@@ -10,14 +10,23 @@ import React, {
 import { Modal, Button } from "react-bootstrap";
 
 import { Spinner } from "react-bootstrap";
-import { Typeahead } from "react-bootstrap-typeahead";
+import { Typeahead, Menu, MenuItem, Highlighter } from "react-bootstrap-typeahead";
 import StoreCreate from "../store/create.js";
 import ProductCategoryCreate from "../product_category/create.js";
 import ProductBrandCreate from "../product_brand/create.js";
 import countryList from 'react-select-country-list';
 import ImageGallery from '../utils/ImageGallery.js';
 import { trimTo2Decimals } from "../utils/numberUtils";
+import Amount from "../utils/amount.js";
 //import Select from 'react-select'
+
+const columnStyle = {
+  width: '20%',
+  overflow: 'hidden',
+  whiteSpace: 'nowrap',
+  textOverflow: 'ellipsis',
+  paddingRight: '8px',
+};
 
 const ProductCreate = forwardRef((props, ref) => {
 
@@ -657,6 +666,28 @@ const ProductCreate = forwardRef((props, ref) => {
 
   let [openProductSearchResult, setOpenProductSearchResult] = useState(false);
 
+  const normalize = (str) => (str || '').toString().toLowerCase();
+  const customFilter = useCallback((option, query) => {
+    const q = normalize(query);
+
+    let partNoLabel = "";
+    if (option.prefix_part_number) {
+      partNoLabel = option.prefix_part_number + " - " + option.part_number;
+    }
+
+    return (
+      normalize(partNoLabel).includes(q) ||
+      normalize(option.prefix_part_number).includes(q) ||
+      normalize(option.part_number).includes(q) ||
+      normalize(option.name).includes(q) ||
+      normalize(option.name_in_arabic).includes(q) ||
+      normalize(option.country_name).includes(q) ||
+      normalize(option.brand_name).includes(q) ||
+      (Array.isArray(option.additional_keywords) &&
+        option.additional_keywords.some((kw) => normalize(kw).includes(q)))
+    );
+  }, []);
+
   const suggestProducts = useCallback(async (searchTerm, type) => {
     console.log("Inside handle suggestProducts");
     if (type === "set") {
@@ -726,17 +757,46 @@ const ProductCreate = forwardRef((props, ref) => {
       .sort((a, b) => a.country_name.localeCompare(b.country_name))     // Sort alphabetically
       .concat(products.filter(item => !item.country_name));*/
 
+
+
+    const filtered = products.filter((opt) => customFilter(opt, searchTerm));
+
+    const sorted = filtered.sort((a, b) => {
+      const aHasCountry = a.country_name && a.country_name.trim() !== "";
+      const bHasCountry = b.country_name && b.country_name.trim() !== "";
+
+      // If both have country, sort by country_name ascending
+      if (aHasCountry && bHasCountry) {
+        return a.country_name.localeCompare(b.country_name);
+      }
+
+      // If only a has country, it comes before b
+      if (aHasCountry && !bHasCountry) {
+        return -1;
+      }
+
+      // If only b has country, it comes before a
+      if (!aHasCountry && bHasCountry) {
+        return 1;
+      }
+
+      // Both have no country, keep original order or sort as needed
+      return 0;
+    });
+
+
+
     if (type === "set") {
       setOpenProductSetSearchResult(true);
-      setProductSetOptions(products);
+      setProductSetOptions(sorted);
     } else {
       setOpenProductSearchResult(true);
-      setProductOptions(products);
+      setProductOptions(sorted);
     }
 
     //setIsProductsLoading(false);
 
-  }, []);
+  }, [customFilter]);
 
 
   const ImageGalleryRef = useRef();
@@ -2273,8 +2333,8 @@ const ProductCreate = forwardRef((props, ref) => {
                 id="linked_product_id"
                 labelKey="search_label"
                 emptyLabel=""
+                filterBy={() => true}
                 ref={productSearchRef}
-
                 onChange={(selectedItems) => {
                   setSelectedLinkedProducts(selectedItems);
                   setOpenProductSearchResult(false);
@@ -2305,9 +2365,50 @@ const ProductCreate = forwardRef((props, ref) => {
                   if (timerRef.current) clearTimeout(timerRef.current);
                   timerRef.current = setTimeout(() => {
                     suggestProducts(searchTerm);
-                  }, 400);
+                  }, 100);
 
                 }}
+                renderMenu={(results, menuProps, state) => (
+                  <Menu {...menuProps}>
+                    {/* Header */}
+                    <MenuItem disabled>
+                      <div style={{ display: 'flex', fontWeight: 'bold', padding: '4px 8px', borderBottom: '1px solid #ddd' }}>
+                        <div style={{ width: '15%' }}>Part Number</div>
+                        <div style={{ width: '45%' }}>Name</div>
+                        <div style={{ width: '10%' }}>Unit Price</div>
+                        <div style={{ width: '10%' }}>Stock</div>
+                        <div style={{ width: '10%' }}>Brand</div>
+                        <div style={{ width: '10%' }}>Country</div>
+                      </div>
+                    </MenuItem>
+
+                    {/* Rows */}
+                    {results.map((option, index) => (
+                      <MenuItem option={option} position={index} key={index}>
+                        <div style={{ display: 'flex', padding: '4px 8px' }}>
+                          <div style={{ ...columnStyle, width: '15%' }}>
+                            <Highlighter search={state.text}>{option.prefix_part_number ? option.prefix_part_number + " - " + option.part_number : "" + option.part_number}</Highlighter>
+                          </div>
+                          <div style={{ ...columnStyle, width: '45%' }}>
+                            <Highlighter search={state.text}>{option.name_in_arabic ? option.name + " - " + option.name_in_arabic : option.name}</Highlighter>
+                          </div>
+                          <div style={{ ...columnStyle, width: '10%' }}>
+                            {option.product_stores?.[localStorage.getItem("store_id")]?.retail_unit_price && <Amount amount={trimTo2Decimals(option.product_stores?.[localStorage.getItem("store_id")]?.retail_unit_price)} />}
+                          </div>
+                          <div style={{ ...columnStyle, width: '10%' }}>
+                            {option.product_stores?.[localStorage.getItem("store_id")]?.stock ?? ''}
+                          </div>
+                          <div style={{ ...columnStyle, width: '10%' }}>
+                            <Highlighter search={state.text}>{option.brand_name}</Highlighter>
+                          </div>
+                          <div style={{ ...columnStyle, width: '10%' }}>
+                            <Highlighter search={state.text}>{option.country_name}</Highlighter>
+                          </div>
+                        </div>
+                      </MenuItem>
+                    ))}
+                  </Menu>
+                )}
                 multiple
               />
             </div>

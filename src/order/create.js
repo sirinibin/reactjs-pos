@@ -16,7 +16,6 @@ import { DebounceInput } from 'react-debounce-input';
 //import BarcodeScannerComponent from "react-qr-barcode-scanner";
 //import Quagga from 'quagga';
 import ProductView from "./../product/view.js";
-import { trimTo2Decimals } from "../utils/numberUtils";
 import { Spinner } from "react-bootstrap";
 //import debounce from 'lodash.debounce';
 import ResizableTableCell from './../utils/ResizableTableCell';
@@ -35,6 +34,7 @@ import DeliveryNote from "./../delivery_note/create.js";
 import DeliveryNotes from "./../utils/delivery_notes.js";
 import Customers from "./../utils/customers.js";
 import Amount from "../utils/amount.js";
+import { trimTo2Decimals } from "../utils/numberUtils";
 import { OverlayTrigger, Tooltip } from 'react-bootstrap';
 import ImageViewerModal from './../utils/ImageViewerModal';
 import * as bootstrap from 'bootstrap';
@@ -495,7 +495,7 @@ const OrderCreate = forwardRef((props, ref) => {
         let Select = `select=id,additional_keywords,search_label,set.name,item_code,prefix_part_number,country_name,brand_name,part_number,name,unit,name_in_arabic,product_stores.${localStorage.getItem('store_id')}.purchase_unit_price,product_stores.${localStorage.getItem('store_id')}.purchase_unit_price_with_vat,product_stores.${localStorage.getItem('store_id')}.retail_unit_price,product_stores.${localStorage.getItem('store_id')}.retail_unit_price_with_vat,product_stores.${localStorage.getItem('store_id')}.stock`;
         // setIsProductsLoading(true);
         let result = await fetch(
-            "/v1/product?" + Select + queryString + "&limit=50&sort=-country_name",
+            "/v1/product?" + Select + queryString + "&limit=50&sort=country_name",
             requestOptions
         );
         let data = await result.json();
@@ -510,11 +510,7 @@ const OrderCreate = forwardRef((props, ref) => {
 
         // openProductSearchResult = true;
         setOpenProductSearchResult(true);
-        /*
-        const sortedProducts = products
-            .filter(item => item.country_name)                        // Keep only items with name
-            .sort((a, b) => a.country_name.localeCompare(b.country_name))     // Sort alphabetically
-            .concat(products.filter(item => !item.country_name));*/
+
 
         const filtered = products.filter((opt) => customFilter(opt, searchTerm));
 
@@ -541,29 +537,10 @@ const OrderCreate = forwardRef((props, ref) => {
             return 0;
         });
 
-        /* const sorted = filtered.sort((a, b) =>
-             a.country_name.localeCompare(b.country_name)
-         );*/
-
         setProductOptions(sorted);
-        //  setIsProductsLoading(false);
 
     }, [customFilter]);
 
-    /*
-    const debouncedSuggestProducts = useMemo(
-        () => debounce((searchTerm) => {
-            console.log("Inside debounce", searchTerm);
-            suggestProducts(searchTerm);
-        }, 400),
-        [suggestProducts]
-    );
-
-    // Then in your input change handler:
-    const handleSuggestProducts = (searchTerm) => {
-        debouncedSuggestProducts(searchTerm);
-    };
-    */
 
 
     async function getProductByBarCode(barcode) {
@@ -2453,7 +2430,7 @@ const OrderCreate = forwardRef((props, ref) => {
                             <label className="form-label">Product Search*</label>
                             <Typeahead
                                 id="product_id"
-                                filterBy={['additional_keywords']}
+                                filterBy={() => true}
                                 size="lg"
                                 ref={productSearchRef}
                                 labelKey="search_label"
@@ -2488,10 +2465,7 @@ const OrderCreate = forwardRef((props, ref) => {
                                         setOpenProductSearchResult(false);
                                         productSearchRef.current?.clear();
                                     }
-
                                     moveToProductSearch();
-
-
                                 }}
                                 onInputChange={(searchTerm, e) => {
                                     if (timerRef.current) clearTimeout(timerRef.current);
