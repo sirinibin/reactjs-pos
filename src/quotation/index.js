@@ -528,7 +528,7 @@ function QuotationIndex(props) {
 
 
   function sendWhatsAppMessage(model) {
-    PreviewRef.current.open(model, "whatsapp", "quotation");
+    PreviewRef.current.open(model, "whatsapp", "whatsapp_quotation");
   }
 
 

@@ -1304,7 +1304,7 @@ async function reCalculate(productIndex) {
             }
         }
 
-        PreviewRef.current.open(model, "whatsapp", "purchase_return");
+        PreviewRef.current.open(model, "whatsapp", "whatsapp_purchase_return");
     }
 
     const timerRef = useRef(null);

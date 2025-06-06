@@ -1513,7 +1513,7 @@ const PurchaseCreate = forwardRef((props, ref) => {
                 return;
             }
         }
-        PreviewRef.current.open(model, "whatsapp", "purchase");
+        PreviewRef.current.open(model, "whatsapp", "whatsapp_purchase");
     }
 
     const productSearchRef = useRef();

@@ -1153,7 +1153,7 @@ function SalesReturnIndex(props) {
     }
 
     function sendWhatsAppMessage(model) {
-        PreviewRef.current.open(model, "whatsapp", "sales_return");
+        PreviewRef.current.open(model, "whatsapp", "whatsapp_sales_return");
     }
 
     const customerSearchRef = useRef();

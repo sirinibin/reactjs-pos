@@ -1935,7 +1935,7 @@ const OrderCreate = forwardRef((props, ref) => {
             }
         }
 
-        PreviewRef.current.open(model, "whatsapp", "sales");
+        PreviewRef.current.open(model, "whatsapp", "whatsapp_sales");
     }
 
 

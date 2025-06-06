@@ -852,7 +852,7 @@ function PurchaseIndex(props) {
 
 
     function sendWhatsAppMessage(model) {
-        PreviewRef.current.open(model, "whatsapp", "purchase");
+        PreviewRef.current.open(model, "whatsapp", "whatsapp_purchase");
     }
 
     const vendorSearchRef = useRef();

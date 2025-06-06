@@ -91,7 +91,7 @@ const DeliveryNoteView = forwardRef((props, ref) => {
     }
 
     function sendWhatsAppMessage() {
-        PreviewRef.current.open(model, "whatsapp", "delivery_note");
+        PreviewRef.current.open(model, "whatsapp", "whatsapp_delivery_note");
     }
 
     return (<>

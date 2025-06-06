@@ -93,7 +93,7 @@ const QuotationView = forwardRef((props, ref) => {
     }
 
     function sendWhatsAppMessage() {
-        PreviewRef.current.open(model, "whatsapp", "quotation");
+        PreviewRef.current.open(model, "whatsapp", "whatsapp_quotation");
     }
 
     return (<>

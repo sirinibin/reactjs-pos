@@ -826,7 +826,7 @@ function PurchaseReturnIndex(props) {
     }
 
     function sendWhatsAppMessage(model) {
-        PreviewRef.current.open(model, "whatsapp", "purchase_return");
+        PreviewRef.current.open(model, "whatsapp", "whatsapp_purchase_return");
     }
 
     const vendorSearchRef = useRef();

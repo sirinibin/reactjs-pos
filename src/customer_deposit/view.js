@@ -82,7 +82,7 @@ const CustomerDepositView = forwardRef((props, ref) => {
     }
 
     function sendWhatsAppMessage() {
-        PreviewRef.current.open(model, "whatsapp", "customer_deposit");
+        PreviewRef.current.open(model, "whatsapp", "whatsapp_customer_deposit");
     }
 
 

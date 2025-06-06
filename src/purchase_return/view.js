@@ -152,7 +152,7 @@ const PurchaseReturnView = forwardRef((props, ref) => {
 
 
     function sendWhatsAppMessage() {
-        PreviewRef.current.open(model, "whatsapp", "purchase_return");
+        PreviewRef.current.open(model, "whatsapp", "whatsapp_purchase_return");
     }
 
     return (<>

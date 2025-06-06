@@ -1505,7 +1505,7 @@ const SalesReturnCreate = forwardRef((props, ref) => {
             }
         }
 
-        PreviewRef.current.open(model, "whatsapp", "sales_return");
+        PreviewRef.current.open(model, "whatsapp", "whatsapp_sales_return");
     }
 
     const timerRef = useRef(null);

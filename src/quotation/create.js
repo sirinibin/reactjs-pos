@@ -1592,7 +1592,7 @@ const QuotationCreate = forwardRef((props, ref) => {
       }
     }
 
-    PreviewRef.current.open(model, "whatsapp", "quotation");
+    PreviewRef.current.open(model, "whatsapp", "whatsapp_quotation");
   }
 
   const timerRef = useRef(null);
