@@ -8,6 +8,7 @@ import { Button, Spinner, Modal } from "react-bootstrap";
 import ReactPaginate from "react-paginate";
 import BalanceSheetPrintPreview from './printPreview.js';
 import Amount from "../utils/amount.js";
+import OverflowTooltip from "../utils/OverflowTooltip.js";
 
 const PostingIndex = forwardRef((props, ref) => {
 
@@ -353,7 +354,7 @@ const PostingIndex = forwardRef((props, ref) => {
             },
         };
         let Select =
-            "select=id,date,store_id,account_id,account_name,account_number,reference_id,reference_model,reference_code,posts,debit_total_credit_total,created_at";
+            "select=id,date,store_id,account_id,account_name,account_number,reference_id,reference_model,reference_code,posts,debit_total,credit_total,created_at";
 
         if (localStorage.getItem("store_id")) {
             searchParams.store_id = localStorage.getItem("store_id");
@@ -582,6 +583,7 @@ const PostingIndex = forwardRef((props, ref) => {
         PreviewRef.current.open(account, "whatsapp");
     }
 
+    /*
     function toTitleCaseFromUnderscore(str) {
         let newStr = str
             .split('_')
@@ -595,11 +597,12 @@ const PostingIndex = forwardRef((props, ref) => {
         }
         return newStr;
     }
+        */
 
     return (
         <>
             <BalanceSheetPrintPreview ref={PreviewRef} />
-            <Modal show={showAccountBalanceSheet} size="xl" onHide={handleAccountBalanceSheetClose} animation={false} scrollable={true}>
+            <Modal show={showAccountBalanceSheet} fullscreen onHide={handleAccountBalanceSheetClose} animation={false} scrollable={true}>
                 <Modal.Header>
                     <Modal.Title>Balance sheet of {selectedAccount?.name + " A/c (#" + selectedAccount?.number + ")"} {selectedAccount?.vat_no ? "  VAT #" + selectedAccount.vat_no : ""} </Modal.Title>
 
@@ -831,6 +834,25 @@ const PostingIndex = forwardRef((props, ref) => {
                                                                 ) : null}
                                                             </b>
                                                         </th>
+                                                        <th>
+                                                            <b
+                                                                style={{
+                                                                    textDecoration: "underline",
+                                                                    cursor: "pointer",
+                                                                }}
+                                                                onClick={() => {
+                                                                    sort("reference_code");
+                                                                }}
+                                                            >
+                                                                ID
+                                                                {sortField === "reference_code" && sortPosting === "-" ? (
+                                                                    <i className="bi bi-sort-alpha-up-alt"></i>
+                                                                ) : null}
+                                                                {sortField === "reference_code" && sortPosting === "" ? (
+                                                                    <i className="bi bi-sort-alpha-up"></i>
+                                                                ) : null}
+                                                            </b>
+                                                        </th>
 
                                                         <th>
                                                             <b
@@ -878,6 +900,25 @@ const PostingIndex = forwardRef((props, ref) => {
                                                                     cursor: "pointer",
                                                                 }}
                                                                 onClick={() => {
+                                                                    sort("posts.balance");
+                                                                }}
+                                                            >
+                                                                Balance
+                                                                {sortField === "posts.balance" && sortPosting === "-" ? (
+                                                                    <i className="bi bi-sort-alpha-up-alt"></i>
+                                                                ) : null}
+                                                                {sortField === "posts.balance" && sortPosting === "" ? (
+                                                                    <i className="bi bi-sort-alpha-up"></i>
+                                                                ) : null}
+                                                            </b>
+                                                        </th>
+                                                        {/*<th>
+                                                            <b
+                                                                style={{
+                                                                    textDecoration: "underline",
+                                                                    cursor: "pointer",
+                                                                }}
+                                                                onClick={() => {
                                                                     sort("reference_model");
                                                                 }}
                                                             >
@@ -889,27 +930,9 @@ const PostingIndex = forwardRef((props, ref) => {
                                                                     <i className="bi bi-sort-alpha-up"></i>
                                                                 ) : null}
                                                             </b>
-                                                        </th>
+                                                        </th>*/}
 
-                                                        <th>
-                                                            <b
-                                                                style={{
-                                                                    textDecoration: "underline",
-                                                                    cursor: "pointer",
-                                                                }}
-                                                                onClick={() => {
-                                                                    sort("reference_code");
-                                                                }}
-                                                            >
-                                                                ID
-                                                                {sortField === "reference_code" && sortPosting === "-" ? (
-                                                                    <i className="bi bi-sort-alpha-up-alt"></i>
-                                                                ) : null}
-                                                                {sortField === "reference_code" && sortPosting === "" ? (
-                                                                    <i className="bi bi-sort-alpha-up"></i>
-                                                                ) : null}
-                                                            </b>
-                                                        </th>
+
 
 
                                                         {/*
@@ -1035,7 +1058,16 @@ const PostingIndex = forwardRef((props, ref) => {
                                                                 </span>
                                                             ) : null}
                                                         </th>
-
+                                                        <th style={{ width: "80px" }}>
+                                                            <input
+                                                                type="text"
+                                                                id="reference_code"
+                                                                onChange={(e) =>
+                                                                    searchByFieldValue("reference_code", e.target.value)
+                                                                }
+                                                                className="form-control"
+                                                            />
+                                                        </th>
 
                                                         <th style={{ width: "130px" }}>
                                                             <Typeahead
@@ -1101,7 +1133,17 @@ const PostingIndex = forwardRef((props, ref) => {
                                                             />
                                                         </th>
                                                         <th style={{ width: "80px" }}>
-                                                            <select className="form-control" onChange={(e) =>
+                                                            <input
+                                                                type="text"
+                                                                id="balance"
+                                                                placeholder="Balance amount"
+                                                                onChange={(e) =>
+                                                                    searchByFieldValue("balance", e.target.value)
+                                                                }
+                                                                className="form-control"
+                                                            />
+
+                                                            {/*<select className="form-control" onChange={(e) =>
                                                                 searchByFieldValue("reference_model", e.target.value)
                                                             }>
                                                                 <option value="">All</option>
@@ -1114,19 +1156,10 @@ const PostingIndex = forwardRef((props, ref) => {
                                                                 <option value="expense">Expense</option>
                                                                 <option value="customer_deposit">Customer Receivable</option>
                                                                 <option value="customer_withdrawal">Customer Payable</option>
-                                                            </select>
+                                                            </select>*/}
 
                                                         </th>
-                                                        <th style={{ width: "80px" }}>
-                                                            <input
-                                                                type="text"
-                                                                id="reference_code"
-                                                                onChange={(e) =>
-                                                                    searchByFieldValue("reference_code", e.target.value)
-                                                                }
-                                                                className="form-control"
-                                                            />
-                                                        </th>
+
                                                         {/*
                                                 <th style={{ minWidth: "150px" }}>
                                                     <DatePicker
@@ -1202,6 +1235,7 @@ const PostingIndex = forwardRef((props, ref) => {
                                                 <tbody className="text-center">
                                                     {selectedAccount && (debitBalanceBoughtDown > 0 || creditBalanceBoughtDown > 0) ? <tr>
                                                         <td></td>
+                                                        <td></td>
                                                         <td style={{ textAlign: "right", color: "red" }}><b>{debitBalanceBoughtDown > 0 ? "To balance b/d " : ""} {debitBalanceBoughtDown > 0 ? <Amount amount={debitBalanceBoughtDown} /> : ""}</b></td>
                                                         <td style={{ textAlign: "right", color: "red" }}><b>{creditBalanceBoughtDown > 0 ? "By balance b/d " : ""} {creditBalanceBoughtDown > 0 ? <Amount amount={creditBalanceBoughtDown} /> : ""} </b></td>
                                                         <td colSpan={2}></td>
@@ -1220,8 +1254,50 @@ const PostingIndex = forwardRef((props, ref) => {
                                                             </tr>
                                                           </td>
                                                        */}
+                                                                <td style={{ width: "auto", whiteSpace: "nowrap" }} >{format(new Date(posting.posts[0]?.date), "MMM dd yyyy h:mma")}</td>
+                                                                <td style={{ width: "auto", whiteSpace: "nowrap" }}>{posting.reference_code}</td>
+                                                                <td className="p-1 ps-3 w-40" style={{ minWidth: "300px", maxWidth: "300px" }}>
+                                                                    <div className="d-flex justify-content-between align-items-center w-100">
+                                                                        {posting.posts[0].debit_or_credit === "debit" && (
+                                                                            <div className="d-flex align-items-center me-2" style={{ maxWidth: '70%' }}>
+                                                                                <span className="text-nowrap me-1">To</span>
+                                                                                <div className="d-flex align-items-center" style={{ maxWidth: '100%' }}>
+                                                                                    <OverflowTooltip value={posting.posts[0].account_name} />
+                                                                                </div>
+                                                                                <span className="ms-1 text-nowrap">
+                                                                                    A/c #{posting.posts[0].account_number} Dr.
+                                                                                </span>
+                                                                            </div>
+                                                                        )}
+                                                                        <span className="text-nowrap ms-auto">
+                                                                            {posting.posts[0].debit
+                                                                                ? <Amount amount={posting.posts[0].debit} />
+                                                                                : <span style={{ visibility: 'hidden' }}><Amount amount={0} /></span>}
+                                                                        </span>
+                                                                    </div>
+                                                                </td>
 
-                                                                <td colSpan={3}>
+                                                                <td className="p-1 ps-3 w-40" style={{ minWidth: "300px", maxWidth: "300px" }}>
+                                                                    <div className="d-flex justify-content-between align-items-center w-100">
+                                                                        {posting.posts[0].debit_or_credit === "credit" && (
+                                                                            <div className="d-flex me-2" style={{ maxWidth: '70%' }}>
+                                                                                <span className="text-nowrap me-1">By</span>
+                                                                                <span className="text-truncate" style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                                                                                    <OverflowTooltip value={posting.posts[0].account_name} />
+                                                                                </span>
+                                                                                <span className="ms-1 text-nowrap">
+                                                                                    A/c #{posting.posts[0].account_number} Cr.
+                                                                                </span>
+                                                                            </div>
+                                                                        )}
+                                                                        <span className="text-nowrap ms-auto">
+                                                                            {posting.posts[0].credit
+                                                                                ? <Amount amount={posting.posts[0].credit} />
+                                                                                : <span style={{ visibility: 'hidden' }}><Amount amount={0} /></span>}
+                                                                        </span>
+                                                                    </div>
+                                                                </td>
+                                                                {/*<td colSpan={3}>
                                                                     {posting.posts &&
                                                                         posting.posts.map((post, key) => (
                                                                             <tr key={key} style={{ border: "solid 1px" }}>
@@ -1243,50 +1319,37 @@ const PostingIndex = forwardRef((props, ref) => {
                                                                                             {post.credit ? <Amount amount={post.credit} /> : ""}
                                                                                         </td>
                                                                                     </td>
+
                                                                                 </td>
-                                                                                {/*
-                                                                        <td colSpan={2} >
-                                                                            <td style={{ border: "solid 1px", minWidth: "250px", maxWidth: "250px", textAlign: "left", paddingLeft: post.debit_or_credit == "debit" ? "10px" : "10px" }} >
-                                                                                {post.debit_or_credit == "debit" ? "To " + post.account_name + " A/c  Dr." : ""}
-                                                                            </td>
-                                                                            <td style={{ border: "solid 1px", textAlign: "right", paddingLeft: "100px" }} >
-                                                                                {post.debit ? post.debit : ""}
-                                                                            </td>
-                                                                        </td>
-                                                                        <td colSpan={2} >
-                                                                            <td style={{ border: "solid 1px", minWidth: "250px", maxWidth: "250px", textAlign: "left", paddingLeft: post.debit_or_credit == "credit" ? "10px" : "10px" }} >
-                                                                                {post.debit_or_credit == "credit" ? "To " + post.account_name + " A/c  Dr." : ""}
-                                                                            </td>
-                                                                            <td style={{ border: "solid 1px", textAlign: "right", paddingLeft: "100px" }} >
-                                                                                {post.credit ? post.credit : ""}
-                                                                            </td>
-                                                                        </td>
-                                                                */}
 
                                                                             </tr>))}
 
 
-                                                                </td>
-                                                                <td style={{ width: "auto", whiteSpace: "nowrap" }} >{toTitleCaseFromUnderscore(posting.reference_model)}</td>
-                                                                <td style={{ width: "auto", whiteSpace: "nowrap" }}>{posting.reference_code}</td>
+                                                                </td>*/}
+                                                                <td style={{ width: "auto", whiteSpace: "nowrap" }} className="text-end" >  <Amount amount={posting.posts[0]?.balance} /></td>
+                                                                {/*<td style={{ width: "auto", whiteSpace: "nowrap" }} >{toTitleCaseFromUnderscore(posting.reference_model)}</td>*/}
+
 
 
                                                             </tr>
                                                         ))}
 
                                                     {selectedAccount ? <tr>
+                                                        <td ></td>
                                                         <td className="text-end">Amount</td>
                                                         <td style={{ textAlign: "right" }}><b>{<Amount amount={debitTotal} />}</b></td>
                                                         <td style={{ textAlign: "right" }}><b>{<Amount amount={creditTotal} />}</b></td>
                                                         <td colSpan={2}></td>
                                                     </tr> : ""}
                                                     {selectedAccount && <tr>
+                                                        <td ></td>
                                                         <td className="text-end">Due Amount</td>
                                                         <td style={{ textAlign: "right", color: "red" }}><b>{debitBalance > 0 ? "To balance c/d " : ""} {debitBalance > 0 ? <Amount amount={debitBalance} /> : ""} </b></td>
                                                         <td style={{ textAlign: "right", color: "red" }}><b>{creditBalance > 0 ? "By balance c/d " : ""} {creditBalance > 0 ? <Amount amount={creditBalance} /> : ""}  </b></td>
                                                         <td colSpan={2}></td>
                                                     </tr>}
                                                     {selectedAccount ? <tr>
+                                                        <td ></td>
                                                         <td className="text-end">Total Amount</td>
                                                         <td style={{ textAlign: "right" }}><b>{creditTotal > debitTotal ? <Amount amount={creditTotal} /> : <Amount amount={debitTotal} />}</b></td>
                                                         <td style={{ textAlign: "right" }}><b>{creditTotal > debitTotal ? <Amount amount={creditTotal} /> : <Amount amount={debitTotal} />}</b></td>

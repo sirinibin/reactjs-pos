@@ -48,6 +48,7 @@ const BalanceSheetPrintPreviewContent = forwardRef((props, ref) => {
         return event.toLocaleDateString('ar-EG', options)
     }
 
+    /*
     function toTitleCaseFromUnderscore(str) {
         let newStr = str
             .split('_')
@@ -60,7 +61,7 @@ const BalanceSheetPrintPreviewContent = forwardRef((props, ref) => {
         }
 
         return newStr;
-    }
+    }*/
 
 
     let detailsLabelsColumnWidthPercent = "32%";
@@ -378,7 +379,7 @@ const BalanceSheetPrintPreviewContent = forwardRef((props, ref) => {
                                                 </ul>
                                             </b>
                                         </th>
-                                        <th className="per1 text-center" style={{ padding: "0px", width: "14%", borderRight: tableBorderThickness, borderBottom: tableBorderThickness }}>
+                                        <th className="per1 text-center" style={{ padding: "0px", width: "12%", borderRight: tableBorderThickness, borderBottom: tableBorderThickness }}>
                                             <ul
                                                 className="list-unstyled"
                                                 style={{
@@ -387,6 +388,17 @@ const BalanceSheetPrintPreviewContent = forwardRef((props, ref) => {
                                             >
                                                 <li>تاريخ</li>
                                                 <li>Date</li>
+                                            </ul>
+                                        </th>
+                                        <th className="per10 text-center" style={{ padding: "0px", width: "20%", borderBottom: tableBorderThickness, borderRight: tableBorderThickness, }}>
+                                            <ul
+                                                className="list-unstyled"
+                                                style={{
+                                                    height: "auto"
+                                                }}
+                                            >
+                                                <li>بطاقة تعريف</li>
+                                                <li>ID</li>
                                             </ul>
                                         </th>
                                         <th className="per3 text-center" colSpan={2} style={{ padding: "0px", width: "29%", borderRight: tableBorderThickness, borderBottom: tableBorderThickness }}>
@@ -413,7 +425,19 @@ const BalanceSheetPrintPreviewContent = forwardRef((props, ref) => {
                                                 <li>Credit</li>
                                             </ul>
                                         </th>
-                                        <th className="per1 text-center" style={{ padding: "0px", width: "9%", borderRight: tableBorderThickness, borderBottom: tableBorderThickness }}>
+                                        <th className="per68 text-center" colSpan={2} style={{ padding: "0px", width: "6%", borderBottom: tableBorderThickness }}>
+                                            <ul
+                                                className="list-unstyled"
+                                                style={{
+                                                    height: "auto",
+                                                    minWidth: "60px"
+                                                }}
+                                            >
+                                                <li>توازن</li>
+                                                <li>Balance</li>
+                                            </ul>
+                                        </th>
+                                        {/*<th className="per1 text-center" style={{ padding: "0px", width: "9%", borderRight: tableBorderThickness, borderBottom: tableBorderThickness }}>
                                             <ul
                                                 className="list-unstyled"
                                                 style={{
@@ -423,18 +447,8 @@ const BalanceSheetPrintPreviewContent = forwardRef((props, ref) => {
                                                 <li>كمية</li>
                                                 <li>Type</li>
                                             </ul>
-                                        </th>
-                                        <th className="per10 text-center" style={{ padding: "0px", width: "15%", borderBottom: tableBorderThickness }}>
-                                            <ul
-                                                className="list-unstyled"
-                                                style={{
-                                                    height: "auto"
-                                                }}
-                                            >
-                                                <li>بطاقة تعريف</li>
-                                                <li>ID</li>
-                                            </ul>
-                                        </th>
+                                        </th>*/}
+
                                     </tr>
 
                                     {pageIndex === 0 && props.model && (props.model.debitBalanceBoughtDown > 0 || props.model.creditBalanceBoughtDown > 0) ?
@@ -442,6 +456,7 @@ const BalanceSheetPrintPreviewContent = forwardRef((props, ref) => {
                                             <td style={{ borderRight: tableBorderThickness, padding: "3px" }}>
 
                                             </td>
+                                            <td style={{ borderRight: tableBorderThickness, padding: "3px" }}></td>
                                             <td style={{ borderRight: tableBorderThickness, padding: "3px" }}></td>
                                             <td colSpan={2} style={{ width: "auto", padding: "3px", whiteSpace: "nowrap", textAlign: "right", color: "red", borderRight: tableBorderThickness }}><b>
                                                 {props.model.debitBalanceBoughtDown > 0 ? "To balance b/d " : ""}
@@ -465,7 +480,7 @@ const BalanceSheetPrintPreviewContent = forwardRef((props, ref) => {
                                                 />
 
                                             </b></td>
-                                            <td style={{ borderRight: tableBorderThickness, padding: "3px" }}></td>
+                                            <td style={{ padding: "3px" }}></td>
                                             <td></td>
                                         </tr> : ""}
 
@@ -473,6 +488,7 @@ const BalanceSheetPrintPreviewContent = forwardRef((props, ref) => {
                                         <tr style={{ borderBottom: tableBorderThickness, }} key={index}   >
                                             <td style={{ width: "auto", padding: "3px", whiteSpace: "nowrap", borderRight: tableBorderThickness, }} >{post.no}</td>
                                             <td style={{ width: "auto", padding: "3px", whiteSpace: "nowrap", borderRight: tableBorderThickness, }} >{post.date ? format(new Date(post.date), "MMM dd yyyy h:mma") : ""}</td>
+                                            <td style={{ padding: "3px", borderRight: tableBorderThickness, }} className="break-text">{post.reference_code}</td>
                                             <td className="text-start break-text" style={{ width: "auto", padding: "3px", whiteSpace: "nowrap", alignContent: "start", borderRightWidth: "0px" }}>
                                                 {/*post.debit_account*/}
                                                 {post.debit_account_name && <span>
@@ -519,12 +535,21 @@ const BalanceSheetPrintPreviewContent = forwardRef((props, ref) => {
                                                     renderText={(value, props) => value}
                                                 />
                                             </td>
-                                            <td style={{ width: "auto", whiteSpace: "nowrap", padding: "3px", borderRight: tableBorderThickness }}>{toTitleCaseFromUnderscore(post.reference_model)}</td>
-                                            <td style={{ padding: "3px", }} className="break-text">{post.reference_code}</td>
+                                            <td className="text-end" style={{ width: "auto", padding: "3px", whiteSpace: "nowrap", border: "solid 0px" }}>
+                                                <NumberFormat
+                                                    value={parseFloat(post.balance_amount)?.toFixed(2)}
+                                                    displayType={"text"}
+                                                    thousandSeparator={true}
+                                                    suffix={""}
+                                                    renderText={(value, props) => value}
+                                                />
+                                            </td>
+                                            {/*<td style={{ width: "auto", whiteSpace: "nowrap", padding: "3px", borderRight: tableBorderThickness }}>{toTitleCaseFromUnderscore(post.reference_model)}</td>*/}
+
                                         </tr>
                                     ))}
                                     {props.model.pages.length === (pageIndex + 1) && props.model ? <tr style={{ borderBottom: tableBorderThickness }}>
-                                        <td className="text-end" colSpan={2} style={{ borderRight: tableBorderThickness, padding: "3px" }}>
+                                        <td className="text-end" colSpan={3} style={{ borderRight: tableBorderThickness, padding: "3px" }}>
                                             <b>Amount</b>
                                         </td>
                                         <td colSpan={2} style={{ textAlign: "right", padding: "3px", borderRight: tableBorderThickness }}><b>
@@ -555,7 +580,7 @@ const BalanceSheetPrintPreviewContent = forwardRef((props, ref) => {
 
                                     {props.model.pages.length === (pageIndex + 1) && props.model ?
                                         <tr style={{ borderBottom: tableBorderThickness }}>
-                                            <th className="text-end" colSpan={2} style={{ borderRight: tableBorderThickness, padding: "3px" }}>
+                                            <th className="text-end" colSpan={3} style={{ borderRight: tableBorderThickness, padding: "3px" }}>
                                                 <b>Due Amount</b>
                                             </th>
                                             <th colSpan={2} style={{ textAlign: "right", padding: "3px", color: "red", borderRight: tableBorderThickness }}><b>
@@ -580,11 +605,11 @@ const BalanceSheetPrintPreviewContent = forwardRef((props, ref) => {
                                                     renderText={(value, props) => value}
                                                 />
                                             </b></th>
-                                            <th colSpan={2}></th>
+                                            <th colSpan={3}></th>
                                         </tr> : ""}
 
                                     {props.model.pages.length === (pageIndex + 1) && props.model ? <tr style={{ borderBottom: tableBorderThickness }}>
-                                        <td className="text-end" colSpan={2} style={{ borderRight: tableBorderThickness, padding: "3px" }}>
+                                        <td className="text-end" colSpan={3} style={{ borderRight: tableBorderThickness, padding: "3px" }}>
                                             <b>Total Amount</b>
                                         </td>
                                         <td colSpan={2} style={{ textAlign: "right", padding: "3px", borderRight: tableBorderThickness }}><b>

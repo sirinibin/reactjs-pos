@@ -129,6 +129,7 @@ const BalanceSheetPrintPreview = forwardRef((props, ref) => {
                         "debit_or_credit": model.posts[j].posts[k].debit_or_credit,
                         "debit_amount": model.posts[j].posts[k].debit ? model.posts[j].posts[0].debit : "",
                         "credit_amount": model.posts[j].posts[k].credit ? model.posts[j].posts[0].credit : "",
+                        "balance_amount": model.posts[j].posts[k].balance ? model.posts[j].posts[0].balance : "",
                         "reference_code": model.posts[j].reference_code,
                         "reference_model": model.posts[j].reference_model,
                     });
