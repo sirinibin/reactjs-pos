@@ -1270,7 +1270,7 @@ const PostingIndex = forwardRef((props, ref) => {
                                                                             </div>
                                                                         )}
                                                                         <span className="text-nowrap ms-auto">
-                                                                            {posting.posts[0].credit
+                                                                            {posting.posts[0].debit
                                                                                 ? <Amount amount={posting.posts[0].debit} />
                                                                                 : <span style={{ visibility: 'hidden' }}><Amount amount={0} /></span>}
                                                                         </span>
