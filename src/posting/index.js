@@ -1259,18 +1259,18 @@ const PostingIndex = forwardRef((props, ref) => {
                                                                 <td className="p-1 ps-3 w-40" style={{ minWidth: "300px", maxWidth: "300px" }}>
                                                                     <div className="d-flex justify-content-between align-items-center w-100">
                                                                         {posting.posts[0].debit_or_credit === "debit" && (
-                                                                            <div className="d-flex align-items-center me-2" style={{ maxWidth: '70%' }}>
+                                                                            <div className="d-flex me-2" style={{ maxWidth: '70%' }}>
                                                                                 <span className="text-nowrap me-1">To</span>
-                                                                                <div className="d-flex align-items-center" style={{ maxWidth: '100%' }}>
+                                                                                <span className="text-truncate" style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                                                                                     <OverflowTooltip value={posting.posts[0].account_name} />
-                                                                                </div>
+                                                                                </span>
                                                                                 <span className="ms-1 text-nowrap">
                                                                                     A/c #{posting.posts[0].account_number} Dr.
                                                                                 </span>
                                                                             </div>
                                                                         )}
                                                                         <span className="text-nowrap ms-auto">
-                                                                            {posting.posts[0].debit
+                                                                            {posting.posts[0].credit
                                                                                 ? <Amount amount={posting.posts[0].debit} />
                                                                                 : <span style={{ visibility: 'hidden' }}><Amount amount={0} /></span>}
                                                                         </span>
