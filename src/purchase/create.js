@@ -732,6 +732,10 @@ const PurchaseCreate = forwardRef((props, ref) => {
                     props.refreshList();
                 }
                 handleClose();
+                if (props.onUpdated) {
+                    props.onUpdated();
+                }
+
                 if (props.openDetailsView)
                     props.openDetailsView(data.result.id);
             })

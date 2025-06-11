@@ -319,7 +319,7 @@ const BalanceSheetPrintPreview = forwardRef((props, ref) => {
     const printAreaRef = useRef();
 
     const getFileName = useCallback(() => {
-        let filename = "";
+        let filename = model.store.code + "_";
 
         if (model.name) {
             filename += model.name + "_acc_no_" + model.number;

@@ -9,6 +9,18 @@ import ReactPaginate from "react-paginate";
 import BalanceSheetPrintPreview from './printPreview.js';
 import Amount from "../utils/amount.js";
 import OverflowTooltip from "../utils/OverflowTooltip.js";
+import OrderCreate from "../order/create.js";
+import SalesReturnCreate from "../sales_return/create.js";
+import PurchaseCreate from "../purchase/create.js";
+import PurchaseReturnCreate from "../purchase_return/create.js";
+import CustomerDepositCreate from "../customer_deposit/create.js";
+import CustomerWithdrawalCreate from "../customer_withdrawal/create.js";
+import ExpenseCreate from "../expense/create.js";
+import CapitalCreate from "../capital/create.js";
+import DividentCreate from "../divident/create.js";
+
+
+
 
 const PostingIndex = forwardRef((props, ref) => {
 
@@ -599,8 +611,62 @@ const PostingIndex = forwardRef((props, ref) => {
     }
         */
 
+    const SalesUpdateFormRef = useRef();
+    const SalesReturnUpdateFormRef = useRef();
+    const PurchaseUpdateFormRef = useRef();
+    const PurchaseReturnUpdateFormRef = useRef();
+    const CustomerReceivableUpdateFormRef = useRef();
+    const CustomerPayableUpdateFormRef = useRef();
+    const ExpenseUpdateFormRef = useRef();
+    const CapitalUpdateFormRef = useRef();
+    const DividentUpdateFormRef = useRef();
+
+    let [showUpdateForm, setShowUpdateForm] = useState(false);
+    const timerRef = useRef(null);
+    function openUpdateForm(id, referenceModel) {
+
+        showUpdateForm = true;
+        setShowUpdateForm(showUpdateForm);
+        if (timerRef.current) clearTimeout(timerRef.current);
+        timerRef.current = setTimeout(() => {
+            if (referenceModel === "sales") {
+                SalesUpdateFormRef.current.open(id);
+            } else if (referenceModel === "sales_return") {
+                SalesReturnUpdateFormRef.current.open(id);
+            } else if (referenceModel === "purchase") {
+                PurchaseUpdateFormRef.current.open(id);
+            } else if (referenceModel === "purchase_return") {
+                PurchaseReturnUpdateFormRef.current.open(id);
+            } else if (referenceModel === "customer_deposit") {
+                CustomerReceivableUpdateFormRef.current.open(id);
+            } else if (referenceModel === "customer_withdrawal") {
+                CustomerPayableUpdateFormRef.current.open(id);
+            } else if (referenceModel === "expense") {
+                ExpenseUpdateFormRef.current.open(id);
+            } else if (referenceModel === "capital") {
+                CapitalUpdateFormRef.current.open(id);
+            } else if (referenceModel === "drawing") {
+                DividentUpdateFormRef.current.open(id);
+            }
+        }, 50);
+
+    }
+    const handleUpdated = () => {
+        list();
+    };
+
     return (
         <>
+            {showUpdateForm && <><OrderCreate ref={SalesUpdateFormRef} onUpdated={handleUpdated} />
+                <SalesReturnCreate ref={SalesReturnUpdateFormRef} onUpdated={handleUpdated} />
+                <PurchaseCreate ref={PurchaseUpdateFormRef} onUpdated={handleUpdated} />
+                <PurchaseReturnCreate ref={PurchaseReturnUpdateFormRef} onUpdated={handleUpdated} />
+                <CustomerDepositCreate ref={CustomerReceivableUpdateFormRef} onUpdated={handleUpdated} />
+                <CustomerWithdrawalCreate ref={CustomerPayableUpdateFormRef} onUpdated={handleUpdated} />
+                <ExpenseCreate ref={ExpenseUpdateFormRef} onUpdated={handleUpdated} />
+                <CapitalCreate ref={CapitalUpdateFormRef} onUpdated={handleUpdated} />
+                <DividentCreate ref={DividentUpdateFormRef} onUpdated={handleUpdated} /></>}
+
             <BalanceSheetPrintPreview ref={PreviewRef} />
             <Modal show={showAccountBalanceSheet} fullscreen onHide={handleAccountBalanceSheetClose} animation={false} scrollable={true}>
                 <Modal.Header>
@@ -1255,7 +1321,11 @@ const PostingIndex = forwardRef((props, ref) => {
                                                           </td>
                                                        */}
                                                                 <td style={{ width: "auto", whiteSpace: "nowrap" }} >{format(new Date(posting.posts[0]?.date), "MMM dd yyyy h:mma")}</td>
-                                                                <td style={{ width: "auto", whiteSpace: "nowrap" }}>{posting.reference_code}</td>
+                                                                <td style={{ width: "auto", whiteSpace: "nowrap" }}>
+                                                                    {posting.reference_code && <span style={{ cursor: "pointer", color: "blue" }} onClick={() => {
+                                                                        openUpdateForm(posting.reference_id, posting.reference_model);
+                                                                    }}>{posting.reference_code}</span>}
+                                                                </td>
                                                                 <td className="p-1 ps-3 w-40" style={{ minWidth: "300px", maxWidth: "300px" }}>
                                                                     <div className="d-flex justify-content-between align-items-center w-100">
                                                                         {posting.posts[0].debit_or_credit === "debit" && (

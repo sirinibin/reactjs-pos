@@ -188,13 +188,13 @@ const CustomerDepositPreview = forwardRef((props, ref) => {
     const printAreaRef = useRef();
 
     const getFileName = useCallback(() => {
-        let filename = "";
+        let filename = model.store.code + "_";
         console.log("modelName inside getFileName:", modelName);
 
         if (modelName === "customer_deposit" || modelName === "whatsapp_customer_deposit") {
-            filename = "Receipt_receivable";
+            filename += "Receipt_receivable";
         } else if (modelName === "customer_withdrawal" || modelName === "whatsapp_customer_withdrawal") {
-            filename = "Receipt_payable";
+            filename += "Receipt_payable";
         }
 
         if (model.id) {

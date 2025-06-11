@@ -960,6 +960,10 @@ const SalesReturnCreate = forwardRef((props, ref) => {
                     props.refreshSalesList();
                 }
 
+                if (props.onUpdated) {
+                    props.onUpdated();
+                }
+
                 openDetailsView(data.result.id);
             })
             .catch((error) => {

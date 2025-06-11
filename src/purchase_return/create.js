@@ -649,6 +649,10 @@ const PurchaseReturnedCreate = forwardRef((props, ref) => {
                     props.refreshPurchaseList();
                 }
 
+                if (props.onUpdated) {
+                    props.onUpdated();
+                }
+
                 openDetailsView(data.result.id);
             })
             .catch((error) => {

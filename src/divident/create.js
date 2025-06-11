@@ -297,6 +297,10 @@ const DividentCreate = forwardRef((props, ref) => {
                     props.refreshList();
                 }
 
+                if (props.onUpdated) {
+                    props.onUpdated();
+                }
+
                 handleClose();
                 if (props.openDetailsView) {
                     if (props.openDetailsView)
@@ -340,7 +344,7 @@ const DividentCreate = forwardRef((props, ref) => {
             <Modal show={show} size="xl" onHide={handleClose} animation={false} backdrop="static" scrollable={true}>
                 <Modal.Header>
                     <Modal.Title>
-                        {formData.id ? "Update WithdrawnByUser Divident #" + formData.description : "Create New Divident Withdrawal"}
+                        {formData.id ? "Update Drawing #" + formData.description : "Create New Drawing"}
                     </Modal.Title>
 
 

@@ -875,6 +875,10 @@ const OrderCreate = forwardRef((props, ref) => {
                 setFormData({ ...formData });
                 reCalculate();
 
+                if (props.onUpdated) {
+                    props.onUpdated();
+                }
+
                 openDetailsView(data.result.id);
             })
             .catch((error) => {
@@ -2044,9 +2048,46 @@ const OrderCreate = forwardRef((props, ref) => {
     const normalize = (str) => (str || '').toString().toLowerCase();
 
 
+    const CustomerUpdateFormRef = useRef();
+    function openCustomerUpdateForm(id) {
+        CustomerUpdateFormRef.current.open(id);
+    }
+
+    const handleCustomerUpdated = (updatedCustomer) => {
+
+        // alert(updatedCustomer);
+        if (updatedCustomer.name && updatedCustomer.id) {
+            // alert("updatedCustomer.customer_name:" + updatedCustomer.name);
+            let selectedCustomers = [
+                {
+                    id: updatedCustomer.id,
+                    name: updatedCustomer.name,
+                    search_label: updatedCustomer.search_label,
+                }
+            ];
+            setSelectedCustomers([...selectedCustomers]);
+
+            formData.customer_id = updatedCustomer.id;
+            if (updatedCustomer.use_remarks_in_sales && updatedCustomer.remarks) {
+                formData.remarks = updatedCustomer.remarks;
+            }
+
+            if (updatedCustomer.phone && !formData.phone) {
+                formData.phone = updatedCustomer.phone;
+            }
+
+            setFormData({ ...formData });
+
+        }
+
+
+    };
+
+
 
     return (
         <>
+            <CustomerCreate ref={CustomerUpdateFormRef} showToastMessage={props.showToastMessage} onUpdated={handleCustomerUpdated} />
             <ImageViewerModal ref={imageViewerRef} images={productImages} />
             <OrderPreview ref={PreviewRef} />
             <div
@@ -2186,6 +2227,7 @@ const OrderCreate = forwardRef((props, ref) => {
                                         setSelectedCustomers([]);
                                         return;
                                     }
+
                                     formData.customer_id = selectedItems[0].id;
                                     if (selectedItems[0].use_remarks_in_sales && selectedItems[0].remarks) {
                                         formData.remarks = selectedItems[0].remarks;
@@ -2233,6 +2275,12 @@ const OrderCreate = forwardRef((props, ref) => {
 
                         </div>
                         <div className="col-md-1">
+                            {formData.customer_id && <><Button className="btn btn-default" style={{ marginTop: "30px" }} onClick={() => {
+                                openCustomerUpdateForm(formData.customer_id);
+                            }}>
+                                <i class="bi bi-pencil"></i>
+                            </Button>&nbsp;</>}
+
                             <Button className="btn btn-primary" style={{ marginTop: "30px" }} onClick={openCustomers}>
                                 <i class="bi bi-list"></i>
                             </Button>

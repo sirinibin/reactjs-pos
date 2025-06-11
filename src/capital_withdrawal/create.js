@@ -395,7 +395,7 @@ const CapitalWithdrawalCreate = forwardRef((props, ref) => {
             <Modal show={show} size="xl" onHide={handleClose} animation={false} backdrop="static" scrollable={true}>
                 <Modal.Header>
                     <Modal.Title>
-                        {formData.id ? "Update WithdrawnByUser CapitalWithdrawal #" + formData.description : "Create New Capital Withdrawal"}
+                        {formData.id ? "Update Drawings #" + formData.description : "Create New Drawing"}
                     </Modal.Title>
 
 

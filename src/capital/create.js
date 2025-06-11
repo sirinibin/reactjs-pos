@@ -8,11 +8,6 @@ import DatePicker from "react-datepicker";
 import { format } from "date-fns";
 
 const CapitalCreate = forwardRef((props, ref) => {
-
-    //Store Auto Suggestion
-
-
-
     useImperativeHandle(ref, () => ({
         open(id) {
 
@@ -301,6 +296,10 @@ const CapitalCreate = forwardRef((props, ref) => {
                 }
                 if (props.refreshList) {
                     props.refreshList();
+                }
+
+                if (props.onUpdated) {
+                    props.onUpdated();
                 }
 
                 handleClose();
