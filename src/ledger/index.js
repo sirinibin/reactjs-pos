@@ -830,6 +830,7 @@ function LedgerIndex(props) {
                                                         <option value="expense">Expense</option>
                                                         <option value="customer_deposit">Customer Receivable</option>
                                                         <option value="customer_withdrawal">Customer Payable</option>
+                                                        <option value="quotation_sales">Quotation Sales</option>
                                                     </select>
 
                                                 </th>

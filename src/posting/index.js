@@ -18,6 +18,7 @@ import CustomerWithdrawalCreate from "../customer_withdrawal/create.js";
 import ExpenseCreate from "../expense/create.js";
 import CapitalCreate from "../capital/create.js";
 import DividentCreate from "../divident/create.js";
+import QuotationCreate from "../quotation/create.js";
 
 
 
@@ -620,6 +621,7 @@ const PostingIndex = forwardRef((props, ref) => {
     const ExpenseUpdateFormRef = useRef();
     const CapitalUpdateFormRef = useRef();
     const DividentUpdateFormRef = useRef();
+    const QuotationUpdateFormRef = useRef();
 
     let [showUpdateForm, setShowUpdateForm] = useState(false);
     const timerRef = useRef(null);
@@ -647,6 +649,8 @@ const PostingIndex = forwardRef((props, ref) => {
                 CapitalUpdateFormRef.current.open(id);
             } else if (referenceModel === "drawing") {
                 DividentUpdateFormRef.current.open(id);
+            } else if (referenceModel === "quotation_sales") {
+                QuotationUpdateFormRef.current.open(id);
             }
         }, 50);
 
@@ -657,7 +661,9 @@ const PostingIndex = forwardRef((props, ref) => {
 
     return (
         <>
-            {showUpdateForm && <><OrderCreate ref={SalesUpdateFormRef} onUpdated={handleUpdated} />
+            {showUpdateForm && <>
+                <OrderCreate ref={SalesUpdateFormRef} onUpdated={handleUpdated} />
+                <QuotationCreate ref={QuotationUpdateFormRef} onUpdated={handleUpdated} />
                 <SalesReturnCreate ref={SalesReturnUpdateFormRef} onUpdated={handleUpdated} />
                 <PurchaseCreate ref={PurchaseUpdateFormRef} onUpdated={handleUpdated} />
                 <PurchaseReturnCreate ref={PurchaseReturnUpdateFormRef} onUpdated={handleUpdated} />
