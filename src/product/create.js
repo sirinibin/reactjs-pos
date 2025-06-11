@@ -1346,6 +1346,30 @@ const ProductCreate = forwardRef((props, ref) => {
               </select>
             </div>
 
+            <div className="col-md-4">
+              <div className="input-group mb-3">
+                <input type="checkbox"
+                  value={formData.allow_duplicates}
+                  checked={formData.allow_duplicates}
+                  onChange={(e) => {
+
+                    errors["formData.allow_duplicates"] = "";
+                    formData.allow_duplicates = !formData.allow_duplicates
+                    setFormData({ ...formData });
+                    console.log(formData);
+                  }}
+                  className=""
+                  id="formData.allow_duplicates"
+                /> &nbsp;Allow duplicates in Sales, Purchases etc
+              </div>
+              <label className="form-label"></label>
+              {errors.allow_duplicates && (
+                <div style={{ color: "red" }}>
+                  {errors.allow_duplicates}
+                </div>
+              )}
+            </div>
+
             <h4>Unit Prices</h4>
             <div className="table-responsive" style={{ overflowX: "auto" }}>
               <table className="table table-striped table-sm table-bordered">
