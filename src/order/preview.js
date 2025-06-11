@@ -709,20 +709,20 @@ const Preview = forwardRef((props, ref) => {
     const printAreaRef = useRef();
 
     const getFileName = useCallback(() => {
-        let filename = "";
+        let filename = model.store.code + "_";
 
         if (modelName === "sales" || modelName === "whatsapp_sales") {
-            filename = "Sales";
+            filename += "Sales";
         } else if (modelName === "sales_return" || modelName === "whatsapp_sales_return") {
-            filename = "Sales_Return";
+            filename += "Sales_Return";
         } else if (modelName === "purchase" || modelName === "whatsapp_purchase") {
-            filename = "Purchase";
+            filename += "Purchase";
         } else if (modelName === "purchase_return" || modelName === "whatsapp_purchase_return") {
-            filename = "Purchase_Return";
+            filename += "Purchase_Return";
         } else if (modelName === "quotation" || modelName === "whatsapp_quotation") {
-            filename = "Quotation";
+            filename += "Quotation";
         } else if (modelName === "delivery_note" || modelName === "whatsapp_delivery_note") {
-            filename = "Delivery_Note";
+            filename += "Delivery_Note";
         }
 
         if (model.code) {
@@ -895,9 +895,9 @@ const Preview = forwardRef((props, ref) => {
         let message = "";
         if (modelName === "quotation" && model?.type !== "invoice") {
             message = `Hello, here is your Quotation:\n${window.location.origin}/pdfs/${getFileName()}.pdf`;
-        } else if (modelName === "delivery_note") {
+        } else if (modelName === "delivery_note" || modelName === "whatsapp_delivery_note") {
             message = `Hello, here is your Delivery Note:\n${window.location.origin}/pdfs/${getFileName()}.pdf`;
-        } else if (modelName === "sales_return") {
+        } else if (modelName === "sales_return" || modelName === "whatsapp_sales_return") {
             message = `Hello, here is your Return Invoice:\n${window.location.origin}/pdfs/${getFileName()}.pdf`;
         } else {
             message = `Hello, here is your Invoice:\n${window.location.origin}/pdfs/${getFileName()}.pdf`;
