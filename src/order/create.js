@@ -2247,6 +2247,13 @@ const OrderCreate = forwardRef((props, ref) => {
                                 ref={customerSearchRef}
                                 onKeyDown={(e) => {
                                     if (e.key === "Escape") {
+                                        delete errors.customer_id;
+                                        //setErrors(errors);
+                                        formData.customer_id = "";
+                                        formData.customer_name = "";
+                                        formData.customerName = "";
+                                        setFormData({ ...formData });
+                                        setSelectedCustomers([]);
                                         setCustomerOptions([]);
                                         customerSearchRef.current?.clear();
                                     }
