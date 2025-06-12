@@ -901,6 +901,11 @@ const QuotationCreate = forwardRef((props, ref) => {
         if (props.refreshList) {
           props.refreshList();
         }
+
+        if (props.onUpdated) {
+          props.onUpdated();
+        }
+
         handleClose();
         if (props.openDetailsView)
           props.openDetailsView(data.result.id);

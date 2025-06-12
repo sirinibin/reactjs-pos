@@ -9,9 +9,11 @@ import CustomerCreate from "./../customer/create.js";
 import CustomerView from "./../customer/view.js";
 import Customers from "./../utils/customers.js";
 import Sales from "./../utils/sales.js";
+import Quotations from "./../utils/quotations.js";
 import CustomerDepositPreview from './preview.js';
 import { trimTo2Decimals } from "../utils/numberUtils";
 import OrderCreate from "./../order/create.js";
+import QuotationCreate from "./../quotation/create.js";
 import { confirm } from 'react-bootstrap-confirmation';
 import InfoDialog from './../utils/InfoDialog';
 
@@ -445,30 +447,8 @@ const CustomerDepositCreate = forwardRef((props, ref) => {
         setFormData({ ...formData });
     };
 
-    const SalesRef = useRef();
-    function openSales(paymentIndex) {
-        if (!formData.customer_id) {
-            infoMessage = "Please select a customer first then try again!";
-            setInfoMessage(infoMessage);
-            showInfo = true;
-            setShowInfo(showInfo);
-            return;
-        }
 
-        selectedPaymentIndex = paymentIndex;
-        setSelectedPaymentIndex(selectedPaymentIndex);
-        let selectedPaymentStatusList = [
-            {
-                id: "not_paid",
-                name: "Not Paid",
-            },
-            {
-                id: "paid_partially",
-                name: "Paid partially",
-            }
-        ];
-        SalesRef.current.open(selectedCustomers, selectedPaymentStatusList);
-    }
+
 
     let [selectedPaymentIndex, setSelectedPaymentIndex] = useState(null);
     let [showInfo, setShowInfo] = useState(false);
@@ -501,6 +481,33 @@ const CustomerDepositCreate = forwardRef((props, ref) => {
         setFormData({ ...formData });
     };
 
+    const handleSelectedQuotationSale = (selectedQuotationSale) => {
+        //alert("selectedQuotationSale.customer_id:" + selectedQuotationSale.customer_id + ",formData.customer_id:" + formData.customer_id);
+        if (formData.customer_id !== selectedQuotationSale.customer_id) {
+            infoMessage = "The selected quotation  invoice is not belongs to the customer " + selectedCustomers[0]?.name;
+            setInfoMessage(infoMessage);
+            showInfo = true;
+            setShowInfo(showInfo);
+            return;
+        }
+
+        console.log("selectedQuotationSale:", selectedQuotationSale);
+        if (selectedQuotationSale.payment_status === "paid") {
+            infoMessage = "The selected invoice is already paid";
+            setInfoMessage(infoMessage);
+            showInfo = true;
+            setShowInfo(showInfo);
+            return;
+        }
+        // setSelectedCustomers([selectedCustomer])
+        formData.payments[selectedPaymentIndex].invoice_type = "quotation_sales";
+        formData.payments[selectedPaymentIndex].invoice_id = selectedQuotationSale.id;
+        formData.payments[selectedPaymentIndex].invoice_code = selectedQuotationSale.code;
+        formData.payments[selectedPaymentIndex].amount = selectedQuotationSale.balance_amount;
+        findTotalPayments();
+        setFormData({ ...formData });
+    };
+
 
 
     const confirmInvoiceRemoval = async (paymentIndex) => {
@@ -529,21 +536,108 @@ const CustomerDepositCreate = forwardRef((props, ref) => {
         SalesUpdateFormRef.current.open(id);
     }
 
+    const QuotationUpdateFormRef = useRef();
+    function openQuotationUpdateForm(id) {
+        QuotationUpdateFormRef.current.open(id);
+    }
+
     const inputRefs = useRef({});
     const timerRef = useRef(null);
     const customerSearchRef = useRef();
 
+    let [showInvoiceTypeSelection, setShowInvoiceTypeSelection] = useState(false);
+
+    function openInvoiceTypeSelection(paymentIndex) {
+        if (!formData.customer_id) {
+            infoMessage = "Please select a customer first then try again!";
+            setInfoMessage(infoMessage);
+            showInfo = true;
+            setShowInfo(showInfo);
+            return;
+        }
+
+        selectedPaymentIndex = paymentIndex;
+        setSelectedPaymentIndex(selectedPaymentIndex);
+
+        if (store.quotation_invoice_accounting) {
+            showInvoiceTypeSelection = true;
+            setShowInvoiceTypeSelection(showInvoiceTypeSelection);
+        } else {
+            openSales();
+        }
+    }
+
+    const SalesRef = useRef();
+    function openSales() {
+        showInvoiceTypeSelection = false;
+        setShowInvoiceTypeSelection(showInvoiceTypeSelection);
+
+        let selectedPaymentStatusList = [
+            {
+                id: "not_paid",
+                name: "Not Paid",
+            },
+            {
+                id: "paid_partially",
+                name: "Paid partially",
+            }
+        ];
+        SalesRef.current.open(selectedCustomers, selectedPaymentStatusList);
+    }
+
+    const QuotationSalesRef = useRef();
+    function openQuotationSales() {
+        showInvoiceTypeSelection = false;
+        setShowInvoiceTypeSelection(showInvoiceTypeSelection);
+
+        let selectedPaymentStatusList = [
+            {
+                id: "not_paid",
+                name: "Not Paid",
+            },
+            {
+                id: "paid_partially",
+                name: "Paid partially",
+            }
+        ];
+        QuotationSalesRef.current.open(true, selectedCustomers, "invoice", selectedPaymentStatusList);
+    }
+
+
     return (
         <>
+            <Modal show={showInvoiceTypeSelection} onHide={() => {
+                showInvoiceTypeSelection = false;
+                setShowInvoiceTypeSelection(showInvoiceTypeSelection);
+            }} centered>
+                <Modal.Header closeButton>
+                    <Modal.Title>Select Invoice Type</Modal.Title>
+                </Modal.Header>
+                <Modal.Body className="d-flex justify-content-around">
+                    <Button variant="primary" onClick={() => {
+                        openSales();
+                    }}>
+                        Sales Invoices
+                    </Button>
+                    <Button variant="secondary" onClick={() => {
+                        openQuotationSales();
+                    }}>
+                        Quotation Invoices
+                    </Button>
+                </Modal.Body>
+            </Modal>
+
             <InfoDialog
                 show={showInfo}
                 message={infoMessage}
                 onClose={() => setShowInfo(false)}
             />
             <OrderCreate ref={SalesUpdateFormRef} />
+            <QuotationCreate ref={QuotationUpdateFormRef} />
             <CustomerDepositPreview ref={PreviewRef} />
             <Customers ref={CustomersRef} onSelectCustomer={handleSelectedCustomer} showToastMessage={props.showToastMessage} />
             <Sales ref={SalesRef} onSelectSale={handleSelectedSale} showToastMessage={props.showToastMessage} />
+            <Quotations ref={QuotationSalesRef} onSelectQuotation={handleSelectedQuotationSale} showToastMessage={props.showToastMessage} />
             <CustomerCreate ref={CustomerCreateFormRef} openDetailsView={openCustomerDetailsView} showToastMessage={props.showToastMessage} />
             <CustomerView ref={CustomerDetailsViewRef} showToastMessage={props.showToastMessage} />
             <Modal show={show} size="xl" keyboard={false} onHide={handleClose} animation={false} backdrop="static" scrollable={true}>
@@ -813,7 +907,12 @@ const CustomerDepositCreate = forwardRef((props, ref) => {
                                                         <div className="row" style={{ border: "solid 0px" }}>
                                                             <div className="" style={{ border: "solid 0px", maxWidth: "140px", fontSize: "12px" }}>
                                                                 <span style={{ cursor: "pointer", color: "blue" }} onClick={() => {
-                                                                    openSalesUpdateForm(formData.payments[key].invoice_id);
+                                                                    if (formData.payments[key].invoice_type === "sales") {
+                                                                        openSalesUpdateForm(formData.payments[key].invoice_id);
+                                                                    } else if (formData.payments[key].invoice_type === "quotation_sales") {
+                                                                        openQuotationUpdateForm(formData.payments[key].invoice_id);
+                                                                    }
+
                                                                 }}>{formData.payments[key].invoice_code}</span>
                                                                 {formData.payments[key].invoice_code && <span className="text-danger"
                                                                     style={{ cursor: "pointer", fontSize: "0.75rem", marginLeft: "3px" }}
@@ -826,7 +925,7 @@ const CustomerDepositCreate = forwardRef((props, ref) => {
                                                             </div>
                                                             <div className="" style={{ border: "solid 0px", width: "40px" }}>
                                                                 <Button className="btn btn-primary" style={{ marginLeft: "-12px" }} onClick={() => {
-                                                                    openSales(key);
+                                                                    openInvoiceTypeSelection(key);
                                                                 }}>
                                                                     <i className="bi bi-list"></i>
                                                                 </Button>

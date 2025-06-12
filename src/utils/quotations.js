@@ -468,7 +468,7 @@ const Quotations = forwardRef((props, ref) => {
             },
         };
         let Select =
-            "select=id,order_code,order_id,reported_to_zatca,reported_to_zatca_at,type,payment_status,payment_methods,total_payment_received,balance_amount,code,date,net_total,created_by_name,customer_name,status,cash_discount,discount_with_vat,created_at,profit,loss";
+            "select=id,order_code,order_id,customer_id,reported_to_zatca,reported_to_zatca_at,type,payment_status,payment_methods,total_payment_received,balance_amount,code,date,net_total,created_by_name,customer_name,status,cash_discount,discount_with_vat,created_at,profit,loss";
 
         if (localStorage.getItem("store_id")) {
             searchParams.store_id = localStorage.getItem("store_id");
