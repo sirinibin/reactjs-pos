@@ -11,6 +11,7 @@ export function trimTo3Decimals(num) {
     return rounded.toFixed(3); // Ensure two decimal digits in string
 }
 
+
 export function trimTo4Decimals(num) {
     if (typeof num !== "number" || isNaN(num)) return "0.0000"; // Handle invalid input
     const rounded = Math.round((num + Number.EPSILON) * 10000) / 10000;
