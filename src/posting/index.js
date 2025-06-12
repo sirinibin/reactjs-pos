@@ -1315,17 +1315,15 @@ const PostingIndex = forwardRef((props, ref) => {
 
                                                     {postingList &&
                                                         postingList.map((posting) => (
-
-
                                                             posting.posts.map((post, index) => (
                                                                 <tr key={`${posting.id}-${index}`}>
                                                                     {/* Date column */}
-                                                                    <td style={{ whiteSpace: "nowrap" }}>
+                                                                    <td style={{ width: "auto", whiteSpace: "nowrap" }}>
                                                                         {format(new Date(post.date), "MMM dd yyyy h:mma")}
                                                                     </td>
 
                                                                     {/* Reference code - show only in first row of group (optional) */}
-                                                                    <td>
+                                                                    <td style={{ width: "auto", whiteSpace: "nowrap" }}>
                                                                         {posting.reference_code && (
                                                                             <span
                                                                                 style={{ cursor: "pointer", color: "blue" }}
@@ -1337,7 +1335,7 @@ const PostingIndex = forwardRef((props, ref) => {
                                                                     </td>
 
                                                                     {/* Debit side */}
-                                                                    <td className="p-1 ps-3 w-40" style={{ minWidth: "300px", maxWidth: "300px" }}>
+                                                                    < td className="p-1 ps-3 w-40" style={{ minWidth: "300px", maxWidth: "300px" }}>
                                                                         <div className="d-flex justify-content-between align-items-center w-100">
                                                                             {post.debit_or_credit === "debit" && (
                                                                                 <div className="d-flex me-2" style={{ maxWidth: '70%' }}>
@@ -1522,8 +1520,8 @@ const PostingIndex = forwardRef((props, ref) => {
                             </div>
                         </div>
                     </div>
-                </Modal.Body>
-            </Modal>
+                </Modal.Body >
+            </Modal >
         </>
     );
 });

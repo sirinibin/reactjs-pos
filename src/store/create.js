@@ -3193,6 +3193,29 @@ const StoreCreate = forwardRef((props, ref) => {
                         <div className="col-md-2">
                             <div className="input-group mb-3">
                                 <input type="checkbox"
+                                    value={formData.one_line_product_name_in_invoice}
+                                    checked={formData.one_line_product_name_in_invoice}
+                                    onChange={(e) => {
+                                        errors["one_line_product_name_in_invoice"] = "";
+                                        formData.one_line_product_name_in_invoice = !formData.one_line_product_name_in_invoice;
+                                        setFormData({ ...formData });
+                                        console.log(formData);
+                                    }}
+                                    className=""
+                                    id="one_line_product_name_in_invoice"
+                                /> &nbsp;Oneline product name in invoice
+                            </div>
+                            <label className="form-label"></label>
+                            {errors.one_line_product_name_in_invoice && (
+                                <div style={{ color: "red" }}>
+                                    {errors.one_line_product_name_in_invoice}
+                                </div>
+                            )}
+                        </div>
+
+                        <div className="col-md-2">
+                            <div className="input-group mb-3">
+                                <input type="checkbox"
                                     value={formData.enable_monthly_serial_number}
                                     checked={formData.enable_monthly_serial_number}
                                     onChange={(e) => {

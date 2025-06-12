@@ -482,8 +482,18 @@ const PreviewContent = forwardRef((props, ref) => {
                                                 <td style={{ padding: "7px", borderRight: tableBorderThickness }}>{product.part_number ? index + 1 + (pageIndex * props.model.pageSize) : ""}</td>
                                                 <td style={{ borderRight: tableBorderThickness }} >{product.prefix_part_number ? product.prefix_part_number + " - " : ""} {product.part_number ? product.part_number : ""}</td>
                                                 <th dir="ltr" style={{ unicodeBidi: 'isolate', borderRight: tableBorderThickness }}>
-                                                    <span dir="ltr" style={{ unicodeBidi: 'isolate' }}>
-                                                        <span style={{
+                                                    {!props.model?.store?.one_line_product_name_in_invoice && <span dir="ltr" style={{ unicodeBidi: 'isolate' }}>
+                                                        <span style={{ //one_line_product_name_in_invoice
+                                                            maxWidth: `${product.name_in_arabic ? "110px" : "220px"}`,
+                                                            verticalAlign: 'bottom'
+                                                        }}>{product.name}</span>
+                                                        {product.name_in_arabic && <>|<span dir="rtl" style={{
+                                                            verticalAlign: 'bottom'
+                                                        }}>{product.name_in_arabic}</span></>}
+                                                    </span>}
+
+                                                    {props.model?.store?.one_line_product_name_in_invoice && <span dir="ltr" style={{ unicodeBidi: 'isolate' }}>
+                                                        <span style={{ //one_line_product_name_in_invoice
                                                             display: 'inline-block',
                                                             maxWidth: `${product.name_in_arabic ? "110px" : "220px"}`,
                                                             whiteSpace: 'nowrap',
@@ -499,7 +509,7 @@ const PreviewContent = forwardRef((props, ref) => {
                                                             textOverflow: 'ellipsis',
                                                             verticalAlign: 'bottom'
                                                         }}>{product.name_in_arabic}</span></>}
-                                                    </span>
+                                                    </span>}
                                                 </th>
                                                 <td style={{ borderRight: tableBorderThickness, marginRight: "2px" }}>{product.quantity ? product.quantity : ""}  {product.unit ? product.unit : ""}</td>
                                                 {props.modelName !== "delivery_note" && <>
