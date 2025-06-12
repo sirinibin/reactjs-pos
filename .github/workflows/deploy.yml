@@ -20,23 +20,36 @@ jobs:
         with:
           node-version: 17.9.0 # Use your project's Node.js version
 
-         
-     # Step 3: Install dependencies and build
+      # Step 3: Cache node modules
+      - name: Cache node modules
+        uses: actions/cache@v3
+        with:
+          path: ~/.npm
+          key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-node-
+
+      # Step 4: Check Node & NPM version
       - name: Check node & npm version
         run: |
           node -v
           npm -v
 
-      # Step 4: Install dependencies and build
+      # Step 5: Install dependencies and build
       - name: Install dependencies and build
         run: |
+          npm config set fetch-retries 5
+          npm config set fetch-retry-factor 2
+          npm config set fetch-retry-mintimeout 20000
+          npm config set fetch-retry-maxtimeout 120000
+          npm config set timeout 120000
           npm install
           export NODE_OPTIONS=--openssl-legacy-provider
           export DANGEROUSLY_DISABLE_HOST_CHECK=true
           export REACT_APP_API_URL=https://startpos-api-test.startuptech.uk
           npm run build
 
-      # Step 4: Deploy to AWS
+      # Step 6: Deploy to AWS
       - name: Deploy to AWS
         env:
           SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
