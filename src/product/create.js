@@ -17,6 +17,7 @@ import ProductBrandCreate from "../product_brand/create.js";
 import countryList from 'react-select-country-list';
 import ImageGallery from '../utils/ImageGallery.js';
 import { trimTo2Decimals } from "../utils/numberUtils";
+import { trimTo4Decimals } from "../utils/numberUtils";
 import Amount from "../utils/amount.js";
 //import Select from 'react-select'
 
@@ -425,20 +426,21 @@ const ProductCreate = forwardRef((props, ref) => {
         formData.set.products[i].retail_unit_price_with_vat = 0;
       }
 
-      if (/^\d*\.?\d{0,2}$/.test(formData.set?.products[i].quantity) === false) {
-        errors["set_product_quantity_" + i] = "Only 2 decimal points are allowed";
+      /*
+      if (/^\d*\.?\d{0,3}$/.test(formData.set?.products[i].quantity) === false) {
+        errors["set_product_quantity_" + i] = "Only 3 decimal points are allowed";
+        haveErrors = true;
+        setErrors({ ...errors });
+      }*/
+
+      if (/^\d*\.?\d{0,4}$/.test(formData.set?.products[i].retail_unit_price_with_vat) === false) {
+        errors["set_product_unit_price_with_vat_" + i] = "Only 4 decimal points are allowed";
         haveErrors = true;
         setErrors({ ...errors });
       }
 
-      if (/^\d*\.?\d{0,2}$/.test(formData.set?.products[i].retail_unit_price_with_vat) === false) {
-        errors["set_product_unit_price_with_vat_" + i] = "Only 2 decimal points are allowed";
-        haveErrors = true;
-        setErrors({ ...errors });
-      }
-
-      if (/^\d*\.?\d{0,2}$/.test(formData.set?.products[i].retail_unit_price) === false) {
-        errors["set_product_unit_price_" + i] = "Only 2 decimal points are allowed";
+      if (/^\d*\.?\d{0,4}$/.test(formData.set?.products[i].retail_unit_price) === false) {
+        errors["set_product_unit_price_" + i] = "Only 4 decimal points are allowed";
         haveErrors = true;
         setErrors({ ...errors });
       }
@@ -477,8 +479,8 @@ const ProductCreate = forwardRef((props, ref) => {
 
     /*
     if (productStores[i]?.retail_unit_price) {
-      if (/^\d*\.?\d{0,2}$/.test(productStores[i]?.retail_unit_price) === false) {
-        errors["retail_unit_price_" + i] = "Only 2 decimal points are allowed";
+      if (/^\d*\.?\d{0,4}$/.test(productStores[i]?.retail_unit_price) === false) {
+        errors["retail_unit_price_" + i] = "Only 4 decimal points are allowed";
         haveErrors = true;
         setErrors({ ...errors });
       }
@@ -896,8 +898,8 @@ const ProductCreate = forwardRef((props, ref) => {
     }
 
     formData.set.total_quantity = parseFloat(trimTo2Decimals(totalQuantity));
-    formData.set.total = parseFloat(trimTo2Decimals(total));
-    formData.set.total_with_vat = parseFloat(trimTo2Decimals(totalWithVAT));
+    formData.set.total = parseFloat(trimTo4Decimals(total));
+    formData.set.total_with_vat = parseFloat(trimTo4Decimals(totalWithVAT));
 
     productStores[localStorage.getItem('store_id')].retail_unit_price = formData.set.total;
     productStores[localStorage.getItem('store_id')].retail_unit_price_with_vat = formData.set.total_with_vat;
@@ -1439,7 +1441,7 @@ const ProductCreate = forwardRef((props, ref) => {
                           setProductStores({ ...productStores });
 
                           timerRef.current = setTimeout(() => {
-                            productStores[localStorage.getItem('store_id')].purchase_unit_price_with_vat = parseFloat(trimTo2Decimals(productStores[localStorage.getItem('store_id')].purchase_unit_price * (1 + (store.vat_percent / 100))));
+                            productStores[localStorage.getItem('store_id')].purchase_unit_price_with_vat = parseFloat(trimTo4Decimals(productStores[localStorage.getItem('store_id')].purchase_unit_price * (1 + (store.vat_percent / 100))));
                             setProductStores({ ...productStores });
                           }, 100);
 
@@ -1513,7 +1515,7 @@ const ProductCreate = forwardRef((props, ref) => {
 
                           setProductStores({ ...productStores });
                           timerRef.current = setTimeout(() => {
-                            productStores[localStorage.getItem('store_id')].wholesale_unit_price_with_vat = parseFloat(trimTo2Decimals(productStores[localStorage.getItem('store_id')].wholesale_unit_price * (1 + (store.vat_percent / 100))));
+                            productStores[localStorage.getItem('store_id')].wholesale_unit_price_with_vat = parseFloat(trimTo4Decimals(productStores[localStorage.getItem('store_id')].wholesale_unit_price * (1 + (store.vat_percent / 100))));
                             setProductStores({ ...productStores });
                           }, 100);
 
@@ -1586,7 +1588,7 @@ const ProductCreate = forwardRef((props, ref) => {
 
 
                           timerRef.current = setTimeout(() => {
-                            productStores[localStorage.getItem('store_id')].retail_unit_price_with_vat = parseFloat(trimTo2Decimals(productStores[localStorage.getItem('store_id')].retail_unit_price * (1 + (store.vat_percent / 100))));
+                            productStores[localStorage.getItem('store_id')].retail_unit_price_with_vat = parseFloat(trimTo4Decimals(productStores[localStorage.getItem('store_id')].retail_unit_price * (1 + (store.vat_percent / 100))));
                             setProductStores({ ...productStores });
                           }, 100);
 
@@ -1678,7 +1680,7 @@ const ProductCreate = forwardRef((props, ref) => {
                           setProductStores({ ...productStores });
 
                           timerRef.current = setTimeout(() => {
-                            productStores[localStorage.getItem('store_id')].purchase_unit_price = parseFloat(trimTo2Decimals(productStores[localStorage.getItem('store_id')].purchase_unit_price_with_vat / (1 + (store.vat_percent / 100))));
+                            productStores[localStorage.getItem('store_id')].purchase_unit_price = parseFloat(trimTo4Decimals(productStores[localStorage.getItem('store_id')].purchase_unit_price_with_vat / (1 + (store.vat_percent / 100))));
                             setProductStores({ ...productStores });
                           }, 100);
 
@@ -1752,7 +1754,7 @@ const ProductCreate = forwardRef((props, ref) => {
                           setProductStores({ ...productStores });
 
                           timerRef.current = setTimeout(() => {
-                            productStores[localStorage.getItem('store_id')].wholesale_unit_price = parseFloat(trimTo2Decimals(productStores[localStorage.getItem('store_id')].wholesale_unit_price_with_vat / (1 + (store.vat_percent / 100))));
+                            productStores[localStorage.getItem('store_id')].wholesale_unit_price = parseFloat(trimTo4Decimals(productStores[localStorage.getItem('store_id')].wholesale_unit_price_with_vat / (1 + (store.vat_percent / 100))));
                             setProductStores({ ...productStores });
                           }, 100);
 
@@ -1826,7 +1828,7 @@ const ProductCreate = forwardRef((props, ref) => {
                           setProductStores({ ...productStores });
 
                           timerRef.current = setTimeout(() => {
-                            productStores[localStorage.getItem('store_id')].retail_unit_price = parseFloat(trimTo2Decimals(productStores[localStorage.getItem('store_id')].retail_unit_price_with_vat / (1 + (store.vat_percent / 100))));
+                            productStores[localStorage.getItem('store_id')].retail_unit_price = parseFloat(trimTo4Decimals(productStores[localStorage.getItem('store_id')].retail_unit_price_with_vat / (1 + (store.vat_percent / 100))));
                             setProductStores({ ...productStores });
                           }, 100);
 
@@ -2223,7 +2225,7 @@ const ProductCreate = forwardRef((props, ref) => {
                                 }
 
                                 formData.set.products[key].retail_unit_price = parseFloat(e.target.value);
-                                formData.set.products[key].retail_unit_price_with_vat = parseFloat(trimTo2Decimals(formData.set.products[key].retail_unit_price * (1 + (store.vat_percent / 100))));
+                                formData.set.products[key].retail_unit_price_with_vat = parseFloat(trimTo4Decimals(formData.set.products[key].retail_unit_price * (1 + (store.vat_percent / 100))));
                                 setFormData({ ...formData });
                                 findSetTotal();
                                 console.log(formData);
@@ -2300,7 +2302,7 @@ const ProductCreate = forwardRef((props, ref) => {
                                 }
 
                                 formData.set.products[key].retail_unit_price_with_vat = parseFloat(e.target.value);
-                                formData.set.products[key].retail_unit_price = parseFloat(trimTo2Decimals(formData.set.products[key].retail_unit_price_with_vat / (1 + (store.vat_percent / 100))));
+                                formData.set.products[key].retail_unit_price = parseFloat(trimTo4Decimals(formData.set.products[key].retail_unit_price_with_vat / (1 + (store.vat_percent / 100))));
                                 setFormData({ ...formData });
                                 findSetTotal();
                                 console.log(formData);
@@ -2328,14 +2330,14 @@ const ProductCreate = forwardRef((props, ref) => {
                         <b>Total</b>
                       </td>
                       <td> {formData.set?.total_quantity ? trimTo2Decimals(formData.set?.total_quantity) : ""} </td>
-                      <td><b style={{ marginLeft: "14px" }}>{formData.set?.total ? trimTo2Decimals(formData.set?.total) + " (without VAT)" : ""}</b>
+                      <td><b style={{ marginLeft: "14px" }}>{formData.set?.total ? trimTo4Decimals(formData.set?.total) + " (without VAT)" : ""}</b>
                         {errors["set_total"] && (
                           <div style={{ color: "red" }}>
                             {errors["set_total"]}
                           </div>
                         )}
                       </td>
-                      <td><b style={{ marginLeft: "14px" }}>{formData.set?.total_with_vat ? trimTo2Decimals(formData.set?.total_with_vat) + " (with VAT)" : ""}</b>
+                      <td><b style={{ marginLeft: "14px" }}>{formData.set?.total_with_vat ? trimTo4Decimals(formData.set?.total_with_vat) + " (with VAT)" : ""}</b>
                         {errors["set_total_with_vat"] && (
                           <div style={{ color: "red" }}>
                             {errors["set_total_with_vat"]}
@@ -2417,7 +2419,7 @@ const ProductCreate = forwardRef((props, ref) => {
                             <Highlighter search={state.text}>{option.name_in_arabic ? option.name + " - " + option.name_in_arabic : option.name}</Highlighter>
                           </div>
                           <div style={{ ...columnStyle, width: '10%' }}>
-                            {option.product_stores?.[localStorage.getItem("store_id")]?.retail_unit_price && <Amount amount={trimTo2Decimals(option.product_stores?.[localStorage.getItem("store_id")]?.retail_unit_price)} />}
+                            {option.product_stores?.[localStorage.getItem("store_id")]?.retail_unit_price && <Amount amount={trimTo4Decimals(option.product_stores?.[localStorage.getItem("store_id")]?.retail_unit_price)} />}
                           </div>
                           <div style={{ ...columnStyle, width: '10%' }}>
                             {option.product_stores?.[localStorage.getItem("store_id")]?.stock ?? ''}
