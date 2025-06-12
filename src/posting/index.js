@@ -1315,17 +1315,79 @@ const PostingIndex = forwardRef((props, ref) => {
 
                                                     {postingList &&
                                                         postingList.map((posting) => (
+
+
+                                                            posting.posts.map((post, index) => (
+                                                                <tr key={`${posting.id}-${index}`}>
+                                                                    {/* Date column */}
+                                                                    <td style={{ whiteSpace: "nowrap" }}>
+                                                                        {format(new Date(post.date), "MMM dd yyyy h:mma")}
+                                                                    </td>
+
+                                                                    {/* Reference code - show only in first row of group (optional) */}
+                                                                    <td>
+                                                                        {posting.reference_code && (
+                                                                            <span
+                                                                                style={{ cursor: "pointer", color: "blue" }}
+                                                                                onClick={() => openUpdateForm(posting.reference_id, posting.reference_model)}
+                                                                            >
+                                                                                {posting.reference_code}
+                                                                            </span>
+                                                                        )}
+                                                                    </td>
+
+                                                                    {/* Debit side */}
+                                                                    <td className="p-1 ps-3 w-40" style={{ minWidth: "300px", maxWidth: "300px" }}>
+                                                                        <div className="d-flex justify-content-between align-items-center w-100">
+                                                                            {post.debit_or_credit === "debit" && (
+                                                                                <div className="d-flex me-2" style={{ maxWidth: '70%' }}>
+                                                                                    <span className="text-nowrap me-1">To</span>
+                                                                                    <span className="text-truncate" style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                                                                                        <OverflowTooltip value={post.account_name} />
+                                                                                    </span>
+                                                                                    <span className="ms-1 text-nowrap">
+                                                                                        A/c #{post.account_number} Dr.
+                                                                                    </span>
+                                                                                </div>
+                                                                            )}
+                                                                            <span className="text-nowrap ms-auto">
+                                                                                {post.debit ? <Amount amount={post.debit} /> : <span style={{ visibility: 'hidden' }}><Amount amount={0} /></span>}
+                                                                            </span>
+                                                                        </div>
+                                                                    </td>
+
+                                                                    {/* Credit side */}
+                                                                    <td className="p-1 ps-3 w-40" style={{ minWidth: "300px", maxWidth: "300px" }}>
+                                                                        <div className="d-flex justify-content-between align-items-center w-100">
+                                                                            {post.debit_or_credit === "credit" && (
+                                                                                <div className="d-flex me-2" style={{ maxWidth: '70%' }}>
+                                                                                    <span className="text-nowrap me-1">By</span>
+                                                                                    <span className="text-truncate" style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                                                                                        <OverflowTooltip value={post.account_name} />
+                                                                                    </span>
+                                                                                    <span className="ms-1 text-nowrap">
+                                                                                        A/c #{post.account_number} Cr.
+                                                                                    </span>
+                                                                                </div>
+                                                                            )}
+                                                                            <span className="text-nowrap ms-auto">
+                                                                                {post.credit ? <Amount amount={post.credit} /> : <span style={{ visibility: 'hidden' }}><Amount amount={0} /></span>}
+                                                                            </span>
+                                                                        </div>
+                                                                    </td>
+
+                                                                    {/* Balance for this post */}
+                                                                    <td className="text-end" style={{ whiteSpace: "nowrap" }}>
+                                                                        <Amount amount={post.balance} />
+                                                                    </td>
+                                                                </tr>
+                                                            ))
+
+                                                        ))}
+
+                                                    {/*postingList &&
+                                                        postingList.map((posting) => (
                                                             <tr key={posting.id}>
-
-
-                                                                {/*
-                                                          <td colSpan={4} style={{border:"solid 1px"}}>
-                                                            <tr style={{border:"solid 1px"}}>
-                                                            <td>1</td>
-                                                            <td>2</td>
-                                                            </tr>
-                                                          </td>
-                                                       */}
                                                                 <td style={{ width: "auto", whiteSpace: "nowrap" }} >{format(new Date(posting.posts[0]?.date), "MMM dd yyyy h:mma")}</td>
                                                                 <td style={{ width: "auto", whiteSpace: "nowrap" }}>
                                                                     {posting.reference_code && <span style={{ cursor: "pointer", color: "blue" }} onClick={() => {
@@ -1401,14 +1463,14 @@ const PostingIndex = forwardRef((props, ref) => {
                                                                             </tr>))}
 
 
-                                                                </td>*/}
+                                                                </td>
                                                                 <td style={{ width: "auto", whiteSpace: "nowrap" }} className="text-end" >  <Amount amount={posting.posts[0]?.balance} /></td>
                                                                 {/*<td style={{ width: "auto", whiteSpace: "nowrap" }} >{toTitleCaseFromUnderscore(posting.reference_model)}</td>*/}
 
 
 
-                                                            </tr>
-                                                        ))}
+                                                    {/*  </tr>
+                                                        ))}*/}
 
                                                     {selectedAccount ? <tr>
                                                         <td ></td>
