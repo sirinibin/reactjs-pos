@@ -39,7 +39,12 @@ jobs:
       - name: Install dependencies and build
         run: |
           npm config set registry https://registry.npmmirror.com
-          npm install
+          npm config set fetch-retries 5
+          npm config set fetch-retry-factor 2
+          npm config set fetch-retry-mintimeout 20000
+          npm config set fetch-retry-maxtimeout 120000
+          npm config set timeout 120000
+          npm install --force
           export NODE_OPTIONS=--openssl-legacy-provider
           export DANGEROUSLY_DISABLE_HOST_CHECK=true
           export REACT_APP_API_URL=https://startpos-api-test.startuptech.uk
