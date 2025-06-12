@@ -14,6 +14,7 @@ import PurchaseReturnedView from "./view.js";
 import ProductView from "../product/view.js";
 import PurchaseView from "./../purchase/view.js";
 import { trimTo2Decimals } from "../utils/numberUtils";
+import { trimTo4Decimals } from "../utils/numberUtils";
 import Preview from "./../order/preview.js";
 
 import { Dropdown } from 'react-bootstrap';
@@ -522,6 +523,29 @@ const PurchaseReturnedCreate = forwardRef((props, ref) => {
         let selectedProductsCount = 0;
         formData.products = [];
         for (var i = 0; i < selectedProducts.length; i++) {
+            let unitPrice = parseFloat(selectedProducts[i].purchase_unit_price);
+
+
+            delete errors["purchasereturn_unit_price_" + i];
+            setErrors({ ...errors });
+
+            if (unitPrice && /^\d*\.?\d{0,4}$/.test(unitPrice) === false) {
+                errors["purchasereturn_unit_price_" + i] = "Max decimal points allowed is 4";
+                setErrors({ ...errors });
+                haveErrors = true;
+            }
+
+            let unitPriceWithVAT = parseFloat(selectedProducts[i].purchase_unit_price_with_vat);
+
+            delete errors["purchasereturn_unit_price_with_vat_" + i];
+            setErrors({ ...errors });
+
+            if (unitPriceWithVAT && /^\d*\.?\d{0,4}$/.test(unitPriceWithVAT) === false) {
+                errors["purchasereturn_unit_price_with_vat_" + i] = "Max decimal points allowed is 4";
+                setErrors({ ...errors });
+                haveErrors = true;
+            }
+
 
             if (selectedProducts[i].selected) {
                 selectedProductsCount++;
@@ -715,20 +739,21 @@ const PurchaseReturnedCreate = forwardRef((props, ref) => {
         for (var i = 0; i < selectedProducts.length; i++) {
 
             let purchaseReturnUnitPrice = parseFloat(selectedProducts[i].purchase_unit_price);
+            delete errors["purchasereturn_unit_price_" + i];
 
-            if (purchaseReturnUnitPrice && /^\d*\.?\d{0,2}$/.test(purchaseReturnUnitPrice) === false) {
-                errors["purchase_return_unit_price_" + i] = "Max decimal points allowed is 2 - WIITHOUT VAT";
+            if (purchaseReturnUnitPrice && /^\d*\.?\d{0,4}$/.test(purchaseReturnUnitPrice) === false) {
+                errors["purchasereturn_unit_price_" + i] = "Max decimal points allowed is 4";
                 setErrors({ ...errors });
                 return;
-
             }
-
 
 
             let purchaseReturnUnitPriceWithVAT = parseFloat(selectedProducts[i].purchase_unit_price_with_vat);
 
-            if (purchaseReturnUnitPriceWithVAT && /^\d*\.?\d{0,2}$/.test(purchaseReturnUnitPriceWithVAT) === false) {
-                errors["purchase_return_unit_price_with_vat" + i] = "Max decimal points allowed is 2 - WITH VAT";
+            delete errors["purchasereturn_unit_price_with_vat" + i];
+
+            if (purchaseReturnUnitPriceWithVAT && /^\d*\.?\d{0,4}$/.test(purchaseReturnUnitPriceWithVAT) === false) {
+                errors["purchasereturn_unit_price_with_vat" + i] = "Max decimal points allowed is 4";
                 setErrors({ ...errors });
                 return;
 
@@ -741,6 +766,9 @@ const PurchaseReturnedCreate = forwardRef((props, ref) => {
             if (selectedProducts[i].unit_discount) {
                 unitDiscount = parseFloat(selectedProducts[i].unit_discount)
 
+                delete errors["purchase_return_unit_discount_" + i];
+                setErrors({ ...errors });
+
                 if (/^\d*\.?\d{0,2}$/.test(unitDiscount) === false) {
                     errors["purchase_return_unit_discount_" + i] = "Max decimal points allowed is 2";
                     setErrors({ ...errors });
@@ -752,6 +780,9 @@ const PurchaseReturnedCreate = forwardRef((props, ref) => {
 
             if (selectedProducts[i].unit_discount_with_vat) {
                 unitDiscountWithVAT = parseFloat(selectedProducts[i].unit_discount_with_vat)
+                delete errors["purchase_return_unit_discount_" + i];
+                setErrors({ ...errors });
+
                 if (/^\d*\.?\d{0,2}$/.test(unitDiscountWithVAT) === false) {
                     errors["purchase_return_unit_discount_" + i] = "Max decimal points allowed is 2";
                     setErrors({ ...errors });
@@ -2138,8 +2169,8 @@ async function reCalculate(productIndex) {
                                                                     return;
                                                                 }
 
-                                                                if (/^\d*\.?\d{0,2}$/.test(parseFloat(e.target.value)) === false) {
-                                                                    errors["purchasereturn_unit_price_" + index] = "Max. decimal points allowed is 2";
+                                                                if (/^\d*\.?\d{0,4}$/.test(parseFloat(e.target.value)) === false) {
+                                                                    errors["purchasereturn_unit_price_" + index] = "Max. decimal points allowed is 4";
                                                                     setErrors({ ...errors });
                                                                 }
 
@@ -2150,7 +2181,7 @@ async function reCalculate(productIndex) {
                                                                 // console.log("selectedProducts[index].unit_price:", selectedProducts[index].unit_price);
                                                                 setSelectedProducts([...selectedProducts]);
                                                                 timerRef.current = setTimeout(() => {
-                                                                    selectedProducts[index].purchase_unit_price_with_vat = parseFloat(trimTo2Decimals(selectedProducts[index].purchase_unit_price * (1 + (formData.vat_percent / 100))))
+                                                                    selectedProducts[index].purchase_unit_price_with_vat = parseFloat(trimTo4Decimals(selectedProducts[index].purchase_unit_price * (1 + (formData.vat_percent / 100))))
                                                                     selectedProducts[index].unit_discount_percent = parseFloat(trimTo2Decimals(((selectedProducts[index].unit_discount / selectedProducts[index].purchase_unit_price) * 100)))
                                                                     selectedProducts[index].unit_discount_percent_with_vat = parseFloat(trimTo2Decimals(((selectedProducts[index].unit_discount_with_vat / selectedProducts[index].purchase_unit_price_with_vat) * 100)))
 
@@ -2252,8 +2283,8 @@ async function reCalculate(productIndex) {
                                                                     return;
                                                                 }
 
-                                                                if (/^\d*\.?\d{0,2}$/.test(parseFloat(e.target.value)) === false) {
-                                                                    errors["purchasereturn_unit_price_with_vat_" + index] = "Max. decimal points allowed is 2";
+                                                                if (/^\d*\.?\d{0,4}$/.test(parseFloat(e.target.value)) === false) {
+                                                                    errors["purchasereturn_unit_price_with_vat_" + index] = "Max. decimal points allowed is 4";
                                                                     setErrors({ ...errors });
                                                                 }
 
@@ -2262,7 +2293,7 @@ async function reCalculate(productIndex) {
 
                                                                 // Set new debounce timer
                                                                 timerRef.current = setTimeout(() => {
-                                                                    selectedProducts[index].purchase_unit_price = parseFloat(trimTo2Decimals(selectedProducts[index].purchase_unit_price_with_vat / (1 + (formData.vat_percent / 100))))
+                                                                    selectedProducts[index].purchase_unit_price = parseFloat(trimTo4Decimals(selectedProducts[index].purchase_unit_price_with_vat / (1 + (formData.vat_percent / 100))))
                                                                     selectedProducts[index].unit_discount_with_vat = parseFloat(trimTo2Decimals(selectedProducts[index].unit_discount * (1 + (formData.vat_percent / 100))))
                                                                     selectedProducts[index].unit_discount_percent = parseFloat(trimTo2Decimals(((selectedProducts[index].unit_discount / selectedProducts[index].unit_price) * 100)))
                                                                     selectedProducts[index].unit_discount_percent_with_vat = parseFloat(trimTo2Decimals(((selectedProducts[index].unit_discount_with_vat / selectedProducts[index].unit_price_with_vat) * 100)))

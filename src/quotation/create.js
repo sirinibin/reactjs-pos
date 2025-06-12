@@ -30,6 +30,7 @@ import DeliveryNoteHistory from "./../product/delivery_note_history.js";
 import Products from "./../utils/products.js";
 import Customers from "./../utils/customers.js";
 import { trimTo2Decimals } from "../utils/numberUtils";
+import { trimTo4Decimals } from "../utils/numberUtils";
 import Amount from "../utils/amount.js";
 import { OverlayTrigger, Tooltip } from 'react-bootstrap';
 import Sales from "./../utils/sales.js";
@@ -688,17 +689,17 @@ const QuotationCreate = forwardRef((props, ref) => {
 
       let unitPrice = parseFloat(selectedProducts[i].unit_price);
 
-      /*
-      if (unitPrice && /^\d*\.?\d{0,2}$/.test(unitPrice) === false) {
-        errors["unit_price_" + i] = "Max decimal points allowed is 2";
+
+      if (unitPrice && /^\d*\.?\d{0,4}$/.test(unitPrice) === false) {
+        errors["unit_price_" + i] = "Max decimal points allowed is 4";
         setErrors({ ...errors });
         haveErrors = true;
-      }*/
+      }
 
       let unitPriceWithVAT = parseFloat(selectedProducts[i].unit_price_with_vat);
 
-      if (unitPriceWithVAT && /^\d*\.?\d{0,2}$/.test(unitPriceWithVAT) === false) {
-        errors["unit_price_with_vat_" + i] = "Max decimal points allowed is 2";
+      if (unitPriceWithVAT && /^\d*\.?\d{0,4}$/.test(unitPriceWithVAT) === false) {
+        errors["unit_price_with_vat_" + i] = "Max decimal points allowed is 4";
         setErrors({ ...errors });
         haveErrors = true;
       }
@@ -2966,8 +2967,8 @@ const QuotationCreate = forwardRef((props, ref) => {
                                   }
 
 
-                                  if (/^\d*\.?\d{0,2}$/.test(parseFloat(e.target.value)) === false) {
-                                    errors["unit_price_" + index] = "Max decimal points allowed is 2";
+                                  if (/^\d*\.?\d{0,4}$/.test(parseFloat(e.target.value)) === false) {
+                                    errors["unit_price_" + index] = "Max decimal points allowed is 4";
                                     setErrors({ ...errors });
                                   }
 
@@ -2975,7 +2976,7 @@ const QuotationCreate = forwardRef((props, ref) => {
                                   setSelectedProducts([...selectedProducts]);
 
                                   timerRef.current = setTimeout(() => {
-                                    selectedProducts[index].unit_price_with_vat = parseFloat(trimTo2Decimals(selectedProducts[index].unit_price * (1 + (formData.vat_percent / 100))))
+                                    selectedProducts[index].unit_price_with_vat = parseFloat(trimTo4Decimals(selectedProducts[index].unit_price * (1 + (formData.vat_percent / 100))))
                                     selectedProducts[index].unit_discount_percent = parseFloat(trimTo2Decimals(((selectedProducts[index].unit_discount / selectedProducts[index].unit_price) * 100)))
                                     selectedProducts[index].unit_discount_percent_with_vat = parseFloat(trimTo2Decimals(((selectedProducts[index].unit_discount_with_vat / selectedProducts[index].unit_price_with_vat) * 100)))
                                     reCalculate(index);
@@ -3074,8 +3075,8 @@ const QuotationCreate = forwardRef((props, ref) => {
                                     return;
                                   }
 
-                                  if (/^\d*\.?\d{0,2}$/.test(parseFloat(e.target.value)) === false) {
-                                    errors["unit_price_with_vat_" + index] = "Max decimal points allowed is 2";
+                                  if (/^\d*\.?\d{0,4}$/.test(parseFloat(e.target.value)) === false) {
+                                    errors["unit_price_with_vat_" + index] = "Max decimal points allowed is 4";
                                     setErrors({ ...errors });
                                   }
 
@@ -3086,7 +3087,7 @@ const QuotationCreate = forwardRef((props, ref) => {
                                   setSelectedProducts([...selectedProducts]);
                                   // Set new debounce timer
                                   timerRef.current = setTimeout(() => {
-                                    selectedProducts[index].unit_price = parseFloat(trimTo2Decimals(selectedProducts[index].unit_price_with_vat / (1 + (formData.vat_percent / 100))))
+                                    selectedProducts[index].unit_price = parseFloat(trimTo4Decimals(selectedProducts[index].unit_price_with_vat / (1 + (formData.vat_percent / 100))))
                                     selectedProducts[index].unit_discount_with_vat = parseFloat(trimTo2Decimals(selectedProducts[index].unit_discount * (1 + (formData.vat_percent / 100))))
 
                                     selectedProducts[index].unit_discount_percent = parseFloat(trimTo2Decimals(((selectedProducts[index].unit_discount / selectedProducts[index].unit_price) * 100)))

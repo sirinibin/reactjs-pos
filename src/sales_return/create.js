@@ -11,6 +11,7 @@ import { format } from "date-fns";
 import { Spinner } from "react-bootstrap";
 import SalesReturnView from "./view.js";
 import { trimTo2Decimals } from "../utils/numberUtils";
+import { trimTo4Decimals } from "../utils/numberUtils";
 import Preview from "./../order/preview.js";
 import { Dropdown } from 'react-bootstrap';
 import SalesHistory from "./../product/sales_history.js";
@@ -717,16 +718,16 @@ const SalesReturnCreate = forwardRef((props, ref) => {
 
             let unitPrice = parseFloat(selectedProducts[i].unit_price);
 
-            if (unitPrice && /^\d*\.?\d{0,2}$/.test(unitPrice) === false) {
-                errors["unit_price_" + i] = "Max decimal points allowed is 2";
+            if (unitPrice && /^\d*\.?\d{0,4}$/.test(unitPrice) === false) {
+                errors["unit_price_" + i] = "Max decimal points allowed is 4";
                 setErrors({ ...errors });
                 haveErrors = true;
             }
 
             let unitPriceWithVAT = parseFloat(selectedProducts[i].unit_price_with_vat);
 
-            if (unitPriceWithVAT && /^\d*\.?\d{0,2}$/.test(unitPriceWithVAT) === false) {
-                errors["unit_price_with_vat_" + i] = "Max decimal points allowed is 2";
+            if (unitPriceWithVAT && /^\d*\.?\d{0,4}$/.test(unitPriceWithVAT) === false) {
+                errors["unit_price_with_vat_" + i] = "Max decimal points allowed is 4";
                 setErrors({ ...errors });
                 haveErrors = true;
             }
@@ -818,7 +819,7 @@ const SalesReturnCreate = forwardRef((props, ref) => {
         console.log("formData.discount:", formData.discount);
 
 
-        errors["products"] = "";
+        delete errors["products"];
         setErrors({ ...errors });
 
         if (selectedProductsCount === 0) {
@@ -1803,7 +1804,7 @@ const SalesReturnCreate = forwardRef((props, ref) => {
                                     value={formData.phone ? formData.phone : ""}
                                     type='string'
                                     onChange={(e) => {
-                                        errors["phone"] = "";
+                                        delete errors["phone"];
                                         setErrors({ ...errors });
                                         formData.phone = e.target.value;
                                         setFormData({ ...formData });
@@ -1840,7 +1841,7 @@ const SalesReturnCreate = forwardRef((props, ref) => {
                                     value={formData.vat_no ? formData.vat_no : ""}
                                     type='string'
                                     onChange={(e) => {
-                                        errors["vat_no"] = "";
+                                        delete errors["vat_no"];
                                         setErrors({ ...errors });
                                         formData.vat_no = e.target.value;
                                         setFormData({ ...formData });
@@ -1866,7 +1867,7 @@ const SalesReturnCreate = forwardRef((props, ref) => {
                                     value={formData.address}
                                     type='string'
                                     onChange={(e) => {
-                                        errors["address"] = "";
+                                        delete errors["address"];
                                         setErrors({ ...errors });
                                         formData.address = e.target.value;
                                         setFormData({ ...formData });
@@ -1892,7 +1893,7 @@ const SalesReturnCreate = forwardRef((props, ref) => {
                                     value={formData.remarks}
                                     type='string'
                                     onChange={(e) => {
-                                        errors["address"] = "";
+                                        delete errors["address"];
                                         setErrors({ ...errors });
                                         formData.remarks = e.target.value;
                                         setFormData({ ...formData });
@@ -2356,8 +2357,8 @@ const SalesReturnCreate = forwardRef((props, ref) => {
                                                                 }
 
 
-                                                                if (/^\d*\.?\d{0,2}$/.test(parseFloat(e.target.value)) === false) {
-                                                                    errors["unit_price_" + index] = "Max decimal points allowed is 2";
+                                                                if (/^\d*\.?\d{0,4}$/.test(parseFloat(e.target.value)) === false) {
+                                                                    errors["unit_price_" + index] = "Max decimal points allowed is 4";
                                                                     setErrors({ ...errors });
                                                                 }
 
@@ -2365,7 +2366,7 @@ const SalesReturnCreate = forwardRef((props, ref) => {
                                                                 setSelectedProducts([...selectedProducts]);
 
                                                                 timerRef.current = setTimeout(() => {
-                                                                    selectedProducts[index].unit_price_with_vat = parseFloat(trimTo2Decimals(selectedProducts[index].unit_price * (1 + (formData.vat_percent / 100))))
+                                                                    selectedProducts[index].unit_price_with_vat = parseFloat(trimTo4Decimals(selectedProducts[index].unit_price * (1 + (formData.vat_percent / 100))))
                                                                     selectedProducts[index].unit_discount_percent = parseFloat(trimTo2Decimals(((selectedProducts[index].unit_discount / selectedProducts[index].unit_price) * 100)))
                                                                     selectedProducts[index].unit_discount_percent_with_vat = parseFloat(trimTo2Decimals(((selectedProducts[index].unit_discount_with_vat / selectedProducts[index].unit_price_with_vat) * 100)))
                                                                     reCalculate(index);
@@ -2464,8 +2465,8 @@ const SalesReturnCreate = forwardRef((props, ref) => {
                                                                     return;
                                                                 }
 
-                                                                if (/^\d*\.?\d{0,2}$/.test(parseFloat(e.target.value)) === false) {
-                                                                    errors["unit_price_with_vat_" + index] = "Max decimal points allowed is 2";
+                                                                if (/^\d*\.?\d{0,4}$/.test(parseFloat(e.target.value)) === false) {
+                                                                    errors["unit_price_with_vat_" + index] = "Max decimal points allowed is 4";
                                                                     setErrors({ ...errors });
                                                                 }
 
@@ -2476,7 +2477,7 @@ const SalesReturnCreate = forwardRef((props, ref) => {
                                                                 setSelectedProducts([...selectedProducts]);
                                                                 // Set new debounce timer
                                                                 timerRef.current = setTimeout(() => {
-                                                                    selectedProducts[index].unit_price = parseFloat(trimTo2Decimals(selectedProducts[index].unit_price_with_vat / (1 + (formData.vat_percent / 100))))
+                                                                    selectedProducts[index].unit_price = parseFloat(trimTo4Decimals(selectedProducts[index].unit_price_with_vat / (1 + (formData.vat_percent / 100))))
                                                                     selectedProducts[index].unit_discount_with_vat = parseFloat(trimTo2Decimals(selectedProducts[index].unit_discount * (1 + (formData.vat_percent / 100))))
 
                                                                     selectedProducts[index].unit_discount_percent = parseFloat(trimTo2Decimals(((selectedProducts[index].unit_discount / selectedProducts[index].unit_price) * 100)))
@@ -2962,13 +2963,13 @@ const SalesReturnCreate = forwardRef((props, ref) => {
                                         <td className="text-end">
                                             <input type="number" id="sales_shipping_fees" name="sales_shipping_fees" onWheel={(e) => e.target.blur()} style={{ width: "150px" }} className="text-start" value={shipping} onChange={(e) => {
                                                 if (timerRef.current) clearTimeout(timerRef.current);
-                                                errors["shipping_handling_fees"] = "";
+                                                delete errors["shipping_handling_fees"];
                                                 setErrors({ ...errors });
 
                                                 if (parseFloat(e.target.value) === 0) {
                                                     shipping = 0;
                                                     setShipping(shipping);
-                                                    errors["shipping_handling_fees"] = "";
+                                                    delete errors["shipping_handling_fees"];
                                                     setErrors({ ...errors });
                                                     timerRef.current = setTimeout(() => {
                                                         reCalculate();
@@ -3002,7 +3003,7 @@ const SalesReturnCreate = forwardRef((props, ref) => {
                                                 }
 
 
-                                                if (/^\d*\.?\d{0,2}$/.test(parseFloat(e.target.value)) === false) {
+                                                if (/^\d*\.?\d{0, 2}$/.test(parseFloat(e.target.value)) === false) {
                                                     errors["shipping_handling_fees"] = "Max. decimal points allowed is 2";
                                                     setErrors({ ...errors });
                                                 }
@@ -3040,7 +3041,7 @@ const SalesReturnCreate = forwardRef((props, ref) => {
                                                     discountPercent = 0;
                                                     setDiscountPercent(discountPercent);
 
-                                                    errors["discount_percent"] = "";
+                                                    delete errors["discount_percent"];
                                                     setErrors({ ...errors });
                                                     timerRef.current = setTimeout(() => {
                                                         reCalculate();
@@ -3408,7 +3409,7 @@ const SalesReturnCreate = forwardRef((props, ref) => {
                                             if (parseFloat(e.target.value) === 0) {
                                                 formData.vat_percent = parseFloat(e.target.value);
                                                 setFormData({ ...formData });
-                                                errors["vat_percent"] = "";
+                                                delete errors["vat_percent"];
                                                 setErrors({ ...errors });
                                                 reCalculate();
                                                 return;
@@ -3434,7 +3435,7 @@ const SalesReturnCreate = forwardRef((props, ref) => {
                                                 setErrors({ ...errors });
                                                 return;
                                             }
-                                            errors["vat_percent"] = "";
+                                            delete errors["vat_percent"];
                                             setErrors({ ...errors });
 
                                             formData.vat_percent = e.target.value;
