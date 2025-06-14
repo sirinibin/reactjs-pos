@@ -176,6 +176,19 @@ const PreviewContent = forwardRef((props, ref) => {
                                     "yyyy-MM-dd h:mma"
                                 ) : "<DATETIME>"} {" | " + getArabicDate(props.model.order?.date)}</div>
                             </div>}
+
+                            {props.model && props.model.quotation_code && (props.modelName === "quotation_sales_return" || props.modelName === "whatsapp_quotation_sales_return") && <div className="row" dir="ltr" style={{ borderBottom: detailsBorderThickness }} >
+                                <div className="col-md-4 print-label" dir="ltr" style={{ borderRight: detailsBorderThickness, borderColor: detailsBorderColor, width: detailsLabelsColumnWidthPercent, padding: "3px" }} ><b>Original Invoice No. | رقم الفاتورة الأصلية:</b></div>
+                                <div className="col-md-8 print-value" dir="ltr" style={{ borderColor: detailsBorderColor, width: detailsValuesColumnWidthPercent, padding: "3px" }} >{props.model.quotation_code ? props.model.quotation_code : ""}</div>
+                            </div>}
+                            {props.model && props.model.quotation_code && props.model.quotation?.date && (props.modelName === "quotation_sales_return" || props.modelName === "whatsapp_quotation_sales_return") && <div className="row" dir="ltr" style={{ borderBottom: detailsBorderThickness }} >
+                                <div className="col-md-4 print-label" dir="ltr" style={{ borderRight: detailsBorderThickness, borderColor: detailsBorderColor, width: detailsLabelsColumnWidthPercent, padding: "3px" }} ><b>Original Invoice Date | تاريخ الفاتورة الأصلية:</b></div>
+                                <div className="col-md-8 print-value" dir="ltr" style={{ borderColor: detailsBorderColor, width: detailsValuesColumnWidthPercent, padding: "3px" }} >{props.model.quotation?.date ? format(
+                                    new Date(props.model.quotation?.date),
+                                    "yyyy-MM-dd h:mma"
+                                ) : "<DATETIME>"} {" | " + getArabicDate(props.model.quotation?.date)}</div>
+                            </div>}
+
                             {props.model && props.model.purchase_code && (props.modelName === "purchase_return" || props.modelName === "whatsapp_purchase_return") && <div className="row" dir="ltr" style={{ borderBottom: detailsBorderThickness }} >
                                 <div className="col-md-4 print-label" dir="ltr" style={{ borderRight: detailsBorderThickness, borderColor: detailsBorderColor, width: detailsLabelsColumnWidthPercent, padding: "3px" }} ><b>Original Invoice No. | رقم الفاتورة الأصلية:</b></div>
                                 <div className="col-md-8 print-value" dir="ltr" style={{ borderColor: detailsBorderColor, width: detailsValuesColumnWidthPercent, padding: "3px" }} >{props.model.purchase_code ? props.model.purchase_code : ""}</div>
@@ -188,7 +201,7 @@ const PreviewContent = forwardRef((props, ref) => {
                                 ) : "<DATETIME>"} {" | " + getArabicDate(props.model.purchase?.date)}</div>
                             </div>}
 
-                            {props.modelName === "sales" || props.modelName === "whatsapp_sales" || props.modelName === "sales_return" || props.modelName === "whatsapp_sales_return" || props.modelName === "quotation" || props.modelName === "whatsapp_quotation" || props.modelName === "delivery_note" || props.modelName === "whatsapp_delivery_note" ? <>
+                            {props.modelName === "sales" || props.modelName === "whatsapp_sales" || props.modelName === "sales_return" || props.modelName === "quotation_sales_return" || props.modelName === "whatsapp_sales_return" || props.modelName === "whatsapp_quotation_sales_return" || props.modelName === "quotation" || props.modelName === "whatsapp_quotation" || props.modelName === "delivery_note" || props.modelName === "whatsapp_delivery_note" ? <>
                                 <div className="row" dir="ltr" style={{ borderBottom: detailsBorderThickness }} >
                                     <div className="col-md-4 print-label" dir="ltr" style={{ borderRight: detailsBorderThickness, borderColor: detailsBorderColor, width: detailsLabelsColumnWidthPercent, padding: "3px" }} ><b>Customer Name | اسم العميل:</b></div>
                                     <div className="col-md-8 print-value" dir="ltr" style={{ borderColor: detailsBorderColor, width: detailsValuesColumnWidthPercent, padding: "3px" }} >
@@ -322,7 +335,7 @@ const PreviewContent = forwardRef((props, ref) => {
                                 </div>
                             </> : ""}
                         </div>
-                        {!props.model.store?.zatca_qr_on_left_bottom && props.modelName !== "delivery_note" && props.modelName !== "whatsapp_delivery_note" && props.modelName !== "quotation" && props.modelName !== "whatsapp_quotation" && <div className="col-md-2" style={{ border: "solid 0px", width: "26%" }}>
+                        {!props.model.store?.zatca_qr_on_left_bottom && props.modelName !== "delivery_note" && props.modelName !== "whatsapp_delivery_note" && props.modelName !== "quotation" && props.modelName !== "quotation_sales_return" && props.modelName !== "whatsapp_quotation" && props.modelName !== "whatsapp_quotation_sales_return" && <div className="col-md-2" style={{ border: "solid 0px", width: "26%" }}>
                             {props.model.store?.zatca?.phase === "1" && props.model.QRImageData ? <img src={props.model.QRImageData} style={{ width: "138px", height: "138px", border: "solid 0px" }} alt="Invoice QR Code" /> : ""}
                             {props.model.store?.zatca?.phase === "2" && props.model.zatca?.qr_code && props.model.zatca?.reporting_passed ? <QRCodeCanvas value={props.model.zatca?.qr_code} style={{ width: "138px", height: "138px" }} size={138} /> : ""}
                             {props.model.store?.zatca?.phase === "2" && !props.model.zatca?.qr_code ? <img src={props.model.QRImageData} style={{ width: "138px", height: "138px", border: "solid 0px" }} alt="Invoice QR Code" /> : ""}
@@ -549,7 +562,7 @@ const PreviewContent = forwardRef((props, ref) => {
                                         props.selectText("tableFooter");
                                     }} className="clickable-text">
                                         <tr style={{ borderBottom: tableBorderThickness }}>
-                                            {props.model.store?.zatca_qr_on_left_bottom && props.modelName !== "quotation" && props.modelName !== "delivery_note" && <th rowSpan={6} style={{ width: "20%", padding: "3px", borderRight: tableBorderThickness }}>
+                                            {props.model.store?.zatca_qr_on_left_bottom && props.modelName !== "quotation" && props.modelName !== "whatsapp_quotation" && props.modelName !== "quotation_sales_return" && props.modelName !== "whatsapp_quotation_sales_return" && props.modelName !== "delivery_note" && <th rowSpan={6} style={{ width: "20%", padding: "3px", borderRight: tableBorderThickness }}>
                                                 <div className="col-md-1 text-center" style={{ width: "100%", height: "100%" }}>
                                                     {props.model.store?.zatca?.phase === "1" && props.model.QRImageData ? <img className="text-start" src={props.model.QRImageData} style={{ width: "138px" }} alt="Invoice QR Code" /> : ""}
                                                     {props.model.store?.zatca?.phase === "2" && props.model.zatca?.qr_code && props.model.zatca?.reporting_passed ? <QRCodeCanvas value={props.model.zatca?.qr_code} style={{ width: "138px", height: "138px", border: "solid 0px", }} size={138} /> : ""}

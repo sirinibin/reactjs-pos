@@ -18,6 +18,7 @@ import PurchaseHistory from "./purchase_history.js";
 import PurchaseReturnHistory from "./purchase_return_history.js";
 
 import QuotationHistory from "./quotation_history.js";
+import QuotationSalesReturnHistory from "./quotation_sales_return_history.js";
 import DeliveryNoteHistory from "./delivery_note_history.js";
 import OverflowTooltip from "../utils/OverflowTooltip.js";
 import Dropdown from 'react-bootstrap/Dropdown';
@@ -761,6 +762,12 @@ function ProductIndex(props) {
     }
 
 
+    const QuotationSalesReturnHistoryRef = useRef();
+    function openQuotationSalesReturnHistory(model) {
+        QuotationSalesReturnHistoryRef.current.open(model);
+    }
+
+
     const DeliveryNoteHistoryRef = useRef();
     function openDeliveryNoteHistory(model) {
         DeliveryNoteHistoryRef.current.open(model);
@@ -897,6 +904,8 @@ function ProductIndex(props) {
             <PurchaseReturnHistory ref={PurchaseReturnHistoryRef} showToastMessage={props.showToastMessage} />
 
             <QuotationHistory ref={QuotationHistoryRef} showToastMessage={props.showToastMessage} />
+
+            <QuotationSalesReturnHistory ref={QuotationSalesReturnHistoryRef} showToastMessage={props.showToastMessage} />
 
             <DeliveryNoteHistory ref={DeliveryNoteHistoryRef} showToastMessage={props.showToastMessage} />
 
@@ -2676,6 +2685,13 @@ function ProductIndex(props) {
                                                                             <i className="bi bi-clock-history"></i>
                                                                             &nbsp;
                                                                             Quotation History
+                                                                        </Dropdown.Item>
+                                                                        <Dropdown.Item onClick={() => {
+                                                                            openQuotationSalesReturnHistory(product);
+                                                                        }}>
+                                                                            <i className="bi bi-clock-history"></i>
+                                                                            &nbsp;
+                                                                            Quotation Sales Return History
                                                                         </Dropdown.Item>
 
                                                                     </Dropdown.Menu>

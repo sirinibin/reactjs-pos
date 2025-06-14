@@ -132,6 +132,9 @@ const ReportPreview = forwardRef((props, ref) => {
             props.searchParams["type"] = "quotation"
             Select =
                 "select=id,code,date,net_total,customer_name";
+        } else if (modelName === "quotation_sales_return_report") {
+            Select =
+                "select=id,code,date,net_total,total_payment_received,balance_amount,customer_name,payment_status";
         } else if (modelName === "quotation_invoice_report") {
             props.searchParams["type"] = "invoice"
             Select =
@@ -179,6 +182,8 @@ const ReportPreview = forwardRef((props, ref) => {
             apiNameSpace = "quotation"
         } else if (modelName === "quotation_invoice_report") {
             apiNameSpace = "quotation"
+        } else if (modelName === "quotation_sales_return_report") {
+            apiNameSpace = "quotation-sales-return"
         } else if (modelName === "delivery_note_report") {
             apiNameSpace = "delivery-note"
         }
@@ -302,6 +307,8 @@ const ReportPreview = forwardRef((props, ref) => {
             model.reportTitle = "PURCHASE RETURN REPORT | تقرير إرجاع المشتريات"
         } else if (model.modelName === "quotation_report") {
             model.reportTitle = "QUOTATION REPORT | تقرير الاقتباس"
+        } else if (model.modelName === "quotation_sales_return_report") {
+            model.reportTitle = "QTN. SALES RETURN REPORT | تقرير مرتجعات المبيعات"
         } else if (model.modelName === "quotation_invoice_report") {
             model.reportTitle = "SALES REPORT | تقرير المبيعات"
         } else if (model.modelName === "delivery_note_report") {
@@ -648,6 +655,8 @@ const ReportPreview = forwardRef((props, ref) => {
             filename = "Quotation_Report";
         } else if (modelName === "quotation_invoice_report") {
             filename = "Sales_Report";
+        } else if (modelName === "quotation_sales_return_report") {
+            filename = "Qtn_Sales_Return_Report";
         } else if (modelName === "delivery_note_report") {
             filename = "Delivery_Note_Report";
         }
@@ -1006,7 +1015,7 @@ const ReportPreview = forwardRef((props, ref) => {
             storedFontSizes = {};
         }
 
-        let modelNames = ["sales", "sales_report", "sales_return", "sales_return_report", "purchase", "purchase_report", "purchase_return", "purchase_return_report", "quotation", "quotation_report", "quotation_invoice_report", "delivery_note", "delivery_note_report"];
+        let modelNames = ["sales", "sales_report", "sales_return", "sales_return_report", "quotation_sales_return_report", "purchase", "purchase_report", "purchase_return", "purchase_return_report", "quotation", "quotation_report", "quotation_invoice_report", "delivery_note", "delivery_note_report"];
         for (let key1 in modelNames) {
             for (let key2 in defaultFontSizes) {
                 if (!storedFontSizes[modelNames[key1] + "_" + key2]) {

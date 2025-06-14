@@ -11,6 +11,7 @@ import Amount from "../utils/amount.js";
 import OverflowTooltip from "../utils/OverflowTooltip.js";
 import OrderCreate from "../order/create.js";
 import SalesReturnCreate from "../sales_return/create.js";
+import QuotationSalesReturnCreate from "../quotation_sales_return/create.js";
 import PurchaseCreate from "../purchase/create.js";
 import PurchaseReturnCreate from "../purchase_return/create.js";
 import CustomerDepositCreate from "../customer_deposit/create.js";
@@ -614,6 +615,7 @@ const PostingIndex = forwardRef((props, ref) => {
 
     const SalesUpdateFormRef = useRef();
     const SalesReturnUpdateFormRef = useRef();
+    const QuotationSalesReturnUpdateFormRef = useRef();
     const PurchaseUpdateFormRef = useRef();
     const PurchaseReturnUpdateFormRef = useRef();
     const CustomerReceivableUpdateFormRef = useRef();
@@ -651,6 +653,8 @@ const PostingIndex = forwardRef((props, ref) => {
                 DividentUpdateFormRef.current.open(id);
             } else if (referenceModel === "quotation_sales") {
                 QuotationUpdateFormRef.current.open(id);
+            } else if (referenceModel === "quotation_sales_return") {
+                QuotationSalesReturnUpdateFormRef.current.open(id);
             }
         }, 50);
 
@@ -665,6 +669,7 @@ const PostingIndex = forwardRef((props, ref) => {
                 <OrderCreate ref={SalesUpdateFormRef} onUpdated={handleUpdated} />
                 <QuotationCreate ref={QuotationUpdateFormRef} onUpdated={handleUpdated} />
                 <SalesReturnCreate ref={SalesReturnUpdateFormRef} onUpdated={handleUpdated} />
+                <QuotationSalesReturnCreate ref={QuotationSalesReturnUpdateFormRef} onUpdated={handleUpdated} />
                 <PurchaseCreate ref={PurchaseUpdateFormRef} onUpdated={handleUpdated} />
                 <PurchaseReturnCreate ref={PurchaseReturnUpdateFormRef} onUpdated={handleUpdated} />
                 <CustomerDepositCreate ref={CustomerReceivableUpdateFormRef} onUpdated={handleUpdated} />

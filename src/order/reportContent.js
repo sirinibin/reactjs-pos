@@ -148,7 +148,7 @@ const ReportContent = forwardRef((props, ref) => {
                                 </div>
                             </div>}
 
-                            {props.model.customer && (props.modelName === "sales_report" || props.modelName === "sales_return_report" || props.modelName === "quotation_report" || props.modelName === "quotation_invoice_report" || props.modelName === "delivery_note_report") ? <>
+                            {props.model.customer && (props.modelName === "sales_report" || props.modelName === "sales_return_report" || props.modelName === "quotation_sales_return_report" || props.modelName === "quotation_report" || props.modelName === "quotation_invoice_report" || props.modelName === "delivery_note_report") ? <>
                                 <div className="row" dir="ltr" style={{ borderBottom: detailsBorderThickness }} >
                                     <div className="col-md-4 print-label" dir="ltr" style={{ borderRight: detailsBorderThickness, borderColor: detailsBorderColor, width: detailsLabelsColumnWidthPercent, padding: "3px" }} ><b>Customer Name | اسم العميل:</b></div>
                                     <div className="col-md-8 print-value" dir="ltr" style={{ borderColor: detailsBorderColor, width: detailsValuesColumnWidthPercent, padding: "3px" }} >
@@ -242,6 +242,26 @@ const ReportContent = forwardRef((props, ref) => {
                                         "Net Profit | صافي الربح": props.model.meta.invoice_net_profit,
                                         "Net Profit % | صافي الربح %": props.model.meta.invoice_net_profit && props.model.meta.invoice_total_sales ? ((props.model.meta.invoice_net_profit / props.model.meta.invoice_total_sales) * 100) : "",
                                         "Net Loss | صافي الخسارة": props.model.meta.invoice_loss,
+                                    }}
+                                />
+                            </div>}
+                            {props.modelName === "quotation_sales_return_report" && pageIndex === 0 && <div className="row" style={{ marginTop: "12px" }}>
+                                <StatsSummary
+                                    title="Qtn. Sales Return"
+                                    defaultOpen={true}
+                                    stats={{
+                                        "Sales Return | عائد المبيعات": props.model.meta.total_quotation_sales_return,
+                                        "Paid Sales Return | عائد المبيعات المدفوع": props.model.meta.paid_quotation_sales_return,
+                                        "Cash Sales Return | عائد المبيعات النقدية": props.model.meta.cash_quotation_sales_return,
+                                        "Bank Account Sales Return | عائد مبيعات الحساب البنكي": props.model.meta.bank_account_quotation_sales_return,
+                                        "Credit Sales Return | عائد مبيعات الائتمان": props.model.meta.unpaid_quotation_sales_return,
+                                        "Sales Discount Return | عائد خصم المبيعات": props.model.meta.discount,
+                                        "Cash Discount Return | إرجاع الخصم النقدي": props.model.meta.cash_discount,
+                                        "Shipping/Handling fees Return | رسوم الشحن/المناولة الإرجاع": props.model.meta.shipping_handling_fees,
+                                        "VAT Return | VAT Return": props.model.meta.vat_price,
+                                        "Net Profit Return | عائد صافي الربح": props.model.meta.net_profit,
+                                        "Net Profit Return % | عائد صافي الربح %": props.model.meta.net_profit && props.model.meta.total_quotation_sales_return ? ((props.model.meta.net_profit / props.model.meta.total_quotation_sales_return) * 100) : "",
+                                        "Net Loss Return | صافي عائد الخسارة": props.model.meta.loss,
                                     }}
                                 />
                             </div>}

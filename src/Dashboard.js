@@ -6,6 +6,7 @@ import {
 } from "react-router-dom";
 import PostingIndex from './posting/index.js';
 import QuotationIndex from './quotation/index.js';
+import QuotationSalesReturnIndex from './quotation_sales_return/index.js';
 import DeliveryNoteIndex from './delivery_note/index.js';
 import OrderIndex from './order/index.js';
 import SalesCashDiscountIndex from './sales_cash_discount/index.js';
@@ -302,6 +303,19 @@ function Dashboard() {
                         <Topbar parentCallback={handleToggle} />
                         <main className="content">
                             <QuotationIndex showToastMessage={showToastMessage} />
+                        </main>
+                        <Footer />
+                    </div>
+                </div>
+            </Route>
+
+            <Route path="/dashboard/quotation_sales_returns">
+                <div className="wrapper">
+                    <Sidebar isSidebarOpen={isSidebarOpen} parentCallback={handleToggle} />
+                    <div className="main">
+                        <Topbar parentCallback={handleToggle} />
+                        <main className="content">
+                            <QuotationSalesReturnIndex showToastMessage={showToastMessage} />
                         </main>
                         <Footer />
                     </div>

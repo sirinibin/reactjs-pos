@@ -30,27 +30,32 @@ const StoreCreate = forwardRef((props, ref) => {
                 sales_serial_number: {
                     prefix: "S-INV",
                     start_from_count: 1,
-                    padding_count: 6
+                    padding_count: 3
                 },
                 sales_return_serial_number: {
                     prefix: "SR-INV",
                     start_from_count: 1,
-                    padding_count: 6
+                    padding_count: 3
                 },
                 purchase_serial_number: {
                     prefix: "P-INV",
                     start_from_count: 1,
-                    padding_count: 6
+                    padding_count: 3
                 },
                 purchase_return_serial_number: {
                     prefix: "PR-INV",
                     start_from_count: 1,
-                    padding_count: 6
+                    padding_count: 3
                 },
                 quotation_serial_number: {
                     prefix: "QTN",
                     start_from_count: 1,
-                    padding_count: 6
+                    padding_count: 3
+                },
+                quotation_sales_return_serial_number: {
+                    prefix: "QTN-SR-INV",
+                    start_from_count: 1,
+                    padding_count: 3
                 },
                 customer_serial_number: {
                     prefix: "CUST",
@@ -154,27 +159,32 @@ const StoreCreate = forwardRef((props, ref) => {
         sales_serial_number: {
             prefix: "S-INV",
             start_from_count: 1,
-            padding_count: 6
+            padding_count: 3
         },
         sales_return_serial_number: {
             prefix: "SR-INV",
             start_from_count: 1,
-            padding_count: 6
+            padding_count: 3
         },
         purchase_serial_number: {
             prefix: "P-INV",
             start_from_count: 1,
-            padding_count: 6
+            padding_count: 3
         },
         purchase_return_serial_number: {
             prefix: "PR-INV",
             start_from_count: 1,
-            padding_count: 6
+            padding_count: 3
         },
         quotation_serial_number: {
             prefix: "QTN",
             start_from_count: 1,
-            padding_count: 6
+            padding_count: 3
+        },
+        quotation_sales_return_serial_number: {
+            prefix: "QTN-SR-INV",
+            start_from_count: 1,
+            padding_count: 3
         },
         customer_serial_number: {
             prefix: "CUST",
@@ -914,23 +924,26 @@ const StoreCreate = forwardRef((props, ref) => {
                                                 formData.sales_serial_number.prefix = formData.sales_serial_number.prefix.replace("-" + formData.code.toUpperCase(), "");
                                                 // formData.sales_serial_number.prefix = formData.sales_serial_number.prefix.replace(formData.code.toUpperCase(), "-");
 
-                                                formData.sales_return_serial_number.prefix = formData.sales_return_serial_number.prefix.replace("-" + formData.code.toUpperCase(), "");
+                                                // formData.sales_return_serial_number.prefix = formData.sales_return_serial_number.prefix.replace("-" + formData.code.toUpperCase(), "");
+
+
                                                 //formData.sales_return_serial_number.prefix = formData.sales_return_serial_number.prefix.replace(formData.code.toUpperCase(), "-");
 
-                                                formData.purchase_serial_number.prefix = formData.purchase_serial_number.prefix.replace("-" + formData.code.toUpperCase(), "");
+                                                //formData.purchase_serial_number.prefix = formData.purchase_serial_number.prefix.replace("-" + formData.code.toUpperCase(), "");
                                                 //  formData.purchase_serial_number.prefix = formData.purchase_serial_number.prefix.replace(formData.code.toUpperCase(), "-");
 
-                                                formData.purchase_return_serial_number.prefix = formData.purchase_return_serial_number.prefix.replace("-" + formData.code.toUpperCase(), "");
+                                                //formData.purchase_return_serial_number.prefix = formData.purchase_return_serial_number.prefix.replace("-" + formData.code.toUpperCase(), "");
                                                 // formData.purchase_return_serial_number.prefix = formData.purchase_return_serial_number.prefix.replace(formData.code.toUpperCase(), "-");
 
-                                                formData.quotation_serial_number.prefix = formData.quotation_serial_number.prefix.replace("-" + formData.code.toUpperCase(), "");
+                                                // formData.quotation_serial_number.prefix = formData.quotation_serial_number.prefix.replace("-" + formData.code.toUpperCase(), "");
 
-                                                formData.customer_serial_number.prefix = formData.customer_serial_number.prefix.replace("-" + formData.code.toUpperCase(), "");
-                                                formData.vendor_serial_number.prefix = formData.vendor_serial_number.prefix.replace("-" + formData.code.toUpperCase(), "");
+                                                // formData.customer_serial_number.prefix = formData.customer_serial_number.prefix.replace("-" + formData.code.toUpperCase(), "");
+                                                // formData.vendor_serial_number.prefix = formData.vendor_serial_number.prefix.replace("-" + formData.code.toUpperCase(), "");
                                                 // formData.quotation_serial_number.prefix = formData.quotation_serial_number.prefix.replace(formData.code.toUpperCase(), "-");
                                             }
 
                                             if (e.target.value) {
+                                                /*
                                                 formData.sales_serial_number.prefix = formData.sales_serial_number.prefix + "-" + e.target.value.toUpperCase();
                                                 formData.sales_return_serial_number.prefix = formData.sales_return_serial_number.prefix + "-" + e.target.value.toUpperCase();
                                                 formData.purchase_serial_number.prefix = formData.purchase_serial_number.prefix + "-" + e.target.value.toUpperCase();
@@ -938,6 +951,7 @@ const StoreCreate = forwardRef((props, ref) => {
                                                 formData.quotation_serial_number.prefix = formData.quotation_serial_number.prefix + "-" + e.target.value.toUpperCase();
                                                 formData.customer_serial_number.prefix = formData.customer_serial_number.prefix + "-" + e.target.value.toUpperCase();
                                                 formData.vendor_serial_number.prefix = formData.vendor_serial_number.prefix + "-" + e.target.value.toUpperCase();
+                                                */
                                             }
                                         }
 
@@ -2135,7 +2149,7 @@ const StoreCreate = forwardRef((props, ref) => {
                                     }}
                                     className="form-control"
                                     id="formData.quotation_serial_number.prefix"
-                                    placeholder="QTN-UMLJ"
+                                    placeholder="QTN"
                                 />
 
 
@@ -2201,6 +2215,91 @@ const StoreCreate = forwardRef((props, ref) => {
                                 <div style={{ color: "red" }}>
                                     <i className="bi bi-x-lg"> </i>
                                     {errors.quotation_serial_number_start_from_count}
+                                </div>
+                            )}
+                        </div>
+
+                        <h5><b>Quotation Sales Return ID's:</b> {formData.quotation_sales_return_serial_number.prefix.toUpperCase()}-{String(formData.quotation_sales_return_serial_number.start_from_count).padStart(formData.quotation_sales_return_serial_number.padding_count, '0')}, {formData.quotation_sales_return_serial_number.prefix.toUpperCase()}-{String((formData.quotation_sales_return_serial_number.start_from_count + 1)).padStart(formData.quotation_sales_return_serial_number.padding_count, '0')}...</h5>
+                        <div className="col-md-2">
+                            <label className="form-label">Prefix*</label>
+                            <div className="input-group mb-3">
+                                <input
+                                    value={formData.quotation_sales_return_serial_number.prefix}
+                                    type='string'
+                                    onChange={(e) => {
+
+                                        errors["formData.quotation_sales_serial_number.prefix"] = "";
+                                        formData.quotation_sales_return_serial_number.prefix = e.target.value;
+                                        setFormData({ ...formData });
+                                        console.log(formData);
+                                    }}
+                                    className="form-control"
+                                    id="formData.quotation_sales_return_serial_number.prefix"
+                                    placeholder="QTN-SR"
+                                />
+
+
+                            </div>
+                            {errors.quotation_sales_return_serial_number_prefix && (
+                                <div style={{ color: "red" }}>
+
+                                    {errors.quotation_sales_return_serial_number_prefix}
+                                </div>
+                            )}
+                        </div>
+
+                        <div className="col-md-2">
+                            <label className="form-label">Padding count*</label>
+                            <div className="input-group mb-3">
+                                <input
+                                    value={formData.quotation_sales_return_serial_number.padding_count}
+                                    type='number'
+                                    onChange={(e) => {
+
+                                        errors["formData.quotation_sales_serial_number.padding_count"] = "";
+                                        formData.quotation_sales_return_serial_number.padding_count = parseInt(e.target.value);
+                                        setFormData({ ...formData });
+                                        console.log(formData);
+                                    }}
+                                    className="form-control"
+                                    id="formData.quotation_sales_return_serial_number.padding_count"
+                                    placeholder="4 will make counter value: 0001"
+                                />
+
+
+                            </div>
+                            {errors.quotation_sales_return_serial_number_padding_count && (
+                                <div style={{ color: "red" }}>
+                                    {errors.quotation_sales_return_serial_number_padding_count}
+                                </div>
+                            )}
+                        </div>
+
+                        <div className="col-md-2">
+                            <label className="form-label">Counting start from*</label>
+                            <div className="input-group mb-3">
+                                <input
+                                    value={formData.quotation_sales_return_serial_number.start_from_count}
+                                    type='number'
+                                    onChange={(e) => {
+                                        if (!e.target.value) {
+                                            formData.quotation_sales_return_serial_number.start_from_count = e.target.value;
+                                            setFormData({ ...formData });
+                                            return
+                                        }
+                                        errors["formData.quotation_sales_serial_number.start_from_count"] = "";
+                                        formData.quotation_sales_return_serial_number.start_from_count = parseInt(e.target.value);
+                                        setFormData({ ...formData });
+                                        console.log(formData);
+                                    }}
+                                    className="form-control"
+                                    id="formData.quotation_sales_serial_number.start_from_count"
+                                    placeholder="eg: Start counting from 1000"
+                                />
+                            </div>
+                            {errors.quotation_sales_return_serial_number_start_from_count && (
+                                <div style={{ color: "red" }}>
+                                    {errors.quotation_sales_return_serial_number_start_from_count}
                                 </div>
                             )}
                         </div>

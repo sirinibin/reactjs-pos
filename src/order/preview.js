@@ -48,6 +48,10 @@ const Preview = forwardRef((props, ref) => {
                     await getOrder(model.order_id);
                 }
 
+                if (model.quotation_id) {
+                    await getQuotation(model.quotation_id);
+                }
+
                 if (model.store_id) {
                     await getStore(model.store_id);
 
@@ -283,6 +287,12 @@ const Preview = forwardRef((props, ref) => {
             } else if (model.type === "invoice") {
                 model.invoiceTitle = "INVOICE | فاتورة";
             }
+        } else if (model.modelName === "quotation_sales_return" || model.modelName === "whatsapp_quotation_sales_return") {
+            if (model.payment_status === "not_paid") {
+                model.invoiceTitle = "CREDIT RETURN INVOICE | فاتورة إرجاع الائتمان";
+            } else {
+                model.invoiceTitle = "RETURN INVOICE | فاتورة الإرجاع";
+            }
         } else if (model.modelName === "delivery_note" || model.modelName === "whatsapp_delivery_note") {
             model.invoiceTitle = "DELIVERY NOTE / مذكرة تسليم";
         }
@@ -392,6 +402,8 @@ const Preview = forwardRef((props, ref) => {
             apiPath = "purchase-return"
         } else if (modelName && (modelName === "quotation" || modelName === "whatsapp_quotation")) {
             apiPath = "quotation"
+        } else if (modelName && (modelName === "quotation_sales_return" || modelName === "whatsapp_quotation_sales_return")) {
+            apiPath = "quotation-sales-return"
         } else if (modelName && (modelName === "delivery_note" || modelName === "whatsapp_delivery_note")) {
             apiPath = "delivery-note"
         }
@@ -452,6 +464,48 @@ const Preview = forwardRef((props, ref) => {
                 console.log(data);
 
                 model.order = data.result;
+                setModel({ ...model });
+
+                return model;
+            })
+            .catch(error => {
+
+            });
+    }
+
+    async function getQuotation(id) {
+        console.log("inside get Quotation");
+        const requestOptions = {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': localStorage.getItem('access_token'),
+            },
+        };
+
+        let searchParams = {};
+        if (localStorage.getItem("store_id")) {
+            searchParams.store_id = localStorage.getItem("store_id");
+        }
+        let queryParams = ObjectToSearchQueryParams(searchParams);
+
+
+
+        await fetch('/v1/quotation/' + id + "?" + queryParams, requestOptions)
+            .then(async response => {
+                const isJson = response.headers.get('content-type')?.includes('application/json');
+                const data = isJson && await response.json();
+
+                // check for error response
+                if (!response.ok) {
+                    const error = (data && data.errors);
+                    return Promise.reject(error);
+                }
+
+                console.log("Response:");
+                console.log(data);
+
+                model.quotation = data.result;
                 setModel({ ...model });
 
                 return model;
@@ -721,6 +775,8 @@ const Preview = forwardRef((props, ref) => {
             filename += "Purchase_Return";
         } else if (modelName === "quotation" || modelName === "whatsapp_quotation") {
             filename += "Quotation";
+        } else if (modelName === "quotation_sales_return" || modelName === "whatsapp_quotation_sales_return") {
+            filename += "Qtn_Sales_Return";
         } else if (modelName === "delivery_note" || modelName === "whatsapp_delivery_note") {
             filename += "Delivery_Note";
         }
@@ -898,6 +954,8 @@ const Preview = forwardRef((props, ref) => {
         } else if (modelName === "delivery_note" || modelName === "whatsapp_delivery_note") {
             message = `Hello, here is your Delivery Note:\n${window.location.origin}/pdfs/${getFileName()}.pdf`;
         } else if (modelName === "sales_return" || modelName === "whatsapp_sales_return") {
+            message = `Hello, here is your Return Invoice:\n${window.location.origin}/pdfs/${getFileName()}.pdf`;
+        } else if (modelName === "quotation_sales_return" || modelName === "whatsapp_quotation_sales_return") {
             message = `Hello, here is your Return Invoice:\n${window.location.origin}/pdfs/${getFileName()}.pdf`;
         } else {
             message = `Hello, here is your Invoice:\n${window.location.origin}/pdfs/${getFileName()}.pdf`;
@@ -1098,6 +1156,8 @@ const Preview = forwardRef((props, ref) => {
             "whatsapp_purchase_return",
             "quotation",
             "whatsapp_quotation",
+            "quotation_sales_return",
+            "whatsapp_quotation_sales_return",
             "delivery_note",
             "whatsapp_delivery_note",
             "customer_deposit",
@@ -1298,7 +1358,7 @@ const Preview = forwardRef((props, ref) => {
                         <button className="btn btn-outline-secondary" onClick={() => decrementSize(modelName + "_marginTop")}>−</button>
                         <span className="mx-2">Margin Top: {fontSizes[modelName + "_marginTop"]?.size}</span>
                         <button className="btn btn-outline-secondary" onClick={() => incrementSize(modelName + "_marginTop")}>+</button>
-                    </div>{"M:" + fontSizes[modelName + "_marginTop"]?.size}
+                    </div>
 
                     <div className="col ">
                         <>

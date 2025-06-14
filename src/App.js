@@ -72,6 +72,10 @@ function App() {
             <Dashboard />
           </Route>
 
+          <Route path="/dashboard/quotation_sales_returns">
+            <Dashboard />
+          </Route>
+
           <Route path="/dashboard/vendors">
             <Dashboard />
           </Route>
