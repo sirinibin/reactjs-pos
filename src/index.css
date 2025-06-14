@@ -225,3 +225,8 @@ code {
   min-height: 48px; /* or whatever suits your design */
 }
 
+
+
+.rbt-menu .active strong {
+  color: black !important;
+}

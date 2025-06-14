@@ -2494,7 +2494,7 @@ const OrderCreate = forwardRef((props, ref) => {
                                 clearButton={false}
                                 open={openProductSearchResult}
                                 isLoading={false}
-                                isInvalid={errors.product_id ? true : false}
+                                isInvalid={!!errors.product_id}
                                 onChange={(selectedItems) => {
                                     if (selectedItems.length === 0) {
                                         errors["product_id"] = "Invalid Product selected";
@@ -2505,12 +2505,11 @@ const OrderCreate = forwardRef((props, ref) => {
                                     setErrors({ ...errors });
 
                                     addProduct(selectedItems[0]);
-
                                     productSearchRef.current?.clear();
                                     setOpenProductSearchResult(false);
 
                                     timerRef.current = setTimeout(() => {
-                                        inputRefs.current[(selectedProducts.length - 1)][`${"sales_product_quantity_" + (selectedProducts.length - 1)}`].select();
+                                        inputRefs.current[(selectedProducts.length - 1)][`sales_product_quantity_${selectedProducts.length - 1}`].select();
                                     }, 100);
                                 }}
                                 options={productOptions}
@@ -2524,7 +2523,7 @@ const OrderCreate = forwardRef((props, ref) => {
                                     }
 
                                     timerRef.current = setTimeout(() => {
-                                        productSearchRef.current.focus();
+                                        productSearchRef.current?.focus();
                                     }, 100);
                                 }}
                                 onInputChange={(searchTerm, e) => {
@@ -2551,46 +2550,53 @@ const OrderCreate = forwardRef((props, ref) => {
                                             </MenuItem>
 
                                             {/* Rows */}
-                                            {results.map((option, index) => (
-                                                <MenuItem option={option} position={index} key={index}>
-                                                    <div style={{ display: 'flex', padding: '4px 8px' }}>
-                                                        <div style={{ ...columnStyle, width: '15%' }}>
-                                                            {highlightWords(
-                                                                option.prefix_part_number
-                                                                    ? option.prefix_part_number + " - " + option.part_number
-                                                                    : option.part_number,
-                                                                searchWords
-                                                            )}
+                                            {results.map((option, index) => {
+                                                const isActive = state.activeIndex === index;
+                                                return (
+                                                    <MenuItem option={option} position={index} key={index}>
+                                                        <div style={{ display: 'flex', padding: '4px 8px' }}>
+                                                            <div style={{ ...columnStyle, width: '15%' }}>
+                                                                {highlightWords(
+                                                                    option.prefix_part_number
+                                                                        ? `${option.prefix_part_number} - ${option.part_number}`
+                                                                        : option.part_number,
+                                                                    searchWords,
+                                                                    isActive
+                                                                )}
+                                                            </div>
+                                                            <div style={{ ...columnStyle, width: '45%' }}>
+                                                                {highlightWords(
+                                                                    option.name_in_arabic
+                                                                        ? `${option.name} - ${option.name_in_arabic}`
+                                                                        : option.name,
+                                                                    searchWords,
+                                                                    isActive
+                                                                )}
+                                                            </div>
+                                                            <div style={{ ...columnStyle, width: '10%' }}>
+                                                                {option.product_stores?.[localStorage.getItem("store_id")]?.retail_unit_price && (
+                                                                    <Amount amount={trimTo2Decimals(option.product_stores?.[localStorage.getItem("store_id")]?.retail_unit_price)} />
+                                                                )}
+                                                            </div>
+                                                            <div style={{ ...columnStyle, width: '10%' }}>
+                                                                {option.product_stores?.[localStorage.getItem("store_id")]?.stock ?? ''}
+                                                            </div>
+                                                            <div style={{ ...columnStyle, width: '10%' }}>
+                                                                {highlightWords(option.brand_name, searchWords, isActive)}
+                                                            </div>
+                                                            <div style={{ ...columnStyle, width: '10%' }}>
+                                                                {highlightWords(option.country_name, searchWords, isActive)}
+                                                            </div>
                                                         </div>
-                                                        <div style={{ ...columnStyle, width: '45%' }}>
-                                                            {highlightWords(
-                                                                option.name_in_arabic
-                                                                    ? option.name + " - " + option.name_in_arabic
-                                                                    : option.name,
-                                                                searchWords
-                                                            )}
-                                                        </div>
-                                                        <div style={{ ...columnStyle, width: '10%' }}>
-                                                            {option.product_stores?.[localStorage.getItem("store_id")]?.retail_unit_price && (
-                                                                <Amount amount={trimTo2Decimals(option.product_stores?.[localStorage.getItem("store_id")]?.retail_unit_price)} />
-                                                            )}
-                                                        </div>
-                                                        <div style={{ ...columnStyle, width: '10%' }}>
-                                                            {option.product_stores?.[localStorage.getItem("store_id")]?.stock ?? ''}
-                                                        </div>
-                                                        <div style={{ ...columnStyle, width: '10%' }}>
-                                                            {highlightWords(option.brand_name, searchWords)}
-                                                        </div>
-                                                        <div style={{ ...columnStyle, width: '10%' }}>
-                                                            {highlightWords(option.country_name, searchWords)}
-                                                        </div>
-                                                    </div>
-                                                </MenuItem>
-                                            ))}
+                                                    </MenuItem>
+                                                );
+                                            })}
                                         </Menu>
                                     );
                                 }}
+
                             />
+
                             <Button hide={true.toString()} onClick={openProductCreateForm} className="btn btn-outline-secondary btn-primary btn-sm" type="button" id="button-addon1"> <i className="bi bi-plus-lg"></i> New</Button>
                             {errors.product_id ? (
                                 <div style={{ color: "red" }}>

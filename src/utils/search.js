@@ -1,48 +1,24 @@
-export function highlightWords(text, words) {
+export function highlightWords(text, words, isActive = false) {
     if (!text) return null;
     if (!words || words.length === 0) return text;
 
-    const lowerText = text.toLowerCase();
-    let parts = [];
-    let remainingText = text;
-    let currentIndex = 0;
+    const regex = new RegExp(`(${words.join("|")})`, "gi");
+    const parts = text.split(regex);
 
-    while (remainingText) {
-        let nextMatchIndex = -1;
-        let matchWord = "";
-
-        for (let word of words) {
-            const idx = lowerText.indexOf(word.toLowerCase(), currentIndex);
-            if (idx !== -1 && (nextMatchIndex === -1 || idx < nextMatchIndex)) {
-                nextMatchIndex = idx;
-                matchWord = word;
-            }
-        }
-
-        if (nextMatchIndex === -1) {
-            parts.push(remainingText);
-            break;
-        }
-
-        const matchStart = nextMatchIndex;
-        const matchEnd = matchStart + matchWord.length;
-
-        const beforeMatch = text.slice(currentIndex, matchStart);
-        const matchedText = text.slice(matchStart, matchEnd);
-
-        if (beforeMatch) {
-            parts.push(beforeMatch);
-        }
-
-        parts.push(
-            <strong style={{ backgroundColor: "yellow" }} key={matchStart}>
-                {matchedText}
+    return parts.map((part, index) =>
+        words.some(word => word.toLowerCase() === part.toLowerCase()) ? (
+            <strong
+                key={index}
+                style={{
+                    backgroundColor: "yellow",
+                    color: isActive ? "#000" : undefined,  // force readable text on blue bg
+                    padding: "0 2px"
+                }}
+            >
+                {part}
             </strong>
-        );
-
-        currentIndex = matchEnd;
-        remainingText = text.slice(currentIndex);
-    }
-
-    return parts;
-}
+        ) : (
+            <span key={index}>{part}</span>
+        )
+    );
+};
