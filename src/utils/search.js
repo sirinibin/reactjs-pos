@@ -6,7 +6,7 @@ export function highlightWords(text, words, isActive = false) {
     const parts = text.split(regex);
 
     return parts.map((part, index) =>
-        words.some(word => word.toLowerCase() === part.toLowerCase()) ? (
+        words.some(word => word?.toLowerCase() === part?.toLowerCase()) ? (
             <strong
                 key={index}
                 style={{
