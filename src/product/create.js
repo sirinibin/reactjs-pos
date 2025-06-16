@@ -916,6 +916,18 @@ const ProductCreate = forwardRef((props, ref) => {
     ProductUpdateFormRef.current.open(id);
   }
 
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.key === "Escape") {
+        e.preventDefault();
+        e.stopPropagation();
+      }
+    };
+
+    document.addEventListener("keydown", handleKeyDown);
+    return () => document.removeEventListener("keydown", handleKeyDown);
+  }, []);
+
   return (
     <>
       {showProductUpdateForm && <ProductCreate ref={ProductUpdateFormRef} showToastMessage={props.showToastMessage} />}
@@ -943,7 +955,7 @@ const ProductCreate = forwardRef((props, ref) => {
         animation={false}
         backdrop="static"
         scrollable={true}
-        keyboard={false}
+
       >
         <Modal.Header>
           <Modal.Title>

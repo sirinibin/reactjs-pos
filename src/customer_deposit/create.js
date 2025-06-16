@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, forwardRef, useImperativeHandle } from "react";
+import React, { useState, useEffect, useRef, forwardRef, useCallback, useImperativeHandle } from "react";
 import { Modal, Button } from "react-bootstrap";
 
 import { Spinner } from "react-bootstrap";
@@ -6,13 +6,17 @@ import { Typeahead } from "react-bootstrap-typeahead";
 import DatePicker from "react-datepicker";
 import { format } from "date-fns";
 import CustomerCreate from "./../customer/create.js";
+import VendorCreate from "./../vendor/create.js";
 import CustomerView from "./../customer/view.js";
 import Customers from "./../utils/customers.js";
+import Vendors from "./../utils/vendors.js";
 import Sales from "./../utils/sales.js";
+import PurchaseReturns from "./../utils/purchase-returns.js";
 import Quotations from "./../utils/quotations.js";
 import CustomerDepositPreview from './preview.js';
 import { trimTo2Decimals } from "../utils/numberUtils";
 import OrderCreate from "./../order/create.js";
+import PurchaseReturnCreate from "./../purchase_return/create.js";
 import QuotationCreate from "./../quotation/create.js";
 import { confirm } from 'react-bootstrap-confirmation';
 import InfoDialog from './../utils/InfoDialog';
@@ -21,11 +25,23 @@ const CustomerDepositCreate = forwardRef((props, ref) => {
     useImperativeHandle(ref, () => ({
         open(id) {
             formData = {
+                type: "customer",
                 images_content: [],
                 date_str: new Date(),
+                payments: [
+                    {
+                        date_str: new Date(),
+                        amount: 0.00,
+                        method: "",
+                        bank_reference: "",
+                        description: "",
+                    },
+                ],
             };
             setFormData({ ...formData });
             setSelectedCustomers([]);
+            setSelectedVendors([]);
+            findTotalPayments();
 
             if (id) {
                 getCustomerDeposit(id);
@@ -162,7 +178,8 @@ const CustomerDepositCreate = forwardRef((props, ref) => {
                 }
                 findTotalPayments();
 
-                if (formData.customer_name && formData.customer_id) {
+
+                if (formData.type === "customer" && formData.customer_name && formData.customer_id) {
                     let selectedCustomers = [
                         {
                             id: formData.customer_id,
@@ -171,6 +188,18 @@ const CustomerDepositCreate = forwardRef((props, ref) => {
                         }
                     ];
                     setSelectedCustomers([...selectedCustomers]);
+                }
+
+
+                if (formData.type === "vendor" && formData.vendor_name && formData.vendor_id) {
+                    let selectedVendors = [
+                        {
+                            id: formData.vendor_id,
+                            name: formData.vendor_name,
+                            search_label: formData.vendor.search_label,
+                        }
+                    ];
+                    setSelectedVendors([...selectedVendors]);
                 }
 
                 formData.images_content = [];
@@ -202,11 +231,52 @@ const CustomerDepositCreate = forwardRef((props, ref) => {
     //Customer Auto Suggestion
     const [customerOptions, setCustomerOptions] = useState([]);
     const [selectedCustomers, setSelectedCustomers] = useState([]);
+
+    const [vendorOptions, setVendorOptions] = useState([]);
+    const [selectedVendors, setSelectedVendors] = useState([]);
     // const [isCustomersLoading, setIsCustomersLoading] = useState(false);
+
+
+
+
+    const customFilter = useCallback((option, query) => {
+        const normalize = (str) => str?.toLowerCase().replace(/\s+/g, " ").trim() || "";
+
+        const q = normalize(query);
+        const qWords = q.split(" ");
+
+        const fields = [
+            option.code,
+            option.vat_no,
+            option.name,
+            option.name_in_arabic,
+            option.phone,
+            option.search_label,
+            option.phone_in_arabic,
+            ...(Array.isArray(option.additional_keywords) ? option.additional_keywords : []),
+        ];
+
+        const searchable = normalize(fields.join(" "));
+
+        return qWords.every((word) => searchable.includes(word));
+    }, []);
+
+
+    let [openVendorSearchResult, setOpenVendorSearchResult] = useState(false);
+    let [openCustomerSearchResult, setOpenCustomerSearchResult] = useState(false);
 
     async function suggestCustomers(searchTerm) {
         console.log("Inside handle suggestCustomers");
         setCustomerOptions([]);
+
+
+        console.log("searchTerm:" + searchTerm);
+        if (!searchTerm) {
+            setTimeout(() => {
+                setOpenCustomerSearchResult(false);
+            }, 100);
+            return;
+        }
 
         console.log("searchTerm:" + searchTerm);
         if (!searchTerm) {
@@ -241,8 +311,79 @@ const CustomerDepositCreate = forwardRef((props, ref) => {
             requestOptions
         );
         let data = await result.json();
+        if (!data.result || data.result.length === 0) {
+            setOpenCustomerSearchResult(false);
+            return;
+        }
 
-        setCustomerOptions(data.result);
+        setOpenCustomerSearchResult(true);
+
+
+        if (data.result) {
+            const filtered = data.result.filter((opt) => customFilter(opt, searchTerm));
+            setCustomerOptions(filtered);
+        } else {
+            setCustomerOptions([]);
+        }
+
+        //setIsCustomersLoading(false);
+    }
+
+
+    async function suggestVendors(searchTerm) {
+        console.log("Inside handle suggestVendors");
+        setCustomerOptions([]);
+
+        console.log("searchTerm:" + searchTerm);
+        if (!searchTerm) {
+            setTimeout(() => {
+                setOpenVendorSearchResult(false);
+            }, 100);
+            return;
+        }
+
+        var params = {
+            query: searchTerm,
+        };
+
+        if (localStorage.getItem("store_id")) {
+            params.store_id = localStorage.getItem("store_id");
+        }
+
+        var queryString = ObjectToSearchQueryParams(params);
+        if (queryString !== "") {
+            queryString = "&" + queryString;
+        }
+
+        const requestOptions = {
+            method: "GET",
+            headers: {
+                "Content-Type": "application/json",
+                Authorization: localStorage.getItem("access_token"),
+            },
+        };
+
+        let Select = "select=id,additional_keywords,code,vat_no,name,phone,name_in_arabic,phone_in_arabic,search_label";
+        // setIsCustomersLoading(true);
+        let result = await fetch(
+            "/v1/vendor?" + Select + queryString,
+            requestOptions
+        );
+        let data = await result.json();
+        if (!data.result || data.result.length === 0) {
+            setOpenVendorSearchResult(false);
+            return;
+        }
+
+        setOpenVendorSearchResult(true);
+
+        if (data.result) {
+            const filtered = data.result.filter((opt) => customFilter(opt, searchTerm));
+            setVendorOptions(filtered);
+        } else {
+            setVendorOptions([]);
+        }
+
         //setIsCustomersLoading(false);
     }
 
@@ -258,6 +399,12 @@ const CustomerDepositCreate = forwardRef((props, ref) => {
 
         if (localStorage.getItem("store_id")) {
             formData.store_id = localStorage.getItem("store_id");
+        }
+
+        if (formData.type === "customer") {
+            formData.vendor_id = "";
+        } else if (formData.type === "vendor") {
+            formData.customer_id = "";
         }
 
 
@@ -430,6 +577,11 @@ const CustomerDepositCreate = forwardRef((props, ref) => {
         CustomerCreateFormRef.current.open();
     }
 
+    const VendorCreateFormRef = useRef();
+    function openVendorCreateForm() {
+        VendorCreateFormRef.current.open();
+    }
+
     const CustomerDetailsViewRef = useRef();
     function openCustomerDetailsView(id) {
         CustomerDetailsViewRef.current.open(id);
@@ -440,6 +592,12 @@ const CustomerDepositCreate = forwardRef((props, ref) => {
         CustomersRef.current.open();
     }
 
+    const VendorsRef = useRef();
+    function openVendors(model) {
+        VendorsRef.current.open();
+    }
+
+
     const handleSelectedCustomer = (selectedCustomer) => {
         console.log("selectedCustomer:", selectedCustomer);
         setSelectedCustomers([selectedCustomer])
@@ -447,6 +605,47 @@ const CustomerDepositCreate = forwardRef((props, ref) => {
         setFormData({ ...formData });
     };
 
+    const handleSelectedVendor = (selectedVendor) => {
+        console.log("selectedVendor:", selectedVendor);
+        setSelectedVendors([selectedVendor])
+        formData.vendor_id = selectedVendor.id;
+        setFormData({ ...formData });
+    };
+
+
+    function ValidateTypeChange(newType) {
+        delete errors["type"];
+        setErrors({ ...errors });
+
+        for (let i = 0; i < formData.payments?.length; i++) {
+            delete errors["customer_receivable_payment_invoice_" + i];
+            setErrors({ ...errors });
+
+            if (formData.type === "vendor" && newType === "customer") {
+                if (formData.payments[i].invoice_type === "purchase_return") {
+                    errors["type"] = "Please remvoe purchase return invoices linked to your payments and try again";
+                    errors["customer_receivable_payment_invoice_" + i] = "Remove this purchase return invoice and try again"
+                    setErrors({ ...errors });
+                    return false;
+                }
+            } else if (formData.type === "customer" && newType === "vendor") {
+                if (formData.payments[i].invoice_type === "sales") {
+                    errors["type"] = "Please remvoe sales invoices linked to your payments and try again";
+                    errors["customer_receivable_payment_invoice_" + i] = "Remove this sales invoice and try again"
+                    setErrors({ ...errors });
+                    return false;
+                }
+
+                if (formData.payments[i].invoice_type === "quotation_sales") {
+                    errors["type"] = "Please remvoe quotation sales invoices linked to your payments and try again";
+                    errors["customer_receivable_payment_invoice_" + i] = "Remove this quotation sales invoice and try again"
+                    setErrors({ ...errors });
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
 
 
 
@@ -476,7 +675,32 @@ const CustomerDepositCreate = forwardRef((props, ref) => {
         formData.payments[selectedPaymentIndex].invoice_type = "sales";
         formData.payments[selectedPaymentIndex].invoice_id = selectedSale.id;
         formData.payments[selectedPaymentIndex].invoice_code = selectedSale.code;
-        formData.payments[selectedPaymentIndex].amount = selectedSale.balance_amount;
+        formData.payments[selectedPaymentIndex].amount = parseFloat(trimTo2Decimals(selectedSale.balance_amount));
+        findTotalPayments();
+        setFormData({ ...formData });
+    };
+
+    const handleSelectedPurchaseReturn = (selectedPurchaseReturn) => {
+        if (formData.vendor_id !== selectedPurchaseReturn.vendor_id) {
+            infoMessage = "The selected Purchase Return is not belongs to the vendor " + selectedVendors[0]?.name;
+            setInfoMessage(infoMessage);
+            showInfo = true;
+            setShowInfo(showInfo);
+            return;
+        }
+
+        if (selectedPurchaseReturn.payment_status === "paid") {
+            infoMessage = "The selected invoice is already paid";
+            setInfoMessage(infoMessage);
+            showInfo = true;
+            setShowInfo(showInfo);
+            return;
+        }
+        // setSelectedCustomers([selectedCustomer])
+        formData.payments[selectedPaymentIndex].invoice_type = "purchase_return";
+        formData.payments[selectedPaymentIndex].invoice_id = selectedPurchaseReturn.id;
+        formData.payments[selectedPaymentIndex].invoice_code = selectedPurchaseReturn.code;
+        formData.payments[selectedPaymentIndex].amount = parseFloat(trimTo2Decimals(selectedPurchaseReturn.balance_amount));
         findTotalPayments();
         setFormData({ ...formData });
     };
@@ -503,7 +727,7 @@ const CustomerDepositCreate = forwardRef((props, ref) => {
         formData.payments[selectedPaymentIndex].invoice_type = "quotation_sales";
         formData.payments[selectedPaymentIndex].invoice_id = selectedQuotationSale.id;
         formData.payments[selectedPaymentIndex].invoice_code = selectedQuotationSale.code;
-        formData.payments[selectedPaymentIndex].amount = selectedQuotationSale.balance_amount;
+        formData.payments[selectedPaymentIndex].amount = parseFloat(trimTo2Decimals(selectedQuotationSale.balance_amount));
         findTotalPayments();
         setFormData({ ...formData });
     };
@@ -536,6 +760,12 @@ const CustomerDepositCreate = forwardRef((props, ref) => {
         SalesUpdateFormRef.current.open(id);
     }
 
+    const PurchaseReturnUpdateFormRef = useRef();
+    function openPurchaseReturnUpdateForm(id) {
+        PurchaseReturnUpdateFormRef.current.open(id);
+    }
+
+
     const QuotationUpdateFormRef = useRef();
     function openQuotationUpdateForm(id) {
         QuotationUpdateFormRef.current.open(id);
@@ -544,12 +774,21 @@ const CustomerDepositCreate = forwardRef((props, ref) => {
     const inputRefs = useRef({});
     const timerRef = useRef(null);
     const customerSearchRef = useRef();
+    const vendorSearchRef = useRef();
 
     let [showInvoiceTypeSelection, setShowInvoiceTypeSelection] = useState(false);
 
     function openInvoiceTypeSelection(paymentIndex) {
-        if (!formData.customer_id) {
+        if (formData.type === "customer" && !formData.customer_id) {
             infoMessage = "Please select a customer first then try again!";
+            setInfoMessage(infoMessage);
+            showInfo = true;
+            setShowInfo(showInfo);
+            return;
+        }
+
+        if (formData.type === "vendor" && !formData.vendor_id) {
+            infoMessage = "Please select a vendor first then try again!";
             setInfoMessage(infoMessage);
             showInfo = true;
             setShowInfo(showInfo);
@@ -559,12 +798,20 @@ const CustomerDepositCreate = forwardRef((props, ref) => {
         selectedPaymentIndex = paymentIndex;
         setSelectedPaymentIndex(selectedPaymentIndex);
 
+        if (formData.type === "customer") {
+            showInvoiceTypeSelection = true;
+            setShowInvoiceTypeSelection(showInvoiceTypeSelection);
+        } else if (formData.type === "vendor") {
+            openPurchaseReturns();
+        }
+
+        /*
         if (store.quotation_invoice_accounting) {
             showInvoiceTypeSelection = true;
             setShowInvoiceTypeSelection(showInvoiceTypeSelection);
         } else {
             openSales();
-        }
+        }*/
     }
 
     const SalesRef = useRef();
@@ -585,6 +832,21 @@ const CustomerDepositCreate = forwardRef((props, ref) => {
         SalesRef.current.open(selectedCustomers, selectedPaymentStatusList);
     }
 
+    const PurchaseReturnsRef = useRef();
+    function openPurchaseReturns() {
+        let selectedPaymentStatusList = [
+            {
+                id: "not_paid",
+                name: "Not Paid",
+            },
+            {
+                id: "paid_partially",
+                name: "Paid partially",
+            }
+        ];
+        PurchaseReturnsRef.current.open(selectedVendors, selectedPaymentStatusList);
+    }
+
     const QuotationSalesRef = useRef();
     function openQuotationSales() {
         showInvoiceTypeSelection = false;
@@ -603,6 +865,18 @@ const CustomerDepositCreate = forwardRef((props, ref) => {
         QuotationSalesRef.current.open(true, selectedCustomers, "invoice", selectedPaymentStatusList);
     }
 
+    useEffect(() => {
+        const handleKeyDown = (e) => {
+            if (e.key === "Escape") {
+                e.preventDefault();
+                e.stopPropagation();
+            }
+        };
+
+        document.addEventListener("keydown", handleKeyDown);
+        return () => document.removeEventListener("keydown", handleKeyDown);
+    }, []);
+
 
     return (
         <>
@@ -614,16 +888,18 @@ const CustomerDepositCreate = forwardRef((props, ref) => {
                     <Modal.Title>Select Invoice Type</Modal.Title>
                 </Modal.Header>
                 <Modal.Body className="d-flex justify-content-around">
-                    <Button variant="primary" onClick={() => {
-                        openSales();
-                    }}>
-                        Sales Invoices
-                    </Button>
-                    <Button variant="secondary" onClick={() => {
-                        openQuotationSales();
-                    }}>
-                        Quotation Invoices
-                    </Button>
+                    {formData.type === "customer" && <>
+                        <Button variant="primary" onClick={() => {
+                            openSales();
+                        }}>
+                            Sales Invoices
+                        </Button>
+                        <Button variant="secondary" onClick={() => {
+                            openQuotationSales();
+                        }}>
+                            Quotation Invoices
+                        </Button>
+                    </>}
                 </Modal.Body>
             </Modal>
 
@@ -633,17 +909,21 @@ const CustomerDepositCreate = forwardRef((props, ref) => {
                 onClose={() => setShowInfo(false)}
             />
             <OrderCreate ref={SalesUpdateFormRef} />
+            <PurchaseReturnCreate ref={PurchaseReturnUpdateFormRef} />
             <QuotationCreate ref={QuotationUpdateFormRef} />
             <CustomerDepositPreview ref={PreviewRef} />
             <Customers ref={CustomersRef} onSelectCustomer={handleSelectedCustomer} showToastMessage={props.showToastMessage} />
+            <Vendors ref={VendorsRef} onSelectVendor={handleSelectedVendor} showToastMessage={props.showToastMessage} />
             <Sales ref={SalesRef} onSelectSale={handleSelectedSale} showToastMessage={props.showToastMessage} />
+            <PurchaseReturns ref={PurchaseReturnsRef} onSelectPurchaseReturn={handleSelectedPurchaseReturn} showToastMessage={props.showToastMessage} />
             <Quotations ref={QuotationSalesRef} onSelectQuotation={handleSelectedQuotationSale} showToastMessage={props.showToastMessage} />
             <CustomerCreate ref={CustomerCreateFormRef} openDetailsView={openCustomerDetailsView} showToastMessage={props.showToastMessage} />
+            <VendorCreate ref={VendorCreateFormRef} showToastMessage={props.showToastMessage} />
             <CustomerView ref={CustomerDetailsViewRef} showToastMessage={props.showToastMessage} />
-            <Modal show={show} size="xl" keyboard={false} onHide={handleClose} animation={false} backdrop="static" scrollable={true}>
+            <Modal show={show} size="xl" onHide={handleClose} animation={false} backdrop="static" scrollable={true}>
                 <Modal.Header>
                     <Modal.Title>
-                        {formData.id ? "Update Customer Receivable #" + formData.code : "Create New Customer Receivable"}
+                        {formData.id ? "Update Receivable #" + formData.code : "Create New Receivable"}
                     </Modal.Title>
 
 
@@ -686,69 +966,183 @@ const CustomerDepositCreate = forwardRef((props, ref) => {
                 </Modal.Header>
                 <Modal.Body>
                     <form className="row g-3 needs-validation" onSubmit={handleCreate}>
-                        <div className="col-md-6" style={{ border: "solid 0px" }}>
-                            <label className="form-label">Customer*</label>
-                            <Typeahead
-                                id="customer_id"
-                                labelKey="search_label"
-                                isLoading={false}
-                                filterBy={['additional_keywords']}
-                                isInvalid={errors.customer_id ? true : false}
-                                onChange={(selectedItems) => {
-                                    errors.customer_id = "";
-                                    setErrors(errors);
-                                    if (selectedItems.length === 0) {
-                                        // errors.customer_id = "Invalid Customer selected";
-                                        //setErrors(errors);
-                                        formData.customer_id = "";
-                                        setFormData({ ...formData });
-                                        setSelectedCustomers([]);
-                                        return;
-                                    }
-                                    formData.customer_id = selectedItems[0].id;
-                                    if (selectedItems[0].use_remarks_in_sales && selectedItems[0].remarks) {
-                                        formData.remarks = selectedItems[0].remarks;
-                                    }
 
-                                    setFormData({ ...formData });
-                                    setSelectedCustomers(selectedItems);
-                                }}
-                                options={customerOptions}
-                                placeholder="Customer Name / Mob / VAT # / ID"
-                                selected={selectedCustomers}
-                                highlightOnlyResult={true}
-                                ref={customerSearchRef}
-                                onKeyDown={(e) => {
-                                    if (e.key === "Escape") {
-                                        setCustomerOptions([]);
-                                        customerSearchRef.current?.clear();
-                                    }
-                                }}
-                                onInputChange={(searchTerm, e) => {
-                                    if (searchTerm) {
-                                        formData.customerName = searchTerm;
-                                    }
-                                    if (timerRef.current) clearTimeout(timerRef.current);
-                                    timerRef.current = setTimeout(() => {
-                                        suggestCustomers(searchTerm);
-                                    }, 100);
-                                }}
-                            />
-                            <Button hide={true.toString()} onClick={openCustomerCreateForm} className="btn btn-outline-secondary btn-primary btn-sm" type="button" id="button-addon1"> <i className="bi bi-plus-lg"></i> New</Button>
+                        <div className="col-md-2">
+                            <label className="form-label">Type*</label>
+
+                            <div className="input-group mb-3">
+                                <select
+                                    value={formData.type}
+                                    onChange={(e) => {
+
+                                        if (!e.target.value) {
+                                            formData.type = "";
+                                            errors["type"] = "Invalid type";
+                                            setErrors({ ...errors });
+                                            return;
+                                        }
+
+                                        delete errors["type"];
+                                        setErrors({ ...errors });
+
+                                        if (ValidateTypeChange(e.target.value)) {
+                                            formData.type = e.target.value;
+                                            setFormData({ ...formData });
+                                            console.log(formData);
+                                        }
 
 
-                            {errors.customer_id && (
+                                    }}
+                                    className="form-control"
+                                >
+                                    <option value="customer" SELECTED>Customer</option>
+                                    <option value="vendor">Vendor</option>
+
+                                </select>
+                            </div>
+                            {errors.type && (
                                 <div style={{ color: "red" }}>
-                                    {errors.customer_id}
+                                    {errors.type}
                                 </div>
                             )}
+                        </div>
 
-                        </div>
-                        <div className="col-md-1">
-                            <Button className="btn btn-primary" style={{ marginTop: "30px" }} onClick={openCustomers}>
-                                <i className="bi bi-list"></i>
-                            </Button>
-                        </div>
+                        {formData.type === "customer" && <>
+                            <div className="col-md-6" style={{ border: "solid 0px" }}>
+                                <label className="form-label">Customer*</label>
+                                <Typeahead
+                                    id="customer_id"
+                                    labelKey="search_label"
+                                    isLoading={false}
+                                    filterBy={['additional_keywords']}
+                                    isInvalid={errors.customer_id ? true : false}
+                                    onChange={(selectedItems) => {
+                                        errors.customer_id = "";
+                                        setErrors(errors);
+                                        if (selectedItems.length === 0) {
+                                            // errors.customer_id = "Invalid Customer selected";
+                                            //setErrors(errors);
+                                            formData.customer_id = "";
+                                            setFormData({ ...formData });
+                                            setSelectedCustomers([]);
+                                            return;
+                                        }
+                                        formData.customer_id = selectedItems[0].id;
+                                        if (selectedItems[0].use_remarks_in_sales && selectedItems[0].remarks) {
+                                            formData.remarks = selectedItems[0].remarks;
+                                        }
+
+                                        setFormData({ ...formData });
+                                        setSelectedCustomers(selectedItems);
+                                        setOpenCustomerSearchResult(false);
+                                    }}
+                                    open={openCustomerSearchResult}
+                                    options={customerOptions}
+                                    placeholder="Customer Name / Mob / VAT # / ID"
+                                    selected={selectedCustomers}
+                                    highlightOnlyResult={true}
+                                    ref={customerSearchRef}
+                                    onKeyDown={(e) => {
+                                        if (e.key === "Escape") {
+                                            setCustomerOptions([]);
+                                            customerSearchRef.current?.clear();
+                                        }
+                                    }}
+                                    onInputChange={(searchTerm, e) => {
+                                        if (searchTerm) {
+                                            formData.customerName = searchTerm;
+                                        }
+                                        if (timerRef.current) clearTimeout(timerRef.current);
+                                        timerRef.current = setTimeout(() => {
+                                            suggestCustomers(searchTerm);
+                                        }, 100);
+                                    }}
+                                />
+                                <Button hide={true.toString()} onClick={openCustomerCreateForm} className="btn btn-outline-secondary btn-primary btn-sm" type="button" id="button-addon1"> <i className="bi bi-plus-lg"></i> New</Button>
+
+
+                                {errors.customer_id && (
+                                    <div style={{ color: "red" }}>
+                                        {errors.customer_id}
+                                    </div>
+                                )}
+
+                            </div>
+                            <div className="col-md-1">
+                                <Button className="btn btn-primary" style={{ marginTop: "30px" }} onClick={openCustomers}>
+                                    <i className="bi bi-list"></i>
+                                </Button>
+                            </div>
+                        </>}
+
+
+                        {formData.type === "vendor" && <>
+                            <div className="col-md-6" style={{ border: "solid 0px" }}>
+                                <label className="form-label">Vendor*</label>
+                                <Typeahead
+                                    id="vendor_id"
+                                    labelKey="search_label"
+                                    isLoading={false}
+                                    filterBy={['additional_keywords']}
+                                    isInvalid={errors.vendor_id ? true : false}
+                                    onChange={(selectedItems) => {
+                                        errors.vendor_id = "";
+                                        setErrors(errors);
+                                        if (selectedItems.length === 0) {
+                                            // errors.customer_id = "Invalid Customer selected";
+                                            //setErrors(errors);
+                                            formData.vendor_id = "";
+                                            setFormData({ ...formData });
+                                            setSelectedVendors([]);
+                                            return;
+                                        }
+                                        formData.vendor_id = selectedItems[0].id;
+
+                                        if (selectedItems[0].use_remarks_in_sales && selectedItems[0].remarks) {
+                                            formData.remarks = selectedItems[0].remarks;
+                                        }
+
+
+                                        setFormData({ ...formData });
+                                        setSelectedVendors(selectedItems);
+                                        setOpenVendorSearchResult(false);
+                                    }}
+                                    open={openVendorSearchResult}
+                                    options={vendorOptions}
+                                    placeholder="Vendor Name | Mob | VAT # | ID"
+                                    selected={selectedVendors}
+                                    highlightOnlyResult={true}
+                                    ref={vendorSearchRef}
+                                    onKeyDown={(e) => {
+                                        if (e.key === "Escape") {
+                                            setVendorOptions([]);
+                                            vendorSearchRef.current?.clear();
+                                        }
+                                    }}
+                                    onInputChange={(searchTerm, e) => {
+                                        if (searchTerm) {
+                                            formData.vendorName = searchTerm;
+                                        }
+                                        if (timerRef.current) clearTimeout(timerRef.current);
+                                        timerRef.current = setTimeout(() => {
+                                            suggestVendors(searchTerm);
+                                        }, 100);
+                                    }}
+                                />
+                                <Button hide={true.toString()} onClick={openVendorCreateForm} className="btn btn-outline-secondary btn-primary btn-sm" type="button" id="button-addon1"> <i className="bi bi-plus-lg"></i> New</Button>
+
+                                {errors.vendor_id && (
+                                    <div style={{ color: "red" }}>
+                                        {errors.vendor_id}
+                                    </div>
+                                )}
+                            </div>
+                            <div className="col-md-1">
+                                <Button className="btn btn-primary" style={{ marginTop: "30px" }} onClick={openVendors}>
+                                    <i className="bi bi-list"></i>
+                                </Button>
+                            </div>
+                        </>}
 
                         <div className="col-md-3">
                             <label className="form-label">Date*</label>
@@ -911,6 +1305,8 @@ const CustomerDepositCreate = forwardRef((props, ref) => {
                                                                         openSalesUpdateForm(formData.payments[key].invoice_id);
                                                                     } else if (formData.payments[key].invoice_type === "quotation_sales") {
                                                                         openQuotationUpdateForm(formData.payments[key].invoice_id);
+                                                                    } else if (formData.payments[key].invoice_type === "purchase_return") {
+                                                                        openPurchaseReturnUpdateForm(formData.payments[key].invoice_id);
                                                                     }
 
                                                                 }}>{formData.payments[key].invoice_code}</span>

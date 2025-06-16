@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 import CustomerDepositCreate from "./create.js";
 import CustomerDepositView from "./view.js";
 
@@ -60,6 +60,9 @@ function CustomerDepositIndex(props) {
     //Customer Auto Suggestion
     const [customerOptions, setCustomerOptions] = useState([]);
     const [selectedCustomers, setSelectedCustomers] = useState([]);
+
+    const [vendorOptions, setVendorOptions] = useState([]);
+    const [selectedVendors, setSelectedVendors] = useState([]);
 
 
 
@@ -220,6 +223,8 @@ function CustomerDepositIndex(props) {
             setSelectedCreatedByCustomerDeposits(values);
         } else if (field === "customer_id") {
             setSelectedCustomers(values);
+        } else if (field === "vendor_id") {
+            setSelectedVendors(values);
         } else if (field === "payment_methods") {
             setSelectedPaymentMethodList(values);
         }
@@ -238,6 +243,19 @@ function CustomerDepositIndex(props) {
 
     async function suggestCustomers(searchTerm) {
         console.log("Inside handle suggestCustomers");
+        setCustomerOptions([]);
+
+        console.log("searchTerm:" + searchTerm);
+        if (!searchTerm) {
+            // openProductSearchResult = false;
+
+            setTimeout(() => {
+                setOpenCustomerSearchResult(false);
+            }, 100);
+            return;
+        }
+
+
 
         var params = {
             query: searchTerm,
@@ -266,9 +284,97 @@ function CustomerDepositIndex(props) {
             requestOptions
         );
         let data = await result.json();
+        if (!data.result || data.result.length === 0) {
+            setOpenCustomerSearchResult(false);
+            return;
+        }
+        setOpenCustomerSearchResult(true);
 
-        setCustomerOptions(data.result);
+        const filtered = data.result.filter((opt) => customFilter(opt, searchTerm));
+
+        setCustomerOptions(filtered);
     }
+
+    let [openVendorSearchResult, setOpenVendorSearchResult] = useState(false);
+    let [openCustomerSearchResult, setOpenCustomerSearchResult] = useState(false);
+
+    async function suggestVendors(searchTerm) {
+        console.log("Inside handle suggest Vendors");
+        setVendorOptions([]);
+
+        console.log("searchTerm:" + searchTerm);
+        if (!searchTerm) {
+            // openProductSearchResult = false;
+
+            setTimeout(() => {
+                setOpenVendorSearchResult(false);
+            }, 100);
+            return;
+        }
+
+
+        var params = {
+            query: searchTerm,
+        };
+
+        if (localStorage.getItem("store_id")) {
+            params.store_id = localStorage.getItem("store_id");
+        }
+
+        var queryString = ObjectToSearchQueryParams(params);
+        if (queryString !== "") {
+            queryString = `&${queryString}`;
+        }
+
+        const requestOptions = {
+            method: "GET",
+            headers: {
+                "Content-Type": "application/json",
+                Authorization: localStorage.getItem("access_token"),
+            },
+        };
+
+        let Select = "select=id,code,additional_keywords,vat_no,name,phone,name_in_arabic,phone_in_arabic,search_label";
+        let result = await fetch(
+            `/v1/vendor?${Select}${queryString}`,
+            requestOptions
+        );
+        let data = await result.json();
+
+        if (!data.result || data.result.length === 0) {
+            setOpenVendorSearchResult(false);
+            return;
+        }
+        setOpenVendorSearchResult(true);
+
+        const filtered = data.result.filter((opt) => customFilter(opt, searchTerm));
+
+        setVendorOptions(filtered);
+    }
+
+
+
+    const customFilter = useCallback((option, query) => {
+        const normalize = (str) => str?.toLowerCase().replace(/\s+/g, " ").trim() || "";
+
+        const q = normalize(query);
+        const qWords = q.split(" ");
+
+        const fields = [
+            option.code,
+            option.vat_no,
+            option.name,
+            option.name_in_arabic,
+            option.phone,
+            option.search_label,
+            option.phone_in_arabic,
+            ...(Array.isArray(option.additional_keywords) ? option.additional_keywords : []),
+        ];
+
+        const searchable = normalize(fields.join(" "));
+
+        return qWords.every((word) => searchable.includes(word));
+    }, []);
 
 
     let [totalCustomerDeposits, setTotalCustomerDeposits] = useState(0.00);
@@ -284,7 +390,7 @@ function CustomerDepositIndex(props) {
             },
         };
         let Select =
-            "select=id,code,date,net_total,payment_methods,payments,bank_reference_no,description,remarks,customer_id,customer_name,created_by_name,created_at";
+            "select=id,code,date,type,net_total,payment_methods,payments,bank_reference_no,description,remarks,customer_id,customer_name,vendor_id,vendor_name,created_by_name,created_at";
 
         if (localStorage.getItem("store_id")) {
             searchParams.store_id = localStorage.getItem("store_id");
@@ -425,11 +531,15 @@ function CustomerDepositIndex(props) {
     }
 
     const customerSearchRef = useRef();
+    const vendorSearchRef = useRef();
     const timerRef = useRef(null);
 
     const idSearchRef = useRef();
     const netTotalSearchRef = useRef();
     const descriptionSearchRef = useRef();
+
+
+
 
     return (
         <>
@@ -460,7 +570,7 @@ function CustomerDepositIndex(props) {
             <div className="container-fluid p-0">
                 <div className="row">
                     <div className="col">
-                        <h1 className="h3">Customer Receivables</h1>
+                        <h1 className="h3"> Receivables</h1>
                     </div>
 
 
@@ -656,6 +766,25 @@ function CustomerDepositIndex(props) {
                                                             cursor: "pointer",
                                                         }}
                                                         onClick={() => {
+                                                            sort("type");
+                                                        }}
+                                                    >
+                                                        Type
+                                                        {sortField === "type" && sortOrder === "-" ? (
+                                                            <i className="bi bi-sort-numeric-down"></i>
+                                                        ) : null}
+                                                        {sortField === "type" && sortOrder === "" ? (
+                                                            <i className="bi bi-sort-numeric-up"></i>
+                                                        ) : null}
+                                                    </b>
+                                                </th>
+                                                <th>
+                                                    <b
+                                                        style={{
+                                                            textDecoration: "underline",
+                                                            cursor: "pointer",
+                                                        }}
+                                                        onClick={() => {
                                                             sort("customer_name");
                                                         }}
                                                     >
@@ -665,6 +794,27 @@ function CustomerDepositIndex(props) {
                                                             <i className="bi bi-sort-alpha-up-alt"></i>
                                                         ) : null}
                                                         {sortField === "customer_name" && sortCustomerDeposit === "" ? (
+                                                            <i className="bi bi-sort-alpha-up"></i>
+                                                        ) : null}
+                                                    </b>
+                                                </th>
+
+                                                <th>
+                                                    <b
+                                                        style={{
+                                                            textDecoration: "underline",
+                                                            cursor: "pointer",
+                                                        }}
+                                                        onClick={() => {
+                                                            sort("vendor_name");
+                                                        }}
+                                                    >
+                                                        Vendor
+                                                        {sortField === "vendor_name" &&
+                                                            sortCustomerDeposit === "-" ? (
+                                                            <i className="bi bi-sort-alpha-up-alt"></i>
+                                                        ) : null}
+                                                        {sortField === "vendor_name" && sortCustomerDeposit === "" ? (
                                                             <i className="bi bi-sort-alpha-up"></i>
                                                         ) : null}
                                                     </b>
@@ -897,6 +1047,18 @@ function CustomerDepositIndex(props) {
                                                     ) : null}
                                                 </th>
                                                 <th>
+                                                    <select
+                                                        onChange={(e) => {
+                                                            searchByFieldValue("type", e.target.value);
+
+                                                        }}
+                                                    >
+                                                        <option value="" >All</option>
+                                                        <option value="customer" >Customer</option>
+                                                        <option value="vendor">Vendor</option>
+                                                    </select>
+                                                </th>
+                                                <th>
                                                     <Typeahead
                                                         id="customer_id"
                                                         labelKey="search_label"
@@ -907,7 +1069,10 @@ function CustomerDepositIndex(props) {
                                                                 "customer_id",
                                                                 selectedItems
                                                             );
+
+                                                            setOpenCustomerSearchResult(false);
                                                         }}
+                                                        open={openCustomerSearchResult}
                                                         options={customerOptions}
                                                         placeholder="Customer Name / Mob / VAT # / ID"
                                                         selected={selectedCustomers}
@@ -923,6 +1088,41 @@ function CustomerDepositIndex(props) {
                                                             if (timerRef.current) clearTimeout(timerRef.current);
                                                             timerRef.current = setTimeout(() => {
                                                                 suggestCustomers(searchTerm);
+                                                            }, 100);
+                                                        }}
+                                                        multiple
+                                                    />
+                                                </th>
+                                                <th>
+                                                    <Typeahead
+                                                        id="vendor_id"
+                                                        filterBy={() => true}
+                                                        labelKey="search_label"
+                                                        style={{ minWidth: "300px" }}
+                                                        onChange={(selectedItems) => {
+                                                            searchByMultipleValuesField(
+                                                                "vendor_id",
+                                                                selectedItems
+                                                            );
+
+                                                            setOpenVendorSearchResult(false);
+                                                        }}
+                                                        options={vendorOptions}
+                                                        open={openVendorSearchResult}
+                                                        placeholder="Vendor Name / Mob / VAT # / ID"
+                                                        selected={selectedVendors}
+                                                        highlightOnlyResult={true}
+                                                        ref={vendorSearchRef}
+                                                        onKeyDown={(e) => {
+                                                            if (e.key === "Escape") {
+                                                                setVendorOptions([]);
+                                                                vendorSearchRef.current?.clear();
+                                                            }
+                                                        }}
+                                                        onInputChange={(searchTerm, e) => {
+                                                            if (timerRef.current) clearTimeout(timerRef.current);
+                                                            timerRef.current = setTimeout(() => {
+                                                                suggestVendors(searchTerm);
                                                             }, 100);
                                                         }}
                                                         multiple
@@ -1182,8 +1382,12 @@ function CustomerDepositIndex(props) {
                                                         <td style={{ width: "auto", whiteSpace: "nowrap" }} >
                                                             {format(new Date(customerdeposit.date), "MMM dd yyyy h:mma")}
                                                         </td>
+                                                        <td style={{ width: "auto", whiteSpace: "nowrap" }} >  {customerdeposit.type}</td>
                                                         <td style={{ width: "auto", whiteSpace: "nowrap" }} >
-                                                            <OverflowTooltip value={customerdeposit.customer_name} maxWidth={300} />
+                                                            {customerdeposit.customer_name && <OverflowTooltip value={customerdeposit.customer_name} maxWidth={300} />}
+                                                        </td>
+                                                        <td style={{ width: "auto", whiteSpace: "nowrap" }} >
+                                                            {customerdeposit.vendor_name && <OverflowTooltip value={customerdeposit.vendor_name} maxWidth={300} />}
                                                         </td>
                                                         <td style={{ width: "auto", whiteSpace: "nowrap" }} >
                                                             <Amount amount={trimTo2Decimals(customerdeposit.net_total)} />

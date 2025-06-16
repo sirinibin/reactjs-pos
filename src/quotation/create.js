@@ -2098,11 +2098,6 @@ const QuotationCreate = forwardRef((props, ref) => {
                       setErrors({ ...errors });
 
                       formData.type = e.target.value;
-                      if (formData.type === "quotation") {
-                        formData.payment_status = "";
-                      } else if (formData.type === "invoice") {
-                        formData.payment_status = "credit";
-                      }
                       setFormData({ ...formData });
                       console.log(formData);
                     }}

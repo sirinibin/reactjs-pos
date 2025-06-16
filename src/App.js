@@ -109,11 +109,11 @@ function App() {
             <Dashboard />
           </Route>
 
-          <Route path="/dashboard/customer_deposits">
+          <Route path="/dashboard/receivables">
             <Dashboard />
           </Route>
 
-          <Route path="/dashboard/customer_withdrawals">
+          <Route path="/dashboard/payables">
             <Dashboard />
           </Route>
 

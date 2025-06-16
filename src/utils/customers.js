@@ -233,7 +233,7 @@ const Customers = forwardRef((props, ref) => {
             },
         };
         let Select =
-            "select=id,code,additional_keywords,name,credit_balance,account,email,phone,name_in_arabic,phone_in_arabic,vat_no,created_by_name,created_at,stores";
+            "select=id,code,search_label,additional_keywords,name,credit_balance,account,email,phone,name_in_arabic,phone_in_arabic,vat_no,created_by_name,created_at,stores";
 
         if (localStorage.getItem("store_id")) {
             searchParams.store_id = localStorage.getItem("store_id");

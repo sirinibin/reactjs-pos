@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, forwardRef, useImperativeHandle } from "react";
+import React, { useState, useEffect, useRef, forwardRef, useCallback, useImperativeHandle } from "react";
 import { Modal, Button } from "react-bootstrap";
 
 import { Spinner } from "react-bootstrap";
@@ -6,12 +6,18 @@ import { Typeahead } from "react-bootstrap-typeahead";
 import DatePicker from "react-datepicker";
 import { format } from "date-fns";
 import CustomerCreate from "./../customer/create.js";
+import VendorCreate from "./../vendor/create.js";
 import CustomerView from "./../customer/view.js";
 import Customers from "./../utils/customers.js";
+import Vendors from "./../utils/vendors.js";
 import SalesReturn from "./../utils/salesReturn.js";
-import CustomerWithdrawalPreview from './preview.js';
+import Purchases from "./../utils/purchases.js";
+import QuotationSalesReturns from "./../utils/quotation_sales_returns.js";
+import CustomerDepositPreview from './../customer_deposit/preview.js';
 import { trimTo2Decimals } from "../utils/numberUtils";
+import PurchaseCreate from "./../purchase/create.js";
 import SalesReturnCreate from "./../sales_return/create.js";
+import QuotationSalesReturnCreate from "./../quotation_sales_return/create.js";
 import { confirm } from 'react-bootstrap-confirmation';
 import InfoDialog from './../utils/InfoDialog';
 
@@ -19,16 +25,29 @@ const CustomerWithdrawalCreate = forwardRef((props, ref) => {
     useImperativeHandle(ref, () => ({
         open(id) {
             formData = {
+                type: "customer",
                 images_content: [],
                 date_str: new Date(),
+                payments: [
+                    {
+                        date_str: new Date(),
+                        amount: 0.00,
+                        method: "",
+                        bank_reference: "",
+                        description: "",
+                    },
+                ],
             };
             setFormData({ ...formData });
             setSelectedCustomers([]);
+            setSelectedVendors([]);
+            findTotalPayments();
 
             if (id) {
                 getCustomerWithdrawal(id);
             }
             getStore(localStorage.getItem("store_id"));
+
             SetShow(true);
         },
 
@@ -66,6 +85,7 @@ const CustomerWithdrawalCreate = forwardRef((props, ref) => {
 
             });
     }
+
 
     useEffect(() => {
         const listener = event => {
@@ -158,7 +178,7 @@ const CustomerWithdrawalCreate = forwardRef((props, ref) => {
                 }
                 findTotalPayments();
 
-                if (formData.customer_name && formData.customer_id) {
+                if (formData.type === "customer" && formData.customer_name && formData.customer_id) {
                     let selectedCustomers = [
                         {
                             id: formData.customer_id,
@@ -169,7 +189,20 @@ const CustomerWithdrawalCreate = forwardRef((props, ref) => {
                     setSelectedCustomers([...selectedCustomers]);
                 }
 
+
+                if (formData.type === "vendor" && formData.vendor_name && formData.vendor_id) {
+                    let selectedVendors = [
+                        {
+                            id: formData.vendor_id,
+                            name: formData.vendor_name,
+                            search_label: formData.vendor.search_label,
+                        }
+                    ];
+                    setSelectedVendors([...selectedVendors]);
+                }
+
                 formData.images_content = [];
+
                 setFormData({ ...formData });
             })
             .catch(error => {
@@ -198,11 +231,52 @@ const CustomerWithdrawalCreate = forwardRef((props, ref) => {
     //Customer Auto Suggestion
     const [customerOptions, setCustomerOptions] = useState([]);
     const [selectedCustomers, setSelectedCustomers] = useState([]);
+
+    const [vendorOptions, setVendorOptions] = useState([]);
+    const [selectedVendors, setSelectedVendors] = useState([]);
     // const [isCustomersLoading, setIsCustomersLoading] = useState(false);
+
+
+
+
+    const customFilter = useCallback((option, query) => {
+        const normalize = (str) => str?.toLowerCase().replace(/\s+/g, " ").trim() || "";
+
+        const q = normalize(query);
+        const qWords = q.split(" ");
+
+        const fields = [
+            option.code,
+            option.vat_no,
+            option.name,
+            option.name_in_arabic,
+            option.phone,
+            option.search_label,
+            option.phone_in_arabic,
+            ...(Array.isArray(option.additional_keywords) ? option.additional_keywords : []),
+        ];
+
+        const searchable = normalize(fields.join(" "));
+
+        return qWords.every((word) => searchable.includes(word));
+    }, []);
+
+
+    let [openVendorSearchResult, setOpenVendorSearchResult] = useState(false);
+    let [openCustomerSearchResult, setOpenCustomerSearchResult] = useState(false);
 
     async function suggestCustomers(searchTerm) {
         console.log("Inside handle suggestCustomers");
         setCustomerOptions([]);
+
+
+        console.log("searchTerm:" + searchTerm);
+        if (!searchTerm) {
+            setTimeout(() => {
+                setOpenCustomerSearchResult(false);
+            }, 100);
+            return;
+        }
 
         console.log("searchTerm:" + searchTerm);
         if (!searchTerm) {
@@ -237,9 +311,80 @@ const CustomerWithdrawalCreate = forwardRef((props, ref) => {
             requestOptions
         );
         let data = await result.json();
+        if (!data.result || data.result.length === 0) {
+            setOpenCustomerSearchResult(false);
+            return;
+        }
 
-        setCustomerOptions(data.result);
-        // setIsCustomersLoading(false);
+        setOpenCustomerSearchResult(true);
+
+
+        if (data.result) {
+            const filtered = data.result.filter((opt) => customFilter(opt, searchTerm));
+            setCustomerOptions(filtered);
+        } else {
+            setCustomerOptions([]);
+        }
+
+        //setIsCustomersLoading(false);
+    }
+
+
+    async function suggestVendors(searchTerm) {
+        console.log("Inside handle suggestVendors");
+        setCustomerOptions([]);
+
+        console.log("searchTerm:" + searchTerm);
+        if (!searchTerm) {
+            setTimeout(() => {
+                setOpenVendorSearchResult(false);
+            }, 100);
+            return;
+        }
+
+        var params = {
+            query: searchTerm,
+        };
+
+        if (localStorage.getItem("store_id")) {
+            params.store_id = localStorage.getItem("store_id");
+        }
+
+        var queryString = ObjectToSearchQueryParams(params);
+        if (queryString !== "") {
+            queryString = "&" + queryString;
+        }
+
+        const requestOptions = {
+            method: "GET",
+            headers: {
+                "Content-Type": "application/json",
+                Authorization: localStorage.getItem("access_token"),
+            },
+        };
+
+        let Select = "select=id,additional_keywords,code,vat_no,name,phone,name_in_arabic,phone_in_arabic,search_label";
+        // setIsCustomersLoading(true);
+        let result = await fetch(
+            "/v1/vendor?" + Select + queryString,
+            requestOptions
+        );
+        let data = await result.json();
+        if (!data.result || data.result.length === 0) {
+            setOpenVendorSearchResult(false);
+            return;
+        }
+
+        setOpenVendorSearchResult(true);
+
+        if (data.result) {
+            const filtered = data.result.filter((opt) => customFilter(opt, searchTerm));
+            setVendorOptions(filtered);
+        } else {
+            setVendorOptions([]);
+        }
+
+        //setIsCustomersLoading(false);
     }
 
     function handleCreate(event) {
@@ -254,6 +399,12 @@ const CustomerWithdrawalCreate = forwardRef((props, ref) => {
 
         if (localStorage.getItem("store_id")) {
             formData.store_id = localStorage.getItem("store_id");
+        }
+
+        if (formData.type === "customer") {
+            formData.vendor_id = "";
+        } else if (formData.type === "vendor") {
+            formData.customer_id = "";
         }
 
 
@@ -426,6 +577,11 @@ const CustomerWithdrawalCreate = forwardRef((props, ref) => {
         CustomerCreateFormRef.current.open();
     }
 
+    const VendorCreateFormRef = useRef();
+    function openVendorCreateForm() {
+        VendorCreateFormRef.current.open();
+    }
+
     const CustomerDetailsViewRef = useRef();
     function openCustomerDetailsView(id) {
         CustomerDetailsViewRef.current.open(id);
@@ -436,6 +592,12 @@ const CustomerWithdrawalCreate = forwardRef((props, ref) => {
         CustomersRef.current.open();
     }
 
+    const VendorsRef = useRef();
+    function openVendors(model) {
+        VendorsRef.current.open();
+    }
+
+
     const handleSelectedCustomer = (selectedCustomer) => {
         console.log("selectedCustomer:", selectedCustomer);
         setSelectedCustomers([selectedCustomer])
@@ -443,38 +605,24 @@ const CustomerWithdrawalCreate = forwardRef((props, ref) => {
         setFormData({ ...formData });
     };
 
-    const SalesReturnRef = useRef();
-    function openSalesReturn(paymentIndex) {
-        if (!formData.customer_id) {
-            infoMessage = "Please select a customer first then try again!";
-            setInfoMessage(infoMessage);
-            showInfo = true;
-            setShowInfo(showInfo);
-            return;
-        }
+    const handleSelectedVendor = (selectedVendor) => {
+        console.log("selectedVendor:", selectedVendor);
+        setSelectedVendors([selectedVendor])
+        formData.vendor_id = selectedVendor.id;
+        setFormData({ ...formData });
+    };
 
-        selectedPaymentIndex = paymentIndex;
-        setSelectedPaymentIndex(selectedPaymentIndex);
-        let selectedPaymentStatusList = [
-            {
-                id: "not_paid",
-                name: "Not Paid",
-            },
-            {
-                id: "paid_partially",
-                name: "Paid partially",
-            }
-        ];
-        SalesReturnRef.current.open(selectedCustomers, selectedPaymentStatusList);
-    }
+
+
 
     let [selectedPaymentIndex, setSelectedPaymentIndex] = useState(null);
     let [showInfo, setShowInfo] = useState(false);
     let [infoMessage, setInfoMessage] = useState("");
 
     const handleSelectedSalesReturn = (selectedSalesReturn) => {
+
         if (formData.customer_id !== selectedSalesReturn.customer_id) {
-            infoMessage = "The selected Sales Return is not belongs to the customer " + selectedCustomers[0]?.name;
+            infoMessage = "The selected sales return is not belongs to the customer " + selectedCustomers[0]?.name;
             setInfoMessage(infoMessage);
             showInfo = true;
             setShowInfo(showInfo);
@@ -493,12 +641,62 @@ const CustomerWithdrawalCreate = forwardRef((props, ref) => {
         formData.payments[selectedPaymentIndex].invoice_type = "sales_return";
         formData.payments[selectedPaymentIndex].invoice_id = selectedSalesReturn.id;
         formData.payments[selectedPaymentIndex].invoice_code = selectedSalesReturn.code;
-        formData.payments[selectedPaymentIndex].amount = selectedSalesReturn.balance_amount;
+        formData.payments[selectedPaymentIndex].amount = parseFloat(trimTo2Decimals(selectedSalesReturn.balance_amount));
         findTotalPayments();
         setFormData({ ...formData });
     };
 
+    const handleSelectedQuotationSalesReturn = (selectedQuotationSalesReturn) => {
 
+        if (formData.customer_id !== selectedQuotationSalesReturn.customer_id) {
+            infoMessage = "The selected Qtn. sales return is not belongs to the customer " + selectedCustomers[0]?.name;
+            setInfoMessage(infoMessage);
+            showInfo = true;
+            setShowInfo(showInfo);
+            return;
+        }
+
+        console.log("selectedQuotationSalesReturn:", selectedQuotationSalesReturn);
+        if (selectedQuotationSalesReturn.payment_status === "paid") {
+            infoMessage = "The selected invoice is already paid";
+            setInfoMessage(infoMessage);
+            showInfo = true;
+            setShowInfo(showInfo);
+            return;
+        }
+        // setSelectedCustomers([selectedCustomer])
+        formData.payments[selectedPaymentIndex].invoice_type = "quotation_sales_return";
+        formData.payments[selectedPaymentIndex].invoice_id = selectedQuotationSalesReturn.id;
+        formData.payments[selectedPaymentIndex].invoice_code = selectedQuotationSalesReturn.code;
+        formData.payments[selectedPaymentIndex].amount = parseFloat(trimTo2Decimals(selectedQuotationSalesReturn.balance_amount));
+        findTotalPayments();
+        setFormData({ ...formData });
+    };
+
+    const handleSelectedPurchase = (selectedPurchase) => {
+        if (formData.vendor_id !== selectedPurchase.vendor_id) {
+            infoMessage = "The selected Purchase is not belongs to the vendor " + selectedVendors[0]?.name;
+            setInfoMessage(infoMessage);
+            showInfo = true;
+            setShowInfo(showInfo);
+            return;
+        }
+
+        if (selectedPurchase.payment_status === "paid") {
+            infoMessage = "The selected invoice is already paid";
+            setInfoMessage(infoMessage);
+            showInfo = true;
+            setShowInfo(showInfo);
+            return;
+        }
+        // setSelectedCustomers([selectedCustomer])
+        formData.payments[selectedPaymentIndex].invoice_type = "purchase";
+        formData.payments[selectedPaymentIndex].invoice_id = selectedPurchase.id;
+        formData.payments[selectedPaymentIndex].invoice_code = selectedPurchase.code;
+        formData.payments[selectedPaymentIndex].amount = parseFloat(trimTo2Decimals(selectedPurchase.balance_amount));
+        findTotalPayments();
+        setFormData({ ...formData });
+    };
 
     const confirmInvoiceRemoval = async (paymentIndex) => {
         const result = await confirm('Are you sure, you want to remove this invoice from this payment?');
@@ -521,32 +719,211 @@ const CustomerWithdrawalCreate = forwardRef((props, ref) => {
         PreviewRef.current.open(formData, undefined, "customer_withdrawal");
     }
 
+    const PurchaseUpdateFormRef = useRef();
+    function openPurchaseUpdateForm(id) {
+        PurchaseUpdateFormRef.current.open(id);
+    }
+
     const SalesReturnUpdateFormRef = useRef();
     function openSalesReturnUpdateForm(id) {
         SalesReturnUpdateFormRef.current.open(id);
     }
 
+
+    const QuotationSalesReturnUpdateFormRef = useRef();
+    function openQuotationSalesReturnUpdateForm(id) {
+        QuotationSalesReturnUpdateFormRef.current.open(id);
+    }
+
     const inputRefs = useRef({});
     const timerRef = useRef(null);
     const customerSearchRef = useRef();
+    const vendorSearchRef = useRef();
+
+    let [showInvoiceTypeSelection, setShowInvoiceTypeSelection] = useState(false);
+
+    function openInvoiceTypeSelection(paymentIndex) {
+        if (formData.type === "customer" && !formData.customer_id) {
+            infoMessage = "Please select a customer first then try again!";
+            setInfoMessage(infoMessage);
+            showInfo = true;
+            setShowInfo(showInfo);
+            return;
+        }
+
+        if (formData.type === "vendor" && !formData.vendor_id) {
+            infoMessage = "Please select a vendor first then try again!";
+            setInfoMessage(infoMessage);
+            showInfo = true;
+            setShowInfo(showInfo);
+            return;
+        }
+
+        selectedPaymentIndex = paymentIndex;
+        setSelectedPaymentIndex(selectedPaymentIndex);
+
+        if (formData.type === "customer") {
+            showInvoiceTypeSelection = true;
+            setShowInvoiceTypeSelection(showInvoiceTypeSelection);
+        } else if (formData.type === "vendor") {
+            // openPurchaseReturns();
+            openPurchases();
+        }
+
+        /*
+        if (store.quotation_invoice_accounting) {
+            showInvoiceTypeSelection = true;
+            setShowInvoiceTypeSelection(showInvoiceTypeSelection);
+        } else {
+            openSales();
+        }*/
+    }
+
+    const SalesReturnsRef = useRef();
+    function openSalesReturns() {
+        showInvoiceTypeSelection = false;
+        setShowInvoiceTypeSelection(showInvoiceTypeSelection);
+
+        let selectedPaymentStatusList = [
+            {
+                id: "not_paid",
+                name: "Not Paid",
+            },
+            {
+                id: "paid_partially",
+                name: "Paid partially",
+            }
+        ];
+        SalesReturnsRef.current.open(selectedCustomers, selectedPaymentStatusList);
+    }
+
+    const PurchasesRef = useRef();
+    function openPurchases() {
+        let selectedPaymentStatusList = [
+            {
+                id: "not_paid",
+                name: "Not Paid",
+            },
+            {
+                id: "paid_partially",
+                name: "Paid partially",
+            }
+        ];
+        PurchasesRef.current.open(selectedVendors, selectedPaymentStatusList);
+    }
+
+    const QuotationSalesReturnsRef = useRef();
+    function openQuotationSalesReturns() {
+        showInvoiceTypeSelection = false;
+        setShowInvoiceTypeSelection(showInvoiceTypeSelection);
+
+        let selectedPaymentStatusList = [
+            {
+                id: "not_paid",
+                name: "Not Paid",
+            },
+            {
+                id: "paid_partially",
+                name: "Paid partially",
+            }
+        ];
+        QuotationSalesReturnsRef.current.open(selectedCustomers, selectedPaymentStatusList);
+    }
+
+
+    function ValidateTypeChange(newType) {
+        delete errors["type"];
+        setErrors({ ...errors });
+
+        for (let i = 0; i < formData.payments?.length; i++) {
+            delete errors["customer_payable_payment_invoice_" + i];
+            setErrors({ ...errors });
+
+            if (formData.type === "vendor" && newType === "customer") {
+                if (formData.payments[i].invoice_type === "purchase") {
+                    errors["type"] = "Please remvoe purchase invoices linked to your payments and try again";
+                    errors["customer_payable_payment_invoice_" + i] = "Remove this purchase invoice and try again"
+                    setErrors({ ...errors });
+                    return false;
+                }
+            } else if (formData.type === "customer" && newType === "vendor") {
+                if (formData.payments[i].invoice_type === "sales_return") {
+                    errors["type"] = "Please remvoe sales return invoices linked to your payments and try again";
+                    errors["customer_payable_payment_invoice_" + i] = "Remove this sales return invoice and try again"
+                    setErrors({ ...errors });
+                    return false;
+                }
+
+                if (formData.payments[i].invoice_type === "quotation_sales_return") {
+                    errors["type"] = "Please remvoe quotation sales return invoices linked to your payments and try again";
+                    errors["customer_payable_payment_invoice_" + i] = "Remove this quotation sales return invoice and try again"
+                    setErrors({ ...errors });
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
+
+    useEffect(() => {
+        const handleKeyDown = (e) => {
+            if (e.key === "Escape") {
+                e.preventDefault();
+                e.stopPropagation();
+            }
+        };
+
+        document.addEventListener("keydown", handleKeyDown);
+        return () => document.removeEventListener("keydown", handleKeyDown);
+    }, []);
+
 
     return (
         <>
+            <Modal show={showInvoiceTypeSelection} onHide={() => {
+                showInvoiceTypeSelection = false;
+                setShowInvoiceTypeSelection(showInvoiceTypeSelection);
+            }} centered>
+                <Modal.Header closeButton>
+                    <Modal.Title>Select Invoice Type</Modal.Title>
+                </Modal.Header>
+                <Modal.Body className="d-flex justify-content-around">
+                    {formData.type === "customer" && <>
+                        <Button variant="primary" onClick={() => {
+                            openSalesReturns();
+                        }}>
+                            Sales Return Invoices
+                        </Button>
+                        <Button variant="secondary" onClick={() => {
+                            openQuotationSalesReturns();
+                        }}>
+                            Quotation Sales Return Invoices
+                        </Button>
+                    </>}
+                </Modal.Body>
+            </Modal>
+
             <InfoDialog
                 show={showInfo}
                 message={infoMessage}
                 onClose={() => setShowInfo(false)}
             />
+            <PurchaseCreate ref={PurchaseUpdateFormRef} />
             <SalesReturnCreate ref={SalesReturnUpdateFormRef} />
-            <CustomerWithdrawalPreview ref={PreviewRef} />
+            <QuotationSalesReturnCreate ref={QuotationSalesReturnUpdateFormRef} />
+            <CustomerDepositPreview ref={PreviewRef} />
             <Customers ref={CustomersRef} onSelectCustomer={handleSelectedCustomer} showToastMessage={props.showToastMessage} />
-            <SalesReturn ref={SalesReturnRef} onSelectSalesReturn={handleSelectedSalesReturn} showToastMessage={props.showToastMessage} />
+            <Vendors ref={VendorsRef} onSelectVendor={handleSelectedVendor} showToastMessage={props.showToastMessage} />
+            <SalesReturn ref={SalesReturnsRef} onSelectSalesReturn={handleSelectedSalesReturn} showToastMessage={props.showToastMessage} />
+            <Purchases ref={PurchasesRef} onSelectPurchase={handleSelectedPurchase} showToastMessage={props.showToastMessage} />
+            <QuotationSalesReturns ref={QuotationSalesReturnsRef} onSelectQuotationSalesReturn={handleSelectedQuotationSalesReturn} showToastMessage={props.showToastMessage} />
             <CustomerCreate ref={CustomerCreateFormRef} openDetailsView={openCustomerDetailsView} showToastMessage={props.showToastMessage} />
+            <VendorCreate ref={VendorCreateFormRef} showToastMessage={props.showToastMessage} />
             <CustomerView ref={CustomerDetailsViewRef} showToastMessage={props.showToastMessage} />
-            <Modal show={show} size="xl" keyboard={false} onHide={handleClose} animation={false} backdrop="static" scrollable={true}>
+            <Modal show={show} size="xl" onHide={handleClose} animation={false} backdrop="static" scrollable={true}>
                 <Modal.Header>
                     <Modal.Title>
-                        {formData.id ? "Update Customer Payable #" + formData.code : "Create New Customer Payable"}
+                        {formData.id ? "Update Payable #" + formData.code : "Create New Payable"}
                     </Modal.Title>
 
 
@@ -589,69 +966,184 @@ const CustomerWithdrawalCreate = forwardRef((props, ref) => {
                 </Modal.Header>
                 <Modal.Body>
                     <form className="row g-3 needs-validation" onSubmit={handleCreate}>
-                        <div className="col-md-6" style={{ border: "solid 0px" }}>
-                            <label className="form-label">Customer*</label>
-                            <Typeahead
-                                id="customer_id"
-                                labelKey="search_label"
-                                isLoading={false}
-                                filterBy={['additional_keywords']}
-                                isInvalid={errors.customer_id ? true : false}
-                                onChange={(selectedItems) => {
-                                    errors.customer_id = "";
-                                    setErrors(errors);
-                                    if (selectedItems.length === 0) {
-                                        // errors.customer_id = "Invalid Customer selected";
-                                        //setErrors(errors);
-                                        formData.customer_id = "";
-                                        setFormData({ ...formData });
-                                        setSelectedCustomers([]);
-                                        return;
-                                    }
-                                    formData.customer_id = selectedItems[0].id;
-                                    if (selectedItems[0].use_remarks_in_salesreturn && selectedItems[0].remarks) {
-                                        formData.remarks = selectedItems[0].remarks;
-                                    }
 
-                                    setFormData({ ...formData });
-                                    setSelectedCustomers(selectedItems);
-                                }}
-                                options={customerOptions}
-                                placeholder="Customer Name / Mob / VAT # / ID"
-                                selected={selectedCustomers}
-                                highlightOnlyResult={true}
-                                onInputChange={(searchTerm, e) => {
-                                    if (searchTerm) {
-                                        formData.customerName = searchTerm;
-                                    }
-                                    if (timerRef.current) clearTimeout(timerRef.current);
-                                    timerRef.current = setTimeout(() => {
-                                        suggestCustomers(searchTerm);
-                                    }, 100);
-                                }}
-                                ref={customerSearchRef}
-                                onKeyDown={(e) => {
-                                    if (e.key === "Escape") {
-                                        setCustomerOptions([]);
-                                        customerSearchRef.current?.clear();
-                                    }
-                                }}
-                            />
-                            <Button hide={true.toString()} onClick={openCustomerCreateForm} className="btn btn-outline-secondary btn-primary btn-sm" type="button" id="button-addon1"> <i className="bi bi-plus-lg"></i> New</Button>
+                        <div className="col-md-2">
+                            <label className="form-label">Type*</label>
+
+                            <div className="input-group mb-3">
+                                <select
+                                    value={formData.type}
+                                    onChange={(e) => {
+
+                                        if (!e.target.value) {
+                                            formData.type = "";
+                                            errors["type"] = "Invalid type";
+                                            setErrors({ ...errors });
+                                            return;
+                                        }
+
+                                        delete errors["type"];
+                                        setErrors({ ...errors });
+
+                                        if (ValidateTypeChange(e.target.value)) {
+                                            formData.type = e.target.value;
+                                            setFormData({ ...formData });
+                                            console.log(formData);
+                                        }
 
 
-                            {errors.customer_id && (
+                                    }}
+                                    className="form-control"
+                                >
+                                    <option value="customer" SELECTED>Customer</option>
+                                    <option value="vendor">Vendor</option>
+
+                                </select>
+                            </div>
+                            {errors.type && (
                                 <div style={{ color: "red" }}>
-                                    {errors.customer_id}
+                                    {errors.type}
                                 </div>
                             )}
+                        </div>
 
-                        </div>
-                        <div className="col-md-1">
-                            <Button className="btn btn-primary" style={{ marginTop: "30px" }} onClick={openCustomers}>
-                                <i className="bi bi-list"></i>
-                            </Button>
-                        </div>
+
+                        {formData.type === "customer" && <>
+                            <div className="col-md-6" style={{ border: "solid 0px" }}>
+                                <label className="form-label">Customer*</label>
+                                <Typeahead
+                                    id="customer_id"
+                                    labelKey="search_label"
+                                    isLoading={false}
+                                    filterBy={['additional_keywords']}
+                                    isInvalid={errors.customer_id ? true : false}
+                                    onChange={(selectedItems) => {
+                                        errors.customer_id = "";
+                                        setErrors(errors);
+                                        if (selectedItems.length === 0) {
+                                            // errors.customer_id = "Invalid Customer selected";
+                                            //setErrors(errors);
+                                            formData.customer_id = "";
+                                            setFormData({ ...formData });
+                                            setSelectedCustomers([]);
+                                            return;
+                                        }
+                                        formData.customer_id = selectedItems[0].id;
+                                        if (selectedItems[0].use_remarks_in_sales && selectedItems[0].remarks) {
+                                            formData.remarks = selectedItems[0].remarks;
+                                        }
+
+                                        setFormData({ ...formData });
+                                        setSelectedCustomers(selectedItems);
+                                        setOpenCustomerSearchResult(false);
+                                    }}
+                                    open={openCustomerSearchResult}
+                                    options={customerOptions}
+                                    placeholder="Customer Name / Mob / VAT # / ID"
+                                    selected={selectedCustomers}
+                                    highlightOnlyResult={true}
+                                    ref={customerSearchRef}
+                                    onKeyDown={(e) => {
+                                        if (e.key === "Escape") {
+                                            setCustomerOptions([]);
+                                            customerSearchRef.current?.clear();
+                                        }
+                                    }}
+                                    onInputChange={(searchTerm, e) => {
+                                        if (searchTerm) {
+                                            formData.customerName = searchTerm;
+                                        }
+                                        if (timerRef.current) clearTimeout(timerRef.current);
+                                        timerRef.current = setTimeout(() => {
+                                            suggestCustomers(searchTerm);
+                                        }, 100);
+                                    }}
+                                />
+                                <Button hide={true.toString()} onClick={openCustomerCreateForm} className="btn btn-outline-secondary btn-primary btn-sm" type="button" id="button-addon1"> <i className="bi bi-plus-lg"></i> New</Button>
+
+
+                                {errors.customer_id && (
+                                    <div style={{ color: "red" }}>
+                                        {errors.customer_id}
+                                    </div>
+                                )}
+
+                            </div>
+                            <div className="col-md-1">
+                                <Button className="btn btn-primary" style={{ marginTop: "30px" }} onClick={openCustomers}>
+                                    <i className="bi bi-list"></i>
+                                </Button>
+                            </div>
+                        </>}
+
+
+                        {formData.type === "vendor" && <>
+                            <div className="col-md-6" style={{ border: "solid 0px" }}>
+                                <label className="form-label">Vendor*</label>
+                                <Typeahead
+                                    id="vendor_id"
+                                    labelKey="search_label"
+                                    isLoading={false}
+                                    filterBy={['additional_keywords']}
+                                    isInvalid={errors.vendor_id ? true : false}
+                                    onChange={(selectedItems) => {
+                                        errors.vendor_id = "";
+                                        setErrors(errors);
+                                        if (selectedItems.length === 0) {
+                                            // errors.customer_id = "Invalid Customer selected";
+                                            //setErrors(errors);
+                                            formData.vendor_id = "";
+                                            setFormData({ ...formData });
+                                            setSelectedVendors([]);
+                                            return;
+                                        }
+                                        formData.vendor_id = selectedItems[0].id;
+
+                                        if (selectedItems[0].use_remarks_in_sales && selectedItems[0].remarks) {
+                                            formData.remarks = selectedItems[0].remarks;
+                                        }
+
+
+                                        setFormData({ ...formData });
+                                        setSelectedVendors(selectedItems);
+                                        setOpenVendorSearchResult(false);
+                                    }}
+                                    open={openVendorSearchResult}
+                                    options={vendorOptions}
+                                    placeholder="Vendor Name | Mob | VAT # | ID"
+                                    selected={selectedVendors}
+                                    highlightOnlyResult={true}
+                                    ref={vendorSearchRef}
+                                    onKeyDown={(e) => {
+                                        if (e.key === "Escape") {
+                                            setVendorOptions([]);
+                                            vendorSearchRef.current?.clear();
+                                        }
+                                    }}
+                                    onInputChange={(searchTerm, e) => {
+                                        if (searchTerm) {
+                                            formData.vendorName = searchTerm;
+                                        }
+                                        if (timerRef.current) clearTimeout(timerRef.current);
+                                        timerRef.current = setTimeout(() => {
+                                            suggestVendors(searchTerm);
+                                        }, 100);
+                                    }}
+                                />
+                                <Button hide={true.toString()} onClick={openVendorCreateForm} className="btn btn-outline-secondary btn-primary btn-sm" type="button" id="button-addon1"> <i className="bi bi-plus-lg"></i> New</Button>
+
+                                {errors.vendor_id && (
+                                    <div style={{ color: "red" }}>
+                                        {errors.vendor_id}
+                                    </div>
+                                )}
+                            </div>
+                            <div className="col-md-1">
+                                <Button className="btn btn-primary" style={{ marginTop: "30px" }} onClick={openVendors}>
+                                    <i className="bi bi-list"></i>
+                                </Button>
+                            </div>
+                        </>}
 
                         <div className="col-md-3">
                             <label className="form-label">Date*</label>
@@ -764,6 +1256,8 @@ const CustomerWithdrawalCreate = forwardRef((props, ref) => {
                                                                 }, 100);
                                                             }}
                                                             onKeyDown={(e) => {
+                                                                if (timerRef.current) clearTimeout(timerRef.current);
+
                                                                 if (e.key === "ArrowLeft") {
                                                                     timerRef.current = setTimeout(() => {
                                                                         if (key > 0) {
@@ -808,7 +1302,14 @@ const CustomerWithdrawalCreate = forwardRef((props, ref) => {
                                                         <div className="row" style={{ border: "solid 0px" }}>
                                                             <div className="" style={{ border: "solid 0px", maxWidth: "140px", fontSize: "12px" }}>
                                                                 <span style={{ cursor: "pointer", color: "blue" }} onClick={() => {
-                                                                    openSalesReturnUpdateForm(formData.payments[key].invoice_id);
+                                                                    if (formData.payments[key].invoice_type === "purchase") {
+                                                                        openPurchaseUpdateForm(formData.payments[key].invoice_id);
+                                                                    } else if (formData.payments[key].invoice_type === "quotation_sales_return") {
+                                                                        openQuotationSalesReturnUpdateForm(formData.payments[key].invoice_id);
+                                                                    } else if (formData.payments[key].invoice_type === "sales_return") {
+                                                                        openSalesReturnUpdateForm(formData.payments[key].invoice_id);
+                                                                    }
+
                                                                 }}>{formData.payments[key].invoice_code}</span>
                                                                 {formData.payments[key].invoice_code && <span className="text-danger"
                                                                     style={{ cursor: "pointer", fontSize: "0.75rem", marginLeft: "3px" }}
@@ -821,7 +1322,7 @@ const CustomerWithdrawalCreate = forwardRef((props, ref) => {
                                                             </div>
                                                             <div className="" style={{ border: "solid 0px", width: "40px" }}>
                                                                 <Button className="btn btn-primary" style={{ marginLeft: "-12px" }} onClick={() => {
-                                                                    openSalesReturn(key);
+                                                                    openInvoiceTypeSelection(key);
                                                                 }}>
                                                                     <i className="bi bi-list"></i>
                                                                 </Button>

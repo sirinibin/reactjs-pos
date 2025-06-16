@@ -26,6 +26,30 @@ const ExcelSheet = ReactExport.ExcelFile.ExcelSheet;
 
 const Purchases = forwardRef((props, ref) => {
     const [show, SetShow] = useState(false);
+    useImperativeHandle(ref, () => ({
+        open(selectedVendorsValue, selectedPaymentStatusListValue) {
+            ResetSearchParams();
+
+            if (selectedVendorsValue?.length > 0) {
+                selectedVendors = selectedVendorsValue;
+                setSelectedVendors(selectedVendors);
+                searchByMultipleValuesField("vendor_id", selectedVendors, true);
+            }
+
+            if (selectedPaymentStatusListValue?.length > 0) {
+                selectedPaymentStatusList = selectedPaymentStatusListValue;
+                setSelectedPaymentStatusList(selectedPaymentStatusList);
+                searchByMultipleValuesField("payment_status", selectedPaymentStatusList, true);
+            }
+
+
+            list();
+
+            getStore(localStorage.getItem("store_id"));
+            SetShow(true);
+        },
+    }));
+
 
     function handleClose() {
         SetShow(false);
@@ -40,15 +64,6 @@ const Purchases = forwardRef((props, ref) => {
         }
     }
 
-    useImperativeHandle(ref, () => ({
-        open() {
-            ResetSearchParams();
-            list();
-
-            getStore(localStorage.getItem("store_id"));
-            SetShow(true);
-        },
-    }));
 
 
 
@@ -142,7 +157,7 @@ const Purchases = forwardRef((props, ref) => {
 
     //Vendor Auto Suggestion
     const [vendorOptions, setVendorOptions] = useState([]);
-    const [selectedVendors, setSelectedVendors] = useState([]);
+    let [selectedVendors, setSelectedVendors] = useState([]);
 
     //Created By User Auto Suggestion
     const [userOptions, setUserOptions] = useState([]);
@@ -618,9 +633,9 @@ const Purchases = forwardRef((props, ref) => {
     }
 
     const [selectedPaymentMethodList, setSelectedPaymentMethodList] = useState([]);
-    const [selectedPaymentStatusList, setSelectedPaymentStatusList] = useState([]);
+    let [selectedPaymentStatusList, setSelectedPaymentStatusList] = useState([]);
 
-    function searchByMultipleValuesField(field, values) {
+    function searchByMultipleValuesField(field, values, noList) {
         if (field === "created_by") {
             setSelectedCreatedByUsers(values);
         } else if (field === "vendor_id") {
@@ -640,7 +655,9 @@ const Purchases = forwardRef((props, ref) => {
         page = 1;
         setPage(page);
 
-        list();
+        if (!noList) {
+            list();
+        }
     }
 
     let [totalPaidPurchase, setTotalPaidPurchase] = useState(0.00);
@@ -662,7 +679,7 @@ const Purchases = forwardRef((props, ref) => {
             },
         };
         let Select =
-            "select=id,code,date,net_total,return_count,cash_discount,discount,vat_price,total,store_id,created_by_name,vendor_name,vendor_invoice_no,status,created_at,updated_at,net_retail_profit,net_wholesale_profit,total_payment_paid,payments_count,payment_methods,payment_status,balance_amount";
+            "select=id,code,date,net_total,return_count,cash_discount,discount,vat_price,total,store_id,created_by_name,vendor_name,vendor_id,vendor_invoice_no,status,created_at,updated_at,net_retail_profit,net_wholesale_profit,total_payment_paid,payments_count,payment_methods,payment_status,balance_amount";
         if (localStorage.getItem("store_id")) {
             searchParams.store_id = localStorage.getItem("store_id");
         }

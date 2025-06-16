@@ -27,6 +27,8 @@ const ExcelSheet = ReactExport.ExcelFile.ExcelSheet;
 
 
 function PurchaseReturnIndex(props) {
+    let [enableSelection, setEnableSelection] = useState(true);
+
     const ReportPreviewRef = useRef();
     function openReportPreview() {
         ReportPreviewRef.current.open("purchase_return_report");
@@ -84,6 +86,22 @@ function PurchaseReturnIndex(props) {
 
 
     useEffect(() => {
+        if (!props.onSelectPurchaseReturn) {
+            setEnableSelection(false);
+        } else {
+            setEnableSelection(true);
+        }
+
+        if (props.selectedVendors?.length > 0) {
+
+            searchByMultipleValuesField("vendor_id", props.selectedVendors, true);
+        }
+
+        if (props.selectedPaymentStatusList) {
+            searchByMultipleValuesField("payment_status", props.selectedPaymentStatusList, true);
+        }
+
+
         list();
         getStore(localStorage.getItem("store_id"));
         // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -521,7 +539,7 @@ function PurchaseReturnIndex(props) {
     const [selectedPaymentMethodList, setSelectedPaymentMethodList] = useState([]);
     const [selectedPaymentStatusList, setSelectedPaymentStatusList] = useState([]);
 
-    function searchByMultipleValuesField(field, values) {
+    function searchByMultipleValuesField(field, values, noList) {
         if (field === "created_by") {
             setSelectedCreatedByUsers(values);
         } else if (field === "vendor_id") {
@@ -541,7 +559,9 @@ function PurchaseReturnIndex(props) {
         page = 1;
         setPage(page);
 
-        list();
+        if (!noList) {
+            list();
+        }
     }
 
     let [totalPaidPurchaseReturn, setTotalPaidPurchaseReturn] = useState(0.00);
@@ -562,7 +582,7 @@ function PurchaseReturnIndex(props) {
             },
         };
         let Select =
-            "select=id,code,purchase_code,cash_discount,purchase_id,date,net_total,created_by_name,vendor_name,vendor_invoice_no,status,created_at,total_payment_paid,payments_count,payment_methods,payment_status,balance_amount,store_id";
+            "select=id,code,purchase_code,cash_discount,purchase_id,date,net_total,created_by_name,vendor_name,vendor_id,vendor_invoice_no,status,created_at,total_payment_paid,payments_count,payment_methods,payment_status,balance_amount,store_id";
         if (localStorage.getItem("store_id")) {
             searchParams.store_id = localStorage.getItem("store_id");
         }
@@ -820,6 +840,8 @@ function PurchaseReturnIndex(props) {
     };
 
 
+
+
     const PreviewRef = useRef();
     function openPreview(model) {
         PreviewRef.current.open(model, undefined, "purchase_return");
@@ -831,6 +853,11 @@ function PurchaseReturnIndex(props) {
 
     const vendorSearchRef = useRef();
     const timerRef = useRef(null);
+
+
+    const handleSelected = (selected) => {
+        props.onSelectPurchaseReturn(selected); // Send to parent
+    };
 
     return (
         <>
@@ -1038,6 +1065,7 @@ function PurchaseReturnIndex(props) {
                                         <thead>
                                             <tr className="text-center">
                                                 <th>Actions</th>
+                                                {enableSelection && <th>Select</th>}
                                                 <th>
                                                     <b
                                                         style={{
@@ -1312,6 +1340,7 @@ function PurchaseReturnIndex(props) {
 
                                         <thead>
                                             <tr className="text-center">
+                                                <th></th>
                                                 <th></th>
                                                 <th>
                                                     <input
@@ -1680,6 +1709,13 @@ function PurchaseReturnIndex(props) {
                                                             </Button>
                                                             &nbsp;
                                                         </td>
+                                                        {enableSelection && <td style={{ width: "auto", whiteSpace: "nowrap" }}>
+                                                            <Button className="btn btn-success btn-sm" onClick={() => {
+                                                                handleSelected(purchasereturn);
+                                                            }}>
+                                                                Select
+                                                            </Button>
+                                                        </td>}
                                                         <td style={{ width: "auto", whiteSpace: "nowrap" }} >{purchasereturn.code}</td>
                                                         <td style={{ width: "auto", whiteSpace: "nowrap" }} >{purchasereturn.vendor_invoice_no}</td>
                                                         <td className="text-start" style={{ width: "auto", whiteSpace: "nowrap" }} >

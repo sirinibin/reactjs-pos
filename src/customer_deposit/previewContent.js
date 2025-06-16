@@ -154,7 +154,7 @@ const CustomerDepositPreviewContent = forwardRef((props, ref) => {
                             ) : "<DATETIME>"} {" | " + getArabicDate(props.model.date)}</div>
                         </div>
 
-                        {props.modelName === "customer_deposit" || props.modelName === "customer_withdrawal" || props.modelName === "whatsapp_customer_deposit" || props.modelName === "whatsapp_customer_withdrawal" ? <>
+                        {props.model.type === "customer" && (props.modelName === "customer_deposit" || props.modelName === "customer_withdrawal" || props.modelName === "whatsapp_customer_deposit" || props.modelName === "whatsapp_customer_withdrawal") ? <>
                             <div className="row" dir="ltr" style={{ borderBottom: detailsBorderThickness }} >
                                 <div className="col-md-4 print-label" dir="ltr" style={{ borderRight: detailsBorderThickness, borderColor: detailsBorderColor, width: detailsLabelsColumnWidthPercent, padding: "3px" }} ><b>Customer Name | اسم العميل:</b></div>
                                 <div className="col-md-8 print-value" dir="ltr" style={{ borderColor: detailsBorderColor, width: detailsValuesColumnWidthPercent, padding: "3px" }} >
@@ -218,6 +218,72 @@ const CustomerDepositPreviewContent = forwardRef((props, ref) => {
                                         {props.model.customer?.national_address?.city_name_arabic ? `, ${props.model.customer.national_address.city_name_arabic}` : ""}
                                         {props.model.customer?.national_address?.zipcode_arabic ? ` - ${props.model.customer.national_address.zipcode_arabic} ` : ""}
                                         {props.model.customer?.national_address?.additional_no_arabic ? `- ${props.model.customer.national_address.additional_no_arabic} ` : ""}
+                                        {/*props.model.customer?.country_name === "Saudi Arabia" ? `المملكة العربية السعودية , ` : ""*/}
+                                    </span>}
+                                </div>
+                            </div>
+                        </> : ""}
+                        {props.model.type === "vendor" && (props.modelName === "customer_deposit" || props.modelName === "customer_withdrawal" || props.modelName === "whatsapp_customer_deposit" || props.modelName === "whatsapp_customer_withdrawal") ? <>
+                            <div className="row" dir="ltr" style={{ borderBottom: detailsBorderThickness }} >
+                                <div className="col-md-4 print-label" dir="ltr" style={{ borderRight: detailsBorderThickness, width: detailsLabelsColumnWidthPercent, padding: "3px" }} ><b>Vendor Name | اسم العميل:</b></div>
+                                <div className="col-md-8 print-value" dir="ltr" style={{ width: detailsValuesColumnWidthPercent, padding: "3px" }} >
+                                    {props.model.vendor ? props.model.vendor.name : ""}
+                                    {!props.model.vendor && props.model.vendorName ? props.model.vendorName : ""}
+                                    {!props.model.vendorName && !props.model.vendor ? "N/A" : ""}
+                                </div>
+                            </div>
+
+                            <div className="row" dir="ltr" style={{ borderBottom: detailsBorderThickness }} >
+                                <div className="col-md-4 print-label" dir="ltr" style={{ borderRight: detailsBorderThickness, width: detailsLabelsColumnWidthPercent, padding: "3px" }} ><b>Vendor ID | معرف البائع:</b></div>
+                                <div className="col-md-8 print-value" dir="ltr" style={{ width: detailsValuesColumnWidthPercent, padding: "3px" }} >
+                                    {props.model.vendor?.code ? props.model.vendor.code : "N/A"}
+
+                                </div>
+                            </div>
+
+                            <div className="row" dir="ltr" style={{ borderBottom: detailsBorderThickness }} >
+                                <div className="col-md-4 print-label" dir="ltr" style={{ borderRight: detailsBorderThickness, width: detailsLabelsColumnWidthPercent, padding: "3px" }} ><b>Vendor VAT | ضريبة القيمة المضافة للعملاء:</b></div>
+                                <div className="col-md-8 print-value" dir="ltr" style={{ width: detailsValuesColumnWidthPercent, padding: "3px" }} >
+                                    {props.model.vendor?.vat_no ? props.model.vendor.vat_no : ""}
+                                    {!props.model.vendor && props.model.vat_no ? props.model.vat_no : ""}
+                                    {!props.model.vendor && !props.model.vat_no ? "N/A" : ""}
+                                </div>
+                            </div>
+
+                            <div className="row" dir="ltr" style={{ borderBottom: detailsBorderThickness }} >
+                                <div className="col-md-4 print-label" dir="ltr" style={{ borderRight: detailsBorderThickness, width: detailsLabelsColumnWidthPercent, padding: "3px" }} ><b>Vendor C.R | رقم تسجيل الشركة الموردة:</b></div>
+                                <div className="col-md-8 print-value" dir="ltr" style={{ width: detailsValuesColumnWidthPercent, padding: "3px" }} >
+                                    {props.model.vendor?.registration_number ? props.model.vendor.registration_number : "N/A"}
+                                </div>
+                            </div>
+
+                            <div className="row" dir="ltr" style={{}} >
+                                <div className="col-md-4 print-label" dir="ltr" style={{ borderRight: detailsBorderThickness, width: detailsLabelsColumnWidthPercent, padding: "3px" }} ><b>Vendor Address | عنوان العميل:</b> </div>
+                                <div className="col-md-8 print-value    " dir="ltr" style={{ width: detailsValuesColumnWidthPercent, padding: "3px" }} >
+                                    {props.model.address && !props.model.vendor ? props.model.address : ""}
+
+                                    {!props.model.vendor?.national_address?.building_no && !props.model.vendor?.national_address?.unit_no && props.model.vendor?.national_address?.street_name && props.model.vendor?.national_address?.district_name && props.model.vendor?.national_address?.city_name ? props.model.vendor?.address : ""}
+                                    <span dir="ltr">
+                                        {props.model.vendor?.national_address?.building_no ? `${props.model.vendor.national_address.building_no}` : ""}
+                                        {props.model.vendor?.national_address?.street_name ? ` ${props.model.vendor.national_address.street_name}` : ""}
+                                        {props.model.vendor?.national_address?.district_name ? ` - ${props.model.vendor.national_address.district_name}` : ""}
+                                        {props.model.vendor?.national_address?.unit_no ? `, Unit #${props.model.vendor.national_address.unit_no}` : ""}
+                                        {props.model.vendor?.national_address?.city_name ? `, ${props.model.vendor.national_address.city_name}` : ""}
+                                        {props.model.vendor?.national_address?.zipcode ? ` - ${props.model.vendor.national_address.zipcode}` : ""}
+                                        {props.model.vendor?.national_address?.additional_no ? ` - ${props.model.vendor.national_address.additional_no}` : ""}
+                                        {/*props.model.customer?.country_name ? `, ${props.model.customer.country_name}` : ""*/}
+                                    </span>
+
+                                    {props.model.address && !props.model.vendor ? props.model.address : ""}
+                                    {props.model.vendor?.national_address?.building_no_arabic && props.model.vendor?.national_address?.street_name_arabic && props.model.vendor?.national_address?.district_name_arabic && props.model.vendor?.national_address?.city_name_arabic && props.model.vendor?.national_address?.zipcode_arabic && <span dir="rtl">
+                                        <br />
+                                        {props.model.vendor?.national_address?.building_no_arabic ? `${props.model.vendor.national_address.building_no_arabic}  ` : ""}
+                                        {props.model.vendor?.national_address?.street_name_arabic ? ` ${props.model.vendor.national_address.street_name_arabic}` : ""}
+                                        {props.model.vendor?.national_address?.district_name_arabic ? ` - ${props.model.vendor.national_address.district_name_arabic}` : ""}
+                                        {props.model.vendor?.national_address?.unit_no_arabic ? `,رقم الوحدة ${props.model.vendor.national_address.unit_no_arabic}` : ""}
+                                        {props.model.vendor?.national_address?.city_name_arabic ? `, ${props.model.vendor.national_address.city_name_arabic}` : ""}
+                                        {props.model.vendor?.national_address?.zipcode_arabic ? ` - ${props.model.vendor.national_address.zipcode_arabic} ` : ""}
+                                        {props.model.vendor?.national_address?.additional_no_arabic ? `- ${props.model.vendor.national_address.additional_no_arabic} ` : ""}
                                         {/*props.model.customer?.country_name === "Saudi Arabia" ? `المملكة العربية السعودية , ` : ""*/}
                                     </span>}
                                 </div>

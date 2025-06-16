@@ -228,7 +228,7 @@ const Vendors = forwardRef((props, ref) => {
             },
         };
         let Select =
-            "select=id,code,name,credit_balance,account,name_in_arabic,phone,phone_in_arabic,vat_no,created_by_name,created_at,stores";
+            "select=id,code,name,search_label,credit_balance,account,name_in_arabic,phone,phone_in_arabic,vat_no,created_by_name,created_at,stores";
 
         if (localStorage.getItem("store_id")) {
             searchParams.store_id = localStorage.getItem("store_id");

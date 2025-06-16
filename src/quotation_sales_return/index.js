@@ -91,8 +91,22 @@ function QuotationSalesReturnIndex(props) {
     const [userOptions, setUserOptions] = useState([]);
     const [selectedCreatedByUsers, setSelectedCreatedByUsers] = useState([]);
 
-
+    let [enableSelection, setEnableSelection] = useState(true);
     useEffect(() => {
+        if (!props.onSelectQuotationSalesReturn) {
+            setEnableSelection(false);
+        } else {
+            setEnableSelection(true);
+        }
+
+        if (props.selectedCustomers?.length > 0) {
+            searchByMultipleValuesField("customer_id", props.selectedCustomers, true);
+        }
+
+        if (props.selectedPaymentStatusList) {
+            searchByMultipleValuesField("payment_status", props.selectedPaymentStatusList, true);
+        }
+
         list();
         if (localStorage.getItem("store_id")) {
             getStore(localStorage.getItem("store_id"));
@@ -751,7 +765,7 @@ function QuotationSalesReturnIndex(props) {
         list();
     }
 
-    function searchByMultipleValuesField(field, values) {
+    function searchByMultipleValuesField(field, values, noList) {
         if (field === "created_by") {
             setSelectedCreatedByUsers(values);
         } else if (field === "customer_id") {
@@ -771,7 +785,10 @@ function QuotationSalesReturnIndex(props) {
         page = 1;
         setPage(page);
 
-        list();
+        if (!noList) {
+            list();
+        }
+
     }
 
     const list = useCallback(() => {
@@ -785,7 +802,7 @@ function QuotationSalesReturnIndex(props) {
             },
         };
         let Select =
-            "select=id,code,date,net_total,created_by_name,customer_name,status,created_at,net_profit,net_loss,cash_discount,quotation_code,quotation_id,total_payment_paid,payments_count,payment_methods,payment_status,balance_amount,store_id";
+            "select=id,code,date,net_total,created_by_name,customer_name,customer_id,status,created_at,net_profit,net_loss,cash_discount,quotation_code,quotation_id,total_payment_paid,payments_count,payment_methods,payment_status,balance_amount,store_id";
         if (localStorage.getItem("store_id")) {
             searchParams.store_id = localStorage.getItem("store_id");
         }
@@ -1059,6 +1076,10 @@ function QuotationSalesReturnIndex(props) {
     const customerSearchRef = useRef();
     const timerRef = useRef(null);
 
+    const handleSelected = (selected) => {
+        props.onSelectQuotationSalesReturn(selected); // Send to parent
+    };
+
 
     return (
         <>
@@ -1270,6 +1291,7 @@ function QuotationSalesReturnIndex(props) {
                                         <thead>
                                             <tr className="text-center">
                                                 <th>Actions</th>
+                                                {enableSelection && <th>Select</th>}
                                                 <th>
                                                     <b
                                                         style={{
@@ -1574,6 +1596,7 @@ function QuotationSalesReturnIndex(props) {
 
                                         <thead>
                                             <tr className="text-center">
+                                                <th></th>
                                                 <th></th>
                                                 <th>
                                                     <input
@@ -1958,6 +1981,13 @@ function QuotationSalesReturnIndex(props) {
                                                             </Button>
                                                             &nbsp;
                                                         </td>
+                                                        {enableSelection && <td style={{ width: "auto", whiteSpace: "nowrap" }}>
+                                                            <Button className="btn btn-success btn-sm" onClick={() => {
+                                                                handleSelected(quotationsalesreturn);
+                                                            }}>
+                                                                Select
+                                                            </Button>
+                                                        </td>}
                                                         <td style={{ width: "auto", whiteSpace: "nowrap" }} >{quotationsalesreturn.code}</td>
 
                                                         <td style={{ width: "auto", whiteSpace: "nowrap" }} >

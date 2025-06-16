@@ -197,17 +197,17 @@ function Sidebar(props) {
                 <li onClick={() => {
                     toggleActive(appState.tabs[16]);
                 }} className={toggleActiveStyles(appState.tabs[16])}>
-                    <Link to="/dashboard/customer_deposits" className="sidebar-link">
+                    <Link to="/dashboard/receivables" className="sidebar-link">
                         <i className="bi bi-currency-dollar" />
-                        <span className="align-middle">Customer Receivables</span>
+                        <span className="align-middle">Receivables</span>
                     </Link>
                 </li>
                 <li onClick={() => {
                     toggleActive(appState.tabs[17]);
                 }} className={toggleActiveStyles(appState.tabs[17])}>
-                    <Link to="/dashboard/customer_withdrawals" className="sidebar-link">
+                    <Link to="/dashboard/payables" className="sidebar-link">
                         <i className="bi bi-currency-dollar" />
-                        <span className="align-middle">Customer Payables</span>
+                        <span className="align-middle">Payables</span>
                     </Link>
                 </li>
                 <li onClick={() => {

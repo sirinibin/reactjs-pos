@@ -72,6 +72,10 @@ const CustomerDepositPreview = forwardRef((props, ref) => {
                     getCustomer(model.customer_id);
                 }
 
+                if (model.vendor_id) {
+                    getVendor(model.vendor_id);
+                }
+
                 setReceiptTitle(modelName);
                 preparePages();
 
@@ -173,6 +177,45 @@ const CustomerDepositPreview = forwardRef((props, ref) => {
                 console.log(data);
                 let customerData = data.result;
                 model.customer = customerData;
+                setModel({ ...model });
+            })
+            .catch(error => {
+
+            });
+    }
+
+
+    function getVendor(id) {
+        console.log("inside get Customer");
+        const requestOptions = {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': localStorage.getItem('access_token'),
+            },
+        };
+
+        let searchParams = {};
+        if (localStorage.getItem("store_id")) {
+            searchParams.store_id = localStorage.getItem("store_id");
+        }
+        let queryParams = ObjectToSearchQueryParams(searchParams);
+
+        fetch('/v1/vendor/' + id + "?" + queryParams, requestOptions)
+            .then(async response => {
+                const isJson = response.headers.get('content-type')?.includes('application/json');
+                const data = isJson && await response.json();
+
+                // check for error response
+                if (!response.ok) {
+                    const error = (data && data.errors);
+                    return Promise.reject(error);
+                }
+
+                console.log("Customer Response:");
+                console.log(data);
+                let vendorData = data.result;
+                model.vendor = vendorData;
                 setModel({ ...model });
             })
             .catch(error => {

@@ -420,7 +420,7 @@ function Dashboard() {
                     </div>
                 </div>
             </Route>
-            <Route path="/dashboard/customer_deposits">
+            <Route path="/dashboard/receivables">
                 <div className="wrapper">
                     <Sidebar isSidebarOpen={isSidebarOpen} parentCallback={handleToggle} />
                     <div className="main">
@@ -433,7 +433,7 @@ function Dashboard() {
                 </div>
             </Route>
 
-            <Route path="/dashboard/customer_withdrawals">
+            <Route path="/dashboard/payables">
                 <div className="wrapper">
                     <Sidebar isSidebarOpen={isSidebarOpen} parentCallback={handleToggle} />
                     <div className="main">

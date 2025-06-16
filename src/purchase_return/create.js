@@ -79,8 +79,18 @@ const PurchaseReturnedCreate = forwardRef((props, ref) => {
                 signature_date_str: format(new Date(), "MMM dd yyyy"),
                 payment_status: "paid",
                 payment_method: "",
+                payments_input: [
+                    {
+                        "date_str": formData.date_str,
+                        // "amount": "",
+                        "amount": 0.00,
+                        "method": "",
+                        "deleted": false,
+                    }
+                ],
             };
 
+            /*
             formData.payments_input = [
                 {
                     "date_str": formData.date_str,
@@ -89,7 +99,8 @@ const PurchaseReturnedCreate = forwardRef((props, ref) => {
                     "method": "",
                     "deleted": false,
                 }
-            ];
+            ];*/
+
             formData.cash_discount = 0.00;
 
             setFormData({ ...formData });
@@ -115,6 +126,7 @@ const PurchaseReturnedCreate = forwardRef((props, ref) => {
                 // reCalculate();
                 getPurchase(purchaseId);
             }
+
             setShow(true);
         },
 
@@ -386,29 +398,29 @@ const PurchaseReturnedCreate = forwardRef((props, ref) => {
                 purchase = data.result;
                 setPurchase(purchase);
 
-                formData = {
-                    // date_str: format(new Date(), "MMM dd yyyy"),
-                    date_str: new Date(),
-                    signature_date_str: format(new Date(), "MMM dd yyyy"),
-                    purchase_id: purchase.id,
-                    purchase_code: purchase.code,
-                    remarks: purchase.remarks,
-                    address: purchase.address,
-                    phone: purchase.phone,
-                    vat_no: purchase.vat_no,
-                    //   vendor_invoice_no: purchase.vendor_invoice_no,
-                    store_id: purchase.store_id,
-                    vendor_id: purchase.vendor_id,
-                    vat_percent: purchase.vat_percent,
-                    status: purchase.status,
-                    purchase_returned_by: purchase.order_placed_by,
-                    purchase_returned_by_signature_id: purchase.order_placed_by_signature_id,
-                    //  is_discount_percent: purchase.is_discount_percent,
-                    discount_percent: purchase.discount_percent,
-                    payment_status: "paid",
-                    payment_method: "",
-                    shipping_handling_fees: purchase.shipping_handling_fees,
-                };
+
+                // date_str: format(new Date(), "MMM dd yyyy"),
+                formData.date_str = new Date();
+                formData.signature_date_str = format(new Date(), "MMM dd yyyy");
+                formData.purchase_id = purchase.id;
+                formData.purchase_code = purchase.code;
+                formData.remarks = purchase.remarks;
+                formData.address = purchase.address;
+                formData.phone = purchase.phone;
+                formData.vat_no = purchase.vat_no;
+                //   vendor_invoice_no: purchase.vendor_invoice_no,
+                formData.store_id = purchase.store_id;
+                formData.vendor_id = purchase.vendor_id;
+                formData.vat_percent = purchase.vat_percent;
+                formData.status = purchase.status;
+                formData.purchase_returned_by = purchase.order_placed_by;
+                formData.purchase_returned_by_signature_id = purchase.order_placed_by_signature_id;
+                //  is_discount_percent: purchase.is_discount_percent,
+                formData.discount_percent = purchase.discount_percent;
+                formData.payment_status = "paid";
+                formData.payment_method = "";
+                formData.shipping_handling_fees = purchase.shipping_handling_fees;
+
 
                 //formData.discount = (purchase.discount - purchase.return_discount);
                 formData.discount = 0;
@@ -1211,6 +1223,10 @@ async function reCalculate(productIndex) {
         let date = new Date();
         if (!formData.id) {
             date = formData.date_str;
+        }
+
+        if (!formData.payments_input) {
+            formData.payments_input = [];
         }
 
         formData.payments_input.push({

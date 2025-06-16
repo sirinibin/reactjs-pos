@@ -645,6 +645,10 @@ const PostingIndex = forwardRef((props, ref) => {
                 CustomerReceivableUpdateFormRef.current.open(id);
             } else if (referenceModel === "customer_withdrawal") {
                 CustomerPayableUpdateFormRef.current.open(id);
+            } else if (referenceModel === "vendor_deposit") {
+                CustomerReceivableUpdateFormRef.current.open(id);
+            } else if (referenceModel === "vendor_withdrawal") {
+                CustomerPayableUpdateFormRef.current.open(id);
             } else if (referenceModel === "expense") {
                 ExpenseUpdateFormRef.current.open(id);
             } else if (referenceModel === "capital") {
