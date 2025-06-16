@@ -763,20 +763,17 @@ const CustomerWithdrawalCreate = forwardRef((props, ref) => {
         setSelectedPaymentIndex(selectedPaymentIndex);
 
         if (formData.type === "customer") {
-            showInvoiceTypeSelection = true;
-            setShowInvoiceTypeSelection(showInvoiceTypeSelection);
+            if (store.quotation_invoice_accounting) {
+                showInvoiceTypeSelection = true;
+                setShowInvoiceTypeSelection(showInvoiceTypeSelection);
+            } else {
+                openSalesReturns();
+            }
+
         } else if (formData.type === "vendor") {
             // openPurchaseReturns();
             openPurchases();
         }
-
-        /*
-        if (store.quotation_invoice_accounting) {
-            showInvoiceTypeSelection = true;
-            setShowInvoiceTypeSelection(showInvoiceTypeSelection);
-        } else {
-            openSales();
-        }*/
     }
 
     const SalesReturnsRef = useRef();

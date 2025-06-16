@@ -799,19 +799,16 @@ const CustomerDepositCreate = forwardRef((props, ref) => {
         setSelectedPaymentIndex(selectedPaymentIndex);
 
         if (formData.type === "customer") {
-            showInvoiceTypeSelection = true;
-            setShowInvoiceTypeSelection(showInvoiceTypeSelection);
+            if (store.quotation_invoice_accounting) {
+                showInvoiceTypeSelection = true;
+                setShowInvoiceTypeSelection(showInvoiceTypeSelection);
+            } else {
+                openSales();
+            }
         } else if (formData.type === "vendor") {
             openPurchaseReturns();
         }
 
-        /*
-        if (store.quotation_invoice_accounting) {
-            showInvoiceTypeSelection = true;
-            setShowInvoiceTypeSelection(showInvoiceTypeSelection);
-        } else {
-            openSales();
-        }*/
     }
 
     const SalesRef = useRef();
