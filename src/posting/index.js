@@ -420,8 +420,11 @@ const PostingIndex = forwardRef((props, ref) => {
 
                 setIsListLoading(false);
                 setIsRefreshInProcess(false);
-                setPostingList(data.result);
-                selectedAccount.posts = data.result;
+                if (data.result) {
+                    setPostingList(data.result);
+                    selectedAccount.posts = data.result;
+                }
+
 
                 let pageCount = parseInt((data.total_count + pageSize - 1) / pageSize);
 
@@ -1323,8 +1326,8 @@ const PostingIndex = forwardRef((props, ref) => {
                                                     </tr> : ""}
 
                                                     {postingList &&
-                                                        postingList.map((posting) => (
-                                                            posting.posts.map((post, index) => (
+                                                        postingList?.map((posting) => (
+                                                            posting.posts?.map((post, index) => (
                                                                 <tr key={`${posting.id}-${index}`}>
                                                                     {/* Date column */}
                                                                     <td style={{ width: "auto", whiteSpace: "nowrap" }}>
