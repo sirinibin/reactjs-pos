@@ -1011,6 +1011,10 @@ const OrderCreate = forwardRef((props, ref) => {
         let product = await getProduct(selectedProducts[i].product_id);
         let stock = 0;
 
+        if (!product) {
+            return;
+        }
+
         if (product.product_stores && product.product_stores[localStorage.getItem("store_id")]?.stock) {
             stock = product.product_stores[localStorage.getItem("store_id")].stock;
         }

@@ -183,9 +183,10 @@ const CustomerWithdrawalCreate = forwardRef((props, ref) => {
                         {
                             id: formData.customer_id,
                             name: formData.customer_name,
-                            search_label: formData.customer.search_label,
+                            search_label: formData.customer?.search_label ? formData.customer?.search_label : formData.customer_name,
                         }
                     ];
+
                     setSelectedCustomers([...selectedCustomers]);
                 }
 
@@ -195,7 +196,7 @@ const CustomerWithdrawalCreate = forwardRef((props, ref) => {
                         {
                             id: formData.vendor_id,
                             name: formData.vendor_name,
-                            search_label: formData.vendor.search_label,
+                            search_label: formData.vendor?.search_label ? formData.vendor?.search_label : formData.vendor_name,
                         }
                     ];
                     setSelectedVendors([...selectedVendors]);
@@ -763,17 +764,20 @@ const CustomerWithdrawalCreate = forwardRef((props, ref) => {
         setSelectedPaymentIndex(selectedPaymentIndex);
 
         if (formData.type === "customer") {
-            if (store.quotation_invoice_accounting) {
-                showInvoiceTypeSelection = true;
-                setShowInvoiceTypeSelection(showInvoiceTypeSelection);
-            } else {
-                openSalesReturns();
-            }
-
+            showInvoiceTypeSelection = true;
+            setShowInvoiceTypeSelection(showInvoiceTypeSelection);
         } else if (formData.type === "vendor") {
             // openPurchaseReturns();
             openPurchases();
         }
+
+        /*
+        if (store.quotation_invoice_accounting) {
+            showInvoiceTypeSelection = true;
+            setShowInvoiceTypeSelection(showInvoiceTypeSelection);
+        } else {
+            openSales();
+        }*/
     }
 
     const SalesReturnsRef = useRef();

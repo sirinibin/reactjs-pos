@@ -2,6 +2,7 @@ import { React, forwardRef } from "react";
 import NumberFormat from "react-number-format";
 import { format } from "date-fns";
 import n2words from 'n2words'
+import Amount from "../utils/amount.js";
 
 const BalanceSheetPrintPreviewContent = forwardRef((props, ref) => {
 
@@ -584,31 +585,17 @@ const BalanceSheetPrintPreviewContent = forwardRef((props, ref) => {
                                                 <b>Due Amount</b>
                                             </th>
                                             <th colSpan={2} style={{ textAlign: "right", padding: "3px", color: "red", borderRight: tableBorderThickness }}><b>
-
                                                 {props.model.debitBalance > 0 ? "To balance c/d " : ""}
-                                                <NumberFormat
-                                                    value={props.model.debitBalance > 0 ? props.model.debitBalance?.toFixed(2) : ""}
-                                                    displayType={"text"}
-                                                    thousandSeparator={true}
-                                                    suffix={""}
-                                                    renderText={(value, props) => value}
-                                                />
-
+                                                {props.model.debitBalance > 0 && <Amount amount={props.model.type === "liability" && props.model.store.show_minus_on_liability_balance_in_balance_sheet ? props.model.debitBalance * (-1) : props.model.debitBalance} />}
                                             </b></th>
                                             <th colSpan={2} style={{ textAlign: "right", padding: "3px", color: "red", borderRight: tableBorderThickness }}><b>
                                                 {props.model.creditBalance > 0 ? "By balance c/d " : ""}
-                                                <NumberFormat
-                                                    value={props.model.creditBalance > 0 ? props.model.creditBalance?.toFixed(2) : ""}
-                                                    displayType={"text"}
-                                                    thousandSeparator={true}
-                                                    suffix={""}
-                                                    renderText={(value, props) => value}
-                                                />
+                                                {props.model.creditBalance > 0 && <Amount amount={props.model.type === "liability" && props.model.store.show_minus_on_liability_balance_in_balance_sheet ? props.model.creditBalance * (-1) : props.model.creditBalance} />}
                                             </b></th>
                                             <th colSpan={3}></th>
                                         </tr> : ""}
 
-                                    {props.model.pages.length === (pageIndex + 1) && props.model ? <tr style={{ borderBottom: tableBorderThickness }}>
+                                    {props.model.pages.length === (pageIndex + 1) && props.model && !props.model.store.hide_total_amount_row_in_balance_sheet && <tr style={{ borderBottom: tableBorderThickness }}>
                                         <td className="text-end" colSpan={3} style={{ borderRight: tableBorderThickness, padding: "3px" }}>
                                             <b>Total Amount</b>
                                         </td>
@@ -635,7 +622,7 @@ const BalanceSheetPrintPreviewContent = forwardRef((props, ref) => {
                                         </b></td>
                                         <td colSpan={2}></td>
 
-                                    </tr> : ""}
+                                    </tr>}
 
 
 

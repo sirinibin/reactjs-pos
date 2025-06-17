@@ -3123,6 +3123,58 @@ const StoreCreate = forwardRef((props, ref) => {
                         <div className="col-md-2">
                             <div className="input-group mb-3">
                                 <input type="checkbox"
+                                    value={formData.show_minus_on_liability_balance_in_balance_sheet}
+                                    checked={formData.show_minus_on_liability_balance_in_balance_sheet}
+                                    onChange={(e) => {
+
+                                        errors["show_minus_on_liability_balance_in_balance_sheet"] = "";
+                                        formData.show_minus_on_liability_balance_in_balance_sheet = !formData.show_minus_on_liability_balance_in_balance_sheet
+                                        setFormData({ ...formData });
+                                        console.log(formData);
+                                    }}
+                                    className=""
+                                    id="show_minus_on_liability_balance_in_balance_sheet"
+
+                                /> &nbsp;Show Minus On Liability Balance In Balance Sheet
+                            </div>
+                            <label className="form-label"></label>
+                            {errors.show_minus_on_liability_balance_in_balance_sheet && (
+                                <div style={{ color: "red" }}>
+                                    {errors.show_minus_on_liability_balance_in_balance_sheet}
+                                </div>
+                            )}
+                        </div>
+
+
+                        <div className="col-md-2">
+                            <div className="input-group mb-3">
+                                <input type="checkbox"
+                                    value={formData.hide_total_amount_row_in_balance_sheet}
+                                    checked={formData.hide_total_amount_row_in_balance_sheet}
+                                    onChange={(e) => {
+
+                                        errors["hide_total_amount_row_in_balance_sheet"] = "";
+                                        formData.hide_total_amount_row_in_balance_sheet = !formData.hide_total_amount_row_in_balance_sheet;
+                                        setFormData({ ...formData });
+                                        console.log(formData);
+                                    }}
+                                    className=""
+                                    id="hide_total_amount_row_in_balance_sheet"
+
+                                /> &nbsp;Hide total amount row in balance_sheet
+                            </div>
+                            <label className="form-label"></label>
+                            {errors.hide_total_amount_row_in_balance_sheet && (
+                                <div style={{ color: "red" }}>
+                                    {errors.hide_total_amount_row_in_balance_sheet}
+                                </div>
+                            )}
+                        </div>
+
+
+                        <div className="col-md-2">
+                            <div className="input-group mb-3">
+                                <input type="checkbox"
                                     value={formData.show_address_in_invoice_footer}
                                     checked={formData.show_address_in_invoice_footer}
                                     onChange={(e) => {

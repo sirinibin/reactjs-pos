@@ -10,10 +10,6 @@ import Amount from "../utils/amount.js";
 import OverflowTooltip from "../utils/OverflowTooltip.js";
 
 function AccountIndex(props) {
-
-
-
-
     //list
     const [accountList, setaccountList] = useState([]);
 

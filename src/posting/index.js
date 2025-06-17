@@ -1492,17 +1492,17 @@ const PostingIndex = forwardRef((props, ref) => {
                                                     {selectedAccount && <tr>
                                                         <td ></td>
                                                         <td className="text-end">Due Amount</td>
-                                                        <td style={{ textAlign: "right", color: "red" }}><b>{debitBalance > 0 ? "To balance c/d " : ""} {debitBalance > 0 ? <Amount amount={debitBalance} /> : ""} </b></td>
-                                                        <td style={{ textAlign: "right", color: "red" }}><b>{creditBalance > 0 ? "By balance c/d " : ""} {creditBalance > 0 ? <Amount amount={creditBalance} /> : ""}  </b></td>
+                                                        <td style={{ textAlign: "right", color: "red" }}><b>{debitBalance > 0 ? "To balance c/d " : ""} {debitBalance > 0 ? <Amount amount={selectedAccount.type === "liability" && store.show_minus_on_liability_balance_in_balance_sheet ? debitBalance * (-1) : debitBalance} /> : ""} </b></td>
+                                                        <td style={{ textAlign: "right", color: "red" }}><b>{creditBalance > 0 ? "By balance c/d " : ""} {creditBalance > 0 ? <Amount amount={selectedAccount.type === "liability" && store.show_minus_on_liability_balance_in_balance_sheet ? creditBalance * (-1) : creditBalance} /> : ""}  </b></td>
                                                         <td colSpan={2}></td>
                                                     </tr>}
-                                                    {selectedAccount ? <tr>
+                                                    {selectedAccount && !store.hide_total_amount_row_in_balance_sheet && < tr >
                                                         <td ></td>
                                                         <td className="text-end">Total Amount</td>
                                                         <td style={{ textAlign: "right" }}><b>{creditTotal > debitTotal ? <Amount amount={creditTotal} /> : <Amount amount={debitTotal} />}</b></td>
                                                         <td style={{ textAlign: "right" }}><b>{creditTotal > debitTotal ? <Amount amount={creditTotal} /> : <Amount amount={debitTotal} />}</b></td>
                                                         <td colSpan={2}></td>
-                                                    </tr> : ""}
+                                                    </tr>}
                                                 </tbody>
                                             </table>
                                         </div>
