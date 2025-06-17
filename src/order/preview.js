@@ -1,6 +1,7 @@
 import { React, useState, useRef, forwardRef, useImperativeHandle, useEffect, useCallback, useMemo } from "react";
 import { Modal, Button, Spinner } from 'react-bootstrap';
 import PreviewContent from './previewContent.js';
+import PreviewContentWithSellerInfo from './previewContentWithSellerInfo.js';
 
 //import { useReactToPrint } from 'react-to-print';
 import { Invoice } from '@axenda/zatca';
@@ -1452,7 +1453,20 @@ const Preview = forwardRef((props, ref) => {
 
             <Modal.Body>
                 <div ref={printAreaRef} className="print-area" id="print-area">
-                    <PreviewContent model={model} invoiceBackground={InvoiceBackground} whatsAppShare={whatsAppShare} modelName={modelName} selectText={selectText} fontSizes={fontSizes} />
+                    {!model.store?.show_seller_info_in_invoice && <PreviewContent
+                        model={model}
+                        invoiceBackground={InvoiceBackground}
+                        whatsAppShare={whatsAppShare}
+                        modelName={modelName}
+                        selectText={selectText}
+                        fontSizes={fontSizes} />}
+                    {model.store?.show_seller_info_in_invoice && <PreviewContentWithSellerInfo
+                        model={model}
+                        invoiceBackground={InvoiceBackground}
+                        whatsAppShare={whatsAppShare}
+                        modelName={modelName}
+                        selectText={selectText}
+                        fontSizes={fontSizes} />}
                 </div>
             </Modal.Body>
             <Modal.Footer>

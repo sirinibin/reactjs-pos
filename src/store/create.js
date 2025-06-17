@@ -3123,6 +3123,32 @@ const StoreCreate = forwardRef((props, ref) => {
                         <div className="col-md-2">
                             <div className="input-group mb-3">
                                 <input type="checkbox"
+                                    value={formData.show_seller_info_in_invoice}
+                                    checked={formData.show_seller_info_in_invoice}
+                                    onChange={(e) => {
+
+                                        errors["show_seller_info_in_invoice"] = "";
+                                        formData.show_seller_info_in_invoice = !formData.show_seller_info_in_invoice
+                                        setFormData({ ...formData });
+                                        console.log(formData);
+                                    }}
+                                    className=""
+                                    id="show_seller_info_in_invoice"
+
+                                /> &nbsp;Show seller info in invoice
+                            </div>
+                            <label className="form-label"></label>
+                            {errors.show_minus_on_liability_balance_in_balance_sheet && (
+                                <div style={{ color: "red" }}>
+                                    {errors.show_minus_on_liability_balance_in_balance_sheet}
+                                </div>
+                            )}
+                        </div>
+
+
+                        <div className="col-md-2">
+                            <div className="input-group mb-3">
+                                <input type="checkbox"
                                     value={formData.show_minus_on_liability_balance_in_balance_sheet}
                                     checked={formData.show_minus_on_liability_balance_in_balance_sheet}
                                     onChange={(e) => {
