@@ -420,10 +420,19 @@ const PostingIndex = forwardRef((props, ref) => {
 
                 setIsListLoading(false);
                 setIsRefreshInProcess(false);
+
+                if (data.meta.account) {
+                    selectedAccount = data.meta.account;
+                    setSelectedAccount({ ...selectedAccount });
+                }
+
                 if (data.result) {
                     setPostingList(data.result);
-                    selectedAccount.posts = data.result;
+                    selectedAccount.posting = data.result;
+                    setSelectedAccount({ ...selectedAccount });
                 }
+
+
 
 
                 let pageCount = parseInt((data.total_count + pageSize - 1) / pageSize);
@@ -449,6 +458,15 @@ const PostingIndex = forwardRef((props, ref) => {
                     setDebitBalance(0.00);
                 }
 
+
+                if (data.meta.credit_balance) {
+                    creditBalance = data.meta.credit_balance;
+                    setCreditBalance(creditBalance);
+                } else {
+                    creditBalance = 0.00;
+                    setCreditBalance(0.00);
+                }
+
                 if (data.meta.debit_balance_bought_down) {
                     debitBalanceBoughtDown = data.meta.debit_balance_bought_down;
                     setDebitBalanceBoughtDown(debitBalanceBoughtDown);
@@ -465,18 +483,59 @@ const PostingIndex = forwardRef((props, ref) => {
                     setCreditBalanceBoughtDown(0.00);
                 }
 
-                if (data.meta.credit_balance) {
-                    creditBalance = data.meta.credit_balance;
-                    setCreditBalance(creditBalance);
-                } else {
-                    creditBalance = 0.00;
-                    setCreditBalance(0.00);
+
+
+                if (ignoreOpeningBalance) {
+
+                    if (debitBalance > 0) {
+                        if (debitBalanceBoughtDown > 0) {
+                            debitBalance += debitBalanceBoughtDown;
+                        }
+
+                        if (creditBalanceBoughtDown > 0) {
+                            debitBalance -= creditBalanceBoughtDown;
+                        }
+
+                        setDebitBalance(debitBalance);
+                    }
+
+                    if (creditBalance > 0) {
+
+                        if (debitBalanceBoughtDown > 0) {
+                            creditBalance -= debitBalanceBoughtDown;
+                        }
+
+                        if (creditBalanceBoughtDown > 0) {
+                            creditBalance += creditBalanceBoughtDown;
+                        }
+                        setCreditBalance(creditBalance);
+                    }
+
+                    if (debitBalanceBoughtDown > 0) {
+                        debitTotal -= debitBalanceBoughtDown;
+                        setDebitTotal(debitTotal);
+                    }
+
+                    if (creditBalanceBoughtDown > 0) {
+                        creditTotal -= creditBalanceBoughtDown;
+                        setCreditTotal(creditTotal);
+                    }
+
+
+                    for (let i = 0; i < selectedAccount.posting?.length; i++) {
+                        for (let j = 0; j < selectedAccount.posting[i].posts?.length; j++) {
+                            if (debitBalanceBoughtDown > 0) {
+                                selectedAccount.posting[i].posts[j].balance -= debitBalanceBoughtDown;
+                            } else if (creditBalanceBoughtDown > 0) {
+                                selectedAccount.posting[i].posts[j].balance += creditBalanceBoughtDown;
+                            }
+                        }
+                    }
+
+                    setPostingList([...selectedAccount.posting]);
+
+
                 }
-
-
-                //totalExpenses = data.meta.total;
-
-
             })
             .catch((error) => {
                 setIsListLoading(false);
@@ -669,6 +728,8 @@ const PostingIndex = forwardRef((props, ref) => {
     const handleUpdated = () => {
         list();
     };
+
+    let [ignoreOpeningBalance, setIgnoreOpeningBalance] = useState(false)
 
     return (
         <>
@@ -866,6 +927,8 @@ const PostingIndex = forwardRef((props, ref) => {
                                                         </p>
                                                     </div>
 
+
+
                                                     <div className="col text-end">
                                                         <p className="text-end">
                                                             page {page} of {totalPages}
@@ -873,6 +936,28 @@ const PostingIndex = forwardRef((props, ref) => {
                                                     </div>
                                                 </>
                                             )}
+                                        </div>
+                                        <div className="row">
+                                            <div className="col text-start">
+                                                <p className="text-start">
+
+
+                                                    <span style={{ marginLeft: "10px" }}>
+                                                        <input type="checkbox"
+                                                            value={ignoreOpeningBalance}
+                                                            checked={ignoreOpeningBalance}
+                                                            onChange={(e) => {
+                                                                ignoreOpeningBalance = !ignoreOpeningBalance;
+                                                                setIgnoreOpeningBalance(ignoreOpeningBalance);
+                                                                list();
+                                                            }}
+                                                            className=""
+                                                            id="ignoreOpeningBalance"
+
+                                                        /> &nbsp;Ignore Opening Balance
+                                                    </span>
+                                                </p>
+                                            </div>
                                         </div>
                                         <div className="table-responsive" style={{ overflowX: "auto" }}>
                                             <table className="table table-striped table-sm table-bordered">
@@ -1073,9 +1158,10 @@ const PostingIndex = forwardRef((props, ref) => {
 
                                                         <th style={{ width: "80px" }}>
                                                             <DatePicker
-                                                                id="date_str"
+                                                                id="balance_sheet_date"
                                                                 value={dateValue}
                                                                 selected={selectedDate}
+                                                                isClearable={true}
                                                                 className="form-control"
                                                                 dateFormat="MMM dd yyyy"
                                                                 onChange={(date) => {
@@ -1105,9 +1191,10 @@ const PostingIndex = forwardRef((props, ref) => {
                                                                 <span className="text-left">
                                                                     From:{" "}
                                                                     <DatePicker
-                                                                        id="from_date"
+                                                                        id="balance_sheet_from_date"
                                                                         value={fromDateValue}
                                                                         selected={selectedFromDate}
+                                                                        isClearable={true}
                                                                         className="form-control"
                                                                         dateFormat="MMM dd yyyy"
                                                                         onChange={(date) => {
@@ -1123,9 +1210,10 @@ const PostingIndex = forwardRef((props, ref) => {
                                                                     />
                                                                     To:{" "}
                                                                     <DatePicker
-                                                                        id="to_date"
+                                                                        id="balance_sheet_to_date"
                                                                         value={toDateValue}
                                                                         selected={selectedToDate}
+                                                                        isClearable={true}
                                                                         className="form-control"
                                                                         dateFormat="MMM dd yyyy"
                                                                         onChange={(date) => {
@@ -1317,7 +1405,7 @@ const PostingIndex = forwardRef((props, ref) => {
                                                 </thead>
 
                                                 <tbody className="text-center">
-                                                    {selectedAccount && (debitBalanceBoughtDown > 0 || creditBalanceBoughtDown > 0) ? <tr>
+                                                    {selectedAccount && (debitBalanceBoughtDown > 0 || creditBalanceBoughtDown > 0) && !ignoreOpeningBalance ? <tr>
                                                         <td></td>
                                                         <td></td>
                                                         <td style={{ textAlign: "right", color: "red" }}><b>{debitBalanceBoughtDown > 0 ? "To balance b/d " : ""} {debitBalanceBoughtDown > 0 ? <Amount amount={debitBalanceBoughtDown} /> : ""}</b></td>

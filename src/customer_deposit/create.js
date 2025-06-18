@@ -997,9 +997,9 @@ const CustomerDepositCreate = forwardRef((props, ref) => {
 
                                 </select>
                             </div>
-                            {errors.type && (
+                            {errors?.type && (
                                 <div style={{ color: "red" }}>
-                                    {errors.type}
+                                    {errors?.type}
                                 </div>
                             )}
                         </div>
