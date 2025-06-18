@@ -317,7 +317,13 @@ const Preview = forwardRef((props, ref) => {
             model.pageSize = 15
         }
 
+        if (modelName === "sales_return") {
+            model.products = model.products.filter(product => product.selected);
+        }
+
+
         let totalProducts = model.products.length;
+
         // let top = 0;
         let totalPagesInt = parseInt(totalProducts / model.pageSize);
         let totalPagesFloat = parseFloat(totalProducts / model.pageSize);
@@ -345,6 +351,10 @@ const Preview = forwardRef((props, ref) => {
             });
 
             for (let j = offset; j < totalProducts; j++) {
+                /* if (modelName == "sales_return" && !model.products[j].selected) {
+                     continue
+                 }*/
+
                 model.pages[i].products.push(model.products[j]);
                 if (model.pages[i].products.length === model.pageSize) {
                     break;
