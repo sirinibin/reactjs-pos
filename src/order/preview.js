@@ -317,7 +317,7 @@ const Preview = forwardRef((props, ref) => {
             model.pageSize = 15
         }
 
-        if (modelName === "sales_return" || modelName === "purchase_return") {
+        if (modelName === "sales_return" || modelName === "whatsapp_sales_return" || modelName === "purchase_return" || modelName === "whatsapp_purchase_return") {
             model.products = model.products.filter(product => product.selected);
         }
 
