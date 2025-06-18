@@ -440,12 +440,19 @@ const DeliveryNoteCreate = forwardRef((props, ref) => {
     return qWords.every((word) => searchable.includes(word));
   }, []);
 
+
+  let [openCustomerSearchResult, setOpenCustomerSearchResult] = useState(false);
+
   async function suggestCustomers(searchTerm) {
     console.log("Inside handle suggestCustomers");
     setCustomerOptions([]);
 
     console.log("searchTerm:" + searchTerm);
     if (!searchTerm) {
+      setTimeout(() => {
+        openCustomerSearchResult = false;
+        setOpenCustomerSearchResult(false);
+      }, 100);
       return;
     }
 
@@ -477,6 +484,16 @@ const DeliveryNoteCreate = forwardRef((props, ref) => {
       requestOptions
     );
     let data = await result.json();
+
+    if (!data.result || data.result.length === 0) {
+      openCustomerSearchResult = false;
+      setOpenCustomerSearchResult(false);
+      return;
+    }
+
+    openCustomerSearchResult = true;
+    setOpenCustomerSearchResult(true);
+
     const filtered = data.result.filter((opt) => customCustomerFilter(opt, searchTerm));
 
     setCustomerOptions(filtered);
@@ -1348,6 +1365,7 @@ const DeliveryNoteCreate = forwardRef((props, ref) => {
                 labelKey="search_label"
                 filterBy={() => true}
                 isLoading={false}
+                open={openCustomerSearchResult}
                 onChange={(selectedItems) => {
                   delete errors["customer_id"];
                   setErrors(errors);
@@ -1364,6 +1382,9 @@ const DeliveryNoteCreate = forwardRef((props, ref) => {
                     formData.remarks = selectedItems[0].remarks;
                   }
 
+                  openCustomerSearchResult = false;
+                  setOpenCustomerSearchResult(false);
+
                   setFormData({ ...formData });
                   setSelectedCustomers(selectedItems);
                 }}
@@ -1374,7 +1395,15 @@ const DeliveryNoteCreate = forwardRef((props, ref) => {
                 ref={customerSearchRef}
                 onKeyDown={(e) => {
                   if (e.key === "Escape") {
+                    delete errors.customer_id;
+                    //setErrors(errors);
+                    formData.customer_id = "";
+                    formData.customer_name = "";
+                    setFormData({ ...formData });
+                    setSelectedCustomers([]);
                     setCustomerOptions([]);
+                    openCustomerSearchResult = false;
+                    setOpenCustomerSearchResult(false);
                     customerSearchRef.current?.clear();
                   }
                 }}
