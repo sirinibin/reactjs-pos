@@ -452,7 +452,7 @@ const BalanceSheetPrintPreviewContent = forwardRef((props, ref) => {
 
                                     </tr>
 
-                                    {pageIndex === 0 && props.model && (props.model.debitBalanceBoughtDown > 0 || props.model.creditBalanceBoughtDown > 0) ?
+                                    {pageIndex === 0 && props.model && (props.model.debitBalanceBoughtDown > 0 || props.model.creditBalanceBoughtDown > 0) && !props.model.ignoreOpeningBalance &&
                                         <tr style={{ borderBottom: tableBorderThickness }} className="text-center"  >
                                             <td style={{ borderRight: tableBorderThickness, padding: "3px" }}>
 
@@ -460,7 +460,7 @@ const BalanceSheetPrintPreviewContent = forwardRef((props, ref) => {
                                             <td style={{ borderRight: tableBorderThickness, padding: "3px" }}></td>
                                             <td style={{ borderRight: tableBorderThickness, padding: "3px" }}></td>
                                             <td colSpan={2} style={{ width: "auto", padding: "3px", whiteSpace: "nowrap", textAlign: "right", color: "red", borderRight: tableBorderThickness }}><b>
-                                                {props.model.debitBalanceBoughtDown > 0 ? "To balance b/d " : ""}
+                                                {props.model.debitBalanceBoughtDown > 0 ? "To Opening Balance  " : ""}
                                                 <NumberFormat
                                                     value={props.model.debitBalanceBoughtDown > 0 ? props.model.debitBalanceBoughtDown?.toFixed(2) : ""}
                                                     displayType={"text"}
@@ -471,7 +471,7 @@ const BalanceSheetPrintPreviewContent = forwardRef((props, ref) => {
 
                                             </b></td>
                                             <td colSpan={2} style={{ width: "auto", padding: "3px", whiteSpace: "nowrap", textAlign: "right", color: "red", borderRight: tableBorderThickness }}><b>
-                                                {props.model.creditBalanceBoughtDown > 0 ? "By balance b/d " : ""}
+                                                {props.model.creditBalanceBoughtDown > 0 ? "By Opening Balance  " : ""}
                                                 <NumberFormat
                                                     value={props.model.creditBalanceBoughtDown > 0 ? props.model.creditBalanceBoughtDown?.toFixed(2) : ""}
                                                     displayType={"text"}
@@ -483,7 +483,7 @@ const BalanceSheetPrintPreviewContent = forwardRef((props, ref) => {
                                             </b></td>
                                             <td style={{ padding: "3px" }}></td>
                                             <td></td>
-                                        </tr> : ""}
+                                        </tr>}
 
                                     {page.posts && page.posts.filter(post => post.date).map((post, index) => (
                                         <tr style={{ borderBottom: tableBorderThickness, }} key={index}   >
@@ -585,11 +585,11 @@ const BalanceSheetPrintPreviewContent = forwardRef((props, ref) => {
                                                 <b>Due Amount</b>
                                             </th>
                                             <th colSpan={2} style={{ textAlign: "right", padding: "3px", color: "red", borderRight: tableBorderThickness }}><b>
-                                                {props.model.debitBalance > 0 ? "To balance c/d " : ""}
+                                                {props.model.debitBalance > 0 ? "To Clsoing Balance  " : ""}
                                                 {props.model.debitBalance > 0 && <Amount amount={props.model.type === "liability" && props.model.store.show_minus_on_liability_balance_in_balance_sheet ? props.model.debitBalance * (-1) : props.model.debitBalance} />}
                                             </b></th>
                                             <th colSpan={2} style={{ textAlign: "right", padding: "3px", color: "red", borderRight: tableBorderThickness }}><b>
-                                                {props.model.creditBalance > 0 ? "By balance c/d " : ""}
+                                                {props.model.creditBalance > 0 ? "By Clsoing Balance  " : ""}
                                                 {props.model.creditBalance > 0 && <Amount amount={props.model.type === "liability" && props.model.store.show_minus_on_liability_balance_in_balance_sheet ? props.model.creditBalance * (-1) : props.model.creditBalance} />}
                                             </b></th>
                                             <th colSpan={3}></th>

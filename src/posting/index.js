@@ -359,6 +359,57 @@ const PostingIndex = forwardRef((props, ref) => {
 
     }
 
+    function RemoveOpeningBalance(posting) {
+        if (debitBalance > 0) {
+            if (debitBalanceBoughtDown > 0) {
+                debitBalance += debitBalanceBoughtDown;
+            }
+
+            if (creditBalanceBoughtDown > 0) {
+                debitBalance -= creditBalanceBoughtDown;
+            }
+            setDebitBalance(debitBalance);
+        }
+
+        if (creditBalance > 0) {
+            if (debitBalanceBoughtDown > 0) {
+                creditBalance -= debitBalanceBoughtDown;
+            }
+
+            if (creditBalanceBoughtDown > 0) {
+                creditBalance += creditBalanceBoughtDown;
+            }
+            setCreditBalance(creditBalance);
+        }
+
+        if (debitBalanceBoughtDown > 0) {
+            debitTotal -= debitBalanceBoughtDown;
+            setDebitTotal(debitTotal);
+        }
+
+        if (creditBalanceBoughtDown > 0) {
+            creditTotal -= creditBalanceBoughtDown;
+            setCreditTotal(creditTotal);
+        }
+
+        //  alert(selectedAccount.type)
+        for (let i = 0; i < posting?.length; i++) {
+            for (let j = 0; j < posting[i].posts?.length; j++) {
+                if (debitBalanceBoughtDown > 0) {
+                    posting[i].posts[j].balance -= debitBalanceBoughtDown;
+                } else if (creditBalanceBoughtDown > 0) {
+                    if (selectedAccount.type === "revenue" || selectedAccount.type === "capital") {
+                        posting[i].posts[j].balance -= creditBalanceBoughtDown;
+                    } else {
+                        posting[i].posts[j].balance += creditBalanceBoughtDown;
+                    }
+                }
+            }
+        }
+
+        return posting;
+    }
+
     function list() {
         const requestOptions = {
             method: "GET",
@@ -486,55 +537,8 @@ const PostingIndex = forwardRef((props, ref) => {
 
 
                 if (ignoreOpeningBalance) {
-
-                    if (debitBalance > 0) {
-                        if (debitBalanceBoughtDown > 0) {
-                            debitBalance += debitBalanceBoughtDown;
-                        }
-
-                        if (creditBalanceBoughtDown > 0) {
-                            debitBalance -= creditBalanceBoughtDown;
-                        }
-
-                        setDebitBalance(debitBalance);
-                    }
-
-                    if (creditBalance > 0) {
-
-                        if (debitBalanceBoughtDown > 0) {
-                            creditBalance -= debitBalanceBoughtDown;
-                        }
-
-                        if (creditBalanceBoughtDown > 0) {
-                            creditBalance += creditBalanceBoughtDown;
-                        }
-                        setCreditBalance(creditBalance);
-                    }
-
-                    if (debitBalanceBoughtDown > 0) {
-                        debitTotal -= debitBalanceBoughtDown;
-                        setDebitTotal(debitTotal);
-                    }
-
-                    if (creditBalanceBoughtDown > 0) {
-                        creditTotal -= creditBalanceBoughtDown;
-                        setCreditTotal(creditTotal);
-                    }
-
-
-                    for (let i = 0; i < selectedAccount.posting?.length; i++) {
-                        for (let j = 0; j < selectedAccount.posting[i].posts?.length; j++) {
-                            if (debitBalanceBoughtDown > 0) {
-                                selectedAccount.posting[i].posts[j].balance -= debitBalanceBoughtDown;
-                            } else if (creditBalanceBoughtDown > 0) {
-                                selectedAccount.posting[i].posts[j].balance += creditBalanceBoughtDown;
-                            }
-                        }
-                    }
-
+                    selectedAccount.posting = RemoveOpeningBalance(selectedAccount.posting);
                     setPostingList([...selectedAccount.posting]);
-
-
                 }
             })
             .catch((error) => {
@@ -612,14 +616,18 @@ const PostingIndex = forwardRef((props, ref) => {
         account.creditTotal = creditTotal;
         account.debitTotal = debitTotal;
 
-        console.log(" account.posts", account.posts);
-        console.log("opening")
-
         account.dateRangeStr = "";
 
         account.dateValue = dateValue;
         account.fromDateValue = fromDateValue;
         account.toDateValue = toDateValue;
+
+        if (ignoreOpeningBalance) {
+            list();
+            account.posts = RemoveOpeningBalance(allPostings);
+        }
+
+        account.ignoreOpeningBalance = ignoreOpeningBalance;
 
 
         /*
@@ -1408,8 +1416,8 @@ const PostingIndex = forwardRef((props, ref) => {
                                                     {selectedAccount && (debitBalanceBoughtDown > 0 || creditBalanceBoughtDown > 0) && !ignoreOpeningBalance ? <tr>
                                                         <td></td>
                                                         <td></td>
-                                                        <td style={{ textAlign: "right", color: "red" }}><b>{debitBalanceBoughtDown > 0 ? "To balance b/d " : ""} {debitBalanceBoughtDown > 0 ? <Amount amount={debitBalanceBoughtDown} /> : ""}</b></td>
-                                                        <td style={{ textAlign: "right", color: "red" }}><b>{creditBalanceBoughtDown > 0 ? "By balance b/d " : ""} {creditBalanceBoughtDown > 0 ? <Amount amount={creditBalanceBoughtDown} /> : ""} </b></td>
+                                                        <td style={{ textAlign: "right", color: "red" }}><b>{debitBalanceBoughtDown > 0 ? "To Opening Balance  " : ""} {debitBalanceBoughtDown > 0 ? <Amount amount={debitBalanceBoughtDown} /> : ""}</b></td>
+                                                        <td style={{ textAlign: "right", color: "red" }}><b>{creditBalanceBoughtDown > 0 ? "By Opening Balance  " : ""} {creditBalanceBoughtDown > 0 ? <Amount amount={creditBalanceBoughtDown} /> : ""} </b></td>
                                                         <td colSpan={2}></td>
                                                     </tr> : ""}
 
@@ -1580,8 +1588,8 @@ const PostingIndex = forwardRef((props, ref) => {
                                                     {selectedAccount && <tr>
                                                         <td ></td>
                                                         <td className="text-end">Due Amount</td>
-                                                        <td style={{ textAlign: "right", color: "red" }}><b>{debitBalance > 0 ? "To balance c/d " : ""} {debitBalance > 0 ? <Amount amount={selectedAccount.type === "liability" && store.show_minus_on_liability_balance_in_balance_sheet ? debitBalance * (-1) : debitBalance} /> : ""} </b></td>
-                                                        <td style={{ textAlign: "right", color: "red" }}><b>{creditBalance > 0 ? "By balance c/d " : ""} {creditBalance > 0 ? <Amount amount={selectedAccount.type === "liability" && store.show_minus_on_liability_balance_in_balance_sheet ? creditBalance * (-1) : creditBalance} /> : ""}  </b></td>
+                                                        <td style={{ textAlign: "right", color: "red" }}><b>{debitBalance > 0 ? "To Closing Balance  " : ""} {debitBalance > 0 ? <Amount amount={selectedAccount.type === "liability" && store.show_minus_on_liability_balance_in_balance_sheet ? debitBalance * (-1) : debitBalance} /> : ""} </b></td>
+                                                        <td style={{ textAlign: "right", color: "red" }}><b>{creditBalance > 0 ? "By Closing Balance  " : ""} {creditBalance > 0 ? <Amount amount={selectedAccount.type === "liability" && store.show_minus_on_liability_balance_in_balance_sheet ? creditBalance * (-1) : creditBalance} /> : ""}  </b></td>
                                                         <td colSpan={2}></td>
                                                     </tr>}
                                                     {selectedAccount && !store.hide_total_amount_row_in_balance_sheet && < tr >
