@@ -442,6 +442,30 @@ const QuotationCreate = forwardRef((props, ref) => {
       .join("&");
   }
 
+
+  const customCustomerFilter = useCallback((option, query) => {
+    const normalize = (str) => str?.toLowerCase().replace(/\s+/g, " ").trim() || "";
+
+    const q = normalize(query);
+    const qWords = q.split(" ");
+
+    const fields = [
+      option.code,
+      option.vat_no,
+      option.name,
+      option.name_in_arabic,
+      option.phone,
+      option.search_label,
+      option.phone_in_arabic,
+      ...(Array.isArray(option.additional_keywords) ? option.additional_keywords : []),
+    ];
+
+    const searchable = normalize(fields.join(" "));
+
+    return qWords.every((word) => searchable.includes(word));
+  }, []);
+
+
   async function suggestCustomers(searchTerm) {
     console.log("Inside handle suggestCustomers");
     setCustomerOptions([]);
@@ -474,7 +498,7 @@ const QuotationCreate = forwardRef((props, ref) => {
     };
 
     let Select =
-      "select=id,code,additional_keywords,vat_no,name,phone,name_in_arabic,phone_in_arabic,search_label";
+      "select=id,code,credit_balance,credit_limit,additional_keywords,vat_no,name,phone,name_in_arabic,phone_in_arabic,search_label";
     // setIsCustomersLoading(true);
     let result = await fetch(
       "/v1/customer?" + Select + queryString,
@@ -482,7 +506,9 @@ const QuotationCreate = forwardRef((props, ref) => {
     );
     let data = await result.json();
 
-    setCustomerOptions(data.result);
+    const filtered = data.result.filter((opt) => customCustomerFilter(opt, searchTerm));
+
+    setCustomerOptions(filtered);
     //setIsCustomersLoading(false);
   }
 
@@ -2123,12 +2149,12 @@ const QuotationCreate = forwardRef((props, ref) => {
               </div>
             </div>
 
-            <div className="col-md-6">
+            <div className="col-md-10">
               <label className="form-label">Customer</label>
               <Typeahead
                 id="customer_id"
                 labelKey="search_label"
-                filterBy={['additional_keywords']}
+                filterBy={() => true}
                 isLoading={false}
                 onChange={(selectedItems) => {
                   delete errors["customer_id"];
@@ -2167,6 +2193,69 @@ const QuotationCreate = forwardRef((props, ref) => {
                   timerRef.current = setTimeout(() => {
                     suggestCustomers(searchTerm);
                   }, 100);
+                }}
+
+                renderMenu={(results, menuProps, state) => {
+                  const searchWords = state.text.toLowerCase().split(" ").filter(Boolean);
+
+                  return (
+                    <Menu {...menuProps}>
+                      {/* Header */}
+                      <MenuItem disabled>
+                        <div style={{ display: 'flex', fontWeight: 'bold', padding: '4px 8px', borderBottom: '1px solid #ddd' }}>
+                          <div style={{ width: '15%' }}>ID</div>
+                          <div style={{ width: '42%' }}>Name</div>
+                          <div style={{ width: '10%' }}>Phone</div>
+                          <div style={{ width: '13%' }}>VAT</div>
+                          <div style={{ width: '10%' }}>Credit Balance</div>
+                          <div style={{ width: '10%' }}>Credit Limit</div>
+                        </div>
+                      </MenuItem>
+
+                      {/* Rows */}
+                      {results.map((option, index) => {
+                        const isActive = state.activeIndex === index;
+                        return (
+                          <MenuItem option={option} position={index} key={index}>
+                            <div style={{ display: 'flex', padding: '4px 8px' }}>
+                              <div style={{ ...columnStyle, width: '15%' }}>
+                                {highlightWords(
+                                  option.code,
+                                  searchWords,
+                                  isActive
+                                )}
+                              </div>
+                              <div style={{ ...columnStyle, width: '42%' }}>
+                                {highlightWords(
+                                  option.name_in_arabic
+                                    ? `${option.name} - ${option.name_in_arabic}`
+                                    : option.name,
+                                  searchWords,
+                                  isActive
+                                )}
+                              </div>
+                              <div style={{ ...columnStyle, width: '10%' }}>
+                                {highlightWords(option.phone, searchWords, isActive)}
+                              </div>
+                              <div style={{ ...columnStyle, width: '13%' }}>
+                                {highlightWords(option.vat_no, searchWords, isActive)}
+                              </div>
+                              <div style={{ ...columnStyle, width: '10%' }}>
+                                {option.credit_balance && (
+                                  <Amount amount={trimTo2Decimals(option.credit_balance)} />
+                                )}
+                              </div>
+                              <div style={{ ...columnStyle, width: '10%' }}>
+                                {option.credit_limit && (
+                                  <Amount amount={trimTo2Decimals(option.credit_limit)} />
+                                )}
+                              </div>
+                            </div>
+                          </MenuItem>
+                        );
+                      })}
+                    </Menu>
+                  );
                 }}
               />
               <Button

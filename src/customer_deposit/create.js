@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef, forwardRef, useCallback, useImperat
 import { Modal, Button } from "react-bootstrap";
 
 import { Spinner } from "react-bootstrap";
-import { Typeahead } from "react-bootstrap-typeahead";
+import { Typeahead, Menu, MenuItem } from "react-bootstrap-typeahead";
 import DatePicker from "react-datepicker";
 import { format } from "date-fns";
 import CustomerCreate from "./../customer/create.js";
@@ -20,6 +20,17 @@ import PurchaseReturnCreate from "./../purchase_return/create.js";
 import QuotationCreate from "./../quotation/create.js";
 import { confirm } from 'react-bootstrap-confirmation';
 import InfoDialog from './../utils/InfoDialog';
+import Amount from "../utils/amount.js";
+
+import { highlightWords } from "../utils/search.js";
+
+const columnStyle = {
+    width: '20%',
+    overflow: 'hidden',
+    whiteSpace: 'nowrap',
+    textOverflow: 'ellipsis',
+    paddingRight: '8px',
+};
 
 const CustomerDepositCreate = forwardRef((props, ref) => {
     useImperativeHandle(ref, () => ({
@@ -236,9 +247,6 @@ const CustomerDepositCreate = forwardRef((props, ref) => {
     const [selectedVendors, setSelectedVendors] = useState([]);
     // const [isCustomersLoading, setIsCustomersLoading] = useState(false);
 
-
-
-
     const customFilter = useCallback((option, query) => {
         const normalize = (str) => str?.toLowerCase().replace(/\s+/g, " ").trim() || "";
 
@@ -262,8 +270,8 @@ const CustomerDepositCreate = forwardRef((props, ref) => {
     }, []);
 
 
-    let [openVendorSearchResult, setOpenVendorSearchResult] = useState(false);
-    let [openCustomerSearchResult, setOpenCustomerSearchResult] = useState(false);
+    //, setOpenVendorSearchResult] = useState(false);
+    //let [openCustomerSearchResult, setOpenCustomerSearchResult] = useState(false);
 
     async function suggestCustomers(searchTerm) {
         console.log("Inside handle suggestCustomers");
@@ -271,12 +279,13 @@ const CustomerDepositCreate = forwardRef((props, ref) => {
 
 
         console.log("searchTerm:" + searchTerm);
+        /*
         if (!searchTerm) {
             setTimeout(() => {
                 setOpenCustomerSearchResult(false);
             }, 100);
             return;
-        }
+        }*/
 
         console.log("searchTerm:" + searchTerm);
         if (!searchTerm) {
@@ -304,19 +313,21 @@ const CustomerDepositCreate = forwardRef((props, ref) => {
             },
         };
 
-        let Select = "select=id,additional_keywords,code,vat_no,name,phone,name_in_arabic,phone_in_arabic,search_label";
+        let Select = "select=id,credit_balance,credit_limit,additional_keywords,code,vat_no,name,phone,name_in_arabic,phone_in_arabic,search_label";
         // setIsCustomersLoading(true);
         let result = await fetch(
             "/v1/customer?" + Select + queryString,
             requestOptions
         );
         let data = await result.json();
+        /*
         if (!data.result || data.result.length === 0) {
             setOpenCustomerSearchResult(false);
             return;
         }
 
         setOpenCustomerSearchResult(true);
+        */
 
 
         if (data.result) {
@@ -330,15 +341,39 @@ const CustomerDepositCreate = forwardRef((props, ref) => {
     }
 
 
+
+    const customVendorFilter = useCallback((option, query) => {
+        const normalize = (str) => str?.toLowerCase().replace(/\s+/g, " ").trim() || "";
+
+        const q = normalize(query);
+        const qWords = q.split(" ");
+
+        const fields = [
+            option.code,
+            option.vat_no,
+            option.name,
+            option.name_in_arabic,
+            option.phone,
+            option.search_label,
+            option.phone_in_arabic,
+            ...(Array.isArray(option.additional_keywords) ? option.additional_keywords : []),
+        ];
+
+        const searchable = normalize(fields.join(" "));
+
+        return qWords.every((word) => searchable.includes(word));
+    }, []);
+
     async function suggestVendors(searchTerm) {
         console.log("Inside handle suggestVendors");
         setCustomerOptions([]);
 
         console.log("searchTerm:" + searchTerm);
         if (!searchTerm) {
+            /*
             setTimeout(() => {
                 setOpenVendorSearchResult(false);
-            }, 100);
+            }, 100);*/
             return;
         }
 
@@ -363,22 +398,22 @@ const CustomerDepositCreate = forwardRef((props, ref) => {
             },
         };
 
-        let Select = "select=id,additional_keywords,code,vat_no,name,phone,name_in_arabic,phone_in_arabic,search_label";
+        let Select = "select=id,credit_balance,credit_limit,additional_keywords,code,vat_no,name,phone,name_in_arabic,phone_in_arabic,search_label";
         // setIsCustomersLoading(true);
         let result = await fetch(
             "/v1/vendor?" + Select + queryString,
             requestOptions
         );
         let data = await result.json();
+        /*
         if (!data.result || data.result.length === 0) {
             setOpenVendorSearchResult(false);
             return;
         }
-
-        setOpenVendorSearchResult(true);
+        setOpenVendorSearchResult(true);*/
 
         if (data.result) {
-            const filtered = data.result.filter((opt) => customFilter(opt, searchTerm));
+            const filtered = data.result.filter((opt) => customVendorFilter(opt, searchTerm));
             setVendorOptions(filtered);
         } else {
             setVendorOptions([]);
@@ -917,7 +952,7 @@ const CustomerDepositCreate = forwardRef((props, ref) => {
             <CustomerCreate ref={CustomerCreateFormRef} openDetailsView={openCustomerDetailsView} showToastMessage={props.showToastMessage} />
             <VendorCreate ref={VendorCreateFormRef} showToastMessage={props.showToastMessage} />
             <CustomerView ref={CustomerDetailsViewRef} showToastMessage={props.showToastMessage} />
-            <Modal show={show} size="xl" onHide={handleClose} animation={false} backdrop="static" scrollable={true}>
+            <Modal show={show} fullscreen onHide={handleClose} animation={false} backdrop="static" scrollable={true}>
                 <Modal.Header>
                     <Modal.Title>
                         {formData.id ? "Update Receivable #" + formData.code : "Create New Receivable"}
@@ -964,212 +999,356 @@ const CustomerDepositCreate = forwardRef((props, ref) => {
                 <Modal.Body>
                     <form className="row g-3 needs-validation" onSubmit={handleCreate}>
 
-                        <div className="col-md-2">
-                            <label className="form-label">Type*</label>
+                        <div className="row mt-2">
+                            <div className="col-md-2">
+                                <label className="form-label">Type*</label>
 
-                            <div className="input-group mb-3">
-                                <select
-                                    value={formData.type}
-                                    onChange={(e) => {
+                                <div className="input-group mb-3">
+                                    <select
+                                        value={formData.type}
+                                        onChange={(e) => {
 
-                                        if (!e.target.value) {
-                                            formData.type = "";
-                                            errors["type"] = "Invalid type";
+                                            if (!e.target.value) {
+                                                formData.type = "";
+                                                errors["type"] = "Invalid type";
+                                                setErrors({ ...errors });
+                                                return;
+                                            }
+
+                                            delete errors["type"];
                                             setErrors({ ...errors });
-                                            return;
-                                        }
 
-                                        delete errors["type"];
-                                        setErrors({ ...errors });
-
-                                        if (ValidateTypeChange(e.target.value)) {
-                                            formData.type = e.target.value;
-                                            setFormData({ ...formData });
-                                            console.log(formData);
-                                        }
+                                            if (ValidateTypeChange(e.target.value)) {
+                                                formData.type = e.target.value;
+                                                setFormData({ ...formData });
+                                                console.log(formData);
+                                            }
 
 
-                                    }}
-                                    className="form-control"
-                                >
-                                    <option value="customer" SELECTED>Customer</option>
-                                    <option value="vendor">Vendor</option>
+                                        }}
+                                        className="form-control"
+                                    >
+                                        <option value="customer" SELECTED>Customer</option>
+                                        <option value="vendor">Vendor</option>
 
-                                </select>
-                            </div>
-                            {errors?.type && (
-                                <div style={{ color: "red" }}>
-                                    {errors?.type}
+                                    </select>
                                 </div>
-                            )}
+                                {errors?.type && (
+                                    <div style={{ color: "red" }}>
+                                        {errors?.type}
+                                    </div>
+                                )}
+                            </div>
+
+                            <div className="col-md-4">
+                                <label className="form-label">Date*</label>
+
+                                <div className="input-group mb-3">
+                                    <DatePicker
+                                        id="date_str"
+                                        selected={formData.date_str ? new Date(formData.date_str) : null}
+                                        value={formData.date_str ? format(
+                                            new Date(formData.date_str),
+                                            "MMMM d, yyyy h:mm aa"
+                                        ) : null}
+                                        className="form-control"
+                                        dateFormat="MMMM d, yyyy h:mm aa"
+                                        showTimeSelect
+                                        timeIntervals="1"
+                                        onChange={(value) => {
+                                            console.log("Value", value);
+                                            formData.date_str = value;
+                                            // formData.date_str = format(new Date(value), "MMMM d yyyy h:mm aa");
+                                            setFormData({ ...formData });
+                                        }}
+                                    />
+
+                                    {errors.date_str && (
+                                        <div style={{ color: "red" }}>
+                                            {errors.date_str}
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
                         </div>
 
-                        {formData.type === "customer" && <>
-                            <div className="col-md-6" style={{ border: "solid 0px" }}>
-                                <label className="form-label">Customer*</label>
-                                <Typeahead
-                                    id="customer_id"
-                                    labelKey="search_label"
-                                    isLoading={false}
-                                    filterBy={['additional_keywords']}
-                                    isInvalid={errors.customer_id ? true : false}
-                                    onChange={(selectedItems) => {
-                                        errors.customer_id = "";
-                                        setErrors(errors);
-                                        if (selectedItems.length === 0) {
-                                            // errors.customer_id = "Invalid Customer selected";
-                                            //setErrors(errors);
-                                            formData.customer_id = "";
+                        <div className="row">
+
+                            {formData.type === "customer" && <>
+                                <div className="col-md-10" style={{ border: "solid 0px" }}>
+                                    <label className="form-label">Customer*</label>
+                                    <Typeahead
+                                        id="customer_id"
+                                        labelKey="search_label"
+                                        isLoading={false}
+                                        filterBy={() => true}
+                                        isInvalid={errors.customer_id ? true : false}
+                                        onChange={(selectedItems) => {
+                                            errors.customer_id = "";
+                                            setErrors(errors);
+                                            if (selectedItems.length === 0) {
+                                                // errors.customer_id = "Invalid Customer selected";
+                                                //setErrors(errors);
+                                                formData.customer_id = "";
+                                                setFormData({ ...formData });
+                                                setSelectedCustomers([]);
+                                                return;
+                                            }
+                                            formData.customer_id = selectedItems[0].id;
+                                            if (selectedItems[0].use_remarks_in_sales && selectedItems[0].remarks) {
+                                                formData.remarks = selectedItems[0].remarks;
+                                            }
+
                                             setFormData({ ...formData });
-                                            setSelectedCustomers([]);
-                                            return;
-                                        }
-                                        formData.customer_id = selectedItems[0].id;
-                                        if (selectedItems[0].use_remarks_in_sales && selectedItems[0].remarks) {
-                                            formData.remarks = selectedItems[0].remarks;
-                                        }
+                                            setSelectedCustomers(selectedItems);
+                                            // setOpenCustomerSearchResult(false);
+                                        }}
 
-                                        setFormData({ ...formData });
-                                        setSelectedCustomers(selectedItems);
-                                        setOpenCustomerSearchResult(false);
-                                    }}
-                                    open={openCustomerSearchResult}
-                                    options={customerOptions}
-                                    placeholder="Customer Name / Mob / VAT # / ID"
-                                    selected={selectedCustomers}
-                                    highlightOnlyResult={true}
-                                    ref={customerSearchRef}
-                                    onKeyDown={(e) => {
-                                        if (e.key === "Escape") {
-                                            setCustomerOptions([]);
-                                            customerSearchRef.current?.clear();
-                                        }
-                                    }}
-                                    onInputChange={(searchTerm, e) => {
-                                        if (searchTerm) {
-                                            formData.customerName = searchTerm;
-                                        }
-                                        if (timerRef.current) clearTimeout(timerRef.current);
-                                        timerRef.current = setTimeout(() => {
-                                            suggestCustomers(searchTerm);
-                                        }, 100);
-                                    }}
-                                />
-                                <Button hide={true.toString()} onClick={openCustomerCreateForm} className="btn btn-outline-secondary btn-primary btn-sm" type="button" id="button-addon1"> <i className="bi bi-plus-lg"></i> New</Button>
+                                        options={customerOptions}
+                                        placeholder="Customer Name / Mob / VAT # / ID"
+                                        selected={selectedCustomers}
+                                        highlightOnlyResult={true}
+                                        ref={customerSearchRef}
+                                        onKeyDown={(e) => {
+                                            if (e.key === "Escape") {
+                                                delete errors.customer_id;
+                                                //setErrors(errors);
+                                                formData.customer_id = "";
+                                                formData.customer_name = "";
+                                                formData.customerName = "";
+                                                setFormData({ ...formData });
+                                                setSelectedCustomers([]);
+                                                setCustomerOptions([]);
+                                                customerSearchRef.current?.clear();
+                                            }
+                                        }}
+                                        onInputChange={(searchTerm, e) => {
+                                            if (searchTerm) {
+                                                formData.customerName = searchTerm;
+                                            }
+                                            if (timerRef.current) clearTimeout(timerRef.current);
+                                            timerRef.current = setTimeout(() => {
+                                                suggestCustomers(searchTerm);
+                                            }, 100);
+                                        }}
+                                        renderMenu={(results, menuProps, state) => {
+                                            const searchWords = state.text.toLowerCase().split(" ").filter(Boolean);
+
+                                            return (
+                                                <Menu {...menuProps}>
+                                                    {/* Header */}
+                                                    <MenuItem disabled>
+                                                        <div style={{ display: 'flex', fontWeight: 'bold', padding: '4px 8px', borderBottom: '1px solid #ddd' }}>
+                                                            <div style={{ width: '15%' }}>ID</div>
+                                                            <div style={{ width: '42%' }}>Name</div>
+                                                            <div style={{ width: '10%' }}>Phone</div>
+                                                            <div style={{ width: '13%' }}>VAT</div>
+                                                            <div style={{ width: '10%' }}>Credit Balance</div>
+                                                            <div style={{ width: '10%' }}>Credit Limit</div>
+                                                        </div>
+                                                    </MenuItem>
+
+                                                    {/* Rows */}
+                                                    {results.map((option, index) => {
+                                                        const isActive = state.activeIndex === index;
+                                                        return (
+                                                            <MenuItem option={option} position={index} key={index}>
+                                                                <div style={{ display: 'flex', padding: '4px 8px' }}>
+                                                                    <div style={{ ...columnStyle, width: '15%' }}>
+                                                                        {highlightWords(
+                                                                            option.code,
+                                                                            searchWords,
+                                                                            isActive
+                                                                        )}
+                                                                    </div>
+                                                                    <div style={{ ...columnStyle, width: '42%' }}>
+                                                                        {highlightWords(
+                                                                            option.name_in_arabic
+                                                                                ? `${option.name} - ${option.name_in_arabic}`
+                                                                                : option.name,
+                                                                            searchWords,
+                                                                            isActive
+                                                                        )}
+                                                                    </div>
+                                                                    <div style={{ ...columnStyle, width: '10%' }}>
+                                                                        {highlightWords(option.phone, searchWords, isActive)}
+                                                                    </div>
+                                                                    <div style={{ ...columnStyle, width: '13%' }}>
+                                                                        {highlightWords(option.vat_no, searchWords, isActive)}
+                                                                    </div>
+                                                                    <div style={{ ...columnStyle, width: '10%' }}>
+                                                                        {option.credit_balance && (
+                                                                            <Amount amount={trimTo2Decimals(option.credit_balance)} />
+                                                                        )}
+                                                                    </div>
+                                                                    <div style={{ ...columnStyle, width: '10%' }}>
+                                                                        {option.credit_limit && (
+                                                                            <Amount amount={trimTo2Decimals(option.credit_limit)} />
+                                                                        )}
+                                                                    </div>
+                                                                </div>
+                                                            </MenuItem>
+                                                        );
+                                                    })}
+                                                </Menu>
+                                            );
+                                        }}
+                                    />
+                                    <Button hide={true.toString()} onClick={openCustomerCreateForm} className="btn btn-outline-secondary btn-primary btn-sm" type="button" id="button-addon1"> <i className="bi bi-plus-lg"></i> New</Button>
 
 
-                                {errors.customer_id && (
-                                    <div style={{ color: "red" }}>
-                                        {errors.customer_id}
-                                    </div>
-                                )}
+                                    {errors.customer_id && (
+                                        <div style={{ color: "red" }}>
+                                            {errors.customer_id}
+                                        </div>
+                                    )}
 
-                            </div>
-                            <div className="col-md-1">
-                                <Button className="btn btn-primary" style={{ marginTop: "30px" }} onClick={openCustomers}>
-                                    <i className="bi bi-list"></i>
-                                </Button>
-                            </div>
-                        </>}
+                                </div>
+                                <div className="col-md-1">
+                                    <Button className="btn btn-primary" style={{ marginTop: "30px" }} onClick={openCustomers}>
+                                        <i className="bi bi-list"></i>
+                                    </Button>
+                                </div>
+                            </>}
 
 
-                        {formData.type === "vendor" && <>
-                            <div className="col-md-6" style={{ border: "solid 0px" }}>
-                                <label className="form-label">Vendor*</label>
-                                <Typeahead
-                                    id="vendor_id"
-                                    labelKey="search_label"
-                                    isLoading={false}
-                                    filterBy={['additional_keywords']}
-                                    isInvalid={errors.vendor_id ? true : false}
-                                    onChange={(selectedItems) => {
-                                        errors.vendor_id = "";
-                                        setErrors(errors);
-                                        if (selectedItems.length === 0) {
-                                            // errors.customer_id = "Invalid Customer selected";
-                                            //setErrors(errors);
-                                            formData.vendor_id = "";
+                            {formData.type === "vendor" && <>
+                                <div className="col-md-10" style={{ border: "solid 0px" }}>
+                                    <label className="form-label">Vendor*</label>
+                                    <Typeahead
+                                        id="vendor_id"
+                                        labelKey="search_label"
+                                        isLoading={false}
+                                        filterBy={() => true}
+                                        isInvalid={errors.vendor_id ? true : false}
+                                        onChange={(selectedItems) => {
+                                            errors.vendor_id = "";
+                                            setErrors(errors);
+                                            if (selectedItems.length === 0) {
+                                                // errors.customer_id = "Invalid Customer selected";
+                                                //setErrors(errors);
+                                                formData.vendor_id = "";
+                                                setFormData({ ...formData });
+                                                setSelectedVendors([]);
+                                                return;
+                                            }
+                                            formData.vendor_id = selectedItems[0].id;
+
+                                            if (selectedItems[0].use_remarks_in_sales && selectedItems[0].remarks) {
+                                                formData.remarks = selectedItems[0].remarks;
+                                            }
+
+
                                             setFormData({ ...formData });
-                                            setSelectedVendors([]);
-                                            return;
-                                        }
-                                        formData.vendor_id = selectedItems[0].id;
+                                            setSelectedVendors(selectedItems);
+                                            // setOpenVendorSearchResult(false);
+                                        }}
 
-                                        if (selectedItems[0].use_remarks_in_sales && selectedItems[0].remarks) {
-                                            formData.remarks = selectedItems[0].remarks;
-                                        }
+                                        options={vendorOptions}
+                                        placeholder="Vendor Name | Mob | VAT # | ID"
+                                        selected={selectedVendors}
+                                        highlightOnlyResult={true}
+                                        ref={vendorSearchRef}
+                                        onKeyDown={(e) => {
+                                            if (e.key === "Escape") {
+                                                delete errors.vendor_id;
+                                                //setErrors(errors);
+                                                formData.vendor_id = "";
+                                                formData.vendor_name = "";
 
+                                                setFormData({ ...formData });
+                                                setSelectedVendors([]);
+                                                setVendorOptions([]);
+                                                vendorSearchRef.current?.clear();
+                                            }
+                                        }}
+                                        onInputChange={(searchTerm, e) => {
+                                            if (searchTerm) {
+                                                formData.vendorName = searchTerm;
+                                            }
+                                            if (timerRef.current) clearTimeout(timerRef.current);
+                                            timerRef.current = setTimeout(() => {
+                                                suggestVendors(searchTerm);
+                                            }, 100);
+                                        }}
+                                        renderMenu={(results, menuProps, state) => {
+                                            const searchWords = state.text.toLowerCase().split(" ").filter(Boolean);
 
-                                        setFormData({ ...formData });
-                                        setSelectedVendors(selectedItems);
-                                        setOpenVendorSearchResult(false);
-                                    }}
-                                    open={openVendorSearchResult}
-                                    options={vendorOptions}
-                                    placeholder="Vendor Name | Mob | VAT # | ID"
-                                    selected={selectedVendors}
-                                    highlightOnlyResult={true}
-                                    ref={vendorSearchRef}
-                                    onKeyDown={(e) => {
-                                        if (e.key === "Escape") {
-                                            setVendorOptions([]);
-                                            vendorSearchRef.current?.clear();
-                                        }
-                                    }}
-                                    onInputChange={(searchTerm, e) => {
-                                        if (searchTerm) {
-                                            formData.vendorName = searchTerm;
-                                        }
-                                        if (timerRef.current) clearTimeout(timerRef.current);
-                                        timerRef.current = setTimeout(() => {
-                                            suggestVendors(searchTerm);
-                                        }, 100);
-                                    }}
-                                />
-                                <Button hide={true.toString()} onClick={openVendorCreateForm} className="btn btn-outline-secondary btn-primary btn-sm" type="button" id="button-addon1"> <i className="bi bi-plus-lg"></i> New</Button>
+                                            return (
+                                                <Menu {...menuProps}>
+                                                    {/* Header */}
+                                                    <MenuItem disabled>
+                                                        <div style={{ display: 'flex', fontWeight: 'bold', padding: '4px 8px', borderBottom: '1px solid #ddd' }}>
+                                                            <div style={{ width: '15%' }}>ID</div>
+                                                            <div style={{ width: '42%' }}>Name</div>
+                                                            <div style={{ width: '10%' }}>Phone</div>
+                                                            <div style={{ width: '13%' }}>VAT</div>
+                                                            <div style={{ width: '10%' }}>Credit Balance</div>
+                                                            <div style={{ width: '10%' }}>Credit Limit</div>
+                                                        </div>
+                                                    </MenuItem>
 
-                                {errors.vendor_id && (
-                                    <div style={{ color: "red" }}>
-                                        {errors.vendor_id}
-                                    </div>
-                                )}
-                            </div>
-                            <div className="col-md-1">
-                                <Button className="btn btn-primary" style={{ marginTop: "30px" }} onClick={openVendors}>
-                                    <i className="bi bi-list"></i>
-                                </Button>
-                            </div>
-                        </>}
+                                                    {/* Rows */}
+                                                    {results.map((option, index) => {
+                                                        const isActive = state.activeIndex === index;
+                                                        return (
+                                                            <MenuItem option={option} position={index} key={index}>
+                                                                <div style={{ display: 'flex', padding: '4px 8px' }}>
+                                                                    <div style={{ ...columnStyle, width: '15%' }}>
+                                                                        {highlightWords(
+                                                                            option.code,
+                                                                            searchWords,
+                                                                            isActive
+                                                                        )}
+                                                                    </div>
+                                                                    <div style={{ ...columnStyle, width: '42%' }}>
+                                                                        {highlightWords(
+                                                                            option.name_in_arabic
+                                                                                ? `${option.name} - ${option.name_in_arabic}`
+                                                                                : option.name,
+                                                                            searchWords,
+                                                                            isActive
+                                                                        )}
+                                                                    </div>
+                                                                    <div style={{ ...columnStyle, width: '10%' }}>
+                                                                        {highlightWords(option.phone, searchWords, isActive)}
+                                                                    </div>
+                                                                    <div style={{ ...columnStyle, width: '13%' }}>
+                                                                        {highlightWords(option.vat_no, searchWords, isActive)}
+                                                                    </div>
+                                                                    <div style={{ ...columnStyle, width: '10%' }}>
+                                                                        {option.credit_balance && (
+                                                                            <Amount amount={trimTo2Decimals(option.credit_balance)} />
+                                                                        )}
+                                                                    </div>
+                                                                    <div style={{ ...columnStyle, width: '10%' }}>
+                                                                        {option.credit_limit && (
+                                                                            <Amount amount={trimTo2Decimals(option.credit_limit)} />
+                                                                        )}
+                                                                    </div>
+                                                                </div>
+                                                            </MenuItem>
+                                                        );
+                                                    })}
+                                                </Menu>
+                                            );
+                                        }}
+                                    />
+                                    <Button hide={true.toString()} onClick={openVendorCreateForm} className="btn btn-outline-secondary btn-primary btn-sm" type="button" id="button-addon1"> <i className="bi bi-plus-lg"></i> New</Button>
 
-                        <div className="col-md-3">
-                            <label className="form-label">Date*</label>
+                                    {errors.vendor_id && (
+                                        <div style={{ color: "red" }}>
+                                            {errors.vendor_id}
+                                        </div>
+                                    )}
+                                </div>
+                                <div className="col-md-1">
+                                    <Button className="btn btn-primary" style={{ marginTop: "30px" }} onClick={openVendors}>
+                                        <i className="bi bi-list"></i>
+                                    </Button>
+                                </div>
+                            </>}
 
-                            <div className="input-group mb-3">
-                                <DatePicker
-                                    id="date_str"
-                                    selected={formData.date_str ? new Date(formData.date_str) : null}
-                                    value={formData.date_str ? format(
-                                        new Date(formData.date_str),
-                                        "MMMM d, yyyy h:mm aa"
-                                    ) : null}
-                                    className="form-control"
-                                    dateFormat="MMMM d, yyyy h:mm aa"
-                                    showTimeSelect
-                                    timeIntervals="1"
-                                    onChange={(value) => {
-                                        console.log("Value", value);
-                                        formData.date_str = value;
-                                        // formData.date_str = format(new Date(value), "MMMM d yyyy h:mm aa");
-                                        setFormData({ ...formData });
-                                    }}
-                                />
-
-                                {errors.date_str && (
-                                    <div style={{ color: "red" }}>
-                                        {errors.date_str}
-                                    </div>
-                                )}
-                            </div>
                         </div>
 
 

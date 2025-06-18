@@ -417,6 +417,29 @@ const DeliveryNoteCreate = forwardRef((props, ref) => {
   }
 
 
+
+  const customCustomerFilter = useCallback((option, query) => {
+    const normalize = (str) => str?.toLowerCase().replace(/\s+/g, " ").trim() || "";
+
+    const q = normalize(query);
+    const qWords = q.split(" ");
+
+    const fields = [
+      option.code,
+      option.vat_no,
+      option.name,
+      option.name_in_arabic,
+      option.phone,
+      option.search_label,
+      option.phone_in_arabic,
+      ...(Array.isArray(option.additional_keywords) ? option.additional_keywords : []),
+    ];
+
+    const searchable = normalize(fields.join(" "));
+
+    return qWords.every((word) => searchable.includes(word));
+  }, []);
+
   async function suggestCustomers(searchTerm) {
     console.log("Inside handle suggestCustomers");
     setCustomerOptions([]);
@@ -447,15 +470,16 @@ const DeliveryNoteCreate = forwardRef((props, ref) => {
       },
     };
 
-    let Select = "select=id,code,vat_no,remarks,name,phone,name_in_arabic,phone_in_arabic,search_label";
+    let Select = "select=id,credit_balance,credit_limit,code,vat_no,remarks,name,phone,name_in_arabic,phone_in_arabic,search_label";
     //setIsCustomersLoading(true);
     let result = await fetch(
       "/v1/customer?" + Select + queryString,
       requestOptions
     );
     let data = await result.json();
+    const filtered = data.result.filter((opt) => customCustomerFilter(opt, searchTerm));
 
-    setCustomerOptions(data.result);
+    setCustomerOptions(filtered);
     // setIsCustomersLoading(false);
   }
 
@@ -1317,12 +1341,12 @@ const DeliveryNoteCreate = forwardRef((props, ref) => {
             )}
           </div>
           <form className="row g-3 needs-validation" onSubmit={handleCreate}>
-            <div className="col-md-6">
+            <div className="col-md-10">
               <label className="form-label">Customer</label>
               <Typeahead
-                id="customer_id"
+                id="customer_search"
                 labelKey="search_label"
-                filterBy={store?.client_filter ? undefined : () => true}
+                filterBy={() => true}
                 isLoading={false}
                 onChange={(selectedItems) => {
                   delete errors["customer_id"];
@@ -1363,7 +1387,70 @@ const DeliveryNoteCreate = forwardRef((props, ref) => {
                   if (timerRef.current) clearTimeout(timerRef.current);
                   timerRef.current = setTimeout(() => {
                     suggestCustomers(searchTerm);
-                  }, 400);
+                  }, 100);
+                }}
+
+                renderMenu={(results, menuProps, state) => {
+                  const searchWords = state.text.toLowerCase().split(" ").filter(Boolean);
+
+                  return (
+                    <Menu {...menuProps}>
+                      {/* Header */}
+                      <MenuItem disabled>
+                        <div style={{ display: 'flex', fontWeight: 'bold', padding: '4px 8px', borderBottom: '1px solid #ddd' }}>
+                          <div style={{ width: '15%' }}>ID</div>
+                          <div style={{ width: '42%' }}>Name</div>
+                          <div style={{ width: '10%' }}>Phone</div>
+                          <div style={{ width: '13%' }}>VAT</div>
+                          <div style={{ width: '10%' }}>Credit Balance</div>
+                          <div style={{ width: '10%' }}>Credit Limit</div>
+                        </div>
+                      </MenuItem>
+
+                      {/* Rows */}
+                      {results.map((option, index) => {
+                        const isActive = state.activeIndex === index;
+                        return (
+                          <MenuItem option={option} position={index} key={index}>
+                            <div style={{ display: 'flex', padding: '4px 8px' }}>
+                              <div style={{ ...columnStyle, width: '15%' }}>
+                                {highlightWords(
+                                  option.code,
+                                  searchWords,
+                                  isActive
+                                )}
+                              </div>
+                              <div style={{ ...columnStyle, width: '42%' }}>
+                                {highlightWords(
+                                  option.name_in_arabic
+                                    ? `${option.name} - ${option.name_in_arabic}`
+                                    : option.name,
+                                  searchWords,
+                                  isActive
+                                )}
+                              </div>
+                              <div style={{ ...columnStyle, width: '10%' }}>
+                                {highlightWords(option.phone, searchWords, isActive)}
+                              </div>
+                              <div style={{ ...columnStyle, width: '13%' }}>
+                                {highlightWords(option.vat_no, searchWords, isActive)}
+                              </div>
+                              <div style={{ ...columnStyle, width: '10%' }}>
+                                {option.credit_balance && (
+                                  <Amount amount={trimTo2Decimals(option.credit_balance)} />
+                                )}
+                              </div>
+                              <div style={{ ...columnStyle, width: '10%' }}>
+                                {option.credit_limit && (
+                                  <Amount amount={trimTo2Decimals(option.credit_limit)} />
+                                )}
+                              </div>
+                            </div>
+                          </MenuItem>
+                        );
+                      })}
+                    </Menu>
+                  );
                 }}
               />
               <Button hide={true.toString()} onClick={openCustomerCreateForm} className="btn btn-outline-secondary btn-primary btn-sm" type="button" id="button-addon1"> <i className="bi bi-plus-lg"></i> New</Button>
