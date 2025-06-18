@@ -5,8 +5,7 @@ import CustomerCreate from "../customer/create.js";
 import ProductCreate from "../product/create.js";
 import UserCreate from "../user/create.js";
 import SignatureCreate from "../signature/create.js";
-
-import { Typeahead, Menu, MenuItem, Highlighter } from "react-bootstrap-typeahead";
+import { Typeahead, Menu, MenuItem } from "react-bootstrap-typeahead";
 import { format } from "date-fns";
 import { Spinner } from "react-bootstrap";
 import ProductView from "../product/view.js";
@@ -27,6 +26,7 @@ import * as bootstrap from 'bootstrap';
 import OverflowTooltip from "../utils/OverflowTooltip.js";
 import Amount from "../utils/amount.js";
 import { trimTo2Decimals } from "../utils/numberUtils";
+import { highlightWords } from "../utils/search.js";
 
 const columnStyle = {
   width: '20%',
@@ -556,26 +556,32 @@ const DeliveryNoteCreate = forwardRef((props, ref) => {
 
   let [openProductSearchResult, setOpenProductSearchResult] = useState(false);
 
-  const normalize = (str) => (str || '').toString().toLowerCase();
+
   const customFilter = useCallback((option, query) => {
+    const normalize = (str) => str?.toLowerCase().replace(/\s+/g, " ").trim() || "";
+
     const q = normalize(query);
+    const qWords = q.split(" ");
 
     let partNoLabel = "";
     if (option.prefix_part_number) {
       partNoLabel = option.prefix_part_number + " - " + option.part_number;
     }
 
-    return (
-      normalize(partNoLabel).includes(q) ||
-      normalize(option.prefix_part_number).includes(q) ||
-      normalize(option.part_number).includes(q) ||
-      normalize(option.name).includes(q) ||
-      normalize(option.name_in_arabic).includes(q) ||
-      normalize(option.country_name).includes(q) ||
-      normalize(option.brand_name).includes(q) ||
-      (Array.isArray(option.additional_keywords) &&
-        option.additional_keywords.some((kw) => normalize(kw).includes(q)))
-    );
+    const fields = [
+      partNoLabel,
+      option.prefix_part_number,
+      option.part_number,
+      option.name,
+      option.name_in_arabic,
+      option.country_name,
+      option.brand_name,
+      ...(Array.isArray(option.additional_keywords) ? option.additional_keywords : []),
+    ];
+
+    const searchable = normalize(fields.join(" "));
+
+    return qWords.every((word) => searchable.includes(word));
   }, []);
 
   async function suggestProducts(searchTerm) {
@@ -1513,48 +1519,68 @@ const DeliveryNoteCreate = forwardRef((props, ref) => {
 
 
                 }}
-                renderMenu={(results, menuProps, state) => (
-                  <Menu {...menuProps}>
-                    {/* Header */}
-                    <MenuItem disabled>
-                      <div style={{ display: 'flex', fontWeight: 'bold', padding: '4px 8px', borderBottom: '1px solid #ddd' }}>
-                        <div style={{ width: '15%' }}>Part Number</div>
-                        <div style={{ width: '45%' }}>Name</div>
-                        <div style={{ width: '10%' }}>Unit Price</div>
-                        <div style={{ width: '10%' }}>Stock</div>
-                        <div style={{ width: '10%' }}>Brand</div>
-                        <div style={{ width: '10%' }}>Country</div>
-                      </div>
-                    </MenuItem>
+                renderMenu={(results, menuProps, state) => {
+                  const searchWords = state.text.toLowerCase().split(" ").filter(Boolean);
 
-                    {/* Rows */}
-                    {results.map((option, index) => (
-                      <MenuItem option={option} position={index} key={index}>
-                        <div style={{ display: 'flex', padding: '4px 8px' }}>
-                          <div style={{ ...columnStyle, width: '15%' }}>
-                            <Highlighter search={state.text}>{option.prefix_part_number ? option.prefix_part_number + " - " + option.part_number : "" + option.part_number}</Highlighter>
-                          </div>
-                          <div style={{ ...columnStyle, width: '45%' }}>
-                            <Highlighter search={state.text}>{option.name_in_arabic ? option.name + " - " + option.name_in_arabic : option.name}</Highlighter>
-                          </div>
-                          <div style={{ ...columnStyle, width: '10%' }}>
-                            {option.product_stores?.[localStorage.getItem("store_id")]?.retail_unit_price && <Amount amount={trimTo2Decimals(option.product_stores?.[localStorage.getItem("store_id")]?.retail_unit_price)} />}
-                          </div>
-                          <div style={{ ...columnStyle, width: '10%' }}>
-                            {option.product_stores?.[localStorage.getItem("store_id")]?.stock ?? ''}
-                          </div>
-                          <div style={{ ...columnStyle, width: '10%' }}>
-                            <Highlighter search={state.text}>{option.brand_name}</Highlighter>
-                          </div>
-                          <div style={{ ...columnStyle, width: '10%' }}>
-                            <Highlighter search={state.text}>{option.country_name}</Highlighter>
-                          </div>
+                  return (
+                    <Menu {...menuProps}>
+                      {/* Header */}
+                      <MenuItem disabled>
+                        <div style={{ display: 'flex', fontWeight: 'bold', padding: '4px 8px', borderBottom: '1px solid #ddd' }}>
+                          <div style={{ width: '15%' }}>Part Number</div>
+                          <div style={{ width: '45%' }}>Name</div>
+                          <div style={{ width: '10%' }}>Unit Price</div>
+                          <div style={{ width: '10%' }}>Stock</div>
+                          <div style={{ width: '10%' }}>Brand</div>
+                          <div style={{ width: '10%' }}>Country</div>
                         </div>
                       </MenuItem>
-                    ))}
-                  </Menu>
-                )}
 
+                      {/* Rows */}
+                      {results.map((option, index) => {
+                        const isActive = state.activeIndex === index;
+                        return (
+                          <MenuItem option={option} position={index} key={index}>
+                            <div style={{ display: 'flex', padding: '4px 8px' }}>
+                              <div style={{ ...columnStyle, width: '15%' }}>
+                                {highlightWords(
+                                  option.prefix_part_number
+                                    ? `${option.prefix_part_number} - ${option.part_number}`
+                                    : option.part_number,
+                                  searchWords,
+                                  isActive
+                                )}
+                              </div>
+                              <div style={{ ...columnStyle, width: '45%' }}>
+                                {highlightWords(
+                                  option.name_in_arabic
+                                    ? `${option.name} - ${option.name_in_arabic}`
+                                    : option.name,
+                                  searchWords,
+                                  isActive
+                                )}
+                              </div>
+                              <div style={{ ...columnStyle, width: '10%' }}>
+                                {option.product_stores?.[localStorage.getItem("store_id")]?.retail_unit_price && (
+                                  <Amount amount={trimTo2Decimals(option.product_stores?.[localStorage.getItem("store_id")]?.retail_unit_price)} />
+                                )}
+                              </div>
+                              <div style={{ ...columnStyle, width: '10%' }}>
+                                {option.product_stores?.[localStorage.getItem("store_id")]?.stock ?? ''}
+                              </div>
+                              <div style={{ ...columnStyle, width: '10%' }}>
+                                {highlightWords(option.brand_name, searchWords, isActive)}
+                              </div>
+                              <div style={{ ...columnStyle, width: '10%' }}>
+                                {highlightWords(option.country_name, searchWords, isActive)}
+                              </div>
+                            </div>
+                          </MenuItem>
+                        );
+                      })}
+                    </Menu>
+                  );
+                }}
               />
               <Button hide={true.toString()} onClick={openProductCreateForm} className="btn btn-outline-secondary btn-primary btn-sm" type="button" id="button-addon1"> <i className="bi bi-plus-lg"></i> New</Button>
               {errors.product_id ? (

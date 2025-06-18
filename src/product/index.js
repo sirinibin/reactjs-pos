@@ -4,7 +4,7 @@ import ProductJson from "./json.js";
 import ProductView from "./view.js";
 import { confirm } from 'react-bootstrap-confirmation';
 
-import { Typeahead, Menu, MenuItem, Highlighter } from "react-bootstrap-typeahead";
+import { Typeahead, Menu, MenuItem } from "react-bootstrap-typeahead";
 import { format } from "date-fns";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
@@ -26,6 +26,7 @@ import StatsSummary from "../utils/StatsSummary.js";
 import countryList from 'react-select-country-list'
 import Amount from "../utils/amount.js";
 import { trimTo2Decimals } from "../utils/numberUtils";
+import { highlightWords } from "../utils/search.js";
 
 const columnStyle = {
     width: '20%',
@@ -572,28 +573,31 @@ function ProductIndex(props) {
     let [selectedProductsByName, setSelectedProductsByName] = useState([]);
     let [openProductSearchResultByName, setOpenProductSearchResultByName] = useState(false);
 
-
-
-    const normalize = (str) => (str || '').toString().toLowerCase();
     const customFilter = useCallback((option, query) => {
+        const normalize = (str) => str?.toLowerCase().replace(/\s+/g, " ").trim() || "";
+
         const q = normalize(query);
+        const qWords = q.split(" ");
 
         let partNoLabel = "";
         if (option.prefix_part_number) {
             partNoLabel = option.prefix_part_number + " - " + option.part_number;
         }
 
-        return (
-            normalize(partNoLabel).includes(q) ||
-            normalize(option.prefix_part_number).includes(q) ||
-            normalize(option.part_number).includes(q) ||
-            normalize(option.name).includes(q) ||
-            normalize(option.name_in_arabic).includes(q) ||
-            normalize(option.country_name).includes(q) ||
-            normalize(option.brand_name).includes(q) ||
-            (Array.isArray(option.additional_keywords) &&
-                option.additional_keywords.some((kw) => normalize(kw).includes(q)))
-        );
+        const fields = [
+            partNoLabel,
+            option.prefix_part_number,
+            option.part_number,
+            option.name,
+            option.name_in_arabic,
+            option.country_name,
+            option.brand_name,
+            ...(Array.isArray(option.additional_keywords) ? option.additional_keywords : []),
+        ];
+
+        const searchable = normalize(fields.join(" "));
+
+        return qWords.every((word) => searchable.includes(word));
     }, []);
 
     const suggestProducts = useCallback(async (searchTerm, searchBy) => {
@@ -677,42 +681,44 @@ function ProductIndex(props) {
 
         //openProductSearchResult = true;
 
+        const filtered = products.filter((opt) => customFilter(opt, searchTerm));
+
+        const sorted = filtered.sort((a, b) => {
+            const aHasCountry = a.country_name && a.country_name.trim() !== "";
+            const bHasCountry = b.country_name && b.country_name.trim() !== "";
+
+            // If both have country, sort by country_name ascending
+            if (aHasCountry && bHasCountry) {
+                return a.country_name.localeCompare(b.country_name);
+            }
+
+            // If only a has country, it comes before b
+            if (aHasCountry && !bHasCountry) {
+                return -1;
+            }
+
+            // If only b has country, it comes before a
+            if (!aHasCountry && bHasCountry) {
+                return 1;
+            }
+
+            // Both have no country, keep original order or sort as needed
+            return 0;
+        });
+
+
+
 
         if (searchBy === "name") {
             setOpenProductSearchResultByName(true);
-            setProductOptionsByName(products);
+            setProductOptionsByName(sorted);
             // setIsProductsLoading(false);
         } else if (searchBy === "part_number") {
             setOpenProductSearchResultByPartNo(true);
-            setProductOptionsByPartNo(products);
+            setProductOptionsByPartNo(sorted);
 
         } else if (searchBy === "all") {
             setOpenProductSearchResult(true);
-            const filtered = products.filter((opt) => customFilter(opt, searchTerm));
-
-            const sorted = filtered.sort((a, b) => {
-                const aHasCountry = a.country_name && a.country_name.trim() !== "";
-                const bHasCountry = b.country_name && b.country_name.trim() !== "";
-
-                // If both have country, sort by country_name ascending
-                if (aHasCountry && bHasCountry) {
-                    return a.country_name.localeCompare(b.country_name);
-                }
-
-                // If only a has country, it comes before b
-                if (aHasCountry && !bHasCountry) {
-                    return -1;
-                }
-
-                // If only b has country, it comes before a
-                if (!aHasCountry && bHasCountry) {
-                    return 1;
-                }
-
-                // Both have no country, keep original order or sort as needed
-                return 0;
-            });
-
             setProductOptions(sorted);
         }
 
@@ -895,6 +901,7 @@ function ProductIndex(props) {
 
     const timerRef = useRef(null);
 
+
     return (
         <>
             <SalesHistory ref={SalesHistoryRef} showToastMessage={props.showToastMessage} />
@@ -1054,7 +1061,7 @@ function ProductIndex(props) {
                                 <div className="row">
                                     <div className="col-md-12">
                                         <Typeahead
-                                            id="product_id"
+                                            id="product_search"
                                             ref={productSearchRef}
                                             filterBy={() => true}
                                             size="lg"
@@ -1099,47 +1106,68 @@ function ProductIndex(props) {
                                             }}
                                             ignoreDiacritics={true}
                                             multiple
-                                            renderMenu={(results, menuProps, state) => (
-                                                <Menu {...menuProps}>
-                                                    {/* Header */}
-                                                    <MenuItem disabled>
-                                                        <div style={{ display: 'flex', fontWeight: 'bold', padding: '4px 8px', borderBottom: '1px solid #ddd' }}>
-                                                            <div style={{ width: '15%' }}>Part Number</div>
-                                                            <div style={{ width: '45%' }}>Name</div>
-                                                            <div style={{ width: '10%' }}>Unit Price</div>
-                                                            <div style={{ width: '10%' }}>Stock</div>
-                                                            <div style={{ width: '10%' }}>Brand</div>
-                                                            <div style={{ width: '10%' }}>Country</div>
-                                                        </div>
-                                                    </MenuItem>
+                                            renderMenu={(results, menuProps, state) => {
+                                                const searchWords = state.text.toLowerCase().split(" ").filter(Boolean);
 
-                                                    {/* Rows */}
-                                                    {results.map((option, index) => (
-                                                        <MenuItem option={option} position={index} key={index}>
-                                                            <div style={{ display: 'flex', padding: '4px 8px' }}>
-                                                                <div style={{ ...columnStyle, width: '15%' }}>
-                                                                    <Highlighter search={state.text}>{option.prefix_part_number ? option.prefix_part_number + " - " + option.part_number : "" + option.part_number}</Highlighter>
-                                                                </div>
-                                                                <div style={{ ...columnStyle, width: '45%' }}>
-                                                                    <Highlighter search={state.text}>{option.name_in_arabic ? option.name + " - " + option.name_in_arabic : option.name}</Highlighter>
-                                                                </div>
-                                                                <div style={{ ...columnStyle, width: '10%' }}>
-                                                                    {option.product_stores?.[localStorage.getItem("store_id")]?.retail_unit_price && <Amount amount={trimTo2Decimals(option.product_stores?.[localStorage.getItem("store_id")]?.retail_unit_price)} />}
-                                                                </div>
-                                                                <div style={{ ...columnStyle, width: '10%' }}>
-                                                                    {option.product_stores?.[localStorage.getItem("store_id")]?.stock ?? ''}
-                                                                </div>
-                                                                <div style={{ ...columnStyle, width: '10%' }}>
-                                                                    <Highlighter search={state.text}>{option.brand_name}</Highlighter>
-                                                                </div>
-                                                                <div style={{ ...columnStyle, width: '10%' }}>
-                                                                    <Highlighter search={state.text}>{option.country_name}</Highlighter>
-                                                                </div>
+                                                return (
+                                                    <Menu {...menuProps}>
+                                                        {/* Header */}
+                                                        <MenuItem disabled>
+                                                            <div style={{ display: 'flex', fontWeight: 'bold', padding: '4px 8px', borderBottom: '1px solid #ddd' }}>
+                                                                <div style={{ width: '15%' }}>Part Number</div>
+                                                                <div style={{ width: '45%' }}>Name</div>
+                                                                <div style={{ width: '10%' }}>Unit Price</div>
+                                                                <div style={{ width: '10%' }}>Stock</div>
+                                                                <div style={{ width: '10%' }}>Brand</div>
+                                                                <div style={{ width: '10%' }}>Country</div>
                                                             </div>
                                                         </MenuItem>
-                                                    ))}
-                                                </Menu>
-                                            )}
+
+                                                        {/* Rows */}
+                                                        {results.map((option, index) => {
+                                                            const isActive = state.activeIndex === index;
+                                                            return (
+                                                                <MenuItem option={option} position={index} key={index}>
+                                                                    <div style={{ display: 'flex', padding: '4px 8px' }}>
+                                                                        <div style={{ ...columnStyle, width: '15%' }}>
+                                                                            {highlightWords(
+                                                                                option.prefix_part_number
+                                                                                    ? `${option.prefix_part_number} - ${option.part_number}`
+                                                                                    : option.part_number,
+                                                                                searchWords,
+                                                                                isActive
+                                                                            )}
+                                                                        </div>
+                                                                        <div style={{ ...columnStyle, width: '45%' }}>
+                                                                            {highlightWords(
+                                                                                option.name_in_arabic
+                                                                                    ? `${option.name} - ${option.name_in_arabic}`
+                                                                                    : option.name,
+                                                                                searchWords,
+                                                                                isActive
+                                                                            )}
+                                                                        </div>
+                                                                        <div style={{ ...columnStyle, width: '10%' }}>
+                                                                            {option.product_stores?.[localStorage.getItem("store_id")]?.retail_unit_price && (
+                                                                                <Amount amount={trimTo2Decimals(option.product_stores?.[localStorage.getItem("store_id")]?.retail_unit_price)} />
+                                                                            )}
+                                                                        </div>
+                                                                        <div style={{ ...columnStyle, width: '10%' }}>
+                                                                            {option.product_stores?.[localStorage.getItem("store_id")]?.stock ?? ''}
+                                                                        </div>
+                                                                        <div style={{ ...columnStyle, width: '10%' }}>
+                                                                            {highlightWords(option.brand_name, searchWords, isActive)}
+                                                                        </div>
+                                                                        <div style={{ ...columnStyle, width: '10%' }}>
+                                                                            {highlightWords(option.country_name, searchWords, isActive)}
+                                                                        </div>
+                                                                    </div>
+                                                                </MenuItem>
+                                                            );
+                                                        })}
+                                                    </Menu>
+                                                );
+                                            }}
                                         />
                                     </div>
                                 </div>
@@ -1969,8 +1997,8 @@ function ProductIndex(props) {
 
                                                 <th style={{ minWidth: "250px" }}>
                                                     <Typeahead
-                                                        id="product_id_by_part_no"
-                                                        filterBy={['additional_keywords']}
+                                                        id="product_search_by_part_no"
+                                                        filterBy={() => true}
                                                         size="lg"
                                                         ref={productSearchByPartNoRef}
                                                         labelKey="search_label"
@@ -2012,6 +2040,7 @@ function ProductIndex(props) {
                                                             }, 100);
                                                         }}
                                                         ignoreDiacritics={true}
+
                                                         multiple
                                                     />
 
@@ -2028,9 +2057,9 @@ function ProductIndex(props) {
 
                                                 <th style={{ minWidth: "250px" }}>
                                                     <Typeahead
-                                                        id="product_id"
+                                                        id="product_search_by_name"
                                                         ref={productSearchByNameRef}
-                                                        filterBy={['additional_keywords']}
+                                                        filterBy={() => true}
                                                         size="lg"
                                                         labelKey="search_label"
                                                         emptyLabel="No products found"
@@ -2072,6 +2101,7 @@ function ProductIndex(props) {
                                                             }, 100);
                                                         }}
                                                         ignoreDiacritics={true}
+
                                                         multiple
                                                     />
                                                 </th>
