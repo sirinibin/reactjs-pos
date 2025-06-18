@@ -103,7 +103,7 @@ const PostingIndex = forwardRef((props, ref) => {
     const [postingList, setPostingList] = useState([]);
 
     //pagination
-    let [pageSize, setPageSize] = useState(5);
+    let [pageSize, setPageSize] = useState(10);
     let [page, setPage] = useState(1);
     const [totalPages, setTotalPages] = useState(null);
     const [totalItems, setTotalItems] = useState();

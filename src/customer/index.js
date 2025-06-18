@@ -452,6 +452,8 @@ function CustomerIndex(props) {
     const customerSearchRef = useRef();
     const timerRef = useRef(null);
 
+    let [ignoreZeroCreditBalance, setIgnoreZeroCreditBalance] = useState(false);
+
 
     return (
         <>
@@ -596,6 +598,27 @@ function CustomerIndex(props) {
                                             </div>
                                         </>
                                     )}
+                                </div>
+
+                                <div className="row">
+                                    <div className="col text-start">
+                                        <p className="text-start">
+                                            <span style={{ marginLeft: "10px" }}>
+                                                <input type="checkbox"
+                                                    value={ignoreZeroCreditBalance}
+                                                    checked={ignoreZeroCreditBalance}
+                                                    onChange={(e) => {
+                                                        ignoreZeroCreditBalance = !ignoreZeroCreditBalance;
+                                                        setIgnoreZeroCreditBalance(ignoreZeroCreditBalance);
+                                                        searchByFieldValue("ignore_zero_credit_balance", ignoreZeroCreditBalance)
+                                                    }}
+                                                    className=""
+                                                    id="ignoreOpeningBalance"
+
+                                                /> &nbsp;Ignore Zero Credit Balance
+                                            </span>
+                                        </p>
+                                    </div>
                                 </div>
                                 <div className="table-responsive" style={{ overflowX: "auto", overflowY: "auto", maxHeight: "500px" }}>
                                     <table className="table table-striped table-sm table-bordered">
