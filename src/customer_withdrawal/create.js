@@ -297,8 +297,8 @@ const CustomerWithdrawalCreate = forwardRef((props, ref) => {
     }, []);
 
 
-    // let [openVendorSearchResult, setOpenVendorSearchResult] = useState(false);
-    //  let [openCustomerSearchResult, setOpenCustomerSearchResult] = useState(false);
+    let [openVendorSearchResult, setOpenVendorSearchResult] = useState(false);
+    let [openCustomerSearchResult, setOpenCustomerSearchResult] = useState(false);
 
     async function suggestCustomers(searchTerm) {
         console.log("Inside handle suggestCustomers");
@@ -306,13 +306,14 @@ const CustomerWithdrawalCreate = forwardRef((props, ref) => {
 
 
         console.log("searchTerm:" + searchTerm);
-        /*
+
         if (!searchTerm) {
             setTimeout(() => {
+                openCustomerSearchResult = false;
                 setOpenCustomerSearchResult(false);
             }, 100);
             return;
-        }*/
+        }
 
         console.log("searchTerm:" + searchTerm);
         if (!searchTerm) {
@@ -347,13 +348,15 @@ const CustomerWithdrawalCreate = forwardRef((props, ref) => {
             requestOptions
         );
         let data = await result.json();
-        /*
+
         if (!data.result || data.result.length === 0) {
+            openCustomerSearchResult = false;
             setOpenCustomerSearchResult(false);
             return;
-        }*/
+        }
 
-        // setOpenCustomerSearchResult(true);
+        openCustomerSearchResult = true;
+        setOpenCustomerSearchResult(true);
 
 
         if (data.result) {
@@ -373,11 +376,12 @@ const CustomerWithdrawalCreate = forwardRef((props, ref) => {
 
         console.log("searchTerm:" + searchTerm);
         if (!searchTerm) {
-            /*
+
             setTimeout(() => {
+                openVendorSearchResult = false;
                 setOpenVendorSearchResult(false);
             }, 100);
-            */
+
             return;
         }
 
@@ -411,11 +415,13 @@ const CustomerWithdrawalCreate = forwardRef((props, ref) => {
         let data = await result.json();
 
         if (!data.result || data.result.length === 0) {
-            // setOpenVendorSearchResult(false);
+            openVendorSearchResult = false
+            setOpenVendorSearchResult(false);
             return;
         }
 
-        // setOpenVendorSearchResult(true);
+        openVendorSearchResult = true;
+        setOpenVendorSearchResult(true);
 
         if (data.result) {
             const filtered = data.result.filter((opt) => customVendorFilter(opt, searchTerm));
@@ -1091,6 +1097,7 @@ const CustomerWithdrawalCreate = forwardRef((props, ref) => {
                                         isLoading={false}
                                         filterBy={() => true}
                                         isInvalid={errors.customer_id ? true : false}
+                                        open={openCustomerSearchResult}
                                         onChange={(selectedItems) => {
                                             errors.customer_id = "";
                                             setErrors(errors);
@@ -1109,7 +1116,8 @@ const CustomerWithdrawalCreate = forwardRef((props, ref) => {
 
                                             setFormData({ ...formData });
                                             setSelectedCustomers(selectedItems);
-                                            // setOpenCustomerSearchResult(false);
+                                            openCustomerSearchResult = false;
+                                            setOpenCustomerSearchResult(false);
                                         }}
 
                                         options={customerOptions}
@@ -1127,6 +1135,8 @@ const CustomerWithdrawalCreate = forwardRef((props, ref) => {
                                                 setFormData({ ...formData });
                                                 setSelectedCustomers([]);
                                                 setCustomerOptions([]);
+                                                openCustomerSearchResult = false;
+                                                setOpenCustomerSearchResult(false);
                                                 customerSearchRef.current?.clear();
                                             }
                                         }}
@@ -1230,17 +1240,17 @@ const CustomerWithdrawalCreate = forwardRef((props, ref) => {
                                         isLoading={false}
                                         filterBy={() => true}
                                         isInvalid={errors.vendor_id ? true : false}
+                                        open={openVendorSearchResult}
                                         onChange={(selectedItems) => {
-                                            errors.vendor_id = "";
+                                            delete errors.vendor_id;
                                             setErrors(errors);
                                             if (selectedItems.length === 0) {
-                                                // errors.customer_id = "Invalid Customer selected";
-                                                //setErrors(errors);
                                                 formData.vendor_id = "";
                                                 setFormData({ ...formData });
                                                 setSelectedVendors([]);
                                                 return;
                                             }
+
                                             formData.vendor_id = selectedItems[0].id;
 
                                             if (selectedItems[0].use_remarks_in_sales && selectedItems[0].remarks) {
@@ -1249,7 +1259,9 @@ const CustomerWithdrawalCreate = forwardRef((props, ref) => {
 
                                             setFormData({ ...formData });
                                             setSelectedVendors(selectedItems);
-                                            //setOpenVendorSearchResult(false);
+
+                                            openVendorSearchResult = false;
+                                            setOpenVendorSearchResult(false);
                                         }}
                                         options={vendorOptions}
                                         placeholder="Vendor Name | Mob | VAT # | ID"
@@ -1266,6 +1278,8 @@ const CustomerWithdrawalCreate = forwardRef((props, ref) => {
                                                 setFormData({ ...formData });
                                                 setSelectedVendors([]);
                                                 setVendorOptions([]);
+                                                openVendorSearchResult = false;
+                                                setOpenVendorSearchResult(false);
                                                 vendorSearchRef.current?.clear();
                                             }
                                         }}

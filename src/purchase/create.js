@@ -429,12 +429,41 @@ const PurchaseCreate = forwardRef((props, ref) => {
         setIsStoresLoading(false);
     }
 
+    const customVendorFilter = useCallback((option, query) => {
+        const normalize = (str) => str?.toLowerCase().replace(/\s+/g, " ").trim() || "";
+
+        const q = normalize(query);
+        const qWords = q.split(" ");
+
+        const fields = [
+            option.code,
+            option.vat_no,
+            option.name,
+            option.name_in_arabic,
+            option.phone,
+            option.search_label,
+            option.phone_in_arabic,
+            ...(Array.isArray(option.additional_keywords) ? option.additional_keywords : []),
+        ];
+
+        const searchable = normalize(fields.join(" "));
+
+        return qWords.every((word) => searchable.includes(word));
+    }, []);
+
+
+    let [openVendorSearchResult, setOpenVendorSearchResult] = useState(false);
+
     async function suggestVendors(searchTerm) {
         console.log("Inside handle suggestVendors");
         setVendorOptions([]);
 
         console.log("searchTerm:" + searchTerm);
         if (!searchTerm) {
+            setTimeout(() => {
+                setOpenVendorSearchResult(false);
+            }, 100);
+
             return;
         }
 
@@ -460,15 +489,31 @@ const PurchaseCreate = forwardRef((props, ref) => {
             },
         };
 
-        let Select = "select=id,additional_keywords,code,use_remarks_in_purchases,remarks,vat_no,name,phone,name_in_arabic,phone_in_arabic,search_label";
+        let Select = "select=id,credit_balance,credit_limit,additional_keywords,code,use_remarks_in_purchases,remarks,vat_no,name,phone,name_in_arabic,phone_in_arabic,search_label";
         // setIsVendorsLoading(true);
         let result = await fetch(
             "/v1/vendor?" + Select + queryString,
             requestOptions
         );
         let data = await result.json();
+        if (!data.result || data.result.length === 0) {
+            openVendorSearchResult = false;
+            setOpenVendorSearchResult(false);
+            return;
+        }
 
-        setVendorOptions(data.result);
+        openVendorSearchResult = true;
+        setOpenVendorSearchResult(true);
+
+
+
+
+        if (data.result) {
+            const filtered = data.result.filter((opt) => customVendorFilter(opt, searchTerm));
+            setVendorOptions(filtered);
+        } else {
+            setVendorOptions([]);
+        }
         // setIsVendorsLoading(false);
     }
 
@@ -1928,18 +1973,19 @@ const PurchaseCreate = forwardRef((props, ref) => {
                                 )}
                             </div>
                         </div> : ""}
-                        <div className="col-md-6">
+                        <div className="col-md-10">
                             <label className="form-label">Vendor</label>
                             <Typeahead
-                                id="vendor_id"
-                                filterBy={['additional_keywords']}
+                                id="vendor_search"
+                                filterBy={() => true}
                                 labelKey="search_label"
+                                open={openVendorSearchResult}
                                 isLoading={false}
                                 onChange={(selectedItems) => {
-                                    errors.vendor_id = "";
+                                    delete errors.vendor_id;
                                     setErrors(errors);
                                     if (selectedItems.length === 0) {
-                                        errors.vendor_id = "";
+                                        delete errors.vendor_id;
                                         //setErrors(errors);
                                         formData.vendor_id = "";
                                         setFormData({ ...formData });
@@ -1950,6 +1996,8 @@ const PurchaseCreate = forwardRef((props, ref) => {
                                     if (selectedItems[0].use_remarks_in_purchases && selectedItems[0].remarks) {
                                         formData.remarks = selectedItems[0].remarks;
                                     }
+
+                                    setOpenVendorSearchResult(false);
                                     setFormData({ ...formData });
                                     setSelectedVendors(selectedItems);
                                 }}
@@ -1960,6 +2008,14 @@ const PurchaseCreate = forwardRef((props, ref) => {
                                 ref={vendorSearchRef}
                                 onKeyDown={(e) => {
                                     if (e.key === "Escape") {
+                                        delete errors.vendor_id;
+                                        setOpenVendorSearchResult(false);
+                                        //setErrors(errors);
+                                        formData.vendor_id = "";
+                                        formData.vendor_name = "";
+
+                                        setFormData({ ...formData });
+                                        setSelectedVendors([]);
                                         setVendorOptions([]);
                                         vendorSearchRef.current?.clear();
                                     }
@@ -1973,6 +2029,69 @@ const PurchaseCreate = forwardRef((props, ref) => {
                                     timerRef.current = setTimeout(() => {
                                         suggestVendors(searchTerm);
                                     }, 100);
+                                }}
+
+                                renderMenu={(results, menuProps, state) => {
+                                    const searchWords = state.text.toLowerCase().split(" ").filter(Boolean);
+
+                                    return (
+                                        <Menu {...menuProps}>
+                                            {/* Header */}
+                                            <MenuItem disabled>
+                                                <div style={{ display: 'flex', fontWeight: 'bold', padding: '4px 8px', borderBottom: '1px solid #ddd' }}>
+                                                    <div style={{ width: '15%' }}>ID</div>
+                                                    <div style={{ width: '42%' }}>Name</div>
+                                                    <div style={{ width: '10%' }}>Phone</div>
+                                                    <div style={{ width: '13%' }}>VAT</div>
+                                                    <div style={{ width: '10%' }}>Credit Balance</div>
+                                                    <div style={{ width: '10%' }}>Credit Limit</div>
+                                                </div>
+                                            </MenuItem>
+
+                                            {/* Rows */}
+                                            {results.map((option, index) => {
+                                                const isActive = state.activeIndex === index;
+                                                return (
+                                                    <MenuItem option={option} position={index} key={index}>
+                                                        <div style={{ display: 'flex', padding: '4px 8px' }}>
+                                                            <div style={{ ...columnStyle, width: '15%' }}>
+                                                                {highlightWords(
+                                                                    option.code,
+                                                                    searchWords,
+                                                                    isActive
+                                                                )}
+                                                            </div>
+                                                            <div style={{ ...columnStyle, width: '42%' }}>
+                                                                {highlightWords(
+                                                                    option.name_in_arabic
+                                                                        ? `${option.name} - ${option.name_in_arabic}`
+                                                                        : option.name,
+                                                                    searchWords,
+                                                                    isActive
+                                                                )}
+                                                            </div>
+                                                            <div style={{ ...columnStyle, width: '10%' }}>
+                                                                {highlightWords(option.phone, searchWords, isActive)}
+                                                            </div>
+                                                            <div style={{ ...columnStyle, width: '13%' }}>
+                                                                {highlightWords(option.vat_no, searchWords, isActive)}
+                                                            </div>
+                                                            <div style={{ ...columnStyle, width: '10%' }}>
+                                                                {option.credit_balance && (
+                                                                    <Amount amount={trimTo2Decimals(option.credit_balance)} />
+                                                                )}
+                                                            </div>
+                                                            <div style={{ ...columnStyle, width: '10%' }}>
+                                                                {option.credit_limit && (
+                                                                    <Amount amount={trimTo2Decimals(option.credit_limit)} />
+                                                                )}
+                                                            </div>
+                                                        </div>
+                                                    </MenuItem>
+                                                );
+                                            })}
+                                        </Menu>
+                                    );
                                 }}
                             />
                             <Button hide={true.toString()} onClick={openVendorCreateForm} className="btn btn-outline-secondary btn-primary btn-sm" type="button" id="button-addon1"> <i className="bi bi-plus-lg"></i> New</Button>

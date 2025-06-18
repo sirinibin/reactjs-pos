@@ -269,9 +269,7 @@ const CustomerDepositCreate = forwardRef((props, ref) => {
         return qWords.every((word) => searchable.includes(word));
     }, []);
 
-
-    //, setOpenVendorSearchResult] = useState(false);
-    //let [openCustomerSearchResult, setOpenCustomerSearchResult] = useState(false);
+    let [openCustomerSearchResult, setOpenCustomerSearchResult] = useState(false);
 
     async function suggestCustomers(searchTerm) {
         console.log("Inside handle suggestCustomers");
@@ -279,13 +277,13 @@ const CustomerDepositCreate = forwardRef((props, ref) => {
 
 
         console.log("searchTerm:" + searchTerm);
-        /*
+
         if (!searchTerm) {
             setTimeout(() => {
                 setOpenCustomerSearchResult(false);
             }, 100);
             return;
-        }*/
+        }
 
         console.log("searchTerm:" + searchTerm);
         if (!searchTerm) {
@@ -320,14 +318,16 @@ const CustomerDepositCreate = forwardRef((props, ref) => {
             requestOptions
         );
         let data = await result.json();
-        /*
+
         if (!data.result || data.result.length === 0) {
+            openCustomerSearchResult = false;
             setOpenCustomerSearchResult(false);
             return;
         }
 
+        openCustomerSearchResult = true;
         setOpenCustomerSearchResult(true);
-        */
+
 
 
         if (data.result) {
@@ -364,16 +364,19 @@ const CustomerDepositCreate = forwardRef((props, ref) => {
         return qWords.every((word) => searchable.includes(word));
     }, []);
 
+
+    let [openVendorSearchResult, setOpenVendorSearchResult] = useState(false);
+
     async function suggestVendors(searchTerm) {
         console.log("Inside handle suggestVendors");
         setCustomerOptions([]);
 
         console.log("searchTerm:" + searchTerm);
         if (!searchTerm) {
-            /*
+
             setTimeout(() => {
                 setOpenVendorSearchResult(false);
-            }, 100);*/
+            }, 100);
             return;
         }
 
@@ -405,12 +408,15 @@ const CustomerDepositCreate = forwardRef((props, ref) => {
             requestOptions
         );
         let data = await result.json();
-        /*
+
         if (!data.result || data.result.length === 0) {
+            openVendorSearchResult = false;
             setOpenVendorSearchResult(false);
             return;
         }
-        setOpenVendorSearchResult(true);*/
+
+        openVendorSearchResult = true;
+        setOpenVendorSearchResult(true);
 
         if (data.result) {
             const filtered = data.result.filter((opt) => customVendorFilter(opt, searchTerm));
@@ -1082,6 +1088,7 @@ const CustomerDepositCreate = forwardRef((props, ref) => {
                                         labelKey="search_label"
                                         isLoading={false}
                                         filterBy={() => true}
+                                        open={openCustomerSearchResult}
                                         isInvalid={errors.customer_id ? true : false}
                                         onChange={(selectedItems) => {
                                             errors.customer_id = "";
@@ -1101,7 +1108,7 @@ const CustomerDepositCreate = forwardRef((props, ref) => {
 
                                             setFormData({ ...formData });
                                             setSelectedCustomers(selectedItems);
-                                            // setOpenCustomerSearchResult(false);
+                                            setOpenCustomerSearchResult(false);
                                         }}
 
                                         options={customerOptions}
@@ -1112,6 +1119,8 @@ const CustomerDepositCreate = forwardRef((props, ref) => {
                                         onKeyDown={(e) => {
                                             if (e.key === "Escape") {
                                                 delete errors.customer_id;
+                                                openCustomerSearchResult = false;
+                                                setOpenCustomerSearchResult(false);
                                                 //setErrors(errors);
                                                 formData.customer_id = "";
                                                 formData.customer_name = "";
@@ -1221,8 +1230,9 @@ const CustomerDepositCreate = forwardRef((props, ref) => {
                                         isLoading={false}
                                         filterBy={() => true}
                                         isInvalid={errors.vendor_id ? true : false}
+                                        open={openVendorSearchResult}
                                         onChange={(selectedItems) => {
-                                            errors.vendor_id = "";
+                                            delete errors.vendor_id;
                                             setErrors(errors);
                                             if (selectedItems.length === 0) {
                                                 // errors.customer_id = "Invalid Customer selected";
@@ -1241,7 +1251,8 @@ const CustomerDepositCreate = forwardRef((props, ref) => {
 
                                             setFormData({ ...formData });
                                             setSelectedVendors(selectedItems);
-                                            // setOpenVendorSearchResult(false);
+                                            openVendorSearchResult = false;
+                                            setOpenVendorSearchResult(false);
                                         }}
 
                                         options={vendorOptions}
@@ -1259,6 +1270,8 @@ const CustomerDepositCreate = forwardRef((props, ref) => {
                                                 setFormData({ ...formData });
                                                 setSelectedVendors([]);
                                                 setVendorOptions([]);
+                                                openVendorSearchResult = false;
+                                                setOpenVendorSearchResult(false);
                                                 vendorSearchRef.current?.clear();
                                             }
                                         }}
