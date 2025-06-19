@@ -6,6 +6,7 @@ import { Invoice } from '@axenda/zatca';
 import html2pdf from 'html2pdf.js';
 import WhatsAppModal from './../utils/WhatsAppModal';
 import MBDIInvoiceBackground from './../INVOICE.jpg';
+import LGKInvoiceBackground from './../LGK_WHATSAPP.png';
 
 const CustomerDepositPreview = forwardRef((props, ref) => {
 
@@ -49,8 +50,14 @@ const CustomerDepositPreview = forwardRef((props, ref) => {
 
                 if (localStorage.getItem("store_id")) {
                     await getStore(localStorage.getItem("store_id"));
-                    if (model.store.code === "MBDI" && whatsAppShare) {
-                        InvoiceBackground = MBDIInvoiceBackground;
+                    if (whatsAppShare) {
+                        if (model.store.code === "MBDI") {
+                            InvoiceBackground = MBDIInvoiceBackground;
+                        } else if (model.store.code === "LGK-SIMULATION" || model.store.code === "LGK" || model.store.code === "PH2") {
+                            InvoiceBackground = LGKInvoiceBackground;
+                        }
+
+
                         setInvoiceBackground(InvoiceBackground);
                         fontSizes[modelName + "_storeHeader"] = {
                             "visible": false,

@@ -9,6 +9,7 @@ import html2pdf from 'html2pdf.js';
 import "./print.css";
 import WhatsAppModal from './../utils/WhatsAppModal';
 import MBDIInvoiceBackground from './../INVOICE.jpg';
+import LGKInvoiceBackground from './../LGK_WHATSAPP.png';
 //import jsPDF from "jspdf";
 //import html2canvas from "html2canvas";
 
@@ -57,8 +58,13 @@ const Preview = forwardRef((props, ref) => {
                     await getStore(model.store_id);
 
 
-                    if (model.store.code === "MBDI" && whatsAppShare) {
-                        InvoiceBackground = MBDIInvoiceBackground;
+                    if (whatsAppShare) {
+                        if (model.store.code === "MBDI") {
+                            InvoiceBackground = MBDIInvoiceBackground;
+                        } else if (model.store.code === "LGK-SIMULATION" || model.store.code === "LGK" || model.store.code === "PH2") {
+                            InvoiceBackground = LGKInvoiceBackground;
+                        }
+
                         setInvoiceBackground(InvoiceBackground);
                         fontSizes[modelName + "_storeHeader"] = {
                             "visible": false,
