@@ -2039,8 +2039,8 @@ const PurchaseCreate = forwardRef((props, ref) => {
                                             {/* Header */}
                                             <MenuItem disabled>
                                                 <div style={{ display: 'flex', fontWeight: 'bold', padding: '4px 8px', borderBottom: '1px solid #ddd' }}>
-                                                    <div style={{ width: '15%' }}>ID</div>
-                                                    <div style={{ width: '42%' }}>Name</div>
+                                                    <div style={{ width: '10%' }}>ID</div>
+                                                    <div style={{ width: '47%' }}>Name</div>
                                                     <div style={{ width: '10%' }}>Phone</div>
                                                     <div style={{ width: '13%' }}>VAT</div>
                                                     <div style={{ width: '10%' }}>Credit Balance</div>
@@ -2054,14 +2054,14 @@ const PurchaseCreate = forwardRef((props, ref) => {
                                                 return (
                                                     <MenuItem option={option} position={index} key={index}>
                                                         <div style={{ display: 'flex', padding: '4px 8px' }}>
-                                                            <div style={{ ...columnStyle, width: '15%' }}>
+                                                            <div style={{ ...columnStyle, width: '10%' }}>
                                                                 {highlightWords(
                                                                     option.code,
                                                                     searchWords,
                                                                     isActive
                                                                 )}
                                                             </div>
-                                                            <div style={{ ...columnStyle, width: '42%' }}>
+                                                            <div style={{ ...columnStyle, width: '47%' }}>
                                                                 {highlightWords(
                                                                     option.name_in_arabic
                                                                         ? `${option.name} - ${option.name_in_arabic}`

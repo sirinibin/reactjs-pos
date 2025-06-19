@@ -649,44 +649,6 @@ function VendorIndex(props) {
                                                             cursor: "pointer",
                                                         }}
                                                         onClick={() => {
-                                                            sort("mob");
-                                                        }}
-                                                    >
-                                                        Phone
-                                                        {sortField === "phone" && sortVendor === "-" ? (
-                                                            <i className="bi bi-sort-alpha-up-alt"></i>
-                                                        ) : null}
-                                                        {sortField === "phone" && sortVendor === "" ? (
-                                                            <i className="bi bi-sort-alpha-up"></i>
-                                                        ) : null}
-                                                    </b>
-                                                </th>
-                                                <th>
-                                                    <b
-                                                        style={{
-                                                            textDecoration: "underline",
-                                                            cursor: "pointer",
-                                                        }}
-                                                        onClick={() => {
-                                                            sort("vat_no");
-                                                        }}
-                                                    >
-                                                        VAT #
-                                                        {sortField === "vat_no" && sortVendor === "-" ? (
-                                                            <i className="bi bi-sort-alpha-up-alt"></i>
-                                                        ) : null}
-                                                        {sortField === "vat_no" && sortVendor === "" ? (
-                                                            <i className="bi bi-sort-alpha-up"></i>
-                                                        ) : null}
-                                                    </b>
-                                                </th>
-                                                <th>
-                                                    <b
-                                                        style={{
-                                                            textDecoration: "underline",
-                                                            cursor: "pointer",
-                                                        }}
-                                                        onClick={() => {
                                                             sort("name");
                                                         }}
                                                     >
@@ -718,6 +680,45 @@ function VendorIndex(props) {
                                                         ) : null}
                                                     </b>
                                                 </th>
+                                                <th>
+                                                    <b
+                                                        style={{
+                                                            textDecoration: "underline",
+                                                            cursor: "pointer",
+                                                        }}
+                                                        onClick={() => {
+                                                            sort("mob");
+                                                        }}
+                                                    >
+                                                        Phone
+                                                        {sortField === "phone" && sortVendor === "-" ? (
+                                                            <i className="bi bi-sort-alpha-up-alt"></i>
+                                                        ) : null}
+                                                        {sortField === "phone" && sortVendor === "" ? (
+                                                            <i className="bi bi-sort-alpha-up"></i>
+                                                        ) : null}
+                                                    </b>
+                                                </th>
+                                                <th>
+                                                    <b
+                                                        style={{
+                                                            textDecoration: "underline",
+                                                            cursor: "pointer",
+                                                        }}
+                                                        onClick={() => {
+                                                            sort("vat_no");
+                                                        }}
+                                                    >
+                                                        VAT #
+                                                        {sortField === "vat_no" && sortVendor === "-" ? (
+                                                            <i className="bi bi-sort-alpha-up-alt"></i>
+                                                        ) : null}
+                                                        {sortField === "vat_no" && sortVendor === "" ? (
+                                                            <i className="bi bi-sort-alpha-up"></i>
+                                                        ) : null}
+                                                    </b>
+                                                </th>
+
                                                 <th>
                                                     <b
                                                         style={{
@@ -1133,26 +1134,6 @@ function VendorIndex(props) {
                                                     />
                                                 </th>
                                                 <th>
-                                                    <input
-                                                        type="text"
-                                                        id="phone"
-                                                        onChange={(e) =>
-                                                            searchByFieldValue("phone", e.target.value)
-                                                        }
-                                                        className="form-control"
-                                                    />
-                                                </th>
-                                                <th>
-                                                    <input
-                                                        type="text"
-                                                        id="vat_no"
-                                                        onChange={(e) =>
-                                                            searchByFieldValue("vat_no", e.target.value)
-                                                        }
-                                                        className="form-control"
-                                                    />
-                                                </th>
-                                                <th>
                                                     <Typeahead
                                                         style={{ minWidth: "300px" }}
                                                         id="vendor_id"
@@ -1193,6 +1174,27 @@ function VendorIndex(props) {
                                                         className="form-control"
                                                     />
                                                 </th>
+                                                <th>
+                                                    <input
+                                                        type="text"
+                                                        id="phone"
+                                                        onChange={(e) =>
+                                                            searchByFieldValue("phone", e.target.value)
+                                                        }
+                                                        className="form-control"
+                                                    />
+                                                </th>
+                                                <th>
+                                                    <input
+                                                        type="text"
+                                                        id="vat_no"
+                                                        onChange={(e) =>
+                                                            searchByFieldValue("vat_no", e.target.value)
+                                                        }
+                                                        className="form-control"
+                                                    />
+                                                </th>
+
                                                 <th>
                                                     <input
                                                         type="text"
@@ -1477,22 +1479,20 @@ function VendorIndex(props) {
                                                             </Button>
                                                         </td>
                                                         <td style={{ width: "auto", whiteSpace: "nowrap" }}>{vendor.code}</td>
-                                                        <td style={{ width: "auto", whiteSpace: "nowrap" }} >{vendor.phone}</td>
-                                                        <td style={{ width: "auto", whiteSpace: "nowrap" }} >{vendor.vat_no}</td>
                                                         <td className="text-start" style={{ width: "auto", whiteSpace: "nowrap" }} >
-
                                                             <OverflowTooltip value={vendor.name} />
                                                         </td>
                                                         <td style={{ width: "auto", whiteSpace: "nowrap" }} >
                                                             {vendor.account && <Button variant="link" onClick={() => {
                                                                 openBalanceSheetDialogue(vendor.account);
                                                             }}>
-
                                                                 <Amount amount={trimTo2Decimals(vendor.credit_balance)} />
-
                                                             </Button>}
                                                             {!vendor.account && <Amount amount={trimTo2Decimals(vendor.credit_balance)} />}
                                                         </td>
+                                                        <td style={{ width: "auto", whiteSpace: "nowrap" }} >{vendor.phone}</td>
+                                                        <td style={{ width: "auto", whiteSpace: "nowrap" }} >{vendor.vat_no}</td>
+
                                                         <td style={{ width: "auto", whiteSpace: "nowrap" }} >
                                                             {vendor.stores && Object.keys(vendor.stores).map((key, index) => {
                                                                 if (localStorage.getItem("store_id") && vendor.stores[key].store_id === localStorage.getItem("store_id")) {

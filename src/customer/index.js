@@ -652,44 +652,6 @@ function CustomerIndex(props) {
                                                             cursor: "pointer",
                                                         }}
                                                         onClick={() => {
-                                                            sort("mob");
-                                                        }}
-                                                    >
-                                                        Phone
-                                                        {sortField === "phone" && sortCustomer === "-" ? (
-                                                            <i className="bi bi-sort-alpha-up-alt"></i>
-                                                        ) : null}
-                                                        {sortField === "phone" && sortCustomer === "" ? (
-                                                            <i className="bi bi-sort-alpha-up"></i>
-                                                        ) : null}
-                                                    </b>
-                                                </th>
-                                                <th>
-                                                    <b
-                                                        style={{
-                                                            textDecoration: "underline",
-                                                            cursor: "pointer",
-                                                        }}
-                                                        onClick={() => {
-                                                            sort("vat_no");
-                                                        }}
-                                                    >
-                                                        VAT #
-                                                        {sortField === "vat_no" && sortCustomer === "-" ? (
-                                                            <i className="bi bi-sort-alpha-up-alt"></i>
-                                                        ) : null}
-                                                        {sortField === "vat_no" && sortCustomer === "" ? (
-                                                            <i className="bi bi-sort-alpha-up"></i>
-                                                        ) : null}
-                                                    </b>
-                                                </th>
-                                                <th>
-                                                    <b
-                                                        style={{
-                                                            textDecoration: "underline",
-                                                            cursor: "pointer",
-                                                        }}
-                                                        onClick={() => {
                                                             sort("name");
                                                         }}
                                                     >
@@ -721,6 +683,45 @@ function CustomerIndex(props) {
                                                         ) : null}
                                                     </b>
                                                 </th>
+                                                <th>
+                                                    <b
+                                                        style={{
+                                                            textDecoration: "underline",
+                                                            cursor: "pointer",
+                                                        }}
+                                                        onClick={() => {
+                                                            sort("mob");
+                                                        }}
+                                                    >
+                                                        Phone
+                                                        {sortField === "phone" && sortCustomer === "-" ? (
+                                                            <i className="bi bi-sort-alpha-up-alt"></i>
+                                                        ) : null}
+                                                        {sortField === "phone" && sortCustomer === "" ? (
+                                                            <i className="bi bi-sort-alpha-up"></i>
+                                                        ) : null}
+                                                    </b>
+                                                </th>
+                                                <th>
+                                                    <b
+                                                        style={{
+                                                            textDecoration: "underline",
+                                                            cursor: "pointer",
+                                                        }}
+                                                        onClick={() => {
+                                                            sort("vat_no");
+                                                        }}
+                                                    >
+                                                        VAT #
+                                                        {sortField === "vat_no" && sortCustomer === "-" ? (
+                                                            <i className="bi bi-sort-alpha-up-alt"></i>
+                                                        ) : null}
+                                                        {sortField === "vat_no" && sortCustomer === "" ? (
+                                                            <i className="bi bi-sort-alpha-up"></i>
+                                                        ) : null}
+                                                    </b>
+                                                </th>
+
                                                 <th>
                                                     <b
                                                         style={{
@@ -1457,26 +1458,6 @@ function CustomerIndex(props) {
                                                     />
                                                 </th>
                                                 <th>
-                                                    <input
-                                                        type="text"
-                                                        id="phone"
-                                                        onChange={(e) =>
-                                                            searchByFieldValue("phone", e.target.value)
-                                                        }
-                                                        className="form-control"
-                                                    />
-                                                </th>
-                                                <th>
-                                                    <input
-                                                        type="text"
-                                                        id="vat_no"
-                                                        onChange={(e) =>
-                                                            searchByFieldValue("vat_no", e.target.value)
-                                                        }
-                                                        className="form-control"
-                                                    />
-                                                </th>
-                                                <th>
                                                     <Typeahead
                                                         id="customer_id"
                                                         filterBy={['additional_keywords']}
@@ -1517,6 +1498,27 @@ function CustomerIndex(props) {
                                                         className="form-control"
                                                     />
                                                 </th>
+                                                <th>
+                                                    <input
+                                                        type="text"
+                                                        id="phone"
+                                                        onChange={(e) =>
+                                                            searchByFieldValue("phone", e.target.value)
+                                                        }
+                                                        className="form-control"
+                                                    />
+                                                </th>
+                                                <th>
+                                                    <input
+                                                        type="text"
+                                                        id="vat_no"
+                                                        onChange={(e) =>
+                                                            searchByFieldValue("vat_no", e.target.value)
+                                                        }
+                                                        className="form-control"
+                                                    />
+                                                </th>
+
                                                 <th>
                                                     <input
                                                         type="text"
@@ -1928,8 +1930,6 @@ function CustomerIndex(props) {
                                                             </Button>
                                                         </td>
                                                         <td style={{ width: "auto", whiteSpace: "nowrap" }}>{customer.code}</td>
-                                                        <td style={{ width: "auto", whiteSpace: "nowrap" }} >{customer.phone}</td>
-                                                        <td style={{ width: "auto", whiteSpace: "nowrap" }} >{customer.vat_no}</td>
                                                         <td style={{ width: "auto", whiteSpace: "nowrap" }} className="text-start" >
                                                             <OverflowTooltip value={customer.name} />
                                                         </td>
@@ -1942,8 +1942,9 @@ function CustomerIndex(props) {
                                                             </Button>}
                                                             {!customer.account && <Amount amount={trimTo2Decimals(customer.credit_balance)} />}
                                                         </td>
+                                                        <td style={{ width: "auto", whiteSpace: "nowrap" }} >{customer.phone}</td>
+                                                        <td style={{ width: "auto", whiteSpace: "nowrap" }} >{customer.vat_no}</td>
                                                         <td style={{ width: "auto", whiteSpace: "nowrap" }} >{customer.email}</td>
-
                                                         <td style={{ width: "auto", whiteSpace: "nowrap" }} >
                                                             {customer.stores && Object.keys(customer.stores).map((key, index) => {
                                                                 if (localStorage.getItem("store_id") && customer.stores[key].store_id === localStorage.getItem("store_id")) {
