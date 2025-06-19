@@ -6,10 +6,9 @@ import OrderPrintContent2 from './printContent2.js';
 import { useReactToPrint } from 'react-to-print';
 import { Invoice } from '@axenda/zatca';
 import { format } from "date-fns";
-import LGKInvoiceBackground from './../INVOICE3.jpeg';
 
 const OrderPrint = forwardRef((props, ref) => {
-    let [InvoiceBackground, setInvoiceBackground] = useState("");
+    // let [InvoiceBackground, setInvoiceBackground] = useState("");
     useImperativeHandle(ref, () => ({
         async open(modelObj, modelNameStr) {
             if (modelNameStr) {
@@ -36,8 +35,8 @@ const OrderPrint = forwardRef((props, ref) => {
 
 
                 if (model.store?.code === "PH2") {
-                    InvoiceBackground = LGKInvoiceBackground;
-                    setInvoiceBackground(InvoiceBackground);
+                    //InvoiceBackground = LGKInvoiceBackground;
+                    //setInvoiceBackground(InvoiceBackground);
                 }
 
 
@@ -45,7 +44,6 @@ const OrderPrint = forwardRef((props, ref) => {
                 if (model.delivered_by) {
                     getUser(model.delivered_by);
                 }
-
 
                 let pageSize = 15;
                 model.pageSize = pageSize;
@@ -63,7 +61,6 @@ const OrderPrint = forwardRef((props, ref) => {
 
 
                 model.pages = [];
-
 
                 let offset = 0;
 
@@ -515,7 +512,7 @@ const OrderPrint = forwardRef((props, ref) => {
                     />}
                     {model.store?.code === "PH2" && <OrderPrintContent2
                         model={model}
-                        invoiceBackground={InvoiceBackground}
+
                     />}
                 </div>
             </Modal.Body>
