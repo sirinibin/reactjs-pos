@@ -21,6 +21,7 @@ import { WebSocketContext } from "./../utils/WebSocketContext.js";
 import eventEmitter from "./../utils/eventEmitter";
 import OrderPreview from "./preview.js";
 import ReportPreview from "./report.js";
+import OrderPrint from './print.js';
 
 import "./../utils/stickyHeader.css";
 
@@ -1173,9 +1174,31 @@ const OrderIndex = forwardRef((props, ref) => {
     const [showSuccess, setShowSuccess] = useState(false);
     const [successMessage, setSuccessMessage] = useState(false);
 
+    function openPrintTypeSelection(model) {
+        setSelectedOrder({ ...model });
+        if (store.settings.enable_invoice_print_type_selection) {
+            showPrintTypeSelection = true;
+            setShowPrintTypeSelection(true);
+        } else {
+            openPreview(model);
+        }
+    }
+
+
+
+    const PrintRef = useRef();
+    function openPrint(model) {
+        showPrintTypeSelection = false;
+        setShowPrintTypeSelection(false);
+        PrintRef.current.open(model, "sales");
+    }
+
 
     const PreviewRef = useRef();
     function openPreview(model) {
+        showPrintTypeSelection = false;
+        setShowPrintTypeSelection(false);
+
         PreviewRef.current.open(model, undefined, "sales");
     }
 
@@ -1192,8 +1215,48 @@ const OrderIndex = forwardRef((props, ref) => {
     const customerSearchRef = useRef();
     const timerRef = useRef(null);
 
+    let [showPrintTypeSelection, setShowPrintTypeSelection] = useState(false);
+
     return (
         <>
+            <OrderPrint ref={PrintRef} />
+
+            <Modal show={showPrintTypeSelection} onHide={() => {
+                showPrintTypeSelection = false;
+                setShowPrintTypeSelection(showPrintTypeSelection);
+            }} centered>
+                <Modal.Header closeButton>
+                    <Modal.Title>Select Print Type</Modal.Title>
+                </Modal.Header>
+                <Modal.Body className="d-flex justify-content-around">
+
+                    <Button variant="secondary" onClick={() => {
+                        openPrint(selectedOrder);
+                    }}>
+                        <i className="bi bi-printer"></i> Print
+                    </Button>
+
+                    <Button variant="primary" onClick={() => {
+                        openPreview(selectedOrder);
+                    }}>
+                        <i className="bi bi-printer"></i> Print A4 Invoice
+                    </Button>
+
+                    {/*formData.type === "customer" && <>
+                        <Button variant="primary" onClick={() => {
+                            openSales();
+                        }}>
+                            Sales Invoices
+                        </Button>
+                        <Button variant="secondary" onClick={() => {
+                            openQuotationSales();
+                        }}>
+                            Quotation Invoices
+                        </Button>
+                    </>*/}
+                </Modal.Body>
+            </Modal>
+
             <ReportPreview ref={ReportPreviewRef} searchParams={searchParams} sortOrder={sortOrder} sortField={sortField} />
             <OrderPreview ref={PreviewRef} />
             <OrderCreate ref={CreateFormRef} refreshList={list} showToastMessage={props.showToastMessage} openCreateForm={openCreateForm} />
@@ -2275,7 +2338,8 @@ const OrderIndex = forwardRef((props, ref) => {
                                                             </Button>&nbsp;
 
                                                             <Button className="btn btn-primary btn-sm" onClick={() => {
-                                                                openPreview(order);
+                                                                // openPreview(order);
+                                                                openPrintTypeSelection(order);
                                                             }}>
                                                                 <i className="bi bi-printer"></i>
                                                             </Button>

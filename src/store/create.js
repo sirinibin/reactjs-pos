@@ -3122,6 +3122,34 @@ const StoreCreate = forwardRef((props, ref) => {
 
                         <h6><b>Settings</b></h6>
 
+
+
+                        <div className="col-md-2">
+                            <div className="input-group mb-3">
+                                <input type="checkbox"
+                                    value={formData.settings.enable_invoice_print_type_selection}
+                                    checked={formData.settings.enable_invoice_print_type_selection}
+                                    onChange={(e) => {
+
+                                        errors["enable_invoice_print_type_selection"] = "";
+                                        formData.settings.enable_invoice_print_type_selection = !formData.settings.enable_invoice_print_type_selection
+                                        setFormData({ ...formData });
+                                        console.log(formData);
+                                    }}
+                                    className=""
+                                    id="enable_invoice_print_type_selection"
+
+                                /> &nbsp;Enable invoice print type selection
+                            </div>
+                            <label className="form-label"></label>
+                            {errors.enable_invoice_print_type_selection && (
+                                <div style={{ color: "red" }}>
+                                    {errors.enable_invoice_print_type_selection}
+                                </div>
+                            )}
+                        </div>
+
+
                         <div className="col-md-2">
                             <div className="input-group mb-3">
                                 <input type="checkbox"
@@ -3300,29 +3328,7 @@ const StoreCreate = forwardRef((props, ref) => {
                             )}
                         </div>
 
-                        <div className="col-md-2">
-                            <div className="input-group mb-3">
-                                <input type="checkbox"
-                                    value={formData.settings.default_unit_price_is_with_vat}
-                                    checked={formData.settings.default_unit_price_is_with_vat}
-                                    onChange={(e) => {
 
-                                        errors["default_unit_price_is_with_vat"] = "";
-                                        formData.settings.default_unit_price_is_with_vat = !formData.settings.default_unit_price_is_with_vat;
-                                        setFormData({ ...formData });
-                                        console.log(formData);
-                                    }}
-                                    className=""
-                                    id="default_unit_price_is_with_vat"
-                                /> &nbsp;Default product unit price is with VAT?
-                            </div>
-                            <label className="form-label"></label>
-                            {errors.default_unit_price_is_with_vat && (
-                                <div style={{ color: "red" }}>
-                                    {errors.default_unit_price_is_with_vat}
-                                </div>
-                            )}
-                        </div>
                         <div className="col-md-2">
                             <div className="input-group mb-3">
                                 <input type="checkbox"

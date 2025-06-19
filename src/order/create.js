@@ -42,6 +42,7 @@ import ImageViewerModal from './../utils/ImageViewerModal';
 import * as bootstrap from 'bootstrap';
 import OverflowTooltip from "../utils/OverflowTooltip.js";
 import { highlightWords } from "../utils/search.js";
+import OrderPrint from './print.js';
 
 const columnStyle = {
     width: '20%',
@@ -2132,8 +2133,15 @@ const OrderCreate = forwardRef((props, ref) => {
     };
 
 
+    const PrintRef = useRef();
+    function openPrint() {
+        PrintRef.current.open(formData);
+    }
+
+
     return (
         <>
+            <OrderPrint ref={PrintRef} />
             <CustomerCreate ref={CustomerUpdateFormRef} showToastMessage={props.showToastMessage} onUpdated={handleCustomerUpdated} />
             <ImageViewerModal ref={imageViewerRef} images={productImages} />
             <OrderPreview ref={PreviewRef} />
@@ -2196,8 +2204,13 @@ const OrderCreate = forwardRef((props, ref) => {
                     </div>}
                     <div className="col align-self-end text-end">
 
+                        <Button variant="secondary" onClick={openPrint}>
+                            <i className="bi bi-printer"></i> Print
+                        </Button>
+                        &nbsp;&nbsp;
+
                         <Button variant="primary" onClick={openPreview}>
-                            <i className="bi bi-printer"></i> Print Full Invoice
+                            <i className="bi bi-printer"></i> Print A4 Invoice
                         </Button>
                         &nbsp;&nbsp;
 

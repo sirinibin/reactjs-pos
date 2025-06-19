@@ -228,12 +228,12 @@ const OrderView = forwardRef((props, ref) => {
                     &nbsp;&nbsp;
 
                     <Button variant="secondary" onClick={openPrint}>
-                        <i className="bi bi-printer"></i> Print Only Data
+                        <i className="bi bi-printer"></i> Print
                     </Button>
 
                     &nbsp;&nbsp;
                     <Button variant="primary" onClick={openPreview}>
-                        <i className="bi bi-printer"></i> Print Full Invoice
+                        <i className="bi bi-printer"></i> Print A4 Invoice
                     </Button>
 
                     &nbsp;&nbsp;
