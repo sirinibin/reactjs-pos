@@ -507,10 +507,10 @@ const OrderPrint = forwardRef((props, ref) => {
             </Modal.Header>
             <Modal.Body>
                 <div ref={printAreaRef} >
-                    {model.store?.code === "GUOJ" && <OrderPrintContent
+                    {(model.store?.code === "GUOJ" || model.store?.code === "UMLJ") && <OrderPrintContent
                         model={model}
                     />}
-                    {model.store?.code === "PH2" && <OrderPrintContent2
+                    {(model.store?.code === "PH2" || model.store?.code === "LGK-SIMULATION" || model.store?.code === "LGK") && <OrderPrintContent2
                         model={model}
 
                     />}
