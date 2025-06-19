@@ -840,7 +840,7 @@ const CustomerDepositCreate = forwardRef((props, ref) => {
         setSelectedPaymentIndex(selectedPaymentIndex);
 
         if (formData.type === "customer") {
-            if (store.quotation_invoice_accounting) {
+            if (store?.settings?.quotation_invoice_accounting) {
                 showInvoiceTypeSelection = true;
                 setShowInvoiceTypeSelection(showInvoiceTypeSelection);
             } else {

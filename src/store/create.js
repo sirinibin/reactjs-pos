@@ -19,6 +19,7 @@ const StoreCreate = forwardRef((props, ref) => {
             formData = {
                 national_address: {},
                 bank_account: {},
+                settings: {},
                 zatca: {
                     phase: "1",
                     env: "NonProduction",
@@ -149,6 +150,7 @@ const StoreCreate = forwardRef((props, ref) => {
     let [formData, setFormData] = useState({
         national_address: {},
         bank_account: {},
+        settings: {},
         zatca: {
             phase: "1",
             env: "NonProduction",
@@ -3123,12 +3125,12 @@ const StoreCreate = forwardRef((props, ref) => {
                         <div className="col-md-2">
                             <div className="input-group mb-3">
                                 <input type="checkbox"
-                                    value={formData.show_seller_info_in_invoice}
-                                    checked={formData.show_seller_info_in_invoice}
+                                    value={formData.settings.show_seller_info_in_invoice}
+                                    checked={formData.settings.show_seller_info_in_invoice}
                                     onChange={(e) => {
 
                                         errors["show_seller_info_in_invoice"] = "";
-                                        formData.show_seller_info_in_invoice = !formData.show_seller_info_in_invoice
+                                        formData.settings.show_seller_info_in_invoice = !formData.settings.show_seller_info_in_invoice
                                         setFormData({ ...formData });
                                         console.log(formData);
                                     }}
@@ -3149,12 +3151,12 @@ const StoreCreate = forwardRef((props, ref) => {
                         <div className="col-md-2">
                             <div className="input-group mb-3">
                                 <input type="checkbox"
-                                    value={formData.show_minus_on_liability_balance_in_balance_sheet}
-                                    checked={formData.show_minus_on_liability_balance_in_balance_sheet}
+                                    value={formData.settings.show_minus_on_liability_balance_in_balance_sheet}
+                                    checked={formData.settings.show_minus_on_liability_balance_in_balance_sheet}
                                     onChange={(e) => {
 
                                         errors["show_minus_on_liability_balance_in_balance_sheet"] = "";
-                                        formData.show_minus_on_liability_balance_in_balance_sheet = !formData.show_minus_on_liability_balance_in_balance_sheet
+                                        formData.settings.show_minus_on_liability_balance_in_balance_sheet = !formData.settings.show_minus_on_liability_balance_in_balance_sheet
                                         setFormData({ ...formData });
                                         console.log(formData);
                                     }}
@@ -3175,12 +3177,12 @@ const StoreCreate = forwardRef((props, ref) => {
                         <div className="col-md-2">
                             <div className="input-group mb-3">
                                 <input type="checkbox"
-                                    value={formData.hide_total_amount_row_in_balance_sheet}
-                                    checked={formData.hide_total_amount_row_in_balance_sheet}
+                                    value={formData.settings.hide_total_amount_row_in_balance_sheet}
+                                    checked={formData.settings.hide_total_amount_row_in_balance_sheet}
                                     onChange={(e) => {
 
                                         errors["hide_total_amount_row_in_balance_sheet"] = "";
-                                        formData.hide_total_amount_row_in_balance_sheet = !formData.hide_total_amount_row_in_balance_sheet;
+                                        formData.settings.hide_total_amount_row_in_balance_sheet = !formData.settings.hide_total_amount_row_in_balance_sheet;
                                         setFormData({ ...formData });
                                         console.log(formData);
                                     }}
@@ -3201,12 +3203,12 @@ const StoreCreate = forwardRef((props, ref) => {
                         <div className="col-md-2">
                             <div className="input-group mb-3">
                                 <input type="checkbox"
-                                    value={formData.show_address_in_invoice_footer}
-                                    checked={formData.show_address_in_invoice_footer}
+                                    value={formData.settings.show_address_in_invoice_footer}
+                                    checked={formData.settings.show_address_in_invoice_footer}
                                     onChange={(e) => {
 
                                         errors["formData.show_address_in_invoice_footer"] = "";
-                                        formData.show_address_in_invoice_footer = !formData.show_address_in_invoice_footer
+                                        formData.settings.show_address_in_invoice_footer = !formData.settings.show_address_in_invoice_footer
                                         setFormData({ ...formData });
                                         console.log(formData);
                                     }}
@@ -3225,12 +3227,12 @@ const StoreCreate = forwardRef((props, ref) => {
                         <div className="col-md-2">
                             <div className="input-group mb-3">
                                 <input type="checkbox"
-                                    value={formData.show_received_by_footer_in_invoice}
-                                    checked={formData.show_received_by_footer_in_invoice}
+                                    value={formData.settings.show_received_by_footer_in_invoice}
+                                    checked={formData.settings.show_received_by_footer_in_invoice}
                                     onChange={(e) => {
 
                                         errors["show_received_by_footer_in_invoice"] = "";
-                                        formData.show_received_by_footer_in_invoice = !formData.show_received_by_footer_in_invoice
+                                        formData.settings.show_received_by_footer_in_invoice = !formData.settings.show_received_by_footer_in_invoice
                                         setFormData({ ...formData });
                                         console.log(formData);
                                     }}
@@ -3253,12 +3255,12 @@ const StoreCreate = forwardRef((props, ref) => {
                         <div className="col-md-2">
                             <div className="input-group mb-3">
                                 <input type="checkbox"
-                                    value={formData.zatca_qr_on_left_bottom}
-                                    checked={formData.zatca_qr_on_left_bottom}
+                                    value={formData.settings.zatca_qr_on_left_bottom}
+                                    checked={formData.settings.zatca_qr_on_left_bottom}
                                     onChange={(e) => {
 
                                         errors["formData.zatca_qr_on_left_bottom"] = "";
-                                        formData.zatca_qr_on_left_bottom = !formData.zatca_qr_on_left_bottom
+                                        formData.settings.zatca_qr_on_left_bottom = !formData.settings.zatca_qr_on_left_bottom
                                         setFormData({ ...formData });
                                         console.log(formData);
                                     }}
@@ -3277,12 +3279,12 @@ const StoreCreate = forwardRef((props, ref) => {
                         <div className="col-md-2">
                             <div className="input-group mb-3">
                                 <input type="checkbox"
-                                    value={formData.quotation_invoice_accounting}
-                                    checked={formData.quotation_invoice_accounting}
+                                    value={formData.settings.quotation_invoice_accounting}
+                                    checked={formData.settings.quotation_invoice_accounting}
                                     onChange={(e) => {
 
                                         errors["formData.quotation_invoice_accounting"] = "";
-                                        formData.quotation_invoice_accounting = !formData.quotation_invoice_accounting
+                                        formData.settings.quotation_invoice_accounting = !formData.settings.quotation_invoice_accounting
                                         setFormData({ ...formData });
                                         console.log(formData);
                                     }}
@@ -3301,12 +3303,12 @@ const StoreCreate = forwardRef((props, ref) => {
                         <div className="col-md-2">
                             <div className="input-group mb-3">
                                 <input type="checkbox"
-                                    value={formData.default_unit_price_is_with_vat}
-                                    checked={formData.default_unit_price_is_with_vat}
+                                    value={formData.settings.default_unit_price_is_with_vat}
+                                    checked={formData.settings.default_unit_price_is_with_vat}
                                     onChange={(e) => {
 
                                         errors["default_unit_price_is_with_vat"] = "";
-                                        formData.default_unit_price_is_with_vat = !formData.default_unit_price_is_with_vat;
+                                        formData.settings.default_unit_price_is_with_vat = !formData.settings.default_unit_price_is_with_vat;
                                         setFormData({ ...formData });
                                         console.log(formData);
                                     }}
@@ -3324,34 +3326,11 @@ const StoreCreate = forwardRef((props, ref) => {
                         <div className="col-md-2">
                             <div className="input-group mb-3">
                                 <input type="checkbox"
-                                    value={formData.client_filter}
-                                    checked={formData.client_filter}
-                                    onChange={(e) => {
-                                        errors["client_filter"] = "";
-                                        formData.client_filter = !formData.client_filter;
-                                        setFormData({ ...formData });
-                                        console.log(formData);
-                                    }}
-                                    className=""
-                                    id="client_filter"
-                                /> &nbsp;Enable Client Search Filter
-                            </div>
-                            <label className="form-label"></label>
-                            {errors.client_filter && (
-                                <div style={{ color: "red" }}>
-                                    {errors.client_filter}
-                                </div>
-                            )}
-                        </div>
-
-                        <div className="col-md-2">
-                            <div className="input-group mb-3">
-                                <input type="checkbox"
-                                    value={formData.block_sale_when_purchase_price_is_higher}
-                                    checked={formData.block_sale_when_purchase_price_is_higher}
+                                    value={formData.settings.block_sale_when_purchase_price_is_higher}
+                                    checked={formData.settings.block_sale_when_purchase_price_is_higher}
                                     onChange={(e) => {
                                         errors["block_sale_when_purchase_price_is_higher"] = "";
-                                        formData.block_sale_when_purchase_price_is_higher = !formData.block_sale_when_purchase_price_is_higher;
+                                        formData.settings.block_sale_when_purchase_price_is_higher = !formData.settings.block_sale_when_purchase_price_is_higher;
                                         setFormData({ ...formData });
                                         console.log(formData);
                                     }}
@@ -3370,11 +3349,11 @@ const StoreCreate = forwardRef((props, ref) => {
                         <div className="col-md-2">
                             <div className="input-group mb-3">
                                 <input type="checkbox"
-                                    value={formData.one_line_product_name_in_invoice}
-                                    checked={formData.one_line_product_name_in_invoice}
+                                    value={formData.settings.one_line_product_name_in_invoice}
+                                    checked={formData.settings.one_line_product_name_in_invoice}
                                     onChange={(e) => {
                                         errors["one_line_product_name_in_invoice"] = "";
-                                        formData.one_line_product_name_in_invoice = !formData.one_line_product_name_in_invoice;
+                                        formData.settings.one_line_product_name_in_invoice = !formData.settings.one_line_product_name_in_invoice;
                                         setFormData({ ...formData });
                                         console.log(formData);
                                     }}
@@ -3393,11 +3372,11 @@ const StoreCreate = forwardRef((props, ref) => {
                         <div className="col-md-2">
                             <div className="input-group mb-3">
                                 <input type="checkbox"
-                                    value={formData.enable_monthly_serial_number}
-                                    checked={formData.enable_monthly_serial_number}
+                                    value={formData.settings.enable_monthly_serial_number}
+                                    checked={formData.settings.enable_monthly_serial_number}
                                     onChange={(e) => {
                                         errors["enable_monthly_serial_number"] = "";
-                                        formData.enable_monthly_serial_number = !formData.enable_monthly_serial_number;
+                                        formData.settings.enable_monthly_serial_number = !formData.settings.enable_monthly_serial_number;
                                         setFormData({ ...formData });
                                         console.log(formData);
                                     }}
@@ -3422,11 +3401,11 @@ const StoreCreate = forwardRef((props, ref) => {
                                     type="number"
                                     className="text-center"
                                     style={{ width: "50px" }}
-                                    value={formData.default_quotation_validity_days}
+                                    value={formData.settings.default_quotation_validity_days}
                                     onChange={(e) => {
                                         console.log("Inside onchange validity days");
                                         if (!e.target.value) {
-                                            formData.default_quotation_validity_days = null;
+                                            formData.settings.default_quotation_validity_days = null;
                                             errors["default_quotation_validity_days"] = "";
                                             setFormData({ ...formData });
                                             setErrors({ ...errors });
@@ -3434,7 +3413,7 @@ const StoreCreate = forwardRef((props, ref) => {
                                         }
 
                                         if (parseInt(e.target.value) <= 0) {
-                                            formData.default_quotation_validity_days = parseInt(e.target.value);
+                                            formData.settings.default_quotation_validity_days = parseInt(e.target.value);
                                             setFormData({ ...formData });
                                             errors["default_quotation_validity_days"] =
                                                 "Deafult quotation validity days should be > 0";
@@ -3444,7 +3423,7 @@ const StoreCreate = forwardRef((props, ref) => {
 
                                         errors["default_quotation_validity_days"] = "";
                                         setErrors({ ...errors });
-                                        formData.default_quotation_validity_days = parseInt(e.target.value);
+                                        formData.settings.default_quotation_validity_days = parseInt(e.target.value);
                                         setFormData({ ...formData });
                                     }}
                                 />
@@ -3464,11 +3443,11 @@ const StoreCreate = forwardRef((props, ref) => {
                                     type="number"
                                     className="text-center"
                                     style={{ width: "50px" }}
-                                    value={formData.default_quotation_delivery_days}
+                                    value={formData.settings.default_quotation_delivery_days}
                                     onChange={(e) => {
                                         console.log("Inside onchange delivery days");
                                         if (!e.target.value) {
-                                            formData.default_quotation_delivery_days = null;
+                                            formData.settings.default_quotation_delivery_days = null;
                                             errors["default_quotation_delivery_days"] = "";
                                             setFormData({ ...formData });
                                             setErrors({ ...errors });
@@ -3476,7 +3455,7 @@ const StoreCreate = forwardRef((props, ref) => {
                                         }
 
                                         if (parseInt(e.target.value) <= 0) {
-                                            formData.default_quotation_delivery_days = parseInt(e.target.value);
+                                            formData.settings.default_quotation_delivery_days = parseInt(e.target.value);
                                             setFormData({ ...formData });
                                             errors["default_quotation_delivery_days"] =
                                                 "Default quotation delivery days should be > 0";
@@ -3486,7 +3465,7 @@ const StoreCreate = forwardRef((props, ref) => {
 
                                         errors["default_quotation_delivery_days"] = "";
                                         setErrors({ ...errors });
-                                        formData.default_quotation_delivery_days = parseInt(e.target.value);
+                                        formData.settings.default_quotation_delivery_days = parseInt(e.target.value);
                                         setFormData({ ...formData });
                                         console.log(formData);
                                     }}

@@ -141,7 +141,7 @@ const CustomerDepositPreviewContent = forwardRef((props, ref) => {
                 <div className="row col-md-14" style={{ border: "solid 0px", borderColor: detailsBorderColor, fontSize: props.fontSizes[props.modelName + "_invoiceDetails"]?.size, padding: "10px" }} onClick={() => {
                     props.selectText("invoiceDetails");
                 }}>
-                    <div className="col-md-12" style={{ border: detailsBorderThickness, borderColor: detailsBorderColor, marginLeft: "0px", width: `${(props.model.store?.zatca_qr_on_left_bottom || (props.modelName === "quotation" && props.model.type !== "invoice")) ? "100%" : "74%"}` }}>
+                    <div className="col-md-12" style={{ border: detailsBorderThickness, borderColor: detailsBorderColor, marginLeft: "0px", width: `${(props.model.store?.settings?.zatca_qr_on_left_bottom || (props.modelName === "quotation" && props.model.type !== "invoice")) ? "100%" : "74%"}` }}>
                         <div className="row" dir="ltr" style={{ borderBottom: detailsBorderThickness }} >
                             <div className="col-md-4 print-label" dir="ltr" style={{ borderRight: detailsBorderThickness, borderColor: detailsBorderColor, width: detailsLabelsColumnWidthPercent, padding: "3px" }} ><b>Receipt No. | رقم الإيصال:</b></div>
                             <div className="col-md-8 print-value" dir="ltr" style={{ borderColor: detailsBorderColor, width: detailsValuesColumnWidthPercent, padding: "3px" }} >{props.model.code ? props.model.code : ""}</div>
@@ -487,7 +487,7 @@ const CustomerDepositPreviewContent = forwardRef((props, ref) => {
                     </div>
                 </div>
                 {
-                    props.model.store?.show_address_in_invoice_footer && <div className="row fw-bold" style={{ fontSize: "2.2mm", height: "55px", }}>
+                    props.model.store?.settings?.show_address_in_invoice_footer && <div className="row fw-bold" style={{ fontSize: "2.2mm", height: "55px", }}>
                         <div className="col-md-2 text-start">
                             {/*props.model.QRImageData && <img src={props.model.QRImageData} style={{ width: "122px", height: "114px" }} alt="Invoice QR Code" />*/}
                         </div>

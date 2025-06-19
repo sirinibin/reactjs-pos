@@ -549,7 +549,7 @@ const ReportContent = forwardRef((props, ref) => {
                         </div>
                     </div>
                     {
-                        props.model.store?.show_address_in_invoice_footer && <div className="row clickable-text" style={{ fontSize: props.fontSizes[props.modelName + "_footer"]?.size, height: "55px", }} onClick={() => {
+                        props.model.store?.settings?.show_address_in_invoice_footer && <div className="row clickable-text" style={{ fontSize: props.fontSizes[props.modelName + "_footer"]?.size, height: "55px", }} onClick={() => {
                             props.selectText("footer");
                         }}>
                             <div className="col-md-2 text-start">

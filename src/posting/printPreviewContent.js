@@ -586,16 +586,16 @@ const BalanceSheetPrintPreviewContent = forwardRef((props, ref) => {
                                             </th>
                                             <th colSpan={2} style={{ textAlign: "right", padding: "3px", color: "red", borderRight: tableBorderThickness }}><b>
                                                 {props.model.debitBalance > 0 ? "To Clsoing Balance  " : ""}
-                                                {props.model.debitBalance > 0 && <Amount amount={props.model.type === "liability" && props.model.store.show_minus_on_liability_balance_in_balance_sheet ? props.model.debitBalance * (-1) : props.model.debitBalance} />}
+                                                {props.model.debitBalance > 0 && <Amount amount={props.model.type === "liability" && props.model.store?.settings?.show_minus_on_liability_balance_in_balance_sheet ? props.model.debitBalance * (-1) : props.model.debitBalance} />}
                                             </b></th>
                                             <th colSpan={2} style={{ textAlign: "right", padding: "3px", color: "red", borderRight: tableBorderThickness }}><b>
                                                 {props.model.creditBalance > 0 ? "By Clsoing Balance  " : ""}
-                                                {props.model.creditBalance > 0 && <Amount amount={props.model.type === "liability" && props.model.store.show_minus_on_liability_balance_in_balance_sheet ? props.model.creditBalance * (-1) : props.model.creditBalance} />}
+                                                {props.model.creditBalance > 0 && <Amount amount={props.model.type === "liability" && props.model.store?.settings?.show_minus_on_liability_balance_in_balance_sheet ? props.model.creditBalance * (-1) : props.model.creditBalance} />}
                                             </b></th>
                                             <th colSpan={3}></th>
                                         </tr> : ""}
 
-                                    {props.model.pages.length === (pageIndex + 1) && props.model && !props.model.store.hide_total_amount_row_in_balance_sheet && <tr style={{ borderBottom: tableBorderThickness }}>
+                                    {props.model.pages.length === (pageIndex + 1) && props.model && !props.model.store?.settings?.hide_total_amount_row_in_balance_sheet && <tr style={{ borderBottom: tableBorderThickness }}>
                                         <td className="text-end" colSpan={3} style={{ borderRight: tableBorderThickness, padding: "3px" }}>
                                             <b>Total Amount</b>
                                         </td>
@@ -694,7 +694,7 @@ const BalanceSheetPrintPreviewContent = forwardRef((props, ref) => {
                     </div>
                 </div >
                 {
-                    props.model.pages.length === (pageIndex + 1) && props.model.store?.show_address_in_invoice_footer ? <div className="row clickable-text" style={{ fontSize: props.fontSizes[props.modelName + "_footer"]?.size, height: "55px", }} onClick={() => {
+                    props.model.pages.length === (pageIndex + 1) && props.model.store?.settings?.show_address_in_invoice_footer ? <div className="row clickable-text" style={{ fontSize: props.fontSizes[props.modelName + "_footer"]?.size, height: "55px", }} onClick={() => {
                         props.selectText("footer");
                     }}>
                         <div className="col-md-2 text-start">

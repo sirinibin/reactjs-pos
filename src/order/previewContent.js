@@ -138,7 +138,7 @@ const PreviewContent = forwardRef((props, ref) => {
                     <div className="row col-md-14" style={{ border: "solid 0px", borderColor: detailsBorderColor, fontSize: props.fontSizes[props.modelName + "_invoiceDetails"]?.size, padding: "10px" }} onClick={() => {
                         props.selectText("invoiceDetails");
                     }}>
-                        <div className="col-md-12" style={{ border: detailsBorderThickness, borderColor: detailsBorderColor, marginLeft: "0px", width: `${(props.model.store?.zatca_qr_on_left_bottom || (props.modelName === "quotation" && props.model.type !== "invoice")) ? "100%" : "74%"}` }}>
+                        <div className="col-md-12" style={{ border: detailsBorderThickness, borderColor: detailsBorderColor, marginLeft: "0px", width: `${(props.model.store?.settings?.zatca_qr_on_left_bottom || (props.modelName === "quotation" && props.model.type !== "invoice")) ? "100%" : "74%"}` }}>
                             {props.modelName === "quotation" && props.model.type !== "invoice" && <>
                                 <div className="row" dir="ltr" style={{ borderBottom: detailsBorderThickness }} >
                                     <div className="col-md-4 print-label" dir="ltr" style={{ borderRight: detailsBorderThickness, borderColor: detailsBorderColor, width: detailsLabelsColumnWidthPercent, padding: "3px" }} ><b>Quotation No. | رقم الاقتباس:</b></div>
@@ -335,7 +335,7 @@ const PreviewContent = forwardRef((props, ref) => {
                                 </div>
                             </> : ""}
                         </div>
-                        {!props.model.store?.zatca_qr_on_left_bottom && props.modelName !== "delivery_note" && props.modelName !== "whatsapp_delivery_note" && props.modelName !== "quotation" && props.modelName !== "quotation_sales_return" && props.modelName !== "whatsapp_quotation" && props.modelName !== "whatsapp_quotation_sales_return" && <div className="col-md-2" style={{ border: "solid 0px", width: "26%" }}>
+                        {!props.model.store?.settings?.zatca_qr_on_left_bottom && props.modelName !== "delivery_note" && props.modelName !== "whatsapp_delivery_note" && props.modelName !== "quotation" && props.modelName !== "quotation_sales_return" && props.modelName !== "whatsapp_quotation" && props.modelName !== "whatsapp_quotation_sales_return" && <div className="col-md-2" style={{ border: "solid 0px", width: "26%" }}>
                             {props.model.store?.zatca?.phase === "1" && props.model.QRImageData ? <img src={props.model.QRImageData} style={{ width: "138px", height: "138px", border: "solid 0px" }} alt="Invoice QR Code" /> : ""}
                             {props.model.store?.zatca?.phase === "2" && props.model.zatca?.qr_code && props.model.zatca?.reporting_passed ? <QRCodeCanvas value={props.model.zatca?.qr_code} style={{ width: "138px", height: "138px" }} size={138} /> : ""}
                             {props.model.store?.zatca?.phase === "2" && !props.model.zatca?.qr_code ? <img src={props.model.QRImageData} style={{ width: "138px", height: "138px", border: "solid 0px" }} alt="Invoice QR Code" /> : ""}
@@ -495,7 +495,7 @@ const PreviewContent = forwardRef((props, ref) => {
                                                 <td style={{ padding: "7px", borderRight: tableBorderThickness }}>{product.part_number ? index + 1 + (pageIndex * props.model.pageSize) : ""}</td>
                                                 <td style={{ borderRight: tableBorderThickness }} >{product.prefix_part_number ? product.prefix_part_number + " - " : ""} {product.part_number ? product.part_number : ""}</td>
                                                 <th dir="ltr" style={{ unicodeBidi: 'isolate', borderRight: tableBorderThickness }}>
-                                                    {!props.model?.store?.one_line_product_name_in_invoice && <span dir="ltr" style={{ unicodeBidi: 'isolate' }}>
+                                                    {!props.model?.store?.settings?.one_line_product_name_in_invoice && <span dir="ltr" style={{ unicodeBidi: 'isolate' }}>
                                                         <span style={{ //one_line_product_name_in_invoice
                                                             maxWidth: `${product.name_in_arabic ? "110px" : "220px"}`,
                                                             verticalAlign: 'bottom'
@@ -505,7 +505,7 @@ const PreviewContent = forwardRef((props, ref) => {
                                                         }}>{product.name_in_arabic}</span></>}
                                                     </span>}
 
-                                                    {props.model?.store?.one_line_product_name_in_invoice && <span dir="ltr" style={{ unicodeBidi: 'isolate' }}>
+                                                    {props.model?.store?.settings?.one_line_product_name_in_invoice && <span dir="ltr" style={{ unicodeBidi: 'isolate' }}>
                                                         <span style={{ //one_line_product_name_in_invoice
                                                             display: 'inline-block',
                                                             maxWidth: `${product.name_in_arabic ? "110px" : "220px"}`,
@@ -562,7 +562,7 @@ const PreviewContent = forwardRef((props, ref) => {
                                         props.selectText("tableFooter");
                                     }} className="clickable-text">
                                         <tr style={{ borderBottom: tableBorderThickness }}>
-                                            {props.model.store?.zatca_qr_on_left_bottom && props.modelName !== "quotation" && props.modelName !== "whatsapp_quotation" && props.modelName !== "quotation_sales_return" && props.modelName !== "whatsapp_quotation_sales_return" && props.modelName !== "delivery_note" && <th rowSpan={6} style={{ width: "20%", padding: "3px", borderRight: tableBorderThickness }}>
+                                            {props.model.store?.settings?.zatca_qr_on_left_bottom && props.modelName !== "quotation" && props.modelName !== "whatsapp_quotation" && props.modelName !== "quotation_sales_return" && props.modelName !== "whatsapp_quotation_sales_return" && props.modelName !== "delivery_note" && <th rowSpan={6} style={{ width: "20%", padding: "3px", borderRight: tableBorderThickness }}>
                                                 <div className="col-md-1 text-center" style={{ width: "100%", height: "100%" }}>
                                                     {props.model.store?.zatca?.phase === "1" && props.model.QRImageData ? <img className="text-start" src={props.model.QRImageData} style={{ width: "138px" }} alt="Invoice QR Code" /> : ""}
                                                     {props.model.store?.zatca?.phase === "2" && props.model.zatca?.qr_code && props.model.zatca?.reporting_passed ? <QRCodeCanvas value={props.model.zatca?.qr_code} style={{ width: "138px", height: "138px", border: "solid 0px", }} size={138} /> : ""}
@@ -838,7 +838,7 @@ const PreviewContent = forwardRef((props, ref) => {
 
 
                                         </tr>}
-                                        {props.model?.store?.show_received_by_footer_in_invoice && <tr>
+                                        {props.model?.store?.settings?.show_received_by_footer_in_invoice && <tr>
                                             <th className="text-end print-label" style={{ width: "20%", padding: "2px" }}>
                                                 Delivered By سلمت بواسطة:
                                             </th>
@@ -882,7 +882,7 @@ const PreviewContent = forwardRef((props, ref) => {
                         </div>
                     </div>
                     {
-                        props.model.store?.show_address_in_invoice_footer && <div className="row clickable-text" style={{ fontSize: props.fontSizes[props.modelName + "_footer"]?.size, height: "55px", }} onClick={() => {
+                        props.model.store?.settings?.show_address_in_invoice_footer && <div className="row clickable-text" style={{ fontSize: props.fontSizes[props.modelName + "_footer"]?.size, height: "55px", }} onClick={() => {
                             props.selectText("footer");
                         }}>
                             <div className="col-md-2 text-start">

@@ -670,7 +670,7 @@ const OrderIndex = forwardRef((props, ref) => {
             },
         };
 
-        fetch('/v1/store/' + id, requestOptions)
+        fetch('/v1/store/' + id + "?select=id,name,code,zatca.phase,zatca.connected,settings", requestOptions)
             .then(async response => {
                 const isJson = response.headers.get('content-type')?.includes('application/json');
                 const data = isJson && await response.json();

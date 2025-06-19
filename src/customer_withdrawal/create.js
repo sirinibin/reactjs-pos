@@ -817,7 +817,7 @@ const CustomerWithdrawalCreate = forwardRef((props, ref) => {
         }
 
         /*
-        if (store.quotation_invoice_accounting) {
+        if (store?.settings?.quotation_invoice_accounting) {
             showInvoiceTypeSelection = true;
             setShowInvoiceTypeSelection(showInvoiceTypeSelection);
         } else {

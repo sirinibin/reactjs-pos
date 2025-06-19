@@ -112,7 +112,7 @@ const ProductCreate = forwardRef((props, ref) => {
           retail_unit_price: 0.00,
           wholesale_unit_price: 0.00,
           stock: 0.00,
-          with_vat: store.default_unit_price_is_with_vat,
+          with_vat: store?.settings?.default_unit_price_is_with_vat,
         };
 
         setProductStores({ ...productStores });

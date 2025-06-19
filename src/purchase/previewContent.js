@@ -500,7 +500,7 @@ const PurchasePreviewContent = forwardRef((props, ref) => {
                         </div>
                     </div>
                 </div>
-                {props.model.store?.show_address_in_invoice_footer && <div className="row" style={{ fontSize: "2mm", height: "55px", }}>
+                {props.model.store?.settings?.show_address_in_invoice_footer && <div className="row" style={{ fontSize: "2mm", height: "55px", }}>
                     <div className="col-md-2 text-start">
                         {/*props.model.QRImageData && <img src={props.model.QRImageData} style={{ width: "122px", height: "114px" }} alt="Invoice QR Code" />*/}
                     </div>

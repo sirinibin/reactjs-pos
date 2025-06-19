@@ -125,7 +125,7 @@ const WhatsAppContent = forwardRef((props, ref) => {
                     <div className="row col-md-14 fw-bold" style={{ border: "solid 0px", fontSize: props.fontSizes[props.modelName + "_invoiceDetails"]?.size, padding: "10px" }} onClick={() => {
                         props.selectText("invoiceDetails");
                     }}>
-                        <div className="col-md-12" style={{ border: "solid 1px", marginLeft: "0px", width: `${props.model.store?.zatca_qr_on_left_bottom ? "100%" : "74%"}` }}>
+                        <div className="col-md-12" style={{ border: "solid 1px", marginLeft: "0px", width: `${props.model.store?.settings?.zatca_qr_on_left_bottom ? "100%" : "74%"}` }}>
                             {props.model.invoice_count_value && props.model.store?.zatca?.phase === "2" ? <div className="row" dir="ltr" style={{ border: "solid 0px" }} >
                                 <div className="col-md-4" dir="ltr" style={{ border: "solid 1px", width: "35%", padding: "3px" }} >Invoice Count Value | عد الفاتورة (ICV):</div>
                                 <div className="col-md-8" dir="ltr" style={{ border: "solid 1px", width: "65%", padding: "3px" }} >  {props.model.invoice_count_value ? props.model.invoice_count_value : ""}</div>
@@ -256,7 +256,7 @@ const WhatsAppContent = forwardRef((props, ref) => {
                                 </div>
                             </> : ""}
                         </div>
-                        {!props.model.store?.zatca_qr_on_left_bottom && props.modelName !== "quotation" && props.modelName !== "delivery_note" && <div className="col-md-2" style={{ border: "solid 0px", width: "26%" }}>
+                        {!props.model.store?.settings?.zatca_qr_on_left_bottom && props.modelName !== "quotation" && props.modelName !== "delivery_note" && <div className="col-md-2" style={{ border: "solid 0px", width: "26%" }}>
                             {props.model.store?.zatca?.phase === "1" && props.model.QRImageData ? <img src={props.model.QRImageData} style={{ width: "138px", height: "138px", border: "solid 0px" }} alt="Invoice QR Code" /> : ""}
                             {props.model.store?.zatca?.phase === "2" && props.model.zatca?.qr_code ? <QRCodeCanvas value={props.model.zatca?.qr_code} style={{ width: "138px", height: "138px" }} size={128} /> : ""}
                         </div>}
@@ -436,13 +436,13 @@ const WhatsAppContent = forwardRef((props, ref) => {
                                         props.selectText("tableFooter");
                                     }} className="fw-bold clickable-text">
                                         <tr >
-                                            {props.model.store?.zatca_qr_on_left_bottom && props.modelName !== "quotation" && props.modelName !== "delivery_note" && <th colSpan={2} rowSpan={6} style={{ maxWidth: "138px", maxHeight: "138px", }}>
+                                            {props.model.store?.settings?.zatca_qr_on_left_bottom && props.modelName !== "quotation" && props.modelName !== "delivery_note" && <th colSpan={2} rowSpan={6} style={{ maxWidth: "138px", maxHeight: "138px", }}>
                                                 <div className="col-md-1 text-center" style={{ border: "solid 0px", padding: "0px", maxWidth: "138px", maxHeight: "138px", marginLeft: "-7px", marginTop: "-7px" }}>
                                                     {props.model.store?.zatca?.phase === "1" && props.model.QRImageData ? <img className="text-start" src={props.model.QRImageData} style={{ width: "138px", height: "138px" }} alt="Invoice QR Code" /> : ""}
                                                     {props.model.store?.zatca?.phase === "2" && props.model.zatca?.qr_code ? <QRCodeCanvas value={props.model.zatca?.qr_code} style={{ width: "138px", height: "138px", border: "solid 0px", }} size={138} /> : ""}
                                                 </div>
                                             </th>}
-                                            <th colSpan={props.model.store?.zatca_qr_on_left_bottom ? 6 : 8} className="text-end" style={{ padding: "2px" }}>
+                                            <th colSpan={props.model.store?.settings?.zatca_qr_on_left_bottom ? 6 : 8} className="text-end" style={{ padding: "2px" }}>
                                                 Total (without VAT) الإجمالي (بدون ضريبة القيمة المضافة):
                                             </th>
                                             <td className="text-end" colSpan="1" style={{ padding: "2px", }} >
@@ -450,7 +450,7 @@ const WhatsAppContent = forwardRef((props, ref) => {
                                             </td>
                                         </tr>
                                         <tr>
-                                            <th className="text-end" colSpan={props.model.store?.zatca_qr_on_left_bottom ? 6 : 8} style={{ padding: "2px" }}>
+                                            <th className="text-end" colSpan={props.model.store?.settings?.zatca_qr_on_left_bottom ? 6 : 8} style={{ padding: "2px" }}>
 
                                                 Shipping / Handling Fees   رسوم الشحن / المناولة:
                                             </th>
@@ -459,7 +459,7 @@ const WhatsAppContent = forwardRef((props, ref) => {
                                             </td>
                                         </tr>
                                         <tr>
-                                            <th className="text-end" colSpan={props.model.store?.zatca_qr_on_left_bottom ? 6 : 8} style={{ padding: "2px" }}>
+                                            <th className="text-end" colSpan={props.model.store?.settings?.zatca_qr_on_left_bottom ? 6 : 8} style={{ padding: "2px" }}>
                                                 Total Discount الخصم الإجمالي:
                                             </th>
                                             <td className="text-end" colSpan="1" style={{ padding: "2px" }}>
@@ -467,7 +467,7 @@ const WhatsAppContent = forwardRef((props, ref) => {
                                             </td>
                                         </tr>
                                         <tr>
-                                            <th colSpan={props.model.store?.zatca_qr_on_left_bottom ? 6 : 8} className="text-end" style={{ padding: "2px" }}>
+                                            <th colSpan={props.model.store?.settings?.zatca_qr_on_left_bottom ? 6 : 8} className="text-end" style={{ padding: "2px" }}>
                                                 Total Taxable Amount (without VAT)  إجمالي المبلغ الخاضع للضريبة (بدون ضريبة القيمة المضافة):
                                             </th>
                                             <td className="text-end" colSpan="1" style={{ padding: "2px" }}>
@@ -475,7 +475,7 @@ const WhatsAppContent = forwardRef((props, ref) => {
                                             </td>
                                         </tr>
                                         <tr>
-                                            <th className="text-end" colSpan={props.model.store?.zatca_qr_on_left_bottom ? 6 : 8} style={{ padding: "2px" }}>
+                                            <th className="text-end" colSpan={props.model.store?.settings?.zatca_qr_on_left_bottom ? 6 : 8} style={{ padding: "2px" }}>
                                                 Total VAT {trimTo2Decimals(props.model.vat_percent)}% إجمالي ضريبة القيمة المضافة :
                                             </th>
 
@@ -486,7 +486,7 @@ const WhatsAppContent = forwardRef((props, ref) => {
                                         </tr>
 
                                         <tr>
-                                            <th colSpan={props.model.store?.zatca_qr_on_left_bottom ? 6 : 8} className="text-end" style={{ padding: "2px" }}>
+                                            <th colSpan={props.model.store?.settings?.zatca_qr_on_left_bottom ? 6 : 8} className="text-end" style={{ padding: "2px" }}>
                                                 Net Total (with VAT)  الإجمالي الصافي (مع ضريبة القيمة المضافة):
                                             </th>
                                             <td className="text-end" colSpan="1" style={{ padding: "2px" }}>
@@ -721,7 +721,7 @@ const WhatsAppContent = forwardRef((props, ref) => {
                         </div>
                     </div>
                     {
-                        props.model.store?.show_address_in_invoice_footer && <div className="row fw-bold clickable-text" style={{ fontSize: props.fontSizes[props.modelName + "_footer"]?.size, height: "55px", }} onClick={() => {
+                        props.model.store?.settings?.show_address_in_invoice_footer && <div className="row fw-bold clickable-text" style={{ fontSize: props.fontSizes[props.modelName + "_footer"]?.size, height: "55px", }} onClick={() => {
                             props.selectText("footer");
                         }}>
                             <div className="col-md-2 text-start">

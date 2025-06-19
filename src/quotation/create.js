@@ -174,12 +174,12 @@ const QuotationCreate = forwardRef((props, ref) => {
         console.log("Response:");
         console.log(data);
         let storeData = data.result;
-        if (storeData.default_quotation_validity_days) {
-          formData.validity_days = storeData.default_quotation_validity_days;
+        if (storeData?.settings?.default_quotation_validity_days) {
+          formData.validity_days = storeData?.settings?.default_quotation_validity_days;
         }
 
-        if (storeData.default_quotation_delivery_days) {
-          formData.delivery_days = storeData.default_quotation_delivery_days;
+        if (storeData?.settings?.default_quotation_delivery_days) {
+          formData.delivery_days = storeData?.settings?.default_quotation_delivery_days;
         }
 
         setFormData(formData);
@@ -1881,7 +1881,7 @@ const QuotationCreate = forwardRef((props, ref) => {
     }
 
 
-    if (store.block_sale_when_purchase_price_is_higher) {
+    if (store?.settings?.block_sale_when_purchase_price_is_higher) {
       if (selectedProducts[i].purchase_unit_price && selectedProducts[i].purchase_unit_price <= 0) {
         errors["purchase_unit_price_" + i] = "Purchase Unit Price should be > 0";
       } else if (!selectedProducts[i].purchase_unit_price) {

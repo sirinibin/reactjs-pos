@@ -1463,14 +1463,14 @@ const Preview = forwardRef((props, ref) => {
 
             <Modal.Body>
                 <div ref={printAreaRef} className="print-area" id="print-area">
-                    {!model.store?.show_seller_info_in_invoice && <PreviewContent
+                    {!model.store?.settings?.show_seller_info_in_invoice && <PreviewContent
                         model={model}
                         invoiceBackground={InvoiceBackground}
                         whatsAppShare={whatsAppShare}
                         modelName={modelName}
                         selectText={selectText}
                         fontSizes={fontSizes} />}
-                    {model.store?.show_seller_info_in_invoice && <PreviewContentWithSellerInfo
+                    {model.store?.settings?.show_seller_info_in_invoice && <PreviewContentWithSellerInfo
                         model={model}
                         invoiceBackground={InvoiceBackground}
                         whatsAppShare={whatsAppShare}

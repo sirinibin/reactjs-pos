@@ -1606,7 +1606,7 @@ const SalesReturnCreate = forwardRef((props, ref) => {
         }
 
 
-        if (store.block_sale_when_purchase_price_is_higher) {
+        if (store?.settings?.block_sale_when_purchase_price_is_higher) {
             if (selectedProducts[i].purchase_unit_price && selectedProducts[i].purchase_unit_price <= 0) {
                 errors["purchase_unit_price_" + i] = "Purchase Unit Price should be > 0";
             } else if (!selectedProducts[i].purchase_unit_price) {
