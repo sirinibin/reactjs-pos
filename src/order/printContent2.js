@@ -40,7 +40,7 @@ const OrderPrintContent2 = forwardRef((props, ref) => {
                     </h4>
 
 
-                    <h4 className="print-value" style={{ fontSize: "3mm", position: "absolute", left: "600px", top: (220 + page.top) + "px", border: "solid " + border + "px", }}>
+                    <h4 className="print-value" style={{ fontSize: "3.5mm", position: "absolute", left: "600px", top: (220 + page.top) + "px", border: "solid " + border + "px", }}>
                         {props.model.date ? format(
                             new Date(props.model.date),
                             "yyyy-MM-dd"
@@ -241,7 +241,7 @@ const OrderPrintContent2 = forwardRef((props, ref) => {
                     </h4>
 
 
-                    <h4 className="print-value" style={{ fontSize: "3mm", position: "absolute", left: "178px", top: (875 + page.top) + "px", border: "solid " + border + "px", }}>
+                    <h4 className="print-value" style={{ fontSize: "5mm", position: "absolute", left: "178px", top: (875 + page.top) + "px", border: "solid " + border + "px", }}>
                         {props.model.customer && props.model.customer.vat_no ? props.model.customer.vat_no : "N/A"}
                     </h4>
                 </div >
