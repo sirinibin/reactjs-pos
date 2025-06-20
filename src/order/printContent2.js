@@ -191,6 +191,22 @@ const OrderPrintContent2 = forwardRef((props, ref) => {
                         </tbody>
                     </table> : ""}
 
+                    <span dir="ltr" className="print-value" style={{ fontSize: "3mm", position: "absolute", left: "60px", top: (815 + page.top) + "px" }} >
+                        <span className="print-label"> <h4>Cust. Address:</h4>
+                            <span dir="ltr" className="print-value" >
+                                {props.model.customer?.national_address?.building_no ? `${props.model.customer.national_address.building_no}` : ""}
+                                {props.model.customer?.national_address?.street_name ? ` ${props.model.customer.national_address.street_name}` : ""}
+                                {props.model.customer?.national_address?.district_name ? ` - ${props.model.customer.national_address.district_name}` : ""}
+                                {props.model.customer?.national_address?.unit_no ? `, Unit #${props.model.customer.national_address.unit_no}` : ""}
+                                {props.model.customer?.national_address?.city_name ? `, ${props.model.customer.national_address.city_name}` : ""}
+                                {props.model.customer?.national_address?.zipcode ? ` - ${props.model.customer.national_address.zipcode}` : ""}
+                                {props.model.customer?.national_address?.additional_no ? ` - ${props.model.customer.national_address.additional_no}` : ""}
+                            </span>
+                        </span>
+
+                    </span>
+
+
                     {/*
                     {page.lastPage && props.model.shipping_handling_fees && props.model.shipping_handling_fees > 0 ? <h4 style={{ fontSize: "3mm", position: "absolute", left: "480px", top: (513 + page.top) + "px" }}>
                         {"Shipping / Handling Fees: "}
