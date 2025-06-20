@@ -77,12 +77,12 @@ const OrderPrintContent2 = forwardRef((props, ref) => {
                                         <h4 className="print-value" style={{ fontSize: "3mm" }}>{index + 1 + (pageIndex * props.model.pageSize)}
                                         </h4>
                                     </td>
-                                    <td className="text-center" style={{ border: "solid 1px", width: "220px" }} >
+                                    <td className="text-center" style={{ border: "solid 1px", width: "250px" }} >
                                         <h4 className="print-value" style={{ fontSize: "2.2mm" }}>
                                             {product.prefix_part_number ? product.prefix_part_number + " - " : ""}{product.part_number ? product.part_number : ""}
                                         </h4>
                                     </td>
-                                    <td className="text-left" style={{ border: "solid 1px", width: "700px", paddingLeft: "20px" }} >
+                                    <td className="text-left" style={{ border: "solid 1px", width: "720px", paddingLeft: "20px" }} >
                                         <div className="print-value" style={{ height: "23px" }} >
                                             {product.name_in_arabic ? <h4 className="print-value" style={{ fontSize: "3mm", position: "relative", top: "-2px" }}>
                                                 {product.name_in_arabic}
@@ -95,12 +95,12 @@ const OrderPrintContent2 = forwardRef((props, ref) => {
                                             </h4> : ""}
                                         </div>
                                     </td>
-                                    <td className="text-center" style={{ border: "solid 1px", width: "100px", }}>
+                                    <td className="text-center" style={{ border: "solid 1px", width: "120px", }}>
                                         <h4 className="print-value" style={{ fontSize: "3mm" }}>
                                             {product.quantity}  {product.unit ? product.unit : ""}
                                         </h4>
                                     </td>
-                                    <td className="text-end" style={{ border: "solid 1px", width: "120px", paddingRight: "5px" }}>
+                                    <td className="text-end" style={{ border: "solid 1px", width: "140px", paddingRight: "5px" }}>
 
                                         <h4 className="print-value" style={{ fontSize: "3mm" }}>
 
@@ -116,7 +116,7 @@ const OrderPrintContent2 = forwardRef((props, ref) => {
                                         </h4>
 
                                     </td>
-                                    <td className="text-end" style={{ border: "solid 1px", width: "130px", paddingRight: "5px" }} >
+                                    <td className="text-end" style={{ border: "solid 1px", width: "150px", paddingRight: "5px" }} >
                                         <h4 className="print-value" style={{ fontSize: "3mm" }}>
                                             <NumberFormat
                                                 value={trimTo2Decimals((product.unit_price - product.unit_discount) * product.quantity)}
