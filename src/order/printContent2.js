@@ -195,7 +195,7 @@ const OrderPrintContent2 = forwardRef((props, ref) => {
                         <h4>Cust. Address:</h4>
                     </span>
 
-                    <span dir="ltr" className="print-value" style={{ fontSize: "3mm", position: "absolute", left: "65px", top: (835 + page.top) + "px" }} >
+                    <span dir="ltr" className="print-value" style={{ fontSize: "2.8mm", position: "absolute", left: "65px", top: (835 + page.top) + "px" }} >
                         {props.model.customer?.national_address?.building_no ? `${props.model.customer.national_address.building_no}` : ""}
                         {props.model.customer?.national_address?.street_name ? ` ${props.model.customer.national_address.street_name}` : ""}
                         {props.model.customer?.national_address?.district_name ? ` - ${props.model.customer.national_address.district_name}` : ""}
@@ -227,7 +227,7 @@ const OrderPrintContent2 = forwardRef((props, ref) => {
                         {props.model.delivered_by_user ? props.model.delivered_by_user.name : ""}
                     </h4>*/}
 
-                    {page.lastPage ? <div className="print-value" style={{ position: "absolute", left: "60px", top: (650 + page.top) + "px" }} >
+                    {page.lastPage ? <div className="print-value" style={{ position: "absolute", left: "65px", top: (650 + page.top) + "px" }} >
                         {/*!props.model.zatca?.qr_code && props.model.QRImageData ? <img className="text-start" src={props.model.QRImageData} style={{ width: "102px", height: "94px" }} alt="Invoice QR Code" /> : ""*/}
                         {/*props.model.zatca?.qr_code ? <QRCodeCanvas value={props.model.zatca?.qr_code} style={{ width: "102px", height: "94px" }} size={100} / > : ""*/}
                         {props.model.store?.zatca?.phase === "1" && props.model.QRImageData ? <img src={props.model.QRImageData} style={{ width: "138px", height: "138px", border: "solid 0px" }} alt="Invoice QR Code" /> : ""}
