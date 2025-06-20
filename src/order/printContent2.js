@@ -31,7 +31,7 @@ const OrderPrintContent2 = forwardRef((props, ref) => {
                         {props.model.invoiceTitle}
                     </h2>
 
-                    <h4 className="print-value" style={{ fontSize: "3mm", position: "absolute", left: "390px", top: (220 + page.top) + "px", border: "solid " + border + "px", }}>
+                    <h4 className="print-value" style={{ fontSize: "3mm", position: "absolute", left: "390px", top: (230 + page.top) + "px", border: "solid " + border + "px", }}>
                         {props.model.code ? props.model.code : ""}
                     </h4>
 
@@ -82,7 +82,7 @@ const OrderPrintContent2 = forwardRef((props, ref) => {
                                             {product.prefix_part_number ? product.prefix_part_number + " - " : ""}{product.part_number ? product.part_number : ""}
                                         </h4>
                                     </td>
-                                    <td className="text-left" style={{ border: "solid 1px", width: "560px", paddingLeft: "20px" }} >
+                                    <td className="text-left" style={{ border: "solid 1px", width: "600px", paddingLeft: "20px" }} >
                                         <div className="print-value" style={{ height: "23px" }} >
                                             {product.name_in_arabic ? <h4 className="print-value" style={{ fontSize: "3mm", position: "relative", top: "-2px" }}>
                                                 {product.name_in_arabic}
@@ -133,7 +133,7 @@ const OrderPrintContent2 = forwardRef((props, ref) => {
                         </tbody>
                     </table>
 
-                    {page.lastPage ? <table className="print-value" style={{ fontSize: "3mm", position: "absolute", left: "720px", top: (800 + page.top) + "px", border: "solid 1px", }}>
+                    {page.lastPage ? <table className="print-value" style={{ fontSize: "3mm", position: "absolute", left: "740px", top: (800 + page.top) + "px", border: "solid 1px", }}>
                         <tbody>
                             <tr className="text-end" style={{ verticalAlign: "center", border: "solid 1px", }}>
                                 <td style={{ width: "99px", paddingRight: "5px", paddingTop: "10px" }}>
@@ -191,19 +191,18 @@ const OrderPrintContent2 = forwardRef((props, ref) => {
                         </tbody>
                     </table> : ""}
 
-                    <span dir="ltr" className="print-value" style={{ fontSize: "3mm", position: "absolute", left: "60px", top: (815 + page.top) + "px" }} >
-                        <span className="print-label"> <h4>Cust. Address:</h4>
-                            <span dir="ltr" className="print-value" >
-                                {props.model.customer?.national_address?.building_no ? `${props.model.customer.national_address.building_no}` : ""}
-                                {props.model.customer?.national_address?.street_name ? ` ${props.model.customer.national_address.street_name}` : ""}
-                                {props.model.customer?.national_address?.district_name ? ` - ${props.model.customer.national_address.district_name}` : ""}
-                                {props.model.customer?.national_address?.unit_no ? `, Unit #${props.model.customer.national_address.unit_no}` : ""}
-                                {props.model.customer?.national_address?.city_name ? `, ${props.model.customer.national_address.city_name}` : ""}
-                                {props.model.customer?.national_address?.zipcode ? ` - ${props.model.customer.national_address.zipcode}` : ""}
-                                {props.model.customer?.national_address?.additional_no ? ` - ${props.model.customer.national_address.additional_no}` : ""}
-                            </span>
-                        </span>
+                    <span dir="ltr" className="print-value" style={{ fontSize: "3mm", position: "absolute", left: "65px", top: (830 + page.top) + "px" }} >
+                        <h4>Cust. Address:</h4>
+                    </span>
 
+                    <span dir="ltr" className="print-value" style={{ fontSize: "3mm", position: "absolute", left: "190px", top: (835 + page.top) + "px" }} >
+                        {props.model.customer?.national_address?.building_no ? `${props.model.customer.national_address.building_no}` : ""}
+                        {props.model.customer?.national_address?.street_name ? ` ${props.model.customer.national_address.street_name}` : ""}
+                        {props.model.customer?.national_address?.district_name ? ` - ${props.model.customer.national_address.district_name}` : ""}
+                        {props.model.customer?.national_address?.unit_no ? `, Unit #${props.model.customer.national_address.unit_no}` : ""}
+                        {props.model.customer?.national_address?.city_name ? `, ${props.model.customer.national_address.city_name}` : ""}
+                        {props.model.customer?.national_address?.zipcode ? ` - ${props.model.customer.national_address.zipcode}` : ""}
+                        {props.model.customer?.national_address?.additional_no ? ` - ${props.model.customer.national_address.additional_no}` : ""}
                     </span>
 
 
