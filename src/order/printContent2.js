@@ -133,7 +133,7 @@ const OrderPrintContent2 = forwardRef((props, ref) => {
                         </tbody>
                     </table>
 
-                    {page.lastPage ? <table className="print-value" style={{ fontSize: "3mm", position: "absolute", left: "750px", top: (800 + page.top) + "px", border: "solid 1px", }}>
+                    {page.lastPage ? <table className="print-value" style={{ minWidth: "150px", fontSize: "3mm", position: "absolute", left: "700px", top: (800 + page.top) + "px", border: "solid 1px", }}>
                         <tbody>
                             <tr className="text-end" style={{ verticalAlign: "center", border: "solid 1px", }}>
                                 <td style={{ width: "99px", paddingRight: "5px", paddingTop: "10px" }}>
@@ -150,7 +150,7 @@ const OrderPrintContent2 = forwardRef((props, ref) => {
                                 </td>
                             </tr>
                             <tr className="text-end" style={{ verticalAlign: "center", border: "solid 1px", }}>
-                                <td style={{ width: "99px", paddingRight: "5px", paddingTop: "13px" }}>
+                                <td style={{ paddingRight: "5px", paddingTop: "13px" }}>
                                     <h4 className="print-value" style={{ fontSize: "3mm", height: "9px", }}>
                                         <NumberFormat
                                             value={trimTo2Decimals(props.model.vat_price)}
@@ -163,7 +163,7 @@ const OrderPrintContent2 = forwardRef((props, ref) => {
                                 </td>
                             </tr>
                             <tr className="text-end" style={{ verticalAlign: "center", border: "solid 1px", }}>
-                                <td style={{ width: "99px", paddingRight: "5px", paddingTop: "13px" }}>
+                                <td style={{ paddingRight: "5px", paddingTop: "13px" }}>
                                     <h4 className="print-value" style={{ fontSize: "3mm", height: "9px", }}>
                                         <NumberFormat
                                             value={trimTo2Decimals(props.model.discount)}
@@ -176,7 +176,7 @@ const OrderPrintContent2 = forwardRef((props, ref) => {
                                 </td>
                             </tr>
                             <tr className="text-end" style={{ verticalAlign: "center", border: "solid 1px", }}>
-                                <td style={{ width: "99px", paddingRight: "5px", paddingTop: "13px" }}>
+                                <td style={{ paddingRight: "5px", paddingTop: "13px" }}>
                                     <h4 className="print-value" style={{ fontSize: "3mm", height: "9px", }}>
                                         <NumberFormat
                                             value={trimTo2Decimals(props.model.net_total)}
