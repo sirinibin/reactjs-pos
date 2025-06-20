@@ -31,11 +31,11 @@ const OrderPrintContent2 = forwardRef((props, ref) => {
                         {props.model.invoiceTitle}
                     </h2>
 
-                    <h4 className="print-value" style={{ fontSize: "3mm", position: "absolute", left: "390px", top: (230 + page.top) + "px", border: "solid " + border + "px", }}>
+                    <h4 className="print-value" style={{ fontSize: "3mm", position: "absolute", left: "390px", top: (225 + page.top) + "px", border: "solid " + border + "px", }}>
                         {props.model.code ? props.model.code : ""}
                     </h4>
 
-                    <h4 className="print-value" style={{ fontSize: "3mm", position: "absolute", left: "450px", top: (270 + page.top) + "px", border: "solid " + border + "px", }}>
+                    <h4 className="print-value" style={{ fontSize: "3mm", position: "absolute", left: "445px", top: (275 + page.top) + "px", border: "solid " + border + "px", }}>
                         {props.model.customer && props.model.customer.name ? props.model.customer.name : "N/A"}
                     </h4>
 
@@ -77,12 +77,12 @@ const OrderPrintContent2 = forwardRef((props, ref) => {
                                         <h4 className="print-value" style={{ fontSize: "3mm" }}>{index + 1 + (pageIndex * props.model.pageSize)}
                                         </h4>
                                     </td>
-                                    <td className="text-center" style={{ border: "solid 1px", width: "200px" }} >
+                                    <td className="text-center" style={{ border: "solid 1px", width: "220px" }} >
                                         <h4 className="print-value" style={{ fontSize: "2.2mm" }}>
                                             {product.prefix_part_number ? product.prefix_part_number + " - " : ""}{product.part_number ? product.part_number : ""}
                                         </h4>
                                     </td>
-                                    <td className="text-left" style={{ border: "solid 1px", width: "600px", paddingLeft: "20px" }} >
+                                    <td className="text-left" style={{ border: "solid 1px", width: "700px", paddingLeft: "20px" }} >
                                         <div className="print-value" style={{ height: "23px" }} >
                                             {product.name_in_arabic ? <h4 className="print-value" style={{ fontSize: "3mm", position: "relative", top: "-2px" }}>
                                                 {product.name_in_arabic}
@@ -116,7 +116,7 @@ const OrderPrintContent2 = forwardRef((props, ref) => {
                                         </h4>
 
                                     </td>
-                                    <td className="text-end" style={{ border: "solid 1px", width: "99px", paddingRight: "5px" }} >
+                                    <td className="text-end" style={{ border: "solid 1px", width: "130px", paddingRight: "5px" }} >
                                         <h4 className="print-value" style={{ fontSize: "3mm" }}>
                                             <NumberFormat
                                                 value={trimTo2Decimals((product.unit_price - product.unit_discount) * product.quantity)}
@@ -133,7 +133,7 @@ const OrderPrintContent2 = forwardRef((props, ref) => {
                         </tbody>
                     </table>
 
-                    {page.lastPage ? <table className="print-value" style={{ fontSize: "3mm", position: "absolute", left: "740px", top: (800 + page.top) + "px", border: "solid 1px", }}>
+                    {page.lastPage ? <table className="print-value" style={{ fontSize: "3mm", position: "absolute", left: "750px", top: (800 + page.top) + "px", border: "solid 1px", }}>
                         <tbody>
                             <tr className="text-end" style={{ verticalAlign: "center", border: "solid 1px", }}>
                                 <td style={{ width: "99px", paddingRight: "5px", paddingTop: "10px" }}>
@@ -195,7 +195,7 @@ const OrderPrintContent2 = forwardRef((props, ref) => {
                         <h4>Cust. Address:</h4>
                     </span>
 
-                    <span dir="ltr" className="print-value" style={{ fontSize: "3mm", position: "absolute", left: "200px", top: (835 + page.top) + "px" }} >
+                    <span dir="ltr" className="print-value" style={{ fontSize: "3mm", position: "absolute", left: "65px", top: (835 + page.top) + "px" }} >
                         {props.model.customer?.national_address?.building_no ? `${props.model.customer.national_address.building_no}` : ""}
                         {props.model.customer?.national_address?.street_name ? ` ${props.model.customer.national_address.street_name}` : ""}
                         {props.model.customer?.national_address?.district_name ? ` - ${props.model.customer.national_address.district_name}` : ""}
