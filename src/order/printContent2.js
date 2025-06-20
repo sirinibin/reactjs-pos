@@ -191,11 +191,11 @@ const OrderPrintContent2 = forwardRef((props, ref) => {
                         </tbody>
                     </table> : ""}
 
-                    <span dir="ltr" className="print-value" style={{ fontSize: "3mm", position: "absolute", left: "65px", top: (830 + page.top) + "px" }} >
+                    <span dir="ltr" className="print-value" style={{ fontSize: "3mm", position: "absolute", left: "200px", top: (815 + page.top) + "px" }} >
                         <h4>Cust. Address:</h4>
                     </span>
 
-                    <span dir="ltr" className="print-value" style={{ fontSize: "3mm", position: "absolute", left: "190px", top: (835 + page.top) + "px" }} >
+                    <span dir="ltr" className="print-value" style={{ fontSize: "3mm", position: "absolute", left: "200px", top: (835 + page.top) + "px" }} >
                         {props.model.customer?.national_address?.building_no ? `${props.model.customer.national_address.building_no}` : ""}
                         {props.model.customer?.national_address?.street_name ? ` ${props.model.customer.national_address.street_name}` : ""}
                         {props.model.customer?.national_address?.district_name ? ` - ${props.model.customer.national_address.district_name}` : ""}
