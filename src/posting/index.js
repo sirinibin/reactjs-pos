@@ -664,6 +664,14 @@ const PostingIndex = forwardRef((props, ref) => {
         account.dateValue = dateValue;
         account.fromDateValue = fromDateValue;
         account.toDateValue = toDateValue;
+
+        if (ignoreOpeningBalance) {
+            list();
+            account.posts = RemoveOpeningBalance(allPostings);
+        }
+
+        account.ignoreOpeningBalance = ignoreOpeningBalance;
+
         PreviewRef.current.open(account, "whatsapp");
     }
 

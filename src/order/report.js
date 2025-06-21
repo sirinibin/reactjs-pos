@@ -670,6 +670,10 @@ const ReportPreview = forwardRef((props, ref) => {
         const element = printAreaRef.current;
         if (!element) return;
 
+        const elementsToHide = element.querySelectorAll('.no-print');
+        elementsToHide.forEach(el => el.style.display = 'none');
+
+
         html2pdf().from(element).set({
             margin: 0,
             filename: `${getFileName()}.pdf`,
@@ -677,6 +681,9 @@ const ReportPreview = forwardRef((props, ref) => {
             html2canvas: { scale: 2, useCORS: true },
             jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
         }).outputPdf('bloburl').then(blobUrl => {
+            // Restore visibility after PDF is created
+            elementsToHide.forEach(el => el.style.display = '');
+
             const iframe = document.createElement('iframe');
             iframe.style.display = 'none';
             iframe.src = blobUrl;

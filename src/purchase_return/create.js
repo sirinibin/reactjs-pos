@@ -29,7 +29,7 @@ import Amount from "../utils/amount.js";
 import { OverlayTrigger, Tooltip } from 'react-bootstrap';
 import ResizableTableCell from './../utils/ResizableTableCell';
 import ImageViewerModal from './../utils/ImageViewerModal';
-import OverflowTooltip from "../utils/OverflowTooltip.js";
+//import OverflowTooltip from "../utils/OverflowTooltip.js";
 import * as bootstrap from 'bootstrap';
 
 
@@ -566,6 +566,7 @@ const PurchaseReturnedCreate = forwardRef((props, ref) => {
             formData.products.push({
                 product_id: selectedProducts[i].product_id,
                 name: selectedProducts[i].name,
+                part_number: selectedProducts[i].part_number,
                 quantity: parseFloat(selectedProducts[i].quantity),
                 unit: selectedProducts[i].unit,
                 purchasereturn_unit_price: parseFloat(selectedProducts[i].purchase_unit_price),
@@ -1880,9 +1881,48 @@ async function reCalculate(productIndex) {
                                                     }} />
                                             </td>
                                             <td style={{ verticalAlign: 'middle', padding: '0.25rem' }}>{index + 1}</td>
-                                            <td style={{ verticalAlign: 'middle', padding: '0.25rem', width: "auto", whiteSpace: "nowrap" }}>
+                                            {/*<td style={{ verticalAlign: 'middle', padding: '0.25rem', width: "auto", whiteSpace: "nowrap" }}>
                                                 <OverflowTooltip maxWidth={120} value={product.prefix_part_number ? product.prefix_part_number + " - " + product.part_number : product.part_number} />
-                                            </td>
+                                            </td>*/}
+                                            <ResizableTableCell style={{ verticalAlign: 'middle', padding: '0.25rem' }}
+                                            >
+                                                <input type="text" id={`${"purchase_return_product_part_number" + index}`}
+                                                    name={`${"purchase_return_product_part_number" + index}`}
+                                                    onWheel={(e) => e.target.blur()}
+
+                                                    value={selectedProducts[index].part_number}
+                                                    className={`form-control text-start ${errors["part_number_" + index] ? 'is-invalid' : ''} ${warnings["part_number_" + index] ? 'border-warning text-warning' : ''}`}
+                                                    onKeyDown={(e) => {
+                                                        RunKeyActions(e, product);
+                                                    }}
+                                                    placeholder="Part No." onChange={(e) => {
+                                                        delete errors["part_number_" + index];
+                                                        setErrors({ ...errors });
+
+                                                        if (!e.target.value) {
+                                                            selectedProducts[index].part_number = "";
+                                                            setSelectedProducts([...selectedProducts]);
+                                                            return;
+                                                        }
+                                                        selectedProducts[index].part_number = e.target.value;
+                                                        setSelectedProducts([...selectedProducts]);
+                                                    }} />
+                                                {(errors[`part_number_${index}`] || warnings[`part_number_${index}`]) && (
+                                                    <i
+                                                        className={`bi bi-exclamation-circle-fill ${errors[`part_number_${index}`] ? 'text-danger' : 'text-warning'} ms-2`}
+                                                        data-bs-toggle="tooltip"
+                                                        data-bs-placement="top"
+                                                        data-error={errors[`part_number_${index}`] || ''}
+                                                        data-warning={warnings[`part_number_${index}`] || ''}
+                                                        title={errors[`part_number_${index}`] || warnings[`part_number_${index}`] || ''}
+                                                        style={{
+                                                            fontSize: '1rem',
+                                                            cursor: 'pointer',
+                                                            whiteSpace: 'nowrap',
+                                                        }}
+                                                    ></i>
+                                                )}
+                                            </ResizableTableCell>
                                             <ResizableTableCell style={{ verticalAlign: 'middle', padding: '0.25rem' }}
                                             >
                                                 <div className="input-group">

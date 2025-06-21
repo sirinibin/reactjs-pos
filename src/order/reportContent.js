@@ -183,7 +183,7 @@ const ReportContent = forwardRef((props, ref) => {
                                     </div>
                                 </div>
                             </> : ""}
-                            {props.modelName === "sales_report" && pageIndex === 0 && <div className="row" style={{ marginTop: "12px" }}>
+                            {props.modelName === "sales_report" && pageIndex === 0 && <div className="row no-print" style={{ marginTop: "12px" }}>
                                 <StatsSummary
                                     title="Sales"
                                     defaultOpen={true}
@@ -205,7 +205,7 @@ const ReportContent = forwardRef((props, ref) => {
                                     }}
                                 />
                             </div>}
-                            {props.modelName === "sales_return_report" && pageIndex === 0 && <div className="row" style={{ marginTop: "12px" }}>
+                            {props.modelName === "sales_return_report" && pageIndex === 0 && <div className="row no-print" style={{ marginTop: "12px" }}>
                                 <StatsSummary
                                     title="Sales Return"
                                     defaultOpen={true}
@@ -225,7 +225,7 @@ const ReportContent = forwardRef((props, ref) => {
                                     }}
                                 />
                             </div>}
-                            {props.modelName === "quotation_invoice_report" && pageIndex === 0 && <div className="row" style={{ marginTop: "12px" }}>
+                            {props.modelName === "quotation_invoice_report" && pageIndex === 0 && <div className="row no-print" style={{ marginTop: "12px" }}>
                                 <StatsSummary
                                     title="Sales"
                                     defaultOpen={true}
@@ -245,7 +245,7 @@ const ReportContent = forwardRef((props, ref) => {
                                     }}
                                 />
                             </div>}
-                            {props.modelName === "quotation_sales_return_report" && pageIndex === 0 && <div className="row" style={{ marginTop: "12px" }}>
+                            {props.modelName === "quotation_sales_return_report" && pageIndex === 0 && <div className="row no-print" style={{ marginTop: "12px" }}>
                                 <StatsSummary
                                     title="Qtn. Sales Return"
                                     defaultOpen={true}
@@ -265,7 +265,7 @@ const ReportContent = forwardRef((props, ref) => {
                                     }}
                                 />
                             </div>}
-                            {props.modelName === "quotation_report" && pageIndex === 0 && <div className="row" style={{ marginTop: "12px" }}>
+                            {props.modelName === "quotation_report" && pageIndex === 0 && <div className="row no-print" style={{ marginTop: "12px" }}>
                                 <StatsSummary
                                     title="Quotations"
                                     defaultOpen={true}
