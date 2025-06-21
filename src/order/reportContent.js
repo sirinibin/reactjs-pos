@@ -416,7 +416,7 @@ const ReportContent = forwardRef((props, ref) => {
                                                     <li>Date</li>
                                                 </ul>
                                             </th>
-                                            {!props.model.customer && (props.modelName === "sales_report" || props.modelName === "sales_return_report" || props.modelName === "quotation_report" || props.modelName === "quotation_invoice_report" || props.modelName === "delivery_note_report") && <>
+                                            {!props.model.customer && (props.modelName === "sales_report" || props.modelName === "sales_return_report" || props.modelName === "quotation_report" || props.modelName === "quotation_sales_return_report" || props.modelName === "quotation_invoice_report" || props.modelName === "delivery_note_report") && <>
                                                 <th className="per5 text-center" style={{ padding: "0px", width: "34%", borderRight: tableBorderThickness, borderBottom: tableBorderThickness }}>
                                                     <ul
                                                         className="list-unstyled"
@@ -504,7 +504,7 @@ const ReportContent = forwardRef((props, ref) => {
                                                 <th dir="ltr" style={{ borderRight: tableBorderThickness }}>
                                                     {format(new Date(model.date), "MMM dd yyyy h:mma")}
                                                 </th>
-                                                {!props.model.customer && (props.modelName === "sales_report" || props.modelName === "sales_return_report" || props.modelName === "quotation_report" || props.modelName === "quotation_invoice_report" || props.modelName === "delivery_note_report") && <>
+                                                {!props.model.customer && (props.modelName === "sales_report" || props.modelName === "sales_return_report" || props.modelName === "quotation_report" || props.modelName === "quotation_sales_return_report" || props.modelName === "quotation_invoice_report" || props.modelName === "delivery_note_report") && <>
                                                     <td style={{ borderRight: tableBorderThickness }}>
                                                         {model.customer_name}
                                                     </td>
@@ -515,15 +515,15 @@ const ReportContent = forwardRef((props, ref) => {
                                                     </td>
                                                 </>}
                                                 {props.modelName !== "delivery_note_report" && <>
-                                                    <td style={{ borderRight: tableBorderThickness }}>
+                                                    <td style={{ borderRight: tableBorderThickness, paddingRight: "3px" }} className="text-end">
                                                         <Amount amount={trimTo2Decimals(model.net_total)} />
                                                     </td>
                                                 </>}
                                                 {props.modelName !== "delivery_note_report" && props.modelName !== "quotation_report" && <>
-                                                    <td style={{ borderRight: tableBorderThickness }}>
+                                                    <td style={{ borderRight: tableBorderThickness, paddingRight: "3px" }} className="text-end">
                                                         <Amount amount={trimTo2Decimals(model.total_payment_received)} />
                                                     </td>
-                                                    <td style={{ borderRight: tableBorderThickness }}>
+                                                    <td style={{ borderRight: tableBorderThickness, paddingRight: "3px" }} className="text-end">
                                                         <Amount amount={trimTo2Decimals(model.balance_amount)} />
                                                     </td>
                                                     <td style={{ borderRight: tableBorderThickness }}>
@@ -543,6 +543,40 @@ const ReportContent = forwardRef((props, ref) => {
                                                 </>}
                                             </tr>
                                         ))}
+                                        {props.modelName !== "delivery_note_report" && <>
+                                            <tr className="text-end" >
+                                                <td colSpan={4} style={{ borderRight: tableBorderThickness }}  >Total</td>
+                                                <td style={{ borderRight: tableBorderThickness, paddingRight: "3px" }}>
+                                                    {props.modelName === "sales_report" && <Amount amount={trimTo2Decimals(props.model.meta.total_sales)} />}
+                                                    {props.modelName === "sales_return_report" && <Amount amount={trimTo2Decimals(props.model.meta.total_sales_return)} />}
+                                                    {props.modelName === "quotation_invoice_report" && <Amount amount={trimTo2Decimals(props.model.meta.invoice_total_sales)} />}
+                                                    {props.modelName === "quotation_sales_return_report" && <Amount amount={trimTo2Decimals(props.model.meta.total_quotation_sales_return)} />}
+                                                    {props.modelName === "quotation_report" && <Amount amount={trimTo2Decimals(props.model.meta.total_quotation)} />}
+                                                    {props.modelName === "purchase_report" && <Amount amount={trimTo2Decimals(props.model.meta.total_purchase)} />}
+                                                    {props.modelName === "purchase_return_report" && <Amount amount={trimTo2Decimals(props.model.meta.total_purchase_return)} />}
+                                                </td>
+                                                {props.modelName !== "delivery_note_report" && props.modelName !== "quotation_report" && <>
+                                                    <td style={{ borderRight: tableBorderThickness, paddingRight: "3px" }}>
+                                                        {props.modelName === "sales_report" && <Amount amount={trimTo2Decimals(props.model.meta.paid_sales)} />}
+                                                        {props.modelName === "sales_return_report" && <Amount amount={trimTo2Decimals(props.model.meta.paid_sales_return)} />}
+                                                        {props.modelName === "quotation_invoice_report" && <Amount amount={trimTo2Decimals(props.model.meta.invoice_paid_sales)} />}
+                                                        {props.modelName === "quotation_sales_return_report" && <Amount amount={trimTo2Decimals(props.model.meta.paid_quotation_sales_return)} />}
+                                                        {props.modelName === "purchase_report" && <Amount amount={trimTo2Decimals(props.model.meta.paid_purchase)} />}
+                                                        {props.modelName === "purchase_return_report" && <Amount amount={trimTo2Decimals(props.model.meta.paid_purchase_return)} />}
+                                                    </td>
+                                                    <td style={{ borderRight: tableBorderThickness, paddingRight: "3px" }}>
+                                                        {props.modelName === "sales_report" && <Amount amount={trimTo2Decimals(props.model.meta.unpaid_sales)} />}
+                                                        {props.modelName === "sales_return_report" && <Amount amount={trimTo2Decimals(props.model.meta.unpaid_sales_return)} />}
+                                                        {props.modelName === "quotation_invoice_report" && <Amount amount={trimTo2Decimals(props.model.meta.invoice_unpaid_sales)} />}
+                                                        {props.modelName === "quotation_sales_return_report" && <Amount amount={trimTo2Decimals(props.model.meta.unpaid_quotation_sales_return)} />}
+                                                        {props.modelName === "purchase_report" && <Amount amount={trimTo2Decimals(props.model.meta.unpaid_purchase)} />}
+                                                        {props.modelName === "purchase_return_report" && <Amount amount={trimTo2Decimals(props.model.meta.unpaid_purchase_return)} />}
+                                                    </td>
+                                                    <td></td>
+                                                </>}
+
+                                            </tr>
+                                        </>}
                                     </tbody>
                                 </table>
                             </div>

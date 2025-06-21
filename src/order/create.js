@@ -1058,6 +1058,8 @@ const OrderCreate = forwardRef((props, ref) => {
             if (oldProducts[j].product_id === selectedProducts[j].product_id) {
                 if (formData.id) {
                     oldQty = oldProducts[j].quantity;
+                    selectedProducts[i].stock += oldQty;
+                    setSelectedProducts([...selectedProducts]);
                     // alert(oldQty)
                 }
                 break;
@@ -2804,7 +2806,7 @@ const OrderCreate = forwardRef((props, ref) => {
                                         <th>Info</th>
                                         <th>Purchase Unit Price(without VAT)</th>
                                         <th>Stock</th>
-                                        <th>Qty</th>
+                                        <th style={{ minWidth: "80px", maxWidth: "80px" }}>Qty</th>
                                         <th>Unit Price(without VAT)</th>
                                         <th>Unit Price(with VAT)</th>
                                         <th>Unit Disc.(without VAT)</th>
@@ -3123,10 +3125,10 @@ const OrderCreate = forwardRef((props, ref) => {
                                                 width: 'auto',
                                                 position: 'relative',
                                             }} >
-                                                <div className="d-flex align-items-center" style={{ minWidth: 0 }}>
-                                                    <div className="input-group flex-nowrap" style={{ flex: '1 1 auto', minWidth: 0 }}>
+                                                <div className="d-flex align-items-center" style={{}}>
+                                                    <div className="input-group flex-nowrap" style={{ flex: '1 1 auto' }}>
                                                         <input type="number"
-                                                            style={{ minWidth: "40px", maxWidth: "120px" }}
+                                                            style={{ minWidth: "80px", maxWidth: "80px" }}
                                                             id={`${"sales_product_quantity_" + index}`}
                                                             name={`${"sales_product_quantity" + index}`}
                                                             className={`form-control text-end ${errors["quantity_" + index] ? 'is-invalid' : warnings["quantity_" + index] ? 'border-warning text-warning' : ''}`}
