@@ -36,7 +36,7 @@ import { OverlayTrigger, Tooltip } from 'react-bootstrap';
 import Sales from "./../utils/sales.js";
 import InfoDialog from './../utils/InfoDialog';
 import * as bootstrap from 'bootstrap';
-import OverflowTooltip from "../utils/OverflowTooltip.js";
+//import OverflowTooltip from "../utils/OverflowTooltip.js";
 import ImageViewerModal from './../utils/ImageViewerModal';
 import { highlightWords } from "../utils/search.js";
 const columnStyle = {

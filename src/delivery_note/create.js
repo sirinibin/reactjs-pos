@@ -23,7 +23,7 @@ import Customers from "./../utils/customers.js";
 import ResizableTableCell from './../utils/ResizableTableCell';
 import ImageViewerModal from './../utils/ImageViewerModal';
 import * as bootstrap from 'bootstrap';
-import OverflowTooltip from "../utils/OverflowTooltip.js";
+//import OverflowTooltip from "../utils/OverflowTooltip.js";
 import Amount from "../utils/amount.js";
 import { trimTo2Decimals } from "../utils/numberUtils";
 import { highlightWords } from "../utils/search.js";
@@ -779,13 +779,11 @@ const DeliveryNoteCreate = forwardRef((props, ref) => {
       formData.products.push({
         product_id: selectedProducts[i].product_id,
         name: selectedProducts[i].name,
-        part_number: selectedProducts[i].part_number,
         name_in_arabic: selectedProducts[i].name_in_arabic,
         quantity: parseFloat(selectedProducts[i].quantity),
         unit_price: parseFloat(selectedProducts[i].unit_price),
         purchase_unit_price: parseFloat(selectedProducts[i].purchase_unit_price),
         unit: selectedProducts[i].unit,
-        part_number: selectedProducts[i].part_number,
       });
     }
 
