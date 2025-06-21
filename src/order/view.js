@@ -272,7 +272,7 @@ const OrderView = forwardRef((props, ref) => {
         if (timerRef.current) clearTimeout(timerRef.current);
 
         timerRef.current = setTimeout(() => {
-            PreviewRef.current.open(model, "whatsapp", "whatsapp_sales");
+            PreviewRef.current?.open(model, "whatsapp", "whatsapp_sales");
         }, 100);
     }
 
