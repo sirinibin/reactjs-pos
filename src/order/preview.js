@@ -328,7 +328,7 @@ const Preview = forwardRef((props, ref) => {
         }
 
 
-        let totalProducts = model.products.length;
+        let totalProducts = model.products?.length;
 
         // let top = 0;
         let totalPagesInt = parseInt(totalProducts / model.pageSize);
@@ -1310,6 +1310,34 @@ const Preview = forwardRef((props, ref) => {
 
 
 
+
+    useEffect(() => {
+        const handleEnterKey = (event) => {
+            const tag = event.target.tagName.toLowerCase();
+            const isInput = tag === 'input' || tag === 'textarea' || event.target.isContentEditable;
+
+            if (!show) {
+                return;
+            }
+
+            if (event.key === 'Enter' && !isInput) {
+                //handlePrint()
+
+                if (whatsAppShare) {
+                    openWhatsAppShare();
+                } else {
+                    handlePrint();
+                }
+                // openPrintTypeSelection();
+                // Call your function here
+            }
+        };
+
+        document.addEventListener('keydown', handleEnterKey);
+        return () => {
+            document.removeEventListener('keydown', handleEnterKey);
+        };
+    }, [handlePrint, openWhatsAppShare, whatsAppShare, show]); // no dependencies
 
 
     return (<>

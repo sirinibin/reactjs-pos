@@ -1,4 +1,4 @@
-import React, { useState, useRef, forwardRef, useImperativeHandle } from "react";
+import React, { useState, useRef, forwardRef, useImperativeHandle, useEffect, useCallback } from "react";
 import { Modal, Button, Table } from 'react-bootstrap';
 
 import NumberFormat from "react-number-format";
@@ -18,6 +18,11 @@ const OrderView = forwardRef((props, ref) => {
                 getCashDiscounts(id);
                 getPayments(id);
                 SetShow(true);
+            }
+
+
+            if (localStorage.getItem('store_id')) {
+                getStore(localStorage.getItem('store_id'));
             }
 
         },
@@ -187,15 +192,7 @@ const OrderView = forwardRef((props, ref) => {
         SetShow(false);
     };
 
-    const PreviewRef = useRef();
-    function openPreview() {
-        PreviewRef.current.open(model, undefined, "sales");
-    }
 
-    const PrintRef = useRef();
-    function openPrint() {
-        PrintRef.current.open(model);
-    }
 
     function ObjectToSearchQueryParams(object) {
         return Object.keys(object)
@@ -205,14 +202,172 @@ const OrderView = forwardRef((props, ref) => {
             .join("&");
     }
 
-    function sendWhatsAppMessage() {
-        PreviewRef.current.open(model, "whatsapp", "whatsapp_sales");
+
+    let [store, setStore] = useState({});
+
+    async function getStore(id) {
+        console.log("inside get Store");
+        const requestOptions = {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': localStorage.getItem('access_token'),
+            },
+        };
+
+        await fetch('/v1/store/' + id, requestOptions)
+            .then(async response => {
+                const isJson = response.headers.get('content-type')?.includes('application/json');
+                const data = isJson && await response.json();
+
+                // check for error response
+                if (!response.ok) {
+                    const error = (data && data.errors);
+                    return Promise.reject(error);
+                }
+
+                console.log("Response:");
+                console.log(data);
+                store = data.result;
+                setStore({ ...store });
+            })
+            .catch(error => {
+
+            });
     }
+
+
+    let [showOrderPreview, setShowOrderPreview] = useState(false);
+    let [showPrintTypeSelection, setShowPrintTypeSelection] = useState(false);
+
+    // let [previewOpened, setPreviewOpened] = useState(false);
+
+
+    const timerRef = useRef(null);
+
+    const PreviewRef = useRef();
+    const openPreview = useCallback(() => {
+        //alert("OPen pre")
+        //  document.removeEventListener('keydown', handleEnterKey);
+        // alert("ok" + model.id);
+        //setPreviewOpened(true);
+        setShowOrderPreview(true);
+
+        setShowPrintTypeSelection(false);
+        handleClose();
+
+        if (timerRef.current) clearTimeout(timerRef.current);
+
+        timerRef.current = setTimeout(() => {
+            PreviewRef.current?.open(model, undefined, "sales");
+        }, 100);
+
+    }, [model]);
+
+    function sendWhatsAppMessage() {
+        setShowPrintTypeSelection(false);
+        setShowOrderPreview(true);
+        handleClose();
+
+        if (timerRef.current) clearTimeout(timerRef.current);
+
+        timerRef.current = setTimeout(() => {
+            PreviewRef.current.open(model, "whatsapp", "whatsapp_sales");
+        }, 100);
+    }
+
+    const PrintRef = useRef();
+    const openPrint = useCallback(() => {
+        // document.removeEventListener('keydown', handleEnterKey);
+        setShowPrintTypeSelection(false);
+        handleClose();
+        PrintRef.current?.open(model);
+    }, [model]);
+
+
+
+
+    const openPrintTypeSelection = useCallback(() => {
+
+        if (store.settings?.enable_invoice_print_type_selection) {
+            // showPrintTypeSelection = true;
+            setShowOrderPreview(true);
+            setShowPrintTypeSelection(true);
+        } else {
+            openPreview();
+        }
+    }, [openPreview, store]);
+
+
+
+
+
+
+    const handleEnterKey = useCallback((event) => {
+        const tag = event.target.tagName.toLowerCase();
+        const isInput = tag === 'input' || tag === 'textarea' || event.target.isContentEditable;
+
+        if (!show) {
+            return;
+        }
+
+        if (event.key === 'Enter' && !isInput) {
+            openPrintTypeSelection();
+            // Call your function here
+        }
+    }, [openPrintTypeSelection, show]);
+
+    useEffect(() => {
+
+
+        document.addEventListener('keydown', handleEnterKey);
+        return () => {
+            document.removeEventListener('keydown', handleEnterKey);
+        };
+    }, [handleEnterKey]); // no dependencies
+
+
+
+    useEffect(() => {
+        const handleKeyDown = (e) => {
+            if (e.key === "Escape") {
+                e.preventDefault();
+                e.stopPropagation();
+            }
+        };
+
+        document.addEventListener("keydown", handleKeyDown);
+        return () => document.removeEventListener("keydown", handleKeyDown);
+    }, []);
+
 
 
 
     return (<>
-        <OrderPreview ref={PreviewRef} />
+
+        <Modal show={showPrintTypeSelection} onHide={() => {
+            showPrintTypeSelection = false;
+            setShowPrintTypeSelection(showPrintTypeSelection);
+        }} centered>
+            <Modal.Header closeButton>
+                <Modal.Title>Select Print Type</Modal.Title>
+            </Modal.Header>
+            <Modal.Body className="d-flex justify-content-around">
+
+                <Button variant="secondary" onClick={() => {
+                    openPrint();
+                }}>
+                    <i className="bi bi-printer"></i> Print
+                </Button>
+
+                <Button variant="primary" onClick={() => {
+                    openPreview();
+                }}>
+                    <i className="bi bi-printer"></i> Print A4 Invoice
+                </Button>
+            </Modal.Body>
+        </Modal>
+        {showOrderPreview && <OrderPreview ref={PreviewRef} />}
         <OrderPrint ref={PrintRef} />
         <Modal show={show} size="xl" onHide={handleClose} animation={false} scrollable={true}>
             <Modal.Header>
@@ -227,12 +382,16 @@ const OrderView = forwardRef((props, ref) => {
                     </Button> : ""}
                     &nbsp;&nbsp;
 
-                    <Button variant="secondary" onClick={openPrint}>
+                    <Button variant="secondary" onClick={() => {
+                        openPrint();
+                    }}>
                         <i className="bi bi-printer"></i> Print
                     </Button>
 
                     &nbsp;&nbsp;
-                    <Button variant="primary" onClick={openPreview}>
+                    <Button variant="primary" onClick={() => {
+                        openPreview();
+                    }}>
                         <i className="bi bi-printer"></i> Print A4 Invoice
                     </Button>
 
