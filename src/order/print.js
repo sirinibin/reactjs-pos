@@ -489,7 +489,7 @@ const OrderPrint = forwardRef((props, ref) => {
 
     return (<>
         <Modal show={show} scrollable={true} size="xl" fullscreen={model.store?.code === "PH2" || model.store?.code === "LGK-SIMULATION" || model.store?.code === "LGK"} onHide={handleClose} animation={false} style={{ overflowY: "auto", height: "auto" }}>
-            <Modal.Header>
+            <Modal.Header className="d-flex flex-wrap align-items-center justify-content-between">
                 <Modal.Title>Invoice Preview</Modal.Title>
                 <div className="col align-self-end text-end">
                     <Button variant="primary" className="btn btn-primary mb-3" onClick={handlePrint}>

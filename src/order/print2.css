@@ -17,10 +17,11 @@
   
   .clickable-text:hover {
   }
+  /*
   @page {
     size: A3 portrait;
     margin: 0mm;
-  }
+  }*/
   
   @media print {
     body {
