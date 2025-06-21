@@ -2670,12 +2670,12 @@ const PurchaseCreate = forwardRef((props, ref) => {
                                                 <div className="d-flex align-items-center" style={{ minWidth: 0 }}>
                                                     <div className="input-group flex-nowrap" style={{ flex: '1 1 auto', minWidth: 0 }}>
                                                         <input
+                                                            style={{ minWidth: "40px", maxWidth: "120px" }}
                                                             id={`${"purchase_product_quantity_" + index}`}
                                                             name={`${"purchase_product_quantity_" + index}`}
                                                             type="number"
                                                             value={product.quantity}
                                                             className="form-control"
-                                                            style={{ minWidth: "50px" }}
                                                             placeholder="Quantity"
                                                             ref={(el) => {
                                                                 if (!inputRefs.current[index]) inputRefs.current[index] = {};
@@ -2741,7 +2741,7 @@ const PurchaseCreate = forwardRef((props, ref) => {
                                                                     reCalculate(index);
                                                                 }, 100);
                                                             }} />
-                                                        <span className="input-group-text" id="basic-addon2">{selectedProducts[index].unit ? selectedProducts[index].unit : "Units"}</span>
+                                                        <span className="input-group-text" id="basic-addon2">{selectedProducts[index].unit ? selectedProducts[index].unit[0] : "U"}</span>
                                                     </div>
                                                     {(errors[`quantity_${index}`] || warnings[`quantity_${index}`]) && (
                                                         <i

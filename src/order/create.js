@@ -159,6 +159,8 @@ const OrderCreate = forwardRef((props, ref) => {
         },
     }));
 
+    let [oldProducts, setOldProducts] = useState([]);
+
     let [store, setStore] = useState({});
 
     async function getStore(id) {
@@ -228,6 +230,9 @@ const OrderCreate = forwardRef((props, ref) => {
                 console.log(data);
 
                 formData = data.result;
+                oldProducts = formData.products.map(obj => ({ ...obj }));
+                setOldProducts([...oldProducts]);
+
                 formData.enable_report_to_zatca = false;
                 formData.date_str = data.result.date;
 
@@ -268,6 +273,7 @@ const OrderCreate = forwardRef((props, ref) => {
 
                 selectedProducts = formData.products;
                 setSelectedProducts([...selectedProducts]);
+
 
                 if (formData.customer_name && formData.customer_id) {
                     let selectedCustomers = [
@@ -1043,18 +1049,29 @@ const OrderCreate = forwardRef((props, ref) => {
 
         if (product.product_stores && product.product_stores[localStorage.getItem("store_id")]?.stock) {
             stock = product.product_stores[localStorage.getItem("store_id")].stock;
+            selectedProducts[i].stock = stock;
+            setSelectedProducts([...selectedProducts]);
         }
 
         let oldQty = 0;
-        for (let j = 0; j < formData.products?.length; j++) {
-            if (formData.products[j].product_id === selectedProducts[j].product_id) {
-                oldQty = formData.products[j].quantity;
+        for (let j = 0; j < oldProducts?.length; j++) {
+            if (oldProducts[j].product_id === selectedProducts[j].product_id) {
+                if (formData.id) {
+                    oldQty = oldProducts[j].quantity;
+                    // alert(oldQty)
+                }
                 break;
             }
         }
 
+
+
         if (product.product_stores && (stock + oldQty) < selectedProducts[i].quantity) {
-            warnings["quantity_" + i] = "Warning: Available stock is " + (stock + oldQty);
+            if (formData.id) {
+                warnings["quantity_" + i] = "Warning: Available stock is " + (stock + oldQty);
+            } else {
+                warnings["quantity_" + i] = "Warning: Available stock is " + (stock);
+            }
         } else {
             delete warnings["quantity_" + i];
         }
@@ -1209,6 +1226,7 @@ const OrderCreate = forwardRef((props, ref) => {
                 unit_discount_with_vat: product.unit_discount_with_vat,
                 unit_discount_percent: product.unit_discount_percent,
                 unit_discount_percent_vat: product.unit_discount_percent_with_vat,
+                stock: product.product_stores[localStorage.getItem("store_id")]?.stock ? product.product_stores[localStorage.getItem("store_id")]?.stock : 0,
 
             });
             console.log("Product added")
@@ -1540,7 +1558,7 @@ const OrderCreate = forwardRef((props, ref) => {
                     discount = res.result.discount;
                     setDiscount(discount);
                 }
-
+    
                 if (res.result.discount_with_vat) {
                     discountWithVAT = res.result.discount_with_vat;
                     setDiscountWithVAT(discountWithVAT);
@@ -1560,11 +1578,11 @@ const OrderCreate = forwardRef((props, ref) => {
                             if (res.result?.products[j].unit_discount_percent) {
                                 selectedProducts[i].unit_discount_percent = res.result?.products[j].unit_discount_percent;
                             }
-
+    
                             if (res.result?.products[j].unit_discount_percent_with_vat) {
                                 selectedProducts[i].unit_discount_percent_with_vat = res.result?.products[j].unit_discount_percent_with_vat;
                             }
-
+    
                             if (res.result?.products[j].unit_discount) {
                                 selectedProducts[i].unit_discount = res.result?.products[j].unit_discount;
                             }
@@ -1572,7 +1590,7 @@ const OrderCreate = forwardRef((props, ref) => {
                             if (res.result?.products[j].unit_price) {
                                 selectedProducts[i].unit_price = res.result?.products[j].unit_price;
                             }
-
+    
                             if (res.result?.products[j].unit_price_with_vat) {
                                 selectedProducts[i].unit_price_with_vat = res.result?.products[j].unit_price_with_vat;
                             }
@@ -2785,6 +2803,7 @@ const OrderCreate = forwardRef((props, ref) => {
                                         </th>
                                         <th>Info</th>
                                         <th>Purchase Unit Price(without VAT)</th>
+                                        <th>Stock</th>
                                         <th>Qty</th>
                                         <th>Unit Price(without VAT)</th>
                                         <th>Unit Price(with VAT)</th>
@@ -2815,7 +2834,6 @@ const OrderCreate = forwardRef((props, ref) => {
                                             </td>*/}
                                             <ResizableTableCell style={{ verticalAlign: 'middle', padding: '0.25rem' }}
                                             >
-                                                {/*<OverflowTooltip maxWidth={140} value={product.prefix_part_number ? product.prefix_part_number + " - " + product.part_number : product.part_number} />*/}
                                                 <input type="text" id={`${"sales_product_part_number" + index}`}
                                                     name={`${"sales_product_part_number" + index}`}
                                                     onWheel={(e) => e.target.blur()}
@@ -3096,10 +3114,19 @@ const OrderCreate = forwardRef((props, ref) => {
                                                 width: 'auto',
                                                 position: 'relative',
                                             }} >
+                                                {selectedProducts[index].stock}
+                                            </td>
+                                            <td style={{
+                                                verticalAlign: 'middle',
+                                                padding: '0.25rem',
+                                                whiteSpace: 'nowrap',
+                                                width: 'auto',
+                                                position: 'relative',
+                                            }} >
                                                 <div className="d-flex align-items-center" style={{ minWidth: 0 }}>
                                                     <div className="input-group flex-nowrap" style={{ flex: '1 1 auto', minWidth: 0 }}>
                                                         <input type="number"
-                                                            style={{ minWidth: "40px" }}
+                                                            style={{ minWidth: "40px", maxWidth: "120px" }}
                                                             id={`${"sales_product_quantity_" + index}`}
                                                             name={`${"sales_product_quantity" + index}`}
                                                             className={`form-control text-end ${errors["quantity_" + index] ? 'is-invalid' : warnings["quantity_" + index] ? 'border-warning text-warning' : ''}`}
@@ -3170,7 +3197,7 @@ const OrderCreate = forwardRef((props, ref) => {
                                                                 }, 100);
                                                             }} />
                                                         <span className="input-group-text text-nowrap">
-                                                            {selectedProducts[index].unit ? selectedProducts[index].unit : 'Units'}
+                                                            {selectedProducts[index].unit ? selectedProducts[index].unit[0] : 'P'}
                                                         </span>
                                                     </div>
                                                     {(errors[`quantity_${index}`] || warnings[`quantity_${index}`]) && (

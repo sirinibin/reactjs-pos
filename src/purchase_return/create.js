@@ -2065,6 +2065,7 @@ async function reCalculate(productIndex) {
                                                 <div className="d-flex align-items-center" style={{ minWidth: 0 }}>
                                                     <div className="input-group flex-nowrap" style={{ flex: '1 1 auto', minWidth: 0 }}>
                                                         <input
+                                                            style={{ minWidth: "40px", maxWidth: "120px" }}
                                                             id={`${"purchase_return_product_quantity_" + index}`}
                                                             name={`${"purchase_return_product_quantity_" + index}`}
                                                             type="number"
@@ -2133,7 +2134,7 @@ async function reCalculate(productIndex) {
 
 
                                                             }} />
-                                                        <span className="input-group-text" id="basic-addon2">{selectedProducts[index].unit ? selectedProducts[index].unit : "Units"}</span>
+                                                        <span className="input-group-text" id="basic-addon2">{selectedProducts[index].unit ? selectedProducts[index].unit[0] : "P"}</span>
                                                     </div>
                                                     {(errors[`quantity_${index}`] || warnings[`quantity_${index}`]) && (
                                                         <i

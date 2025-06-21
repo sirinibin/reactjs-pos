@@ -332,6 +332,9 @@ const QuotationCreate = forwardRef((props, ref) => {
 
         let quotation = data.result;
 
+        oldProducts = quotation.products.map(obj => ({ ...obj }));
+        setOldProducts([...oldProducts]);
+
         if (data.result?.discount) {
           discount = data.result?.discount;
           setDiscount(discount);
@@ -1103,6 +1106,7 @@ const QuotationCreate = forwardRef((props, ref) => {
         unit_discount_with_vat: product.unit_discount_with_vat,
         unit_discount_percent: product.unit_discount_percent,
         unit_discount_percent_vat: product.unit_discount_percent_with_vat,
+        stock: product.product_stores[localStorage.getItem("store_id")]?.stock ? product.product_stores[localStorage.getItem("store_id")]?.stock : 0,
 
       });
       console.log("Product added")
@@ -1909,6 +1913,8 @@ const QuotationCreate = forwardRef((props, ref) => {
   }
 
 
+  let [oldProducts, setOldProducts] = useState([]);
+
   async function checkWarnings(index) {
     if (index) {
       checkWarning(index);
@@ -1920,24 +1926,40 @@ const QuotationCreate = forwardRef((props, ref) => {
   }
 
 
+
   async function checkWarning(i) {
     let product = await getProduct(selectedProducts[i].product_id);
     let stock = 0;
 
+    if (!product) {
+      return;
+    }
+
     if (product.product_stores && product.product_stores[localStorage.getItem("store_id")]?.stock) {
       stock = product.product_stores[localStorage.getItem("store_id")].stock;
+      selectedProducts[i].stock = stock;
+      setSelectedProducts([...selectedProducts]);
     }
 
     let oldQty = 0;
-    for (let j = 0; j < formData.products?.length; j++) {
-      if (formData.products[j].product_id === selectedProducts[j].product_id) {
-        oldQty = formData.products[j].quantity;
+    for (let j = 0; j < oldProducts?.length; j++) {
+      if (oldProducts[j].product_id === selectedProducts[j].product_id) {
+        if (formData.id) {
+          oldQty = oldProducts[j].quantity;
+          // alert(oldQty)
+        }
         break;
       }
     }
 
+
+
     if (product.product_stores && (stock + oldQty) < selectedProducts[i].quantity) {
-      warnings["quantity_" + i] = "Warning: Available stock is " + (stock + oldQty);
+      if (formData.id) {
+        warnings["quantity_" + i] = "Warning: Available stock is " + (stock + oldQty);
+      } else {
+        warnings["quantity_" + i] = "Warning: Available stock is " + (stock);
+      }
     } else {
       delete warnings["quantity_" + i];
     }
@@ -2644,6 +2666,7 @@ const QuotationCreate = forwardRef((props, ref) => {
                     </th>
                     <th >Info</th>
                     <th >Purchase Unit Price(without VAT)</th>
+                    <th>Stock</th>
                     <th>Qty</th>
                     <th>Unit Price(without VAT)</th>
                     <th>Unit Price(with VAT)</th>
@@ -2947,7 +2970,15 @@ const QuotationCreate = forwardRef((props, ref) => {
                             )}
                           </div>
                         </td>
-
+                        <td style={{
+                          verticalAlign: 'middle',
+                          padding: '0.25rem',
+                          whiteSpace: 'nowrap',
+                          width: 'auto',
+                          position: 'relative',
+                        }} >
+                          {selectedProducts[index].stock}
+                        </td>
                         <td style={{
                           verticalAlign: 'middle',
                           padding: '0.25rem',
@@ -2958,7 +2989,7 @@ const QuotationCreate = forwardRef((props, ref) => {
                           <div className="d-flex align-items-center" style={{ minWidth: 0 }}>
                             <div className="input-group flex-nowrap" style={{ flex: '1 1 auto', minWidth: 0 }}>
                               <input type="number"
-                                style={{ minWidth: "40px" }}
+                                style={{ minWidth: "40px", maxWidth: "120px" }}
                                 id={`${"quotation_product_quantity_" + index}`}
                                 name={`${"quotation_product_quantity" + index}`}
                                 className={`form-control text-end ${errors["quantity_" + index] ? 'is-invalid' : warnings["quantity_" + index] ? 'border-warning text-warning' : ''}`}
@@ -3030,7 +3061,7 @@ const QuotationCreate = forwardRef((props, ref) => {
                                   }, 100);
                                 }} />
                               <span className="input-group-text text-nowrap">
-                                {selectedProducts[index].unit ? selectedProducts[index].unit : 'Units'}
+                                {selectedProducts[index].unit ? selectedProducts[index].unit[0] : 'P'}
                               </span>
                             </div>
                             {(errors[`quantity_${index}`] || warnings[`quantity_${index}`]) && (

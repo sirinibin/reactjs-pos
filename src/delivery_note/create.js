@@ -148,25 +148,38 @@ const DeliveryNoteCreate = forwardRef((props, ref) => {
     }
   }
 
+  let [oldProducts, setOldProducts] = useState([]);
 
   async function checkWarning(i) {
     let product = await getProduct(selectedProducts[i].product_id);
     let stock = 0;
 
+    if (!product) {
+      return;
+    }
+
     if (product.product_stores && product.product_stores[localStorage.getItem("store_id")]?.stock) {
       stock = product.product_stores[localStorage.getItem("store_id")].stock;
+      selectedProducts[i].stock = stock;
+      setSelectedProducts([...selectedProducts]);
     }
 
     let oldQty = 0;
-    for (let j = 0; j < formData.products?.length; j++) {
-      if (formData.products[j].product_id === selectedProducts[j].product_id) {
-        oldQty = formData.products[j].quantity;
+    for (let j = 0; j < oldProducts?.length; j++) {
+      if (oldProducts[j].product_id === selectedProducts[j].product_id) {
+        if (formData.id) {
+          oldQty = oldProducts[j].quantity;
+        }
         break;
       }
     }
 
+
+
     if (product.product_stores && (stock + oldQty) < selectedProducts[i].quantity) {
-      warnings["quantity_" + i] = "Warning: Available stock is " + (stock + oldQty);
+      if (!formData.id) {
+        warnings["quantity_" + i] = "Warning: Available stock is " + (stock);
+      }
     } else {
       delete warnings["quantity_" + i];
     }
@@ -345,6 +358,9 @@ const DeliveryNoteCreate = forwardRef((props, ref) => {
         console.log(data);
 
         let deliverynote = data.result;
+        oldProducts = deliverynote.products.map(obj => ({ ...obj }));
+        setOldProducts([...oldProducts]);
+
         formData = {
           id: deliverynote.id,
           code: deliverynote.code,
@@ -929,6 +945,7 @@ const DeliveryNoteCreate = forwardRef((props, ref) => {
         quantity: product.quantity,
         stores: product.stores,
         unit: product.unit,
+        stock: product.product_stores[localStorage.getItem("store_id")]?.stock ? product.product_stores[localStorage.getItem("store_id")]?.stock : 0,
       };
 
       if (product.unit_price) {
@@ -1733,9 +1750,9 @@ const DeliveryNoteCreate = forwardRef((props, ref) => {
                     </th>}
                     <th >SI No.</th>
                     <th style={{ width: "20%" }}>Part No.</th>
-                    <th style={{ width: "30%" }}>Name</th>
+                    <th style={{ width: "50%" }}>Name</th>
                     <th >Info</th>
-                    <th >Qty</th>
+                    <th style={{ width: "10%" }}>Qty</th>
                   </tr>
                   {selectedProducts.map((product, index) => (
                     <tr key={index} className="text-center">
@@ -1944,6 +1961,7 @@ const DeliveryNoteCreate = forwardRef((props, ref) => {
                         <div className="d-flex align-items-center" style={{ minWidth: 0 }}>
                           <div className="input-group flex-nowrap" style={{ flex: '1 1 auto', minWidth: 0 }}>
                             <input type="number"
+                              style={{ minWidth: "40px", maxWidth: "120px" }}
                               id={`${"delivery_note_quantity_" + index}`}
                               name={`${"delivery_note_quantity_" + index}`}
                               value={product.quantity}
@@ -2009,7 +2027,7 @@ const DeliveryNoteCreate = forwardRef((props, ref) => {
                                 }, 100);
 
                               }} />
-                            <span className="input-group-text" id="basic-addon2"> {selectedProducts[index].unit ? selectedProducts[index].unit : "Units"}</span>
+                            <span className="input-group-text" id="basic-addon2"> {selectedProducts[index].unit ? selectedProducts[index].unit[0] : "P"}</span>
                           </div>
                           {(errors[`quantity_${index}`] || warnings[`quantity_${index}`]) && (
                             <i

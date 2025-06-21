@@ -2240,7 +2240,7 @@ const SalesReturnCreate = forwardRef((props, ref) => {
                                                 <div className="d-flex align-items-center" style={{ minWidth: 0 }}>
                                                     <div className="input-group flex-nowrap" style={{ flex: '1 1 auto', minWidth: 0 }}>
                                                         <input type="number"
-                                                            style={{ minWidth: "40px" }}
+                                                            style={{ minWidth: "40px", maxWidth: "120px" }}
                                                             id={`${"sales_return_product_quantity_" + index}`}
                                                             name={`${"sales_return_product_quantity_" + index}`}
                                                             className={`form-control text-end ${errors["quantity_" + index] ? 'is-invalid' : warnings["quantity_" + index] ? 'border-warning text-warning' : ''}`}
@@ -2311,7 +2311,7 @@ const SalesReturnCreate = forwardRef((props, ref) => {
                                                                 }, 100);
                                                             }} />
                                                         <span className="input-group-text text-nowrap">
-                                                            {selectedProducts[index].unit ? selectedProducts[index].unit : 'Units'}
+                                                            {selectedProducts[index].unit ? selectedProducts[index].unit[0] : 'P'}
                                                         </span>
                                                     </div>
                                                     {(errors[`quantity_${index}`] || warnings[`quantity_${index}`]) && (
