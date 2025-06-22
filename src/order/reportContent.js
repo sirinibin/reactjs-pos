@@ -5,7 +5,7 @@ import { format } from "date-fns";
 import { trimTo2Decimals } from "../utils/numberUtils.js";
 import '@emran-alhaddad/saudi-riyal-font/index.css';
 import Amount from "../utils/amount.js";
-import StatsSummary from "../utils/StatsSummary.js";
+//import StatsSummary from "../utils/StatsSummary.js";
 
 const ReportContent = forwardRef((props, ref) => {
 
@@ -183,7 +183,7 @@ const ReportContent = forwardRef((props, ref) => {
                                     </div>
                                 </div>
                             </> : ""}
-                            {props.modelName === "sales_report" && pageIndex === 0 && <div className="row no-print" style={{ marginTop: "12px" }}>
+                            {/*props.modelName === "sales_report" && pageIndex === 0 && <div className="row no-print" style={{ marginTop: "12px" }}>
                                 <StatsSummary
                                     title="Sales"
                                     defaultOpen={true}
@@ -204,8 +204,8 @@ const ReportContent = forwardRef((props, ref) => {
                                         "Return Paid Amount | إرجاع المبلغ المدفوع": props.model.meta.return_amount,
                                     }}
                                 />
-                            </div>}
-                            {props.modelName === "sales_return_report" && pageIndex === 0 && <div className="row no-print" style={{ marginTop: "12px" }}>
+                            </div>*/}
+                            {/*props.modelName === "sales_return_report" && pageIndex === 0 && <div className="row no-print" style={{ marginTop: "12px" }}>
                                 <StatsSummary
                                     title="Sales Return"
                                     defaultOpen={true}
@@ -224,8 +224,8 @@ const ReportContent = forwardRef((props, ref) => {
                                         "Net Loss Return | صافي عائد الخسارة": props.model.meta.loss,
                                     }}
                                 />
-                            </div>}
-                            {props.modelName === "quotation_invoice_report" && pageIndex === 0 && <div className="row no-print" style={{ marginTop: "12px" }}>
+                            </div>*/}
+                            {/*props.modelName === "quotation_invoice_report" && pageIndex === 0 && <div className="row no-print" style={{ marginTop: "12px" }}>
                                 <StatsSummary
                                     title="Sales"
                                     defaultOpen={true}
@@ -244,8 +244,8 @@ const ReportContent = forwardRef((props, ref) => {
                                         "Net Loss | صافي الخسارة": props.model.meta.invoice_loss,
                                     }}
                                 />
-                            </div>}
-                            {props.modelName === "quotation_sales_return_report" && pageIndex === 0 && <div className="row no-print" style={{ marginTop: "12px" }}>
+                            </div>*/}
+                            {/*props.modelName === "quotation_sales_return_report" && pageIndex === 0 && <div className="row no-print" style={{ marginTop: "12px" }}>
                                 <StatsSummary
                                     title="Qtn. Sales Return"
                                     defaultOpen={true}
@@ -264,8 +264,8 @@ const ReportContent = forwardRef((props, ref) => {
                                         "Net Loss Return | صافي عائد الخسارة": props.model.meta.loss,
                                     }}
                                 />
-                            </div>}
-                            {props.modelName === "quotation_report" && pageIndex === 0 && <div className="row no-print" style={{ marginTop: "12px" }}>
+                            </div>*/}
+                            {/*props.modelName === "quotation_report" && pageIndex === 0 && <div className="row no-print" style={{ marginTop: "12px" }}>
                                 <StatsSummary
                                     title="Quotations"
                                     defaultOpen={true}
@@ -276,7 +276,7 @@ const ReportContent = forwardRef((props, ref) => {
                                         "Loss": props.model.meta.loss,
                                     }}
                                 />
-                            </div>}
+                            </div>*/}
 
                             {props.model.vendor && (props.modelName === "purchase_report" || props.modelName === "purchase_return_report") ? <>
                                 <div className="row" dir="ltr" style={{ borderBottom: detailsBorderThickness }} >
@@ -306,7 +306,7 @@ const ReportContent = forwardRef((props, ref) => {
                                     </div>
                                 </div>
                             </> : ""}
-                            {props.modelName === "purchase_report" && pageIndex === 0 && <div className="row" style={{ marginTop: "12px" }}>
+                            {/*props.modelName === "purchase_report" && pageIndex === 0 && <div className="row" style={{ marginTop: "12px" }}>
                                 <StatsSummary
                                     title="Purchase"
                                     defaultOpen={true}
@@ -324,8 +324,8 @@ const ReportContent = forwardRef((props, ref) => {
                                         "Return Paid Amount | إرجاع المبلغ المدفوع": props.model.meta.return_paid_amount,
                                     }}
                                 />
-                            </div>}
-                            {props.modelName === "purchase_return_report" && pageIndex === 0 && <div className="row" style={{ marginTop: "12px" }}>
+                            </div>*/}
+                            {/*props.modelName === "purchase_return_report" && pageIndex === 0 && <div className="row" style={{ marginTop: "12px" }}>
                                 <StatsSummary
                                     title="Purchase"
                                     defaultOpen={true}
@@ -341,7 +341,7 @@ const ReportContent = forwardRef((props, ref) => {
                                         "VAT Return | إرجاع ضريبة القيمة المضافة": props.model.meta.vat_price,
                                     }}
                                 />
-                            </div>}
+                            </div>*/}
                         </div>
                     </div>
 
@@ -545,7 +545,7 @@ const ReportContent = forwardRef((props, ref) => {
                                         ))}
                                         {props.modelName !== "delivery_note_report" && <>
                                             <tr className="text-end" >
-                                                <td colSpan={4} style={{ borderRight: tableBorderThickness }}  >Total</td>
+                                                <td colSpan={(props.model.customer || props.model.vendor) ? 3 : 4} style={{ borderRight: tableBorderThickness }}  >Total</td>
                                                 <td style={{ borderRight: tableBorderThickness, paddingRight: "3px" }}>
                                                     {props.modelName === "sales_report" && <Amount amount={trimTo2Decimals(props.model.meta.total_sales)} />}
                                                     {props.modelName === "sales_return_report" && <Amount amount={trimTo2Decimals(props.model.meta.total_sales_return)} />}
