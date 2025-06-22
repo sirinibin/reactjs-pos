@@ -17,6 +17,35 @@
   
   .clickable-text:hover {
   }
+
+  @media print {
+    @page {
+      size: 907px 1058px;
+      margin: 0; /* Remove browser default margins */
+    }
+  
+    body {
+      margin: 0;
+      padding: 0;
+    }
+  
+    .container {
+      width: 907px;
+      height: 1058px;
+      padding: 0px; /* Optional inner padding */
+      box-sizing: border-box;
+      page-break-after: always;
+      overflow: hidden;
+    }
+  
+    /* Optional: avoid text cutoff */
+    * {
+      -webkit-print-color-adjust: exact !important;
+      print-color-adjust: exact !important;
+    }
+  }
+
+    /*
   @media print {
     .container {
       page-break-inside: avoid;
@@ -24,7 +53,7 @@
       /*height: 1587px !important; /* exact A3 portrait height */
       /*outline: 2px dashed red;*/
      /* max-height: 1000px !important;*/
-    }
+   /* }
   
     .container:not(:last-of-type) {
       page-break-after: always;
@@ -34,8 +63,8 @@
       size: A3 portrait;
       margin: 0mm;
     /*  max-height: 1000px !important;*/
-    }
-  }
+   /* }
+  }*/
   /*
   
   @media print {

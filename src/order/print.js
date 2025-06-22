@@ -32,83 +32,143 @@ const OrderPrint = forwardRef((props, ref) => {
 
                 setInvoiceTitle(modelName);
 
-
-
-
-
-                if (model.delivered_by) {
-                    getUser(model.delivered_by);
-                }
-
-                let pageSize = 15;
-
                 if (model.store?.code === "PH2" || model.store?.code === "LGK-SIMULATION" || model.store?.code === "LGK") {
-                    pageSize = 8;
-                    //InvoiceBackground = LGKInvoiceBackground;
-                    //setInvoiceBackground(InvoiceBackground);
-                }
+
+                    preparePages();
+                } else {
 
 
 
 
-                model.pageSize = pageSize;
-                let totalProducts = model.products?.length;
-                let top = 0;
-                let totalPagesInt = parseInt(totalProducts / pageSize);
-                let totalPagesFloat = parseFloat(totalProducts / pageSize);
 
-                let totalPages = totalPagesInt;
-                if ((totalPagesFloat - totalPagesInt) > 0) {
-                    totalPages++;
-                }
+                    if (model.delivered_by) {
+                        getUser(model.delivered_by);
+                    }
 
-                model.total_pages = totalPages;
+                    let pageSize = 15;
+
+                    model.pageSize = pageSize;
+                    let totalProducts = model.products?.length;
+                    let top = 0;
+                    let totalPagesInt = parseInt(totalProducts / pageSize);
+                    let totalPagesFloat = parseFloat(totalProducts / pageSize);
+
+                    let totalPages = totalPagesInt;
+                    if ((totalPagesFloat - totalPagesInt) > 0) {
+                        totalPages++;
+                    }
+
+                    model.total_pages = totalPages;
 
 
-                model.pages = [];
+                    model.pages = [];
 
-                let offset = 0;
+                    let offset = 0;
 
-                for (let i = 0; i < totalPages; i++) {
-                    model.pages.push({
-                        top: top,
-                        products: [],
-                        lastPage: false,
-                    });
+                    for (let i = 0; i < totalPages; i++) {
+                        model.pages.push({
+                            top: top,
+                            products: [],
+                            lastPage: false,
+                        });
 
-                    for (let j = offset; j < totalProducts; j++) {
-                        model.pages[i].products.push(model.products[j]);
+                        for (let j = offset; j < totalProducts; j++) {
+                            model.pages[i].products.push(model.products[j]);
 
-                        if (model.pages[i].products.length === pageSize) {
-                            break;
+                            if (model.pages[i].products.length === pageSize) {
+                                break;
+                            }
+                        }
+
+                        if (totalPages > 1) {
+                            top += 1050;
+                        }
+
+                        //top += 1122;
+                        offset += pageSize;
+                        if ((i + 1) === totalPages) {
+                            model.pages[i].lastPage = true;
                         }
                     }
 
-                    if (totalPages > 1) {
-                        top += 1050;
-                    }
+                    console.log("model.pages:", model.pages);
 
-                    //top += 1122;
-                    offset += pageSize;
-                    if ((i + 1) === totalPages) {
-                        model.pages[i].lastPage = true;
-                    }
+                    console.log("model.products:", model.products);
+                    getQRCodeContents();
+                    //model.qr_content = getQRCodeContents();
+                    //setModel({ ...model });
+
+                    setShow(true);
+                    console.log("model:", model);
                 }
-
-                console.log("model.pages:", model.pages);
-
-                console.log("model.products:", model.products);
-                getQRCodeContents();
-                //model.qr_content = getQRCodeContents();
-                //setModel({ ...model });
-
-                setShow(true);
-                console.log("model:", model);
             }
 
         },
 
     }));
+
+    function preparePages() {
+        let pageSize = 8;
+
+
+
+        model.pageSize = pageSize;
+        let totalProducts = model.products?.length;
+        let top = 0;
+        let totalPagesInt = parseInt(totalProducts / pageSize);
+        let totalPagesFloat = parseFloat(totalProducts / pageSize);
+
+        let totalPages = totalPagesInt;
+        if ((totalPagesFloat - totalPagesInt) > 0) {
+            totalPages++;
+        }
+
+        model.total_pages = totalPages;
+
+
+        model.pages = [];
+
+        let offset = 0;
+
+        for (let i = 0; i < totalPages; i++) {
+            model.pages.push({
+                top: top,
+                products: [],
+                lastPage: false,
+            });
+
+            for (let j = offset; j < totalProducts; j++) {
+                model.pages[i].products.push(model.products[j]);
+
+                if (model.pages[i].products.length === pageSize) {
+                    break;
+                }
+            }
+
+            if (totalPages > 1) {
+                top += 1058;
+            }
+
+            //top += 1122;
+            offset += pageSize;
+            if ((i + 1) === totalPages) {
+                model.pages[i].lastPage = true;
+            }
+        }
+
+        console.log("model.pages:", model.pages);
+
+        console.log("model.products:", model.products);
+        getQRCodeContents();
+        //model.qr_content = getQRCodeContents();
+        //setModel({ ...model });
+
+        setShow(true);
+        console.log("model:", model);
+    }
+
+
+
 
 
     function setInvoiceTitle(modelName) {

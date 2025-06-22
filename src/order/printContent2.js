@@ -24,7 +24,7 @@ const OrderPrintContent2 = forwardRef((props, ref) => {
                         padding: "10px",
                         /* minHeight: "700px",*/
 
-                        height: "700px"
+                        height: "1058px"
                     }}
 
                 >
@@ -80,12 +80,12 @@ const OrderPrintContent2 = forwardRef((props, ref) => {
                                             {index + 1 + (pageIndex * props.model.pageSize)}
                                         </h4>
                                     </td>
-                                    <td className="text-center" style={{ border: "solid 0px", width: "120px" }} >
-                                        <h4 className="print-value" style={{ fontSize: "3mm", maxWidth: "120px" }}>
+                                    <td className="text-left" style={{ border: "solid 0px", width: "120px", height: "auto", }} >
+                                        <h4 className="print-value" style={{ fontSize: "3mm", maxWidth: "120px", height: "auto", }}>
                                             {product.prefix_part_number ? product.prefix_part_number + " - " : ""}{product.part_number ? product.part_number : ""}
                                         </h4>
                                     </td>
-                                    <td className="text-left" style={{ border: "solid 0px", width: "350px", paddingLeft: "10px" }} >
+                                    <td className="text-left" style={{ border: "solid 0px", width: "350px", height: "auto", paddingLeft: "10px" }} >
                                         <div className="print-value" style={{ height: "auto", maxWidth: "350px" }} >
 
                                             {product.name && product.name_in_arabic ? <h4 className="print-value" style={{ fontSize: "3mm", position: "relative", top: "-11px" }}>
