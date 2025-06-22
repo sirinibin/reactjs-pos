@@ -814,21 +814,25 @@ const PreviewContentWithSellerInfo = forwardRef((props, ref) => {
                                             <tr style={{ borderBottom: tableBorderThickness }} key={product.item_code} className="text-center"  >
                                                 <td style={{ padding: "7px", borderRight: tableBorderThickness }}>{product.part_number ? index + 1 + (pageIndex * props.model.pageSize) : ""}</td>
                                                 <td style={{ borderRight: tableBorderThickness }} >{product.prefix_part_number ? product.prefix_part_number + " - " : ""} {product.part_number ? product.part_number : ""}</td>
-                                                <th dir="ltr" style={{ unicodeBidi: 'isolate', borderRight: tableBorderThickness }}>
-                                                    {!props.model?.store?.settings?.one_line_product_name_in_invoice && <span dir="ltr" style={{ unicodeBidi: 'isolate' }}>
-                                                        <span style={{ //one_line_product_name_in_invoice
-                                                            maxWidth: `${product.name_in_arabic ? "110px" : "220px"}`,
-                                                            verticalAlign: 'bottom'
+                                                <th dir="ltr" style={{
+                                                    unicodeBidi: 'isolate',
+                                                    borderRight: tableBorderThickness,
+                                                    wordBreak: "break-word",
+                                                    overflowWrap: "break-word",
+                                                    whiteSpace: "normal"
+
+                                                }}>
+                                                    {!props.model?.store?.settings?.one_line_product_name_in_invoice && <span dir="ltr" style={{}}>
+                                                        <span dir="ltr" style={{ //one_line_product_name_in_invoice
                                                         }}>{product.name}</span>
                                                         {product.name_in_arabic && <>|<span dir="rtl" style={{
-                                                            verticalAlign: 'bottom'
                                                         }}>{product.name_in_arabic}</span></>}
                                                     </span>}
 
                                                     {props.model?.store?.settings?.one_line_product_name_in_invoice && <span dir="ltr" style={{ unicodeBidi: 'isolate' }}>
                                                         <span style={{ //one_line_product_name_in_invoice
                                                             display: 'inline-block',
-                                                            maxWidth: `${product.name_in_arabic ? "110px" : "220px"}`,
+                                                            maxWidth: `${product.name_in_arabic ? "120px" : "220px"}`,
                                                             whiteSpace: 'nowrap',
                                                             overflow: 'hidden',
                                                             textOverflow: 'ellipsis',
@@ -836,7 +840,7 @@ const PreviewContentWithSellerInfo = forwardRef((props, ref) => {
                                                         }}>{product.name}</span>
                                                         {product.name_in_arabic && <>|<span dir="rtl" style={{
                                                             display: 'inline-block',
-                                                            maxWidth: "110px",
+                                                            maxWidth: "100px",
                                                             whiteSpace: 'nowrap',
                                                             overflow: 'hidden',
                                                             textOverflow: 'ellipsis',
