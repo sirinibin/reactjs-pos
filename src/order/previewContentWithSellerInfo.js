@@ -880,7 +880,7 @@ const PreviewContentWithSellerInfo = forwardRef((props, ref) => {
                                         ))}
                                     </tbody>
                                 </table>
-                                <table className="table-responsive"
+                                {props.model.pages.length === (pageIndex + 1) && <table className="table-responsive"
                                     style={{ border: tableBorderThickness, width: "100%" }}>
                                     {props.modelName !== "delivery_note" && <tbody style={{ fontSize: props.fontSizes[props.modelName + "_tableFooter"]?.size }} onClick={() => {
                                         props.selectText("tableFooter");
@@ -945,8 +945,8 @@ const PreviewContentWithSellerInfo = forwardRef((props, ref) => {
                                             </td>
                                         </tr>
                                     </tbody>}
-                                </table>
-                                <table className="table-responsive"
+                                </table>}
+                                {props.model.pages.length === (pageIndex + 1) && <table className="table-responsive"
                                     style={{ border: tableBorderThickness, width: "100%" }}
                                 >
                                     {props.modelName !== "delivery_note" && <tbody style={{ fontSize: props.fontSizes[props.modelName + "_tableFooter"]?.size }} onClick={() => {
@@ -1141,9 +1141,10 @@ const PreviewContentWithSellerInfo = forwardRef((props, ref) => {
                                             </tr> : ""}
                                         </>}
                                     </tbody>}
-                                </table>
+                                </table>}
 
-                                <table className="invoice-table clickable-text" style={{ fontSize: props.fontSizes[props.modelName + "_signature"]?.size, width: "100%" }} onClick={() => {
+
+                                {props.model.pages.length === (pageIndex + 1) && <table className="invoice-table clickable-text" style={{ fontSize: props.fontSizes[props.modelName + "_signature"]?.size, width: "100%" }} onClick={() => {
                                     props.selectText("signature");
                                 }} >
                                     <thead>
@@ -1201,7 +1202,7 @@ const PreviewContentWithSellerInfo = forwardRef((props, ref) => {
                                         <th></th>
                                     </tr>*/}
                                     </thead>
-                                </table>
+                                </table>}
                             </div>
                         </div>
                     </div>
