@@ -1211,7 +1211,7 @@ const OrderCreate = forwardRef((props, ref) => {
         }
 
         if (!alreadyAdded) {
-            selectedProducts.push({
+            let item = {
                 product_id: product.id,
                 code: product.item_code,
                 prefix_part_number: product.prefix_part_number,
@@ -1228,10 +1228,14 @@ const OrderCreate = forwardRef((props, ref) => {
                 unit_discount_with_vat: product.unit_discount_with_vat,
                 unit_discount_percent: product.unit_discount_percent,
                 unit_discount_percent_vat: product.unit_discount_percent_with_vat,
-                stock: product.product_stores[localStorage.getItem("store_id")]?.stock ? product.product_stores[localStorage.getItem("store_id")]?.stock : 0,
+            };
 
-            });
-            console.log("Product added")
+            item.stock = 0;
+            if (product.product_stores && product.product_stores[localStorage.getItem("store_id")]) {
+                item.stock = product.product_stores[localStorage.getItem("store_id")]?.stock;
+            }
+
+            selectedProducts.push(item);
         }
         setSelectedProducts([...selectedProducts]);
         if (timerRef.current) clearTimeout(timerRef.current);
