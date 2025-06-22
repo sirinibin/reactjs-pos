@@ -34,11 +34,6 @@ const OrderPrint = forwardRef((props, ref) => {
 
 
 
-                if (model.store?.code === "PH2") {
-                    //InvoiceBackground = LGKInvoiceBackground;
-                    //setInvoiceBackground(InvoiceBackground);
-                }
-
 
 
                 if (model.delivered_by) {
@@ -46,6 +41,16 @@ const OrderPrint = forwardRef((props, ref) => {
                 }
 
                 let pageSize = 15;
+
+                if (model.store?.code === "PH2" || model.store?.code === "LGK-SIMULATION" || model.store?.code === "LGK") {
+                    pageSize = 8;
+                    //InvoiceBackground = LGKInvoiceBackground;
+                    //setInvoiceBackground(InvoiceBackground);
+                }
+
+
+
+
                 model.pageSize = pageSize;
                 let totalProducts = model.products?.length;
                 let top = 0;
@@ -80,7 +85,7 @@ const OrderPrint = forwardRef((props, ref) => {
                     }
 
                     if (totalPages > 1) {
-                        top += 1066;
+                        top += 1050;
                     }
 
                     //top += 1122;
