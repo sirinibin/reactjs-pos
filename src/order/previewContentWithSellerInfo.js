@@ -772,6 +772,7 @@ const PreviewContentWithSellerInfo = forwardRef((props, ref) => {
                                                         <li>Discount</li>
                                                     </ul>
                                                 </th>
+
                                                 <th className="per12 text-center" style={{ padding: "0px", width: "11%", borderRight: tableBorderThickness, borderBottom: tableBorderThickness }}>
                                                     <ul
                                                         className="list-unstyled"
@@ -784,30 +785,32 @@ const PreviewContentWithSellerInfo = forwardRef((props, ref) => {
                                                         <li>Price (without VAT)</li>
                                                     </ul>
                                                 </th>
-                                                <th className="per8 text-center" style={{ padding: "0px", width: "8%", borderRight: tableBorderThickness, borderBottom: tableBorderThickness }}>
-                                                    <ul
-                                                        className="list-unstyled"
-                                                        style={{
-                                                            height: "auto",
-                                                            marginBottom: "2px"
-                                                        }}
-                                                    >
-                                                        <li>ضريبة</li>
-                                                        <li>VAT({trimTo2Decimals(props.model.vat_percent)}%)</li>
-                                                    </ul>
-                                                </th>
-                                                <th className="per10 text-center" style={{ padding: "0px", width: "10%", borderBottom: tableBorderThickness }}>
-                                                    <ul
-                                                        className="list-unstyled"
-                                                        style={{
-                                                            height: "auto",
-                                                            marginBottom: "2px"
-                                                        }}
-                                                    >
-                                                        <li>السعر مع الضريبة</li>
-                                                        <li>Price (with VAT)</li>
-                                                    </ul>
-                                                </th>
+                                                {!props.model.hideVAT && <>
+                                                    <th className="per8 text-center" style={{ padding: "0px", width: "8%", borderRight: tableBorderThickness, borderBottom: tableBorderThickness }}>
+                                                        <ul
+                                                            className="list-unstyled"
+                                                            style={{
+                                                                height: "auto",
+                                                                marginBottom: "2px"
+                                                            }}
+                                                        >
+                                                            <li>ضريبة</li>
+                                                            <li>VAT({trimTo2Decimals(props.model.vat_percent)}%)</li>
+                                                        </ul>
+                                                    </th>
+                                                    <th className="per10 text-center" style={{ padding: "0px", width: "10%", borderBottom: tableBorderThickness }}>
+                                                        <ul
+                                                            className="list-unstyled"
+                                                            style={{
+                                                                height: "auto",
+                                                                marginBottom: "2px"
+                                                            }}
+                                                        >
+                                                            <li>السعر مع الضريبة</li>
+                                                            <li>Price (with VAT)</li>
+                                                        </ul>
+                                                    </th>
+                                                </>}
                                             </>}
                                         </tr>
                                         {page.products && page.products.map((product, index) => (
@@ -865,16 +868,18 @@ const PreviewContentWithSellerInfo = forwardRef((props, ref) => {
                                                         {product.purchase_unit_price && props.modelName === "purchase" ? <Amount amount={trimTo2Decimals((product.purchase_unit_price - product.unit_discount) * product.quantity)} /> : ""}
                                                         {product.purchasereturn_unit_price && props.modelName === "purchase_return" ? <Amount amount={trimTo2Decimals((product.purchasereturn_unit_price - product.unit_discount) * product.quantity)} /> : ""}
                                                     </td>
-                                                    <td style={{ borderRight: tableBorderThickness, paddingRight: "3px" }} className="text-end">
-                                                        {product.unit_price ? <Amount amount={trimTo2Decimals((product.unit_price - product.unit_discount) * product.quantity) * (props.model.vat_percent / 100)} /> : ""}
-                                                        {product.purchase_unit_price && props.modelName === "purchase" ? <Amount amount={trimTo2Decimals((product.purchase_unit_price - product.unit_discount) * product.quantity) * (props.model.vat_percent / 100)} /> : ""}
-                                                        {product.purchasereturn_unit_price && props.modelName === "purchase_return" ? <Amount amount={trimTo2Decimals((product.purchasereturn_unit_price - product.unit_discount) * product.quantity) * (props.model.vat_percent / 100)} /> : ""}
-                                                    </td>
-                                                    <td style={{ paddingRight: "3px" }} className="text-end">
-                                                        {product.unit_price ? <Amount amount={trimTo2Decimals(((product.unit_price - product.unit_discount) * product.quantity) + (((product.unit_price - product.unit_discount) * product.quantity) * (props.model.vat_percent / 100)))} /> : ""}
-                                                        {product.purchase_unit_price && props.modelName === "purchase" ? <Amount amount={trimTo2Decimals(((product.purchase_unit_price - product.unit_discount) * product.quantity) + (((product.purchase_unit_price - product.unit_discount) * product.quantity) * (props.model.vat_percent / 100)))} /> : ""}
-                                                        {product.purchasereturn_unit_price && props.modelName === "purchase_return" ? <Amount amount={trimTo2Decimals(((product.purchasereturn_unit_price - product.unit_discount) * product.quantity) + (((product.purchasereturn_unit_price - product.unit_discount) * product.quantity) * (props.model.vat_percent / 100)))} /> : ""}
-                                                    </td>
+                                                    {!props.model.hideVAT && <>
+                                                        <td style={{ borderRight: tableBorderThickness, paddingRight: "3px" }} className="text-end">
+                                                            {product.unit_price ? <Amount amount={trimTo2Decimals((product.unit_price - product.unit_discount) * product.quantity) * (props.model.vat_percent / 100)} /> : ""}
+                                                            {product.purchase_unit_price && props.modelName === "purchase" ? <Amount amount={trimTo2Decimals((product.purchase_unit_price - product.unit_discount) * product.quantity) * (props.model.vat_percent / 100)} /> : ""}
+                                                            {product.purchasereturn_unit_price && props.modelName === "purchase_return" ? <Amount amount={trimTo2Decimals((product.purchasereturn_unit_price - product.unit_discount) * product.quantity) * (props.model.vat_percent / 100)} /> : ""}
+                                                        </td>
+                                                        <td style={{ paddingRight: "3px" }} className="text-end">
+                                                            {product.unit_price ? <Amount amount={trimTo2Decimals(((product.unit_price - product.unit_discount) * product.quantity) + (((product.unit_price - product.unit_discount) * product.quantity) * (props.model.vat_percent / 100)))} /> : ""}
+                                                            {product.purchase_unit_price && props.modelName === "purchase" ? <Amount amount={trimTo2Decimals(((product.purchase_unit_price - product.unit_discount) * product.quantity) + (((product.purchase_unit_price - product.unit_discount) * product.quantity) * (props.model.vat_percent / 100)))} /> : ""}
+                                                            {product.purchasereturn_unit_price && props.modelName === "purchase_return" ? <Amount amount={trimTo2Decimals(((product.purchasereturn_unit_price - product.unit_discount) * product.quantity) + (((product.purchasereturn_unit_price - product.unit_discount) * product.quantity) * (props.model.vat_percent / 100)))} /> : ""}
+                                                        </td>
+                                                    </>}
                                                 </>}
                                             </tr>
                                         ))}
@@ -925,17 +930,14 @@ const PreviewContentWithSellerInfo = forwardRef((props, ref) => {
                                                 <Amount amount={trimTo2Decimals((props.model.net_total - props.model.vat_price))} />
                                             </td>
                                         </tr>
-                                        <tr style={{ borderBottom: tableBorderThickness }}>
+                                        {!props.model.hideVAT && <tr style={{ borderBottom: tableBorderThickness }}>
                                             <th className="text-end print-label" style={{ padding: "2px", borderRight: tableBorderThickness }}>
                                                 Total VAT {trimTo2Decimals(props.model.vat_percent)}% إجمالي ضريبة القيمة المضافة :
                                             </th>
                                             <td className="text-end print-table-value" colSpan="1" style={{ paddingRight: "3px" }}>
-
-                                                {props.model.store?.settings?.hide_quotation_invoice_vat ? <>
-                                                    {(props.modelName === "quotation" && props.model.type === "invoice") || (props.modelName === "whatsapp_quotation" && props.model.type === "invoice") || props.modelName === "quotation_sales_return" || props.modelName === "whatsapp_quotation_sales_return" ? "" : <Amount amount={trimTo2Decimals(props.model.vat_price)} />}
-                                                </> : <Amount amount={trimTo2Decimals(props.model.vat_price)} />}
+                                                <Amount amount={trimTo2Decimals(props.model.vat_price)} />
                                             </td>
-                                        </tr>
+                                        </tr>}
                                         <tr>
                                             <th className="text-end print-label" style={{ padding: "2px", width: `${props.modelName !== "quotation" ? "70%" : "90%"}`, borderRight: tableBorderThickness }}>
                                                 Net Total (with VAT)  الإجمالي الصافي (مع ضريبة القيمة المضافة) :

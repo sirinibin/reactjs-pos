@@ -91,6 +91,7 @@ const Preview = forwardRef((props, ref) => {
                 }
 
                 setInvoiceTitle(modelName);
+                setHideVAT(modelName);
 
                 if (model.delivered_by) {
                     getUser(model.delivered_by);
@@ -189,6 +190,24 @@ const Preview = forwardRef((props, ref) => {
     }
     let [whatsAppShare, setWhatsAppShare] = useState(false);
     let [phone, setPhone] = useState("");
+
+    /*
+     {props.model.store?.settings?.hide_quotation_invoice_vat ? <>
+                                                    {(props.modelName === "quotation" && props.model.type === "invoice") || (props.modelName === "whatsapp_quotation" && props.model.type === "invoice") || props.modelName === "quotation_sales_return" || props.modelName === "whatsapp_quotation_sales_return" ? "" : <Amount amount={trimTo2Decimals(props.model.vat_price)} />}
+                                                </> : <Amount amount={trimTo2Decimals(props.model.vat_price)} />}
+    */
+
+    function setHideVAT(modelName) {
+        if (model.store?.settings.hide_quotation_invoice_vat) {
+            if (((modelName === "quotation" || modelName === "whatsapp_quotation") && model.type === "invoice") || modelName === "quotation_sales_return" || modelName === "whatsapp_quotation_sales_return") {
+                model.hideVAT = true;
+            } else {
+                model.hideVAT = false;
+            }
+        } else {
+            model.hideVAT = false;
+        }
+    }
 
     function setInvoiceTitle(modelName) {
         model.modelName = modelName;
@@ -835,33 +854,33 @@ const Preview = forwardRef((props, ref) => {
 
 
     /*
-  const handlePrint = async () => {
+    const handlePrint = async () => {
       const element = printAreaRef.current;
       if (!element) return;
-
+    
       const canvas = await html2canvas(element, {
           scale: 2,
           useCORS: true,
       });
-
+    
       const imgData = canvas.toDataURL("image/jpeg", 1.0);
       const pdf = new jsPDF("p", "mm", "a4");
-
+    
       const imgProps = pdf.getImageProperties(imgData);
       const pdfWidth = pdf.internal.pageSize.getWidth();
       const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width;
-
+    
       pdf.addImage(imgData, "JPEG", 0, 0, pdfWidth, pdfHeight);
       pdf.save(`${getFileName()}.pdf`);
-  };*/
+    };*/
 
     /*
-    
-    
+     
+     
             const handlePrint = useCallback(async () => {
                 const element = printAreaRef.current;
                 if (!element) return;
-    
+     
                 const opt = {
                     margin: 0,
                     filename: `${getFileName()}.pdf`,
@@ -869,12 +888,12 @@ const Preview = forwardRef((props, ref) => {
                     html2canvas: { scale: 2, useCORS: true, logging: true },
                     jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
                 };
-    
+     
                 const pdfBlob = await html2pdf().from(element).set(opt).outputPdf('blob');
-    
+     
                 // Create a blob URL
                 const blobUrl = URL.createObjectURL(pdfBlob);
-    
+     
                 // Open the PDF in a new window or iframe and trigger print
                 const printWindow = window.open(blobUrl);
                 if (printWindow) {

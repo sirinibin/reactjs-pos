@@ -386,10 +386,12 @@ const QuotationSalesReturnCreate = forwardRef((props, ref) => {
                 if (!saleReturnID) {
                     //Case: Create new quotationsales return 
                     let selectedProductsTemp = quotation.products;
+                    //  alert("L:" + quotation.products?.length);
                     selectedProducts = [];
                     for (let i = 0; i < selectedProductsTemp.length; i++) {
                         selectedProductsTemp[i].selected = false;
                         let soldQty = selectedProductsTemp[i].quantity - selectedProductsTemp[i].quantity_returned;
+                        //  alert(" soldQty:" + soldQty);
                         selectedProductsTemp[i].quantity = soldQty;
 
                         if (soldQty > 0) {
@@ -397,7 +399,10 @@ const QuotationSalesReturnCreate = forwardRef((props, ref) => {
                         }
                     }
 
+
+
                     // selectedProducts = selectedProductsTemp
+
 
                     console.log("selectedProducts:", selectedProducts);
                     setSelectedProducts([...selectedProducts]);
@@ -1120,6 +1125,7 @@ const QuotationSalesReturnCreate = forwardRef((props, ref) => {
                 formData.total_with_vat = res.result.total_with_vat;
                 formData.net_total = res.result.net_total;
                 formData.vat_price = res.result.vat_price;
+
 
 
                 if (res.result.discount_percent) {
@@ -1905,8 +1911,8 @@ const QuotationSalesReturnCreate = forwardRef((props, ref) => {
                         </div>}
                     </div>
 
-                    {selectedProducts && selectedProducts.length === 0 && "Already returned all products"}
-                    {selectedProducts && selectedProducts.length > 0 && <form className="row g-3 needs-validation" onSubmit={handleCreate}>
+                    {selectedProducts?.length === 0 && "Already returned all products"}
+                    {selectedProducts?.length > 0 && <form className="row g-3 needs-validation" onSubmit={handleCreate}>
                         <h2>Select Products</h2>
                         <div className="table-responsive" style={{ overflowX: "auto", overflowY: "scroll" }}>
                             <table className="table table-striped table-sm table-bordered">
