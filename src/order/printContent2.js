@@ -81,18 +81,17 @@ const OrderPrintContent2 = forwardRef((props, ref) => {
                                         </h4>
                                     </td>
                                     <td className="text-left" style={{ border: "solid 0px", width: "120px", height: "auto", }} >
-                                        <h4 className="print-value" style={{ fontSize: "3mm", maxWidth: "120px", height: "auto", }}>
+                                        <h4 className="print-value-new" style={{ fontSize: "3mm", maxWidth: "120px", height: "auto", }}>
                                             {product.prefix_part_number ? product.prefix_part_number + " - " : ""}{product.part_number ? product.part_number : ""}
                                         </h4>
                                     </td>
-                                    <td className="text-left" style={{ border: "solid 0px", width: "350px", height: "auto", paddingLeft: "10px" }} >
-                                        <div className="print-value" style={{ height: "auto", maxWidth: "350px" }} >
-
-                                            {product.name && product.name_in_arabic ? <h4 className="print-value" style={{ fontSize: "3mm", position: "relative", top: "-11px" }}>
+                                    <td className="text-left" style={{ border: "solid 1px", width: "350px", paddingLeft: "10px" }} >
+                                        <div style={{ maxWidth: "350px" }} >
+                                            {product.name && product.name_in_arabic ? <h4 className="print-value-new" style={{ fontSize: "3mm", position: "relative", top: "-11px" }}>
                                                 {product.name + " | "}
                                                 <span dir="rtl">{product.name_in_arabic}</span>
                                             </h4> : ""}
-                                            {product.name && !product.name_in_arabic ? <h4 className="print-value" style={{ fontSize: "3mm", position: "relative", top: "2px" }}>
+                                            {product.name && !product.name_in_arabic ? <h4 className="print-value-new" style={{ fontSize: "3mm", position: "relative", top: "2px", border: "solid 1px" }}>
                                                 {product.name}
                                             </h4> : ""}
                                             {/*product.name_in_arabic ? <h4 className="print-value" dir="rtl" style={{ fontSize: "3mm", position: "relative", top: "-2px" }}>
