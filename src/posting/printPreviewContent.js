@@ -492,7 +492,6 @@ const BalanceSheetPrintPreviewContent = forwardRef((props, ref) => {
                                             <td style={{ padding: "3px", borderRight: tableBorderThickness, }} className="break-text">{post.reference_code}</td>
                                             <th className="text-start" style={{ width: "auto", padding: "3px", whiteSpace: "nowrap", alignContent: "start", borderRightWidth: "0px" }}>
                                                 {post.debit_account_name && <span>
-                                                    {/*"NAME:" + post.debit_account_name + " "*/}
                                                     To <span style={{
                                                         display: 'inline-block',
                                                         maxWidth: accountNameMaxWidth,
@@ -512,9 +511,7 @@ const BalanceSheetPrintPreviewContent = forwardRef((props, ref) => {
                                                     renderText={(value, props) => value}
                                                 />
                                             </td>
-                                            <th style={{ width: "auto", padding: "3px", alignContent: "start", whiteSpace: "nowrap", borderRightWidth: "0px" }} className="break-text">
-                                                {/*post.credit_account*/}
-
+                                            <th style={{ width: "auto", padding: "3px", alignContent: "start", whiteSpace: "nowrap", borderRightWidth: "0px" }}>
                                                 {post.credit_account_name && <span>
                                                     By <span style={{
                                                         display: 'inline-block',
