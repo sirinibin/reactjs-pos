@@ -332,15 +332,19 @@ const BalanceSheetPrintPreview = forwardRef((props, ref) => {
 
         filename = filename.split(' ').join('_')
 
+        filename = filename.replace(/[^a-zA-Z0-9-_]/g, '');
+
         if (model.dateValue) {
             filename += "_Date_" + format(new Date(model.dateValue), "MMM_dd_yyyy")
         } else if (model.fromDateValue && model.toDateValue) {
-            filename += "_Date_" + format(new Date(model.fromDateValue), "MMM_dd_yyyy") + "_to_" + format(new Date(model.toDateValue), "MMM dd yyyy")
+            filename += "_Date_" + format(new Date(model.fromDateValue), "MMM_dd_yyyy") + "_to_" + format(new Date(model.toDateValue), "MMM_dd_yyyy")
         } else if (model.fromDateValue && !model.toDateValue && !model.dateValue) {
             filename += "_Date_from_" + format(new Date(model.fromDateValue), "MMM_dd_yyyy") + "_to_present"
         } else if (model.toDateValue && !model.fromDateValue && !model.dateValue) {
             filename += "_Date_upto_" + format(new Date(model.toDateValue), "MMM_dd_yyyy")
         }
+
+
 
 
         return filename;
