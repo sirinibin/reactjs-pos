@@ -929,9 +929,11 @@ const PreviewContentWithSellerInfo = forwardRef((props, ref) => {
                                             <th className="text-end print-label" style={{ padding: "2px", borderRight: tableBorderThickness }}>
                                                 Total VAT {trimTo2Decimals(props.model.vat_percent)}% إجمالي ضريبة القيمة المضافة :
                                             </th>
-
                                             <td className="text-end print-table-value" colSpan="1" style={{ paddingRight: "3px" }}>
-                                                <Amount amount={trimTo2Decimals(props.model.vat_price)} />
+
+                                                {props.model.store?.settings?.hide_quotation_invoice_vat ? <>
+                                                    {(props.modelName === "quotation" && props.model.type === "invoice") || (props.modelName === "whatsapp_quotation" && props.model.type === "invoice") || props.modelName === "quotation_sales_return" || props.modelName === "whatsapp_quotation_sales_return" ? "" : <Amount amount={trimTo2Decimals(props.model.vat_price)} />}
+                                                </> : <Amount amount={trimTo2Decimals(props.model.vat_price)} />}
                                             </td>
                                         </tr>
                                         <tr>

@@ -3122,6 +3122,32 @@ const StoreCreate = forwardRef((props, ref) => {
 
                         <h6><b>Settings</b></h6>
 
+
+
+                        <div className="col-md-2">
+                            <div className="input-group mb-3">
+                                <input type="checkbox"
+                                    value={formData.settings.hide_quotation_invoice_vat}
+                                    checked={formData.settings.hide_quotation_invoice_vat}
+                                    onChange={(e) => {
+                                        errors["hide_quotation_invoice_vat"] = "";
+                                        formData.settings.hide_quotation_invoice_vat = !formData.settings.hide_quotation_invoice_vat;
+                                        setFormData({ ...formData });
+                                        console.log(formData);
+                                    }}
+                                    className=""
+                                    id="hide_quotation_invoice_vat"
+
+                                /> &nbsp;Hide quotation invoice vat
+                            </div>
+                            <label className="form-label"></label>
+                            {errors.hide_quotation_invoice_vat && (
+                                <div style={{ color: "red" }}>
+                                    {errors.hide_quotation_invoice_vat}
+                                </div>
+                            )}
+                        </div>
+
                         <div className="col-md-2">
                             <div className="input-group mb-3">
                                 <input type="checkbox"
