@@ -28,12 +28,12 @@ const OrderPrintContent2 = forwardRef((props, ref) => {
                     }}
 
                 >
-                    <h2 className="print-value" style={{ fontSize: "4mm", position: "absolute", left: "300px", top: (185 + page.top) + "px", border: "solid " + border + "px", textDecoration: "underline", }}>
+                    <h2 className="print-value" style={{ fontSize: "4mm", position: "absolute", left: "300px", top: (188 + page.top) + "px", border: "solid " + border + "px", textDecoration: "underline", }}>
                         {/*"TAX INVOICE / فاتورة ضريبية"*/}
                         {props.model.invoiceTitle}
                     </h2>
 
-                    <h4 className="print-value" style={{ fontSize: "3mm", position: "absolute", left: "395px", top: (210 + page.top) + "px", border: "solid " + border + "px", }}>
+                    <h4 className="print-value" style={{ fontSize: "3mm", position: "absolute", left: "395px", top: (213 + page.top) + "px", border: "solid " + border + "px", }}>
                         {props.model.code ? props.model.code : ""}
                     </h4>
 
@@ -42,7 +42,7 @@ const OrderPrintContent2 = forwardRef((props, ref) => {
                     </h4>
 
 
-                    <h4 className="print-value" style={{ fontSize: "3.5mm", position: "absolute", left: "600px", top: (205 + page.top) + "px", border: "solid " + border + "px", }}>
+                    <h4 className="print-value" style={{ fontSize: "3.5mm", position: "absolute", left: "600px", top: (207 + page.top) + "px", border: "solid " + border + "px", }}>
                         {props.model.date ? format(
                             new Date(props.model.date),
                             "yyyy-MM-dd"
