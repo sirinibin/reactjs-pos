@@ -3122,7 +3122,29 @@ const StoreCreate = forwardRef((props, ref) => {
 
                         <h6><b>Settings</b></h6>
 
+                        <div className="col-md-2">
+                            <div className="input-group mb-3">
+                                <input type="checkbox"
+                                    value={formData.settings.allow_adjust_same_date_payments}
+                                    checked={formData.settings.allow_adjust_same_date_payments}
+                                    onChange={(e) => {
+                                        errors["allow_adjust_same_date_payments"] = "";
+                                        formData.settings.allow_adjust_same_date_payments = !formData.settings.allow_adjust_same_date_payments
+                                        setFormData({ ...formData });
+                                        console.log(formData);
+                                    }}
+                                    className=""
+                                    id=" allow_adjust_same_date_payments"
 
+                                /> &nbsp;Allow adjust same date payments
+                            </div>
+                            <label className="form-label"></label>
+                            {errors.allow_adjust_same_date_payments && (
+                                <div style={{ color: "red" }}>
+                                    {errors.allow_adjust_same_date_payments}
+                                </div>
+                            )}
+                        </div>
 
                         <div className="col-md-2">
                             <div className="input-group mb-3">
