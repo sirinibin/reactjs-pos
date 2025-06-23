@@ -312,7 +312,7 @@ const PreviewContentWithSellerInfo = forwardRef((props, ref) => {
                                         </ul>
                                     </div>
                                     <div className="col-md-8 print-value text-center" dir="ltr" style={{ borderColor: detailsBorderColor, width: "12.5%", padding: "3px", borderRight: detailsBorderThickness }} >
-                                        {props.model.store?.registration_number ? props.model.store.registration_number : "N/A"}
+                                        {props.model.customer?.registration_number ? props.model.customer.registration_number : "N/A"}
                                     </div>
 
                                     <div className="col-md-4 print-label text-center" dir="ltr" style={{ borderColor: detailsBorderColor, borderRight: detailsBorderThickness, width: "12.5%", padding: "3px" }} >
