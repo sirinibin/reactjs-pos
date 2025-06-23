@@ -490,21 +490,20 @@ const BalanceSheetPrintPreviewContent = forwardRef((props, ref) => {
                                             <td style={{ width: "auto", padding: "3px", whiteSpace: "nowrap", borderRight: tableBorderThickness, }} >{post.no}</td>
                                             <td style={{ width: "auto", padding: "3px", whiteSpace: "nowrap", borderRight: tableBorderThickness, }} >{post.date ? format(new Date(post.date), "MMM dd yyyy h:mma") : ""}</td>
                                             <td style={{ padding: "3px", borderRight: tableBorderThickness, }} className="break-text">{post.reference_code}</td>
-                                            <td className="text-start break-text" style={{ width: "auto", padding: "3px", whiteSpace: "nowrap", alignContent: "start", borderRightWidth: "0px" }}>
-                                                {/*post.debit_account*/}
+                                            <th className="text-start" style={{ width: "auto", padding: "3px", whiteSpace: "nowrap", alignContent: "start", borderRightWidth: "0px" }}>
                                                 {post.debit_account_name && <span>
+                                                    {/*"NAME:" + post.debit_account_name + " "*/}
                                                     To <span style={{
                                                         display: 'inline-block',
                                                         maxWidth: accountNameMaxWidth,
                                                         whiteSpace: 'nowrap',
                                                         overflow: 'hidden',
                                                         textOverflow: 'ellipsis',
-                                                        verticalAlign: 'bottom'
+                                                        verticalAlign: 'bottom',
                                                     }}>{post.debit_account_name}</span> A/c {post.debit_account_number} Dr.
                                                 </span>}
-                                            </td>
+                                            </th>
                                             <td className="text-end" style={{ width: "auto", padding: "3px", whiteSpace: "nowrap", border: "solid 0px", borderRight: tableBorderThickness }}>
-
                                                 <NumberFormat
                                                     value={parseFloat(post.debit_amount)?.toFixed(2)}
                                                     displayType={"text"}
@@ -513,7 +512,7 @@ const BalanceSheetPrintPreviewContent = forwardRef((props, ref) => {
                                                     renderText={(value, props) => value}
                                                 />
                                             </td>
-                                            <td style={{ width: "auto", padding: "3px", alignContent: "start", whiteSpace: "nowrap", borderRightWidth: "0px" }} className="break-text">
+                                            <th style={{ width: "auto", padding: "3px", alignContent: "start", whiteSpace: "nowrap", borderRightWidth: "0px" }} className="break-text">
                                                 {/*post.credit_account*/}
 
                                                 {post.credit_account_name && <span>
@@ -526,7 +525,7 @@ const BalanceSheetPrintPreviewContent = forwardRef((props, ref) => {
                                                         verticalAlign: 'bottom'
                                                     }}>{post.credit_account_name}</span> A/c {post.credit_account_number} Cr.
                                                 </span>}
-                                            </td>
+                                            </th>
                                             <td className="text-end" style={{ width: "auto", padding: "3px", whiteSpace: "nowrap", border: "solid 0px", borderRight: tableBorderThickness }}>
                                                 <NumberFormat
                                                     value={parseFloat(post.credit_amount)?.toFixed(2)}

@@ -330,9 +330,11 @@ const BalanceSheetPrintPreview = forwardRef((props, ref) => {
             filename += model.name + "_acc_no_" + model.number;
         }
 
+        filename = filename.replace(/[^a-zA-Z0-9-_]/g, '');
+
         filename = filename.split(' ').join('_')
 
-        filename = filename.replace(/[^a-zA-Z0-9-_]/g, '');
+
 
         if (model.dateValue) {
             filename += "_Date_" + format(new Date(model.dateValue), "MMM_dd_yyyy")
