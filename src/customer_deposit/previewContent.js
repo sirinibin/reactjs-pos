@@ -324,7 +324,7 @@ const CustomerDepositPreviewContent = forwardRef((props, ref) => {
                                         e.stopPropagation();
                                         props.selectText("tableHead");
                                     }}>
-                                        <th className="per1 text-center" style={{ padding: "0px", width: "8%", borderRight: tableBorderThickness, borderBottom: tableBorderThickness }}>
+                                        <th className="per1 text-center" style={{ padding: "0px", width: "7%", borderRight: tableBorderThickness, borderBottom: tableBorderThickness }}>
                                             <ul
                                                 className="list-unstyled"
                                                 style={{
@@ -335,7 +335,7 @@ const CustomerDepositPreviewContent = forwardRef((props, ref) => {
                                                 <li>SI No.</li>
                                             </ul>
                                         </th>
-                                        <th className="per68 text-center" style={{ padding: "0px", width: "39%", borderRight: tableBorderThickness, borderBottom: tableBorderThickness }}>
+                                        <th className="per68 text-center" style={{ padding: "0px", width: "28%", borderRight: tableBorderThickness, borderBottom: tableBorderThickness }}>
                                             <ul
                                                 className="list-unstyled"
                                                 style={{
@@ -358,7 +358,7 @@ const CustomerDepositPreviewContent = forwardRef((props, ref) => {
                                                 <li>Payment Mode</li>
                                             </ul>
                                         </th>
-                                        <th className="per1 text-center" style={{ padding: "0px", width: "27%", borderRight: tableBorderThickness, borderBottom: tableBorderThickness }}>
+                                        <th className="per1 text-center" style={{ padding: "0px", width: "16%", borderRight: tableBorderThickness, borderBottom: tableBorderThickness }}>
                                             <ul
                                                 className="list-unstyled"
                                                 style={{
@@ -369,7 +369,7 @@ const CustomerDepositPreviewContent = forwardRef((props, ref) => {
                                                 <li>Bank Ref. #</li>
                                             </ul>
                                         </th>
-                                        <th className="per68 text-center" style={{ padding: "0px", width: "13%", borderBottom: tableBorderThickness }}>
+                                        <th className="per68 text-center" style={{ padding: "0px", width: "12%", borderBottom: tableBorderThickness, borderRight: tableBorderThickness }}>
                                             <ul
                                                 className="list-unstyled"
                                                 style={{
@@ -378,6 +378,28 @@ const CustomerDepositPreviewContent = forwardRef((props, ref) => {
                                             >
                                                 <li>وصف</li>
                                                 <li>Amount</li>
+                                            </ul>
+                                        </th>
+                                        <th className="per68 text-center" style={{ padding: "0px", width: "12%", borderBottom: tableBorderThickness, borderRight: tableBorderThickness }}>
+                                            <ul
+                                                className="list-unstyled"
+                                                style={{
+                                                    height: "20px"
+                                                }}
+                                            >
+                                                <li>تخفيض</li>
+                                                <li>Discount</li>
+                                            </ul>
+                                        </th>
+                                        <th className="per68 text-center" style={{ padding: "0px", width: "12%", borderBottom: tableBorderThickness }}>
+                                            <ul
+                                                className="list-unstyled"
+                                                style={{
+                                                    height: "20px"
+                                                }}
+                                            >
+                                                <li>المجموع</li>
+                                                <li>Total</li>
                                             </ul>
                                         </th>
                                     </tr>
@@ -393,19 +415,21 @@ const CustomerDepositPreviewContent = forwardRef((props, ref) => {
                                             </td>
                                             <td style={{ padding: "1px", borderRight: tableBorderThickness }} className="text-center">{payment.method ? GetPaymentMode(payment.method) : ""} </td>
                                             <td style={{ padding: "1px", borderRight: tableBorderThickness }} className="text-center">{payment.bank_reference ? payment.bank_reference : ""} </td>
-                                            <td style={{ padding: "1px", paddingRight: "2px", textAlign: "right" }}> {payment.amount ? <Amount amount={trimTo2Decimals(payment.amount)} /> : ""}</td>
+                                            <td style={{ padding: "1px", borderRight: tableBorderThickness, paddingRight: "2px", textAlign: "right" }}> {payment.amount ? <Amount amount={trimTo2Decimals(payment.amount)} /> : ""}</td>
+                                            <td style={{ padding: "1px", borderRight: tableBorderThickness, paddingRight: "2px", textAlign: "right" }}> {payment.amount ? <Amount amount={trimTo2Decimals(payment.discount)} /> : ""}</td>
+                                            <td style={{ padding: "1px", paddingRight: "2px", textAlign: "right" }}> {payment.amount ? <Amount amount={trimTo2Decimals((payment.amount - payment.discount))} /> : ""}</td>
                                         </tr>
                                     ))}
                                 </tbody>
                                 <tfoot
                                     className=""
-                                    style={{ fontSize: props.fontSizes[props.modelName + "_tableFooter"]?.size, border: tableBorderThickness, width: "100%" }} onClick={() => {
+                                    style={{ fontSize: props.fontSizes[props.modelName + "_tableFooter"]?.size, width: "100%" }} onClick={() => {
                                         props.selectText("tableFooter");
                                     }}
                                 >
                                     <tr
-                                        style={{ borderBottom: tableBorderThickness }}>
-                                        <th colSpan="4" className="text-end print-label"
+                                        style={{}}>
+                                        <th colSpan="6" className="text-end print-label"
                                             style={{ padding: "2px", borderRight: tableBorderThickness }}
                                         >
                                             Net Total  صافي المجموع:

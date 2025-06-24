@@ -43,6 +43,7 @@ const CustomerDepositCreate = forwardRef((props, ref) => {
                     {
                         date_str: new Date(),
                         amount: 0.00,
+                        discount: 0.00,
                         method: "",
                         bank_reference: "",
                         description: "",
@@ -532,8 +533,8 @@ const CustomerDepositCreate = forwardRef((props, ref) => {
 
         formData.payments.push({
             "date_str": date,
-            // "amount": "",
             "amount": 0.00,
+            "discount": 0.00,
             "method": "",
             "deleted": false,
         });
@@ -556,6 +557,7 @@ const CustomerDepositCreate = forwardRef((props, ref) => {
 
         for (var key = 0; key < formData.payments?.length; key++) {
             errors["customer_receivable_payment_amount_" + key] = "";
+            errors["customer_receivable_payment_discount_" + key] = "";
             errors["customer_receivable_payment_date_" + key] = "";
             errors["customer_receivable_payment_method_" + key] = "";
             setErrors({ ...errors });
@@ -597,11 +599,11 @@ const CustomerDepositCreate = forwardRef((props, ref) => {
         let totalPayment = 0.00;
         for (var i = 0; i < formData.payments?.length; i++) {
             if (formData.payments[i].amount && !formData.payments[i].deleted) {
-                totalPayment += formData.payments[i].amount;
+                totalPayment += (formData.payments[i].amount - formData.payments[i].discount);
             }
         }
 
-        totalPaymentAmount = totalPayment;
+        totalPaymentAmount = parseFloat(trimTo2Decimals(totalPayment));
         setTotalPaymentAmount(totalPaymentAmount);
         return totalPayment;
     }
@@ -1205,7 +1207,6 @@ const CustomerDepositCreate = forwardRef((props, ref) => {
                                     />
                                     <Button hide={true.toString()} onClick={openCustomerCreateForm} className="btn btn-outline-secondary btn-primary btn-sm" type="button" id="button-addon1"> <i className="bi bi-plus-lg"></i> New</Button>
 
-
                                     {errors.customer_id && (
                                         <div style={{ color: "red" }}>
                                             {errors.customer_id}
@@ -1386,6 +1387,9 @@ const CustomerDepositCreate = forwardRef((props, ref) => {
                                             <th style={{ minWidth: "130px" }}>
                                                 Amount
                                             </th>
+                                            <th style={{ minWidth: "130px" }}>
+                                                Discount
+                                            </th>
                                             <th style={{ minWidth: "180px" }}>
                                                 Invoice
                                             </th>
@@ -1454,7 +1458,7 @@ const CustomerDepositCreate = forwardRef((props, ref) => {
                                                                     }, 100);
                                                                 } else if (e.key === "Enter") {
                                                                     timerRef.current = setTimeout(() => {
-                                                                        inputRefs.current[key][`${"customer_receivable_payment_method_" + key}`].focus();
+                                                                        inputRefs.current[key][`${"customer_receivable_payment_discount_" + key}`].focus();
                                                                     }, 100);
                                                                 }
                                                             }}
@@ -1483,6 +1487,63 @@ const CustomerDepositCreate = forwardRef((props, ref) => {
                                                             <div style={{ color: "red", fontSize: "10px" }}>
 
                                                                 {errors["customer_receivable_payment_amount_" + key]}
+                                                            </div>
+                                                        )}
+                                                    </td>
+                                                    <td>
+                                                        <input
+                                                            type='number'
+                                                            id={`${"customer_receivable_payment_discount_" + key}`}
+                                                            name={`${"customer_receivable_payment_discount_" + key}`}
+                                                            value={formData.payments[key].discount}
+                                                            className="form-control "
+                                                            ref={(el) => {
+                                                                if (!inputRefs.current[key]) inputRefs.current[key] = {};
+                                                                inputRefs.current[key][`${"customer_receivable_payment_discount_" + key}`] = el;
+                                                            }}
+                                                            onFocus={() => {
+                                                                if (timerRef.current) clearTimeout(timerRef.current);
+                                                                timerRef.current = setTimeout(() => {
+                                                                    inputRefs.current[key][`${"customer_receivable_payment_discount_" + key}`].select();
+                                                                }, 100);
+                                                            }}
+                                                            onKeyDown={(e) => {
+                                                                if (timerRef.current) clearTimeout(timerRef.current);
+
+                                                                if (e.key === "ArrowLeft") {
+                                                                    timerRef.current = setTimeout(() => {
+                                                                        inputRefs.current[key][`${"customer_receivable_payment_amount_" + (key)}`]?.focus();
+                                                                    }, 100);
+                                                                } else if (e.key === "Enter") {
+                                                                    timerRef.current = setTimeout(() => {
+                                                                        inputRefs.current[key][`${"customer_receivable_payment_method_" + key}`].focus();
+                                                                    }, 100);
+                                                                }
+                                                            }}
+
+                                                            onChange={(e) => {
+                                                                errors["customer_receivable_payment_discount_" + key] = "";
+                                                                setErrors({ ...errors });
+
+                                                                if (!e.target.value) {
+                                                                    formData.payments[key].discount = e.target.value;
+                                                                    setFormData({ ...formData });
+                                                                    findTotalPayments();
+                                                                    //  validatePaymentAmounts();
+                                                                    return;
+                                                                }
+
+                                                                formData.payments[key].discount = parseFloat(e.target.value);
+
+                                                                // validatePaymentAmounts();
+                                                                findTotalPayments();
+                                                                setFormData({ ...formData });
+                                                                console.log(formData);
+                                                            }}
+                                                        />
+                                                        {errors["customer_receivable_payment_discount_" + key] && (
+                                                            <div style={{ color: "red", fontSize: "10px" }}>
+                                                                {errors["customer_receivable_payment_discount_" + key]}
                                                             </div>
                                                         )}
                                                     </td>
@@ -1542,7 +1603,7 @@ const CustomerDepositCreate = forwardRef((props, ref) => {
                                                                 if (timerRef.current) clearTimeout(timerRef.current);
                                                                 if (e.key === "ArrowLeft") {
                                                                     timerRef.current = setTimeout(() => {
-                                                                        inputRefs.current[key][`${"customer_receivable_payment_amount_" + key}`].focus();
+                                                                        inputRefs.current[key][`${"customer_receivable_payment_discount_" + key}`].focus();
                                                                     }, 100);
                                                                 }
                                                             }}
