@@ -497,8 +497,8 @@ const PreviewContent = forwardRef((props, ref) => {
                                                 <th dir="ltr" style={{
                                                     unicodeBidi: 'isolate',
                                                     borderRight: tableBorderThickness,
-                                                    wordBreak: "break-word",
-                                                    overflowWrap: "break-word",
+                                                    /*  wordBreak: "break-word",*/
+                                                    /*  overflowWrap: "break-word",*/
                                                     whiteSpace: "normal"
                                                 }}>
                                                     {!props.model?.store?.settings?.one_line_product_name_in_invoice && <span dir="ltr" style={{ unicodeBidi: 'isolate' }}>
