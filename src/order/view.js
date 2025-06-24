@@ -252,14 +252,14 @@ const OrderView = forwardRef((props, ref) => {
         // alert("ok" + model.id);
         //setPreviewOpened(true);
         setShowOrderPreview(true);
-
         setShowPrintTypeSelection(false);
-        handleClose();
+
 
         if (timerRef.current) clearTimeout(timerRef.current);
 
         timerRef.current = setTimeout(() => {
             PreviewRef.current?.open(model, undefined, "sales");
+            handleClose();
         }, 100);
 
     }, [model]);
@@ -267,12 +267,13 @@ const OrderView = forwardRef((props, ref) => {
     function sendWhatsAppMessage() {
         setShowPrintTypeSelection(false);
         setShowOrderPreview(true);
-        handleClose();
+
 
         if (timerRef.current) clearTimeout(timerRef.current);
 
         timerRef.current = setTimeout(() => {
             PreviewRef.current?.open(model, "whatsapp", "whatsapp_sales");
+            handleClose();
         }, 100);
     }
 
@@ -280,19 +281,26 @@ const OrderView = forwardRef((props, ref) => {
     const openPrint = useCallback(() => {
         // document.removeEventListener('keydown', handleEnterKey);
         setShowPrintTypeSelection(false);
-        handleClose();
+
         PrintRef.current?.open(model);
+        handleClose();
     }, [model]);
 
 
 
-
+    const printButtonRef = useRef();
+    const printA4ButtonRef = useRef();
     const openPrintTypeSelection = useCallback(() => {
 
         if (store.settings?.enable_invoice_print_type_selection) {
             // showPrintTypeSelection = true;
             setShowOrderPreview(true);
             setShowPrintTypeSelection(true);
+            if (timerRef.current) clearTimeout(timerRef.current);
+            timerRef.current = setTimeout(() => {
+                printButtonRef.current?.focus();
+            }, 100);
+
         } else {
             openPreview();
         }
@@ -343,6 +351,7 @@ const OrderView = forwardRef((props, ref) => {
 
 
 
+
     return (<>
 
         <Modal show={showPrintTypeSelection} onHide={() => {
@@ -354,20 +363,39 @@ const OrderView = forwardRef((props, ref) => {
             </Modal.Header>
             <Modal.Body className="d-flex justify-content-around">
 
-                <Button variant="secondary" onClick={() => {
+                <Button variant="secondary" ref={printButtonRef} onClick={() => {
                     openPrint();
+                }} onKeyDown={(e) => {
+                    if (timerRef.current) clearTimeout(timerRef.current);
+
+                    if (e.key === "ArrowRight") {
+                        timerRef.current = setTimeout(() => {
+                            printA4ButtonRef.current.focus();
+                        }, 100);
+                    }
                 }}>
                     <i className="bi bi-printer"></i> Print
                 </Button>
 
-                <Button variant="primary" onClick={() => {
+                <Button variant="primary" ref={printA4ButtonRef} onClick={() => {
                     openPreview();
-                }}>
+                }}
+                    onKeyDown={(e) => {
+                        if (timerRef.current) clearTimeout(timerRef.current);
+
+                        if (e.key === "ArrowLeft") {
+                            timerRef.current = setTimeout(() => {
+                                printButtonRef.current.focus();
+                            }, 100);
+                        }
+                    }}
+                >
                     <i className="bi bi-printer"></i> Print A4 Invoice
                 </Button>
             </Modal.Body>
-        </Modal>
-        {showOrderPreview && <OrderPreview ref={PreviewRef} />}
+        </Modal >
+        {showOrderPreview && <OrderPreview ref={PreviewRef} />
+        }
         <OrderPrint ref={PrintRef} />
         <Modal show={show} size="xl" onHide={handleClose} animation={false} scrollable={true}>
             <Modal.Header>

@@ -1173,7 +1173,10 @@ const OrderIndex = forwardRef((props, ref) => {
     const [showErrors, setShowErrors] = useState(false);
     const [showSuccess, setShowSuccess] = useState(false);
     const [successMessage, setSuccessMessage] = useState(false);
+    const printButtonRef = useRef();
+    const printA4ButtonRef = useRef();
 
+    /*
     function openPrintTypeSelection(model) {
         setSelectedOrder({ ...model });
         if (store.settings.enable_invoice_print_type_selection) {
@@ -1182,25 +1185,56 @@ const OrderIndex = forwardRef((props, ref) => {
         } else {
             openPreview(model);
         }
-    }
+    }*/
+
+    const openPreview = useCallback(() => {
+        setShowOrderPreview(true);
+        setShowPrintTypeSelection(false);
+
+
+        if (timerRef.current) clearTimeout(timerRef.current);
+
+        timerRef.current = setTimeout(() => {
+            PreviewRef.current?.open(selectedOrder, undefined, "sales");
+        }, 100);
+
+    }, [selectedOrder]);
+
+    let [showOrderPreview, setShowOrderPreview] = useState(false);
+
+    const openPrintTypeSelection = useCallback((order) => {
+        setSelectedOrder(order);
+        if (store.settings?.enable_invoice_print_type_selection) {
+            // showPrintTypeSelection = true;
+            setShowOrderPreview(true);
+            setShowPrintTypeSelection(true);
+            if (timerRef.current) clearTimeout(timerRef.current);
+            timerRef.current = setTimeout(() => {
+                printButtonRef.current?.focus();
+            }, 100);
+
+        } else {
+            openPreview();
+        }
+    }, [openPreview, store]);
 
 
 
     const PrintRef = useRef();
-    function openPrint(model) {
-        showPrintTypeSelection = false;
+
+
+    const openPrint = useCallback(() => {
+        // document.removeEventListener('keydown', handleEnterKey);
         setShowPrintTypeSelection(false);
-        PrintRef.current.open(model, "sales");
-    }
+
+        PrintRef.current?.open(selectedOrder, "sales");
+    }, [selectedOrder]);
 
 
     const PreviewRef = useRef();
-    function openPreview(model) {
-        showPrintTypeSelection = false;
-        setShowPrintTypeSelection(false);
 
-        PreviewRef.current.open(model, undefined, "sales");
-    }
+
+
 
     const ReportPreviewRef = useRef();
     function openReportPreview() {
@@ -1229,36 +1263,40 @@ const OrderIndex = forwardRef((props, ref) => {
                     <Modal.Title>Select Print Type</Modal.Title>
                 </Modal.Header>
                 <Modal.Body className="d-flex justify-content-around">
+                    <Button variant="secondary" ref={printButtonRef} onClick={() => {
+                        openPrint();
+                    }} onKeyDown={(e) => {
+                        if (timerRef.current) clearTimeout(timerRef.current);
 
-                    <Button variant="secondary" onClick={() => {
-                        openPrint(selectedOrder);
+                        if (e.key === "ArrowRight") {
+                            timerRef.current = setTimeout(() => {
+                                printA4ButtonRef.current.focus();
+                            }, 100);
+                        }
                     }}>
                         <i className="bi bi-printer"></i> Print
                     </Button>
 
-                    <Button variant="primary" onClick={() => {
-                        openPreview(selectedOrder);
-                    }}>
+                    <Button variant="primary" ref={printA4ButtonRef} onClick={() => {
+                        openPreview();
+                    }}
+                        onKeyDown={(e) => {
+                            if (timerRef.current) clearTimeout(timerRef.current);
+
+                            if (e.key === "ArrowLeft") {
+                                timerRef.current = setTimeout(() => {
+                                    printButtonRef.current.focus();
+                                }, 100);
+                            }
+                        }}
+                    >
                         <i className="bi bi-printer"></i> Print A4 Invoice
                     </Button>
-
-                    {/*formData.type === "customer" && <>
-                        <Button variant="primary" onClick={() => {
-                            openSales();
-                        }}>
-                            Sales Invoices
-                        </Button>
-                        <Button variant="secondary" onClick={() => {
-                            openQuotationSales();
-                        }}>
-                            Quotation Invoices
-                        </Button>
-                    </>*/}
                 </Modal.Body>
             </Modal>
 
             <ReportPreview ref={ReportPreviewRef} searchParams={searchParams} sortOrder={sortOrder} sortField={sortField} />
-            <OrderPreview ref={PreviewRef} />
+            {showOrderPreview && <OrderPreview ref={PreviewRef} />}
             <OrderCreate ref={CreateFormRef} refreshList={list} showToastMessage={props.showToastMessage} openCreateForm={openCreateForm} />
             <OrderView ref={DetailsViewRef} openCreateForm={openCreateForm} />
             <SalesReturnCreate ref={SalesReturnCreateRef} showToastMessage={props.showToastMessage} refreshSalesList={list} />

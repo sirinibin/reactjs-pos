@@ -1,12 +1,13 @@
-import React, { useState, useRef, forwardRef, useImperativeHandle } from "react";
+import React, { useState, useRef, forwardRef, useImperativeHandle, useCallback, useEffect } from "react";
 import { Modal, Button, Table } from 'react-bootstrap';
 
 import NumberFormat from "react-number-format";
 import Preview from "./../order/preview.js";
-import SalesReturnPrint from './print.js';
+import OrderPrint from './../order/print.js';
 import { format } from "date-fns";
 import { QRCodeCanvas } from "qrcode.react";
 import { trimTo2Decimals } from "../utils/numberUtils";
+import OrderPreview from './../order/preview.js';
 
 const SalesReturnView = forwardRef((props, ref) => {
 
@@ -19,16 +20,55 @@ const SalesReturnView = forwardRef((props, ref) => {
                 SetShow(true);
             }
 
+
+            if (localStorage.getItem('store_id')) {
+                getStore(localStorage.getItem('store_id'));
+            }
+
+
         },
 
     }));
 
 
+
+
+    let [store, setStore] = useState({});
+
+    async function getStore(id) {
+        console.log("inside get Store");
+        const requestOptions = {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': localStorage.getItem('access_token'),
+            },
+        };
+
+        await fetch('/v1/store/' + id, requestOptions)
+            .then(async response => {
+                const isJson = response.headers.get('content-type')?.includes('application/json');
+                const data = isJson && await response.json();
+
+                // check for error response
+                if (!response.ok) {
+                    const error = (data && data.errors);
+                    return Promise.reject(error);
+                }
+
+                console.log("Response:");
+                console.log(data);
+                store = data.result;
+                setStore({ ...store });
+            })
+            .catch(error => {
+
+            });
+    }
+
+
+
     let [model, setModel] = useState({});
-
-
-
-
 
     let [salesReturnPaymentList, setSalesReturnPaymentList] = useState([]);
     let [totalPayments, setTotalPayments] = useState(0.00);
@@ -144,23 +184,138 @@ const SalesReturnView = forwardRef((props, ref) => {
     };
 
     const PreviewRef = useRef();
-    function openPreview() {
-        PreviewRef.current.open(model, undefined, "sales_return");
-    }
+
+    const openPreview = useCallback(() => {
+        setShowOrderPreview(true);
+        setShowPrintTypeSelection(false);
 
 
+        if (timerRef.current) clearTimeout(timerRef.current);
+
+        timerRef.current = setTimeout(() => {
+            PreviewRef.current?.open(model, undefined, "sales_return");
+            handleClose();
+        }, 100);
+
+    }, [model]);
+
+
+    /*
     const PrintRef = useRef();
     function openPrint() {
         PrintRef.current.open(model);
-    }
+    }*/
+
+
+    const PrintRef = useRef();
+    const openPrint = useCallback(() => {
+        // document.removeEventListener('keydown', handleEnterKey);
+        setShowPrintTypeSelection(false);
+
+        PrintRef.current?.open(model, "sales_return");
+        handleClose();
+    }, [model]);
+
 
     function sendWhatsAppMessage() {
         PreviewRef.current.open(model, "whatsapp", "whatsapp_sales_return");
     }
 
+    let [showPrintTypeSelection, setShowPrintTypeSelection] = useState(false);
+
+
+
+    let [showOrderPreview, setShowOrderPreview] = useState(false);
+    const timerRef = useRef(null);
+
+    const printButtonRef = useRef();
+    const printA4ButtonRef = useRef();
+    const openPrintTypeSelection = useCallback(() => {
+
+        if (store.settings?.enable_invoice_print_type_selection) {
+            // showPrintTypeSelection = true;
+            setShowOrderPreview(true);
+            setShowPrintTypeSelection(true);
+            if (timerRef.current) clearTimeout(timerRef.current);
+            timerRef.current = setTimeout(() => {
+                printButtonRef.current?.focus();
+            }, 100);
+
+        } else {
+            openPreview();
+        }
+    }, [openPreview, store]);
+
+
+
+
+
+
+    const handleEnterKey = useCallback((event) => {
+        const tag = event.target.tagName.toLowerCase();
+        const isInput = tag === 'input' || tag === 'textarea' || event.target.isContentEditable;
+
+        if (!show) {
+            return;
+        }
+
+        if (event.key === 'Enter' && !isInput) {
+            openPrintTypeSelection();
+            // Call your function here
+        }
+    }, [openPrintTypeSelection, show]);
+
+    useEffect(() => {
+        document.addEventListener('keydown', handleEnterKey);
+        return () => {
+            document.removeEventListener('keydown', handleEnterKey);
+        };
+    }, [handleEnterKey]);
+
     return (<>
+        <Modal show={showPrintTypeSelection} onHide={() => {
+            showPrintTypeSelection = false;
+            setShowPrintTypeSelection(showPrintTypeSelection);
+        }} centered>
+            <Modal.Header closeButton>
+                <Modal.Title>Select Print Type</Modal.Title>
+            </Modal.Header>
+            <Modal.Body className="d-flex justify-content-around">
+
+                <Button variant="secondary" ref={printButtonRef} onClick={() => {
+                    openPrint();
+                }} onKeyDown={(e) => {
+                    if (timerRef.current) clearTimeout(timerRef.current);
+
+                    if (e.key === "ArrowRight") {
+                        timerRef.current = setTimeout(() => {
+                            printA4ButtonRef.current.focus();
+                        }, 100);
+                    }
+                }}>
+                    <i className="bi bi-printer"></i> Print
+                </Button>
+
+                <Button variant="primary" ref={printA4ButtonRef} onClick={() => {
+                    openPreview();
+                }}
+                    onKeyDown={(e) => {
+                        if (timerRef.current) clearTimeout(timerRef.current);
+
+                        if (e.key === "ArrowLeft") {
+                            timerRef.current = setTimeout(() => {
+                                printButtonRef.current.focus();
+                            }, 100);
+                        }
+                    }}
+                >
+                    <i className="bi bi-printer"></i> Print A4 Invoice
+                </Button>
+            </Modal.Body>
+        </Modal >
+        {showOrderPreview && <OrderPreview ref={PreviewRef} />}
         <Preview ref={PreviewRef} />
-        <SalesReturnPrint ref={PrintRef} />
+        <OrderPrint ref={PrintRef} />
         <Modal show={show} size="xl" onHide={handleClose} animation={false} scrollable={true}>
             <Modal.Header>
                 <Modal.Title>Details of SalesReturn #{model.code}</Modal.Title>

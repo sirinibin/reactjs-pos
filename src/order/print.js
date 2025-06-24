@@ -18,9 +18,16 @@ const OrderPrint = forwardRef((props, ref) => {
 
 
             if (modelObj) {
+                model = modelObj;
+
+
+                if (model.id) {
+                    await getModel(model.id, modelName);
+                }
+                /*
                 if (modelObj.id) {
                     await getOrder(modelObj.id);
-                }
+                }*/
 
                 if (model.store_id) {
                     await getStore(model.store_id);
@@ -33,6 +40,7 @@ const OrderPrint = forwardRef((props, ref) => {
                 setInvoiceTitle(modelName);
 
                 if (model.store?.code === "PH2" || model.store?.code === "LGK-SIMULATION" || model.store?.code === "LGK") {
+
 
                     preparePages();
                 } else {
@@ -106,6 +114,62 @@ const OrderPrint = forwardRef((props, ref) => {
         },
 
     }));
+
+    async function getModel(id, modelName) {
+        console.log("inside get Order");
+        const requestOptions = {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': localStorage.getItem('access_token'),
+            },
+        };
+
+        let searchParams = {};
+        if (localStorage.getItem("store_id")) {
+            searchParams.store_id = localStorage.getItem("store_id");
+        }
+        let queryParams = ObjectToSearchQueryParams(searchParams);
+
+        let apiPath = "";
+        if (modelName && (modelName === "sales" || modelName === "whatsapp_sales")) {
+            apiPath = "order"
+        } else if (modelName && (modelName === "sales_return" || modelName === "whatsapp_sales_return")) {
+            apiPath = "sales-return"
+        } else if (modelName && (modelName === "purchase" || modelName === "whatsapp_purchase")) {
+            apiPath = "purchase"
+        } else if (modelName && (modelName === "purchase_return" || modelName === "whatsapp_purchase_return")) {
+            apiPath = "purchase-return"
+        } else if (modelName && (modelName === "quotation" || modelName === "whatsapp_quotation")) {
+            apiPath = "quotation"
+        } else if (modelName && (modelName === "quotation_sales_return" || modelName === "whatsapp_quotation_sales_return")) {
+            apiPath = "quotation-sales-return"
+        } else if (modelName && (modelName === "delivery_note" || modelName === "whatsapp_delivery_note")) {
+            apiPath = "delivery-note"
+        }
+
+        await fetch('/v1/' + apiPath + '/' + id + "?" + queryParams, requestOptions)
+            .then(async response => {
+                const isJson = response.headers.get('content-type')?.includes('application/json');
+                const data = isJson && await response.json();
+
+                // check for error response
+                if (!response.ok) {
+                    const error = (data && data.errors);
+                    return Promise.reject(error);
+                }
+
+                console.log("Response:");
+                console.log(data);
+
+                model = data.result;
+                setModel({ ...model });
+                return model;
+            })
+            .catch(error => {
+
+            });
+    }
 
     function preparePages() {
         let pageSize = 8;
@@ -290,6 +354,7 @@ const OrderPrint = forwardRef((props, ref) => {
 
     let [modelName, setModelName] = useState("sales");
 
+    /*
     async function getOrder(id) {
         console.log("inside get Order");
         const requestOptions = {
@@ -330,7 +395,7 @@ const OrderPrint = forwardRef((props, ref) => {
             .catch(error => {
 
             });
-    }
+    }*/
 
 
 
