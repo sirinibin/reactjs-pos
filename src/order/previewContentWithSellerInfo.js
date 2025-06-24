@@ -820,7 +820,7 @@ const PreviewContentWithSellerInfo = forwardRef((props, ref) => {
                                                 <th dir="ltr" style={{
                                                     unicodeBidi: 'isolate',
                                                     borderRight: tableBorderThickness,
-                                                    wordBreak: "break-word",
+                                                    /* wordBreak: "break-word",*/
                                                     overflowWrap: "break-word",
                                                     whiteSpace: "normal"
 
