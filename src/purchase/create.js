@@ -977,7 +977,11 @@ const PurchaseCreate = forwardRef((props, ref) => {
     }
 
     function removeProduct(product) {
-        const index = selectedProducts.indexOf(product);
+        let index = selectedProducts.indexOf(product);
+        if (index === -1) {
+            index = getProductIndex(product.id);
+        }
+
         if (index > -1) {
             selectedProducts.splice(index, 1);
             removeWarningAndError(index);
@@ -2377,10 +2381,19 @@ const PurchaseCreate = forwardRef((props, ref) => {
                                     return (
                                         <Menu {...menuProps}>
                                             {/* Header */}
-                                            <MenuItem disabled>
-                                                <div style={{ display: 'flex', fontWeight: 'bold', padding: '4px 8px', borderBottom: '1px solid #ddd' }}>
+                                            <MenuItem disabled style={{ position: 'sticky', top: 0, padding: 0, margin: 0 }}>
+                                                <div style={{
+
+                                                    background: '#f8f9fa',
+                                                    zIndex: 2,
+                                                    display: 'flex',
+                                                    fontWeight: 'bold',
+                                                    padding: '4px 8px',
+                                                    borderBottom: '1px solid #ddd',
+                                                }}>
+                                                    <div style={{ width: '5%' }}></div>
                                                     <div style={{ width: '15%' }}>Part Number</div>
-                                                    <div style={{ width: '45%' }}>Name</div>
+                                                    <div style={{ width: '40%' }}>Name</div>
                                                     <div style={{ width: '10%' }}>Unit Price</div>
                                                     <div style={{ width: '10%' }}>Stock</div>
                                                     <div style={{ width: '10%' }}>Brand</div>
@@ -2391,10 +2404,54 @@ const PurchaseCreate = forwardRef((props, ref) => {
                                             {/* Rows */}
                                             {results.map((option, index) => {
                                                 const isActive = state.activeIndex === index;
+                                                let checked = isProductAdded(option.id);
                                                 return (
                                                     <MenuItem option={option} position={index} key={index}>
                                                         <div style={{ display: 'flex', padding: '4px 8px' }}>
-                                                            <div style={{ ...columnStyle, width: '15%' }}>
+                                                            <div
+                                                                className="form-check"
+                                                                style={{ ...columnStyle, width: '5%' }}
+                                                                onClick={e => {
+                                                                    e.stopPropagation();     // Stop click bubbling to parent MenuItem
+                                                                    checked = !checked;
+
+                                                                    if (timerRef.current) clearTimeout(timerRef.current);
+                                                                    timerRef.current = setTimeout(() => {
+                                                                        if (checked) {
+                                                                            addProduct(option);
+                                                                        } else {
+                                                                            removeProduct(option);
+                                                                        }
+                                                                    }, 100);
+
+                                                                }}
+                                                            >
+                                                                <input
+                                                                    className="form-check-input"
+                                                                    type="checkbox"
+                                                                    value={checked}
+                                                                    checked={checked}
+                                                                    onClick={e => {
+                                                                        e.stopPropagation();     // Stop click bubbling to parent MenuItem
+                                                                    }}
+                                                                    onChange={e => {
+                                                                        e.preventDefault();      // Prevent default selection behavior
+                                                                        e.stopPropagation();
+
+                                                                        checked = !checked;
+
+                                                                        if (timerRef.current) clearTimeout(timerRef.current);
+                                                                        timerRef.current = setTimeout(() => {
+                                                                            if (checked) {
+                                                                                addProduct(option);
+                                                                            } else {
+                                                                                removeProduct(option);
+                                                                            }
+                                                                        }, 100);
+                                                                    }}
+                                                                />
+                                                            </div>
+                                                            <div style={{ ...columnStyle, width: '10%' }}>
                                                                 {highlightWords(
                                                                     option.prefix_part_number
                                                                         ? `${option.prefix_part_number} - ${option.part_number}`

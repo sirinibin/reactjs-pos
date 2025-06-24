@@ -901,6 +901,45 @@ function ProductIndex(props) {
 
     const timerRef = useRef(null);
 
+    function getProductIndex(productID) {
+        for (var i = 0; i < selectedProducts.length; i++) {
+            if (selectedProducts[i].id === productID) {
+                return i;
+            }
+        }
+        return false;
+    }
+
+
+    function isProductAdded(productID) {
+        for (var i = 0; i < selectedProducts.length; i++) {
+            if (selectedProducts[i].id === productID) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+
+    function removeProduct(product) {
+        let index = selectedProducts.indexOf(product);
+        if (index === -1) {
+            index = getProductIndex(product.id);
+        }
+
+
+        if (index > -1) {
+            selectedProducts.splice(index, 1);
+        }
+        setSelectedProducts([...selectedProducts]);
+
+        if (timerRef.current) clearTimeout(timerRef.current);
+
+        timerRef.current = setTimeout(() => {
+            list();
+        }, 100);
+    }
+
 
     return (
         <>
@@ -1072,9 +1111,9 @@ function ProductIndex(props) {
                                             isLoading={false}
                                             onKeyDown={(e) => {
                                                 if (e.key === "Escape") {
-                                                    setProductOptions([]);
+                                                    // setProductOptions([]);
                                                     setOpenProductSearchResult(false);
-                                                    productSearchRef.current?.clear();
+                                                    // productSearchRef.current?.clear();
                                                 }
                                             }}
                                             onChange={(selectedItems) => {
@@ -1108,14 +1147,21 @@ function ProductIndex(props) {
                                             multiple
                                             renderMenu={(results, menuProps, state) => {
                                                 const searchWords = state.text.toLowerCase().split(" ").filter(Boolean);
-
                                                 return (
                                                     <Menu {...menuProps}>
                                                         {/* Header */}
-                                                        <MenuItem disabled>
-                                                            <div style={{ display: 'flex', fontWeight: 'bold', padding: '4px 8px', borderBottom: '1px solid #ddd' }}>
+                                                        <MenuItem disabled style={{ position: 'sticky', top: 0, padding: 0, margin: 0 }}>
+                                                            <div style={{
+                                                                background: '#f8f9fa',
+                                                                zIndex: 2,
+                                                                display: 'flex',
+                                                                fontWeight: 'bold',
+                                                                padding: '4px 8px',
+                                                                borderBottom: '1px solid #ddd',
+                                                            }}>
+                                                                <div style={{ width: '5%' }}></div>
                                                                 <div style={{ width: '15%' }}>Part Number</div>
-                                                                <div style={{ width: '45%' }}>Name</div>
+                                                                <div style={{ width: '40%' }}>Name</div>
                                                                 <div style={{ width: '10%' }}>Unit Price</div>
                                                                 <div style={{ width: '10%' }}>Stock</div>
                                                                 <div style={{ width: '10%' }}>Brand</div>
@@ -1126,10 +1172,72 @@ function ProductIndex(props) {
                                                         {/* Rows */}
                                                         {results.map((option, index) => {
                                                             const isActive = state.activeIndex === index;
+                                                            let checked = isProductAdded(option.id);
                                                             return (
                                                                 <MenuItem option={option} position={index} key={index}>
                                                                     <div style={{ display: 'flex', padding: '4px 8px' }}>
-                                                                        <div style={{ ...columnStyle, width: '15%' }}>
+                                                                        <div
+                                                                            style={{ ...columnStyle, width: '5%' }}
+                                                                            onClick={e => {
+                                                                                e.stopPropagation();     // Stop click bubbling to parent MenuItem
+
+                                                                                checked = !checked
+
+                                                                                if (checked) {
+                                                                                    timerRef.current = setTimeout(() => {
+                                                                                        selectedProducts.push(option);
+                                                                                        setSelectedProducts([...selectedProducts]);
+                                                                                        searchByMultipleValuesField(
+                                                                                            "product_id",
+                                                                                            selectedProducts,
+                                                                                            "all"
+                                                                                        );
+                                                                                    }, 100);
+
+                                                                                } else {
+                                                                                    timerRef.current = setTimeout(() => {
+                                                                                        removeProduct(option);
+                                                                                    }, 100);
+
+                                                                                }
+                                                                            }}
+                                                                        >
+                                                                            <input
+
+                                                                                type="checkbox"
+                                                                                value={checked}
+                                                                                checked={checked}
+                                                                                onClick={e => {
+                                                                                    e.stopPropagation();     // Stop click bubbling to parent MenuItem
+                                                                                }}
+                                                                                onChange={e => {
+                                                                                    if (timerRef.current) clearTimeout(timerRef.current);
+                                                                                    e.preventDefault();      // Prevent default selection behavior
+                                                                                    e.stopPropagation();
+
+                                                                                    checked = !checked
+
+                                                                                    if (checked) {
+                                                                                        timerRef.current = setTimeout(() => {
+                                                                                            selectedProducts.push(option);
+                                                                                            setSelectedProducts([...selectedProducts]);
+                                                                                            searchByMultipleValuesField(
+                                                                                                "product_id",
+                                                                                                selectedProducts,
+                                                                                                "all"
+                                                                                            );
+                                                                                        }, 100);
+
+                                                                                    } else {
+                                                                                        timerRef.current = setTimeout(() => {
+                                                                                            removeProduct(option);
+                                                                                        }, 100);
+
+                                                                                    }
+                                                                                }}
+                                                                            />
+                                                                        </div>
+                                                                        <div style={{ ...columnStyle, width: '10%' }}>
                                                                             {highlightWords(
                                                                                 option.prefix_part_number
                                                                                     ? `${option.prefix_part_number} - ${option.part_number}`

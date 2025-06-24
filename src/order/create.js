@@ -1055,7 +1055,7 @@ const OrderCreate = forwardRef((props, ref) => {
 
         let oldQty = 0;
         for (let j = 0; j < oldProducts?.length; j++) {
-            if (oldProducts[j].product_id === selectedProducts[j].product_id) {
+            if (oldProducts[j]?.product_id === selectedProducts[j]?.product_id) {
                 if (formData.id) {
                     oldQty = oldProducts[j].quantity;
                     selectedProducts[i].stock += oldQty;
@@ -1244,12 +1244,15 @@ const OrderCreate = forwardRef((props, ref) => {
             reCalculate(index);
             checkErrors(index);
             checkWarnings(index);
-        }, 300);
+        }, 100);
         return true;
     }
 
     function removeProduct(product) {
-        const index = selectedProducts.indexOf(product);
+        let index = selectedProducts.indexOf(product);
+        if (index === -1) {
+            index = getProductIndex(product.id);
+        }
         if (product.quantity_returned > 0) {
             errors["product_" + index] = "This product cannot be removed as it is returned, Note: Please remove the product from sales return and try again"
             setErrors({ ...errors });
@@ -1262,7 +1265,11 @@ const OrderCreate = forwardRef((props, ref) => {
         }
         setSelectedProducts([...selectedProducts]);
 
-        reCalculate();
+        if (timerRef.current) clearTimeout(timerRef.current);
+
+        timerRef.current = setTimeout(() => {
+            reCalculate();
+        }, 100);
     }
 
 
@@ -2609,7 +2616,7 @@ const OrderCreate = forwardRef((props, ref) => {
                                 </div>
                             )}
                         </div>
-                        <div className="col-md-8" >
+                        <div className="col-md-10" >
                             <label className="form-label">Product Search*</label>
                             <Typeahead
                                 id="product_id"
@@ -2637,7 +2644,7 @@ const OrderCreate = forwardRef((props, ref) => {
                                     setOpenProductSearchResult(false);
 
                                     timerRef.current = setTimeout(() => {
-                                        inputRefs.current[(selectedProducts.length - 1)][`sales_product_quantity_${selectedProducts.length - 1}`].select();
+                                        inputRefs.current[(selectedProducts.length - 1)][`sales_product_quantity_${selectedProducts.length - 1}`]?.select();
                                     }, 100);
                                 }}
                                 options={productOptions}
@@ -2666,10 +2673,19 @@ const OrderCreate = forwardRef((props, ref) => {
                                     return (
                                         <Menu {...menuProps}>
                                             {/* Header */}
-                                            <MenuItem disabled>
-                                                <div style={{ display: 'flex', fontWeight: 'bold', padding: '4px 8px', borderBottom: '1px solid #ddd' }}>
+                                            <MenuItem disabled style={{ position: 'sticky', top: 0, padding: 0, margin: 0 }}>
+                                                <div style={{
+
+                                                    background: '#f8f9fa',
+                                                    zIndex: 2,
+                                                    display: 'flex',
+                                                    fontWeight: 'bold',
+                                                    padding: '4px 8px',
+                                                    borderBottom: '1px solid #ddd',
+                                                }}>
+                                                    <div style={{ width: '5%' }}></div>
                                                     <div style={{ width: '15%' }}>Part Number</div>
-                                                    <div style={{ width: '45%' }}>Name</div>
+                                                    <div style={{ width: '40%' }}>Name</div>
                                                     <div style={{ width: '10%' }}>Unit Price</div>
                                                     <div style={{ width: '10%' }}>Stock</div>
                                                     <div style={{ width: '10%' }}>Brand</div>
@@ -2680,10 +2696,54 @@ const OrderCreate = forwardRef((props, ref) => {
                                             {/* Rows */}
                                             {results.map((option, index) => {
                                                 const isActive = state.activeIndex === index;
+                                                let checked = isProductAdded(option.id);
                                                 return (
                                                     <MenuItem option={option} position={index} key={index}>
                                                         <div style={{ display: 'flex', padding: '4px 8px' }}>
-                                                            <div style={{ ...columnStyle, width: '15%' }}>
+                                                            <div
+                                                                className="form-check"
+                                                                style={{ ...columnStyle, width: '5%' }}
+                                                                onClick={e => {
+                                                                    e.stopPropagation();     // Stop click bubbling to parent MenuItem
+                                                                    checked = !checked;
+
+                                                                    if (timerRef.current) clearTimeout(timerRef.current);
+                                                                    timerRef.current = setTimeout(() => {
+                                                                        if (checked) {
+                                                                            addProduct(option);
+                                                                        } else {
+                                                                            removeProduct(option);
+                                                                        }
+                                                                    }, 100);
+
+                                                                }}
+                                                            >
+                                                                <input
+                                                                    className="form-check-input"
+                                                                    type="checkbox"
+                                                                    value={checked}
+                                                                    checked={checked}
+                                                                    onClick={e => {
+                                                                        e.stopPropagation();     // Stop click bubbling to parent MenuItem
+                                                                    }}
+                                                                    onChange={e => {
+                                                                        e.preventDefault();      // Prevent default selection behavior
+                                                                        e.stopPropagation();
+
+                                                                        checked = !checked;
+
+                                                                        if (timerRef.current) clearTimeout(timerRef.current);
+                                                                        timerRef.current = setTimeout(() => {
+                                                                            if (checked) {
+                                                                                addProduct(option);
+                                                                            } else {
+                                                                                removeProduct(option);
+                                                                            }
+                                                                        }, 100);
+                                                                    }}
+                                                                />
+                                                            </div>
+                                                            <div style={{ ...columnStyle, width: '10%' }}>
                                                                 {highlightWords(
                                                                     option.prefix_part_number
                                                                         ? `${option.prefix_part_number} - ${option.part_number}`
@@ -2740,20 +2800,19 @@ const OrderCreate = forwardRef((props, ref) => {
                             </Button>
                         </div>
 
-                        <div className="col-md-2">
+                        <div className="col-md-1">
                             <div style={{ zIndex: "9999 !important", marginTop: "30px" }}>
-                                <Dropdown>
+                                <Dropdown style={{}}>
                                     <Dropdown.Toggle variant="success" id="dropdown-basic">
-                                        <i className="bi bi-download"></i>    Import Products from
+                                        <i className="bi bi-download"></i>    Import
                                     </Dropdown.Toggle>
-
                                     <Dropdown.Menu >
                                         <Dropdown.Item onClick={() => {
                                             openQuotations();
                                         }}>
                                             <i className="bi bi-file-earmark-text"></i>
                                             &nbsp;
-                                            Quotations
+                                            From Quotations
                                         </Dropdown.Item>
 
                                         <Dropdown.Item onClick={() => {
@@ -2761,7 +2820,7 @@ const OrderCreate = forwardRef((props, ref) => {
                                         }}>
                                             <i className="bi bi-file-earmark-text"></i>
                                             &nbsp;
-                                            Delivery Notes
+                                            From Delivery Notes
                                         </Dropdown.Item>
                                     </Dropdown.Menu>
                                 </Dropdown>
