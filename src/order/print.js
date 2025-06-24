@@ -20,7 +20,6 @@ const OrderPrint = forwardRef((props, ref) => {
             if (modelObj) {
                 model = modelObj;
 
-
                 if (model.id) {
                     await getModel(model.id, modelName);
                 }
@@ -172,9 +171,7 @@ const OrderPrint = forwardRef((props, ref) => {
     }
 
     function preparePages() {
-        let pageSize = 8;
-
-
+        let pageSize = 11;
 
         model.pageSize = pageSize;
         let totalProducts = model.products?.length;
