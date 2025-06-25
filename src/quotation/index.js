@@ -593,18 +593,17 @@ function QuotationIndex(props) {
   const printA4ButtonRef = useRef();
 
   const PreviewRef = useRef();
-  const openPreview = useCallback(() => {
+  const openPreview = useCallback((quotation) => {
     setShowOrderPreview(true);
     setShowPrintTypeSelection(false);
-
 
     if (timerRef.current) clearTimeout(timerRef.current);
 
     timerRef.current = setTimeout(() => {
-      PreviewRef.current?.open(selectedQuotation, undefined, "quotation");
+      PreviewRef.current?.open(quotation, undefined, "quotation");
     }, 100);
 
-  }, [selectedQuotation]);
+  }, []);
 
 
   let [showOrderPreview, setShowOrderPreview] = useState(false);
@@ -619,21 +618,19 @@ function QuotationIndex(props) {
       timerRef.current = setTimeout(() => {
         printButtonRef.current?.focus();
       }, 100);
-
     } else {
-      openPreview();
+      openPreview(quotation);
     }
   }, [openPreview, store]);
 
 
 
   const PrintRef = useRef();
-
-  const openPrint = useCallback(() => {
+  const openPrint = useCallback((quotation) => {
     // document.removeEventListener('keydown', handleEnterKey);
     setShowPrintTypeSelection(false);
-    PrintRef.current?.open(selectedQuotation, "quotation");
-  }, [selectedQuotation]);
+    PrintRef.current?.open(quotation, "quotation");
+  }, []);
 
 
   return (
@@ -649,7 +646,7 @@ function QuotationIndex(props) {
         </Modal.Header>
         <Modal.Body className="d-flex justify-content-around">
           <Button variant="secondary" ref={printButtonRef} onClick={() => {
-            openPrint();
+            openPrint(selectedQuotation);
           }} onKeyDown={(e) => {
             if (timerRef.current) clearTimeout(timerRef.current);
 
@@ -663,7 +660,7 @@ function QuotationIndex(props) {
           </Button>
 
           <Button variant="primary" ref={printA4ButtonRef} onClick={() => {
-            openPreview();
+            openPreview(selectedQuotation);
           }}
             onKeyDown={(e) => {
               if (timerRef.current) clearTimeout(timerRef.current);
