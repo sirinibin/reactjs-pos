@@ -240,17 +240,10 @@ const OrderView = forwardRef((props, ref) => {
     let [showOrderPreview, setShowOrderPreview] = useState(false);
     let [showPrintTypeSelection, setShowPrintTypeSelection] = useState(false);
 
-    // let [previewOpened, setPreviewOpened] = useState(false);
-
-
     const timerRef = useRef(null);
-
     const PreviewRef = useRef();
+
     const openPreview = useCallback(() => {
-        //alert("OPen pre")
-        //  document.removeEventListener('keydown', handleEnterKey);
-        // alert("ok" + model.id);
-        //setPreviewOpened(true);
         setShowOrderPreview(true);
         setShowPrintTypeSelection(false);
 
@@ -282,7 +275,7 @@ const OrderView = forwardRef((props, ref) => {
         // document.removeEventListener('keydown', handleEnterKey);
         setShowPrintTypeSelection(false);
 
-        PrintRef.current?.open(model);
+        PrintRef.current?.open(model, "sales");
         handleClose();
     }, [model]);
 
@@ -291,7 +284,6 @@ const OrderView = forwardRef((props, ref) => {
     const printButtonRef = useRef();
     const printA4ButtonRef = useRef();
     const openPrintTypeSelection = useCallback(() => {
-
         if (store.settings?.enable_invoice_print_type_selection) {
             // showPrintTypeSelection = true;
             setShowOrderPreview(true);
@@ -326,13 +318,11 @@ const OrderView = forwardRef((props, ref) => {
     }, [openPrintTypeSelection, show]);
 
     useEffect(() => {
-
-
         document.addEventListener('keydown', handleEnterKey);
         return () => {
             document.removeEventListener('keydown', handleEnterKey);
         };
-    }, [handleEnterKey]); // no dependencies
+    }, [handleEnterKey]);
 
 
 
@@ -394,8 +384,8 @@ const OrderView = forwardRef((props, ref) => {
                 </Button>
             </Modal.Body>
         </Modal >
-        {showOrderPreview && <OrderPreview ref={PreviewRef} />
-        }
+        {showOrderPreview && <OrderPreview ref={PreviewRef} />}
+
         <OrderPrint ref={PrintRef} />
         <Modal show={show} size="xl" onHide={handleClose} animation={false} scrollable={true}>
             <Modal.Header>

@@ -1222,7 +1222,6 @@ const OrderIndex = forwardRef((props, ref) => {
 
     const PrintRef = useRef();
 
-
     const openPrint = useCallback(() => {
         // document.removeEventListener('keydown', handleEnterKey);
         setShowPrintTypeSelection(false);
@@ -2376,7 +2375,7 @@ const OrderIndex = forwardRef((props, ref) => {
                                                             </Button>&nbsp;
 
                                                             <Button className="btn btn-primary btn-sm" onClick={() => {
-                                                                // openPreview(order);
+
                                                                 openPrintTypeSelection(order);
                                                             }}>
                                                                 <i className="bi bi-printer"></i>
