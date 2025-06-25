@@ -567,13 +567,15 @@ const PreviewContent = forwardRef((props, ref) => {
                                         props.selectText("tableFooter");
                                     }} className="clickable-text">
                                         <tr style={{ borderBottom: tableBorderThickness }}>
-                                            {props.model.store?.settings?.zatca_qr_on_left_bottom && props.modelName !== "quotation" && props.modelName !== "whatsapp_quotation" && props.modelName !== "quotation_sales_return" && props.modelName !== "whatsapp_quotation_sales_return" && props.modelName !== "delivery_note" && <th rowSpan={6} style={{ width: "20%", padding: "3px", borderRight: tableBorderThickness }}>
+                                            {props.model.store?.settings?.zatca_qr_on_left_bottom && props.modelName !== "quotation" && props.modelName !== "whatsapp_quotation" && props.modelName !== "quotation_sales_return" && props.modelName !== "whatsapp_quotation_sales_return" && props.modelName !== "delivery_note" && <th rowSpan={7} style={{ width: "23%", padding: "3px", borderRight: tableBorderThickness }}>
                                                 <div className="col-md-1 text-center" style={{ width: "100%", height: "100%" }}>
-                                                    {props.model.store?.zatca?.phase === "1" && props.model.QRImageData ? <img className="text-start" src={props.model.QRImageData} style={{ width: "138px" }} alt="Invoice QR Code" /> : ""}
-                                                    {props.model.store?.zatca?.phase === "2" && props.model.zatca?.qr_code && props.model.zatca?.reporting_passed ? <QRCodeCanvas value={props.model.zatca?.qr_code} style={{ width: "138px", height: "138px", border: "solid 0px", }} size={138} /> : ""}
-                                                    {props.model.store?.zatca?.phase === "2" && !props.model.zatca?.qr_code ? <img src={props.model.QRImageData} style={{ width: "138px", height: "138px", border: "solid 0px" }} alt="Invoice QR Code" /> : ""}
+                                                    {props.model.store?.zatca?.phase === "1" && props.model.QRImageData ? <img className="text-start" src={props.model.QRImageData} style={{ width: "163px" }} alt="Invoice QR Code" /> : ""}
+                                                    {props.model.store?.zatca?.phase === "2" && props.model.zatca?.qr_code && props.model.zatca?.reporting_passed ? <QRCodeCanvas value={props.model.zatca?.qr_code} style={{ width: "163px", height: "163px", border: "solid 0px", }} size={163} /> : ""}
+                                                    {props.model.store?.zatca?.phase === "2" && !props.model.zatca?.qr_code ? <img src={props.model.QRImageData} style={{ width: "163px", height: "163px", border: "solid 0px" }} alt="Invoice QR Code" /> : ""}
                                                 </div>
                                             </th>}
+                                        </tr>
+                                        <tr style={{ borderBottom: tableBorderThickness }}>
                                             <th className="text-end print-label" style={{ padding: "2px", borderRight: tableBorderThickness }}>
                                                 <b> Total (without VAT) الإجمالي (بدون ضريبة القيمة المضافة) :</b>
                                             </th>
@@ -583,7 +585,6 @@ const PreviewContent = forwardRef((props, ref) => {
                                         </tr>
                                         <tr style={{ borderBottom: tableBorderThickness }}>
                                             <th className="text-end print-label" style={{ padding: "2px", borderRight: tableBorderThickness }}>
-
                                                 Shipping / Handling Fees   رسوم الشحن / المناولة :
                                             </th>
                                             <td className="text-end print-table-value" colSpan="1" style={{ paddingRight: "3px" }}>
@@ -616,7 +617,7 @@ const PreviewContent = forwardRef((props, ref) => {
                                             </td>
                                         </tr>
                                         <tr>
-                                            <th className="text-end print-label" style={{ padding: "2px", width: `${props.modelName !== "quotation" ? "70%" : "90%"}`, borderRight: tableBorderThickness }}>
+                                            <th className="text-end print-label" style={{ padding: "2px", width: `${props.modelName !== "quotation" ? "67%" : "90%"}`, borderRight: tableBorderThickness }}>
                                                 Net Total (with VAT)  الإجمالي الصافي (مع ضريبة القيمة المضافة) :
                                             </th>
                                             <td className="text-end" colSpan="1" style={{ width: "10%", paddingRight: "3px" }}>
