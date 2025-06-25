@@ -1151,7 +1151,7 @@ function SalesReturnIndex(props) {
     const printA4ButtonRef = useRef();
 
     const PreviewRef = useRef();
-    const openPreview = useCallback(() => {
+    const openPreview = useCallback((salesReturn) => {
         setShowOrderPreview(true);
         setShowPrintTypeSelection(false);
 
@@ -1159,10 +1159,10 @@ function SalesReturnIndex(props) {
         if (timerRef.current) clearTimeout(timerRef.current);
 
         timerRef.current = setTimeout(() => {
-            PreviewRef.current?.open(selectedSalesReturn, undefined, "sales_return");
+            PreviewRef.current?.open(salesReturn, undefined, "sales_return");
         }, 100);
 
-    }, [selectedSalesReturn]);
+    }, []);
 
     function sendWhatsAppMessage(model) {
         PreviewRef.current.open(model, "whatsapp", "whatsapp_sales_return");
@@ -1197,15 +1197,15 @@ function SalesReturnIndex(props) {
             }, 100);
 
         } else {
-            openPreview();
+            openPreview(salesReturn);
         }
     }, [openPreview, store]);
 
     const PrintRef = useRef();
-    const openPrint = useCallback(() => {
+    const openPrint = useCallback((salesReturn) => {
         setShowPrintTypeSelection(false);
-        PrintRef.current?.open(selectedSalesReturn, "sales_return");
-    }, [selectedSalesReturn]);
+        PrintRef.current?.open(salesReturn, "sales_return");
+    }, []);
 
 
     return (
@@ -1219,7 +1219,7 @@ function SalesReturnIndex(props) {
                 </Modal.Header>
                 <Modal.Body className="d-flex justify-content-around">
                     <Button variant="secondary" ref={printButtonRef} onClick={() => {
-                        openPrint();
+                        openPrint(selectedSalesReturn);
                     }} onKeyDown={(e) => {
                         if (timerRef.current) clearTimeout(timerRef.current);
 
@@ -1233,7 +1233,7 @@ function SalesReturnIndex(props) {
                     </Button>
 
                     <Button variant="primary" ref={printA4ButtonRef} onClick={() => {
-                        openPreview();
+                        openPreview(selectedSalesReturn);
                     }}
                         onKeyDown={(e) => {
                             if (timerRef.current) clearTimeout(timerRef.current);
