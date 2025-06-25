@@ -27,7 +27,7 @@ const OrderPrintContent = forwardRef((props, ref) => {
 
                 >
                     <h2 style={{ fontSize: "4mm", position: "absolute", left: "305px", top: (40 + page.top) + "px", border: "solid " + border + "px", textDecoration: "underline", }}>
-                        {"TAX INVOICE / فاتورة ضريبية"}
+                        {props.model.invoiceTitle}
                     </h2>
 
                     <h4 style={{ fontSize: "3mm", position: "absolute", left: "100px", top: (14 + page.top) + "px", border: "solid " + border + "px", }}>
@@ -208,7 +208,7 @@ const OrderPrintContent = forwardRef((props, ref) => {
                         {props.model.delivered_by_user ? props.model.delivered_by_user.name : ""}
                     </h4>
 
-                    {page.lastPage ? <div style={{ position: "absolute", left: "600px", top: (670 + page.top) + "px" }} >
+                    {page.lastPage && props.model?.modelName !== "quotation" && props.model?.modelName !== "quotation_sales_return" && props.model?.modelName !== "delivery_note" ? <div style={{ position: "absolute", left: "600px", top: (670 + page.top) + "px" }} >
                         {!props.model.zatca?.qr_code && props.model.QRImageData ? <img className="text-start" src={props.model.QRImageData} style={{ width: "102px", height: "94px" }} alt="Invoice QR Code" /> : ""}
                         {props.model.zatca?.qr_code ? <QRCodeCanvas value={props.model.zatca?.qr_code} style={{ width: "102px", height: "94px" }} size={100} /> : ""}
                     </div> : ""}
