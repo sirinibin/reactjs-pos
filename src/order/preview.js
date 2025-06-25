@@ -1027,9 +1027,24 @@ const Preview = forwardRef((props, ref) => {
 
 
     const [showSlider, setShowSlider] = useState(false);
+    const [showQrCodeSlider, setShowQrCodeSlider] = useState(false);
     let [selectedText, setSelectedText] = useState("");
 
     const defaultFontSizes = useMemo(() => ({
+        "qrCode": {
+            "height": {
+                "value": 138,
+                "unit": "px",
+                "size": "138px",
+                "step": 1
+            },
+            "width": {
+                "value": 138,
+                "unit": "px",
+                "size": "138px",
+                "step": 1
+            },
+        },
         "pageSize": 15,
         "font": "Cairo",
         "reportPageSize": 20,
@@ -1161,6 +1176,15 @@ const Preview = forwardRef((props, ref) => {
         setShowSlider(true);
     };
 
+    const selectQRCode = () => {
+        selectedText = "";
+        setSelectedText("");
+        if (!fontSizes[modelName + "_qrCode"]) {
+            fontSizes[modelName + "_qrCode"] = defaultFontSizes[modelName + "_qrCode"];
+        }
+        setShowQrCodeSlider(true);
+    };
+
     const saveToLocalStorage = useCallback((key, obj) => {
         localStorage.setItem(key, JSON.stringify(obj));
     }, []);
@@ -1242,6 +1266,25 @@ const Preview = forwardRef((props, ref) => {
             saveToLocalStorage("fontSizes", fontSizes);
         }
     };
+
+
+    const QrSize = (operation, attribute) => {
+
+        if (!fontSizes[modelName + "_qrCode"]) {
+            fontSizes[modelName + "_qrCode"] = defaultFontSizes["qrCode"];
+        }
+        if (operation === "increment") {
+            fontSizes[modelName + "_qrCode"][attribute].value += fontSizes[modelName + "_qrCode"][attribute].step;
+        } else if (operation === "decrement") {
+            fontSizes[modelName + "_qrCode"][attribute].value -= fontSizes[modelName + "_qrCode"][attribute].step;
+        }
+
+        fontSizes[modelName + "_qrCode"][attribute]["value"] = parseFloat(Math.min(fontSizes[modelName + "_qrCode"][attribute]?.value).toFixed(2));
+        fontSizes[modelName + "_qrCode"][attribute]["size"] = fontSizes[modelName + "_qrCode"][attribute]?.value + fontSizes[modelName + "_qrCode"][attribute]?.unit;
+        setFontSizes({ ...fontSizes });
+        saveToLocalStorage("fontSizes", fontSizes);
+    };
+
 
 
     const incrementSize = (element) => {
@@ -1387,6 +1430,41 @@ const Preview = forwardRef((props, ref) => {
                         </div>
                     )}
 
+                    {showQrCodeSlider && (
+                        <>
+                            <div className="d-flex align-items-center border rounded bg-light p-2">
+                                <button className="btn btn-outline-secondary" onClick={() => {
+                                    QrSize("decrement", "width");
+                                }}>−</button>
+                                <span className="mx-2">Width: {fontSizes[modelName + "_qrCode"]["width"]?.size}</span>
+                                <button className="btn btn-outline-secondary" onClick={() => {
+                                    QrSize("increment", "width");
+                                }}>+</button>
+
+
+                                <button className="btn btn-outline-secondary" style={{ marginLeft: "10px" }} onClick={() => {
+                                    QrSize("decrement", "height");
+                                }}>−</button>
+                                <span className="mx-2">Height: {fontSizes[modelName + "_qrCode"]["height"]?.size}</span>
+                                <button className="btn btn-outline-secondary" onClick={() => {
+                                    QrSize("increment", "height");
+                                }}>+</button>
+                                <button className="btn-close ms-2" onClick={() => setShowQrCodeSlider(false)}></button>
+
+                            </div>
+                            {/* <div className="d-flex align-items-center border rounded bg-light p-2">
+                                <button className="btn btn-outline-secondary" onClick={() => {
+                                    QrSize("decrement", "height");
+                                }}>−</button>
+                                <span className="mx-2">Height: {fontSizes[modelName + "_qrCode"]["height"]?.size}</span>
+                                <button className="btn btn-outline-secondary" onClick={() => {
+                                    QrSize("increment", "height");
+                                }}>+</button>
+                                <button className="btn-close ms-2" onClick={() => setShowQrCodeSlider(false)}></button>
+                            </div>*/}
+                        </>
+                    )}
+
                     <label htmlFor="font-select">Select Font: </label>
                     <select id="font-select" value={fontSizes[modelName + "_font"]} onChange={handleFontChange}>
                         {fonts.map((font) => (
@@ -1522,6 +1600,7 @@ const Preview = forwardRef((props, ref) => {
                         whatsAppShare={whatsAppShare}
                         modelName={modelName}
                         selectText={selectText}
+                        selectQRCode={selectQRCode}
                         fontSizes={fontSizes} />}
                     {model.store?.settings?.show_seller_info_in_invoice && <PreviewContentWithSellerInfo
                         model={model}
@@ -1529,6 +1608,7 @@ const Preview = forwardRef((props, ref) => {
                         whatsAppShare={whatsAppShare}
                         modelName={modelName}
                         selectText={selectText}
+                        selectQRCode={selectQRCode}
                         fontSizes={fontSizes} />}
                 </div>
             </Modal.Body>
