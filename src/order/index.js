@@ -1173,39 +1173,27 @@ const OrderIndex = forwardRef((props, ref) => {
     const [showErrors, setShowErrors] = useState(false);
     const [showSuccess, setShowSuccess] = useState(false);
     const [successMessage, setSuccessMessage] = useState(false);
+
     const printButtonRef = useRef();
     const printA4ButtonRef = useRef();
 
-    /*
-    function openPrintTypeSelection(model) {
-        setSelectedOrder({ ...model });
-        if (store.settings.enable_invoice_print_type_selection) {
-            showPrintTypeSelection = true;
-            setShowPrintTypeSelection(true);
-        } else {
-            openPreview(model);
-        }
-    }*/
-
-    const openPreview = useCallback(() => {
+    const PreviewRef = useRef();
+    const openPreview = useCallback((order) => {
         setShowOrderPreview(true);
         setShowPrintTypeSelection(false);
 
 
         if (timerRef.current) clearTimeout(timerRef.current);
-
         timerRef.current = setTimeout(() => {
-            PreviewRef.current?.open(selectedOrder, undefined, "sales");
+            PreviewRef.current?.open(order, undefined, "sales");
         }, 100);
-
-    }, [selectedOrder]);
+    }, []);
 
     let [showOrderPreview, setShowOrderPreview] = useState(false);
 
     const openPrintTypeSelection = useCallback((order) => {
         setSelectedOrder(order);
         if (store.settings?.enable_invoice_print_type_selection) {
-            // showPrintTypeSelection = true;
             setShowOrderPreview(true);
             setShowPrintTypeSelection(true);
             if (timerRef.current) clearTimeout(timerRef.current);
@@ -1214,7 +1202,10 @@ const OrderIndex = forwardRef((props, ref) => {
             }, 100);
 
         } else {
-            openPreview();
+            if (timerRef.current) clearTimeout(timerRef.current);
+            timerRef.current = setTimeout(() => {
+                openPreview(order);
+            }, 100);
         }
     }, [openPreview, store]);
 
@@ -1228,9 +1219,6 @@ const OrderIndex = forwardRef((props, ref) => {
 
         PrintRef.current?.open(selectedOrder, "sales");
     }, [selectedOrder]);
-
-
-    const PreviewRef = useRef();
 
 
 
@@ -1253,7 +1241,7 @@ const OrderIndex = forwardRef((props, ref) => {
     return (
         <>
             <OrderPrint ref={PrintRef} />
-
+            {showOrderPreview && <OrderPreview ref={PreviewRef} />}
             <Modal show={showPrintTypeSelection} onHide={() => {
                 showPrintTypeSelection = false;
                 setShowPrintTypeSelection(showPrintTypeSelection);
@@ -1263,7 +1251,7 @@ const OrderIndex = forwardRef((props, ref) => {
                 </Modal.Header>
                 <Modal.Body className="d-flex justify-content-around">
                     <Button variant="secondary" ref={printButtonRef} onClick={() => {
-                        openPrint();
+                        openPrint(selectedOrder);
                     }} onKeyDown={(e) => {
                         if (timerRef.current) clearTimeout(timerRef.current);
 
@@ -1277,7 +1265,7 @@ const OrderIndex = forwardRef((props, ref) => {
                     </Button>
 
                     <Button variant="primary" ref={printA4ButtonRef} onClick={() => {
-                        openPreview();
+                        openPreview(selectedOrder);
                     }}
                         onKeyDown={(e) => {
                             if (timerRef.current) clearTimeout(timerRef.current);
@@ -1295,7 +1283,7 @@ const OrderIndex = forwardRef((props, ref) => {
             </Modal>
 
             <ReportPreview ref={ReportPreviewRef} searchParams={searchParams} sortOrder={sortOrder} sortField={sortField} />
-            {showOrderPreview && <OrderPreview ref={PreviewRef} />}
+
             <OrderCreate ref={CreateFormRef} refreshList={list} showToastMessage={props.showToastMessage} openCreateForm={openCreateForm} />
             <OrderView ref={DetailsViewRef} openCreateForm={openCreateForm} />
             <SalesReturnCreate ref={SalesReturnCreateRef} showToastMessage={props.showToastMessage} refreshSalesList={list} />
@@ -2596,7 +2584,7 @@ const OrderIndex = forwardRef((props, ref) => {
 
             <Modal show={showOrderPaymentHistory} size="lg" onHide={handleOrderPaymentHistoryClose} animation={false} scrollable={true}>
                 <Modal.Header>
-                    <Modal.Title>Payment history of Order #{selectedOrder.code}</Modal.Title>
+                    <Modal.Title>Payment history of Order #{selectedOrder?.code}</Modal.Title>
 
                     <div className="col align-self-end text-end">
                         <button
@@ -2615,7 +2603,7 @@ const OrderIndex = forwardRef((props, ref) => {
 
             <Modal show={showOrderReturns} size="lg" onHide={handleOrderReturnsClose} animation={false} scrollable={true}>
                 <Modal.Header>
-                    <Modal.Title>Sales Returns of Sale Order #{selectedOrder.code}</Modal.Title>
+                    <Modal.Title>Sales Returns of Sale Order #{selectedOrder?.code}</Modal.Title>
 
                     <div className="col align-self-end text-end">
                         <button

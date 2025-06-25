@@ -343,7 +343,7 @@ const Preview = forwardRef((props, ref) => {
         }
 
         if (modelName === "sales_return" || modelName === "whatsapp_sales_return" || modelName === "purchase_return" || modelName === "whatsapp_purchase_return") {
-            model.products = model.products.filter(product => product.selected);
+            model.products = model.products?.filter(product => product.selected);
         }
 
 

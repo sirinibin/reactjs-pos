@@ -24,6 +24,12 @@ const PreviewContent = forwardRef((props, ref) => {
     }
 
 
+    function capitalizeFirstLetter(str) {
+        if (!str) return '';
+        return str.charAt(0).toUpperCase() + str.slice(1);
+    }
+
+
     function getArabicDate(engishDate) {
         let event = new Date(engishDate);
         let options = {
@@ -675,7 +681,7 @@ const PreviewContent = forwardRef((props, ref) => {
                                                         lineHeight: '1.8',
 
                                                     }}>{n2words(props.model.net_total, { lang: 'ar' }) + " ريال سعودي  "}</li>
-                                                    <li>{n2words(props.model.net_total, { lang: 'en' }) + " saudi riyals"}</li>
+                                                    <li>{capitalizeFirstLetter(n2words(props.model.net_total, { lang: 'en' })) + " saudi riyals"}</li>
                                                 </ul>
                                             </th>
                                         </tr>

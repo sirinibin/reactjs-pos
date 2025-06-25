@@ -2560,11 +2560,11 @@ const QuotationCreate = forwardRef((props, ref) => {
                           padding: '4px 8px',
                           borderBottom: '1px solid #ddd',
                         }}>
-                          <div style={{ width: '5%' }}></div>
-                          <div style={{ width: '15%' }}>Part Number</div>
-                          <div style={{ width: '40%' }}>Name</div>
-                          <div style={{ width: '10%' }}>Unit Price</div>
-                          <div style={{ width: '10%' }}>Stock</div>
+                          <div style={{ width: '3%' }}></div>
+                          <div style={{ width: '18%' }}>Part Number</div>
+                          <div style={{ width: '45%' }}>Name</div>
+                          <div style={{ width: '9%' }}>Unit Price</div>
+                          <div style={{ width: '5%' }}>Stock</div>
                           <div style={{ width: '10%' }}>Brand</div>
                           <div style={{ width: '10%' }}>Country</div>
                         </div>
@@ -2575,11 +2575,11 @@ const QuotationCreate = forwardRef((props, ref) => {
                         const isActive = state.activeIndex === index;
                         let checked = isProductAdded(option.id);
                         return (
-                          <MenuItem option={option} position={index} key={index}>
+                          <MenuItem option={option} position={index} key={index} style={{ padding: "0px" }}>
                             <div style={{ display: 'flex', padding: '4px 8px' }}>
                               <div
                                 className="form-check"
-                                style={{ ...columnStyle, width: '5%' }}
+                                style={{ ...columnStyle, width: '3%' }}
                                 onClick={e => {
                                   e.stopPropagation();     // Stop click bubbling to parent MenuItem
                                   checked = !checked;
@@ -2620,7 +2620,7 @@ const QuotationCreate = forwardRef((props, ref) => {
                                   }}
                                 />
                               </div>
-                              <div style={{ ...columnStyle, width: '10%' }}>
+                              <div style={{ ...columnStyle, width: '18%' }}>
                                 {highlightWords(
                                   option.prefix_part_number
                                     ? `${option.prefix_part_number} - ${option.part_number}`
@@ -2638,12 +2638,12 @@ const QuotationCreate = forwardRef((props, ref) => {
                                   isActive
                                 )}
                               </div>
-                              <div style={{ ...columnStyle, width: '10%' }}>
+                              <div style={{ ...columnStyle, width: '9%' }}>
                                 {option.product_stores?.[localStorage.getItem("store_id")]?.retail_unit_price && (
                                   <Amount amount={trimTo2Decimals(option.product_stores?.[localStorage.getItem("store_id")]?.retail_unit_price)} />
                                 )}
                               </div>
-                              <div style={{ ...columnStyle, width: '10%' }}>
+                              <div style={{ ...columnStyle, width: '5%' }}>
                                 {option.product_stores?.[localStorage.getItem("store_id")]?.stock ?? ''}
                               </div>
                               <div style={{ ...columnStyle, width: '10%' }}>

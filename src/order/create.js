@@ -50,6 +50,7 @@ const columnStyle = {
     whiteSpace: 'nowrap',
     textOverflow: 'ellipsis',
     paddingRight: '8px',
+    border: "solid 0px"
 };
 
 const OrderCreate = forwardRef((props, ref) => {
@@ -2675,21 +2676,21 @@ const OrderCreate = forwardRef((props, ref) => {
                                             {/* Header */}
                                             <MenuItem disabled style={{ position: 'sticky', top: 0, padding: 0, margin: 0 }}>
                                                 <div style={{
-
                                                     background: '#f8f9fa',
                                                     zIndex: 2,
                                                     display: 'flex',
                                                     fontWeight: 'bold',
                                                     padding: '4px 8px',
+                                                    border: "solid 0px",
                                                     borderBottom: '1px solid #ddd',
                                                 }}>
-                                                    <div style={{ width: '5%' }}></div>
-                                                    <div style={{ width: '15%' }}>Part Number</div>
-                                                    <div style={{ width: '40%' }}>Name</div>
-                                                    <div style={{ width: '10%' }}>Unit Price</div>
-                                                    <div style={{ width: '10%' }}>Stock</div>
-                                                    <div style={{ width: '10%' }}>Brand</div>
-                                                    <div style={{ width: '10%' }}>Country</div>
+                                                    <div style={{ width: '3%', border: "solid 0px", }}></div>
+                                                    <div style={{ width: '18%', border: "solid 0px", }}>Part Number</div>
+                                                    <div style={{ width: '45%', border: "solid 0px", }}>Name</div>
+                                                    <div style={{ width: '9%', border: "solid 0px", }}>Unit Price</div>
+                                                    <div style={{ width: '5%', border: "solid 0px", }}>Stock</div>
+                                                    <div style={{ width: '10%', border: "solid 0px", }}>Brand</div>
+                                                    <div style={{ width: '10%', border: "solid 0px", }}>Country</div>
                                                 </div>
                                             </MenuItem>
 
@@ -2698,11 +2699,11 @@ const OrderCreate = forwardRef((props, ref) => {
                                                 const isActive = state.activeIndex === index;
                                                 let checked = isProductAdded(option.id);
                                                 return (
-                                                    <MenuItem option={option} position={index} key={index}>
+                                                    <MenuItem option={option} position={index} key={index} style={{ padding: "0px" }}>
                                                         <div style={{ display: 'flex', padding: '4px 8px' }}>
                                                             <div
                                                                 className="form-check"
-                                                                style={{ ...columnStyle, width: '5%' }}
+                                                                style={{ ...columnStyle, width: '3%' }}
                                                                 onClick={e => {
                                                                     e.stopPropagation();     // Stop click bubbling to parent MenuItem
                                                                     checked = !checked;
@@ -2743,7 +2744,7 @@ const OrderCreate = forwardRef((props, ref) => {
                                                                     }}
                                                                 />
                                                             </div>
-                                                            <div style={{ ...columnStyle, width: '10%' }}>
+                                                            <div style={{ ...columnStyle, width: '18%' }}>
                                                                 {highlightWords(
                                                                     option.prefix_part_number
                                                                         ? `${option.prefix_part_number} - ${option.part_number}`
@@ -2761,12 +2762,12 @@ const OrderCreate = forwardRef((props, ref) => {
                                                                     isActive
                                                                 )}
                                                             </div>
-                                                            <div style={{ ...columnStyle, width: '10%' }}>
+                                                            <div style={{ ...columnStyle, width: '9%' }}>
                                                                 {option.product_stores?.[localStorage.getItem("store_id")]?.retail_unit_price && (
                                                                     <Amount amount={trimTo2Decimals(option.product_stores?.[localStorage.getItem("store_id")]?.retail_unit_price)} />
                                                                 )}
                                                             </div>
-                                                            <div style={{ ...columnStyle, width: '10%' }}>
+                                                            <div style={{ ...columnStyle, width: '5%' }}>
                                                                 {option.product_stores?.[localStorage.getItem("store_id")]?.stock ?? ''}
                                                             </div>
                                                             <div style={{ ...columnStyle, width: '10%' }}>

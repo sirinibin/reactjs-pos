@@ -236,3 +236,8 @@ code {
     display: none !important;
   }
 }
+
+.dropdown-menu {
+  z-index: 1050 !important; /* Bootstrap modal uses 1050 */
+  overflow: visible;
+}
