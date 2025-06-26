@@ -2007,6 +2007,126 @@ function ProductIndex(props) {
                                                             cursor: "pointer",
                                                         }}
                                                         onClick={() => {
+                                                            sort("stores.quotation_sales_count");
+                                                        }}
+                                                    >
+                                                        Qtn. Sales count
+                                                        {sortField === "stores.quotation_sales_count" && sortProduct === "-" ? (
+                                                            <i className="bi bi-sort-alpha-up-alt"></i>
+                                                        ) : null}
+                                                        {sortField === "stores.quotation_sales_count" && sortProduct === "" ? (
+                                                            <i className="bi bi-sort-alpha-up"></i>
+                                                        ) : null}
+                                                    </b>
+                                                </th>
+
+                                                <th>
+                                                    <b
+                                                        style={{
+                                                            textDecoration: "underline",
+                                                            cursor: "pointer",
+                                                        }}
+                                                        onClick={() => {
+                                                            sort("stores.quotation_sales");
+                                                        }}
+                                                    >
+                                                        Qtn. Sales amount
+                                                        {sortField === "stores.quotation_sales" && sortProduct === "-" ? (
+                                                            <i className="bi bi-sort-alpha-up-alt"></i>
+                                                        ) : null}
+                                                        {sortField === "stores.quotation_sales" && sortProduct === "" ? (
+                                                            <i className="bi bi-sort-alpha-up"></i>
+                                                        ) : null}
+                                                    </b>
+                                                </th>
+
+                                                <th>
+                                                    <b
+                                                        style={{
+                                                            textDecoration: "underline",
+                                                            cursor: "pointer",
+                                                        }}
+                                                        onClick={() => {
+                                                            sort("stores.quotation_sales_quantity");
+                                                        }}
+                                                    >
+                                                        Qtn. Sales quantity
+                                                        {sortField === "stores.quotation_sales_quantity" && sortProduct === "-" ? (
+                                                            <i className="bi bi-sort-alpha-up-alt"></i>
+                                                        ) : null}
+                                                        {sortField === "stores.quotation_sales_quantity" && sortProduct === "" ? (
+                                                            <i className="bi bi-sort-alpha-up"></i>
+                                                        ) : null}
+                                                    </b>
+                                                </th>
+
+                                                <th>
+                                                    <b
+                                                        style={{
+                                                            textDecoration: "underline",
+                                                            cursor: "pointer",
+                                                        }}
+                                                        onClick={() => {
+                                                            sort("stores.quotation_sales_return_count");
+                                                        }}
+                                                    >
+                                                        Qtn. Sales Return count
+                                                        {sortField === "stores.quotation_sales_return_count" && sortProduct === "-" ? (
+                                                            <i className="bi bi-sort-alpha-up-alt"></i>
+                                                        ) : null}
+                                                        {sortField === "stores.quotation_sales_return_count" && sortProduct === "" ? (
+                                                            <i className="bi bi-sort-alpha-up"></i>
+                                                        ) : null}
+                                                    </b>
+                                                </th>
+
+                                                <th>
+                                                    <b
+                                                        style={{
+                                                            textDecoration: "underline",
+                                                            cursor: "pointer",
+                                                        }}
+                                                        onClick={() => {
+                                                            sort("stores.quotation_sales_return");
+                                                        }}
+                                                    >
+                                                        Qtn. Sales Return amount
+                                                        {sortField === "stores.quotation_sales_return" && sortProduct === "-" ? (
+                                                            <i className="bi bi-sort-alpha-up-alt"></i>
+                                                        ) : null}
+                                                        {sortField === "stores.quotation_sales_return" && sortProduct === "" ? (
+                                                            <i className="bi bi-sort-alpha-up"></i>
+                                                        ) : null}
+                                                    </b>
+                                                </th>
+
+                                                <th>
+                                                    <b
+                                                        style={{
+                                                            textDecoration: "underline",
+                                                            cursor: "pointer",
+                                                        }}
+                                                        onClick={() => {
+                                                            sort("stores.quotation_sales_return_quantity");
+                                                        }}
+                                                    >
+                                                        Qtn. Sales Return quantity
+                                                        {sortField === "stores.quotation_sales_return_quantity" && sortProduct === "-" ? (
+                                                            <i className="bi bi-sort-alpha-up-alt"></i>
+                                                        ) : null}
+                                                        {sortField === "stores.quotation_sales_return_quantity" && sortProduct === "" ? (
+                                                            <i className="bi bi-sort-alpha-up"></i>
+                                                        ) : null}
+                                                    </b>
+                                                </th>
+
+                                                <th>
+                                                    <b
+                                                        style={{
+                                                            textDecoration: "underline",
+                                                            cursor: "pointer",
+                                                        }}
+                                                        onClick={() => {
                                                             sort("stores.delivery_note_count");
                                                         }}
                                                     >
@@ -2625,6 +2745,72 @@ function ProductIndex(props) {
                                                 </th>
                                                 <th>
                                                     <input
+                                                        id="product_search_by_quotation_sales_count"
+                                                        name="product_search_by_quotation_sales_count"
+                                                        type="text"
+                                                        onChange={(e) =>
+                                                            searchByFieldValue("quotation_sales_count", e.target.value)
+                                                        }
+                                                        className="form-control"
+                                                    />
+                                                </th>
+                                                <th>
+                                                    <input
+                                                        id="product_search_by_quotation_sales"
+                                                        name="product_search_by_quotation_sales"
+                                                        type="text"
+                                                        onChange={(e) =>
+                                                            searchByFieldValue("quotation_sales", e.target.value)
+                                                        }
+                                                        className="form-control"
+                                                    />
+                                                </th>
+                                                <th>
+                                                    <input
+                                                        id="product_search_by_quotation_sales_quantity"
+                                                        name="product_search_by_quotation_sales_quantity"
+                                                        type="text"
+                                                        onChange={(e) =>
+                                                            searchByFieldValue("quotation_sales_quantity", e.target.value)
+                                                        }
+                                                        className="form-control"
+                                                    />
+                                                </th>
+                                                <th>
+                                                    <input
+                                                        id="product_search_by_quotation_sales_return_count"
+                                                        name="product_search_by_quotation_sales_return_count"
+                                                        type="text"
+                                                        onChange={(e) =>
+                                                            searchByFieldValue("quotation_sales_return_count", e.target.value)
+                                                        }
+                                                        className="form-control"
+                                                    />
+                                                </th>
+                                                <th>
+                                                    <input
+                                                        id="product_search_by_quotation_sales_return"
+                                                        name="product_search_by_quotation_sales_return"
+                                                        type="text"
+                                                        onChange={(e) =>
+                                                            searchByFieldValue("quotation_sales_return", e.target.value)
+                                                        }
+                                                        className="form-control"
+                                                    />
+                                                </th>
+                                                <th>
+                                                    <input
+                                                        id="product_search_by_quotation_sales_quantity"
+                                                        name="product_search_by_quotation_sales_quantity"
+                                                        type="text"
+                                                        onChange={(e) =>
+                                                            searchByFieldValue("quotation_sales_quantity", e.target.value)
+                                                        }
+                                                        className="form-control"
+                                                    />
+                                                </th>
+                                                <th>
+                                                    <input
                                                         id="product_search_by_delivery_note_count"
                                                         name="product_search_by_delivery_note_count"
                                                         type="text"
@@ -3210,6 +3396,66 @@ function ProductIndex(props) {
                                                                     return (<b>{product.product_stores[key].quotation_quantity}</b>);
                                                                 } else if (!localStorage.getItem("store_id")) {
                                                                     return (<li><b>{product.product_stores[key].quotation_quantity}</b> {"@" + product.product_stores[key].sales_name}</li>);
+                                                                }
+                                                                return ""
+                                                            })}
+                                                        </td>
+                                                        <td>
+                                                            {product.product_stores && Object.keys(product.product_stores).map((key, index) => {
+                                                                if (localStorage.getItem("store_id") && product.product_stores[key].store_id === localStorage.getItem("store_id")) {
+                                                                    return (<b>{product.product_stores[key].quotation_sales_count}</b>);
+                                                                } else if (!localStorage.getItem("store_id")) {
+                                                                    return (<li><b>{product.product_stores[key].quotation_sales_count}</b> {"@" + product.product_stores[key].sales_name}</li>);
+                                                                }
+                                                                return ""
+                                                            })}
+                                                        </td>
+                                                        <td>
+                                                            {product.product_stores && Object.keys(product.product_stores).map((key, index) => {
+                                                                if (localStorage.getItem("store_id") && product.product_stores[key].store_id === localStorage.getItem("store_id")) {
+                                                                    return (<b>{product.product_stores[key].quotation_sales}</b>);
+                                                                } else if (!localStorage.getItem("store_id")) {
+                                                                    return (<li><b>{product.product_stores[key].quotation_sales}</b> {"@" + product.product_stores[key].sales_name}</li>);
+                                                                }
+                                                                return ""
+                                                            })}
+                                                        </td>
+                                                        <td>
+                                                            {product.product_stores && Object.keys(product.product_stores).map((key, index) => {
+                                                                if (localStorage.getItem("store_id") && product.product_stores[key].store_id === localStorage.getItem("store_id")) {
+                                                                    return (<b>{product.product_stores[key].quotation_sales_quantity}</b>);
+                                                                } else if (!localStorage.getItem("store_id")) {
+                                                                    return (<li><b>{product.product_stores[key].quotation_sales_quantity}</b> {"@" + product.product_stores[key].sales_name}</li>);
+                                                                }
+                                                                return ""
+                                                            })}
+                                                        </td>
+                                                        <td>
+                                                            {product.product_stores && Object.keys(product.product_stores).map((key, index) => {
+                                                                if (localStorage.getItem("store_id") && product.product_stores[key].store_id === localStorage.getItem("store_id")) {
+                                                                    return (<b>{product.product_stores[key].quotation_sales_return_count}</b>);
+                                                                } else if (!localStorage.getItem("store_id")) {
+                                                                    return (<li><b>{product.product_stores[key].quotation_sales_return_count}</b> {"@" + product.product_stores[key].sales_name}</li>);
+                                                                }
+                                                                return ""
+                                                            })}
+                                                        </td>
+                                                        <td>
+                                                            {product.product_stores && Object.keys(product.product_stores).map((key, index) => {
+                                                                if (localStorage.getItem("store_id") && product.product_stores[key].store_id === localStorage.getItem("store_id")) {
+                                                                    return (<b>{product.product_stores[key].quotation_sales_return}</b>);
+                                                                } else if (!localStorage.getItem("store_id")) {
+                                                                    return (<li><b>{product.product_stores[key].quotation_sales_return}</b> {"@" + product.product_stores[key].sales_name}</li>);
+                                                                }
+                                                                return ""
+                                                            })}
+                                                        </td>
+                                                        <td>
+                                                            {product.product_stores && Object.keys(product.product_stores).map((key, index) => {
+                                                                if (localStorage.getItem("store_id") && product.product_stores[key].store_id === localStorage.getItem("store_id")) {
+                                                                    return (<b>{product.product_stores[key].quotation_sales_return_quantity}</b>);
+                                                                } else if (!localStorage.getItem("store_id")) {
+                                                                    return (<li><b>{product.product_stores[key].quotation_sales_return_quantity}</b> {"@" + product.product_stores[key].sales_name}</li>);
                                                                 }
                                                                 return ""
                                                             })}

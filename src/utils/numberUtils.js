@@ -18,3 +18,10 @@ export function trimTo4Decimals(num) {
     return rounded.toFixed(4); // Ensure two decimal digits in string
 }
 
+export function trimTo8Decimals(num) {
+    if (typeof num !== "number" || isNaN(num)) return "0.00000000"; // Handle invalid input
+    const rounded = Math.round((num + Number.EPSILON) * 100000000) / 100000000;
+    return rounded.toFixed(8); // Ensure two decimal digits in string
+}
+
+

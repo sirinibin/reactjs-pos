@@ -1176,7 +1176,7 @@ const DeliveryNoteCreate = forwardRef((props, ref) => {
   // Handle all select
   const handleSelectAll = (e) => {
     if (e.target.checked) {
-      setSelectedIds(selectedProducts.map((p) => p.id));
+      setSelectedIds(selectedProducts.map((p) => p.product_id));
     } else {
       setSelectedIds([]);
     }
@@ -1192,7 +1192,7 @@ const DeliveryNoteCreate = forwardRef((props, ref) => {
   const isAllSelected = selectedIds?.length === selectedProducts?.length;
 
   const handleSendSelected = () => {
-    const newlySelectedProducts = selectedProducts.filter((p) => selectedIds.includes(p.id));
+    const newlySelectedProducts = selectedProducts.filter((p) => selectedIds.includes(p.product_id));
     if (props.onSelectProducts) {
       props.onSelectProducts(newlySelectedProducts, selectedCustomers); // Send to parent
     }
@@ -1797,14 +1797,15 @@ const DeliveryNoteCreate = forwardRef((props, ref) => {
                 <tbody>
                   <tr className="text-center" style={{ borderBottom: "solid 2px" }}>
                     <th></th>
+                    <th >SI No.</th>
                     {enableProductSelection && <th>
                       <input
                         type="checkbox"
                         checked={isAllSelected}
                         onChange={handleSelectAll}
-                      /> Select All
+                      /> <br />Select All
                     </th>}
-                    <th >SI No.</th>
+
                     <th style={{ width: "20%" }}>Part No.</th>
                     <th style={{ width: "50%" }}>Name</th>
                     <th >Info</th>
@@ -1826,8 +1827,8 @@ const DeliveryNoteCreate = forwardRef((props, ref) => {
                       {enableProductSelection && <td>
                         <input
                           type="checkbox"
-                          checked={selectedIds.includes(product.id)}
-                          onChange={() => handleSelect(product.id)}
+                          checked={selectedIds.includes(product.product_id)}
+                          onChange={() => handleSelect(product.product_id)}
                         />
                       </td>}
                       {/*<td style={{ verticalAlign: 'middle', padding: '0.25rem', width: "auto", whiteSpace: "nowrap" }}>

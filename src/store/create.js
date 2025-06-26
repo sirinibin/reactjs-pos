@@ -3127,6 +3127,30 @@ const StoreCreate = forwardRef((props, ref) => {
                         <div className="col-md-2">
                             <div className="input-group mb-3">
                                 <input type="checkbox"
+                                    value={formData.settings.update_product_stock_on_quotation_sales}
+                                    checked={formData.settings.update_product_stock_on_quotation_sales}
+                                    onChange={(e) => {
+                                        errors["hide_quotation_invoice_vat"] = "";
+                                        formData.settings.update_product_stock_on_quotation_sales = !formData.settings.update_product_stock_on_quotation_sales;
+                                        setFormData({ ...formData });
+                                        console.log(formData);
+                                    }}
+                                    className=""
+                                    id="hide_quotation_invoice_vat"
+
+                                /> &nbsp;Update product stock on quotation sales
+                            </div>
+                            <label className="form-label"></label>
+                            {errors.update_product_stock_on_quotation_sales && (
+                                <div style={{ color: "red" }}>
+                                    {errors.update_product_stock_on_quotation_sales}
+                                </div>
+                            )}
+                        </div>
+
+                        <div className="col-md-2">
+                            <div className="input-group mb-3">
+                                <input type="checkbox"
                                     value={formData.settings.hide_quotation_invoice_vat}
                                     checked={formData.settings.hide_quotation_invoice_vat}
                                     onChange={(e) => {

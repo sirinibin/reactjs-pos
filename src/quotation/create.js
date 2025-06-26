@@ -1557,7 +1557,7 @@ const QuotationCreate = forwardRef((props, ref) => {
   // Handle all select
   const handleSelectAll = (e) => {
     if (e.target.checked) {
-      setSelectedIds(selectedProducts.map((p) => p.id));
+      setSelectedIds(selectedProducts.map((p) => p.product_id));
     } else {
       setSelectedIds([]);
     }
@@ -1573,7 +1573,7 @@ const QuotationCreate = forwardRef((props, ref) => {
   const isAllSelected = selectedIds?.length === selectedProducts?.length;
 
   const handleSendSelected = () => {
-    const newlySelectedProducts = selectedProducts.filter((p) => selectedIds.includes(p.id));
+    const newlySelectedProducts = selectedProducts.filter((p) => selectedIds.includes(p.product_id));
     if (props.onSelectProducts) {
       props.onSelectProducts(newlySelectedProducts, selectedCustomers, "quotation", formData.id, formData.code); // Send to parent
     }
@@ -2136,477 +2136,453 @@ const QuotationCreate = forwardRef((props, ref) => {
             )}
           </div>
           <form className="row g-3 needs-validation" onSubmit={handleCreate}>
-            <div className="row">
+            {!enableProductSelection && <>
+              <div className="row">
+                <div className="col-md-2">
+                  <label className="form-label">Type*</label>
+
+                  <div className="input-group mb-3">
+                    <select
+                      value={formData.type}
+                      onChange={(e) => {
+                        console.log("Inside onchange payment method");
+                        if (!e.target.value) {
+                          formData.type = "";
+                          errors["type"] = "Invalid type";
+                          setErrors({ ...errors });
+                          return;
+                        }
+
+                        delete errors["type"];
+                        setErrors({ ...errors });
+
+                        formData.type = e.target.value;
+                        setFormData({ ...formData });
+                        console.log(formData);
+                      }}
+                      className="form-control"
+                    >
+                      <option value="quotation" SELECTED>Quotation</option>
+                      <option value="invoice">Invoice</option>
+
+                    </select>
+                  </div>
+                  {errors.type && (
+                    <div style={{ color: "red" }}>
+                      {errors.type}
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              <div className="col-md-10">
+                <label className="form-label">Customer</label>
+                <Typeahead
+                  id="customer_id"
+                  labelKey="search_label"
+                  filterBy={() => true}
+                  isLoading={false}
+                  onChange={(selectedItems) => {
+                    delete errors["customer_id"];
+                    setErrors(errors);
+                    if (selectedItems.length === 0) {
+                      delete errors["customer_id"];
+                      setErrors(errors);
+                      formData.customer_id = "";
+                      setFormData({ ...formData });
+                      setSelectedCustomers([]);
+                      return;
+                    }
+                    formData.customer_id = selectedItems[0].id;
+                    setFormData({ ...formData });
+                    setSelectedCustomers(selectedItems);
+                  }}
+                  options={customerOptions}
+                  placeholder="Customer Name / Mob / VAT # / ID"
+                  selected={selectedCustomers}
+                  highlightOnlyResult={true}
+                  ref={customerSearchRef}
+                  onKeyDown={(e) => {
+                    if (e.key === "Escape") {
+                      setCustomerOptions([]);
+                      customerSearchRef.current?.clear();
+                    }
+                  }}
+
+                  onInputChange={(searchTerm, e) => {
+                    formData.customerName = searchTerm;
+                    if (searchTerm) {
+                      formData.customer_name = searchTerm;
+                    }
+                    setFormData({ ...formData });
+                    if (timerRef.current) clearTimeout(timerRef.current);
+                    timerRef.current = setTimeout(() => {
+                      suggestCustomers(searchTerm);
+                    }, 100);
+                  }}
+
+                  renderMenu={(results, menuProps, state) => {
+                    const searchWords = state.text.toLowerCase().split(" ").filter(Boolean);
+
+                    return (
+                      <Menu {...menuProps}>
+                        {/* Header */}
+                        <MenuItem disabled>
+                          <div style={{ display: 'flex', fontWeight: 'bold', padding: '4px 8px', borderBottom: '1px solid #ddd' }}>
+                            <div style={{ width: '10%' }}>ID</div>
+                            <div style={{ width: '47%' }}>Name</div>
+                            <div style={{ width: '10%' }}>Phone</div>
+                            <div style={{ width: '13%' }}>VAT</div>
+                            <div style={{ width: '10%' }}>Credit Balance</div>
+                            <div style={{ width: '10%' }}>Credit Limit</div>
+                          </div>
+                        </MenuItem>
+
+                        {/* Rows */}
+                        {results.map((option, index) => {
+                          const isActive = state.activeIndex === index;
+                          return (
+                            <MenuItem option={option} position={index} key={index}>
+                              <div style={{ display: 'flex', padding: '4px 8px' }}>
+                                <div style={{ ...columnStyle, width: '10%' }}>
+                                  {highlightWords(
+                                    option.code,
+                                    searchWords,
+                                    isActive
+                                  )}
+                                </div>
+                                <div style={{ ...columnStyle, width: '47%' }}>
+                                  {highlightWords(
+                                    option.name_in_arabic
+                                      ? `${option.name} - ${option.name_in_arabic}`
+                                      : option.name,
+                                    searchWords,
+                                    isActive
+                                  )}
+                                </div>
+                                <div style={{ ...columnStyle, width: '10%' }}>
+                                  {highlightWords(option.phone, searchWords, isActive)}
+                                </div>
+                                <div style={{ ...columnStyle, width: '13%' }}>
+                                  {highlightWords(option.vat_no, searchWords, isActive)}
+                                </div>
+                                <div style={{ ...columnStyle, width: '10%' }}>
+                                  {option.credit_balance && (
+                                    <Amount amount={trimTo2Decimals(option.credit_balance)} />
+                                  )}
+                                </div>
+                                <div style={{ ...columnStyle, width: '10%' }}>
+                                  {option.credit_limit && (
+                                    <Amount amount={trimTo2Decimals(option.credit_limit)} />
+                                  )}
+                                </div>
+                              </div>
+                            </MenuItem>
+                          );
+                        })}
+                      </Menu>
+                    );
+                  }}
+                />
+                <Button
+                  hide={true.toString()}
+                  onClick={openCustomerCreateForm}
+                  className="btn btn-outline-secondary btn-primary btn-sm"
+                  type="button"
+                  id="button-addon1"
+                >
+                  {" "}
+                  <i className="bi bi-plus-lg"></i> New
+                </Button>
+                {errors.customer_id && (
+                  <div style={{ color: "red" }}>
+                    <i className="bi bi-x-lg"> </i>
+                    {errors.customer_id}
+                  </div>
+                )}
+
+              </div>
+
+              <div className="col-md-1">
+                <Button className="btn btn-primary" style={{ marginTop: "30px" }} onClick={openCustomers}>
+                  <i class="bi bi-list"></i>
+                </Button>
+              </div>
+
               <div className="col-md-2">
-                <label className="form-label">Type*</label>
+                <label className="form-label">Product Barcode Scan</label>
 
                 <div className="input-group mb-3">
-                  <select
-                    value={formData.type}
+                  <DebounceInput
+                    minLength={3}
+                    debounceTimeout={500}
+                    placeholder="Scan Barcode"
+                    className="form-control barcode"
+                    value={formData.barcode}
+                    onChange={(event) => getProductByBarCode(event.target.value)}
+                  />
+                  {errors.bar_code && (
+                    <div style={{ color: "red" }}>
+                      <i className="bi bi-x-lg"> </i>
+                      {errors.bar_code}
+                    </div>
+                  )}
+                  {formData.bar_code && !errors.bar_code && (
+                    <div style={{ color: "green" }}>
+                      <i className="bi bi-check-lg"> </i>
+                      Looks good!
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              <div className="col-md-3">
+                <label className="form-label">Date*</label>
+
+                <div className="input-group mb-3">
+                  <DatePicker
+                    id="date_str"
+                    selected={
+                      formData.date_str ? new Date(formData.date_str) : null
+                    }
+                    value={
+                      formData.date_str
+                        ? format(
+                          new Date(formData.date_str),
+                          "MMMM d, yyyy h:mm aa"
+                        )
+                        : null
+                    }
+                    className="form-control"
+                    dateFormat="MMMM d, yyyy h:mm aa"
+                    showTimeSelect
+                    timeIntervals="1"
+                    onChange={(value) => {
+                      console.log("Value", value);
+                      formData.date_str = value;
+                      // formData.date_str = format(new Date(value), "MMMM d yyyy h:mm aa");
+                      setFormData({ ...formData });
+                    }}
+                  />
+
+                  {errors.date_str && (
+                    <div style={{ color: "red" }}>
+                      <i className="bi bi-x-lg"> </i>
+                      {errors.date_str}
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              <div className="col-md-2">
+                <label className="form-label">Phone ( 05.. / +966..)</label>
+
+                <div className="input-group mb-3">
+                  <input
+                    id="quotation_phone"
+                    name="quotation_phone"
+                    value={formData.phone ? formData.phone : ""}
+                    type='string'
                     onChange={(e) => {
-                      console.log("Inside onchange payment method");
-                      if (!e.target.value) {
-                        formData.type = "";
-                        errors["type"] = "Invalid type";
-                        setErrors({ ...errors });
-                        return;
-                      }
-
-                      delete errors["type"];
+                      delete errors["phone"];
                       setErrors({ ...errors });
-
-                      formData.type = e.target.value;
+                      formData.phone = e.target.value;
                       setFormData({ ...formData });
                       console.log(formData);
                     }}
                     className="form-control"
-                  >
-                    <option value="quotation" SELECTED>Quotation</option>
-                    <option value="invoice">Invoice</option>
 
-                  </select>
+                    placeholder="Phone"
+                  />
                 </div>
-                {errors.type && (
+                {errors.phone && (
                   <div style={{ color: "red" }}>
-                    {errors.type}
+                    {errors.phone}
                   </div>
                 )}
               </div>
-            </div>
 
-            <div className="col-md-10">
-              <label className="form-label">Customer</label>
-              <Typeahead
-                id="customer_id"
-                labelKey="search_label"
-                filterBy={() => true}
-                isLoading={false}
-                onChange={(selectedItems) => {
-                  delete errors["customer_id"];
-                  setErrors(errors);
-                  if (selectedItems.length === 0) {
-                    delete errors["customer_id"];
-                    setErrors(errors);
-                    formData.customer_id = "";
-                    setFormData({ ...formData });
-                    setSelectedCustomers([]);
-                    return;
-                  }
-                  formData.customer_id = selectedItems[0].id;
-                  setFormData({ ...formData });
-                  setSelectedCustomers(selectedItems);
-                }}
-                options={customerOptions}
-                placeholder="Customer Name / Mob / VAT # / ID"
-                selected={selectedCustomers}
-                highlightOnlyResult={true}
-                ref={customerSearchRef}
-                onKeyDown={(e) => {
-                  if (e.key === "Escape") {
-                    setCustomerOptions([]);
-                    customerSearchRef.current?.clear();
-                  }
-                }}
+              <div className="col-md-1">
+                <Button className={`btn btn-success btn-sm`} style={{ marginTop: "30px" }} onClick={sendWhatsAppMessage}>
+                  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="white" viewBox="0 0 16 16">
+                    <path d="M13.601 2.326A7.875 7.875 0 0 0 8.036 0C3.596 0 0 3.597 0 8.036c0 1.417.37 2.805 1.07 4.03L0 16l3.993-1.05a7.968 7.968 0 0 0 4.043 1.085h.003c4.44 0 8.036-3.596 8.036-8.036 0-2.147-.836-4.166-2.37-5.673ZM8.036 14.6a6.584 6.584 0 0 1-3.35-.92l-.24-.142-2.37.622.63-2.31-.155-.238a6.587 6.587 0 0 1-1.018-3.513c0-3.637 2.96-6.6 6.6-6.6 1.764 0 3.42.69 4.67 1.94a6.56 6.56 0 0 1 1.93 4.668c0 3.637-2.96 6.6-6.6 6.6Zm3.61-4.885c-.198-.1-1.17-.578-1.352-.644-.18-.066-.312-.1-.444.1-.13.197-.51.644-.626.775-.115.13-.23.15-.428.05-.198-.1-.837-.308-1.594-.983-.59-.525-.99-1.174-1.11-1.372-.116-.198-.012-.305.088-.403.09-.09.198-.23.298-.345.1-.115.132-.197.2-.33.065-.13.032-.247-.017-.345-.05-.1-.444-1.07-.61-1.46-.16-.384-.323-.332-.444-.338l-.378-.007c-.13 0-.344.048-.525.23s-.688.672-.688 1.64c0 .967.704 1.9.802 2.03.1.13 1.386 2.116 3.365 2.963.47.203.837.324 1.122.414.472.15.902.13 1.24.08.378-.057 1.17-.48 1.336-.942.165-.462.165-.858.116-.943-.048-.084-.18-.132-.378-.23Z" />
+                  </svg>
+                </Button>
+              </div>
 
-                onInputChange={(searchTerm, e) => {
-                  formData.customerName = searchTerm;
-                  if (searchTerm) {
-                    formData.customer_name = searchTerm;
-                  }
-                  setFormData({ ...formData });
-                  if (timerRef.current) clearTimeout(timerRef.current);
-                  timerRef.current = setTimeout(() => {
-                    suggestCustomers(searchTerm);
-                  }, 100);
-                }}
+              <div className="col-md-2">
+                <label className="form-label">VAT NO.(15 digits)</label>
 
-                renderMenu={(results, menuProps, state) => {
-                  const searchWords = state.text.toLowerCase().split(" ").filter(Boolean);
+                <div className="input-group mb-3">
+                  <input
+                    id="quotation_vat_no"
+                    name="quotation_vat_no"
+                    value={formData.vat_no ? formData.vat_no : ""}
+                    type='string'
+                    onChange={(e) => {
+                      delete errors["vat_no"];
+                      setErrors({ ...errors });
+                      formData.vat_no = e.target.value;
+                      setFormData({ ...formData });
+                      console.log(formData);
+                    }}
+                    className="form-control"
 
-                  return (
-                    <Menu {...menuProps}>
-                      {/* Header */}
-                      <MenuItem disabled>
-                        <div style={{ display: 'flex', fontWeight: 'bold', padding: '4px 8px', borderBottom: '1px solid #ddd' }}>
-                          <div style={{ width: '10%' }}>ID</div>
-                          <div style={{ width: '47%' }}>Name</div>
-                          <div style={{ width: '10%' }}>Phone</div>
-                          <div style={{ width: '13%' }}>VAT</div>
-                          <div style={{ width: '10%' }}>Credit Balance</div>
-                          <div style={{ width: '10%' }}>Credit Limit</div>
-                        </div>
-                      </MenuItem>
-
-                      {/* Rows */}
-                      {results.map((option, index) => {
-                        const isActive = state.activeIndex === index;
-                        return (
-                          <MenuItem option={option} position={index} key={index}>
-                            <div style={{ display: 'flex', padding: '4px 8px' }}>
-                              <div style={{ ...columnStyle, width: '10%' }}>
-                                {highlightWords(
-                                  option.code,
-                                  searchWords,
-                                  isActive
-                                )}
-                              </div>
-                              <div style={{ ...columnStyle, width: '47%' }}>
-                                {highlightWords(
-                                  option.name_in_arabic
-                                    ? `${option.name} - ${option.name_in_arabic}`
-                                    : option.name,
-                                  searchWords,
-                                  isActive
-                                )}
-                              </div>
-                              <div style={{ ...columnStyle, width: '10%' }}>
-                                {highlightWords(option.phone, searchWords, isActive)}
-                              </div>
-                              <div style={{ ...columnStyle, width: '13%' }}>
-                                {highlightWords(option.vat_no, searchWords, isActive)}
-                              </div>
-                              <div style={{ ...columnStyle, width: '10%' }}>
-                                {option.credit_balance && (
-                                  <Amount amount={trimTo2Decimals(option.credit_balance)} />
-                                )}
-                              </div>
-                              <div style={{ ...columnStyle, width: '10%' }}>
-                                {option.credit_limit && (
-                                  <Amount amount={trimTo2Decimals(option.credit_limit)} />
-                                )}
-                              </div>
-                            </div>
-                          </MenuItem>
-                        );
-                      })}
-                    </Menu>
-                  );
-                }}
-              />
-              <Button
-                hide={true.toString()}
-                onClick={openCustomerCreateForm}
-                className="btn btn-outline-secondary btn-primary btn-sm"
-                type="button"
-                id="button-addon1"
-              >
-                {" "}
-                <i className="bi bi-plus-lg"></i> New
-              </Button>
-              {errors.customer_id && (
-                <div style={{ color: "red" }}>
-                  <i className="bi bi-x-lg"> </i>
-                  {errors.customer_id}
+                    placeholder="VAT NO."
+                  />
                 </div>
-              )}
-
-            </div>
-
-            <div className="col-md-1">
-              <Button className="btn btn-primary" style={{ marginTop: "30px" }} onClick={openCustomers}>
-                <i class="bi bi-list"></i>
-              </Button>
-            </div>
-
-            <div className="col-md-2">
-              <label className="form-label">Product Barcode Scan</label>
-
-              <div className="input-group mb-3">
-                <DebounceInput
-                  minLength={3}
-                  debounceTimeout={500}
-                  placeholder="Scan Barcode"
-                  className="form-control barcode"
-                  value={formData.barcode}
-                  onChange={(event) => getProductByBarCode(event.target.value)}
-                />
-                {errors.bar_code && (
+                {errors.vat_no && (
                   <div style={{ color: "red" }}>
-                    <i className="bi bi-x-lg"> </i>
-                    {errors.bar_code}
-                  </div>
-                )}
-                {formData.bar_code && !errors.bar_code && (
-                  <div style={{ color: "green" }}>
-                    <i className="bi bi-check-lg"> </i>
-                    Looks good!
+
+                    {errors.vat_no}
                   </div>
                 )}
               </div>
-            </div>
 
-            <div className="col-md-3">
-              <label className="form-label">Date*</label>
-
-              <div className="input-group mb-3">
-                <DatePicker
-                  id="date_str"
-                  selected={
-                    formData.date_str ? new Date(formData.date_str) : null
-                  }
-                  value={
-                    formData.date_str
-                      ? format(
-                        new Date(formData.date_str),
-                        "MMMM d, yyyy h:mm aa"
-                      )
-                      : null
-                  }
-                  className="form-control"
-                  dateFormat="MMMM d, yyyy h:mm aa"
-                  showTimeSelect
-                  timeIntervals="1"
-                  onChange={(value) => {
-                    console.log("Value", value);
-                    formData.date_str = value;
-                    // formData.date_str = format(new Date(value), "MMMM d yyyy h:mm aa");
-                    setFormData({ ...formData });
-                  }}
-                />
-
-                {errors.date_str && (
+              <div className="col-md-3">
+                <label className="form-label">Address</label>
+                <div className="input-group mb-3">
+                  <textarea
+                    value={formData.address}
+                    type='string'
+                    onChange={(e) => {
+                      delete errors["address"];
+                      setErrors({ ...errors });
+                      formData.address = e.target.value;
+                      setFormData({ ...formData });
+                      console.log(formData);
+                    }}
+                    className="form-control"
+                    id="address"
+                    placeholder="Address"
+                  />
+                </div>
+                {errors.address && (
                   <div style={{ color: "red" }}>
-                    <i className="bi bi-x-lg"> </i>
-                    {errors.date_str}
+
+                    {errors.address}
                   </div>
                 )}
               </div>
-            </div>
-
-            <div className="col-md-2">
-              <label className="form-label">Phone ( 05.. / +966..)</label>
-
-              <div className="input-group mb-3">
-                <input
-                  id="quotation_phone"
-                  name="quotation_phone"
-                  value={formData.phone ? formData.phone : ""}
-                  type='string'
-                  onChange={(e) => {
-                    delete errors["phone"];
-                    setErrors({ ...errors });
-                    formData.phone = e.target.value;
-                    setFormData({ ...formData });
-                    console.log(formData);
-                  }}
-                  className="form-control"
-
-                  placeholder="Phone"
-                />
-              </div>
-              {errors.phone && (
-                <div style={{ color: "red" }}>
-                  {errors.phone}
+              <div className="col-md-3">
+                <label className="form-label">Remarks</label>
+                <div className="input-group mb-3">
+                  <textarea
+                    value={formData.remarks}
+                    type='string'
+                    onChange={(e) => {
+                      delete errors["address"];
+                      setErrors({ ...errors });
+                      formData.remarks = e.target.value;
+                      setFormData({ ...formData });
+                      console.log(formData);
+                    }}
+                    className="form-control"
+                    id="remarks"
+                    placeholder="Remarks"
+                  />
                 </div>
-              )}
-            </div>
+                {errors.remarks && (
+                  <div style={{ color: "red" }}>
 
-            <div className="col-md-1">
-              <Button className={`btn btn-success btn-sm`} style={{ marginTop: "30px" }} onClick={sendWhatsAppMessage}>
-                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="white" viewBox="0 0 16 16">
-                  <path d="M13.601 2.326A7.875 7.875 0 0 0 8.036 0C3.596 0 0 3.597 0 8.036c0 1.417.37 2.805 1.07 4.03L0 16l3.993-1.05a7.968 7.968 0 0 0 4.043 1.085h.003c4.44 0 8.036-3.596 8.036-8.036 0-2.147-.836-4.166-2.37-5.673ZM8.036 14.6a6.584 6.584 0 0 1-3.35-.92l-.24-.142-2.37.622.63-2.31-.155-.238a6.587 6.587 0 0 1-1.018-3.513c0-3.637 2.96-6.6 6.6-6.6 1.764 0 3.42.69 4.67 1.94a6.56 6.56 0 0 1 1.93 4.668c0 3.637-2.96 6.6-6.6 6.6Zm3.61-4.885c-.198-.1-1.17-.578-1.352-.644-.18-.066-.312-.1-.444.1-.13.197-.51.644-.626.775-.115.13-.23.15-.428.05-.198-.1-.837-.308-1.594-.983-.59-.525-.99-1.174-1.11-1.372-.116-.198-.012-.305.088-.403.09-.09.198-.23.298-.345.1-.115.132-.197.2-.33.065-.13.032-.247-.017-.345-.05-.1-.444-1.07-.61-1.46-.16-.384-.323-.332-.444-.338l-.378-.007c-.13 0-.344.048-.525.23s-.688.672-.688 1.64c0 .967.704 1.9.802 2.03.1.13 1.386 2.116 3.365 2.963.47.203.837.324 1.122.414.472.15.902.13 1.24.08.378-.057 1.17-.48 1.336-.942.165-.462.165-.858.116-.943-.048-.084-.18-.132-.378-.23Z" />
-                </svg>
-              </Button>
-            </div>
-
-            <div className="col-md-2">
-              <label className="form-label">VAT NO.(15 digits)</label>
-
-              <div className="input-group mb-3">
-                <input
-                  id="quotation_vat_no"
-                  name="quotation_vat_no"
-                  value={formData.vat_no ? formData.vat_no : ""}
-                  type='string'
-                  onChange={(e) => {
-                    delete errors["vat_no"];
-                    setErrors({ ...errors });
-                    formData.vat_no = e.target.value;
-                    setFormData({ ...formData });
-                    console.log(formData);
-                  }}
-                  className="form-control"
-
-                  placeholder="VAT NO."
-                />
+                    {errors.remarks}
+                  </div>
+                )}
               </div>
-              {errors.vat_no && (
-                <div style={{ color: "red" }}>
 
-                  {errors.vat_no}
-                </div>
-              )}
-            </div>
-
-            <div className="col-md-3">
-              <label className="form-label">Address</label>
-              <div className="input-group mb-3">
-                <textarea
-                  value={formData.address}
-                  type='string'
-                  onChange={(e) => {
-                    delete errors["address"];
+              <div className="col-md-10">
+                <label className="form-label">Product*</label>
+                <Typeahead
+                  id="product_id"
+                  ref={productSearchRef}
+                  filterBy={() => true}
+                  size="lg"
+                  labelKey="search_label"
+                  emptyLabel=""
+                  clearButton={true}
+                  open={openProductSearchResult}
+                  isLoading={false}
+                  isInvalid={errors.product_id ? true : false}
+                  onChange={(selectedItems) => {
+                    if (selectedItems.length === 0) {
+                      errors["product_id"] = "Invalid Product selected";
+                      setErrors(errors);
+                      return;
+                    }
+                    delete errors["product_id"];
                     setErrors({ ...errors });
-                    formData.address = e.target.value;
-                    setFormData({ ...formData });
-                    console.log(formData);
-                  }}
-                  className="form-control"
-                  id="address"
-                  placeholder="Address"
-                />
-              </div>
-              {errors.address && (
-                <div style={{ color: "red" }}>
 
-                  {errors.address}
-                </div>
-              )}
-            </div>
-            <div className="col-md-3">
-              <label className="form-label">Remarks</label>
-              <div className="input-group mb-3">
-                <textarea
-                  value={formData.remarks}
-                  type='string'
-                  onChange={(e) => {
-                    delete errors["address"];
-                    setErrors({ ...errors });
-                    formData.remarks = e.target.value;
-                    setFormData({ ...formData });
-                    console.log(formData);
-                  }}
-                  className="form-control"
-                  id="remarks"
-                  placeholder="Remarks"
-                />
-              </div>
-              {errors.remarks && (
-                <div style={{ color: "red" }}>
-
-                  {errors.remarks}
-                </div>
-              )}
-            </div>
-
-            <div className="col-md-10">
-              <label className="form-label">Product*</label>
-              <Typeahead
-                id="product_id"
-                ref={productSearchRef}
-                filterBy={() => true}
-                size="lg"
-                labelKey="search_label"
-                emptyLabel=""
-                clearButton={true}
-                open={openProductSearchResult}
-                isLoading={false}
-                isInvalid={errors.product_id ? true : false}
-                onChange={(selectedItems) => {
-                  if (selectedItems.length === 0) {
-                    errors["product_id"] = "Invalid Product selected";
-                    setErrors(errors);
-                    return;
-                  }
-                  delete errors["product_id"];
-                  setErrors({ ...errors });
-
-                  if (formData.store_id) {
-                    addProduct(selectedItems[0]);
-                  }
-                  setOpenProductSearchResult(false);
-
-                  timerRef.current = setTimeout(() => {
-                    inputRefs.current[(selectedProducts.length - 1)][`${"quotation_product_quantity_" + (selectedProducts.length - 1)}`].select();
-                  }, 100);
-
-                }}
-                options={productOptions}
-                selected={selectedProduct}
-                placeholder="Part No. | Name | Name in Arabic | Brand | Country"
-                highlightOnlyResult={true}
-                onInputChange={(searchTerm, e) => {
-                  if (timerRef.current) clearTimeout(timerRef.current);
-                  timerRef.current = setTimeout(() => {
-                    suggestProducts(searchTerm);
-                  }, 100);
-                }}
-                onKeyDown={(e) => {
-                  if (e.key === "Escape") {
-                    setProductOptions([]);
+                    if (formData.store_id) {
+                      addProduct(selectedItems[0]);
+                    }
                     setOpenProductSearchResult(false);
-                    productSearchRef.current?.clear();
-                  }
 
-                  timerRef.current = setTimeout(() => {
-                    productSearchRef.current.focus();
-                  }, 100);
+                    timerRef.current = setTimeout(() => {
+                      inputRefs.current[(selectedProducts.length - 1)][`${"quotation_product_quantity_" + (selectedProducts.length - 1)}`].select();
+                    }, 100);
 
-                }}
+                  }}
+                  options={productOptions}
+                  selected={selectedProduct}
+                  placeholder="Part No. | Name | Name in Arabic | Brand | Country"
+                  highlightOnlyResult={true}
+                  onInputChange={(searchTerm, e) => {
+                    if (timerRef.current) clearTimeout(timerRef.current);
+                    timerRef.current = setTimeout(() => {
+                      suggestProducts(searchTerm);
+                    }, 100);
+                  }}
+                  onKeyDown={(e) => {
+                    if (e.key === "Escape") {
+                      setProductOptions([]);
+                      setOpenProductSearchResult(false);
+                      productSearchRef.current?.clear();
+                    }
 
-                renderMenu={(results, menuProps, state) => {
-                  const searchWords = state.text.toLowerCase().split(" ").filter(Boolean);
+                    timerRef.current = setTimeout(() => {
+                      productSearchRef.current.focus();
+                    }, 100);
 
-                  return (
-                    <Menu {...menuProps}>
-                      {/* Header */}
-                      <MenuItem disabled style={{ position: 'sticky', top: 0, padding: 0, margin: 0 }}>
-                        <div style={{
+                  }}
 
-                          background: '#f8f9fa',
-                          zIndex: 2,
-                          display: 'flex',
-                          fontWeight: 'bold',
-                          padding: '4px 8px',
-                          borderBottom: '1px solid #ddd',
-                        }}>
-                          <div style={{ width: '3%' }}></div>
-                          <div style={{ width: '18%' }}>Part Number</div>
-                          <div style={{ width: '45%' }}>Name</div>
-                          <div style={{ width: '9%' }}>Unit Price</div>
-                          <div style={{ width: '5%' }}>Stock</div>
-                          <div style={{ width: '10%' }}>Brand</div>
-                          <div style={{ width: '10%' }}>Country</div>
-                        </div>
-                      </MenuItem>
+                  renderMenu={(results, menuProps, state) => {
+                    const searchWords = state.text.toLowerCase().split(" ").filter(Boolean);
 
-                      {/* Rows */}
-                      {results.map((option, index) => {
-                        const isActive = state.activeIndex === index;
-                        let checked = isProductAdded(option.id);
-                        return (
-                          <MenuItem option={option} position={index} key={index} style={{ padding: "0px" }}>
-                            <div style={{ display: 'flex', padding: '4px 8px' }}>
-                              <div
-                                className="form-check"
-                                style={{ ...columnStyle, width: '3%' }}
-                                onClick={e => {
-                                  e.stopPropagation();     // Stop click bubbling to parent MenuItem
-                                  checked = !checked;
+                    return (
+                      <Menu {...menuProps}>
+                        {/* Header */}
+                        <MenuItem disabled style={{ position: 'sticky', top: 0, padding: 0, margin: 0 }}>
+                          <div style={{
 
-                                  if (timerRef.current) clearTimeout(timerRef.current);
-                                  timerRef.current = setTimeout(() => {
-                                    if (checked) {
-                                      addProduct(option);
-                                    } else {
-                                      removeProduct(option);
-                                    }
-                                  }, 100);
+                            background: '#f8f9fa',
+                            zIndex: 2,
+                            display: 'flex',
+                            fontWeight: 'bold',
+                            padding: '4px 8px',
+                            borderBottom: '1px solid #ddd',
+                          }}>
+                            <div style={{ width: '3%' }}></div>
+                            <div style={{ width: '18%' }}>Part Number</div>
+                            <div style={{ width: '45%' }}>Name</div>
+                            <div style={{ width: '9%' }}>Unit Price</div>
+                            <div style={{ width: '5%' }}>Stock</div>
+                            <div style={{ width: '10%' }}>Brand</div>
+                            <div style={{ width: '10%' }}>Country</div>
+                          </div>
+                        </MenuItem>
 
-                                }}
-                              >
-                                <input
-                                  className="form-check-input"
-                                  type="checkbox"
-                                  value={checked}
-                                  checked={checked}
+                        {/* Rows */}
+                        {results.map((option, index) => {
+                          const isActive = state.activeIndex === index;
+                          let checked = isProductAdded(option.id);
+                          return (
+                            <MenuItem option={option} position={index} key={index} style={{ padding: "0px" }}>
+                              <div style={{ display: 'flex', padding: '4px 8px' }}>
+                                <div
+                                  className="form-check"
+                                  style={{ ...columnStyle, width: '3%' }}
                                   onClick={e => {
                                     e.stopPropagation();     // Stop click bubbling to parent MenuItem
-                                  }}
-                                  onChange={e => {
-                                    e.preventDefault();      // Prevent default selection behavior
-                                    e.stopPropagation();
-
                                     checked = !checked;
 
                                     if (timerRef.current) clearTimeout(timerRef.current);
@@ -2617,72 +2593,98 @@ const QuotationCreate = forwardRef((props, ref) => {
                                         removeProduct(option);
                                       }
                                     }, 100);
-                                  }}
-                                />
-                              </div>
-                              <div style={{ ...columnStyle, width: '18%' }}>
-                                {highlightWords(
-                                  option.prefix_part_number
-                                    ? `${option.prefix_part_number} - ${option.part_number}`
-                                    : option.part_number,
-                                  searchWords,
-                                  isActive
-                                )}
-                              </div>
-                              <div style={{ ...columnStyle, width: '45%' }}>
-                                {highlightWords(
-                                  option.name_in_arabic
-                                    ? `${option.name} - ${option.name_in_arabic}`
-                                    : option.name,
-                                  searchWords,
-                                  isActive
-                                )}
-                              </div>
-                              <div style={{ ...columnStyle, width: '9%' }}>
-                                {option.product_stores?.[localStorage.getItem("store_id")]?.retail_unit_price && (
-                                  <Amount amount={trimTo2Decimals(option.product_stores?.[localStorage.getItem("store_id")]?.retail_unit_price)} />
-                                )}
-                              </div>
-                              <div style={{ ...columnStyle, width: '5%' }}>
-                                {option.product_stores?.[localStorage.getItem("store_id")]?.stock ?? ''}
-                              </div>
-                              <div style={{ ...columnStyle, width: '10%' }}>
-                                {highlightWords(option.brand_name, searchWords, isActive)}
-                              </div>
-                              <div style={{ ...columnStyle, width: '10%' }}>
-                                {highlightWords(option.country_name, searchWords, isActive)}
-                              </div>
-                            </div>
-                          </MenuItem>
-                        );
-                      })}
-                    </Menu>
-                  );
-                }}
-              />
-              <Button
-                hide={true.toString()}
-                onClick={openProductCreateForm}
-                className="btn btn-outline-secondary btn-primary btn-sm"
-                type="button"
-                id="button-addon1"
-              >
-                {" "}
-                <i className="bi bi-plus-lg"></i> New
-              </Button>
-              {errors.product_id ? (
-                <div style={{ color: "red" }}>
-                  <i className="bi bi-x-lg"> </i>
-                  {errors.product_id}
-                </div>
-              ) : null}
-            </div>
 
-            <div className="col-md-1">
-              <Button className="btn btn-primary" style={{ marginTop: "30px" }} onClick={openProducts}>
-                <i class="bi bi-list"></i>
-              </Button>
-            </div>
+                                  }}
+                                >
+                                  <input
+                                    className="form-check-input"
+                                    type="checkbox"
+                                    value={checked}
+                                    checked={checked}
+                                    onClick={e => {
+                                      e.stopPropagation();     // Stop click bubbling to parent MenuItem
+                                    }}
+                                    onChange={e => {
+                                      e.preventDefault();      // Prevent default selection behavior
+                                      e.stopPropagation();
+
+                                      checked = !checked;
+
+                                      if (timerRef.current) clearTimeout(timerRef.current);
+                                      timerRef.current = setTimeout(() => {
+                                        if (checked) {
+                                          addProduct(option);
+                                        } else {
+                                          removeProduct(option);
+                                        }
+                                      }, 100);
+                                    }}
+                                  />
+                                </div>
+                                <div style={{ ...columnStyle, width: '18%' }}>
+                                  {highlightWords(
+                                    option.prefix_part_number
+                                      ? `${option.prefix_part_number} - ${option.part_number}`
+                                      : option.part_number,
+                                    searchWords,
+                                    isActive
+                                  )}
+                                </div>
+                                <div style={{ ...columnStyle, width: '45%' }}>
+                                  {highlightWords(
+                                    option.name_in_arabic
+                                      ? `${option.name} - ${option.name_in_arabic}`
+                                      : option.name,
+                                    searchWords,
+                                    isActive
+                                  )}
+                                </div>
+                                <div style={{ ...columnStyle, width: '9%' }}>
+                                  {option.product_stores?.[localStorage.getItem("store_id")]?.retail_unit_price && (
+                                    <Amount amount={trimTo2Decimals(option.product_stores?.[localStorage.getItem("store_id")]?.retail_unit_price)} />
+                                  )}
+                                </div>
+                                <div style={{ ...columnStyle, width: '5%' }}>
+                                  {option.product_stores?.[localStorage.getItem("store_id")]?.stock ?? ''}
+                                </div>
+                                <div style={{ ...columnStyle, width: '10%' }}>
+                                  {highlightWords(option.brand_name, searchWords, isActive)}
+                                </div>
+                                <div style={{ ...columnStyle, width: '10%' }}>
+                                  {highlightWords(option.country_name, searchWords, isActive)}
+                                </div>
+                              </div>
+                            </MenuItem>
+                          );
+                        })}
+                      </Menu>
+                    );
+                  }}
+                />
+                <Button
+                  hide={true.toString()}
+                  onClick={openProductCreateForm}
+                  className="btn btn-outline-secondary btn-primary btn-sm"
+                  type="button"
+                  id="button-addon1"
+                >
+                  {" "}
+                  <i className="bi bi-plus-lg"></i> New
+                </Button>
+                {errors.product_id ? (
+                  <div style={{ color: "red" }}>
+                    <i className="bi bi-x-lg"> </i>
+                    {errors.product_id}
+                  </div>
+                ) : null}
+              </div>
+
+              <div className="col-md-1">
+                <Button className="btn btn-primary" style={{ marginTop: "30px" }} onClick={openProducts}>
+                  <i class="bi bi-list"></i>
+                </Button>
+              </div>
+            </>}
 
 
 
@@ -2751,8 +2753,8 @@ const QuotationCreate = forwardRef((props, ref) => {
                         {enableProductSelection && <td>
                           <input
                             type="checkbox"
-                            checked={selectedIds.includes(product.id)}
-                            onChange={() => handleSelect(product.id)}
+                            checked={selectedIds.includes(product.product_id)}
+                            onChange={() => handleSelect(product.product_id)}
                           />
                         </td>}
                         <td style={{ verticalAlign: 'middle', padding: '0.25rem' }}>{index + 1}</td>

@@ -8,7 +8,7 @@ import React, {
   useCallback,
 } from "react";
 import { Modal, Button } from "react-bootstrap";
-
+import { OverlayTrigger, Tooltip } from 'react-bootstrap';
 import { Spinner } from "react-bootstrap";
 import { Typeahead, Menu, MenuItem, Highlighter } from "react-bootstrap-typeahead";
 import StoreCreate from "../store/create.js";
@@ -18,6 +18,7 @@ import countryList from 'react-select-country-list';
 import ImageGallery from '../utils/ImageGallery.js';
 import { trimTo2Decimals } from "../utils/numberUtils";
 import { trimTo4Decimals } from "../utils/numberUtils";
+import { trimTo8Decimals } from "../utils/numberUtils";
 import Amount from "../utils/amount.js";
 //import Select from 'react-select'
 
@@ -850,6 +851,7 @@ const ProductCreate = forwardRef((props, ref) => {
     } else {
       formData.set.products.push({
         "product_id": product.id,
+        "part_number": product.part_number,
         "name": product.name,
         "quantity": 1,
         "purchase_unit_price": product.purchase_unit_price,
@@ -936,6 +938,15 @@ const ProductCreate = forwardRef((props, ref) => {
     productStores[localStorage.getItem('store_id')].purchase_unit_price = formData.set.purchase_total;
     productStores[localStorage.getItem('store_id')].purchase_unit_price_with_vat = formData.set.purchase_total_with_vat;
 
+    //Caluclate %
+    for (let i = 0; i < formData.set.products.length; i++) {
+      let price = formData.set.products[i].purchase_unit_price * formData.set.products[i].quantity;
+      formData.set.products[i].purchase_price_percent = parseFloat(trimTo8Decimals(((price / purchaseTotal) * 100)));
+
+      price = formData.set.products[i].retail_unit_price * formData.set.products[i].quantity;
+      formData.set.products[i].retail_price_percent = parseFloat(trimTo8Decimals(((price / total) * 100)));
+    }
+
     setFormData({ ...formData });
   }
 
@@ -965,6 +976,13 @@ const ProductCreate = forwardRef((props, ref) => {
     document.addEventListener("keydown", handleKeyDown);
     return () => document.removeEventListener("keydown", handleKeyDown);
   }, []);
+
+
+  const renderPercentTooltip = (props) => (
+    <Tooltip id="label-tooltip" {...props}>
+      {props.value + "%"}
+    </Tooltip>
+  );
 
   return (
     <>
@@ -2141,25 +2159,34 @@ const ProductCreate = forwardRef((props, ref) => {
                 <table class="table table-striped table-sm table-bordered">
                   {formData.set?.products && formData.set?.products?.length > 0 &&
                     <thead className="text-center">
-                      <th>
+                      <th style={{ width: "12%" }}>
+                        Part No.
+                      </th>
+                      <th style={{ width: "19%" }}>
                         Name
                       </th>
-                      <th>
+                      <th style={{ width: "8%" }}>
                         Qty
                       </th>
-                      <th>
+                      <th style={{ width: "10%" }}>
                         Purchase Unit Price
                       </th>
-                      <th>
+                      <th style={{ width: "10%" }}>
                         Purchase Unit Price(with VAT)
                       </th>
-                      <th>
+                      <th style={{ width: "8%" }}>
+                        Purchase Price %
+                      </th>
+                      <th style={{ width: "10%" }}>
                         Retail Unit Price
                       </th>
-                      <th>
+                      <th style={{ width: "10%" }}>
                         Retail Unit Price(with VAT)
                       </th>
-                      <th>
+                      <th style={{ width: "8%" }}>
+                        Retail Price %
+                      </th>
+                      <th style={{ width: "5%" }}>
                         Action
                       </th>
                     </thead>}
@@ -2167,12 +2194,17 @@ const ProductCreate = forwardRef((props, ref) => {
                     {formData.set?.products &&
                       formData.set?.products.map((product, key) => (
                         <tr key={key}>
-                          <td style={{ minWidth: "300px" }}>
+                          <td >
+                            <span style={{ color: "blue", cursor: "pointer" }} onClick={() => {
+                              openUpdateForm(product.product_id);
+                            }}>{product.part_number}</span>
+                          </td>
+                          <td >
                             <span style={{ color: "blue", cursor: "pointer" }} onClick={() => {
                               openUpdateForm(product.product_id);
                             }}>{product.name}</span>
                           </td>
-                          <td style={{ width: "100px" }}>
+                          <td >
                             <input type='number'
                               id={`${"set_product_quantity_" + key}`}
                               name={`${"set_product_quantity_" + key}`}
@@ -2235,7 +2267,7 @@ const ProductCreate = forwardRef((props, ref) => {
                               </div>
                             )}
                           </td>
-                          <td style={{ width: "200px" }}>
+                          <td >
                             <input type='number'
                               id={`${"set_product_purchase_unit_price_" + key}`}
                               name={`${"set_product_purchase_unit_price_" + key}`}
@@ -2295,7 +2327,7 @@ const ProductCreate = forwardRef((props, ref) => {
                               </div>
                             )}
                           </td>
-                          <td style={{ width: "200px" }}>
+                          <td >
                             <input type='number'
                               id={`${"set_product_purchase_unit_price_with_vat_" + key}`}
                               name={`${"set_product_purchase_unit_price_with_vat_" + key}`}
@@ -2372,7 +2404,13 @@ const ProductCreate = forwardRef((props, ref) => {
                               </div>
                             )}
                           </td>
-                          <td style={{ width: "200px" }}>
+                          <td >
+                            {trimTo2Decimals(formData.set.products[key].purchase_price_percent) + "%"}
+                            <OverlayTrigger placement="right" overlay={renderPercentTooltip({ value: formData.set.products[key].purchase_price_percent })}>
+                              <span style={{ textDecoration: 'underline dotted', cursor: 'pointer' }}>ℹ️</span>
+                            </OverlayTrigger>
+                          </td>
+                          <td style={{ width: "140px" }}>
                             <input type='number'
                               id={`${"set_product_unit_price_" + key}`}
                               name={`${"set_product_unit_price_" + key}`}
@@ -2393,7 +2431,7 @@ const ProductCreate = forwardRef((props, ref) => {
 
                                 if (e.key === "ArrowLeft") {
                                   timerRef.current = setTimeout(() => {
-                                    inputRefs.current[(key)][`${"set_product_quantity_" + (key)}`].focus();
+                                    inputRefs.current[(key)][`${"set_product_purchase_unit_price_with_vat_" + (key)}`].focus();
                                     // productSetSearchRef.current?.focus();
                                   }, 100);
                                 }
@@ -2433,7 +2471,7 @@ const ProductCreate = forwardRef((props, ref) => {
                               </div>
                             )}
                           </td>
-                          <td style={{ width: "200px" }}>
+                          <td >
                             <input type='number'
                               id={`${"set_product_unit_price_with_vat_" + key}`}
                               name={`${"set_product_unit_price_with_vat_" + key}`}
@@ -2510,49 +2548,58 @@ const ProductCreate = forwardRef((props, ref) => {
                               </div>
                             )}
                           </td>
-                          <td style={{ width: "100px" }}>
+                          <td>
+                            {trimTo2Decimals(formData.set.products[key].retail_price_percent) + "%"}
+                            <OverlayTrigger placement="right" overlay={renderPercentTooltip({ value: formData.set.products[key].retail_price_percent })}>
+                              <span style={{ textDecoration: 'underline dotted', cursor: 'pointer' }}>ℹ️</span>
+                            </OverlayTrigger>
+                          </td>
+                          <td>
                             <Button variant="danger" onClick={(event) => {
                               RemoveProductFromSet(key);
                             }}>
-                              Remove
+                              <i className="bi bi-trash"></i>
                             </Button>
                           </td>
 
                         </tr>
                       )).reverse()}
                     <tr>
+                      <td></td>
                       <td class="text-end">
                         <b>Total</b>
                       </td>
                       <td> {formData.set?.total_quantity ? trimTo2Decimals(formData.set?.total_quantity) : ""} </td>
-                      <td><b style={{ marginLeft: "14px" }}>{formData.set?.purchase_total ? trimTo4Decimals(formData.set?.purchase_total) + " (without VAT)" : ""}</b>
+                      <td><b style={{ marginLeft: "14px" }}>{formData.set?.purchase_total ? trimTo4Decimals(formData.set?.purchase_total) : ""}</b>
                         {errors["set_purchase_total"] && (
                           <div style={{ color: "red" }}>
                             {errors["set_purchase_total"]}
                           </div>
                         )}
                       </td>
-                      <td><b style={{ marginLeft: "14px" }}>{formData.set?.purchase_total_with_vat ? trimTo4Decimals(formData.set?.purchase_total_with_vat) + " (with VAT)" : ""}</b>
+                      <td><b style={{ marginLeft: "14px" }}>{formData.set?.purchase_total_with_vat ? trimTo4Decimals(formData.set?.purchase_total_with_vat) : ""}</b>
                         {errors["set_purchase_total_with_vat"] && (
                           <div style={{ color: "red" }}>
                             {errors["set_purchase_total_with_vat"]}
                           </div>
                         )}
                       </td>
-                      <td><b style={{ marginLeft: "14px" }}>{formData.set?.total ? trimTo4Decimals(formData.set?.total) + " (without VAT)" : ""}</b>
+                      <td></td>
+                      <td><b style={{ marginLeft: "14px" }}>{formData.set?.total ? trimTo4Decimals(formData.set?.total) : ""}</b>
                         {errors["set_total"] && (
                           <div style={{ color: "red" }}>
                             {errors["set_total"]}
                           </div>
                         )}
                       </td>
-                      <td><b style={{ marginLeft: "14px" }}>{formData.set?.total_with_vat ? trimTo4Decimals(formData.set?.total_with_vat) + " (with VAT)" : ""}</b>
+                      <td><b style={{ marginLeft: "14px" }}>{formData.set?.total_with_vat ? trimTo4Decimals(formData.set?.total_with_vat) : ""}</b>
                         {errors["set_total_with_vat"] && (
                           <div style={{ color: "red" }}>
                             {errors["set_total_with_vat"]}
                           </div>
                         )}
                       </td>
+                      <td></td>
                       <td></td>
                     </tr>
                   </tbody>
