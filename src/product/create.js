@@ -835,6 +835,15 @@ const ProductCreate = forwardRef((props, ref) => {
       product.unit_price_with_vat = 0;
     }
 
+
+    if (product.product_stores && product.product_stores[formData.store_id]?.purchase_unit_price) {
+      product.purchase_unit_price = product.product_stores[formData.store_id].purchase_unit_price;
+      product.purchase_unit_price_with_vat = product.product_stores[formData.store_id].purchase_unit_price_with_vat;
+    } else {
+      product.purchase_unit_price = 0;
+      product.purchase_unit_price_with_vat = 0;
+    }
+
     if (IsProductExistsInSet(product.id)) {
       let index = getProductIndexInSET(product.id);
       formData.set.products[index].quantity++;
@@ -843,6 +852,8 @@ const ProductCreate = forwardRef((props, ref) => {
         "product_id": product.id,
         "name": product.name,
         "quantity": 1,
+        "purchase_unit_price": product.purchase_unit_price,
+        "purchase_unit_price_with_vat": product.purchase_unit_price_with_vat,
         "retail_unit_price": product.unit_price,
         "retail_unit_price_with_vat": product.unit_price_with_vat,
       });
@@ -880,8 +891,12 @@ const ProductCreate = forwardRef((props, ref) => {
   }
 
   function findSetTotal() {
+    let purchaseTotal = 0.00;
+    let purchaseTotalWithVAT = 0.00;
+
     let total = 0.00;
     let totalWithVAT = 0.00;
+
     let totalQuantity = 0.00;
     for (let i = 0; i < formData.set.products.length; i++) {
       if (formData.set.products[i].quantity) {
@@ -895,14 +910,31 @@ const ProductCreate = forwardRef((props, ref) => {
       if (formData.set.products[i].retail_unit_price_with_vat && formData.set.products[i].quantity) {
         totalWithVAT += formData.set.products[i].retail_unit_price_with_vat * formData.set.products[i].quantity;
       }
+
+      //purchase 
+      if (formData.set.products[i].purchase_unit_price && formData.set.products[i].quantity) {
+        purchaseTotal += formData.set.products[i].purchase_unit_price * formData.set.products[i].quantity;
+      }
+
+      if (formData.set.products[i].purchase_unit_price_with_vat && formData.set.products[i].quantity) {
+        purchaseTotalWithVAT += formData.set.products[i].purchase_unit_price_with_vat * formData.set.products[i].quantity;
+      }
     }
 
     formData.set.total_quantity = parseFloat(trimTo2Decimals(totalQuantity));
+
     formData.set.total = parseFloat(trimTo4Decimals(total));
     formData.set.total_with_vat = parseFloat(trimTo4Decimals(totalWithVAT));
 
+    formData.set.purchase_total = parseFloat(trimTo4Decimals(purchaseTotal));
+    formData.set.purchase_total_with_vat = parseFloat(trimTo4Decimals(purchaseTotalWithVAT));
+
     productStores[localStorage.getItem('store_id')].retail_unit_price = formData.set.total;
     productStores[localStorage.getItem('store_id')].retail_unit_price_with_vat = formData.set.total_with_vat;
+
+    //purchase
+    productStores[localStorage.getItem('store_id')].purchase_unit_price = formData.set.purchase_total;
+    productStores[localStorage.getItem('store_id')].purchase_unit_price_with_vat = formData.set.purchase_total_with_vat;
 
     setFormData({ ...formData });
   }
@@ -913,7 +945,13 @@ const ProductCreate = forwardRef((props, ref) => {
   function openUpdateForm(id) {
     showProductUpdateForm = true;
     setShowProductUpdateForm(true);
-    ProductUpdateFormRef.current.open(id);
+
+    if (timerRef.current) clearTimeout(timerRef.current);
+    timerRef.current = setTimeout(() => {
+      ProductUpdateFormRef.current?.open(id);
+    }, 100);
+
+
   }
 
   useEffect(() => {
@@ -950,7 +988,7 @@ const ProductCreate = forwardRef((props, ref) => {
 
       <Modal
         show={show}
-        size="xl"
+        fullscreen
         onHide={handleClose}
         animation={false}
         backdrop="static"
@@ -1401,6 +1439,7 @@ const ProductCreate = forwardRef((props, ref) => {
                         name={`${"product_purchase_unit_price_0"}`}
                         type="number"
                         value={productStores[localStorage.getItem('store_id')]?.purchase_unit_price}
+                        disabled={formData.set?.purchase_total}
                         ref={(el) => {
                           if (!inputRefs.current[0]) inputRefs.current[0] = {};
                           inputRefs.current[0][`${"product_purchase_unit_price_0"}`] = el;
@@ -1627,6 +1666,7 @@ const ProductCreate = forwardRef((props, ref) => {
                       <input
                         id={`${"product_purchase_unit_price_with_vat_0"}`}
                         name={`${"product_purchase_unit_price_with_vat_0"}`}
+                        disabled={formData.set?.purchase_total_with_vat}
                         type="number"
                         value={
                           productStores[localStorage.getItem('store_id')]?.purchase_unit_price_with_vat || productStores[localStorage.getItem('store_id')]?.purchase_unit_price_with_vat === 0
@@ -2108,10 +2148,16 @@ const ProductCreate = forwardRef((props, ref) => {
                         Qty
                       </th>
                       <th>
-                        Unit Price
+                        Purchase Unit Price
                       </th>
                       <th>
-                        Unit Price(with VAT)
+                        Purchase Unit Price(with VAT)
+                      </th>
+                      <th>
+                        Retail Unit Price
+                      </th>
+                      <th>
+                        Retail Unit Price(with VAT)
                       </th>
                       <th>
                         Action
@@ -2126,7 +2172,7 @@ const ProductCreate = forwardRef((props, ref) => {
                               openUpdateForm(product.product_id);
                             }}>{product.name}</span>
                           </td>
-                          <td style={{ width: "200px" }}>
+                          <td style={{ width: "100px" }}>
                             <input type='number'
                               id={`${"set_product_quantity_" + key}`}
                               name={`${"set_product_quantity_" + key}`}
@@ -2186,6 +2232,143 @@ const ProductCreate = forwardRef((props, ref) => {
                               <div style={{ color: "red" }}>
 
                                 {errors["set_product_quantity_" + key]}
+                              </div>
+                            )}
+                          </td>
+                          <td style={{ width: "200px" }}>
+                            <input type='number'
+                              id={`${"set_product_purchase_unit_price_" + key}`}
+                              name={`${"set_product_purchase_unit_price_" + key}`}
+                              value={formData.set.products[key].purchase_unit_price}
+                              className="form-control"
+                              ref={(el) => {
+                                if (!inputRefs.current[key]) inputRefs.current[key] = {};
+                                inputRefs.current[key][`${"set_product_purchase_unit_price_" + key}`] = el;
+                              }}
+                              onFocus={() => {
+                                if (timerRef.current) clearTimeout(timerRef.current);
+                                timerRef.current = setTimeout(() => {
+                                  inputRefs.current[key][`${"set_product_purchase_unit_price_" + key}`].select();
+                                }, 100);
+                              }}
+                              onKeyDown={(e) => {
+                                if (timerRef.current) clearTimeout(timerRef.current);
+
+                                if (e.key === "ArrowLeft") {
+                                  timerRef.current = setTimeout(() => {
+                                    inputRefs.current[(key)][`${"set_product_quantity_" + (key)}`].focus();
+                                    // productSetSearchRef.current?.focus();
+                                  }, 100);
+                                }
+                              }}
+
+                              onChange={(e) => {
+                                errors["set_product_purchase_unit_price_" + key] = "";
+                                setErrors({ ...errors });
+
+                                if (e.target.value === 0) {
+                                  formData.set.products[key].purchase_unit_price_with_vat = 0;
+                                  formData.set.products[key].purchase_unit_price = 0;
+                                  findSetTotal();
+                                  setFormData({ ...formData });
+                                  return;
+                                }
+
+                                if (!e.target.value) {
+                                  formData.set.products[key].purchase_unit_price_with_vat = "";
+                                  formData.set.products[key].purchase_unit_price = "";
+                                  findSetTotal();
+                                  setFormData({ ...formData });
+                                  return;
+                                }
+
+                                formData.set.products[key].purchase_unit_price = parseFloat(e.target.value);
+                                formData.set.products[key].purchase_unit_price_with_vat = parseFloat(trimTo4Decimals(formData.set.products[key].purchase_unit_price * (1 + (store.vat_percent / 100))));
+                                setFormData({ ...formData });
+                                findSetTotal();
+                                console.log(formData);
+                              }}
+                            />
+                            {errors["set_product_purchase_unit_price_" + key] && (
+                              <div style={{ color: "red" }}>
+                                {errors["set_product_purchase_unit_price_" + key]}
+                              </div>
+                            )}
+                          </td>
+                          <td style={{ width: "200px" }}>
+                            <input type='number'
+                              id={`${"set_product_purchase_unit_price_with_vat_" + key}`}
+                              name={`${"set_product_purchase_unit_price_with_vat_" + key}`}
+                              value={formData.set.products[key].purchase_unit_price_with_vat}
+                              className="form-control "
+                              ref={(el) => {
+                                if (!inputRefs.current[key]) inputRefs.current[key] = {};
+                                inputRefs.current[key][`${"set_product_purchase_unit_price_with_vat_" + key}`] = el;
+                              }}
+                              onFocus={() => {
+                                if (timerRef.current) clearTimeout(timerRef.current);
+                                timerRef.current = setTimeout(() => {
+                                  inputRefs.current[key][`${"set_product_purchase_unit_price_with_vat_" + key}`]?.select();
+                                }, 100);
+                              }}
+                              onKeyDown={(e) => {
+                                if (timerRef.current) clearTimeout(timerRef.current);
+
+                                if (e.key === "Enter") {
+                                  if ((key + 1) === formData.set.products.length) {
+                                    timerRef.current = setTimeout(() => {
+                                      productSetSearchRef.current?.focus();
+                                    }, 100);
+                                  } else {
+                                    console.log("moviing to next line")
+                                    if (key === 0) {
+                                      timerRef.current = setTimeout(() => {
+                                        productSetSearchRef.current?.focus();
+                                      }, 100);
+                                    } else {
+                                      timerRef.current = setTimeout(() => {
+                                        inputRefs.current[key][`${"set_product_unit_price_" + key}`].focus();
+                                      }, 100);
+                                    }
+                                  }
+                                } else if (e.key === "ArrowLeft") {
+                                  timerRef.current = setTimeout(() => {
+                                    inputRefs.current[key][`${"set_product_purchase_unit_price_" + key}`].focus();
+                                  }, 100);
+                                }
+                              }}
+
+                              onChange={(e) => {
+                                errors["set_product_purchase_unit_price_with_vat_" + key] = "";
+                                setErrors({ ...errors });
+
+                                if (e.target.value === 0) {
+                                  formData.set.products[key].purchase_unit_price_with_vat = 0;
+                                  formData.set.products[key].purchase_unit_price = 0;
+                                  findSetTotal();
+                                  setFormData({ ...formData });
+                                  return;
+                                }
+
+                                if (!e.target.value) {
+                                  formData.set.products[key].purchase_unit_price_with_vat = "";
+                                  formData.set.products[key].purchase_unit_price = ""
+                                  findSetTotal();
+                                  setFormData({ ...formData });
+                                  return;
+                                }
+
+                                formData.set.products[key].purchase_unit_price_with_vat = parseFloat(e.target.value);
+                                formData.set.products[key].purchase_unit_price = parseFloat(trimTo4Decimals(formData.set.products[key].purchase_unit_price_with_vat / (1 + (store.vat_percent / 100))));
+                                setFormData({ ...formData });
+                                findSetTotal();
+                                console.log(formData);
+                              }}
+                            />
+                            {errors["set_product_purchase_unit_price_with_vat_" + key] && (
+                              <div style={{ color: "red" }}>
+
+                                {errors["set_product_purchase_unit_price_with_vat_" + key]}
                               </div>
                             )}
                           </td>
@@ -2342,6 +2525,20 @@ const ProductCreate = forwardRef((props, ref) => {
                         <b>Total</b>
                       </td>
                       <td> {formData.set?.total_quantity ? trimTo2Decimals(formData.set?.total_quantity) : ""} </td>
+                      <td><b style={{ marginLeft: "14px" }}>{formData.set?.purchase_total ? trimTo4Decimals(formData.set?.purchase_total) + " (without VAT)" : ""}</b>
+                        {errors["set_purchase_total"] && (
+                          <div style={{ color: "red" }}>
+                            {errors["set_purchase_total"]}
+                          </div>
+                        )}
+                      </td>
+                      <td><b style={{ marginLeft: "14px" }}>{formData.set?.purchase_total_with_vat ? trimTo4Decimals(formData.set?.purchase_total_with_vat) + " (with VAT)" : ""}</b>
+                        {errors["set_purchase_total_with_vat"] && (
+                          <div style={{ color: "red" }}>
+                            {errors["set_purchase_total_with_vat"]}
+                          </div>
+                        )}
+                      </td>
                       <td><b style={{ marginLeft: "14px" }}>{formData.set?.total ? trimTo4Decimals(formData.set?.total) + " (without VAT)" : ""}</b>
                         {errors["set_total"] && (
                           <div style={{ color: "red" }}>

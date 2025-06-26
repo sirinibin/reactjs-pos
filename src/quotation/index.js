@@ -523,9 +523,15 @@ function QuotationIndex(props) {
   }
 
 
-
   function sendWhatsAppMessage(model) {
-    PreviewRef.current.open(model, "whatsapp", "whatsapp_quotation");
+    showOrderPreview = true;
+    setShowOrderPreview(showOrderPreview);
+
+    if (timerRef.current) clearTimeout(timerRef.current);
+
+    timerRef.current = setTimeout(() => {
+      PreviewRef.current.open(model, "whatsapp", "whatsapp_quotation");
+    }, 100);
   }
 
 
