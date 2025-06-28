@@ -8,8 +8,7 @@ import React, {
   useCallback,
 } from "react";
 import { Modal, Button } from "react-bootstrap";
-import { OverlayTrigger, Tooltip } from 'react-bootstrap';
-import { Spinner } from "react-bootstrap";
+import { OverlayTrigger, Tooltip, Dropdown, Spinner } from 'react-bootstrap';
 import { Typeahead, Menu, MenuItem, Highlighter } from "react-bootstrap-typeahead";
 import StoreCreate from "../store/create.js";
 import ProductCategoryCreate from "../product_category/create.js";
@@ -20,7 +19,15 @@ import { trimTo2Decimals } from "../utils/numberUtils";
 import { trimTo4Decimals } from "../utils/numberUtils";
 import { trimTo8Decimals } from "../utils/numberUtils";
 import Amount from "../utils/amount.js";
-//import Select from 'react-select'
+import SalesHistory from "./../product/sales_history.js";
+import SalesReturnHistory from "./../product/sales_return_history.js";
+import PurchaseHistory from "./../product/purchase_history.js";
+import PurchaseReturnHistory from "./../product/purchase_return_history.js";
+import QuotationHistory from "./../product/quotation_history.js";
+import QuotationSalesReturnHistory from "./../product/quotation_sales_return_history.js";
+import DeliveryNoteHistory from "./../product/delivery_note_history.js";
+import Products from "./../utils/products.js";
+import ImageViewerModal from './../utils/ImageViewerModal';
 
 const columnStyle = {
   width: '20%',
@@ -178,6 +185,37 @@ const ProductCreate = forwardRef((props, ref) => {
     SetShow(false);
   }
 
+  async function getProductObj(id) {
+    const requestOptions = {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: localStorage.getItem("access_token"),
+      },
+    };
+
+    let searchParams = {};
+    if (localStorage.getItem("store_id")) {
+      searchParams.store_id = localStorage.getItem("store_id");
+    }
+    let queryParams = ObjectToSearchQueryParams(searchParams);
+
+    try {
+      const response = await fetch(`/v1/product/${id}?select=id,images,store_id&${queryParams}`, requestOptions);
+      const isJson = response.headers.get("content-type")?.includes("application/json");
+      const data = isJson ? await response.json() : null;
+
+      if (!response.ok) {
+        const error = data?.errors || "Unknown error";
+        throw error;
+      }
+
+      return data.result;  // ✅ return the result here
+    } catch (error) {
+      return null;  // ✅ explicitly return null or a fallback if there's an error
+    }
+  }
+
   async function getProduct(id) {
     console.log("inside get Product");
     const requestOptions = {
@@ -211,6 +249,7 @@ const ProductCreate = forwardRef((props, ref) => {
 
         console.log("Response:");
         console.log(data);
+
         let categoryIds = data.result.category_id;
         let categoryNames = data.result.category_name;
 
@@ -984,8 +1023,74 @@ const ProductCreate = forwardRef((props, ref) => {
     </Tooltip>
   );
 
+
+  const ProductsRef = useRef();
+  function openLinkedProducts(model) {
+    ProductsRef.current.open(model, "linked_products");
+  }
+
+
+  const SalesHistoryRef = useRef();
+  function openSalesHistory(model) {
+    SalesHistoryRef.current.open(model);
+  }
+
+  const SalesReturnHistoryRef = useRef();
+  function openSalesReturnHistory(model) {
+    SalesReturnHistoryRef.current.open(model);
+  }
+
+
+  const PurchaseHistoryRef = useRef();
+  function openPurchaseHistory(model) {
+    PurchaseHistoryRef.current.open(model);
+  }
+
+  const PurchaseReturnHistoryRef = useRef();
+  function openPurchaseReturnHistory(model) {
+    PurchaseReturnHistoryRef.current.open(model);
+  }
+
+
+  const DeliveryNoteHistoryRef = useRef();
+  function openDeliveryNoteHistory(model) {
+    DeliveryNoteHistoryRef.current.open(model);
+  }
+
+
+  const QuotationHistoryRef = useRef();
+  function openQuotationHistory(model) {
+    QuotationHistoryRef.current.open(model);
+  }
+
+  const QuotationSalesReturnHistoryRef = useRef();
+  function openQuotationSalesReturnHistory(model) {
+    QuotationSalesReturnHistoryRef.current.open(model);
+  }
+
+  const imageViewerRef = useRef();
+  let [productImages, setProductImages] = useState([]);
+
+  async function openProductImages(id) {
+    let product = await getProductObj(id);
+    productImages = product?.images;
+    setProductImages(productImages);
+    imageViewerRef.current.open(0);
+  }
+
+
   return (
     <>
+      <ImageViewerModal ref={imageViewerRef} images={productImages} />
+      <Products ref={ProductsRef} showToastMessage={props.showToastMessage} />
+      <SalesHistory ref={SalesHistoryRef} showToastMessage={props.showToastMessage} />
+      <SalesReturnHistory ref={SalesReturnHistoryRef} showToastMessage={props.showToastMessage} />
+      <PurchaseHistory ref={PurchaseHistoryRef} showToastMessage={props.showToastMessage} />
+      <PurchaseReturnHistory ref={PurchaseReturnHistoryRef} showToastMessage={props.showToastMessage} />
+      <QuotationHistory ref={QuotationHistoryRef} showToastMessage={props.showToastMessage} />
+      <QuotationSalesReturnHistory ref={QuotationSalesReturnHistoryRef} showToastMessage={props.showToastMessage} />
+      <DeliveryNoteHistory ref={DeliveryNoteHistoryRef} showToastMessage={props.showToastMessage} />
+
       {showProductUpdateForm && <ProductCreate ref={ProductUpdateFormRef} showToastMessage={props.showToastMessage} />}
       <StoreCreate
         ref={StoreCreateFormRef}
@@ -2159,28 +2264,29 @@ const ProductCreate = forwardRef((props, ref) => {
                 <table class="table table-striped table-sm table-bordered">
                   {formData.set?.products && formData.set?.products?.length > 0 &&
                     <thead className="text-center">
-                      <th style={{ width: "12%" }}>
+                      <th style={{ width: "11%" }}>
                         Part No.
                       </th>
                       <th style={{ width: "19%" }}>
                         Name
                       </th>
+                      <th style={{ width: "5%" }} >Info</th>
                       <th style={{ width: "8%" }}>
                         Qty
                       </th>
-                      <th style={{ width: "10%" }}>
+                      <th style={{ width: "9%" }}>
                         Purchase Unit Price
                       </th>
-                      <th style={{ width: "10%" }}>
+                      <th style={{ width: "9%" }}>
                         Purchase Unit Price(with VAT)
                       </th>
                       <th style={{ width: "8%" }}>
                         Purchase Price %
                       </th>
-                      <th style={{ width: "10%" }}>
+                      <th style={{ width: "9%" }}>
                         Retail Unit Price
                       </th>
-                      <th style={{ width: "10%" }}>
+                      <th style={{ width: "9%" }}>
                         Retail Unit Price(with VAT)
                       </th>
                       <th style={{ width: "8%" }}>
@@ -2204,6 +2310,84 @@ const ProductCreate = forwardRef((props, ref) => {
                               openUpdateForm(product.product_id);
                             }}>{product.name}</span>
                           </td>
+                          <td style={{ verticalAlign: 'middle', padding: '0.25rem' }}>
+                            <div style={{ zIndex: "9999 !important", position: "absolute !important" }}>
+                              <Dropdown drop="top">
+                                <Dropdown.Toggle variant="secondary" id="dropdown-secondary" style={{}}>
+                                  <i className="bi bi-info"></i>
+                                </Dropdown.Toggle>
+
+                                <Dropdown.Menu style={{ zIndex: 9999, position: "absolute" }} popperConfig={{ modifiers: [{ name: 'preventOverflow', options: { boundary: 'viewport' } }] }}>
+                                  <Dropdown.Item onClick={() => {
+                                    openLinkedProducts(product);
+                                  }}>
+                                    <i className="bi bi-link"></i>
+                                    &nbsp;
+                                    Linked Products (F10)
+                                  </Dropdown.Item>
+
+                                  <Dropdown.Item onClick={() => {
+                                    openSalesHistory(product);
+                                  }}>
+                                    <i className="bi bi-clock-history"></i>
+                                    &nbsp;
+                                    Sales History (F4)
+                                  </Dropdown.Item>
+                                  <Dropdown.Item onClick={() => {
+                                    openSalesReturnHistory(product);
+                                  }}>
+                                    <i className="bi bi-clock-history"></i>
+                                    &nbsp;
+                                    Sales Return History (F9)
+                                  </Dropdown.Item>
+                                  <Dropdown.Item onClick={() => {
+                                    openPurchaseHistory(product);
+                                  }}>
+                                    <i className="bi bi-clock-history"></i>
+                                    &nbsp;
+                                    Purchase History (F6)
+                                  </Dropdown.Item>
+                                  <Dropdown.Item onClick={() => {
+                                    openPurchaseReturnHistory(product);
+                                  }}>
+                                    <i className="bi bi-clock-history"></i>
+                                    &nbsp;
+                                    Purchase Return History (F8)
+                                  </Dropdown.Item>
+                                  <Dropdown.Item onClick={() => {
+                                    openDeliveryNoteHistory(product);
+                                  }}>
+                                    <i className="bi bi-clock-history"></i>
+                                    &nbsp;
+                                    Delivery Note History (F3)
+                                  </Dropdown.Item>
+                                  <Dropdown.Item onClick={() => {
+                                    openQuotationHistory(product);
+                                  }}>
+                                    <i className="bi bi-clock-history"></i>
+                                    &nbsp;
+                                    Quotation History  (F2)
+                                  </Dropdown.Item>
+                                  <Dropdown.Item onClick={() => {
+                                    openQuotationSalesReturnHistory(product);
+                                  }}>
+                                    <i className="bi bi-clock-history"></i>
+                                    &nbsp;
+                                    Qtn. Sales Return History (CTR + SHIFT + Z)
+                                  </Dropdown.Item>
+                                  <Dropdown.Item onClick={() => {
+                                    openProductImages(product.product_id);
+                                  }}>
+                                    <i className="bi bi-clock-history"></i>
+                                    &nbsp;
+                                    Images  (CTR + SHIFT + F)
+                                  </Dropdown.Item>
+
+                                </Dropdown.Menu>
+                              </Dropdown>
+                            </div>
+                          </td>
+
                           <td >
                             <input type='number'
                               id={`${"set_product_quantity_" + key}`}

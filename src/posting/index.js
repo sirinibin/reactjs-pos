@@ -366,14 +366,23 @@ const PostingIndex = forwardRef((props, ref) => {
             }
 
             if (creditBalanceBoughtDown > 0) {
-                debitBalance -= creditBalanceBoughtDown;
+                if (creditBalanceBoughtDown > debitBalance) {
+                    debitBalance = creditBalanceBoughtDown - debitBalance;
+                } else {
+                    debitBalance = debitBalance - creditBalanceBoughtDown;
+                }
             }
             setDebitBalance(debitBalance);
         }
 
         if (creditBalance > 0) {
             if (debitBalanceBoughtDown > 0) {
-                creditBalance -= debitBalanceBoughtDown;
+                if (creditBalance > debitBalanceBoughtDown) {
+                    creditBalance = creditBalance - debitBalanceBoughtDown;
+                } else {
+                    creditBalance = debitBalanceBoughtDown - creditBalance;
+                }
+
             }
 
             if (creditBalanceBoughtDown > 0) {
