@@ -404,10 +404,12 @@ const PostingIndex = forwardRef((props, ref) => {
 
         if (debitTotal > creditTotal) {
             setCreditBalance((debitTotal - creditTotal));
+            setDebitBalance(0);
         }
 
         if (debitTotal < creditTotal) {
             setDebitBalance((creditTotal - debitTotal));
+            setCreditBalance(0);
         }
 
 
