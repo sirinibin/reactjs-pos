@@ -360,6 +360,7 @@ const PostingIndex = forwardRef((props, ref) => {
     }
 
     function RemoveOpeningBalance(posting) {
+        /*
         if (debitBalance > 0) {
             if (debitBalanceBoughtDown > 0) {
                 debitBalance += debitBalanceBoughtDown;
@@ -389,7 +390,7 @@ const PostingIndex = forwardRef((props, ref) => {
                 creditBalance += creditBalanceBoughtDown;
             }
             setCreditBalance(creditBalance);
-        }
+        }*/
 
         if (debitBalanceBoughtDown > 0) {
             debitTotal -= debitBalanceBoughtDown;
@@ -400,6 +401,15 @@ const PostingIndex = forwardRef((props, ref) => {
             creditTotal -= creditBalanceBoughtDown;
             setCreditTotal(creditTotal);
         }
+
+        if (debitTotal > creditTotal) {
+            setCreditBalance((debitTotal - creditTotal));
+        }
+
+        if (debitTotal < creditTotal) {
+            setDebitBalance((creditTotal - debitTotal));
+        }
+
 
         //  alert(selectedAccount.type)
         for (let i = 0; i < posting?.length; i++) {
