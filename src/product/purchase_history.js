@@ -795,7 +795,7 @@ const PurchaseHistory = forwardRef((props, ref) => {
                                                                 ) : null}
                                                             </b>
                                                         </th>
-                                                        <th>
+                                                        {/* <th>
                                                             <b
                                                                 style={{
                                                                     textDecoration: "underline",
@@ -871,7 +871,7 @@ const PurchaseHistory = forwardRef((props, ref) => {
                                                                     <i className="bi bi-sort-alpha-up"></i>
                                                                 ) : null}
                                                             </b>
-                                                        </th>
+                                                        </th>*/}
 
                                                     </tr>
                                                 </thead>
@@ -1080,7 +1080,7 @@ const PurchaseHistory = forwardRef((props, ref) => {
                                                             />
                                                         </th>
 
-                                                        <th>
+                                                        {/*<th>
                                                             <input
                                                                 type="text"
                                                                 id="retail_profit"
@@ -1121,7 +1121,7 @@ const PurchaseHistory = forwardRef((props, ref) => {
                                                                 }
                                                                 className="form-control"
                                                             />
-                                                        </th>
+                                                        </th>*/}
                                                     </tr>
                                                 </thead>
 
@@ -1161,10 +1161,11 @@ const PurchaseHistory = forwardRef((props, ref) => {
                                                                 <td>{history.price.toFixed(2) + " "}</td>
                                                                 <td>{history.vat_price.toFixed(2) + "   (" + history.vat_percent.toFixed(2) + "%)"}</td>
                                                                 <td>{history.net_price.toFixed(2) + " "}</td>
-                                                                <td>{history.retail_profit.toFixed(2) + " "}</td>
+
+                                                                {/*<td>{history.retail_profit.toFixed(2) + " "}</td>
                                                                 <td>{history.wholesale_profit.toFixed(2) + " "}</td>
                                                                 <td>{history.retail_loss.toFixed(2) + " "}</td>
-                                                                <td>{history.wholesale_loss.toFixed(2) + " "}</td>
+                                                                <td>{history.wholesale_loss.toFixed(2) + " "}</td>*/}
 
                                                                 {/* <td>   
                                                         <button

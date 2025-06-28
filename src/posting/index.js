@@ -402,18 +402,11 @@ const PostingIndex = forwardRef((props, ref) => {
             setCreditTotal(creditTotal);
         }
 
-        if (debitTotal > creditTotal) {
-            setCreditBalance((debitTotal - creditTotal));
-            setDebitBalance(0);
-        }
-
-        if (debitTotal < creditTotal) {
-            setDebitBalance((creditTotal - debitTotal));
-            setCreditBalance(0);
-        }
 
 
         //  alert(selectedAccount.type)
+        let lastPostBalance = 0;
+
         for (let i = 0; i < posting?.length; i++) {
             for (let j = 0; j < posting[i].posts?.length; j++) {
                 if (debitBalanceBoughtDown > 0) {
@@ -425,8 +418,34 @@ const PostingIndex = forwardRef((props, ref) => {
                         posting[i].posts[j].balance += creditBalanceBoughtDown;
                     }
                 }
+
+                if (i === (posting?.length - 1) && j === (posting[i].posts?.length - 1)) {
+                    lastPostBalance = posting[i].posts[j].balance;
+                }
             }
         }
+
+        if (lastPostBalance > 0 && selectedAccount.type === "liability") {
+            selectedAccount.type = "asset";
+            setSelectedAccount({ ...selectedAccount });
+        }
+
+
+        if (debitTotal > creditTotal) {
+            let creditBalance = (debitTotal - creditTotal);
+
+
+            setCreditBalance(creditBalance);
+            setDebitBalance(0);
+        }
+
+        if (debitTotal < creditTotal) {
+            let debitBalance = (creditTotal - debitTotal);
+            setDebitBalance(debitBalance);
+            setCreditBalance(0);
+        }
+
+
 
         return posting;
     }
