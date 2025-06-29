@@ -1042,7 +1042,7 @@ const OrderCreate = forwardRef((props, ref) => {
 
 
     async function checkWarning(i) {
-        let product = await getProduct(selectedProducts[i].product_id);
+        let product = await getProduct(selectedProducts[i].product_id, `id,product_stores.${localStorage.getItem("store_id")}.stock,store_id`);
         let stock = 0;
 
         if (!product) {
@@ -1084,7 +1084,7 @@ const OrderCreate = forwardRef((props, ref) => {
 
 
 
-    async function getProduct(id) {
+    async function getProduct(id, selectStr) {
         console.log("inside get Product");
         const requestOptions = {
             method: "GET",
@@ -1101,7 +1101,7 @@ const OrderCreate = forwardRef((props, ref) => {
         let queryParams = ObjectToSearchQueryParams(searchParams);
 
         try {
-            const response = await fetch(`/v1/product/${id}?${queryParams}`, requestOptions);
+            const response = await fetch(`/v1/product/${id}?${queryParams}${selectStr ? "&select=" + selectStr : ""}`, requestOptions);
             const isJson = response.headers.get("content-type")?.includes("application/json");
             const data = isJson ? await response.json() : null;
 
