@@ -1948,7 +1948,7 @@ const QuotationCreate = forwardRef((props, ref) => {
 
     let oldQty = 0;
     for (let j = 0; j < oldProducts?.length; j++) {
-      if (oldProducts[j].product_id === selectedProducts[j].product_id) {
+      if (oldProducts[j].product_id === selectedProducts[i].product_id) {
         if (formData.id) {
           oldQty = oldProducts[j].quantity;
           // alert(oldQty)
