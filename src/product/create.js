@@ -9,7 +9,7 @@ import React, {
 } from "react";
 import { Modal, Button } from "react-bootstrap";
 import { OverlayTrigger, Tooltip, Dropdown, Spinner } from 'react-bootstrap';
-import { Typeahead, Menu, MenuItem, Highlighter } from "react-bootstrap-typeahead";
+import { Typeahead, Menu, MenuItem } from "react-bootstrap-typeahead";
 import StoreCreate from "../store/create.js";
 import ProductCategoryCreate from "../product_category/create.js";
 import ProductBrandCreate from "../product_brand/create.js";
@@ -28,6 +28,7 @@ import QuotationSalesReturnHistory from "./../product/quotation_sales_return_his
 import DeliveryNoteHistory from "./../product/delivery_note_history.js";
 import Products from "./../utils/products.js";
 import ImageViewerModal from './../utils/ImageViewerModal';
+import { highlightWords } from "../utils/search.js";
 
 const columnStyle = {
   width: '20%',
@@ -915,6 +916,27 @@ const ProductCreate = forwardRef((props, ref) => {
     return false;
   }
 
+  function IsProductExistsInLinkedProducts(productID) {
+    for (var i = 0; i < selectedLinkedProducts.length; i++) {
+      if (selectedLinkedProducts[i].id === productID) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  function removeProductFromLinkedProducts(product) {
+    for (var i = 0; i < selectedLinkedProducts.length; i++) {
+      if (selectedLinkedProducts[i].id === product.id) {
+        selectedLinkedProducts.splice(i, 1);
+        setSelectedLinkedProducts([...selectedLinkedProducts]);
+        return true;
+      }
+    }
+  }
+
+
+
   /*
   function getProductIndexInSET(productID) {
     for (var i = 0; i < formData.set.products.length; i++) {
@@ -930,6 +952,21 @@ const ProductCreate = forwardRef((props, ref) => {
     }
     setFormData({ ...formData });
     findSetTotal();
+  }
+
+  function RemoveProductFromSetByObj(product) {
+    // alert(formData.set.products.length)
+    for (var i = 0; i < formData.set.products.length; i++) {
+      // alert(formData.set.products[i].id);
+      if (formData.set.products[i].product_id === product.id) {
+        formData.set.products.splice(i, 1);
+        // alert("Removed")
+        setFormData({ ...formData });
+        findSetTotal();
+        return true;
+      }
+    }
+    return false
   }
 
   function findSetTotal() {
@@ -2194,7 +2231,7 @@ const ProductCreate = forwardRef((props, ref) => {
             </div>
 
             <h4>SET</h4>
-            <div className="col-md-3">
+            <div className="col-md-2">
               <label className="form-label">Set Name</label>
               <div className="input-group mb-3">
                 <input
@@ -2223,7 +2260,7 @@ const ProductCreate = forwardRef((props, ref) => {
               </div>
             </div>
 
-            <div className="col-md-9">
+            <div className="col-md-10">
               <label className="form-label">Select Products</label>
               <Typeahead
                 id="set_product_id"
@@ -2289,6 +2326,122 @@ const ProductCreate = forwardRef((props, ref) => {
                 onInputChange={(searchTerm, e) => {
                   suggestProducts(searchTerm, "set");
 
+                }}
+
+                renderMenu={(results, menuProps, state) => {
+                  const searchWords = state.text.toLowerCase().split(" ").filter(Boolean);
+
+                  return (
+                    <Menu {...menuProps}>
+                      {/* Header */}
+                      <MenuItem disabled style={{ position: 'sticky', top: 0, padding: 0, margin: 0 }}>
+                        <div style={{
+                          background: '#f8f9fa',
+                          zIndex: 2,
+                          display: 'flex',
+                          fontWeight: 'bold',
+                          padding: '4px 8px',
+                          border: "solid 0px",
+                          borderBottom: '1px solid #ddd',
+                        }}>
+                          <div style={{ width: '3%', border: "solid 0px", }}></div>
+                          <div style={{ width: '18%', border: "solid 0px", }}>Part Number</div>
+                          <div style={{ width: '45%', border: "solid 0px", }}>Name</div>
+                          <div style={{ width: '9%', border: "solid 0px", }}>Unit Price</div>
+                          <div style={{ width: '5%', border: "solid 0px", }}>Stock</div>
+                          <div style={{ width: '10%', border: "solid 0px", }}>Brand</div>
+                          <div style={{ width: '10%', border: "solid 0px", }}>Country</div>
+                        </div>
+                      </MenuItem>
+
+                      {/* Rows */}
+                      {results.map((option, index) => {
+                        const isActive = state.activeIndex === index;
+                        let checked = IsProductExistsInSet(option.id);
+                        return (
+                          <MenuItem option={option} position={index} key={index} style={{ padding: "0px" }}>
+                            <div style={{ display: 'flex', padding: '4px 8px' }}>
+                              <div
+                                className="form-check"
+                                style={{ ...columnStyle, width: '3%' }}
+                                onClick={e => {
+                                  e.stopPropagation();     // Stop click bubbling to parent MenuItem
+                                  checked = !checked;
+
+                                  if (timerRef.current) clearTimeout(timerRef.current);
+                                  timerRef.current = setTimeout(() => {
+                                    if (checked) {
+                                      AddProductToSet(option);
+                                    } else {
+                                      RemoveProductFromSetByObj(option);
+                                    }
+                                  }, 100);
+
+                                }}
+                              >
+                                <input
+                                  className="form-check-input"
+                                  type="checkbox"
+                                  value={checked}
+                                  checked={checked}
+                                  onClick={e => {
+                                    e.stopPropagation();     // Stop click bubbling to parent MenuItem
+                                  }}
+                                  onChange={e => {
+                                    e.preventDefault();      // Prevent default selection behavior
+                                    e.stopPropagation();
+
+                                    checked = !checked;
+
+                                    if (timerRef.current) clearTimeout(timerRef.current);
+                                    timerRef.current = setTimeout(() => {
+                                      if (checked) {
+                                        AddProductToSet(option);
+                                      } else {
+                                        RemoveProductFromSetByObj(option);
+                                      }
+                                    }, 100);
+                                  }}
+                                />
+                              </div>
+                              <div style={{ ...columnStyle, width: '18%' }}>
+                                {highlightWords(
+                                  option.prefix_part_number
+                                    ? `${option.prefix_part_number} - ${option.part_number}`
+                                    : option.part_number,
+                                  searchWords,
+                                  isActive
+                                )}
+                              </div>
+                              <div style={{ ...columnStyle, width: '45%' }}>
+                                {highlightWords(
+                                  option.name_in_arabic
+                                    ? `${option.name} - ${option.name_in_arabic}`
+                                    : option.name,
+                                  searchWords,
+                                  isActive
+                                )}
+                              </div>
+                              <div style={{ ...columnStyle, width: '9%' }}>
+                                {option.product_stores?.[localStorage.getItem("store_id")]?.retail_unit_price && (
+                                  <Amount amount={trimTo2Decimals(option.product_stores?.[localStorage.getItem("store_id")]?.retail_unit_price)} />
+                                )}
+                              </div>
+                              <div style={{ ...columnStyle, width: '5%' }}>
+                                {option.product_stores?.[localStorage.getItem("store_id")]?.stock ?? ''}
+                              </div>
+                              <div style={{ ...columnStyle, width: '10%' }}>
+                                {highlightWords(option.brand_name, searchWords, isActive)}
+                              </div>
+                              <div style={{ ...columnStyle, width: '10%' }}>
+                                {highlightWords(option.country_name, searchWords, isActive)}
+                              </div>
+                            </div>
+                          </MenuItem>
+                        );
+                      })}
+                    </Menu>
+                  );
                 }}
               />
             </div>
@@ -2849,7 +3002,12 @@ const ProductCreate = forwardRef((props, ref) => {
                 filterBy={() => true}
                 ref={productSearchRef}
                 onChange={(selectedItems) => {
-                  setSelectedLinkedProducts(selectedItems);
+
+                  // alert(selectedItems[selectedItems.length - 1].part_number);
+                  if (!IsProductExistsInLinkedProducts(selectedItems[selectedItems.length - 1].id)) {
+                    setSelectedLinkedProducts(selectedItems);
+                  }
+
                   setOpenProductSearchResult(false);
                   /*
                   setProductOptions([]);
@@ -2881,47 +3039,125 @@ const ProductCreate = forwardRef((props, ref) => {
                   }, 100);
 
                 }}
-                renderMenu={(results, menuProps, state) => (
-                  <Menu {...menuProps}>
-                    {/* Header */}
-                    <MenuItem disabled>
-                      <div style={{ display: 'flex', fontWeight: 'bold', padding: '4px 8px', borderBottom: '1px solid #ddd' }}>
-                        <div style={{ width: '15%' }}>Part Number</div>
-                        <div style={{ width: '45%' }}>Name</div>
-                        <div style={{ width: '10%' }}>Unit Price</div>
-                        <div style={{ width: '10%' }}>Stock</div>
-                        <div style={{ width: '10%' }}>Brand</div>
-                        <div style={{ width: '10%' }}>Country</div>
-                      </div>
-                    </MenuItem>
+                renderMenu={(results, menuProps, state) => {
+                  const searchWords = state.text.toLowerCase().split(" ").filter(Boolean);
 
-                    {/* Rows */}
-                    {results.map((option, index) => (
-                      <MenuItem option={option} position={index} key={index}>
-                        <div style={{ display: 'flex', padding: '4px 8px' }}>
-                          <div style={{ ...columnStyle, width: '15%' }}>
-                            <Highlighter search={state.text}>{option.prefix_part_number ? option.prefix_part_number + " - " + option.part_number : "" + option.part_number}</Highlighter>
-                          </div>
-                          <div style={{ ...columnStyle, width: '45%' }}>
-                            <Highlighter search={state.text}>{option.name_in_arabic ? option.name + " - " + option.name_in_arabic : option.name}</Highlighter>
-                          </div>
-                          <div style={{ ...columnStyle, width: '10%' }}>
-                            {option.product_stores?.[localStorage.getItem("store_id")]?.retail_unit_price && <Amount amount={trimTo4Decimals(option.product_stores?.[localStorage.getItem("store_id")]?.retail_unit_price)} />}
-                          </div>
-                          <div style={{ ...columnStyle, width: '10%' }}>
-                            {option.product_stores?.[localStorage.getItem("store_id")]?.stock ?? ''}
-                          </div>
-                          <div style={{ ...columnStyle, width: '10%' }}>
-                            <Highlighter search={state.text}>{option.brand_name}</Highlighter>
-                          </div>
-                          <div style={{ ...columnStyle, width: '10%' }}>
-                            <Highlighter search={state.text}>{option.country_name}</Highlighter>
-                          </div>
+                  return (
+                    <Menu {...menuProps}>
+                      {/* Header */}
+                      <MenuItem disabled style={{ position: 'sticky', top: 0, padding: 0, margin: 0 }}>
+                        <div style={{
+                          background: '#f8f9fa',
+                          zIndex: 2,
+                          display: 'flex',
+                          fontWeight: 'bold',
+                          padding: '4px 8px',
+                          border: "solid 0px",
+                          borderBottom: '1px solid #ddd',
+                        }}>
+                          <div style={{ width: '3%', border: "solid 0px", }}></div>
+                          <div style={{ width: '18%', border: "solid 0px", }}>Part Number</div>
+                          <div style={{ width: '45%', border: "solid 0px", }}>Name</div>
+                          <div style={{ width: '9%', border: "solid 0px", }}>Unit Price</div>
+                          <div style={{ width: '5%', border: "solid 0px", }}>Stock</div>
+                          <div style={{ width: '10%', border: "solid 0px", }}>Brand</div>
+                          <div style={{ width: '10%', border: "solid 0px", }}>Country</div>
                         </div>
                       </MenuItem>
-                    ))}
-                  </Menu>
-                )}
+
+                      {/* Rows */}
+                      {results.map((option, index) => {
+                        const isActive = state.activeIndex === index;
+                        let checked = IsProductExistsInLinkedProducts(option.id);
+                        return (
+                          <MenuItem option={option} position={index} key={index} style={{ padding: "0px" }}>
+                            <div style={{ display: 'flex', padding: '4px 8px' }}>
+                              <div
+                                className="form-check"
+                                style={{ ...columnStyle, width: '3%' }}
+                                onClick={e => {
+                                  e.stopPropagation();     // Stop click bubbling to parent MenuItem
+                                  checked = !checked;
+
+                                  if (timerRef.current) clearTimeout(timerRef.current);
+                                  timerRef.current = setTimeout(() => {
+                                    if (checked) {
+                                      // addProduct(option);
+                                      selectedLinkedProducts.push(option);
+                                      setSelectedLinkedProducts([...selectedLinkedProducts]);
+                                    } else {
+                                      removeProductFromLinkedProducts(option);
+                                    }
+                                  }, 100);
+
+                                }}
+                              >
+                                <input
+                                  className="form-check-input"
+                                  type="checkbox"
+                                  value={checked}
+                                  checked={checked}
+                                  onClick={e => {
+                                    e.stopPropagation();     // Stop click bubbling to parent MenuItem
+                                  }}
+                                  onChange={e => {
+                                    e.preventDefault();      // Prevent default selection behavior
+                                    e.stopPropagation();
+
+                                    checked = !checked;
+
+                                    if (timerRef.current) clearTimeout(timerRef.current);
+                                    timerRef.current = setTimeout(() => {
+                                      if (checked) {
+                                        // addProduct(option);
+                                        selectedLinkedProducts.push(option);
+                                        setSelectedLinkedProducts([...selectedLinkedProducts]);
+                                      } else {
+                                        removeProductFromLinkedProducts(option);
+                                      }
+                                    }, 100);
+                                  }}
+                                />
+                              </div>
+                              <div style={{ ...columnStyle, width: '18%' }}>
+                                {highlightWords(
+                                  option.prefix_part_number
+                                    ? `${option.prefix_part_number} - ${option.part_number}`
+                                    : option.part_number,
+                                  searchWords,
+                                  isActive
+                                )}
+                              </div>
+                              <div style={{ ...columnStyle, width: '45%' }}>
+                                {highlightWords(
+                                  option.name_in_arabic
+                                    ? `${option.name} - ${option.name_in_arabic}`
+                                    : option.name,
+                                  searchWords,
+                                  isActive
+                                )}
+                              </div>
+                              <div style={{ ...columnStyle, width: '9%' }}>
+                                {option.product_stores?.[localStorage.getItem("store_id")]?.retail_unit_price && (
+                                  <Amount amount={trimTo2Decimals(option.product_stores?.[localStorage.getItem("store_id")]?.retail_unit_price)} />
+                                )}
+                              </div>
+                              <div style={{ ...columnStyle, width: '5%' }}>
+                                {option.product_stores?.[localStorage.getItem("store_id")]?.stock ?? ''}
+                              </div>
+                              <div style={{ ...columnStyle, width: '10%' }}>
+                                {highlightWords(option.brand_name, searchWords, isActive)}
+                              </div>
+                              <div style={{ ...columnStyle, width: '10%' }}>
+                                {highlightWords(option.country_name, searchWords, isActive)}
+                              </div>
+                            </div>
+                          </MenuItem>
+                        );
+                      })}
+                    </Menu>
+                  );
+                }}
                 multiple
               />
             </div>
