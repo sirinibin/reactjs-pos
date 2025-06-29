@@ -1148,14 +1148,14 @@ const QuotationSalesReturnHistory = forwardRef((props, ref) => {
                                                                     }}>{history.customer_name}
                                                                 </td>
                                                                 <td>{history.quantity}{history.unit ? history.unit : ""}</td>
-                                                                <td>{history.unit_price.toFixed(2)}</td>
-                                                                <td>{history.discount.toFixed(2)}</td>
-                                                                <td>{history.discount_percent.toFixed(2)}</td>
-                                                                <td>{history.price.toFixed(2) + " "}</td>
-                                                                <td>{history.vat_price.toFixed(2) + "   (" + history.vat_percent.toFixed(2) + "%)"}</td>
-                                                                <td>{history.net_price.toFixed(2) + " "}</td>
-                                                                <td>{history.profit.toFixed(2) + " "}</td>
-                                                                <td>{history.loss.toFixed(2) + " "}</td>
+                                                                <td>{history.unit_price ? history.unit_price?.toFixed(2) : ""}</td>
+                                                                <td>{history.discount ? history.discount?.toFixed(2) : ""}</td>
+                                                                <td>{history.discount_percent ? history.discount_percent?.toFixed(2) : ""}</td>
+                                                                <td>{history.price ? history.price?.toFixed(2) : ""}</td>
+                                                                <td>{history.vat_price ? history.vat_price?.toFixed(2) + "   (" + history.vat_percent?.toFixed(2) + "%)" : ""}</td>
+                                                                <td>{history.net_price ? history.net_price?.toFixed(2) : ""}</td>
+                                                                <td>{history.profit ? history.profit?.toFixed(2) : ""}</td>
+                                                                <td>{history.loss ? history.loss?.toFixed(2) : ""}</td>
                                                                 {/* <td>   
                                                         <button
                                                             className="btn btn-outline-secondary dropdown-toggle"
