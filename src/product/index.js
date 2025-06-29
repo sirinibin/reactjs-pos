@@ -363,11 +363,11 @@ function ProductIndex(props) {
             // Select =
             //"select=id,item_code,ean_12,bar_code,part_number,name,name_in_arabic,category_name,product_stores." + localStorage.getItem("store_id") + ".stock,product_stores." + localStorage.getItem("store_id") + ".purchase_unit_price,product_stores." + localStorage.getItem("store_id") + ".wholesale_unit_price,product_stores." + localStorage.getItem("store_id") + ".retail_unit_price,product_stores." + localStorage.getItem("store_id") + ".store_id";
             Select =
-                "select=id,deleted,deleted_at,prefix_part_number,brand_name,country_name,item_code,ean_12,bar_code,part_number,name,name_in_arabic,category_name,category_id,created_by_name,created_at,rack,product_stores";
+                "select=id,is_set,deleted,deleted_at,prefix_part_number,brand_name,country_name,item_code,ean_12,bar_code,part_number,name,name_in_arabic,category_name,category_id,created_by_name,created_at,rack,product_stores";
 
         } else {
             Select =
-                "select=id,deleted,deleted_at,prefix_part_number,brand_name,country_name,item_code,ean_12,bar_code,part_number,name,name_in_arabic,category_name,category_id,created_by_name,created_at,rack,product_stores";
+                "select=id,is_set,deleted,deleted_at,prefix_part_number,brand_name,country_name,item_code,ean_12,bar_code,part_number,name,name_in_arabic,category_name,category_id,created_by_name,created_at,rack,product_stores";
 
 
             //Select =
@@ -1569,7 +1569,7 @@ function ProductIndex(props) {
                                                         ) : null}
                                                     </b>
                                                 </th>
-
+                                                <th>SET</th>
                                                 <th>
                                                     <b
                                                         style={{
@@ -2452,6 +2452,24 @@ function ProductIndex(props) {
                                                         className="form-control"
                                                     />
                                                 </th>
+                                                <th>
+                                                    <select
+                                                        onChange={(e) => {
+                                                            searchByFieldValue("is_set", e.target.value);
+                                                            if (e.target.value === "1") {
+                                                                // deleted = true;
+                                                                // setDeleted(deleted);
+                                                            } else {
+                                                                //deleted = false;
+                                                                //setDeleted(deleted);
+                                                            }
+                                                        }}
+                                                    >
+                                                        <option value="" >ALL</option>
+                                                        <option value="0" >NO</option>
+                                                        <option value="1">YES</option>
+                                                    </select>
+                                                </th>
                                                 <th style={{ minWidth: "250px" }}>
                                                     <Typeahead
                                                         id="category_id"
@@ -3092,6 +3110,7 @@ function ProductIndex(props) {
                                                                 return ""
                                                             })}
                                                         </td>
+                                                        <td>{product.is_set ? "YES" : "NO"}</td>
                                                         {/*
                                                         <td>
                                                             {product.product_stores && Object.keys(product.product_stores).map((key, index) => {
