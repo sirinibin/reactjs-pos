@@ -1202,7 +1202,7 @@ const Quotations = forwardRef((props, ref) => {
                                                     <thead>
                                                         <tr className="text-center">
                                                             <th></th>
-                                                            <th></th>
+                                                            {enableSelection && <th></th>}
                                                             <th>
                                                                 <input
                                                                     type="text"

@@ -25,6 +25,8 @@ const QuotationHistory = forwardRef((props, ref) => {
 
             if (type) {
                 searchByFieldValue("type", type, true);
+                selectedType = type;
+                setSelectedType(type);
             }
 
             list();
@@ -394,6 +396,8 @@ const QuotationHistory = forwardRef((props, ref) => {
         document.addEventListener("keydown", handleKeyDown);
         return () => document.removeEventListener("keydown", handleKeyDown);
     }, []);
+
+    let [selectedType, setSelectedType] = useState("");
 
 
     return (
@@ -1028,8 +1032,11 @@ const QuotationHistory = forwardRef((props, ref) => {
                                                             <select
                                                                 onChange={(e) => {
                                                                     searchByFieldValue("type", e.target.value);
+                                                                    selectedType = e.target.value;
+                                                                    setSelectedType(selectedType);
 
                                                                 }}
+                                                                value={selectedType}
                                                             >
                                                                 <option value="" >All</option>
                                                                 <option value="quotation" >Quotation</option>
