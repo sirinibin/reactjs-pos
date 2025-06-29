@@ -885,8 +885,8 @@ const ProductCreate = forwardRef((props, ref) => {
     }
 
     if (IsProductExistsInSet(product.id)) {
-      let index = getProductIndexInSET(product.id);
-      formData.set.products[index].quantity++;
+      //let index = getProductIndexInSET(product.id);
+      // formData.set.products[index].quantity++;
     } else {
       formData.set.products.push({
         "product_id": product.id,
@@ -915,13 +915,14 @@ const ProductCreate = forwardRef((props, ref) => {
     return false;
   }
 
+  /*
   function getProductIndexInSET(productID) {
     for (var i = 0; i < formData.set.products.length; i++) {
       if (formData.set.products[i].product_id === productID) {
         return i;
       }
     }
-  }
+  }*/
 
   function RemoveProductFromSet(index) {
     if (index > -1) {

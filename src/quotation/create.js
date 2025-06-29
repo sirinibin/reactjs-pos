@@ -1035,7 +1035,8 @@ const QuotationCreate = forwardRef((props, ref) => {
     if (isProductAdded(product.id) && !product.allow_duplicates) {
       alreadyAdded = true;
       index = getProductIndex(product.id);
-      quantity = parseFloat(selectedProducts[index].quantity + product.quantity);
+      // quantity = parseFloat(selectedProducts[index].quantity + product.quantity);
+      quantity = parseFloat(selectedProducts[index].quantity);
       if (product.unit_price) {
         selectedProducts[index].unit_price = product.unit_price;
         selectedProducts[index].unit_price_with_vat = product.unit_price_with_vat;

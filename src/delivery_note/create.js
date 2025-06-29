@@ -923,7 +923,8 @@ const DeliveryNoteCreate = forwardRef((props, ref) => {
     if (isProductAdded(product.id) && !product.allow_duplicates) {
       alreadyAdded = true;
       index = getProductIndex(product.id);
-      quantity = parseFloat(selectedProducts[index].quantity + product.quantity);
+      // quantity = parseFloat(selectedProducts[index].quantity + product.quantity);
+      quantity = parseFloat(selectedProducts[index].quantity);
     } else {
       quantity = parseFloat(product.quantity);
     }

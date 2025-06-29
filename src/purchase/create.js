@@ -902,7 +902,8 @@ const PurchaseCreate = forwardRef((props, ref) => {
         if (isProductAdded(product.id) && !product.allow_duplicates) {
             alreadyAdded = true;
             index = getProductIndex(product.id);
-            quantity = parseFloat(selectedProducts[index].quantity + product.quantity);
+            quantity = parseFloat(selectedProducts[index].quantity);
+            // quantity = parseFloat(selectedProducts[index].quantity + product.quantity);
         } else {
             quantity = parseFloat(product.quantity);
         }
