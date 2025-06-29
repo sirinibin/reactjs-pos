@@ -20,8 +20,9 @@ import StatsSummary from "../utils/StatsSummary.js";
 import { WebSocketContext } from "./../utils/WebSocketContext.js";
 import eventEmitter from "./../utils/eventEmitter";
 import Quotations from "./../utils/quotations.js";
-import Preview from "./../order/preview.js";
+import OrderPreview from "./../order/preview.js"
 import ReportPreview from "./../order/report.js";
+import OrderPrint from "./../order/print.js"
 
 
 const ExcelFile = ReactExport.ExcelFile;
@@ -1063,11 +1064,12 @@ function QuotationSalesReturnIndex(props) {
     };
 
 
-
+    /*
     const PreviewRef = useRef();
     function openPreview(model) {
         PreviewRef.current.open(model, undefined, "quotation_sales_return");
     }
+        */
 
     function sendWhatsAppMessage(model) {
         PreviewRef.current.open(model, "whatsapp", "whatsapp_quotation_sales_return");
@@ -1081,10 +1083,98 @@ function QuotationSalesReturnIndex(props) {
     };
 
 
+
+    //Printing
+    let [showPrintTypeSelection, setShowPrintTypeSelection] = useState(false);
+
+    const printButtonRef = useRef();
+    const printA4ButtonRef = useRef();
+
+    const PreviewRef = useRef();
+    const openPreview = useCallback((quotation) => {
+        setShowOrderPreview(true);
+        setShowPrintTypeSelection(false);
+
+        if (timerRef.current) clearTimeout(timerRef.current);
+
+        timerRef.current = setTimeout(() => {
+            PreviewRef.current?.open(quotation, undefined, "quotation_sales_return");
+        }, 100);
+
+    }, []);
+
+
+    let [showOrderPreview, setShowOrderPreview] = useState(false);
+
+    const openPrintTypeSelection = useCallback((quotationSalesReturn) => {
+        setSelectedQuotationSalesReturn(quotationSalesReturn);
+        if (store.settings?.enable_invoice_print_type_selection) {
+            // showPrintTypeSelection = true;
+            setShowOrderPreview(true);
+            setShowPrintTypeSelection(true);
+            if (timerRef.current) clearTimeout(timerRef.current);
+            timerRef.current = setTimeout(() => {
+                printButtonRef.current?.focus();
+            }, 100);
+        } else {
+            openPreview(quotationSalesReturn);
+        }
+    }, [openPreview, store]);
+
+
+
+    const PrintRef = useRef();
+    const openPrint = useCallback((quotation) => {
+        // document.removeEventListener('keydown', handleEnterKey);
+        setShowPrintTypeSelection(false);
+        PrintRef.current?.open(quotation, "quotation_sales_return");
+    }, []);
+
+
     return (
         <>
+            <OrderPrint ref={PrintRef} />
+            <Modal show={showPrintTypeSelection} onHide={() => {
+                showPrintTypeSelection = false;
+                setShowPrintTypeSelection(showPrintTypeSelection);
+            }} centered>
+                <Modal.Header closeButton>
+                    <Modal.Title>Select Print Type</Modal.Title>
+                </Modal.Header>
+                <Modal.Body className="d-flex justify-content-around">
+                    <Button variant="secondary" ref={printButtonRef} onClick={() => {
+                        openPrint(selectedQuotationSalesReturn);
+                    }} onKeyDown={(e) => {
+                        if (timerRef.current) clearTimeout(timerRef.current);
+
+                        if (e.key === "ArrowRight") {
+                            timerRef.current = setTimeout(() => {
+                                printA4ButtonRef.current.focus();
+                            }, 100);
+                        }
+                    }}>
+                        <i className="bi bi-printer"></i> Print
+                    </Button>
+
+                    <Button variant="primary" ref={printA4ButtonRef} onClick={() => {
+                        openPreview(selectedQuotationSalesReturn);
+                    }}
+                        onKeyDown={(e) => {
+                            if (timerRef.current) clearTimeout(timerRef.current);
+
+                            if (e.key === "ArrowLeft") {
+                                timerRef.current = setTimeout(() => {
+                                    printButtonRef.current.focus();
+                                }, 100);
+                            }
+                        }}
+                    >
+                        <i className="bi bi-printer"></i> Print A4 Invoice
+                    </Button>
+                </Modal.Body>
+            </Modal>
             <ReportPreview ref={ReportPreviewRef} searchParams={searchParams} sortOrder={sortOrder} sortField={sortField} />
-            <Preview ref={PreviewRef} />
+            {showOrderPreview && <OrderPreview ref={PreviewRef} />}
             <Quotations ref={QuotationsRef} onSelectQuotation={handleSelectedQuotationSale} showToastMessage={props.showToastMessage} />
             <QuotationSalesReturnCreate ref={CreateFormRef} refreshList={list} refreshQuotationSalesList={props.refreshQuotationSalesList} showToastMessage={props.showToastMessage} />
             <QuotationSalesReturnView ref={DetailsViewRef} />
@@ -1967,7 +2057,8 @@ function QuotationSalesReturnIndex(props) {
                                                             &nbsp;
 
                                                             <Button className="btn btn-primary btn-sm" onClick={() => {
-                                                                openPreview(quotationsalesreturn);
+                                                                //openPreview(quotationsalesreturn);
+                                                                openPrintTypeSelection(quotationsalesreturn);
                                                             }}>
                                                                 <i className="bi bi-printer"></i>
                                                             </Button>
