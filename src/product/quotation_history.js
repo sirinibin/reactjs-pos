@@ -15,15 +15,19 @@ import { Typeahead } from "react-bootstrap-typeahead";
 const QuotationHistory = forwardRef((props, ref) => {
 
     useImperativeHandle(ref, () => ({
-        open(model, selectedCustomers) {
+        open(model, selectedCustomers, type) {
             product = model;
             setProduct({ ...product });
             if (selectedCustomers?.length > 0) {
                 setSelectedCustomers(selectedCustomers)
-                searchByMultipleValuesField("customer_id", selectedCustomers);
-            } else {
-                list();
+                searchByMultipleValuesField("customer_id", selectedCustomers, true);
             }
+
+            if (type) {
+                searchByFieldValue("type", type, true);
+            }
+
+            list();
 
             getStore(localStorage.getItem("store_id"));
             SetShow(true);
@@ -64,9 +68,11 @@ const QuotationHistory = forwardRef((props, ref) => {
             });
     }
 
-    function searchByMultipleValuesField(field, values) {
+    function searchByMultipleValuesField(field, values, noList) {
         if (field === "customer_id") {
             setSelectedCustomers(values);
+        } else if (field === "type") {
+            // setSelectedCustomers(values);
         }
 
         searchParams[field] = Object.values(values)
@@ -78,7 +84,9 @@ const QuotationHistory = forwardRef((props, ref) => {
         page = 1;
         setPage(page);
 
-        list();
+        if (!noList) {
+            list();
+        }
     }
 
     const [customerOptions, setCustomerOptions] = useState([]);
@@ -160,12 +168,16 @@ const QuotationHistory = forwardRef((props, ref) => {
             .join("&");
     }
 
-    function searchByFieldValue(field, value) {
+    function searchByFieldValue(field, value, noList) {
         searchParams[field] = value;
 
         page = 1;
         setPage(page);
-        list();
+
+        if (!noList) {
+            list();
+        }
+
     }
 
     function searchByDateField(field, value) {

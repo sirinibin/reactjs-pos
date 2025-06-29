@@ -1060,7 +1060,11 @@ const ProductCreate = forwardRef((props, ref) => {
 
   const QuotationHistoryRef = useRef();
   function openQuotationHistory(model) {
-    QuotationHistoryRef.current.open(model);
+    QuotationHistoryRef.current.open(model, [], "quotation");
+  }
+
+  function openQuotationSalesHistory(model) {
+    QuotationHistoryRef.current.open(model, [], "invoice");
   }
 
   const QuotationSalesReturnHistoryRef = useRef();
@@ -1076,6 +1080,36 @@ const ProductCreate = forwardRef((props, ref) => {
     productImages = product?.images;
     setProductImages(productImages);
     imageViewerRef.current.open(0);
+  }
+
+  function RunKeyActions(event, product) {
+    const isMac = navigator.userAgentData
+      ? navigator.userAgentData.platform === 'macOS'
+      : /Mac/i.test(navigator.userAgent);
+
+    const isCmdOrCtrl = isMac ? event.metaKey : event.ctrlKey;
+
+    if (event.key === "F10") {
+      openLinkedProducts(product);
+    } else if (event.key === "F4") {
+      openSalesHistory(product);
+    } else if (event.key === "F9") {
+      openSalesReturnHistory(product);
+    } else if (event.key === "F6") {
+      openPurchaseHistory(product);
+    } else if (event.key === "F8") {
+      openPurchaseReturnHistory(product);
+    } else if (event.key === "F3") {
+      openDeliveryNoteHistory(product);
+    } else if (event.key === "F2") {
+      openQuotationHistory(product);
+    } else if (isCmdOrCtrl && event.shiftKey && event.key.toLowerCase() === 'p') {
+      openQuotationSalesHistory(product);
+    } else if (isCmdOrCtrl && event.shiftKey && event.key.toLowerCase() === 'z') {
+      openQuotationSalesReturnHistory(product);
+    } else if (isCmdOrCtrl && event.shiftKey && event.key.toLowerCase() === 'f') {
+      openProductImages(product.product_id);
+    }
   }
 
 
@@ -2369,6 +2403,13 @@ const ProductCreate = forwardRef((props, ref) => {
                                     Quotation History  (F2)
                                   </Dropdown.Item>
                                   <Dropdown.Item onClick={() => {
+                                    openQuotationSalesHistory(product);
+                                  }}>
+                                    <i className="bi bi-clock-history"></i>
+                                    &nbsp;
+                                    Qtn. Sales History (CTR + SHIFT + P)
+                                  </Dropdown.Item>
+                                  <Dropdown.Item onClick={() => {
                                     openQuotationSalesReturnHistory(product);
                                   }}>
                                     <i className="bi bi-clock-history"></i>
@@ -2405,6 +2446,7 @@ const ProductCreate = forwardRef((props, ref) => {
                                 }, 100);
                               }}
                               onKeyDown={(e) => {
+                                RunKeyActions(e, product);
                                 if (timerRef.current) clearTimeout(timerRef.current);
 
                                 if (e.key === "ArrowLeft") {
@@ -2468,6 +2510,7 @@ const ProductCreate = forwardRef((props, ref) => {
                                 }, 100);
                               }}
                               onKeyDown={(e) => {
+                                RunKeyActions(e, product);
                                 if (timerRef.current) clearTimeout(timerRef.current);
 
                                 if (e.key === "ArrowLeft") {
@@ -2528,6 +2571,7 @@ const ProductCreate = forwardRef((props, ref) => {
                                 }, 100);
                               }}
                               onKeyDown={(e) => {
+                                RunKeyActions(e, product);
                                 if (timerRef.current) clearTimeout(timerRef.current);
 
                                 if (e.key === "Enter") {
@@ -2611,6 +2655,7 @@ const ProductCreate = forwardRef((props, ref) => {
                                 }, 100);
                               }}
                               onKeyDown={(e) => {
+                                RunKeyActions(e, product);
                                 if (timerRef.current) clearTimeout(timerRef.current);
 
                                 if (e.key === "ArrowLeft") {
@@ -2672,6 +2717,7 @@ const ProductCreate = forwardRef((props, ref) => {
                                 }, 100);
                               }}
                               onKeyDown={(e) => {
+                                RunKeyActions(e, product);
                                 if (timerRef.current) clearTimeout(timerRef.current);
 
                                 if (e.key === "Enter") {

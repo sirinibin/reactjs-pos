@@ -764,8 +764,13 @@ function ProductIndex(props) {
 
     const QuotationHistoryRef = useRef();
     function openQuotationHistory(model) {
-        QuotationHistoryRef.current.open(model);
+        QuotationHistoryRef.current.open(model, [], "quotation");
     }
+
+    function openQuotationSalesHistory(model) {
+        QuotationHistoryRef.current.open(model, [], "invoice");
+    }
+
 
 
     const QuotationSalesReturnHistoryRef = useRef();
@@ -3011,11 +3016,18 @@ function ProductIndex(props) {
                                                                             Quotation History
                                                                         </Dropdown.Item>
                                                                         <Dropdown.Item onClick={() => {
+                                                                            openQuotationSalesHistory(product);
+                                                                        }}>
+                                                                            <i className="bi bi-clock-history"></i>
+                                                                            &nbsp;
+                                                                            Qtn. Sales History
+                                                                        </Dropdown.Item>
+                                                                        <Dropdown.Item onClick={() => {
                                                                             openQuotationSalesReturnHistory(product);
                                                                         }}>
                                                                             <i className="bi bi-clock-history"></i>
                                                                             &nbsp;
-                                                                            Quotation Sales Return History
+                                                                            Qtn. Sales Return History
                                                                         </Dropdown.Item>
 
                                                                     </Dropdown.Menu>

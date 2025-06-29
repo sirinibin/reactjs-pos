@@ -21,6 +21,7 @@ import { Spinner } from "react-bootstrap";
 import ResizableTableCell from './../utils/ResizableTableCell';
 
 import { Dropdown } from 'react-bootstrap';
+
 import SalesHistory from "./../product/sales_history.js";
 import SalesReturnHistory from "./../product/sales_return_history.js";
 import PurchaseHistory from "./../product/purchase_history.js";
@@ -1911,7 +1912,11 @@ const OrderCreate = forwardRef((props, ref) => {
 
     const QuotationHistoryRef = useRef();
     function openQuotationHistory(model) {
-        QuotationHistoryRef.current.open(model, selectedCustomers);
+        QuotationHistoryRef.current.open(model, selectedCustomers, "quotation");
+    }
+
+    function openQuotationSalesHistory(model) {
+        QuotationHistoryRef.current.open(model, selectedCustomers, "invoice");
     }
 
     const QuotationSalesReturnHistoryRef = useRef();
@@ -1949,6 +1954,8 @@ const OrderCreate = forwardRef((props, ref) => {
             openDeliveryNoteHistory(product);
         } else if (event.key === "F2") {
             openQuotationHistory(product);
+        } else if (isCmdOrCtrl && event.shiftKey && event.key.toLowerCase() === 'p') {
+            openQuotationSalesHistory(product);
         } else if (isCmdOrCtrl && event.shiftKey && event.key.toLowerCase() === 'z') {
             openQuotationSalesReturnHistory(product);
         } else if (isCmdOrCtrl && event.shiftKey && event.key.toLowerCase() === 'f') {
@@ -3058,6 +3065,13 @@ const OrderCreate = forwardRef((props, ref) => {
                                                                 <i className="bi bi-clock-history"></i>
                                                                 &nbsp;
                                                                 Quotation History  (F2)
+                                                            </Dropdown.Item>
+                                                            <Dropdown.Item onClick={() => {
+                                                                openQuotationSalesHistory(product);
+                                                            }}>
+                                                                <i className="bi bi-clock-history"></i>
+                                                                &nbsp;
+                                                                Qtn. Sales History  (CTR + SHIFT + P)
                                                             </Dropdown.Item>
                                                             <Dropdown.Item onClick={() => {
                                                                 openQuotationSalesReturnHistory(product);
