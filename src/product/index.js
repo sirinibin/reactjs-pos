@@ -27,6 +27,7 @@ import countryList from 'react-select-country-list'
 import Amount from "../utils/amount.js";
 import { trimTo2Decimals } from "../utils/numberUtils";
 import { highlightWords } from "../utils/search.js";
+import ImageViewerModal from './../utils/ImageViewerModal';
 
 const columnStyle = {
     width: '20%',
@@ -945,9 +946,53 @@ function ProductIndex(props) {
         }, 100);
     }
 
+    const imageViewerRef = useRef();
+    let [productImages, setProductImages] = useState([]);
+
+    async function openProductImages(id) {
+        let product = await getProductObj(id);
+        productImages = product?.images;
+        setProductImages(productImages);
+        imageViewerRef.current.open(0);
+    }
+
+
+
+    async function getProductObj(id) {
+        const requestOptions = {
+            method: "GET",
+            headers: {
+                "Content-Type": "application/json",
+                Authorization: localStorage.getItem("access_token"),
+            },
+        };
+
+        let searchParams = {};
+        if (localStorage.getItem("store_id")) {
+            searchParams.store_id = localStorage.getItem("store_id");
+        }
+        let queryParams = ObjectToSearchQueryParams(searchParams);
+
+        try {
+            const response = await fetch(`/v1/product/${id}?select=id,images,store_id&${queryParams}`, requestOptions);
+            const isJson = response.headers.get("content-type")?.includes("application/json");
+            const data = isJson ? await response.json() : null;
+
+            if (!response.ok) {
+                const error = data?.errors || "Unknown error";
+                throw error;
+            }
+
+            return data.result;  // ✅ return the result here
+        } catch (error) {
+            return null;  // ✅ explicitly return null or a fallback if there's an error
+        }
+    }
+
 
     return (
         <>
+            <ImageViewerModal ref={imageViewerRef} images={productImages} />
             <SalesHistory ref={SalesHistoryRef} showToastMessage={props.showToastMessage} />
             <SalesReturnHistory ref={SalesReturnHistoryRef} showToastMessage={props.showToastMessage} />
 
@@ -3046,6 +3091,13 @@ function ProductIndex(props) {
                                                                             <i className="bi bi-clock-history"></i>
                                                                             &nbsp;
                                                                             Qtn. Sales Return History
+                                                                        </Dropdown.Item>
+                                                                        <Dropdown.Item onClick={() => {
+                                                                            openProductImages(product.id);
+                                                                        }}>
+                                                                            <i className="bi bi-clock-history"></i>
+                                                                            &nbsp;
+                                                                            Images
                                                                         </Dropdown.Item>
 
                                                                     </Dropdown.Menu>
