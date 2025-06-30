@@ -223,11 +223,11 @@ const OrderPrintContent2 = forwardRef((props, ref) => {
                     </h4> : ""}*/}
 
 
-                    {page.lastPage ? <h4 className="print-value" style={{ fontSize: "3.5mm", position: "absolute", left: "100px", top: (850 + page.top) + "px" }}>
+                    {page.lastPage && props.model?.modelName !== "delivery_note" ? <h4 className="print-value" style={{ fontSize: "3.5mm", position: "absolute", left: "100px", top: (850 + page.top) + "px" }}>
                         {n2words(props.model.net_total, { lang: 'en' }) + " saudi riyals"}
                     </h4> : ""}
 
-                    {page.lastPage ? <h4 className="print-value" dir="rtl" style={{ fontSize: "3.5mm", position: "absolute", right: "545px", top: (860 + page.top) + "px" }}>
+                    {page.lastPage && props.model?.modelName !== "delivery_note" ? <h4 className="print-value" dir="rtl" style={{ fontSize: "3.5mm", position: "absolute", right: "545px", top: (860 + page.top) + "px" }}>
                         {n2words(props.model.net_total, { lang: 'ar' }) + " ريال سعودي  "}
                     </h4> : ""}
 

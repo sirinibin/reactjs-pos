@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 import DeliveryNoteCreate from "./create.js";
 import DeliveryNoteView from "./view.js";
 
@@ -6,11 +6,12 @@ import { Typeahead } from "react-bootstrap-typeahead";
 import { format } from "date-fns";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
-import { Button, Spinner } from "react-bootstrap";
+import { Button, Spinner, Modal } from "react-bootstrap";
 import ReactPaginate from "react-paginate";
 import OverflowTooltip from "../utils/OverflowTooltip.js";
-import Preview from "./../order/preview.js"
 import ReportPreview from "./../order/report.js";
+import OrderPreview from "./../order/preview.js"
+import OrderPrint from "./../order/print.js"
 
 function DeliveryNoteIndex(props) {
   const ReportPreviewRef = useRef();
@@ -396,12 +397,6 @@ function DeliveryNoteIndex(props) {
   }
 
 
-  const PreviewRef = useRef();
-  function openPreview(model) {
-    PreviewRef.current.open(model, undefined, "delivery_note");
-  }
-
-
   function sendWhatsAppMessage(model) {
     PreviewRef.current.open(model, "whatsapp", "delivery_note");
   }
@@ -409,10 +404,102 @@ function DeliveryNoteIndex(props) {
   const customerSearchRef = useRef();
   const timerRef = useRef(null);
 
+
+
+  //Printing
+
+  const [selectedDeliveryNote, setSelectedDeliveryNote] = useState({});
+  let [showPrintTypeSelection, setShowPrintTypeSelection] = useState(false);
+
+  const printButtonRef = useRef();
+  const printA4ButtonRef = useRef();
+
+  const PreviewRef = useRef();
+  const openPreview = useCallback((quotation) => {
+    setShowOrderPreview(true);
+    setShowPrintTypeSelection(false);
+
+    if (timerRef.current) clearTimeout(timerRef.current);
+
+    timerRef.current = setTimeout(() => {
+      PreviewRef.current?.open(quotation, undefined, "delivery_note");
+    }, 100);
+
+  }, []);
+
+
+  let [showOrderPreview, setShowOrderPreview] = useState(false);
+
+  const openPrintTypeSelection = useCallback((deliveryNote) => {
+    setSelectedDeliveryNote(deliveryNote);
+    if (store.settings?.enable_invoice_print_type_selection) {
+      // showPrintTypeSelection = true;
+      setShowOrderPreview(true);
+      setShowPrintTypeSelection(true);
+      if (timerRef.current) clearTimeout(timerRef.current);
+      timerRef.current = setTimeout(() => {
+        printButtonRef.current?.focus();
+      }, 100);
+    } else {
+      openPreview(deliveryNote);
+    }
+  }, [openPreview, store]);
+
+
+
+  const PrintRef = useRef();
+  const openPrint = useCallback((deliveryNote) => {
+    // document.removeEventListener('keydown', handleEnterKey);
+    setShowPrintTypeSelection(false);
+    PrintRef.current?.open(deliveryNote, "delivery_note");
+  }, []);
+
+
   return (
     <>
+      <OrderPrint ref={PrintRef} />
+      <Modal show={showPrintTypeSelection} onHide={() => {
+        showPrintTypeSelection = false;
+        setShowPrintTypeSelection(showPrintTypeSelection);
+      }} centered>
+        <Modal.Header closeButton>
+          <Modal.Title>Select Print Type</Modal.Title>
+        </Modal.Header>
+        <Modal.Body className="d-flex justify-content-around">
+          <Button variant="secondary" ref={printButtonRef} onClick={() => {
+            openPrint(selectedDeliveryNote);
+          }} onKeyDown={(e) => {
+            if (timerRef.current) clearTimeout(timerRef.current);
+
+            if (e.key === "ArrowRight") {
+              timerRef.current = setTimeout(() => {
+                printA4ButtonRef.current.focus();
+              }, 100);
+            }
+          }}>
+            <i className="bi bi-printer"></i> Print
+          </Button>
+
+          <Button variant="primary" ref={printA4ButtonRef} onClick={() => {
+            openPreview(selectedDeliveryNote);
+          }}
+            onKeyDown={(e) => {
+              if (timerRef.current) clearTimeout(timerRef.current);
+
+              if (e.key === "ArrowLeft") {
+                timerRef.current = setTimeout(() => {
+                  printButtonRef.current.focus();
+                }, 100);
+              }
+            }}
+          >
+            <i className="bi bi-printer"></i> Print A4 Invoice
+          </Button>
+        </Modal.Body>
+      </Modal>
       <ReportPreview ref={ReportPreviewRef} searchParams={searchParams} sortOrder={sortOrder} sortField={sortField} />
-      <Preview ref={PreviewRef} />
+      {showOrderPreview && <OrderPreview ref={PreviewRef} />}
+      <ReportPreview ref={ReportPreviewRef} searchParams={searchParams} sortOrder={sortOrder} sortField={sortField} />
       <DeliveryNoteCreate ref={CreateFormRef} refreshList={list} showToastMessage={props.showToastMessage} openDetailsView={openDetailsView} />
       <DeliveryNoteView ref={DetailsViewRef} openUpdateForm={openUpdateForm} openCreateForm={openCreateForm} />
       <div className="container-fluid p-0">
@@ -919,7 +1006,7 @@ function DeliveryNoteIndex(props) {
                               &nbsp;
 
                               <Button className="btn btn-primary btn-sm" onClick={() => {
-                                openPreview(deliverynote);
+                                openPrintTypeSelection(deliverynote);
                               }}>
                                 <i className="bi bi-printer"></i>
                               </Button>

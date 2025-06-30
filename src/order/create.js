@@ -136,6 +136,7 @@ const OrderCreate = forwardRef((props, ref) => {
             formData.cash_discount = 0.00;
             formData.payment_method = "";
             formData.payment_status = "";
+            formData.remarks = ""
             formData.net_total = 0.00;
             formData.date_str = new Date();
             formData.payments_input = [
