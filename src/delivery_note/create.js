@@ -55,6 +55,7 @@ const DeliveryNoteCreate = forwardRef((props, ref) => {
         date_str: format(new Date(), "MMM dd yyyy"),
         signature_date_str: format(new Date(), "MMM dd yyyy"),
         status: "delivered",
+        remarks: "",
         price_type: "retail",
       };
 

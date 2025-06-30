@@ -1852,6 +1852,7 @@ const OrderCreate = forwardRef((props, ref) => {
     const handleSelectedQuotation = (selectedQuotation) => {
         console.log("Selected Quotation:", selectedQuotation);
         // formData.customer_id = selectedQuotation.customer_id;
+
         QuotationRef.current.open(selectedQuotation.id, "product_selection");
         //ProductsRef.current.open(selectedQuotation, "quotation_products");
     };
@@ -1965,7 +1966,7 @@ const OrderCreate = forwardRef((props, ref) => {
     }
 
 
-    const handleSelectedProducts = (selected, selectedCustomers, modelName, modelID, modelCode) => {
+    const handleSelectedProducts = (selected, selectedCustomers, modelName, modelID, modelCode, remarks) => {
         console.log("Selected Products:", selected);
         let addedCount = 0;
         for (var i = 0; i < selected.length; i++) {
@@ -1977,6 +1978,10 @@ const OrderCreate = forwardRef((props, ref) => {
         setShowToast(true);
         if (selectedCustomers && !formData.id) {
             formData.customer_id = selectedCustomers[0]?.id;
+            if (remarks) {
+                formData.remarks = remarks;
+                setFormData({ ...formData });
+            }
             setSelectedCustomers(selectedCustomers);
         }
         setTimeout(() => setShowToast(false), 3000);

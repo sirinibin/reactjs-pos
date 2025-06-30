@@ -97,6 +97,7 @@ const QuotationCreate = forwardRef((props, ref) => {
         price_type: "retail",
         delivery_days: 7,
         validity_days: 2,
+        remarks: "",
         type: "quotation",
         payment_status: "",
       };
@@ -363,6 +364,7 @@ const QuotationCreate = forwardRef((props, ref) => {
           order_code: quotation.order_code,
           payment_status: quotation.payment_status,
           code: quotation.code,
+          remarks: quotation.remarks,
           store_id: quotation.store_id,
           customer_id: quotation.customer_id,
           // date_str: quotation.date_str,
@@ -1576,7 +1578,7 @@ const QuotationCreate = forwardRef((props, ref) => {
   const handleSendSelected = () => {
     const newlySelectedProducts = selectedProducts.filter((p) => selectedIds.includes(p.product_id));
     if (props.onSelectProducts) {
-      props.onSelectProducts(newlySelectedProducts, selectedCustomers, "quotation", formData.id, formData.code); // Send to parent
+      props.onSelectProducts(newlySelectedProducts, selectedCustomers, "quotation", formData.id, formData.code, formData.remarks); // Send to parent
     }
 
     handleClose();
@@ -2472,7 +2474,7 @@ const QuotationCreate = forwardRef((props, ref) => {
                     value={formData.remarks}
                     type='string'
                     onChange={(e) => {
-                      delete errors["address"];
+                      delete errors["remarks"];
                       setErrors({ ...errors });
                       formData.remarks = e.target.value;
                       setFormData({ ...formData });
