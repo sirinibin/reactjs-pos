@@ -11,7 +11,7 @@ import { format } from "date-fns";
 import { Spinner } from "react-bootstrap";
 import SalesReturnView from "./view.js";
 import { trimTo2Decimals } from "../utils/numberUtils";
-import { trimTo4Decimals } from "../utils/numberUtils";
+import { trimTo8Decimals } from "../utils/numberUtils";
 import Preview from "./../order/preview.js";
 import { Dropdown } from 'react-bootstrap';
 import SalesHistory from "./../product/sales_history.js";
@@ -718,16 +718,16 @@ const SalesReturnCreate = forwardRef((props, ref) => {
 
             let unitPrice = parseFloat(selectedProducts[i].unit_price);
 
-            if (unitPrice && /^\d*\.?\d{0,4}$/.test(unitPrice) === false) {
-                errors["unit_price_" + i] = "Max decimal points allowed is 4";
+            if (unitPrice && /^\d*\.?\d{0,8}$/.test(unitPrice) === false) {
+                errors["unit_price_" + i] = "Max decimal points allowed is 8";
                 setErrors({ ...errors });
                 haveErrors = true;
             }
 
             let unitPriceWithVAT = parseFloat(selectedProducts[i].unit_price_with_vat);
 
-            if (unitPriceWithVAT && /^\d*\.?\d{0,4}$/.test(unitPriceWithVAT) === false) {
-                errors["unit_price_with_vat_" + i] = "Max decimal points allowed is 4";
+            if (unitPriceWithVAT && /^\d*\.?\d{0,8}$/.test(unitPriceWithVAT) === false) {
+                errors["unit_price_with_vat_" + i] = "Max decimal points allowed is 8";
                 setErrors({ ...errors });
                 haveErrors = true;
             }
@@ -2399,8 +2399,8 @@ const SalesReturnCreate = forwardRef((props, ref) => {
                                                                 }
 
 
-                                                                if (/^\d*\.?\d{0,4}$/.test(parseFloat(e.target.value)) === false) {
-                                                                    errors["unit_price_" + index] = "Max decimal points allowed is 4";
+                                                                if (/^\d*\.?\d{0,8}$/.test(parseFloat(e.target.value)) === false) {
+                                                                    errors["unit_price_" + index] = "Max decimal points allowed is 8";
                                                                     setErrors({ ...errors });
                                                                 }
 
@@ -2408,7 +2408,7 @@ const SalesReturnCreate = forwardRef((props, ref) => {
                                                                 setSelectedProducts([...selectedProducts]);
 
                                                                 timerRef.current = setTimeout(() => {
-                                                                    selectedProducts[index].unit_price_with_vat = parseFloat(trimTo4Decimals(selectedProducts[index].unit_price * (1 + (formData.vat_percent / 100))))
+                                                                    selectedProducts[index].unit_price_with_vat = parseFloat(trimTo8Decimals(selectedProducts[index].unit_price * (1 + (formData.vat_percent / 100))))
                                                                     selectedProducts[index].unit_discount_percent = parseFloat(trimTo2Decimals(((selectedProducts[index].unit_discount / selectedProducts[index].unit_price) * 100)))
                                                                     selectedProducts[index].unit_discount_percent_with_vat = parseFloat(trimTo2Decimals(((selectedProducts[index].unit_discount_with_vat / selectedProducts[index].unit_price_with_vat) * 100)))
                                                                     reCalculate(index);
@@ -2507,8 +2507,8 @@ const SalesReturnCreate = forwardRef((props, ref) => {
                                                                     return;
                                                                 }
 
-                                                                if (/^\d*\.?\d{0,4}$/.test(parseFloat(e.target.value)) === false) {
-                                                                    errors["unit_price_with_vat_" + index] = "Max decimal points allowed is 4";
+                                                                if (/^\d*\.?\d{0,8}$/.test(parseFloat(e.target.value)) === false) {
+                                                                    errors["unit_price_with_vat_" + index] = "Max decimal points allowed is 8";
                                                                     setErrors({ ...errors });
                                                                 }
 
@@ -2519,7 +2519,7 @@ const SalesReturnCreate = forwardRef((props, ref) => {
                                                                 setSelectedProducts([...selectedProducts]);
                                                                 // Set new debounce timer
                                                                 timerRef.current = setTimeout(() => {
-                                                                    selectedProducts[index].unit_price = parseFloat(trimTo4Decimals(selectedProducts[index].unit_price_with_vat / (1 + (formData.vat_percent / 100))))
+                                                                    selectedProducts[index].unit_price = parseFloat(trimTo8Decimals(selectedProducts[index].unit_price_with_vat / (1 + (formData.vat_percent / 100))))
                                                                     selectedProducts[index].unit_discount_with_vat = parseFloat(trimTo2Decimals(selectedProducts[index].unit_discount * (1 + (formData.vat_percent / 100))))
 
                                                                     selectedProducts[index].unit_discount_percent = parseFloat(trimTo2Decimals(((selectedProducts[index].unit_discount / selectedProducts[index].unit_price) * 100)))

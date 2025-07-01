@@ -16,7 +16,6 @@ import ProductBrandCreate from "../product_brand/create.js";
 import countryList from 'react-select-country-list';
 import ImageGallery from '../utils/ImageGallery.js';
 import { trimTo2Decimals } from "../utils/numberUtils";
-import { trimTo4Decimals } from "../utils/numberUtils";
 import { trimTo8Decimals } from "../utils/numberUtils";
 import Amount from "../utils/amount.js";
 import SalesHistory from "./../product/sales_history.js";
@@ -474,14 +473,14 @@ const ProductCreate = forwardRef((props, ref) => {
         setErrors({ ...errors });
       }*/
 
-      if (/^\d*\.?\d{0,4}$/.test(formData.set?.products[i].retail_unit_price_with_vat) === false) {
-        errors["set_product_unit_price_with_vat_" + i] = "Only 4 decimal points are allowed";
+      if (/^\d*\.?\d{0,8}$/.test(formData.set?.products[i].retail_unit_price_with_vat) === false) {
+        errors["set_product_unit_price_with_vat_" + i] = "Only 8 decimal points are allowed";
         haveErrors = true;
         setErrors({ ...errors });
       }
 
-      if (/^\d*\.?\d{0,4}$/.test(formData.set?.products[i].retail_unit_price) === false) {
-        errors["set_product_unit_price_" + i] = "Only 4 decimal points are allowed";
+      if (/^\d*\.?\d{0,8}$/.test(formData.set?.products[i].retail_unit_price) === false) {
+        errors["set_product_unit_price_" + i] = "Only 8 decimal points are allowed";
         haveErrors = true;
         setErrors({ ...errors });
       }
@@ -520,8 +519,8 @@ const ProductCreate = forwardRef((props, ref) => {
 
     /*
     if (productStores[i]?.retail_unit_price) {
-      if (/^\d*\.?\d{0,4}$/.test(productStores[i]?.retail_unit_price) === false) {
-        errors["retail_unit_price_" + i] = "Only 4 decimal points are allowed";
+      if (/^\d*\.?\d{0,8}$/.test(productStores[i]?.retail_unit_price) === false) {
+        errors["retail_unit_price_" + i] = "Only 8 decimal points are allowed";
         haveErrors = true;
         setErrors({ ...errors });
       }
@@ -1002,11 +1001,11 @@ const ProductCreate = forwardRef((props, ref) => {
 
     formData.set.total_quantity = parseFloat(trimTo2Decimals(totalQuantity));
 
-    formData.set.total = parseFloat(trimTo4Decimals(total));
-    formData.set.total_with_vat = parseFloat(trimTo4Decimals(totalWithVAT));
+    formData.set.total = parseFloat(trimTo8Decimals(total));
+    formData.set.total_with_vat = parseFloat(trimTo8Decimals(totalWithVAT));
 
-    formData.set.purchase_total = parseFloat(trimTo4Decimals(purchaseTotal));
-    formData.set.purchase_total_with_vat = parseFloat(trimTo4Decimals(purchaseTotalWithVAT));
+    formData.set.purchase_total = parseFloat(trimTo8Decimals(purchaseTotal));
+    formData.set.purchase_total_with_vat = parseFloat(trimTo8Decimals(purchaseTotalWithVAT));
 
     productStores[localStorage.getItem('store_id')].retail_unit_price = formData.set.total;
     productStores[localStorage.getItem('store_id')].retail_unit_price_with_vat = formData.set.total_with_vat;
@@ -1687,7 +1686,7 @@ const ProductCreate = forwardRef((props, ref) => {
                           setProductStores({ ...productStores });
 
                           timerRef.current = setTimeout(() => {
-                            productStores[localStorage.getItem('store_id')].purchase_unit_price_with_vat = parseFloat(trimTo4Decimals(productStores[localStorage.getItem('store_id')].purchase_unit_price * (1 + (store.vat_percent / 100))));
+                            productStores[localStorage.getItem('store_id')].purchase_unit_price_with_vat = parseFloat(trimTo8Decimals(productStores[localStorage.getItem('store_id')].purchase_unit_price * (1 + (store.vat_percent / 100))));
                             setProductStores({ ...productStores });
                           }, 100);
 
@@ -1761,7 +1760,7 @@ const ProductCreate = forwardRef((props, ref) => {
 
                           setProductStores({ ...productStores });
                           timerRef.current = setTimeout(() => {
-                            productStores[localStorage.getItem('store_id')].wholesale_unit_price_with_vat = parseFloat(trimTo4Decimals(productStores[localStorage.getItem('store_id')].wholesale_unit_price * (1 + (store.vat_percent / 100))));
+                            productStores[localStorage.getItem('store_id')].wholesale_unit_price_with_vat = parseFloat(trimTo8Decimals(productStores[localStorage.getItem('store_id')].wholesale_unit_price * (1 + (store.vat_percent / 100))));
                             setProductStores({ ...productStores });
                           }, 100);
 
@@ -1834,7 +1833,7 @@ const ProductCreate = forwardRef((props, ref) => {
 
 
                           timerRef.current = setTimeout(() => {
-                            productStores[localStorage.getItem('store_id')].retail_unit_price_with_vat = parseFloat(trimTo4Decimals(productStores[localStorage.getItem('store_id')].retail_unit_price * (1 + (store.vat_percent / 100))));
+                            productStores[localStorage.getItem('store_id')].retail_unit_price_with_vat = parseFloat(trimTo8Decimals(productStores[localStorage.getItem('store_id')].retail_unit_price * (1 + (store.vat_percent / 100))));
                             setProductStores({ ...productStores });
                           }, 100);
 
@@ -1927,7 +1926,7 @@ const ProductCreate = forwardRef((props, ref) => {
                           setProductStores({ ...productStores });
 
                           timerRef.current = setTimeout(() => {
-                            productStores[localStorage.getItem('store_id')].purchase_unit_price = parseFloat(trimTo4Decimals(productStores[localStorage.getItem('store_id')].purchase_unit_price_with_vat / (1 + (store.vat_percent / 100))));
+                            productStores[localStorage.getItem('store_id')].purchase_unit_price = parseFloat(trimTo8Decimals(productStores[localStorage.getItem('store_id')].purchase_unit_price_with_vat / (1 + (store.vat_percent / 100))));
                             setProductStores({ ...productStores });
                           }, 100);
 
@@ -2001,7 +2000,7 @@ const ProductCreate = forwardRef((props, ref) => {
                           setProductStores({ ...productStores });
 
                           timerRef.current = setTimeout(() => {
-                            productStores[localStorage.getItem('store_id')].wholesale_unit_price = parseFloat(trimTo4Decimals(productStores[localStorage.getItem('store_id')].wholesale_unit_price_with_vat / (1 + (store.vat_percent / 100))));
+                            productStores[localStorage.getItem('store_id')].wholesale_unit_price = parseFloat(trimTo8Decimals(productStores[localStorage.getItem('store_id')].wholesale_unit_price_with_vat / (1 + (store.vat_percent / 100))));
                             setProductStores({ ...productStores });
                           }, 100);
 
@@ -2075,7 +2074,7 @@ const ProductCreate = forwardRef((props, ref) => {
                           setProductStores({ ...productStores });
 
                           timerRef.current = setTimeout(() => {
-                            productStores[localStorage.getItem('store_id')].retail_unit_price = parseFloat(trimTo4Decimals(productStores[localStorage.getItem('store_id')].retail_unit_price_with_vat / (1 + (store.vat_percent / 100))));
+                            productStores[localStorage.getItem('store_id')].retail_unit_price = parseFloat(trimTo8Decimals(productStores[localStorage.getItem('store_id')].retail_unit_price_with_vat / (1 + (store.vat_percent / 100))));
                             setProductStores({ ...productStores });
                           }, 100);
 
@@ -2696,7 +2695,7 @@ const ProductCreate = forwardRef((props, ref) => {
                                 }
 
                                 formData.set.products[key].purchase_unit_price = parseFloat(e.target.value);
-                                formData.set.products[key].purchase_unit_price_with_vat = parseFloat(trimTo4Decimals(formData.set.products[key].purchase_unit_price * (1 + (store.vat_percent / 100))));
+                                formData.set.products[key].purchase_unit_price_with_vat = parseFloat(trimTo8Decimals(formData.set.products[key].purchase_unit_price * (1 + (store.vat_percent / 100))));
                                 setFormData({ ...formData });
                                 findSetTotal();
                                 console.log(formData);
@@ -2773,7 +2772,7 @@ const ProductCreate = forwardRef((props, ref) => {
                                 }
 
                                 formData.set.products[key].purchase_unit_price_with_vat = parseFloat(e.target.value);
-                                formData.set.products[key].purchase_unit_price = parseFloat(trimTo4Decimals(formData.set.products[key].purchase_unit_price_with_vat / (1 + (store.vat_percent / 100))));
+                                formData.set.products[key].purchase_unit_price = parseFloat(trimTo8Decimals(formData.set.products[key].purchase_unit_price_with_vat / (1 + (store.vat_percent / 100))));
                                 setFormData({ ...formData });
                                 findSetTotal();
                                 console.log(formData);
@@ -2841,7 +2840,7 @@ const ProductCreate = forwardRef((props, ref) => {
                                 }
 
                                 formData.set.products[key].retail_unit_price = parseFloat(e.target.value);
-                                formData.set.products[key].retail_unit_price_with_vat = parseFloat(trimTo4Decimals(formData.set.products[key].retail_unit_price * (1 + (store.vat_percent / 100))));
+                                formData.set.products[key].retail_unit_price_with_vat = parseFloat(trimTo8Decimals(formData.set.products[key].retail_unit_price * (1 + (store.vat_percent / 100))));
                                 setFormData({ ...formData });
                                 findSetTotal();
                                 console.log(formData);
@@ -2919,7 +2918,7 @@ const ProductCreate = forwardRef((props, ref) => {
                                 }
 
                                 formData.set.products[key].retail_unit_price_with_vat = parseFloat(e.target.value);
-                                formData.set.products[key].retail_unit_price = parseFloat(trimTo4Decimals(formData.set.products[key].retail_unit_price_with_vat / (1 + (store.vat_percent / 100))));
+                                formData.set.products[key].retail_unit_price = parseFloat(trimTo8Decimals(formData.set.products[key].retail_unit_price_with_vat / (1 + (store.vat_percent / 100))));
                                 setFormData({ ...formData });
                                 findSetTotal();
                                 console.log(formData);
@@ -2954,14 +2953,14 @@ const ProductCreate = forwardRef((props, ref) => {
                         <b>Total</b>
                       </td>
                       <td> {formData.set?.total_quantity ? trimTo2Decimals(formData.set?.total_quantity) : ""} </td>
-                      <td><b style={{ marginLeft: "14px" }}>{formData.set?.purchase_total ? trimTo4Decimals(formData.set?.purchase_total) : ""}</b>
+                      <td><b style={{ marginLeft: "14px" }}>{formData.set?.purchase_total ? trimTo8Decimals(formData.set?.purchase_total) : ""}</b>
                         {errors["set_purchase_total"] && (
                           <div style={{ color: "red" }}>
                             {errors["set_purchase_total"]}
                           </div>
                         )}
                       </td>
-                      <td><b style={{ marginLeft: "14px" }}>{formData.set?.purchase_total_with_vat ? trimTo4Decimals(formData.set?.purchase_total_with_vat) : ""}</b>
+                      <td><b style={{ marginLeft: "14px" }}>{formData.set?.purchase_total_with_vat ? trimTo8Decimals(formData.set?.purchase_total_with_vat) : ""}</b>
                         {errors["set_purchase_total_with_vat"] && (
                           <div style={{ color: "red" }}>
                             {errors["set_purchase_total_with_vat"]}
@@ -2969,14 +2968,14 @@ const ProductCreate = forwardRef((props, ref) => {
                         )}
                       </td>
                       <td></td>
-                      <td><b style={{ marginLeft: "14px" }}>{formData.set?.total ? trimTo4Decimals(formData.set?.total) : ""}</b>
+                      <td><b style={{ marginLeft: "14px" }}>{formData.set?.total ? trimTo8Decimals(formData.set?.total) : ""}</b>
                         {errors["set_total"] && (
                           <div style={{ color: "red" }}>
                             {errors["set_total"]}
                           </div>
                         )}
                       </td>
-                      <td><b style={{ marginLeft: "14px" }}>{formData.set?.total_with_vat ? trimTo4Decimals(formData.set?.total_with_vat) : ""}</b>
+                      <td><b style={{ marginLeft: "14px" }}>{formData.set?.total_with_vat ? trimTo8Decimals(formData.set?.total_with_vat) : ""}</b>
                         {errors["set_total_with_vat"] && (
                           <div style={{ color: "red" }}>
                             {errors["set_total_with_vat"]}
