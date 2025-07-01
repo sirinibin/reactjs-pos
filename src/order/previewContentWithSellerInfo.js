@@ -901,7 +901,7 @@ const PreviewContentWithSellerInfo = forwardRef((props, ref) => {
                                         props.selectText("tableFooter");
                                     }} className="clickable-text">
                                         <tr style={{ borderBottom: tableBorderThickness }}>
-                                            {props.model.store?.settings?.zatca_qr_on_left_bottom && props.modelName !== "quotation" && props.modelName !== "whatsapp_quotation" && props.modelName !== "quotation_sales_return" && props.modelName !== "whatsapp_quotation_sales_return" && props.modelName !== "delivery_note" && <th rowSpan={6} style={{ width: "20%", padding: "3px", borderRight: tableBorderThickness }}>
+                                            {props.model.store?.settings?.zatca_qr_on_left_bottom && props.modelName !== "quotation" && props.modelName !== "whatsapp_quotation" && props.modelName !== "quotation_sales_return" && props.modelName !== "whatsapp_quotation_sales_return" && props.modelName !== "delivery_note" && <th rowSpan={7} style={{ width: "20%", padding: "3px", borderRight: tableBorderThickness }}>
                                                 <div
                                                     className="col-md-1 text-center"
                                                     style={{ width: "100%", height: "100%" }}
@@ -957,6 +957,16 @@ const PreviewContentWithSellerInfo = forwardRef((props, ref) => {
                                                 <Amount amount={trimTo2Decimals(props.model.vat_price)} />
                                             </td>
                                         </tr>}
+                                        <tr style={{ borderBottom: tableBorderThickness }}>
+                                            <th className="text-end print-label" style={{ padding: "2px", width: `${props.modelName !== "quotation" ? "70%" : "90%"}`, borderRight: tableBorderThickness }}>
+                                                Rounding Amount مبلغ التقريب :
+                                            </th>
+                                            <td className="text-end" colSpan="1" style={{ width: "10%", paddingRight: "3px" }}>
+                                                <span className="print-table-value">
+                                                    {props.model.rounding_amount ? <Amount amount={trimTo2Decimals(props.model.rounding_amount)} /> : "0.00"}
+                                                </span>
+                                            </td>
+                                        </tr>
                                         <tr>
                                             <th className="text-end print-label" style={{ padding: "2px", width: `${props.modelName !== "quotation" ? "70%" : "90%"}`, borderRight: tableBorderThickness }}>
                                                 Net Total (with VAT)  الإجمالي الصافي (مع ضريبة القيمة المضافة) :
