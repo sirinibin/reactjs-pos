@@ -628,6 +628,40 @@ const OrderView = forwardRef((props, ref) => {
                                 <td className="text-end">0.00</td>
                             </tr>
                             <tr>
+                                <th colSpan="7" className="text-end">Net Total Before Rounding</th>
+                                <th className="text-end">
+                                    <NumberFormat
+                                        value={trimTo2Decimals((model.net_total - model.rounding_amount))}
+                                        displayType={"text"}
+                                        thousandSeparator={true}
+                                        suffix={""}
+                                        renderText={(value, props) => value}
+                                    />
+                                </th>
+                                <th colSpan={3} className="text-end"></th>
+                                <td className="text-end">
+                                    0.00
+                                </td>
+                                <td className="text-end">0.00</td>
+                            </tr>
+                            <tr>
+                                <th colSpan="7" className="text-end">Rounding Amount</th>
+                                <th className="text-end">
+                                    <NumberFormat
+                                        value={trimTo2Decimals(model.rounding_amount)}
+                                        displayType={"text"}
+                                        thousandSeparator={true}
+                                        suffix={""}
+                                        renderText={(value, props) => value}
+                                    />
+                                </th>
+                                <th colSpan={3} className="text-end"></th>
+                                <td className="text-end">
+                                    0.00
+                                </td>
+                                <td className="text-end">0.00</td>
+                            </tr>
+                            <tr>
                                 <th colSpan="7" className="text-end">Net Total</th>
                                 <th className="text-end">
                                     <NumberFormat
