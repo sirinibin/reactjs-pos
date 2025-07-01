@@ -38,6 +38,9 @@ const SalesReturnCreate = forwardRef((props, ref) => {
         shipping = 0.00;
         setShipping(shipping);
 
+        roundingAmount = 0.00;
+        setRoundingAmount(roundingAmount);
+
         discount = 0.00;
         setDiscount(discount);
 
@@ -72,6 +75,8 @@ const SalesReturnCreate = forwardRef((props, ref) => {
                 date_str: new Date(),
                 signature_date_str: format(new Date(), "MMM dd yyyy"),
                 status: "received",
+                rounding_amount: 0.00,
+                auto_rounding_amount: true,
                 payment_status: "",
                 payment_method: "",
                 price_type: "retail",
@@ -204,6 +209,14 @@ const SalesReturnCreate = forwardRef((props, ref) => {
                 let salesReturn = data.result;
                 // formData = purchaseReturn;
 
+                if (data.result?.rounding_amount) {
+                    roundingAmount = data.result.rounding_amount;
+                    setRoundingAmount(roundingAmount);
+                } else {
+                    roundingAmount = 0;
+                    setRoundingAmount(roundingAmount);
+                }
+
                 if (data.result?.discount) {
                     discount = (data.result?.discount);
                     setDiscount(discount);
@@ -232,6 +245,7 @@ const SalesReturnCreate = forwardRef((props, ref) => {
 
                 formData = {
                     id: salesReturn.id,
+                    auto_rounding_amount: salesReturn.auto_rounding_amount,
                     uuid: salesReturn.uuid,
                     invoice_count_value: salesReturn.invoice_count_value,
                     code: salesReturn.code,
@@ -426,6 +440,20 @@ const SalesReturnCreate = forwardRef((props, ref) => {
                     formData.shipping_handling_fees = order.shipping_handling_fees;
                     // shipping = order.shipping_handling_fees;
                     // setShipping(shipping);
+
+                    formData.auto_rounding_amount = order.auto_rounding_amount;
+
+                    if (!order.auto_rounding_amount) {
+                        if (data.result?.rounding_amount) {
+                            roundingAmount = data.result.rounding_amount;
+                            setRoundingAmount(roundingAmount);
+                        } else {
+                            roundingAmount = 0;
+                            setRoundingAmount(roundingAmount);
+                        }
+                    }
+
+
 
                     if (data.result?.discount) {
                         if (data.result?.return_discount) {
@@ -685,6 +713,12 @@ const SalesReturnCreate = forwardRef((props, ref) => {
         console.log("selectedProducts:", selectedProducts);
         console.log("formData.order_id:", formData.order_id);
 
+        if (!roundingAmount) {
+            formData.rounding_amount = 0;
+        } else {
+            formData.rounding_amount = roundingAmount;
+        }
+
         if (discount) {
             formData.discount = discount;
         } else {
@@ -870,6 +904,14 @@ const SalesReturnCreate = forwardRef((props, ref) => {
         }
 
 
+
+        if (/^-?\d*\.?\d{0,2}$/.test(parseFloat(formData.rounding_amount)) === false) {
+            errors["rounding_amount"] = "Max. decimal points allowed is 2";
+            setErrors({ ...errors });
+            haveErrors = true;
+        }
+
+
         if (!formData.discount && formData.discount !== 0) {
             errors["discount"] = "Invalid discount";
             setErrors({ ...errors });
@@ -978,6 +1020,8 @@ const SalesReturnCreate = forwardRef((props, ref) => {
             });
     }
 
+
+    let [roundingAmount, setRoundingAmount] = useState(0.00);
     let [shipping, setShipping] = useState(0.00);
     let [discount, setDiscount] = useState(0.00);
     let [discountPercent, setDiscountPercent] = useState(0.00);
@@ -988,6 +1032,12 @@ const SalesReturnCreate = forwardRef((props, ref) => {
 
     async function reCalculate(productIndex) {
         console.log("inside reCalculate");
+
+        if (!roundingAmount) {
+            formData.rounding_amount = 0;
+        } else {
+            formData.rounding_amount = roundingAmount;
+        }
 
         if (!discountWithVAT) {
             formData.discount_with_vat = 0
@@ -1119,9 +1169,14 @@ const SalesReturnCreate = forwardRef((props, ref) => {
             if (res.result) {
                 formData.total = res.result.total;
                 formData.total_with_vat = res.result.total_with_vat;
-                formData.rounding_amount = res.result.rounding_amount;
+                //  formData.rounding_amount = res.result.rounding_amount;
                 formData.net_total = res.result.net_total;
                 formData.vat_price = res.result.vat_price;
+
+                if (res.result.rounding_amount && formData.auto_rounding_amount) {
+                    roundingAmount = res.result.rounding_amount;
+                    setRoundingAmount(roundingAmount);
+                }
 
 
                 if (res.result.discount_percent) {
@@ -1541,10 +1596,17 @@ const SalesReturnCreate = forwardRef((props, ref) => {
         </Tooltip>
     );
 
-    const renderNetTotalTooltip = (props) => (
+    const renderNetTotalBeforeRoundingTooltip = (props) => (
         <Tooltip id="label-tooltip" {...props}>
             Total Taxable Amount(without VAT) + VAT Price ( 15% of Taxable Amount)
-            {"(" + trimTo2Decimals(formData.total + shipping - discount) + " + " + trimTo2Decimals(formData.vat_price) + ") = " + trimTo2Decimals(formData.net_total)}
+            {"(" + trimTo2Decimals(formData.total + shipping - discount) + " + " + trimTo2Decimals(formData.vat_price) + ") = " + trimTo2Decimals(formData.net_total - roundingAmount)}
+        </Tooltip>
+    );
+
+    const renderNetTotalTooltip = (props) => (
+        <Tooltip id="label-tooltip" {...props}>
+            Total Taxable Amount(without VAT) + VAT Price ( 15% of Taxable Amount) {roundingAmount > 0 ? " + Rounding Amount" : " - Rounding Amount"}
+            {"(" + trimTo2Decimals(formData.total + shipping - discount) + " + " + trimTo2Decimals(formData.vat_price) + `${roundingAmount > 0 ? " + " : " - "}` + trimTo2Decimals(roundingAmount) + " ) = " + trimTo2Decimals(formData.net_total)}
         </Tooltip>
     );
 
@@ -3502,17 +3564,17 @@ const SalesReturnCreate = forwardRef((props, ref) => {
                                             />
                                         </td>
                                     </tr>
-                                    <tr>
 
+                                    <tr>
                                         <th colSpan="8" className="text-end">
-                                            Rounding Amount
-                                            {/*<OverlayTrigger placement="right" overlay={renderNetTotalTooltip}>
-                                                                                    <span style={{ textDecoration: 'underline dotted', cursor: 'pointer' }}>ℹ️</span>
-                                                                                </OverlayTrigger>*/}
+                                            Net Total(with VAT) Before Rounding
+                                            <OverlayTrigger placement="right" overlay={renderNetTotalBeforeRoundingTooltip}>
+                                                <span style={{ textDecoration: 'underline dotted', cursor: 'pointer' }}>ℹ️</span>
+                                            </OverlayTrigger>
                                         </th>
                                         <th className="text-end">
                                             <NumberFormat
-                                                value={trimTo2Decimals(formData.rounding_amount)}
+                                                value={trimTo2Decimals(formData.net_total - roundingAmount)}
                                                 displayType={"text"}
                                                 thousandSeparator={true}
                                                 suffix={" "}
@@ -3522,6 +3584,93 @@ const SalesReturnCreate = forwardRef((props, ref) => {
                                     </tr>
                                     <tr>
 
+                                        <th colSpan="8" className="text-end">  Rounding Amount
+                                            [<input type="checkbox"
+                                                id="sales_auto_rounding_amount"
+                                                name="sales_auto_rounding_amount"
+                                                className="text-center"
+                                                style={{}}
+                                                value={formData.auto_rounding_amount}
+                                                checked={formData.auto_rounding_amount}
+                                                onChange={(e) => {
+                                                    if (timerRef.current) clearTimeout(timerRef.current);
+                                                    setErrors({ ...errors });
+                                                    formData.auto_rounding_amount = !formData.auto_rounding_amount;
+                                                    setFormData({ ...formData });
+                                                    timerRef.current = setTimeout(() => {
+                                                        reCalculate();
+                                                    }, 100);
+
+                                                    console.log(formData);
+                                                }} />{" Auto Calculate]"}
+                                        </th>
+                                        <td className="text-end">
+                                            <input type="number"
+                                                id="sales_rounding_amount"
+                                                name="sales_rounding_amount"
+                                                disabled={formData.auto_rounding_amount}
+                                                onWheel={(e) => e.target.blur()}
+                                                style={{ width: "150px" }}
+                                                className="text-start"
+                                                value={roundingAmount}
+                                                onChange={(e) => {
+                                                    if (timerRef.current) clearTimeout(timerRef.current);
+                                                    delete errors["rounding_amount"];
+                                                    setErrors({ ...errors });
+
+                                                    if (!e.target.value) {
+                                                        roundingAmount = "";
+                                                        setRoundingAmount(roundingAmount);
+                                                        timerRef.current = setTimeout(() => {
+                                                            reCalculate();
+                                                        }, 100);
+                                                        return;
+                                                    }
+
+                                                    if (e.target.value) {
+                                                        if (/^-?\d*\.?\d{0,2}$/.test(parseFloat(e.target.value)) === false) {
+                                                            roundingAmount = parseFloat(e.target.value);
+
+                                                            errors["rounding_amount"] = "Max. decimal points allowed is 2";
+                                                            setErrors({ ...errors });
+                                                            return;
+                                                        }
+                                                    }
+
+                                                    roundingAmount = parseFloat(e.target.value)
+                                                    setRoundingAmount(roundingAmount);
+
+                                                    delete errors["rounding_amount"];
+                                                    setErrors({ ...errors });
+                                                    timerRef.current = setTimeout(() => {
+                                                        reCalculate();
+                                                    }, 100);
+                                                }}
+
+                                                onKeyDown={(e) => {
+                                                    if (timerRef.current) clearTimeout(timerRef.current);
+
+                                                    if (e.key === "Backspace") {
+                                                        delete errors["rounding_amount"];
+                                                        setErrors({ ...errors });
+                                                        roundingAmount = "";
+                                                        setRoundingAmount("");
+
+                                                        timerRef.current = setTimeout(() => {
+                                                            reCalculate();
+                                                        }, 100);
+                                                    }
+                                                }}
+                                            />
+                                            {" "}
+                                            {errors.rounding_amount && (
+                                                <div style={{ color: "red" }}>
+                                                    {errors.rounding_amount}
+                                                </div>
+                                            )}
+                                        </td>
+                                    </tr>
+                                    <tr>
                                         <th colSpan="8" className="text-end">
                                             Net Total(with VAT)
                                             <OverlayTrigger placement="right" overlay={renderNetTotalTooltip}>
