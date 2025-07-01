@@ -1549,6 +1549,7 @@ const OrderCreate = forwardRef((props, ref) => {
             if (res.result) {
                 formData.total = res.result.total;
                 formData.total_with_vat = res.result.total_with_vat;
+                formData.rounding_amount = res.result.rounding_amount;
                 formData.net_total = res.result.net_total;
                 formData.vat_price = res.result.vat_price;
 
@@ -4480,6 +4481,23 @@ const OrderCreate = forwardRef((props, ref) => {
                                     </tr>
                                     <tr>
 
+                                        <th colSpan="8" className="text-end">
+                                            Rounding Amount
+                                            {/*<OverlayTrigger placement="right" overlay={renderNetTotalTooltip}>
+                                                <span style={{ textDecoration: 'underline dotted', cursor: 'pointer' }}>ℹ️</span>
+                                            </OverlayTrigger>*/}
+                                        </th>
+                                        <th className="text-end">
+                                            <NumberFormat
+                                                value={trimTo2Decimals(formData.rounding_amount)}
+                                                displayType={"text"}
+                                                thousandSeparator={true}
+                                                suffix={" "}
+                                                renderText={(value, props) => value}
+                                            />
+                                        </th>
+                                    </tr>
+                                    <tr>
                                         <th colSpan="8" className="text-end">
                                             Net Total(with VAT)
                                             <OverlayTrigger placement="right" overlay={renderNetTotalTooltip}>
