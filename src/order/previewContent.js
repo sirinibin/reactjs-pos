@@ -651,7 +651,7 @@ const PreviewContent = forwardRef((props, ref) => {
                                                     Total Taxable Amount (without VAT)  إجمالي المبلغ الخاضع للضريبة (بدون ضريبة القيمة المضافة) :
                                                 </th>
                                                 <td className="text-end print-table-value" colSpan="1" style={{ paddingRight: "3px" }}>
-                                                    <Amount amount={trimTo2Decimals((props.model.net_total - props.model.vat_price))} />
+                                                    <Amount amount={trimTo2Decimals(((props.model.net_total - props.model.rounding_amount) - props.model.vat_price))} />
                                                 </td>
                                             </tr>
                                             <tr style={{ borderBottom: tableBorderThickness }}>
