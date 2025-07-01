@@ -663,6 +663,12 @@ const PurchaseCreate = forwardRef((props, ref) => {
             formData.cash_discount = 0.00;
         }
 
+        if (!roundingAmount) {
+            formData.rounding_amount = 0;
+        } else {
+            formData.rounding_amount = roundingAmount;
+        }
+
 
 
         if (discount) {
@@ -741,6 +747,12 @@ const PurchaseCreate = forwardRef((props, ref) => {
 
         if (!formData.discount && formData.discount !== 0) {
             errors["discount"] = "Invalid discount";
+            setErrors({ ...errors });
+            return;
+        }
+
+        if (/^-?\d*\.?\d{0,2}$/.test(parseFloat(formData.rounding_amount)) === false) {
+            errors["rounding_amount"] = "Max. decimal points allowed is 2";
             setErrors({ ...errors });
             return;
         }
