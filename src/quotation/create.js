@@ -30,7 +30,7 @@ import DeliveryNoteHistory from "./../product/delivery_note_history.js";
 import Products from "./../utils/products.js";
 import Customers from "./../utils/customers.js";
 import { trimTo2Decimals } from "../utils/numberUtils";
-import { trimTo4Decimals } from "../utils/numberUtils";
+import { trimTo8Decimals } from "../utils/numberUtils";
 import Amount from "../utils/amount.js";
 import { OverlayTrigger, Tooltip } from 'react-bootstrap';
 import Sales from "./../utils/sales.js";
@@ -53,6 +53,9 @@ const QuotationCreate = forwardRef((props, ref) => {
   function ResetForm() {
     shipping = 0.00;
     setShipping(shipping);
+
+    roundingAmount = 0.00;
+    setRoundingAmount(roundingAmount);
 
     discount = 0.00;
     setDiscount(discount);
@@ -100,6 +103,8 @@ const QuotationCreate = forwardRef((props, ref) => {
         remarks: "",
         type: "quotation",
         payment_status: "",
+        rounding_amount: 0.00,
+        auto_rounding_amount: true,
       };
 
       formData.payments_input = [
@@ -336,6 +341,14 @@ const QuotationCreate = forwardRef((props, ref) => {
         oldProducts = quotation.products.map(obj => ({ ...obj }));
         setOldProducts([...oldProducts]);
 
+        if (data.result?.rounding_amount) {
+          roundingAmount = data.result.rounding_amount;
+          setRoundingAmount(roundingAmount);
+        } else {
+          roundingAmount = 0;
+          setRoundingAmount(roundingAmount);
+        }
+
         if (data.result?.discount) {
           discount = data.result?.discount;
           setDiscount(discount);
@@ -359,6 +372,7 @@ const QuotationCreate = forwardRef((props, ref) => {
 
         formData = {
           id: quotation.id,
+          auto_rounding_amount: quotation.auto_rounding_amount,
           type: quotation.type,
           order_id: quotation.order_id,
           order_code: quotation.order_code,
@@ -697,6 +711,12 @@ const QuotationCreate = forwardRef((props, ref) => {
       formData.payment_status = ""
     }
 
+    if (!roundingAmount) {
+      formData.rounding_amount = 0;
+    } else {
+      formData.rounding_amount = roundingAmount;
+    }
+
     if (discount) {
       formData.discount = discount;
     } else {
@@ -728,16 +748,16 @@ const QuotationCreate = forwardRef((props, ref) => {
       let unitPrice = parseFloat(selectedProducts[i].unit_price);
 
 
-      if (unitPrice && /^\d*\.?\d{0,4}$/.test(unitPrice) === false) {
-        errors["unit_price_" + i] = "Max decimal points allowed is 4";
+      if (unitPrice && /^\d*\.?\d{0,8}$/.test(unitPrice) === false) {
+        errors["unit_price_" + i] = "Max decimal points allowed is 8";
         setErrors({ ...errors });
         haveErrors = true;
       }
 
       let unitPriceWithVAT = parseFloat(selectedProducts[i].unit_price_with_vat);
 
-      if (unitPriceWithVAT && /^\d*\.?\d{0,4}$/.test(unitPriceWithVAT) === false) {
-        errors["unit_price_with_vat_" + i] = "Max decimal points allowed is 4";
+      if (unitPriceWithVAT && /^\d*\.?\d{0,8}$/.test(unitPriceWithVAT) === false) {
+        errors["unit_price_with_vat_" + i] = "Max decimal points allowed is 8";
         setErrors({ ...errors });
         haveErrors = true;
       }
@@ -831,6 +851,12 @@ const QuotationCreate = forwardRef((props, ref) => {
 
     if (/^\d*\.?\d{0,2}$/.test(parseFloat(formData.shipping_handling_fees)) === false) {
       errors["shipping_handling_fees"] = "Max. decimal points allowed is 2";
+      setErrors({ ...errors });
+      haveErrors = true;
+    }
+
+    if (/^-?\d*\.?\d{0,2}$/.test(parseFloat(formData.rounding_amount)) === false) {
+      errors["rounding_amount"] = "Max. decimal points allowed is 2";
       setErrors({ ...errors });
       haveErrors = true;
     }
@@ -1196,13 +1222,21 @@ const QuotationCreate = forwardRef((props, ref) => {
     </Tooltip>
   );
 
-  const renderNetTotalTooltip = (props) => (
+  const renderNetTotalBeforeRoundingTooltip = (props) => (
     <Tooltip id="label-tooltip" {...props}>
       Total Taxable Amount(without VAT) + VAT Price ( 15% of Taxable Amount)
-      {"(" + trimTo2Decimals(formData.total + shipping - discount) + " + " + trimTo2Decimals(formData.vat_price) + ") = " + trimTo2Decimals(formData.net_total)}
+      {"(" + trimTo2Decimals(formData.total + shipping - discount) + " + " + trimTo2Decimals(formData.vat_price) + ") = " + trimTo2Decimals(formData.net_total - roundingAmount)}
     </Tooltip>
   );
 
+  const renderNetTotalTooltip = (props) => (
+    <Tooltip id="label-tooltip" {...props}>
+      Total Taxable Amount(without VAT) + VAT Price ( 15% of Taxable Amount) {roundingAmount > 0 ? " + Rounding Amount" : " - Rounding Amount"}
+      {"(" + trimTo2Decimals(formData.total + shipping - discount) + " + " + trimTo2Decimals(formData.vat_price) + `${roundingAmount > 0 ? " + " : " - "}` + trimTo2Decimals(roundingAmount) + " ) = " + trimTo2Decimals(formData.net_total)}
+    </Tooltip>
+  );
+
+  let [roundingAmount, setRoundingAmount] = useState(0.00);
   let [shipping, setShipping] = useState(0.00);
   let [discount, setDiscount] = useState(0.00);
   let [discountPercent, setDiscountPercent] = useState(0.00);
@@ -1213,6 +1247,12 @@ const QuotationCreate = forwardRef((props, ref) => {
 
   async function reCalculate(productIndex) {
     console.log("inside reCalculate");
+
+    if (!roundingAmount) {
+      formData.rounding_amount = 0;
+    } else {
+      formData.rounding_amount = roundingAmount;
+    }
 
     if (!discountWithVAT) {
       formData.discount_with_vat = 0
@@ -1345,6 +1385,11 @@ const QuotationCreate = forwardRef((props, ref) => {
         formData.total_with_vat = res.result.total_with_vat;
         formData.net_total = res.result.net_total;
         formData.vat_price = res.result.vat_price;
+
+        if (res.result.rounding_amount && formData.auto_rounding_amount) {
+          roundingAmount = res.result.rounding_amount;
+          setRoundingAmount(roundingAmount);
+        }
 
         if (res.result.discount_percent) {
           discountPercent = res.result.discount_percent;
@@ -3211,8 +3256,8 @@ const QuotationCreate = forwardRef((props, ref) => {
                                   }
 
 
-                                  if (/^\d*\.?\d{0,4}$/.test(parseFloat(e.target.value)) === false) {
-                                    errors["unit_price_" + index] = "Max decimal points allowed is 4";
+                                  if (/^\d*\.?\d{0,8}$/.test(parseFloat(e.target.value)) === false) {
+                                    errors["unit_price_" + index] = "Max decimal points allowed is 8";
                                     setErrors({ ...errors });
                                   }
 
@@ -3220,7 +3265,7 @@ const QuotationCreate = forwardRef((props, ref) => {
                                   setSelectedProducts([...selectedProducts]);
 
                                   timerRef.current = setTimeout(() => {
-                                    selectedProducts[index].unit_price_with_vat = parseFloat(trimTo4Decimals(selectedProducts[index].unit_price * (1 + (formData.vat_percent / 100))))
+                                    selectedProducts[index].unit_price_with_vat = parseFloat(trimTo8Decimals(selectedProducts[index].unit_price * (1 + (formData.vat_percent / 100))))
                                     selectedProducts[index].unit_discount_percent = parseFloat(trimTo2Decimals(((selectedProducts[index].unit_discount / selectedProducts[index].unit_price) * 100)))
                                     selectedProducts[index].unit_discount_percent_with_vat = parseFloat(trimTo2Decimals(((selectedProducts[index].unit_discount_with_vat / selectedProducts[index].unit_price_with_vat) * 100)))
                                     reCalculate(index);
@@ -3319,8 +3364,8 @@ const QuotationCreate = forwardRef((props, ref) => {
                                     return;
                                   }
 
-                                  if (/^\d*\.?\d{0,4}$/.test(parseFloat(e.target.value)) === false) {
-                                    errors["unit_price_with_vat_" + index] = "Max decimal points allowed is 4";
+                                  if (/^\d*\.?\d{0,8}$/.test(parseFloat(e.target.value)) === false) {
+                                    errors["unit_price_with_vat_" + index] = "Max decimal points allowed is 8";
                                     setErrors({ ...errors });
                                   }
 
@@ -3331,7 +3376,7 @@ const QuotationCreate = forwardRef((props, ref) => {
                                   setSelectedProducts([...selectedProducts]);
                                   // Set new debounce timer
                                   timerRef.current = setTimeout(() => {
-                                    selectedProducts[index].unit_price = parseFloat(trimTo4Decimals(selectedProducts[index].unit_price_with_vat / (1 + (formData.vat_percent / 100))))
+                                    selectedProducts[index].unit_price = parseFloat(trimTo8Decimals(selectedProducts[index].unit_price_with_vat / (1 + (formData.vat_percent / 100))))
                                     selectedProducts[index].unit_discount_with_vat = parseFloat(trimTo2Decimals(selectedProducts[index].unit_discount * (1 + (formData.vat_percent / 100))))
 
                                     selectedProducts[index].unit_discount_percent = parseFloat(trimTo2Decimals(((selectedProducts[index].unit_discount / selectedProducts[index].unit_price) * 100)))
@@ -4317,7 +4362,111 @@ const QuotationCreate = forwardRef((props, ref) => {
                     </td>
                   </tr>
                   <tr>
+                    <th colSpan="8" className="text-end">
+                      Net Total(with VAT) Before Rounding
+                      <OverlayTrigger placement="right" overlay={renderNetTotalBeforeRoundingTooltip}>
+                        <span style={{ textDecoration: 'underline dotted', cursor: 'pointer' }}>ℹ️</span>
+                      </OverlayTrigger>
+                    </th>
+                    <th className="text-end">
+                      <NumberFormat
+                        value={trimTo2Decimals(formData.net_total - roundingAmount)}
+                        displayType={"text"}
+                        thousandSeparator={true}
+                        suffix={" "}
+                        renderText={(value, props) => value}
+                      />
+                    </th>
+                  </tr>
+                  <tr>
 
+                    <th colSpan="8" className="text-end">  Rounding Amount
+                      [<input type="checkbox"
+                        id="sales_auto_rounding_amount"
+                        name="sales_auto_rounding_amount"
+                        className="text-center"
+                        style={{}}
+                        value={formData.auto_rounding_amount}
+                        checked={formData.auto_rounding_amount}
+                        onChange={(e) => {
+                          if (timerRef.current) clearTimeout(timerRef.current);
+                          setErrors({ ...errors });
+                          formData.auto_rounding_amount = !formData.auto_rounding_amount;
+                          setFormData({ ...formData });
+                          timerRef.current = setTimeout(() => {
+                            reCalculate();
+                          }, 100);
+
+                          console.log(formData);
+                        }} />{" Auto Calculate]"}
+                    </th>
+                    <td className="text-end">
+                      <input type="number"
+                        id="sales_rounding_amount"
+                        name="sales_rounding_amount"
+                        disabled={formData.auto_rounding_amount}
+                        onWheel={(e) => e.target.blur()}
+                        style={{ width: "150px" }}
+                        className="text-start"
+                        value={roundingAmount}
+                        onChange={(e) => {
+                          if (timerRef.current) clearTimeout(timerRef.current);
+                          delete errors["rounding_amount"];
+                          setErrors({ ...errors });
+
+                          if (!e.target.value) {
+                            roundingAmount = "";
+                            setRoundingAmount(roundingAmount);
+                            timerRef.current = setTimeout(() => {
+                              reCalculate();
+                            }, 100);
+                            return;
+                          }
+
+                          if (e.target.value) {
+                            if (/^-?\d*\.?\d{0,2}$/.test(parseFloat(e.target.value)) === false) {
+                              roundingAmount = parseFloat(e.target.value);
+
+                              errors["rounding_amount"] = "Max. decimal points allowed is 2";
+                              setErrors({ ...errors });
+                              return;
+                            }
+                          }
+
+                          roundingAmount = parseFloat(e.target.value)
+                          setRoundingAmount(roundingAmount);
+
+                          delete errors["rounding_amount"];
+                          setErrors({ ...errors });
+                          timerRef.current = setTimeout(() => {
+                            reCalculate();
+                          }, 100);
+                        }}
+
+                        onKeyDown={(e) => {
+                          if (timerRef.current) clearTimeout(timerRef.current);
+
+                          if (e.key === "Backspace") {
+                            delete errors["rounding_amount"];
+                            setErrors({ ...errors });
+                            roundingAmount = "";
+                            setRoundingAmount("");
+
+                            timerRef.current = setTimeout(() => {
+                              reCalculate();
+                            }, 100);
+                          }
+                        }}
+                      />
+                      {" "}
+                      {errors.rounding_amount && (
+                        <div style={{ color: "red" }}>
+                          {errors.rounding_amount}
+                        </div>
+                      )}
+                    </td>
+                  </tr>
+                  <tr>
                     <th colSpan="8" className="text-end">
                       Net Total(with VAT)
                       <OverlayTrigger placement="right" overlay={renderNetTotalTooltip}>
