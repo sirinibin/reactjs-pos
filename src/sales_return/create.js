@@ -1173,7 +1173,8 @@ const SalesReturnCreate = forwardRef((props, ref) => {
                 formData.net_total = res.result.net_total;
                 formData.vat_price = res.result.vat_price;
 
-                if (res.result.rounding_amount && formData.auto_rounding_amount) {
+
+                if ((res.result.rounding_amount || res.result.rounding_amount === 0) && formData.auto_rounding_amount) {
                     roundingAmount = res.result.rounding_amount;
                     setRoundingAmount(roundingAmount);
                 }

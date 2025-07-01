@@ -1594,7 +1594,8 @@ const OrderCreate = forwardRef((props, ref) => {
                 formData.vat_price = res.result.vat_price;
 
 
-                if (res.result.rounding_amount && formData.auto_rounding_amount) {
+
+                if ((res.result.rounding_amount || res.result.rounding_amount === 0) && formData.auto_rounding_amount) {
                     roundingAmount = res.result.rounding_amount;
                     setRoundingAmount(roundingAmount);
                 } /*else {
@@ -4640,22 +4641,6 @@ const OrderCreate = forwardRef((props, ref) => {
                                             )}
                                         </td>
                                     </tr>
-                                    {/* <tr>
-
-                                        <th colSpan="8" className="text-end">
-                                            Rounding Amount
-                                        
-                                        </th>
-                                        <th className="text-end">
-                                            <NumberFormat
-                                                value={trimTo2Decimals(formData.rounding_amount)}
-                                                displayType={"text"}
-                                                thousandSeparator={true}
-                                                suffix={" "}
-                                                renderText={(value, props) => value}
-                                            />
-                                        </th>
-                                    </tr>*/}
                                     <tr>
                                         <th colSpan="8" className="text-end">
                                             Net Total(with VAT)
