@@ -69,6 +69,9 @@ const OrderCreate = forwardRef((props, ref) => {
         */
 
     function ResetForm() {
+        cashDiscount = "";
+        setCashDiscount(cashDiscount);
+
         shipping = 0.00;
         setShipping(shipping);
 
@@ -136,8 +139,6 @@ const OrderCreate = forwardRef((props, ref) => {
             formData.discount_with_vat = 0.00;
             formData.shipping_handling_fees = 0.00;
             formData.partial_payment_amount = 0.00;
-            cashDiscount = "";
-            setCashDiscount(cashDiscount);
             formData.payment_method = "";
             formData.payment_status = "";
             formData.remarks = ""
@@ -673,16 +674,16 @@ const OrderCreate = forwardRef((props, ref) => {
         event.preventDefault();
         let haveErrors = false;
 
-        if (!roundingAmount) {
-            formData.rounding_amount = 0;
-        } else {
-            formData.rounding_amount = roundingAmount;
-        }
-
         if (!cashDiscount) {
             formData.cash_discount = 0;
         } else {
             formData.cash_discount = cashDiscount;
+        }
+
+        if (!roundingAmount) {
+            formData.rounding_amount = 0;
+        } else {
+            formData.rounding_amount = roundingAmount;
         }
 
         if (discount) {

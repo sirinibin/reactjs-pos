@@ -35,6 +35,9 @@ const SalesReturnCreate = forwardRef((props, ref) => {
 
 
     function ResetForm() {
+        cashDiscount = "";
+        setCashDiscount(cashDiscount);
+
         shipping = 0.00;
         setShipping(shipping);
 
@@ -93,8 +96,6 @@ const SalesReturnCreate = forwardRef((props, ref) => {
             ];
 
             ResetForm();
-
-            formData.cash_discount = 0.00;
             if (localStorage.getItem("user_id")) {
                 selectedReceivedByUsers = [{
                     id: localStorage.getItem("user_id"),
@@ -208,6 +209,14 @@ const SalesReturnCreate = forwardRef((props, ref) => {
 
                 let salesReturn = data.result;
                 // formData = purchaseReturn;
+
+                if (data.result?.cash_discount) {
+                    cashDiscount = data.result.cash_discount;
+                    setCashDiscount(cashDiscount);
+                } else {
+                    cashDiscount = "";
+                    setCashDiscount(cashDiscount);
+                }
 
                 if (data.result?.rounding_amount) {
                     roundingAmount = data.result.rounding_amount;
@@ -490,7 +499,8 @@ const SalesReturnCreate = forwardRef((props, ref) => {
                         setShipping(shipping);
                     }
 
-                    formData.cash_discount = parseFloat(order.cash_discount - order.return_cash_discount);
+                    cashDiscount = parseFloat(order.cash_discount - order.return_cash_discount);
+                    setCashDiscount(cashDiscount);
                     // formData.discount = (order.discount - order.return_discount);
 
                     // formData.discount_percent = order.discount_percent;
@@ -713,6 +723,13 @@ const SalesReturnCreate = forwardRef((props, ref) => {
         console.log("selectedProducts:", selectedProducts);
         console.log("formData.order_id:", formData.order_id);
 
+        if (!cashDiscount) {
+            formData.cash_discount = 0;
+        } else {
+            formData.cash_discount = cashDiscount;
+        }
+
+
         if (!roundingAmount) {
             formData.rounding_amount = 0;
         } else {
@@ -841,10 +858,6 @@ const SalesReturnCreate = forwardRef((props, ref) => {
                 unit: selectedProducts[i].unit,
                 selected: selectedProducts[i].selected,
             });
-        }
-
-        if (!formData.cash_discount) {
-            formData.cash_discount = 0.00;
         }
 
         formData.discount = parseFloat(formData.discount);
@@ -1020,7 +1033,7 @@ const SalesReturnCreate = forwardRef((props, ref) => {
             });
     }
 
-
+    let [cashDiscount, setCashDiscount] = useState("");
     let [roundingAmount, setRoundingAmount] = useState(0.00);
     let [shipping, setShipping] = useState(0.00);
     let [discount, setDiscount] = useState(0.00);
@@ -1032,6 +1045,11 @@ const SalesReturnCreate = forwardRef((props, ref) => {
 
     async function reCalculate(productIndex) {
         console.log("inside reCalculate");
+        if (!cashDiscount) {
+            formData.cash_discount = 0;
+        } else {
+            formData.cash_discount = cashDiscount;
+        }
 
         if (!roundingAmount) {
             formData.rounding_amount = 0;
@@ -1283,8 +1301,8 @@ const SalesReturnCreate = forwardRef((props, ref) => {
 
                 if (formData.net_total > 0) {
                     formData.payments_input[0].amount = parseFloat(trimTo2Decimals(formData.net_total));
-                    if (formData.cash_discount) {
-                        formData.payments_input[0].amount = formData.payments_input[0].amount - parseFloat(trimTo2Decimals(formData.cash_discount));
+                    if (cashDiscount) {
+                        formData.payments_input[0].amount = formData.payments_input[0].amount - parseFloat(trimTo2Decimals(cashDiscount));
                     }
                     formData.payments_input[0].amount = parseFloat(trimTo2Decimals(formData.payments_input[0].amount));
                 }
@@ -1304,8 +1322,8 @@ const SalesReturnCreate = forwardRef((props, ref) => {
 
                 if (formData.net_total > 0) {
                     formData.payments_input[0].amount = parseFloat(trimTo2Decimals(formData.net_total));
-                    if (formData.cash_discount) {
-                        formData.payments_input[0].amount = formData.payments_input[0].amount - parseFloat(trimTo2Decimals(formData.cash_discount));
+                    if (cashDiscount) {
+                        formData.payments_input[0].amount = formData.payments_input[0].amount - parseFloat(trimTo2Decimals(cashDiscount));
                     }
                     formData.payments_input[0].amount = parseFloat(trimTo2Decimals(formData.payments_input[0].amount));
                 }
@@ -1348,11 +1366,11 @@ const SalesReturnCreate = forwardRef((props, ref) => {
 
         totalPaymentAmount = totalPayment;
         setTotalPaymentAmount(totalPaymentAmount);
-        balanceAmount = (parseFloat(trimTo2Decimals(formData.net_total)) - parseFloat(parseFloat(trimTo2Decimals(formData.cash_discount)))) - parseFloat(trimTo2Decimals(totalPayment));
+        balanceAmount = (parseFloat(trimTo2Decimals(formData.net_total)) - parseFloat(parseFloat(trimTo2Decimals(cashDiscount)))) - parseFloat(trimTo2Decimals(totalPayment));
         balanceAmount = parseFloat(trimTo2Decimals(balanceAmount));
         setBalanceAmount(balanceAmount);
 
-        if (balanceAmount === (parseFloat(trimTo2Decimals(formData.net_total)) - parseFloat(trimTo2Decimals(formData.cash_discount)))) {
+        if (balanceAmount === (parseFloat(trimTo2Decimals(formData.net_total)) - parseFloat(trimTo2Decimals(cashDiscount)))) {
             paymentStatus = "not_paid"
         } else if (balanceAmount <= 0) {
             paymentStatus = "paid"
@@ -1390,7 +1408,7 @@ const SalesReturnCreate = forwardRef((props, ref) => {
 
 
 
-        if (formData.net_total && formData.cash_discount > 0 && formData.cash_discount >= formData.net_total) {
+        if (formData.net_total && cashDiscount > 0 && cashDiscount >= formData.net_total) {
             errors["cash_discount"] = "Cash discount should not be >= " + trimTo2Decimals(formData.net_total).toString();
             setErrors({ ...errors });
             haveErrors = true
@@ -1613,6 +1631,7 @@ const SalesReturnCreate = forwardRef((props, ref) => {
 
 
     const inputRefs = useRef({});
+    const cashDiscountRef = useRef(null);
 
     function openUpdateProductForm(id) {
         ProductCreateFormRef.current.open(id);
@@ -3694,36 +3713,74 @@ const SalesReturnCreate = forwardRef((props, ref) => {
 
                         <div className="col-md-2">
                             <label className="form-label">Cash discount</label>
-                            <input id="sales_return_cash_discount" name="sales_return_cash_discount"
-                                type='number' value={formData.cash_discount} className="form-control "
+                            <input
+                                type='number'
+                                ref={cashDiscountRef}
+                                id="sales_cash_discount"
+                                name="sales_cash_discount"
+                                value={cashDiscount}
+                                className="form-control"
                                 onChange={(e) => {
                                     delete errors["cash_discount"];
                                     setErrors({ ...errors });
                                     if (!e.target.value) {
-                                        formData.cash_discount = e.target.value;
-                                        setFormData({ ...formData });
-                                        validatePaymentAmounts();
+                                        cashDiscount = e.target.value;
+                                        setCashDiscount(cashDiscount);
+
+                                        if (timerRef.current) clearTimeout(timerRef.current);
+                                        timerRef.current = setTimeout(() => {
+                                            // validatePaymentAmounts();
+                                            reCalculate();
+                                        }, 100);
+
                                         return;
                                     }
-                                    formData.cash_discount = parseFloat(e.target.value);
-                                    if (formData.cash_discount > 0 && formData.cash_discount >= formData.net_total) {
-                                        errors["cash_discount"] = "Cash discount should not be >= " + formData.net_total.toString();
+
+                                    cashDiscount = parseFloat(e.target.value);
+                                    setCashDiscount(cashDiscount);
+
+                                    if (cashDiscount > 0 && cashDiscount >= formData.net_total) {
+                                        errors["cash_discount"] = "Cash discount should not be greater than or equal to Net Total: " + formData.net_total?.toString();
                                         setErrors({ ...errors });
                                         return;
                                     }
 
-                                    setFormData({ ...formData });
-                                    validatePaymentAmounts();
+                                    if (timerRef.current) clearTimeout(timerRef.current);
+                                    timerRef.current = setTimeout(() => {
+                                        //  validatePaymentAmounts();
+                                        reCalculate();
+                                    }, 100);
                                     console.log(formData);
+                                }}
+
+                                onKeyDown={(e) => {
+                                    if (timerRef.current) clearTimeout(timerRef.current);
+
+                                    if (e.key === "Backspace") {
+                                        cashDiscount = "";
+                                        setCashDiscount(cashDiscount);
+
+                                        if (timerRef.current) clearTimeout(timerRef.current);
+                                        timerRef.current = setTimeout(() => {
+                                            reCalculate();
+                                        }, 100);
+                                        return;
+                                    }
+                                }}
+                                onFocus={() => {
+                                    if (timerRef.current) clearTimeout(timerRef.current);
+                                    timerRef.current = setTimeout(() => {
+                                        cashDiscountRef.current.select();
+                                    }, 20);
                                 }}
                             />
                             {errors.cash_discount && (
                                 <div style={{ color: "red" }}>
-                                    <i className="bi bi-x-lg"> </i>
                                     {errors.cash_discount}
                                 </div>
                             )}
                         </div>
+
 
                         <div className="col-md-8">
                             <label className="form-label">Payments given</label>

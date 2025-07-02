@@ -43,6 +43,9 @@ const PurchaseCreate = forwardRef((props, ref) => {
 
     function ResetForm() {
 
+        cashDiscount = "";
+        setCashDiscount(cashDiscount);
+
         roundingAmount = 0.00;
         setRoundingAmount(roundingAmount);
 
@@ -66,7 +69,6 @@ const PurchaseCreate = forwardRef((props, ref) => {
 
     useImperativeHandle(ref, () => ({
         open(id) {
-
             selectedProducts = [];
             setSelectedProducts([]);
 
@@ -110,8 +112,6 @@ const PurchaseCreate = forwardRef((props, ref) => {
                     "deleted": false,
                 }
             ];
-            formData.cash_discount = 0.00;
-
 
             if (localStorage.getItem('store_id')) {
                 getStore(localStorage.getItem('store_id'));
@@ -300,6 +300,14 @@ const PurchaseCreate = forwardRef((props, ref) => {
                 console.log(data);
 
                 let purchase = data.result;
+
+                if (data.result?.cash_discount) {
+                    cashDiscount = data.result.cash_discount;
+                    setCashDiscount(cashDiscount);
+                } else {
+                    cashDiscount = "";
+                    setCashDiscount(cashDiscount);
+                }
 
                 if (data.result?.rounding_amount) {
                     roundingAmount = data.result.rounding_amount;
@@ -659,8 +667,10 @@ const PurchaseCreate = forwardRef((props, ref) => {
         console.log("Inside handle Create");
         console.log("selectedProducts:", selectedProducts);
 
-        if (!formData.cash_discount) {
-            formData.cash_discount = 0.00;
+        if (!cashDiscount) {
+            formData.cash_discount = 0;
+        } else {
+            formData.cash_discount = cashDiscount;
         }
 
         if (!roundingAmount) {
@@ -1037,6 +1047,7 @@ const PurchaseCreate = forwardRef((props, ref) => {
         setWarnings({ ...warnings });
     }
 
+    let [cashDiscount, setCashDiscount] = useState("");
     let [roundingAmount, setRoundingAmount] = useState(0.00);
     let [shipping, setShipping] = useState(0.00);
     let [discount, setDiscount] = useState(0.00);
@@ -1048,6 +1059,11 @@ const PurchaseCreate = forwardRef((props, ref) => {
 
     async function reCalculate(productIndex) {
         console.log("inside reCalculate");
+        if (!cashDiscount) {
+            formData.cash_discount = 0;
+        } else {
+            formData.cash_discount = cashDiscount;
+        }
 
         if (!roundingAmount) {
             formData.rounding_amount = 0;
@@ -1298,8 +1314,8 @@ const PurchaseCreate = forwardRef((props, ref) => {
 
                     if (formData.net_total > 0) {
                         formData.payments_input[0].amount = parseFloat(trimTo2Decimals(formData.net_total));
-                        if (formData.cash_discount) {
-                            formData.payments_input[0].amount = formData.payments_input[0].amount - parseFloat(trimTo2Decimals(formData.cash_discount));
+                        if (cashDiscount) {
+                            formData.payments_input[0].amount = formData.payments_input[0].amount - parseFloat(trimTo2Decimals(cashDiscount));
                         }
                         formData.payments_input[0].amount = parseFloat(trimTo2Decimals(formData.payments_input[0].amount));
                     }
@@ -1348,11 +1364,11 @@ const PurchaseCreate = forwardRef((props, ref) => {
         console.log("totalPaymentAmount:", totalPaymentAmount);
         setTotalPaymentAmount(totalPaymentAmount);
         console.log("totalPayment:", totalPayment)
-        balanceAmount = (parseFloat(formData.net_total.toFixed(2)) - parseFloat(parseFloat(formData.cash_discount)?.toFixed(2))) - parseFloat(totalPayment.toFixed(2));
+        balanceAmount = (parseFloat(formData.net_total.toFixed(2)) - parseFloat(parseFloat(cashDiscount)?.toFixed(2))) - parseFloat(totalPayment.toFixed(2));
         balanceAmount = parseFloat(balanceAmount.toFixed(2));
         setBalanceAmount(balanceAmount);
 
-        if (balanceAmount === parseFloat((parseFloat(formData.net_total.toFixed(2)) - parseFloat(parseFloat(formData.cash_discount)?.toFixed(2))).toFixed(2))) {
+        if (balanceAmount === parseFloat((parseFloat(formData.net_total.toFixed(2)) - parseFloat(parseFloat(cashDiscount)?.toFixed(2))).toFixed(2))) {
             paymentStatus = "not_paid"
         } else if (balanceAmount <= 0) {
             paymentStatus = "paid"
@@ -1406,7 +1422,7 @@ const PurchaseCreate = forwardRef((props, ref) => {
         }
 
 
-        if (formData.cash_discount > 0 && formData.cash_discount >= formData.net_total) {
+        if (cashDiscount > 0 && cashDiscount >= formData.net_total) {
             errors["cash_discount"] = "Cash discount should not be >= " + formData.net_total.toFixed(2).toString();
             setErrors({ ...errors });
             haveErrors = true
@@ -1452,7 +1468,7 @@ const PurchaseCreate = forwardRef((props, ref) => {
 
 
             if ((formData.payments_input[key].amount || formData.payments_input[key].amount === 0) && !formData.payments_input[key].deleted) {
-                let maxAllowedAmount = (formData.net_total - formData.cash_discount) - (totalPayment - formData.payments_input[key].amount);
+                let maxAllowedAmount = (formData.net_total - cashDiscount) - (totalPayment - formData.payments_input[key].amount);
 
                 if (maxAllowedAmount < 0) {
                     maxAllowedAmount = 0;
@@ -1461,7 +1477,7 @@ const PurchaseCreate = forwardRef((props, ref) => {
                 /*
                 
                 if (maxAllowedAmount === 0) {
-                    errors["payment_amount_" + key] = "Total amount should not exceed " + (formData.net_total - formData.cash_discount).toFixed(2).toString() + ", Please delete this payment";
+                    errors["payment_amount_" + key] = "Total amount should not exceed " + (formData.net_total - cashDiscount).toFixed(2).toString() + ", Please delete this payment";
                     setErrors({ ...errors });
                     haveErrors = true;
                 } else if (formData.payments_input[key].amount > parseFloat(maxAllowedAmount.toFixed(2))) {
@@ -1666,6 +1682,7 @@ const PurchaseCreate = forwardRef((props, ref) => {
 
 
     const inputRefs = useRef({});
+    const cashDiscountRef = useRef(null);
 
     const vendorSearchRef = useRef();
 
@@ -4236,36 +4253,74 @@ const PurchaseCreate = forwardRef((props, ref) => {
 
                         <div className="col-md-2">
                             <label className="form-label">Cash discount</label>
-                            <input id="purchase_cash_discount" name="purchase_cash_discount"
-                                type='number' value={formData.cash_discount} className="form-control "
+                            <input
+                                type='number'
+                                ref={cashDiscountRef}
+                                id="sales_cash_discount"
+                                name="sales_cash_discount"
+                                value={cashDiscount}
+                                className="form-control"
                                 onChange={(e) => {
                                     delete errors["cash_discount"];
                                     setErrors({ ...errors });
                                     if (!e.target.value) {
-                                        formData.cash_discount = e.target.value;
-                                        setFormData({ ...formData });
-                                        validatePaymentAmounts();
+                                        cashDiscount = e.target.value;
+                                        setCashDiscount(cashDiscount);
+
+                                        if (timerRef.current) clearTimeout(timerRef.current);
+                                        timerRef.current = setTimeout(() => {
+                                            // validatePaymentAmounts();
+                                            reCalculate();
+                                        }, 100);
+
                                         return;
                                     }
-                                    formData.cash_discount = parseFloat(e.target.value);
-                                    if (formData.cash_discount > 0 && formData.cash_discount >= formData.net_total) {
-                                        errors["cash_discount"] = "Cash discount should not be >= " + formData.net_total.toString();
+
+                                    cashDiscount = parseFloat(e.target.value);
+                                    setCashDiscount(cashDiscount);
+
+                                    if (cashDiscount > 0 && cashDiscount >= formData.net_total) {
+                                        errors["cash_discount"] = "Cash discount should not be greater than or equal to Net Total: " + formData.net_total?.toString();
                                         setErrors({ ...errors });
                                         return;
                                     }
 
-                                    setFormData({ ...formData });
-                                    validatePaymentAmounts();
+                                    if (timerRef.current) clearTimeout(timerRef.current);
+                                    timerRef.current = setTimeout(() => {
+                                        //  validatePaymentAmounts();
+                                        reCalculate();
+                                    }, 100);
                                     console.log(formData);
+                                }}
+
+                                onKeyDown={(e) => {
+                                    if (timerRef.current) clearTimeout(timerRef.current);
+
+                                    if (e.key === "Backspace") {
+                                        cashDiscount = "";
+                                        setCashDiscount(cashDiscount);
+
+                                        if (timerRef.current) clearTimeout(timerRef.current);
+                                        timerRef.current = setTimeout(() => {
+                                            reCalculate();
+                                        }, 100);
+                                        return;
+                                    }
+                                }}
+                                onFocus={() => {
+                                    if (timerRef.current) clearTimeout(timerRef.current);
+                                    timerRef.current = setTimeout(() => {
+                                        cashDiscountRef.current.select();
+                                    }, 20);
                                 }}
                             />
                             {errors.cash_discount && (
                                 <div style={{ color: "red" }}>
-                                    <i className="bi bi-x-lg"> </i>
                                     {errors.cash_discount}
                                 </div>
                             )}
                         </div>
+
 
                         <div className="col-md-8">
                             <label className="form-label">Payments Paid</label>
