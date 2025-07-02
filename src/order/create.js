@@ -2936,8 +2936,7 @@ const OrderCreate = forwardRef((props, ref) => {
                                         <th ></th>
                                         <th >SI No.</th>
                                         <th>Part No.</th>
-                                        <th style={{ minWidth: "250px" }}>Name
-                                        </th>
+                                        <th style={{ minWidth: "250px" }}>Name</th>
                                         <th>Info</th>
                                         <th>Purchase Unit Price(without VAT)</th>
                                         <th>Stock</th>
@@ -3341,7 +3340,7 @@ const OrderCreate = forwardRef((props, ref) => {
                                                                 }, 100);
                                                             }} />
                                                         <span className="input-group-text text-nowrap">
-                                                            {selectedProducts[index].unit ? selectedProducts[index].unit[0] : 'P'}
+                                                            {selectedProducts[index].unit ? selectedProducts[index].unit[0]?.toUpperCase() : 'P'}
                                                         </span>
                                                     </div>
                                                     {(errors[`quantity_${index}`] || warnings[`quantity_${index}`]) && (

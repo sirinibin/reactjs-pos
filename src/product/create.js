@@ -15,8 +15,7 @@ import ProductCategoryCreate from "../product_category/create.js";
 import ProductBrandCreate from "../product_brand/create.js";
 import countryList from 'react-select-country-list';
 import ImageGallery from '../utils/ImageGallery.js';
-import { trimTo2Decimals } from "../utils/numberUtils";
-import { trimTo8Decimals } from "../utils/numberUtils";
+import { trimTo2Decimals, trimTo8Decimals, trimTo4Decimals } from "../utils/numberUtils";
 import Amount from "../utils/amount.js";
 import SalesHistory from "./../product/sales_history.js";
 import SalesReturnHistory from "./../product/sales_return_history.js";
@@ -893,6 +892,7 @@ const ProductCreate = forwardRef((props, ref) => {
         "part_number": product.part_number,
         "name": product.name,
         "quantity": 1,
+        "unit": product.unit,
         "purchase_unit_price": product.purchase_unit_price,
         "purchase_unit_price_with_vat": product.purchase_unit_price_with_vat,
         "retail_unit_price": product.unit_price,
@@ -2461,19 +2461,22 @@ const ProductCreate = forwardRef((props, ref) => {
                       <th style={{ width: "8%" }}>
                         Qty
                       </th>
-                      <th style={{ width: "9%" }}>
+                      <th style={{ width: "4%" }}>
+                        Unit
+                      </th>
+                      <th style={{ width: "8%" }}>
                         Purchase Unit Price
                       </th>
-                      <th style={{ width: "9%" }}>
+                      <th style={{ width: "8%" }}>
                         Purchase Unit Price(with VAT)
                       </th>
                       <th style={{ width: "8%" }}>
                         Purchase Price %
                       </th>
-                      <th style={{ width: "9%" }}>
+                      <th style={{ width: "8%" }}>
                         Retail Unit Price
                       </th>
-                      <th style={{ width: "9%" }}>
+                      <th style={{ width: "8%" }}>
                         Retail Unit Price(with VAT)
                       </th>
                       <th style={{ width: "8%" }}>
@@ -2645,6 +2648,9 @@ const ProductCreate = forwardRef((props, ref) => {
                                 {errors["set_product_quantity_" + key]}
                               </div>
                             )}
+                          </td>
+                          <td>
+                            {formData.set.products[key].unit ? formData.set.products[key].unit[0]?.toUpperCase() : 'P'}
                           </td>
                           <td >
                             <input type='number'
@@ -2949,18 +2955,21 @@ const ProductCreate = forwardRef((props, ref) => {
                       )).reverse()}
                     <tr>
                       <td></td>
+                      <td></td>
+
                       <td class="text-end">
                         <b>Total</b>
                       </td>
-                      <td> {formData.set?.total_quantity ? trimTo2Decimals(formData.set?.total_quantity) : ""} </td>
-                      <td><b style={{ marginLeft: "14px" }}>{formData.set?.purchase_total ? trimTo8Decimals(formData.set?.purchase_total) : ""}</b>
+                      <td> {formData.set?.total_quantity ? trimTo4Decimals(formData.set?.total_quantity) : ""} </td>
+                      <td></td>
+                      <td><b style={{ marginLeft: "14px" }}>{formData.set?.purchase_total ? trimTo4Decimals(formData.set?.purchase_total) : ""}</b>
                         {errors["set_purchase_total"] && (
                           <div style={{ color: "red" }}>
                             {errors["set_purchase_total"]}
                           </div>
                         )}
                       </td>
-                      <td><b style={{ marginLeft: "14px" }}>{formData.set?.purchase_total_with_vat ? trimTo8Decimals(formData.set?.purchase_total_with_vat) : ""}</b>
+                      <td><b style={{ marginLeft: "14px" }}>{formData.set?.purchase_total_with_vat ? trimTo4Decimals(formData.set?.purchase_total_with_vat) : ""}</b>
                         {errors["set_purchase_total_with_vat"] && (
                           <div style={{ color: "red" }}>
                             {errors["set_purchase_total_with_vat"]}
@@ -2968,14 +2977,14 @@ const ProductCreate = forwardRef((props, ref) => {
                         )}
                       </td>
                       <td></td>
-                      <td><b style={{ marginLeft: "14px" }}>{formData.set?.total ? trimTo8Decimals(formData.set?.total) : ""}</b>
+                      <td><b style={{ marginLeft: "14px" }}>{formData.set?.total ? trimTo4Decimals(formData.set?.total) : ""}</b>
                         {errors["set_total"] && (
                           <div style={{ color: "red" }}>
                             {errors["set_total"]}
                           </div>
                         )}
                       </td>
-                      <td><b style={{ marginLeft: "14px" }}>{formData.set?.total_with_vat ? trimTo8Decimals(formData.set?.total_with_vat) : ""}</b>
+                      <td><b style={{ marginLeft: "14px" }}>{formData.set?.total_with_vat ? trimTo4Decimals(formData.set?.total_with_vat) : ""}</b>
                         {errors["set_total_with_vat"] && (
                           <div style={{ color: "red" }}>
                             {errors["set_total_with_vat"]}
