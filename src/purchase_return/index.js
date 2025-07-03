@@ -1095,18 +1095,19 @@ function PurchaseReturnIndex(props) {
                                                             cursor: "pointer",
                                                         }}
                                                         onClick={() => {
-                                                            sort("vendor_invoice_no");
+                                                            sort("date");
                                                         }}
                                                     >
-                                                        Vendor Return Invoice No.
-                                                        {sortField === "vendor_invoice_no" && sortOrder === "-" ? (
-                                                            <i className="bi bi-sort-alpha-up-alt"></i>
+                                                        Date
+                                                        {sortField === "date" && sortOrder === "-" ? (
+                                                            <i className="bi bi-sort-down"></i>
                                                         ) : null}
-                                                        {sortField === "vendor_invoice_no" && sortOrder === "" ? (
-                                                            <i className="bi bi-sort-alpha-up"></i>
+                                                        {sortField === "date" && sortOrder === "" ? (
+                                                            <i className="bi bi-sort-up"></i>
                                                         ) : null}
                                                     </b>
                                                 </th>
+
                                                 <th>
                                                     <b
                                                         style={{
@@ -1127,44 +1128,8 @@ function PurchaseReturnIndex(props) {
                                                         ) : null}
                                                     </b>
                                                 </th>
-                                                <th>
-                                                    <b
-                                                        style={{
-                                                            textDecoration: "underline",
-                                                            cursor: "pointer",
-                                                        }}
-                                                        onClick={() => {
-                                                            sort("purchase_code");
-                                                        }}
-                                                    >
-                                                        Purchase ID
-                                                        {sortField === "code" && sortOrder === "-" ? (
-                                                            <i className="bi bi-sort-alpha-up-alt"></i>
-                                                        ) : null}
-                                                        {sortField === "code" && sortOrder === "" ? (
-                                                            <i className="bi bi-sort-alpha-up"></i>
-                                                        ) : null}
-                                                    </b>
-                                                </th>
-                                                <th>
-                                                    <b
-                                                        style={{
-                                                            textDecoration: "underline",
-                                                            cursor: "pointer",
-                                                        }}
-                                                        onClick={() => {
-                                                            sort("date");
-                                                        }}
-                                                    >
-                                                        Date
-                                                        {sortField === "date" && sortOrder === "-" ? (
-                                                            <i className="bi bi-sort-down"></i>
-                                                        ) : null}
-                                                        {sortField === "date" && sortOrder === "" ? (
-                                                            <i className="bi bi-sort-up"></i>
-                                                        ) : null}
-                                                    </b>
-                                                </th>
+
+
                                                 <th>
                                                     <b
                                                         style={{
@@ -1184,25 +1149,7 @@ function PurchaseReturnIndex(props) {
                                                         ) : null}
                                                     </b>
                                                 </th>
-                                                <th>
-                                                    <b
-                                                        style={{
-                                                            textDecoration: "underline",
-                                                            cursor: "pointer",
-                                                        }}
-                                                        onClick={() => {
-                                                            sort("cash_discount");
-                                                        }}
-                                                    >
-                                                        Cash Discount
-                                                        {sortField === "cash_discount" && sortOrder === "-" ? (
-                                                            <i className="bi bi-sort-numeric-down"></i>
-                                                        ) : null}
-                                                        {sortField === "cash_discount" && sortOrder === "" ? (
-                                                            <i className="bi bi-sort-numeric-up"></i>
-                                                        ) : null}
-                                                    </b>
-                                                </th>
+
                                                 <th>
                                                     <b
                                                         style={{
@@ -1238,6 +1185,63 @@ function PurchaseReturnIndex(props) {
                                                         ) : null}
                                                         {sortField === "balance_amount" && sortOrder === "" ? (
                                                             <i className="bi bi-sort-numeric-up"></i>
+                                                        ) : null}
+                                                    </b>
+                                                </th>
+                                                <th>
+                                                    <b
+                                                        style={{
+                                                            textDecoration: "underline",
+                                                            cursor: "pointer",
+                                                        }}
+                                                        onClick={() => {
+                                                            sort("purchase_code");
+                                                        }}
+                                                    >
+                                                        Purchase ID
+                                                        {sortField === "code" && sortOrder === "-" ? (
+                                                            <i className="bi bi-sort-alpha-up-alt"></i>
+                                                        ) : null}
+                                                        {sortField === "code" && sortOrder === "" ? (
+                                                            <i className="bi bi-sort-alpha-up"></i>
+                                                        ) : null}
+                                                    </b>
+                                                </th>
+                                                <th>
+                                                    <b
+                                                        style={{
+                                                            textDecoration: "underline",
+                                                            cursor: "pointer",
+                                                        }}
+                                                        onClick={() => {
+                                                            sort("cash_discount");
+                                                        }}
+                                                    >
+                                                        Cash Discount
+                                                        {sortField === "cash_discount" && sortOrder === "-" ? (
+                                                            <i className="bi bi-sort-numeric-down"></i>
+                                                        ) : null}
+                                                        {sortField === "cash_discount" && sortOrder === "" ? (
+                                                            <i className="bi bi-sort-numeric-up"></i>
+                                                        ) : null}
+                                                    </b>
+                                                </th>
+                                                <th>
+                                                    <b
+                                                        style={{
+                                                            textDecoration: "underline",
+                                                            cursor: "pointer",
+                                                        }}
+                                                        onClick={() => {
+                                                            sort("vendor_invoice_no");
+                                                        }}
+                                                    >
+                                                        Vendor Return Invoice No.
+                                                        {sortField === "vendor_invoice_no" && sortOrder === "-" ? (
+                                                            <i className="bi bi-sort-alpha-up-alt"></i>
+                                                        ) : null}
+                                                        {sortField === "vendor_invoice_no" && sortOrder === "" ? (
+                                                            <i className="bi bi-sort-alpha-up"></i>
                                                         ) : null}
                                                     </b>
                                                 </th>
@@ -1344,7 +1348,7 @@ function PurchaseReturnIndex(props) {
                                         <thead>
                                             <tr className="text-center">
                                                 <th></th>
-                                                <th></th>
+
                                                 <th>
                                                     <input
                                                         type="text"
@@ -1352,60 +1356,6 @@ function PurchaseReturnIndex(props) {
                                                         name="purchase_return_code"
                                                         onChange={(e) =>
                                                             searchByFieldValue("code", e.target.value)
-                                                        }
-                                                        className="form-control"
-                                                    />
-                                                </th>
-                                                <th>
-                                                    <input
-                                                        type="text"
-                                                        id="purchase_return_vendor_invoice_no"
-                                                        name="purchase_return_vendor_invoice_no"
-                                                        onChange={(e) =>
-                                                            searchByFieldValue("vendor_invoice_no", e.target.value)
-                                                        }
-                                                        className="form-control"
-                                                    />
-                                                </th>
-                                                <th>
-                                                    <Typeahead
-                                                        id="vendor_id"
-                                                        labelKey="search_label"
-                                                        filterBy={['additional_keywords']}
-                                                        style={{ minWidth: "300px" }}
-                                                        onChange={(selectedItems) => {
-                                                            searchByMultipleValuesField(
-                                                                "vendor_id",
-                                                                selectedItems
-                                                            );
-                                                        }}
-                                                        options={vendorOptions}
-                                                        placeholder="Vendor Name / Mob / VAT # / ID"
-                                                        selected={selectedVendors}
-                                                        highlightOnlyResult={true}
-                                                        ref={vendorSearchRef}
-                                                        onKeyDown={(e) => {
-                                                            if (e.key === "Escape") {
-                                                                setVendorOptions([]);
-                                                                vendorSearchRef.current?.clear();
-                                                            }
-                                                        }}
-                                                        onInputChange={(searchTerm, e) => {
-                                                            if (timerRef.current) clearTimeout(timerRef.current);
-                                                            timerRef.current = setTimeout(() => {
-                                                                suggestVendors(searchTerm);
-                                                            }, 100);
-                                                        }}
-                                                        multiple
-                                                    />
-                                                </th>
-                                                <th>
-                                                    <input
-                                                        type="text"
-                                                        id="purchase_return_purchase_code"
-                                                        name="purchase_return_purchase_code"
-                                                        onChange={(e) =>
-                                                            searchByFieldValue("purchase_code", e.target.value)
                                                         }
                                                         className="form-control"
                                                     />
@@ -1486,6 +1436,41 @@ function PurchaseReturnIndex(props) {
                                                         ) : null}
                                                     </div>
                                                 </th>
+
+                                                <th>
+                                                    <Typeahead
+                                                        id="vendor_id"
+                                                        labelKey="search_label"
+                                                        filterBy={['additional_keywords']}
+                                                        style={{ minWidth: "300px" }}
+                                                        onChange={(selectedItems) => {
+                                                            searchByMultipleValuesField(
+                                                                "vendor_id",
+                                                                selectedItems
+                                                            );
+                                                        }}
+                                                        options={vendorOptions}
+                                                        placeholder="Vendor Name / Mob / VAT # / ID"
+                                                        selected={selectedVendors}
+                                                        highlightOnlyResult={true}
+                                                        ref={vendorSearchRef}
+                                                        onKeyDown={(e) => {
+                                                            if (e.key === "Escape") {
+                                                                setVendorOptions([]);
+                                                                vendorSearchRef.current?.clear();
+                                                            }
+                                                        }}
+                                                        onInputChange={(searchTerm, e) => {
+                                                            if (timerRef.current) clearTimeout(timerRef.current);
+                                                            timerRef.current = setTimeout(() => {
+                                                                suggestVendors(searchTerm);
+                                                            }, 100);
+                                                        }}
+                                                        multiple
+                                                    />
+                                                </th>
+
+
                                                 <th>
                                                     <input
                                                         type="text"
@@ -1497,17 +1482,7 @@ function PurchaseReturnIndex(props) {
                                                         className="form-control"
                                                     />
                                                 </th>
-                                                <th>
-                                                    <input
-                                                        type="text"
-                                                        id="purchase_return_cash_discount"
-                                                        name="purchase_return_cash_discount"
-                                                        onChange={(e) =>
-                                                            searchByFieldValue("cash_discount", e.target.value)
-                                                        }
-                                                        className="form-control"
-                                                    />
-                                                </th>
+
                                                 <th>
                                                     <input
                                                         type="text"
@@ -1526,6 +1501,39 @@ function PurchaseReturnIndex(props) {
                                                         name="purchase_return_balance_amount"
                                                         onChange={(e) =>
                                                             searchByFieldValue("balance_amount", e.target.value)
+                                                        }
+                                                        className="form-control"
+                                                    />
+                                                </th>
+                                                <th>
+                                                    <input
+                                                        type="text"
+                                                        id="purchase_return_purchase_code"
+                                                        name="purchase_return_purchase_code"
+                                                        onChange={(e) =>
+                                                            searchByFieldValue("purchase_code", e.target.value)
+                                                        }
+                                                        className="form-control"
+                                                    />
+                                                </th>
+                                                <th>
+                                                    <input
+                                                        type="text"
+                                                        id="purchase_return_cash_discount"
+                                                        name="purchase_return_cash_discount"
+                                                        onChange={(e) =>
+                                                            searchByFieldValue("cash_discount", e.target.value)
+                                                        }
+                                                        className="form-control"
+                                                    />
+                                                </th>
+                                                <th>
+                                                    <input
+                                                        type="text"
+                                                        id="purchase_return_vendor_invoice_no"
+                                                        name="purchase_return_vendor_invoice_no"
+                                                        onChange={(e) =>
+                                                            searchByFieldValue("vendor_invoice_no", e.target.value)
                                                         }
                                                         className="form-control"
                                                     />
@@ -1720,19 +1728,20 @@ function PurchaseReturnIndex(props) {
                                                             </Button>
                                                         </td>}
                                                         <td style={{ width: "auto", whiteSpace: "nowrap" }} >{purchasereturn.code}</td>
-                                                        <td style={{ width: "auto", whiteSpace: "nowrap" }} >{purchasereturn.vendor_invoice_no}</td>
-                                                        <td className="text-start" style={{ width: "auto", whiteSpace: "nowrap" }} >
-                                                            {purchasereturn.vendor_name && <OverflowTooltip value={purchasereturn.vendor_name} />}
-                                                        </td>
-                                                        <td style={{ width: "auto", whiteSpace: "nowrap" }} >{purchasereturn.purchase_code}</td>
                                                         <td style={{ width: "auto", whiteSpace: "nowrap" }} >
                                                             {format(
                                                                 new Date(purchasereturn.date),
                                                                 "MMM dd yyyy h:mma"
                                                             )}
                                                         </td>
+
+                                                        <td className="text-start" style={{ width: "auto", whiteSpace: "nowrap" }} >
+                                                            {purchasereturn.vendor_name && <OverflowTooltip value={purchasereturn.vendor_name} />}
+                                                        </td>
+
+
                                                         <td style={{ width: "auto", whiteSpace: "nowrap" }} > <Amount amount={purchasereturn.net_total} /> </td>
-                                                        <td style={{ width: "auto", whiteSpace: "nowrap" }} > <Amount amount={purchasereturn.cash_discount?.toFixed(2)} /> </td>
+
                                                         <td style={{ width: "auto", whiteSpace: "nowrap" }} >
                                                             <Button variant="link" onClick={() => {
                                                                 openPaymentsDialogue(purchasereturn);
@@ -1743,8 +1752,10 @@ function PurchaseReturnIndex(props) {
                                                         </td>
                                                         <td style={{ width: "auto", whiteSpace: "nowrap" }} >
                                                             <Amount amount={purchasereturn.balance_amount?.toFixed(2)} />
-
                                                         </td>
+                                                        <td style={{ width: "auto", whiteSpace: "nowrap" }} >{purchasereturn.purchase_code}</td>
+                                                        <td style={{ width: "auto", whiteSpace: "nowrap" }} > <Amount amount={purchasereturn.cash_discount?.toFixed(2)} /> </td>
+                                                        <td style={{ width: "auto", whiteSpace: "nowrap" }} >{purchasereturn.vendor_invoice_no}</td>
                                                         {/*<td style={{ width: "auto", whiteSpace: "nowrap" }} >
                                                             <Button variant="link" onClick={() => {
                                                                 openPaymentsDialogue(purchasereturn);

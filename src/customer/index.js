@@ -709,6 +709,25 @@ function CustomerIndex(props) {
                                                             cursor: "pointer",
                                                         }}
                                                         onClick={() => {
+                                                            sort("stores.quotation_invoice_balance_amount");
+                                                        }}
+                                                    >
+                                                        Qtn. Invoice Credit balance amount
+                                                        {sortField === "stores.quotation_invoice_balance_amount" && sortCustomer === "-" ? (
+                                                            <i className="bi bi-sort-alpha-up-alt"></i>
+                                                        ) : null}
+                                                        {sortField === "stores.quotation_invoice_balance_amount" && sortCustomer === "" ? (
+                                                            <i className="bi bi-sort-alpha-up"></i>
+                                                        ) : null}
+                                                    </b>
+                                                </th>
+                                                <th>
+                                                    <b
+                                                        style={{
+                                                            textDecoration: "underline",
+                                                            cursor: "pointer",
+                                                        }}
+                                                        onClick={() => {
                                                             sort("stores.sales_count");
                                                         }}
                                                     >
@@ -1166,25 +1185,7 @@ function CustomerIndex(props) {
                                                     </b>
                                                 </th>
 
-                                                <th>
-                                                    <b
-                                                        style={{
-                                                            textDecoration: "underline",
-                                                            cursor: "pointer",
-                                                        }}
-                                                        onClick={() => {
-                                                            sort("stores.quotation_invoice_balance_amount");
-                                                        }}
-                                                    >
-                                                        Qtn. Invoice Credit balance amount
-                                                        {sortField === "stores.quotation_invoice_balance_amount" && sortCustomer === "-" ? (
-                                                            <i className="bi bi-sort-alpha-up-alt"></i>
-                                                        ) : null}
-                                                        {sortField === "stores.quotation_invoice_balance_amount" && sortCustomer === "" ? (
-                                                            <i className="bi bi-sort-alpha-up"></i>
-                                                        ) : null}
-                                                    </b>
-                                                </th>
+
 
                                                 <th>
                                                     <b
@@ -1513,6 +1514,15 @@ function CustomerIndex(props) {
                                                     <input
                                                         type="text"
                                                         onChange={(e) =>
+                                                            searchByFieldValue("quotation_invoice_balance_amount", e.target.value)
+                                                        }
+                                                        className="form-control"
+                                                    />
+                                                </th>
+                                                <th>
+                                                    <input
+                                                        type="text"
+                                                        onChange={(e) =>
                                                             searchByFieldValue("sales_count", e.target.value)
                                                         }
                                                         className="form-control"
@@ -1730,15 +1740,7 @@ function CustomerIndex(props) {
                                                     />
                                                 </th>
 
-                                                <th>
-                                                    <input
-                                                        type="text"
-                                                        onChange={(e) =>
-                                                            searchByFieldValue("quotation_invoice_balance_amount", e.target.value)
-                                                        }
-                                                        className="form-control"
-                                                    />
-                                                </th>
+
                                                 <th>
                                                     <input
                                                         type="text"
@@ -1972,7 +1974,18 @@ function CustomerIndex(props) {
                                                             </Button>}
                                                             {!customer.account && <Amount amount={trimTo2Decimals(customer.credit_balance)} />}
                                                         </td>
-
+                                                        <td style={{ width: "auto", whiteSpace: "nowrap" }} >
+                                                            {customer.stores && Object.keys(customer.stores).map((key, index) => {
+                                                                if (localStorage.getItem("store_id") && customer.stores[key].store_id === localStorage.getItem("store_id")) {
+                                                                    return (
+                                                                        <b>{customer.stores[key].quotation_invoice_balance_amount?.toFixed(2)}</b>
+                                                                    );
+                                                                } else if (!localStorage.getItem("store_id")) {
+                                                                    return (<li><b>{customer.stores[key].quotation_invoice_balance_amount?.toFixed(2)}</b> {"@" + customer.stores[key].store_name}</li>);
+                                                                }
+                                                                return "";
+                                                            })}
+                                                        </td>
                                                         <td style={{ width: "auto", whiteSpace: "nowrap" }} >
                                                             {customer.stores && Object.keys(customer.stores).map((key, index) => {
                                                                 if (localStorage.getItem("store_id") && customer.stores[key].store_id === localStorage.getItem("store_id")) {
@@ -1997,11 +2010,7 @@ function CustomerIndex(props) {
                                                                 return "";
                                                             })}
                                                         </td>
-
-
                                                         <td style={{ width: "auto", whiteSpace: "nowrap" }}>{customer.code}</td>
-
-
                                                         <td style={{ width: "auto", whiteSpace: "nowrap" }} >{customer.phone}</td>
                                                         <td style={{ width: "auto", whiteSpace: "nowrap" }} >{customer.vat_no}</td>
                                                         <td style={{ width: "auto", whiteSpace: "nowrap" }} >
@@ -2028,11 +2037,7 @@ function CustomerIndex(props) {
                                                                 return "";
                                                             })}
                                                         </td>
-
                                                         <td style={{ width: "auto", whiteSpace: "nowrap" }} >{customer.email}</td>
-
-
-
                                                         <td style={{ width: "auto", whiteSpace: "nowrap" }} >
                                                             {customer.stores && Object.keys(customer.stores).map((key, index) => {
                                                                 if (localStorage.getItem("store_id") && customer.stores[key].store_id === localStorage.getItem("store_id")) {
@@ -2217,18 +2222,7 @@ function CustomerIndex(props) {
                                                                 return "";
                                                             })}
                                                         </td>
-                                                        <td style={{ width: "auto", whiteSpace: "nowrap" }} >
-                                                            {customer.stores && Object.keys(customer.stores).map((key, index) => {
-                                                                if (localStorage.getItem("store_id") && customer.stores[key].store_id === localStorage.getItem("store_id")) {
-                                                                    return (
-                                                                        <b>{customer.stores[key].quotation_invoice_balance_amount?.toFixed(2)}</b>
-                                                                    );
-                                                                } else if (!localStorage.getItem("store_id")) {
-                                                                    return (<li><b>{customer.stores[key].quotation_invoice_balance_amount?.toFixed(2)}</b> {"@" + customer.stores[key].store_name}</li>);
-                                                                }
-                                                                return "";
-                                                            })}
-                                                        </td>
+
                                                         <td style={{ width: "auto", whiteSpace: "nowrap" }} >
                                                             {customer.stores && Object.keys(customer.stores).map((key, index) => {
                                                                 if (localStorage.getItem("store_id") && customer.stores[key].store_id === localStorage.getItem("store_id")) {
