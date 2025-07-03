@@ -1341,7 +1341,7 @@ function PurchaseIndex(props) {
                                                         ) : null}
                                                     </b>
                                                 </th>
-                                                <th>
+                                                {/*<th>
                                                     <b
                                                         style={{
                                                             textDecoration: "underline",
@@ -1378,7 +1378,7 @@ function PurchaseIndex(props) {
                                                             <i className="bi bi-sort-numeric-up"></i>
                                                         ) : null}
                                                     </b>
-                                                </th>
+                                                </th>*/}
                                                 <th>
                                                     <b
                                                         style={{
@@ -1715,7 +1715,7 @@ function PurchaseIndex(props) {
                                                     />
                                                 </th>
 
-                                                <th>
+                                                {/*<th>
                                                     <input
                                                         type="text"
                                                         id="purchase_net_retail_profit"
@@ -1737,7 +1737,7 @@ function PurchaseIndex(props) {
                                                         }
                                                         className="form-control"
                                                     />
-                                                </th>
+                                                </th>*/}
                                                 <th>
                                                     <Typeahead
                                                         id="created_by"
@@ -1967,7 +1967,6 @@ function PurchaseIndex(props) {
                                                         <td style={{ width: "auto", whiteSpace: "nowrap" }} >
                                                             {format(new Date(purchase.date), "MMM dd yyyy h:mma")}
                                                         </td>
-
                                                         <td className="text-start" style={{ width: "auto", whiteSpace: "nowrap" }} >
                                                             {purchase.vendor_name && <OverflowTooltip value={purchase.vendor_name} />}
                                                         </td>
@@ -1975,7 +1974,6 @@ function PurchaseIndex(props) {
                                                         <td style={{ width: "auto", whiteSpace: "nowrap" }} >
                                                             <Amount amount={purchase.net_total} />
                                                         </td>
-
                                                         <td style={{ width: "auto", whiteSpace: "nowrap" }} >
                                                             <Button variant="link" onClick={() => {
                                                                 openPaymentsDialogue(purchase);
@@ -2036,14 +2034,14 @@ function PurchaseIndex(props) {
                                                             </Button>
                                                         </td>
 
-                                                        <td style={{ width: "auto", whiteSpace: "nowrap" }} >
+                                                        {/*<td style={{ width: "auto", whiteSpace: "nowrap" }} >
                                                             <Amount amount={purchase.net_retail_profit} />
 
                                                         </td>
                                                         <td style={{ width: "auto", whiteSpace: "nowrap" }} >
                                                             <Amount amount={purchase.net_wholesale_profit} />
 
-                                                        </td>
+                                                        </td>*/}
                                                         <td style={{ width: "auto", whiteSpace: "nowrap" }} >{purchase.created_by_name}</td>
                                                         <td style={{ width: "auto", whiteSpace: "nowrap" }} >
                                                             {format(
