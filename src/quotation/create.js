@@ -3891,21 +3891,21 @@ const QuotationCreate = forwardRef((props, ref) => {
                           <div className="d-flex align-items-center" style={{ minWidth: 0 }}>
                             <div className="input-group flex-nowrap" style={{ flex: '1 1 auto', minWidth: 0 }}>
                               <input type="number"
-                                id={`${"sales_product_line_total_" + index}`}
-                                name={`${"sales_product_line_total_" + index}`}
+                                id={`${"quotation_product_line_total_" + index}`}
+                                name={`${"quotation_product_line_total_" + index}`}
                                 onWheel={(e) => e.target.blur()}
                                 value={selectedProducts[index].line_total}
                                 className={`form-control text-end ${errors["line_total_" + index] ? 'is-invalid' : ''} ${warnings["line_total_" + index] ? 'border-warning text-warning' : ''}`}
                                 placeholder="Line total"
                                 ref={(el) => {
                                   if (!inputRefs.current[index]) inputRefs.current[index] = {};
-                                  inputRefs.current[index][`${"sales_product_line_total_" + index}`] = el;
+                                  inputRefs.current[index][`${"quotation_product_line_total_" + index}`] = el;
                                 }}
 
                                 onFocus={() => {
                                   if (timerRef.current) clearTimeout(timerRef.current);
                                   timerRef.current = setTimeout(() => {
-                                    inputRefs.current[index][`${"sales_product_line_total_" + index}`]?.select();
+                                    inputRefs.current[index][`${"quotation_product_line_total_" + index}`]?.select();
                                   }, 20);
                                 }}
 
@@ -3927,7 +3927,7 @@ const QuotationCreate = forwardRef((props, ref) => {
                                     }, 100);
                                   } else if (e.key === "ArrowLeft") {
                                     timerRef.current = setTimeout(() => {
-                                      inputRefs.current[index][`${"sales_product_unit_discount_with_vat_" + index}`]?.select();
+                                      inputRefs.current[index][`${"quotation_product_unit_discount_with_vat_" + index}`]?.select();
                                     }, 100);
                                   }
                                 }}
@@ -4010,21 +4010,21 @@ const QuotationCreate = forwardRef((props, ref) => {
                           <div className="d-flex align-items-center" style={{ minWidth: 0 }}>
                             <div className="input-group flex-nowrap" style={{ flex: '1 1 auto', minWidth: 0 }}>
                               <input type="number"
-                                id={`${"sales_product_line_total_with_vat" + index}`}
-                                name={`${"sales_product_line_total_with_vat" + index}`}
+                                id={`${"quotation_product_line_total_with_vat" + index}`}
+                                name={`${"quotation_product_line_total_with_vat" + index}`}
                                 onWheel={(e) => e.target.blur()}
                                 value={selectedProducts[index].line_total_with_vat}
                                 className={`form-control text-end ${errors["line_total_with_vat" + index] ? 'is-invalid' : ''} ${warnings["line_total_with_vat" + index] ? 'border-warning text-warning' : ''}`}
                                 placeholder="Line total with VAT"
                                 ref={(el) => {
                                   if (!inputRefs.current[index]) inputRefs.current[index] = {};
-                                  inputRefs.current[index][`${"sales_product_line_total_with_vat" + index}`] = el;
+                                  inputRefs.current[index][`${"quotation_product_line_total_with_vat" + index}`] = el;
                                 }}
 
                                 onFocus={() => {
                                   if (timerRef.current) clearTimeout(timerRef.current);
                                   timerRef.current = setTimeout(() => {
-                                    inputRefs.current[index][`${"sales_product_line_total_with_vat" + index}`]?.select();
+                                    inputRefs.current[index][`${"quotation_product_line_total_with_vat" + index}`]?.select();
                                   }, 20);
                                 }}
 
@@ -4046,7 +4046,7 @@ const QuotationCreate = forwardRef((props, ref) => {
                                     }, 100);
                                   } else if (e.key === "ArrowLeft") {
                                     timerRef.current = setTimeout(() => {
-                                      inputRefs.current[index][`${"sales_product_line_total_" + index}`]?.select();
+                                      inputRefs.current[index][`${"quotation_product_line_total_" + index}`]?.select();
                                     }, 100);
                                   }
                                 }}
