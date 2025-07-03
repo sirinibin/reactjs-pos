@@ -630,25 +630,6 @@ function VendorIndex(props) {
                                                             cursor: "pointer",
                                                         }}
                                                         onClick={() => {
-                                                            sort("code");
-                                                        }}
-                                                    >
-                                                        ID
-                                                        {sortField === "code" && sortVendor === "-" ? (
-                                                            <i className="bi bi-sort-alpha-up-alt"></i>
-                                                        ) : null}
-                                                        {sortField === "code" && sortVendor === "" ? (
-                                                            <i className="bi bi-sort-alpha-up"></i>
-                                                        ) : null}
-                                                    </b>
-                                                </th>
-                                                <th>
-                                                    <b
-                                                        style={{
-                                                            textDecoration: "underline",
-                                                            cursor: "pointer",
-                                                        }}
-                                                        onClick={() => {
                                                             sort("name");
                                                         }}
                                                     >
@@ -657,83 +638,6 @@ function VendorIndex(props) {
                                                             <i className="bi bi-sort-alpha-up-alt"></i>
                                                         ) : null}
                                                         {sortField === "name" && sortVendor === "" ? (
-                                                            <i className="bi bi-sort-alpha-up"></i>
-                                                        ) : null}
-                                                    </b>
-                                                </th>
-                                                <th>
-                                                    <b
-                                                        style={{
-                                                            textDecoration: "underline",
-                                                            cursor: "pointer",
-                                                        }}
-                                                        onClick={() => {
-                                                            sort("credit_balance");
-                                                        }}
-                                                    >
-                                                        Credit balance
-                                                        {sortField === "credit_balance" && sortVendor === "-" ? (
-                                                            <i className="bi bi-sort-alpha-up-alt"></i>
-                                                        ) : null}
-                                                        {sortField === "credit_balance" && sortVendor === "" ? (
-                                                            <i className="bi bi-sort-alpha-up"></i>
-                                                        ) : null}
-                                                    </b>
-                                                </th>
-                                                <th>
-                                                    <b
-                                                        style={{
-                                                            textDecoration: "underline",
-                                                            cursor: "pointer",
-                                                        }}
-                                                        onClick={() => {
-                                                            sort("mob");
-                                                        }}
-                                                    >
-                                                        Phone
-                                                        {sortField === "phone" && sortVendor === "-" ? (
-                                                            <i className="bi bi-sort-alpha-up-alt"></i>
-                                                        ) : null}
-                                                        {sortField === "phone" && sortVendor === "" ? (
-                                                            <i className="bi bi-sort-alpha-up"></i>
-                                                        ) : null}
-                                                    </b>
-                                                </th>
-                                                <th>
-                                                    <b
-                                                        style={{
-                                                            textDecoration: "underline",
-                                                            cursor: "pointer",
-                                                        }}
-                                                        onClick={() => {
-                                                            sort("vat_no");
-                                                        }}
-                                                    >
-                                                        VAT #
-                                                        {sortField === "vat_no" && sortVendor === "-" ? (
-                                                            <i className="bi bi-sort-alpha-up-alt"></i>
-                                                        ) : null}
-                                                        {sortField === "vat_no" && sortVendor === "" ? (
-                                                            <i className="bi bi-sort-alpha-up"></i>
-                                                        ) : null}
-                                                    </b>
-                                                </th>
-
-                                                <th>
-                                                    <b
-                                                        style={{
-                                                            textDecoration: "underline",
-                                                            cursor: "pointer",
-                                                        }}
-                                                        onClick={() => {
-                                                            sort("stores.purchase_count");
-                                                        }}
-                                                    >
-                                                        Purchase count
-                                                        {sortField === "stores.purchase_count" && sortVendor === "-" ? (
-                                                            <i className="bi bi-sort-alpha-up-alt"></i>
-                                                        ) : null}
-                                                        {sortField === "stores.purchase_count" && sortVendor === "" ? (
                                                             <i className="bi bi-sort-alpha-up"></i>
                                                         ) : null}
                                                     </b>
@@ -783,6 +687,44 @@ function VendorIndex(props) {
                                                             cursor: "pointer",
                                                         }}
                                                         onClick={() => {
+                                                            sort("credit_balance");
+                                                        }}
+                                                    >
+                                                        Credit balance
+                                                        {sortField === "credit_balance" && sortVendor === "-" ? (
+                                                            <i className="bi bi-sort-alpha-up-alt"></i>
+                                                        ) : null}
+                                                        {sortField === "credit_balance" && sortVendor === "" ? (
+                                                            <i className="bi bi-sort-alpha-up"></i>
+                                                        ) : null}
+                                                    </b>
+                                                </th>
+                                                <th>
+                                                    <b
+                                                        style={{
+                                                            textDecoration: "underline",
+                                                            cursor: "pointer",
+                                                        }}
+                                                        onClick={() => {
+                                                            sort("stores.purchase_count");
+                                                        }}
+                                                    >
+                                                        Purchase count
+                                                        {sortField === "stores.purchase_count" && sortVendor === "-" ? (
+                                                            <i className="bi bi-sort-alpha-up-alt"></i>
+                                                        ) : null}
+                                                        {sortField === "stores.purchase_count" && sortVendor === "" ? (
+                                                            <i className="bi bi-sort-alpha-up"></i>
+                                                        ) : null}
+                                                    </b>
+                                                </th>
+                                                <th>
+                                                    <b
+                                                        style={{
+                                                            textDecoration: "underline",
+                                                            cursor: "pointer",
+                                                        }}
+                                                        onClick={() => {
                                                             sort("stores.purchase_balance_amount");
                                                         }}
                                                     >
@@ -795,7 +737,105 @@ function VendorIndex(props) {
                                                         ) : null}
                                                     </b>
                                                 </th>
+
                                                 <th>
+                                                    <b
+                                                        style={{
+                                                            textDecoration: "underline",
+                                                            cursor: "pointer",
+                                                        }}
+                                                        onClick={() => {
+                                                            sort("code");
+                                                        }}
+                                                    >
+                                                        ID
+                                                        {sortField === "code" && sortVendor === "-" ? (
+                                                            <i className="bi bi-sort-alpha-up-alt"></i>
+                                                        ) : null}
+                                                        {sortField === "code" && sortVendor === "" ? (
+                                                            <i className="bi bi-sort-alpha-up"></i>
+                                                        ) : null}
+                                                    </b>
+                                                </th>
+
+
+                                                <th>
+                                                    <b
+                                                        style={{
+                                                            textDecoration: "underline",
+                                                            cursor: "pointer",
+                                                        }}
+                                                        onClick={() => {
+                                                            sort("mob");
+                                                        }}
+                                                    >
+                                                        Phone
+                                                        {sortField === "phone" && sortVendor === "-" ? (
+                                                            <i className="bi bi-sort-alpha-up-alt"></i>
+                                                        ) : null}
+                                                        {sortField === "phone" && sortVendor === "" ? (
+                                                            <i className="bi bi-sort-alpha-up"></i>
+                                                        ) : null}
+                                                    </b>
+                                                </th>
+                                                <th>
+                                                    <b
+                                                        style={{
+                                                            textDecoration: "underline",
+                                                            cursor: "pointer",
+                                                        }}
+                                                        onClick={() => {
+                                                            sort("vat_no");
+                                                        }}
+                                                    >
+                                                        VAT #
+                                                        {sortField === "vat_no" && sortVendor === "-" ? (
+                                                            <i className="bi bi-sort-alpha-up-alt"></i>
+                                                        ) : null}
+                                                        {sortField === "vat_no" && sortVendor === "" ? (
+                                                            <i className="bi bi-sort-alpha-up"></i>
+                                                        ) : null}
+                                                    </b>
+                                                </th>
+                                                <th>
+                                                    <b
+                                                        style={{
+                                                            textDecoration: "underline",
+                                                            cursor: "pointer",
+                                                        }}
+                                                        onClick={() => {
+                                                            sort("stores.purchase_paid_count");
+                                                        }}
+                                                    >
+                                                        Purchase paid count
+                                                        {sortField === "stores.purchase_paid_count" && sortVendor === "-" ? (
+                                                            <i className="bi bi-sort-alpha-up-alt"></i>
+                                                        ) : null}
+                                                        {sortField === "stores.purchase_paid_count" && sortVendor === "" ? (
+                                                            <i className="bi bi-sort-alpha-up"></i>
+                                                        ) : null}
+                                                    </b>
+                                                </th>
+                                                <th>
+                                                    <b
+                                                        style={{
+                                                            textDecoration: "underline",
+                                                            cursor: "pointer",
+                                                        }}
+                                                        onClick={() => {
+                                                            sort("stores.purchase_not_paid_count");
+                                                        }}
+                                                    >
+                                                        Purchase unpaid count
+                                                        {sortField === "stores.purchase_not_paid_count" && sortVendor === "-" ? (
+                                                            <i className="bi bi-sort-alpha-up-alt"></i>
+                                                        ) : null}
+                                                        {sortField === "stores.purchase_not_paid_count" && sortVendor === "" ? (
+                                                            <i className="bi bi-sort-alpha-up"></i>
+                                                        ) : null}
+                                                    </b>
+                                                </th>
+                                                {/* <th>
                                                     <b
                                                         style={{
                                                             textDecoration: "underline",
@@ -870,45 +910,9 @@ function VendorIndex(props) {
                                                             <i className="bi bi-sort-alpha-up"></i>
                                                         ) : null}
                                                     </b>
-                                                </th>
-                                                <th>
-                                                    <b
-                                                        style={{
-                                                            textDecoration: "underline",
-                                                            cursor: "pointer",
-                                                        }}
-                                                        onClick={() => {
-                                                            sort("stores.purchase_paid_count");
-                                                        }}
-                                                    >
-                                                        Purchase paid count
-                                                        {sortField === "stores.purchase_paid_count" && sortVendor === "-" ? (
-                                                            <i className="bi bi-sort-alpha-up-alt"></i>
-                                                        ) : null}
-                                                        {sortField === "stores.purchase_paid_count" && sortVendor === "" ? (
-                                                            <i className="bi bi-sort-alpha-up"></i>
-                                                        ) : null}
-                                                    </b>
-                                                </th>
-                                                <th>
-                                                    <b
-                                                        style={{
-                                                            textDecoration: "underline",
-                                                            cursor: "pointer",
-                                                        }}
-                                                        onClick={() => {
-                                                            sort("stores.purchase_not_paid_count");
-                                                        }}
-                                                    >
-                                                        Purchase unpaid count
-                                                        {sortField === "stores.purchase_not_paid_count" && sortVendor === "-" ? (
-                                                            <i className="bi bi-sort-alpha-up-alt"></i>
-                                                        ) : null}
-                                                        {sortField === "stores.purchase_not_paid_count" && sortVendor === "" ? (
-                                                            <i className="bi bi-sort-alpha-up"></i>
-                                                        ) : null}
-                                                    </b>
-                                                </th>
+                                                </th>*/}
+
+
                                                 <th>
                                                     <b
                                                         style={{
@@ -1123,16 +1127,6 @@ function VendorIndex(props) {
                                                     </select>
                                                 </th>
                                                 <th></th>
-                                                <th >
-                                                    <input
-                                                        type="text"
-                                                        id="code"
-                                                        onChange={(e) =>
-                                                            searchByFieldValue("code", e.target.value)
-                                                        }
-                                                        className="form-control"
-                                                    />
-                                                </th>
                                                 <th>
                                                     <Typeahead
                                                         style={{ minWidth: "300px" }}
@@ -1169,11 +1163,60 @@ function VendorIndex(props) {
                                                     <input
                                                         type="text"
                                                         onChange={(e) =>
+                                                            searchByFieldValue("purchase_amount", e.target.value)
+                                                        }
+                                                        className="form-control"
+                                                    />
+                                                </th>
+                                                <th>
+                                                    <input
+                                                        type="text"
+                                                        onChange={(e) =>
+                                                            searchByFieldValue("purchase_paid_amount", e.target.value)
+                                                        }
+                                                        className="form-control"
+                                                    />
+                                                </th>
+                                                <th>
+                                                    <input
+                                                        type="text"
+                                                        onChange={(e) =>
                                                             searchByFieldValue("credit_balance", e.target.value)
                                                         }
                                                         className="form-control"
                                                     />
                                                 </th>
+                                                <th>
+                                                    <input
+                                                        type="text"
+                                                        onChange={(e) =>
+                                                            searchByFieldValue("purchase_count", e.target.value)
+                                                        }
+                                                        className="form-control"
+                                                    />
+                                                </th>
+                                                <th>
+                                                    <input
+                                                        type="text"
+                                                        onChange={(e) =>
+                                                            searchByFieldValue("purchase_balance_amount", e.target.value)
+                                                        }
+                                                        className="form-control"
+                                                    />
+                                                </th>
+
+                                                <th >
+                                                    <input
+                                                        type="text"
+                                                        id="code"
+                                                        onChange={(e) =>
+                                                            searchByFieldValue("code", e.target.value)
+                                                        }
+                                                        className="form-control"
+                                                    />
+                                                </th>
+
+
                                                 <th>
                                                     <input
                                                         type="text"
@@ -1199,7 +1242,7 @@ function VendorIndex(props) {
                                                     <input
                                                         type="text"
                                                         onChange={(e) =>
-                                                            searchByFieldValue("purchase_count", e.target.value)
+                                                            searchByFieldValue("purchase_paid_count", e.target.value)
                                                         }
                                                         className="form-control"
                                                     />
@@ -1208,30 +1251,13 @@ function VendorIndex(props) {
                                                     <input
                                                         type="text"
                                                         onChange={(e) =>
-                                                            searchByFieldValue("purchase_amount", e.target.value)
+                                                            searchByFieldValue("purchase_not_paid_count", e.target.value)
                                                         }
                                                         className="form-control"
                                                     />
                                                 </th>
-                                                <th>
-                                                    <input
-                                                        type="text"
-                                                        onChange={(e) =>
-                                                            searchByFieldValue("purchase_paid_amount", e.target.value)
-                                                        }
-                                                        className="form-control"
-                                                    />
-                                                </th>
-                                                <th>
-                                                    <input
-                                                        type="text"
-                                                        onChange={(e) =>
-                                                            searchByFieldValue("purchase_balance_amount", e.target.value)
-                                                        }
-                                                        className="form-control"
-                                                    />
-                                                </th>
-                                                <th>
+
+                                                {/*<th>
                                                     <input
                                                         type="text"
                                                         onChange={(e) =>
@@ -1266,25 +1292,9 @@ function VendorIndex(props) {
                                                         }
                                                         className="form-control"
                                                     />
-                                                </th>
-                                                <th>
-                                                    <input
-                                                        type="text"
-                                                        onChange={(e) =>
-                                                            searchByFieldValue("purchase_paid_count", e.target.value)
-                                                        }
-                                                        className="form-control"
-                                                    />
-                                                </th>
-                                                <th>
-                                                    <input
-                                                        type="text"
-                                                        onChange={(e) =>
-                                                            searchByFieldValue("purchase_not_paid_count", e.target.value)
-                                                        }
-                                                        className="form-control"
-                                                    />
-                                                </th>
+                                                </th>*/}
+
+
                                                 <th>
                                                     <input
                                                         type="text"
@@ -1478,32 +1488,8 @@ function VendorIndex(props) {
                                                                 <i className="bi bi-eye"></i>
                                                             </Button>
                                                         </td>
-                                                        <td style={{ width: "auto", whiteSpace: "nowrap" }}>{vendor.code}</td>
                                                         <td className="text-start" style={{ width: "auto", whiteSpace: "nowrap" }} >
                                                             <OverflowTooltip value={vendor.name} />
-                                                        </td>
-                                                        <td style={{ width: "auto", whiteSpace: "nowrap" }} >
-                                                            {vendor.account && <Button variant="link" onClick={() => {
-                                                                openBalanceSheetDialogue(vendor.account);
-                                                            }}>
-                                                                <Amount amount={trimTo2Decimals(vendor.credit_balance)} />
-                                                            </Button>}
-                                                            {!vendor.account && <Amount amount={trimTo2Decimals(vendor.credit_balance)} />}
-                                                        </td>
-                                                        <td style={{ width: "auto", whiteSpace: "nowrap" }} >{vendor.phone}</td>
-                                                        <td style={{ width: "auto", whiteSpace: "nowrap" }} >{vendor.vat_no}</td>
-
-                                                        <td style={{ width: "auto", whiteSpace: "nowrap" }} >
-                                                            {vendor.stores && Object.keys(vendor.stores).map((key, index) => {
-                                                                if (localStorage.getItem("store_id") && vendor.stores[key].store_id === localStorage.getItem("store_id")) {
-                                                                    return (
-                                                                        <b>{vendor.stores[key].purchase_count}</b>
-                                                                    );
-                                                                } else if (!localStorage.getItem("store_id")) {
-                                                                    return (<li><b>{vendor.stores[key].purchase_count}</b> {"@" + vendor.stores[key].store_name}</li>);
-                                                                }
-                                                                return ""
-                                                            })}
                                                         </td>
                                                         <td style={{ width: "auto", whiteSpace: "nowrap" }} >
                                                             {vendor.stores && Object.keys(vendor.stores).map((key, index) => {
@@ -1530,6 +1516,27 @@ function VendorIndex(props) {
                                                             })}
                                                         </td>
                                                         <td style={{ width: "auto", whiteSpace: "nowrap" }} >
+                                                            {vendor.account && <Button variant="link" onClick={() => {
+                                                                openBalanceSheetDialogue(vendor.account);
+                                                            }}>
+                                                                <Amount amount={trimTo2Decimals(vendor.credit_balance)} />
+                                                            </Button>}
+                                                            {!vendor.account && <Amount amount={trimTo2Decimals(vendor.credit_balance)} />}
+                                                        </td>
+                                                        <td style={{ width: "auto", whiteSpace: "nowrap" }} >
+                                                            {vendor.stores && Object.keys(vendor.stores).map((key, index) => {
+                                                                if (localStorage.getItem("store_id") && vendor.stores[key].store_id === localStorage.getItem("store_id")) {
+                                                                    return (
+                                                                        <b>{vendor.stores[key].purchase_count}</b>
+                                                                    );
+                                                                } else if (!localStorage.getItem("store_id")) {
+                                                                    return (<li><b>{vendor.stores[key].purchase_count}</b> {"@" + vendor.stores[key].store_name}</li>);
+                                                                }
+                                                                return ""
+                                                            })}
+                                                        </td>
+
+                                                        <td style={{ width: "auto", whiteSpace: "nowrap" }} >
                                                             {vendor.stores && Object.keys(vendor.stores).map((key, index) => {
                                                                 if (localStorage.getItem("store_id") && vendor.stores[key].store_id === localStorage.getItem("store_id")) {
                                                                     return (
@@ -1541,7 +1548,45 @@ function VendorIndex(props) {
                                                                 return ""
                                                             })}
                                                         </td>
+
+
+                                                        <td style={{ width: "auto", whiteSpace: "nowrap" }}>{vendor.code}</td>
+
+
+                                                        <td style={{ width: "auto", whiteSpace: "nowrap" }} >{vendor.phone}</td>
+                                                        <td style={{ width: "auto", whiteSpace: "nowrap" }} >{vendor.vat_no}</td>
+
+
+
+
                                                         <td style={{ width: "auto", whiteSpace: "nowrap" }} >
+                                                            {vendor.stores && Object.keys(vendor.stores).map((key, index) => {
+                                                                if (localStorage.getItem("store_id") && vendor.stores[key].store_id === localStorage.getItem("store_id")) {
+                                                                    return (
+                                                                        <b>{vendor.stores[key].purchase_paid_count}</b>
+                                                                    );
+                                                                } else if (!localStorage.getItem("store_id")) {
+                                                                    return (<li><b>{vendor.stores[key].purchase_paid_count}</b> {"@" + vendor.stores[key].store_name}</li>);
+                                                                }
+                                                                return ""
+                                                            })}
+                                                        </td>
+
+                                                        <td style={{ width: "auto", whiteSpace: "nowrap" }} >
+                                                            {vendor.stores && Object.keys(vendor.stores).map((key, index) => {
+                                                                if (localStorage.getItem("store_id") && vendor.stores[key].store_id === localStorage.getItem("store_id")) {
+                                                                    return (
+                                                                        <b>{vendor.stores[key].purchase_not_paid_count}</b>
+                                                                    );
+                                                                } else if (!localStorage.getItem("store_id")) {
+                                                                    return (<li><b>{vendor.stores[key].purchase_not_paid_count}</b> {"@" + vendor.stores[key].store_name}</li>);
+                                                                }
+                                                                return ""
+                                                            })}
+                                                        </td>
+
+
+                                                        {/*<td style={{ width: "auto", whiteSpace: "nowrap" }} >
                                                             {vendor.stores && Object.keys(vendor.stores).map((key, index) => {
                                                                 if (localStorage.getItem("store_id") && vendor.stores[key].store_id === localStorage.getItem("store_id")) {
                                                                     return (
@@ -1588,31 +1633,9 @@ function VendorIndex(props) {
                                                                 }
                                                                 return ""
                                                             })}
-                                                        </td>
-                                                        <td style={{ width: "auto", whiteSpace: "nowrap" }} >
-                                                            {vendor.stores && Object.keys(vendor.stores).map((key, index) => {
-                                                                if (localStorage.getItem("store_id") && vendor.stores[key].store_id === localStorage.getItem("store_id")) {
-                                                                    return (
-                                                                        <b>{vendor.stores[key].purchase_paid_count}</b>
-                                                                    );
-                                                                } else if (!localStorage.getItem("store_id")) {
-                                                                    return (<li><b>{vendor.stores[key].purchase_paid_count}</b> {"@" + vendor.stores[key].store_name}</li>);
-                                                                }
-                                                                return ""
-                                                            })}
-                                                        </td>
-                                                        <td style={{ width: "auto", whiteSpace: "nowrap" }} >
-                                                            {vendor.stores && Object.keys(vendor.stores).map((key, index) => {
-                                                                if (localStorage.getItem("store_id") && vendor.stores[key].store_id === localStorage.getItem("store_id")) {
-                                                                    return (
-                                                                        <b>{vendor.stores[key].purchase_not_paid_count}</b>
-                                                                    );
-                                                                } else if (!localStorage.getItem("store_id")) {
-                                                                    return (<li><b>{vendor.stores[key].purchase_not_paid_count}</b> {"@" + vendor.stores[key].store_name}</li>);
-                                                                }
-                                                                return ""
-                                                            })}
-                                                        </td>
+                                                        </td>*/}
+
+
                                                         <td style={{ width: "auto", whiteSpace: "nowrap" }} >
                                                             {vendor.stores && Object.keys(vendor.stores).map((key, index) => {
                                                                 if (localStorage.getItem("store_id") && vendor.stores[key].store_id === localStorage.getItem("store_id")) {
