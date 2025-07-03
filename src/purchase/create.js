@@ -2863,6 +2863,7 @@ const PurchaseCreate = forwardRef((props, ref) => {
                                                                     timerRef.current = setTimeout(() => {
                                                                         checkWarnings(index);
                                                                         checkErrors(index);
+                                                                        CalCulateLineTotals(index);
                                                                         reCalculate(index);
                                                                     }, 100);
                                                                     return;
