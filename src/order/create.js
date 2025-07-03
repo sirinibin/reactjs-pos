@@ -1288,7 +1288,6 @@ const OrderCreate = forwardRef((props, ref) => {
         }
         setSelectedProducts([...selectedProducts]);
 
-        if (timerRef.current) clearTimeout(timerRef.current);
 
         timerRef.current = setTimeout(() => {
             index = getProductIndex(product.id);
@@ -1297,6 +1296,7 @@ const OrderCreate = forwardRef((props, ref) => {
             checkErrors(index);
             checkWarnings(index);
         }, 100);
+
         return true;
     }
 
@@ -2015,7 +2015,7 @@ const OrderCreate = forwardRef((props, ref) => {
     }
 
 
-    const handleSelectedProducts = (selected, selectedCustomers, modelName, modelID, modelCode, remarks) => {
+    const handleSelectedProducts = (selected, selectedCustomers, modelName, modelID, modelCode, remarks, model) => {
         console.log("Selected Products:", selected);
         let addedCount = 0;
         for (var i = 0; i < selected.length; i++) {
@@ -2023,16 +2023,47 @@ const OrderCreate = forwardRef((props, ref) => {
                 addedCount++;
             }
         }
+
+
         setToastMessage(`${addedCount} product${addedCount !== 1 ? "s" : ""} added ✅`);
         setShowToast(true);
         if (selectedCustomers && !formData.id) {
             formData.customer_id = selectedCustomers[0]?.id;
-            if (remarks) {
-                formData.remarks = remarks;
-                setFormData({ ...formData });
-            }
+
+
             setSelectedCustomers(selectedCustomers);
         }
+
+        if (remarks) {
+            formData.remarks = remarks;
+            setFormData({ ...formData });
+        }
+
+        if (model.cash_discount) {
+            cashDiscount = model.cash_discount;
+            setCashDiscount(cashDiscount);
+            setFormData({ ...formData });
+        }
+
+
+        if (model.shipping_handling_fees) {
+            shipping = model.shipping_handling_fees;
+            setShipping(shipping);
+            setFormData({ ...formData });
+        }
+
+        if (model.discount) {
+            discount = model.discount;
+            setDiscount(discount);
+            setFormData({ ...formData });
+        }
+
+        if (model.discount_with_vat) {
+            discountWithVAT = model.discount_with_vat;
+            setDiscountWithVAT(discountWithVAT);
+            setFormData({ ...formData });
+        }
+
         setTimeout(() => setShowToast(false), 3000);
 
         if (modelName && modelID && modelCode) {
