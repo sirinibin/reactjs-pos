@@ -633,14 +633,14 @@ function CustomerIndex(props) {
                                                             cursor: "pointer",
                                                         }}
                                                         onClick={() => {
-                                                            sort("code");
+                                                            sort("name");
                                                         }}
                                                     >
-                                                        ID
-                                                        {sortField === "code" && sortCustomer === "-" ? (
+                                                        Name
+                                                        {sortField === "name" && sortCustomer === "-" ? (
                                                             <i className="bi bi-sort-alpha-up-alt"></i>
                                                         ) : null}
-                                                        {sortField === "code" && sortCustomer === "" ? (
+                                                        {sortField === "name" && sortCustomer === "" ? (
                                                             <i className="bi bi-sort-alpha-up"></i>
                                                         ) : null}
                                                     </b>
@@ -652,14 +652,33 @@ function CustomerIndex(props) {
                                                             cursor: "pointer",
                                                         }}
                                                         onClick={() => {
-                                                            sort("name");
+                                                            sort("stores.sales_amount");
                                                         }}
                                                     >
-                                                        Name
-                                                        {sortField === "name" && sortCustomer === "-" ? (
+                                                        Total Sales amount
+                                                        {sortField === "stores.sales_amount" && sortCustomer === "-" ? (
                                                             <i className="bi bi-sort-alpha-up-alt"></i>
                                                         ) : null}
-                                                        {sortField === "name" && sortCustomer === "" ? (
+                                                        {sortField === "stores.sales_amount" && sortCustomer === "" ? (
+                                                            <i className="bi bi-sort-alpha-up"></i>
+                                                        ) : null}
+                                                    </b>
+                                                </th>
+                                                <th>
+                                                    <b
+                                                        style={{
+                                                            textDecoration: "underline",
+                                                            cursor: "pointer",
+                                                        }}
+                                                        onClick={() => {
+                                                            sort("stores.sales_paid_amount");
+                                                        }}
+                                                    >
+                                                        Sales paid amount
+                                                        {sortField === "stores.sales_paid_amount" && sortCustomer === "-" ? (
+                                                            <i className="bi bi-sort-alpha-up-alt"></i>
+                                                        ) : null}
+                                                        {sortField === "stores.sales_paid_amount" && sortCustomer === "" ? (
                                                             <i className="bi bi-sort-alpha-up"></i>
                                                         ) : null}
                                                     </b>
@@ -683,6 +702,67 @@ function CustomerIndex(props) {
                                                         ) : null}
                                                     </b>
                                                 </th>
+                                                <th>
+                                                    <b
+                                                        style={{
+                                                            textDecoration: "underline",
+                                                            cursor: "pointer",
+                                                        }}
+                                                        onClick={() => {
+                                                            sort("stores.sales_count");
+                                                        }}
+                                                    >
+                                                        Sales count
+                                                        {sortField === "stores.sales_count" && sortCustomer === "-" ? (
+                                                            <i className="bi bi-sort-alpha-up-alt"></i>
+                                                        ) : null}
+                                                        {sortField === "stores.sales_count" && sortCustomer === "" ? (
+                                                            <i className="bi bi-sort-alpha-up"></i>
+                                                        ) : null}
+                                                    </b>
+                                                </th>
+
+                                                <th>
+                                                    <b
+                                                        style={{
+                                                            textDecoration: "underline",
+                                                            cursor: "pointer",
+                                                        }}
+                                                        onClick={() => {
+                                                            sort("stores.sales_balance_amount");
+                                                        }}
+                                                    >
+                                                        Sales Credit balance amount
+                                                        {sortField === "stores.sales_balance_amount" && sortCustomer === "-" ? (
+                                                            <i className="bi bi-sort-alpha-up-alt"></i>
+                                                        ) : null}
+                                                        {sortField === "stores.sales_balance_amount" && sortCustomer === "" ? (
+                                                            <i className="bi bi-sort-alpha-up"></i>
+                                                        ) : null}
+                                                    </b>
+                                                </th>
+
+                                                <th>
+                                                    <b
+                                                        style={{
+                                                            textDecoration: "underline",
+                                                            cursor: "pointer",
+                                                        }}
+                                                        onClick={() => {
+                                                            sort("code");
+                                                        }}
+                                                    >
+                                                        ID
+                                                        {sortField === "code" && sortCustomer === "-" ? (
+                                                            <i className="bi bi-sort-alpha-up-alt"></i>
+                                                        ) : null}
+                                                        {sortField === "code" && sortCustomer === "" ? (
+                                                            <i className="bi bi-sort-alpha-up"></i>
+                                                        ) : null}
+                                                    </b>
+                                                </th>
+
+
                                                 <th>
                                                     <b
                                                         style={{
@@ -729,6 +809,46 @@ function CustomerIndex(props) {
                                                             cursor: "pointer",
                                                         }}
                                                         onClick={() => {
+                                                            sort("stores.sales_paid_count");
+                                                        }}
+                                                    >
+                                                        Sales paid count
+                                                        {sortField === "stores.sales_paid_count" && sortCustomer === "-" ? (
+                                                            <i className="bi bi-sort-alpha-up-alt"></i>
+                                                        ) : null}
+                                                        {sortField === "stores.sales_paid_count" && sortCustomer === "" ? (
+                                                            <i className="bi bi-sort-alpha-up"></i>
+                                                        ) : null}
+                                                    </b>
+                                                </th>
+
+                                                <th>
+                                                    <b
+                                                        style={{
+                                                            textDecoration: "underline",
+                                                            cursor: "pointer",
+                                                        }}
+                                                        onClick={() => {
+                                                            sort("stores.sales_not_paid_count");
+                                                        }}
+                                                    >
+                                                        Sales unpaid count
+                                                        {sortField === "stores.sales_not_paid_count" && sortCustomer === "-" ? (
+                                                            <i className="bi bi-sort-alpha-up-alt"></i>
+                                                        ) : null}
+                                                        {sortField === "stores.sales_not_paid_count" && sortCustomer === "" ? (
+                                                            <i className="bi bi-sort-alpha-up"></i>
+                                                        ) : null}
+                                                    </b>
+                                                </th>
+
+                                                <th>
+                                                    <b
+                                                        style={{
+                                                            textDecoration: "underline",
+                                                            cursor: "pointer",
+                                                        }}
+                                                        onClick={() => {
                                                             sort("email");
                                                         }}
                                                     >
@@ -737,87 +857,6 @@ function CustomerIndex(props) {
                                                             <i className="bi bi-sort-alpha-up-alt"></i>
                                                         ) : null}
                                                         {sortField === "email" && sortCustomer === "" ? (
-                                                            <i className="bi bi-sort-alpha-up"></i>
-                                                        ) : null}
-                                                    </b>
-                                                </th>
-
-
-                                                <th>
-                                                    <b
-                                                        style={{
-                                                            textDecoration: "underline",
-                                                            cursor: "pointer",
-                                                        }}
-                                                        onClick={() => {
-                                                            sort("stores.sales_count");
-                                                        }}
-                                                    >
-                                                        Sales count
-                                                        {sortField === "stores.sales_count" && sortCustomer === "-" ? (
-                                                            <i className="bi bi-sort-alpha-up-alt"></i>
-                                                        ) : null}
-                                                        {sortField === "stores.sales_count" && sortCustomer === "" ? (
-                                                            <i className="bi bi-sort-alpha-up"></i>
-                                                        ) : null}
-                                                    </b>
-                                                </th>
-
-                                                <th>
-                                                    <b
-                                                        style={{
-                                                            textDecoration: "underline",
-                                                            cursor: "pointer",
-                                                        }}
-                                                        onClick={() => {
-                                                            sort("stores.sales_amount");
-                                                        }}
-                                                    >
-                                                        Total Sales amount
-                                                        {sortField === "stores.sales_amount" && sortCustomer === "-" ? (
-                                                            <i className="bi bi-sort-alpha-up-alt"></i>
-                                                        ) : null}
-                                                        {sortField === "stores.sales_amount" && sortCustomer === "" ? (
-                                                            <i className="bi bi-sort-alpha-up"></i>
-                                                        ) : null}
-                                                    </b>
-                                                </th>
-
-                                                <th>
-                                                    <b
-                                                        style={{
-                                                            textDecoration: "underline",
-                                                            cursor: "pointer",
-                                                        }}
-                                                        onClick={() => {
-                                                            sort("stores.sales_paid_amount");
-                                                        }}
-                                                    >
-                                                        Sales paid amount
-                                                        {sortField === "stores.sales_paid_amount" && sortCustomer === "-" ? (
-                                                            <i className="bi bi-sort-alpha-up-alt"></i>
-                                                        ) : null}
-                                                        {sortField === "stores.sales_paid_amount" && sortCustomer === "" ? (
-                                                            <i className="bi bi-sort-alpha-up"></i>
-                                                        ) : null}
-                                                    </b>
-                                                </th>
-
-                                                <th>
-                                                    <b
-                                                        style={{
-                                                            textDecoration: "underline",
-                                                            cursor: "pointer",
-                                                        }}
-                                                        onClick={() => {
-                                                            sort("stores.sales_balance_amount");
-                                                        }}
-                                                    >
-                                                        Sales Credit balance amount
-                                                        {sortField === "stores.sales_balance_amount" && sortCustomer === "-" ? (
-                                                            <i className="bi bi-sort-alpha-up-alt"></i>
-                                                        ) : null}
-                                                        {sortField === "stores.sales_balance_amount" && sortCustomer === "" ? (
                                                             <i className="bi bi-sort-alpha-up"></i>
                                                         ) : null}
                                                     </b>
@@ -863,45 +902,9 @@ function CustomerIndex(props) {
                                                     </b>
                                                 </th>
 
-                                                <th>
-                                                    <b
-                                                        style={{
-                                                            textDecoration: "underline",
-                                                            cursor: "pointer",
-                                                        }}
-                                                        onClick={() => {
-                                                            sort("stores.sales_paid_count");
-                                                        }}
-                                                    >
-                                                        Sales paid count
-                                                        {sortField === "stores.sales_paid_count" && sortCustomer === "-" ? (
-                                                            <i className="bi bi-sort-alpha-up-alt"></i>
-                                                        ) : null}
-                                                        {sortField === "stores.sales_paid_count" && sortCustomer === "" ? (
-                                                            <i className="bi bi-sort-alpha-up"></i>
-                                                        ) : null}
-                                                    </b>
-                                                </th>
 
-                                                <th>
-                                                    <b
-                                                        style={{
-                                                            textDecoration: "underline",
-                                                            cursor: "pointer",
-                                                        }}
-                                                        onClick={() => {
-                                                            sort("stores.sales_not_paid_count");
-                                                        }}
-                                                    >
-                                                        Sales unpaid count
-                                                        {sortField === "stores.sales_not_paid_count" && sortCustomer === "-" ? (
-                                                            <i className="bi bi-sort-alpha-up-alt"></i>
-                                                        ) : null}
-                                                        {sortField === "stores.sales_not_paid_count" && sortCustomer === "" ? (
-                                                            <i className="bi bi-sort-alpha-up"></i>
-                                                        ) : null}
-                                                    </b>
-                                                </th>
+
+
 
                                                 <th>
                                                     <b
@@ -1447,16 +1450,6 @@ function CustomerIndex(props) {
                                                     </select>
                                                 </th>
                                                 <th></th>
-                                                <th >
-                                                    <input
-                                                        type="text"
-                                                        id="code"
-                                                        onChange={(e) =>
-                                                            searchByFieldValue("code", e.target.value)
-                                                        }
-                                                        className="form-control"
-                                                    />
-                                                </th>
                                                 <th>
                                                     <Typeahead
                                                         id="customer_id"
@@ -1493,11 +1486,61 @@ function CustomerIndex(props) {
                                                     <input
                                                         type="text"
                                                         onChange={(e) =>
+                                                            searchByFieldValue("sales_amount", e.target.value)
+                                                        }
+                                                        className="form-control"
+                                                    />
+                                                </th>
+                                                <th>
+                                                    <input
+                                                        type="text"
+                                                        onChange={(e) =>
+                                                            searchByFieldValue("sales_paid_amount", e.target.value)
+                                                        }
+                                                        className="form-control"
+                                                    />
+                                                </th>
+                                                <th>
+                                                    <input
+                                                        type="text"
+                                                        onChange={(e) =>
                                                             searchByFieldValue("credit_balance", e.target.value)
                                                         }
                                                         className="form-control"
                                                     />
                                                 </th>
+                                                <th>
+                                                    <input
+                                                        type="text"
+                                                        onChange={(e) =>
+                                                            searchByFieldValue("sales_count", e.target.value)
+                                                        }
+                                                        className="form-control"
+                                                    />
+                                                </th>
+                                                <th>
+                                                    <input
+                                                        type="text"
+                                                        onChange={(e) =>
+                                                            searchByFieldValue("sales_balance_amount", e.target.value)
+                                                        }
+                                                        className="form-control"
+                                                    />
+                                                </th>
+
+
+                                                <th >
+                                                    <input
+                                                        type="text"
+                                                        id="code"
+                                                        onChange={(e) =>
+                                                            searchByFieldValue("code", e.target.value)
+                                                        }
+                                                        className="form-control"
+                                                    />
+                                                </th>
+
+
                                                 <th>
                                                     <input
                                                         type="text"
@@ -1514,74 +1557,6 @@ function CustomerIndex(props) {
                                                         id="vat_no"
                                                         onChange={(e) =>
                                                             searchByFieldValue("vat_no", e.target.value)
-                                                        }
-                                                        className="form-control"
-                                                    />
-                                                </th>
-
-                                                <th>
-                                                    <input
-                                                        type="text"
-                                                        id="email"
-                                                        onChange={(e) =>
-                                                            searchByFieldValue("email", e.target.value)
-                                                        }
-                                                        className="form-control"
-                                                    />
-                                                </th>
-
-                                                <th>
-                                                    <input
-                                                        type="text"
-                                                        onChange={(e) =>
-                                                            searchByFieldValue("sales_count", e.target.value)
-                                                        }
-                                                        className="form-control"
-                                                    />
-                                                </th>
-                                                <th>
-                                                    <input
-                                                        type="text"
-                                                        onChange={(e) =>
-                                                            searchByFieldValue("sales_amount", e.target.value)
-                                                        }
-                                                        className="form-control"
-                                                    />
-                                                </th>
-
-                                                <th>
-                                                    <input
-                                                        type="text"
-                                                        onChange={(e) =>
-                                                            searchByFieldValue("sales_paid_amount", e.target.value)
-                                                        }
-                                                        className="form-control"
-                                                    />
-                                                </th>
-
-                                                <th>
-                                                    <input
-                                                        type="text"
-                                                        onChange={(e) =>
-                                                            searchByFieldValue("sales_balance_amount", e.target.value)
-                                                        }
-                                                        className="form-control"
-                                                    />
-                                                </th>
-                                                <th>
-                                                    <input
-                                                        type="text"
-                                                        onChange={(e) =>
-                                                            searchByFieldValue("sales_profit", e.target.value)
-                                                        }
-                                                        className="form-control"
-                                                    />
-                                                </th>
-                                                <th>
-                                                    <input
-                                                        type="text"
-                                                        onChange={(e) =>
-                                                            searchByFieldValue("sales_loss", e.target.value)
                                                         }
                                                         className="form-control"
                                                     />
@@ -1604,6 +1579,38 @@ function CustomerIndex(props) {
                                                         className="form-control"
                                                     />
                                                 </th>
+
+                                                <th>
+                                                    <input
+                                                        type="text"
+                                                        id="email"
+                                                        onChange={(e) =>
+                                                            searchByFieldValue("email", e.target.value)
+                                                        }
+                                                        className="form-control"
+                                                    />
+                                                </th>
+
+                                                <th>
+                                                    <input
+                                                        type="text"
+                                                        onChange={(e) =>
+                                                            searchByFieldValue("sales_profit", e.target.value)
+                                                        }
+                                                        className="form-control"
+                                                    />
+                                                </th>
+                                                <th>
+                                                    <input
+                                                        type="text"
+                                                        onChange={(e) =>
+                                                            searchByFieldValue("sales_loss", e.target.value)
+                                                        }
+                                                        className="form-control"
+                                                    />
+                                                </th>
+
+
                                                 <th>
                                                     <input
                                                         type="text"
@@ -1929,33 +1936,8 @@ function CustomerIndex(props) {
                                                                 <i className="bi bi-eye"></i>
                                                             </Button>
                                                         </td>
-                                                        <td style={{ width: "auto", whiteSpace: "nowrap" }}>{customer.code}</td>
                                                         <td style={{ width: "auto", whiteSpace: "nowrap" }} className="text-start" >
                                                             <OverflowTooltip value={customer.name} />
-                                                        </td>
-                                                        <td style={{ width: "auto", whiteSpace: "nowrap" }} >
-                                                            {customer.account && <Button variant="link" onClick={() => {
-                                                                openBalanceSheetDialogue(customer.account);
-                                                            }}>
-                                                                <Amount amount={trimTo2Decimals(customer.credit_balance)} />
-
-                                                            </Button>}
-                                                            {!customer.account && <Amount amount={trimTo2Decimals(customer.credit_balance)} />}
-                                                        </td>
-                                                        <td style={{ width: "auto", whiteSpace: "nowrap" }} >{customer.phone}</td>
-                                                        <td style={{ width: "auto", whiteSpace: "nowrap" }} >{customer.vat_no}</td>
-                                                        <td style={{ width: "auto", whiteSpace: "nowrap" }} >{customer.email}</td>
-                                                        <td style={{ width: "auto", whiteSpace: "nowrap" }} >
-                                                            {customer.stores && Object.keys(customer.stores).map((key, index) => {
-                                                                if (localStorage.getItem("store_id") && customer.stores[key].store_id === localStorage.getItem("store_id")) {
-                                                                    return (
-                                                                        <b>{customer.stores[key].sales_count}</b>
-                                                                    );
-                                                                } else if (!localStorage.getItem("store_id")) {
-                                                                    return (<li><b>{customer.stores[key].sales_count}</b> {"@" + customer.stores[key].store_name}</li>);
-                                                                }
-                                                                return "";
-                                                            })}
                                                         </td>
                                                         <td style={{ width: "auto", whiteSpace: "nowrap" }} >
                                                             {customer.stores && Object.keys(customer.stores).map((key, index) => {
@@ -1982,6 +1964,28 @@ function CustomerIndex(props) {
                                                             })}
                                                         </td>
                                                         <td style={{ width: "auto", whiteSpace: "nowrap" }} >
+                                                            {customer.account && <Button variant="link" onClick={() => {
+                                                                openBalanceSheetDialogue(customer.account);
+                                                            }}>
+                                                                <Amount amount={trimTo2Decimals(customer.credit_balance)} />
+
+                                                            </Button>}
+                                                            {!customer.account && <Amount amount={trimTo2Decimals(customer.credit_balance)} />}
+                                                        </td>
+
+                                                        <td style={{ width: "auto", whiteSpace: "nowrap" }} >
+                                                            {customer.stores && Object.keys(customer.stores).map((key, index) => {
+                                                                if (localStorage.getItem("store_id") && customer.stores[key].store_id === localStorage.getItem("store_id")) {
+                                                                    return (
+                                                                        <b>{customer.stores[key].sales_count}</b>
+                                                                    );
+                                                                } else if (!localStorage.getItem("store_id")) {
+                                                                    return (<li><b>{customer.stores[key].sales_count}</b> {"@" + customer.stores[key].store_name}</li>);
+                                                                }
+                                                                return "";
+                                                            })}
+                                                        </td>
+                                                        <td style={{ width: "auto", whiteSpace: "nowrap" }} >
                                                             {customer.stores && Object.keys(customer.stores).map((key, index) => {
                                                                 if (localStorage.getItem("store_id") && customer.stores[key].store_id === localStorage.getItem("store_id")) {
                                                                     return (
@@ -1993,30 +1997,13 @@ function CustomerIndex(props) {
                                                                 return "";
                                                             })}
                                                         </td>
-                                                        <td style={{ width: "auto", whiteSpace: "nowrap" }} >
-                                                            {customer.stores && Object.keys(customer.stores).map((key, index) => {
-                                                                if (localStorage.getItem("store_id") && customer.stores[key].store_id === localStorage.getItem("store_id")) {
-                                                                    return (
-                                                                        <b>{customer.stores[key].sales_profit?.toFixed(2)}</b>
-                                                                    );
-                                                                } else if (!localStorage.getItem("store_id")) {
-                                                                    return (<li><b>{customer.stores[key].sales_profit?.toFixed(2)}</b> {"@" + customer.stores[key].store_name}</li>);
-                                                                }
-                                                                return "";
-                                                            })}
-                                                        </td>
-                                                        <td style={{ width: "auto", whiteSpace: "nowrap" }} >
-                                                            {customer.stores && Object.keys(customer.stores).map((key, index) => {
-                                                                if (localStorage.getItem("store_id") && customer.stores[key].store_id === localStorage.getItem("store_id")) {
-                                                                    return (
-                                                                        <b>{customer.stores[key].sales_loss?.toFixed(2)}</b>
-                                                                    );
-                                                                } else if (!localStorage.getItem("store_id")) {
-                                                                    return (<li><b>{customer.stores[key].sales_loss?.toFixed(2)}</b> {"@" + customer.stores[key].store_name}</li>);
-                                                                }
-                                                                return "";
-                                                            })}
-                                                        </td>
+
+
+                                                        <td style={{ width: "auto", whiteSpace: "nowrap" }}>{customer.code}</td>
+
+
+                                                        <td style={{ width: "auto", whiteSpace: "nowrap" }} >{customer.phone}</td>
+                                                        <td style={{ width: "auto", whiteSpace: "nowrap" }} >{customer.vat_no}</td>
                                                         <td style={{ width: "auto", whiteSpace: "nowrap" }} >
                                                             {customer.stores && Object.keys(customer.stores).map((key, index) => {
                                                                 if (localStorage.getItem("store_id") && customer.stores[key].store_id === localStorage.getItem("store_id")) {
@@ -2041,6 +2028,37 @@ function CustomerIndex(props) {
                                                                 return "";
                                                             })}
                                                         </td>
+
+                                                        <td style={{ width: "auto", whiteSpace: "nowrap" }} >{customer.email}</td>
+
+
+
+                                                        <td style={{ width: "auto", whiteSpace: "nowrap" }} >
+                                                            {customer.stores && Object.keys(customer.stores).map((key, index) => {
+                                                                if (localStorage.getItem("store_id") && customer.stores[key].store_id === localStorage.getItem("store_id")) {
+                                                                    return (
+                                                                        <b>{customer.stores[key].sales_profit?.toFixed(2)}</b>
+                                                                    );
+                                                                } else if (!localStorage.getItem("store_id")) {
+                                                                    return (<li><b>{customer.stores[key].sales_profit?.toFixed(2)}</b> {"@" + customer.stores[key].store_name}</li>);
+                                                                }
+                                                                return "";
+                                                            })}
+                                                        </td>
+                                                        <td style={{ width: "auto", whiteSpace: "nowrap" }} >
+                                                            {customer.stores && Object.keys(customer.stores).map((key, index) => {
+                                                                if (localStorage.getItem("store_id") && customer.stores[key].store_id === localStorage.getItem("store_id")) {
+                                                                    return (
+                                                                        <b>{customer.stores[key].sales_loss?.toFixed(2)}</b>
+                                                                    );
+                                                                } else if (!localStorage.getItem("store_id")) {
+                                                                    return (<li><b>{customer.stores[key].sales_loss?.toFixed(2)}</b> {"@" + customer.stores[key].store_name}</li>);
+                                                                }
+                                                                return "";
+                                                            })}
+                                                        </td>
+
+
                                                         <td style={{ width: "auto", whiteSpace: "nowrap" }} >
                                                             {customer.stores && Object.keys(customer.stores).map((key, index) => {
                                                                 if (localStorage.getItem("store_id") && customer.stores[key].store_id === localStorage.getItem("store_id")) {

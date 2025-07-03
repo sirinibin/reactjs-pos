@@ -873,22 +873,20 @@ function PurchaseIndex(props) {
                         <span className="text-end">
                             <StatsSummary
                                 title="Purchase"
-                                stats={{
+                                leftStats={{
+                                    "Cash purchase": totalCashPurchase,
+                                    "Credit purchase": totalUnPaidPurchase,
+                                    "Bank account purchase": totalBankAccountPurchase,
+                                    "Cash discount": totalCashDiscount,
+                                    "VAT paid": vatPrice,
+                                }}
+                                rightStats={{
                                     "Purchase": totalPurchase,
                                     "Paid purchase": totalPaidPurchase,
-                                    "Cash purchase": totalCashPurchase,
-                                    "Bank account purchase": totalBankAccountPurchase,
-                                    "Credit purchase": totalUnPaidPurchase,
                                     "Purchase discount": totalDiscount,
-                                    "Cash discount": totalCashDiscount,
                                     "Shipping/Handling fees": totalShippingHandlingFees,
-                                    "VAT paid": vatPrice,
                                     "Return Count": returnCount,
                                     "Return Paid Amount": returnPaidAmount,
-                                    // "Net retail profit": netRetailProfit,
-                                    //  "Net retail Profit %": netRetailProfit && totalPurchase ? ((netRetailProfit / totalPurchase) * 100) : "",
-                                    // "Net wholesale profit": netWholesaleProfit,
-                                    // "Net wholesale Profit %": netWholesaleProfit && totalPurchase ? ((netWholesaleProfit / totalPurchase) * 100) : "",
                                 }}
                                 onToggle={handleSummaryToggle}
                             />
@@ -1079,18 +1077,20 @@ function PurchaseIndex(props) {
                                                             cursor: "pointer",
                                                         }}
                                                         onClick={() => {
-                                                            sort("vendor_invoice_no");
+                                                            sort("date");
                                                         }}
                                                     >
-                                                        Vendor Invoice No.
-                                                        {sortField === "vendor_invoice_no" && sortOrder === "-" ? (
-                                                            <i className="bi bi-sort-alpha-up-alt"></i>
+                                                        Date
+                                                        {sortField === "date" && sortOrder === "-" ? (
+                                                            <i className="bi bi-sort-down"></i>
                                                         ) : null}
-                                                        {sortField === "vendor_invoice_no" && sortOrder === "" ? (
-                                                            <i className="bi bi-sort-alpha-up"></i>
+                                                        {sortField === "date" && sortOrder === "" ? (
+                                                            <i className="bi bi-sort-up"></i>
                                                         ) : null}
                                                     </b>
                                                 </th>
+
+
                                                 <th>
                                                     <b
                                                         style={{
@@ -1111,25 +1111,7 @@ function PurchaseIndex(props) {
                                                         ) : null}
                                                     </b>
                                                 </th>
-                                                <th>
-                                                    <b
-                                                        style={{
-                                                            textDecoration: "underline",
-                                                            cursor: "pointer",
-                                                        }}
-                                                        onClick={() => {
-                                                            sort("date");
-                                                        }}
-                                                    >
-                                                        Date
-                                                        {sortField === "date" && sortOrder === "-" ? (
-                                                            <i className="bi bi-sort-down"></i>
-                                                        ) : null}
-                                                        {sortField === "date" && sortOrder === "" ? (
-                                                            <i className="bi bi-sort-up"></i>
-                                                        ) : null}
-                                                    </b>
-                                                </th>
+
                                                 <th>
                                                     <b
                                                         style={{
@@ -1149,25 +1131,7 @@ function PurchaseIndex(props) {
                                                         ) : null}
                                                     </b>
                                                 </th>
-                                                <th>
-                                                    <b
-                                                        style={{
-                                                            textDecoration: "underline",
-                                                            cursor: "pointer",
-                                                        }}
-                                                        onClick={() => {
-                                                            sort("cash_discount");
-                                                        }}
-                                                    >
-                                                        Cash Discount
-                                                        {sortField === "cash_discount" && sortOrder === "-" ? (
-                                                            <i className="bi bi-sort-numeric-down"></i>
-                                                        ) : null}
-                                                        {sortField === "cash_discount" && sortOrder === "" ? (
-                                                            <i className="bi bi-sort-numeric-up"></i>
-                                                        ) : null}
-                                                    </b>
-                                                </th>
+
                                                 <th>
                                                     <b
                                                         style={{
@@ -1203,6 +1167,44 @@ function PurchaseIndex(props) {
                                                         ) : null}
                                                         {sortField === "balance_amount" && sortOrder === "" ? (
                                                             <i className="bi bi-sort-numeric-up"></i>
+                                                        ) : null}
+                                                    </b>
+                                                </th>
+                                                <th>
+                                                    <b
+                                                        style={{
+                                                            textDecoration: "underline",
+                                                            cursor: "pointer",
+                                                        }}
+                                                        onClick={() => {
+                                                            sort("cash_discount");
+                                                        }}
+                                                    >
+                                                        Cash Discount
+                                                        {sortField === "cash_discount" && sortOrder === "-" ? (
+                                                            <i className="bi bi-sort-numeric-down"></i>
+                                                        ) : null}
+                                                        {sortField === "cash_discount" && sortOrder === "" ? (
+                                                            <i className="bi bi-sort-numeric-up"></i>
+                                                        ) : null}
+                                                    </b>
+                                                </th>
+                                                <th>
+                                                    <b
+                                                        style={{
+                                                            textDecoration: "underline",
+                                                            cursor: "pointer",
+                                                        }}
+                                                        onClick={() => {
+                                                            sort("vendor_invoice_no");
+                                                        }}
+                                                    >
+                                                        Vendor Invoice No.
+                                                        {sortField === "vendor_invoice_no" && sortOrder === "-" ? (
+                                                            <i className="bi bi-sort-alpha-up-alt"></i>
+                                                        ) : null}
+                                                        {sortField === "vendor_invoice_no" && sortOrder === "" ? (
+                                                            <i className="bi bi-sort-alpha-up"></i>
                                                         ) : null}
                                                     </b>
                                                 </th>
@@ -1455,49 +1457,6 @@ function PurchaseIndex(props) {
                                                     />
                                                 </th>
                                                 <th>
-                                                    <input
-                                                        type="text"
-                                                        id="purchase_vendor_invoice_no"
-                                                        name="purchase_vendor_invoice_no"
-                                                        onChange={(e) =>
-                                                            searchByFieldValue("vendor_invoice_no", e.target.value)
-                                                        }
-                                                        className="form-control"
-                                                    />
-                                                </th>
-                                                <th>
-                                                    <Typeahead
-                                                        style={{ minWidth: "300px" }}
-                                                        id="vendor_id"
-                                                        filterBy={['additional_keywords']}
-                                                        labelKey="search_label"
-                                                        onChange={(selectedItems) => {
-                                                            searchByMultipleValuesField(
-                                                                "vendor_id",
-                                                                selectedItems
-                                                            );
-                                                        }}
-                                                        options={vendorOptions}
-                                                        placeholder="Vendor Name / Mob / VAT # / ID"
-                                                        selected={selectedVendors}
-                                                        highlightOnlyResult={true}
-                                                        ref={vendorSearchRef}
-                                                        onKeyDown={(e) => {
-                                                            if (e.key === "Escape") {
-                                                                setVendorOptions([]);
-                                                                vendorSearchRef.current?.clear();
-                                                            }
-                                                        }}
-                                                        onInputChange={(searchTerm, e) => {
-                                                            if (timerRef.current) clearTimeout(timerRef.current);
-                                                            timerRef.current = setTimeout(() => {
-                                                                suggestVendors(searchTerm);
-                                                            }, 100);
-                                                        }}
-                                                        multiple
-                                                    />
-                                                </th>
-                                                <th>
                                                     <div style={{ minWidth: "125px" }}>
                                                         <DatePicker
                                                             id="date_str"
@@ -1573,6 +1532,41 @@ function PurchaseIndex(props) {
                                                         ) : null}
                                                     </div>
                                                 </th>
+
+
+                                                <th>
+                                                    <Typeahead
+                                                        style={{ minWidth: "300px" }}
+                                                        id="vendor_id"
+                                                        filterBy={['additional_keywords']}
+                                                        labelKey="search_label"
+                                                        onChange={(selectedItems) => {
+                                                            searchByMultipleValuesField(
+                                                                "vendor_id",
+                                                                selectedItems
+                                                            );
+                                                        }}
+                                                        options={vendorOptions}
+                                                        placeholder="Vendor Name / Mob / VAT # / ID"
+                                                        selected={selectedVendors}
+                                                        highlightOnlyResult={true}
+                                                        ref={vendorSearchRef}
+                                                        onKeyDown={(e) => {
+                                                            if (e.key === "Escape") {
+                                                                setVendorOptions([]);
+                                                                vendorSearchRef.current?.clear();
+                                                            }
+                                                        }}
+                                                        onInputChange={(searchTerm, e) => {
+                                                            if (timerRef.current) clearTimeout(timerRef.current);
+                                                            timerRef.current = setTimeout(() => {
+                                                                suggestVendors(searchTerm);
+                                                            }, 100);
+                                                        }}
+                                                        multiple
+                                                    />
+                                                </th>
+
                                                 <th>
                                                     <input
                                                         type="text"
@@ -1580,6 +1574,28 @@ function PurchaseIndex(props) {
                                                         name="purchase_net_total"
                                                         onChange={(e) =>
                                                             searchByFieldValue("net_total", e.target.value)
+                                                        }
+                                                        className="form-control"
+                                                    />
+                                                </th>
+
+                                                <th>
+                                                    <input
+                                                        type="text"
+                                                        id="total_payment_paid"
+                                                        onChange={(e) =>
+                                                            searchByFieldValue("total_payment_paid", e.target.value)
+                                                        }
+                                                        className="form-control"
+                                                    />
+                                                </th>
+                                                <th>
+                                                    <input
+                                                        type="text"
+                                                        id="purchase_balance_amount"
+                                                        name="purchase_balance_amount"
+                                                        onChange={(e) =>
+                                                            searchByFieldValue("balance_amount", e.target.value)
                                                         }
                                                         className="form-control"
                                                     />
@@ -1598,20 +1614,10 @@ function PurchaseIndex(props) {
                                                 <th>
                                                     <input
                                                         type="text"
-                                                        id="total_payment_paid"
+                                                        id="purchase_vendor_invoice_no"
+                                                        name="purchase_vendor_invoice_no"
                                                         onChange={(e) =>
-                                                            searchByFieldValue("total_payment_paid", e.target.value)
-                                                        }
-                                                        className="form-control"
-                                                    />
-                                                </th>
-                                                <th>
-                                                    <input
-                                                        type="text"
-                                                        id="purchase_balance_amount"
-                                                        name="purchase_balance_amount"
-                                                        onChange={(e) =>
-                                                            searchByFieldValue("balance_amount", e.target.value)
+                                                            searchByFieldValue("vendor_invoice_no", e.target.value)
                                                         }
                                                         className="form-control"
                                                     />
@@ -1958,26 +1964,28 @@ function PurchaseIndex(props) {
                                                             </button>
                                                         </td>
                                                         <td style={{ width: "auto", whiteSpace: "nowrap" }} >{purchase.code}</td>
-                                                        <td style={{ width: "auto", whiteSpace: "nowrap" }} >{purchase.vendor_invoice_no}</td>
-                                                        <td className="text-start" style={{ width: "auto", whiteSpace: "nowrap" }} >
-                                                            {purchase.vendor_name && <OverflowTooltip value={purchase.vendor_name} />}
-                                                        </td>
                                                         <td style={{ width: "auto", whiteSpace: "nowrap" }} >
                                                             {format(new Date(purchase.date), "MMM dd yyyy h:mma")}
                                                         </td>
+
+                                                        <td className="text-start" style={{ width: "auto", whiteSpace: "nowrap" }} >
+                                                            {purchase.vendor_name && <OverflowTooltip value={purchase.vendor_name} />}
+                                                        </td>
+
                                                         <td style={{ width: "auto", whiteSpace: "nowrap" }} >
                                                             <Amount amount={purchase.net_total} />
                                                         </td>
-                                                        <td style={{ width: "auto", whiteSpace: "nowrap" }} >  <Amount amount={purchase.cash_discount?.toFixed(2)} /> </td>
+
                                                         <td style={{ width: "auto", whiteSpace: "nowrap" }} >
                                                             <Button variant="link" onClick={() => {
                                                                 openPaymentsDialogue(purchase);
                                                             }}>
                                                                 <Amount amount={purchase.total_payment_paid?.toFixed(2)} />
-
                                                             </Button>
                                                         </td>
                                                         <td style={{ width: "auto", whiteSpace: "nowrap" }} > <Amount amount={purchase.balance_amount?.toFixed(2)} /> </td>
+                                                        <td style={{ width: "auto", whiteSpace: "nowrap" }} >  <Amount amount={purchase.cash_discount?.toFixed(2)} /> </td>
+                                                        <td style={{ width: "auto", whiteSpace: "nowrap" }} >{purchase.vendor_invoice_no}</td>
                                                         <td style={{ width: "auto", whiteSpace: "nowrap" }} >
                                                             <Button variant="link" onClick={() => {
                                                                 openPaymentsDialogue(purchase);

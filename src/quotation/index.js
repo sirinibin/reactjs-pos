@@ -591,7 +591,6 @@ function QuotationIndex(props) {
 
 
   //Printing
-
   const [selectedQuotation, setSelectedQuotation] = useState({});
   let [showPrintTypeSelection, setShowPrintTypeSelection] = useState(false);
 
@@ -693,9 +692,12 @@ function QuotationIndex(props) {
             <span className="text-end">
               <StatsSummary
                 title="Quotation"
-                stats={{
+                leftStats={{
                   "Quotation": totalQuotation,
                   "Profit": profit,
+
+                }}
+                rightStats={{
                   "Profit %": profit && totalQuotation ? (profit / totalQuotation) * 100 : "",
                   "Loss": loss,
                 }}
@@ -705,18 +707,20 @@ function QuotationIndex(props) {
             <span className="text-end">
               <StatsSummary
                 title="Sales"
-                stats={{
+                leftStats={{
                   "Sales": invoiceTotalSales,
-                  "Paid Sales": invoiceTotalPaidSales,
                   "Cash Sales": invoiceTotalCashSales,
-                  "Bank Account Sales": invoiceTotalBankAccountSales,
                   "Credit Sales": invoiceTotalUnPaidSales,
-                  "Sales Discount": invoiceTotalDiscount,
+                  "Bank Account Sales": invoiceTotalBankAccountSales,
                   "Cash Discount": invoiceTotalCashDiscount,
-                  "Shipping/Handling fees": invoiceTotalShippingHandlingFees,
                   "VAT Collected": invoiceVatPrice,
-                  "Net Profit": invoiceNetProfit,
                   "Net Profit %": invoiceNetProfit && invoiceTotalSales ? ((invoiceNetProfit / invoiceTotalSales) * 100) : "",
+                  "Paid Sales": invoiceTotalPaidSales,
+                  "Sales Discount": invoiceTotalDiscount,
+                }}
+                rightStats={{
+                  "Shipping/Handling fees": invoiceTotalShippingHandlingFees,
+                  "Net Profit": invoiceNetProfit,
                   "Net Loss": invoiceLoss,
                 }}
                 onToggle={handleSummaryToggle}
@@ -971,18 +975,39 @@ function QuotationIndex(props) {
                               cursor: "pointer",
                             }}
                             onClick={() => {
-                              sort("order_code");
+                              sort("total_payment_received");
                             }}
                           >
-                            Sales ID
-                            {sortField === "order_code" && sortOrder === "-" ? (
+                            Amount Paid
+                            {sortField === "total_payment_received" && sortOrder === "-" ? (
                               <i className="bi bi-sort-numeric-down"></i>
                             ) : null}
-                            {sortField === "order_code" && sortOrder === "" ? (
+                            {sortField === "total_payment_received" && sortOrder === "" ? (
                               <i className="bi bi-sort-numeric-up"></i>
                             ) : null}
                           </b>
                         </th>
+
+                        <th>
+                          <b
+                            style={{
+                              textDecoration: "underline",
+                              cursor: "pointer",
+                            }}
+                            onClick={() => {
+                              sort("balance_amount");
+                            }}
+                          >
+                            Credit Balance
+                            {sortField === "balance_amount" && sortOrder === "-" ? (
+                              <i className="bi bi-sort-numeric-down"></i>
+                            ) : null}
+                            {sortField === "balance_amount" && sortOrder === "" ? (
+                              <i className="bi bi-sort-numeric-up"></i>
+                            ) : null}
+                          </b>
+                        </th>
+
                         {store.zatca?.phase === "2" && store.zatca?.connected ? <th>
                           <b
                             style={{
@@ -1028,38 +1053,19 @@ function QuotationIndex(props) {
                               cursor: "pointer",
                             }}
                             onClick={() => {
-                              sort("total_payment_received");
+                              sort("order_code");
                             }}
                           >
-                            Amount Paid
-                            {sortField === "total_payment_received" && sortOrder === "-" ? (
+                            Sales ID
+                            {sortField === "order_code" && sortOrder === "-" ? (
                               <i className="bi bi-sort-numeric-down"></i>
                             ) : null}
-                            {sortField === "total_payment_received" && sortOrder === "" ? (
+                            {sortField === "order_code" && sortOrder === "" ? (
                               <i className="bi bi-sort-numeric-up"></i>
                             ) : null}
                           </b>
                         </th>
 
-                        <th>
-                          <b
-                            style={{
-                              textDecoration: "underline",
-                              cursor: "pointer",
-                            }}
-                            onClick={() => {
-                              sort("balance_amount");
-                            }}
-                          >
-                            Credit Balance
-                            {sortField === "balance_amount" && sortOrder === "-" ? (
-                              <i className="bi bi-sort-numeric-down"></i>
-                            ) : null}
-                            {sortField === "balance_amount" && sortOrder === "" ? (
-                              <i className="bi bi-sort-numeric-up"></i>
-                            ) : null}
-                          </b>
-                        </th>
                         <th>
                           <b
                             style={{
@@ -1361,13 +1367,26 @@ function QuotationIndex(props) {
                         <th>
                           <input
                             type="text"
-                            id="order_code"
+                            id="sales_total_payment_received"
+                            name="sales_total_payment_received"
                             onChange={(e) =>
-                              searchByFieldValue("order_code", e.target.value)
+                              searchByFieldValue("total_payment_received", e.target.value)
                             }
                             className="form-control"
                           />
                         </th>
+                        <th>
+                          <input
+                            type="text"
+                            id="sales_balance_amount"
+                            name="sales_balance_amount"
+                            onChange={(e) =>
+                              searchByFieldValue("balance_amount", e.target.value)
+                            }
+                            className="form-control"
+                          />
+                        </th>
+
                         {store.zatca?.phase === "2" && store.zatca?.connected ? <th>
                           <select
                             onChange={(e) => {
@@ -1394,25 +1413,14 @@ function QuotationIndex(props) {
                         <th>
                           <input
                             type="text"
-                            id="sales_total_payment_received"
-                            name="sales_total_payment_received"
+                            id="order_code"
                             onChange={(e) =>
-                              searchByFieldValue("total_payment_received", e.target.value)
+                              searchByFieldValue("order_code", e.target.value)
                             }
                             className="form-control"
                           />
                         </th>
-                        <th>
-                          <input
-                            type="text"
-                            id="sales_balance_amount"
-                            name="sales_balance_amount"
-                            onChange={(e) =>
-                              searchByFieldValue("balance_amount", e.target.value)
-                            }
-                            className="form-control"
-                          />
-                        </th>
+
                         <th>
                           <Typeahead
                             id="payment_status"
@@ -1650,10 +1658,11 @@ function QuotationIndex(props) {
                             </td>
                             <td style={{ width: "auto", whiteSpace: "nowrap" }} > <Amount amount={quotation.net_total} /> </td>
                             <td style={{ width: "auto", whiteSpace: "nowrap" }} >
-                              {quotation.order_code && <span style={{ cursor: "pointer", color: "blue" }} onClick={() => {
-                                openSalesUpdateForm(quotation.order_id);
-                              }}>{quotation.order_code}</span>}
+                              <Amount amount={trimTo2Decimals(quotation.total_payment_received)} />
                             </td>
+                            <td><Amount amount={trimTo2Decimals(quotation.balance_amount)} /></td>
+
+
                             {store.zatca?.phase === "2" && store.zatca?.connected ? <td style={{ width: "auto", whiteSpace: "nowrap" }}>
                               {quotation.reported_to_zatca ? <span>&nbsp;<span className="badge bg-success">
                                 Reported
@@ -1665,9 +1674,11 @@ function QuotationIndex(props) {
                             </td> : ""}
                             <td style={{ width: "auto", whiteSpace: "nowrap" }} >  {quotation.type}</td>
                             <td style={{ width: "auto", whiteSpace: "nowrap" }} >
-                              <Amount amount={trimTo2Decimals(quotation.total_payment_received)} />
+                              {quotation.order_code && <span style={{ cursor: "pointer", color: "blue" }} onClick={() => {
+                                openSalesUpdateForm(quotation.order_id);
+                              }}>{quotation.order_code}</span>}
                             </td>
-                            <td><Amount amount={trimTo2Decimals(quotation.balance_amount)} /></td>
+
                             <td style={{ width: "auto", whiteSpace: "nowrap" }}>
                               {quotation.payment_status === "paid" ?
                                 <span className="badge bg-success">
@@ -1683,12 +1694,10 @@ function QuotationIndex(props) {
                                 </span> : ""}
                             </td>
                             <td style={{ width: "auto", whiteSpace: "nowrap" }}>
-
                               {quotation.payment_methods &&
                                 quotation.payment_methods.map((name) => (
                                   <span className="badge bg-info">{name}</span>
                                 ))}
-
                             </td>
                             <td style={{ width: "auto", whiteSpace: "nowrap" }} ><Amount amount={trimTo2Decimals(quotation.cash_discount)} /> </td>
                             <td>{trimTo2Decimals(quotation.discount_with_vat)} </td>

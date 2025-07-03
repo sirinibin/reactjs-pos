@@ -1348,20 +1348,22 @@ const OrderIndex = forwardRef((props, ref) => {
                         <span className="text-end">
                             <StatsSummary
                                 title="Sales"
-                                stats={{
+                                leftStats={{
                                     "Sales": totalSales,
-                                    "Paid Sales": totalPaidSales,
                                     "Cash Sales": totalCashSales,
-                                    "Sales Discount": totalDiscount,
                                     "Credit Sales": totalUnPaidSales,
-                                    "Shipping/Handling fees": totalShippingHandlingFees,
                                     "Bank Account Sales": totalBankAccountSales,
-                                    "Net Profit": netProfit,
                                     "Cash Discount": totalCashDiscount,
-                                    "Net Loss": loss,
                                     "VAT Collected": vatPrice,
-                                    "Return Count": returnCount,
                                     "Net Profit %": netProfit && totalSales ? ((netProfit / totalSales) * 100) : "",
+                                    "Paid Sales": totalPaidSales,
+                                    "Sales Discount": totalDiscount,
+                                }}
+                                rightStats={{
+                                    "Shipping/Handling fees": totalShippingHandlingFees,
+                                    "Net Profit": netProfit,
+                                    "Net Loss": loss,
+                                    "Return Count": returnCount,
                                     "Return Paid Amount": returnPaidAmount,
                                 }}
                                 onToggle={handleSummaryToggle}

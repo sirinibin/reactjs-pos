@@ -1188,19 +1188,21 @@ function QuotationSalesReturnIndex(props) {
                     <div className="col">
                         <span className="text-end">
                             <StatsSummary
-                                title="QuotationSales Return"
-                                stats={{
+                                title="Quotation Sales Return"
+                                leftStats={{
                                     "Sales Return": totalQuotationSalesReturn,
-                                    "Paid Sales Return": totalPaidQuotationSalesReturn,
                                     "Cash Sales Return": totalCashQuotationSalesReturn,
-                                    "Bank Account Sales Return": totalBankAccountQuotationSalesReturn,
                                     "Credit Sales Return": totalUnPaidQuotationSalesReturn,
-                                    "Sales Discount Return": totalDiscount,
+                                    "Bank Account Sales Return": totalBankAccountQuotationSalesReturn,
                                     "Cash Discount Return": totalCashDiscount,
-                                    "Shipping/Handling fees Return": totalShippingHandlingFees,
                                     "VAT Return": vatPrice,
-                                    "Net Profit Return": netProfit,
                                     "Net Profit Return %": netProfit && totalQuotationSalesReturn ? ((netProfit / totalQuotationSalesReturn) * 100) : "",
+                                }}
+                                rightStats={{
+                                    "Paid Sales Return": totalPaidQuotationSalesReturn,
+                                    "Sales Discount Return": totalDiscount,
+                                    "Shipping/Handling fees Return": totalShippingHandlingFees,
+                                    "Net Profit Return": netProfit,
                                     "Net Loss Return": loss,
                                 }}
                                 onToggle={handleSummaryToggle}
