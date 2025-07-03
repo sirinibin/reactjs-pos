@@ -742,8 +742,8 @@ const OrderCreate = forwardRef((props, ref) => {
 
             if (selectedProducts[i].unit_discount) {
                 unitDiscount = parseFloat(selectedProducts[i].unit_discount)
-                if (/^\d*\.?\d{0,2}$/.test(unitDiscount) === false) {
-                    errors["unit_discount_" + i] = "Max decimal points allowed is 2";
+                if (/^\d*\.?\d{0,8}$/.test(unitDiscount) === false) {
+                    errors["unit_discount_" + i] = "Max decimal points allowed is 8";
                     setErrors({ ...errors });
                     haveErrors = true;
                 }
@@ -753,8 +753,8 @@ const OrderCreate = forwardRef((props, ref) => {
 
             if (selectedProducts[i].unit_discount_with_vat) {
                 unitDiscountWithVAT = parseFloat(selectedProducts[i].unit_discount_with_vat)
-                if (/^\d*\.?\d{0,2}$/.test(unitDiscountWithVAT) === false) {
-                    errors["unit_discount_with_vat_" + i] = "Max decimal points allowed is 2";
+                if (/^\d*\.?\d{0,8}$/.test(unitDiscountWithVAT) === false) {
+                    errors["unit_discount_with_vat_" + i] = "Max decimal points allowed is 8";
                     setErrors({ ...errors });
                     haveErrors = true;
                 }
@@ -3172,7 +3172,7 @@ const OrderCreate = forwardRef((props, ref) => {
                                                         onFocus={() => {
                                                             if (timerRef.current) clearTimeout(timerRef.current);
                                                             timerRef.current = setTimeout(() => {
-                                                                inputRefs.current[index][`${"sales_product_purchase_unit_price_" + index}`].select();
+                                                                inputRefs.current[index][`${"sales_product_purchase_unit_price_" + index}`]?.select();
                                                             }, 20);
                                                         }}
                                                         onKeyDown={(e) => {
@@ -3193,7 +3193,7 @@ const OrderCreate = forwardRef((props, ref) => {
                                                                     }, 100);
                                                                 } else {
                                                                     timerRef.current = setTimeout(() => {
-                                                                        inputRefs.current[(index + 1)][`${"sales_unit_discount_with_vat_" + (index + 1)}`].select();
+                                                                        inputRefs.current[(index + 1)][`${"sales_unit_discount_with_vat_" + (index + 1)}`]?.select();
                                                                     }, 100);
                                                                 }
                                                             }
@@ -3282,7 +3282,7 @@ const OrderCreate = forwardRef((props, ref) => {
                                                             onFocus={() => {
                                                                 if (timerRef.current) clearTimeout(timerRef.current);
                                                                 timerRef.current = setTimeout(() => {
-                                                                    inputRefs.current[index][`${"sales_product_quantity_" + index}`].select();
+                                                                    inputRefs.current[index][`${"sales_product_quantity_" + index}`]?.select();
                                                                 }, 20);
                                                             }}
                                                             onKeyDown={(e) => {
@@ -3300,7 +3300,7 @@ const OrderCreate = forwardRef((props, ref) => {
                                                                     }, 100);
                                                                 } else if (e.key === "ArrowLeft") {
                                                                     timerRef.current = setTimeout(() => {
-                                                                        inputRefs.current[index][`${"sales_product_purchase_unit_price_" + index}`].select();
+                                                                        inputRefs.current[index][`${"sales_product_purchase_unit_price_" + index}`]?.select();
                                                                     }, 100);
                                                                 }
                                                             }}
@@ -3382,7 +3382,7 @@ const OrderCreate = forwardRef((props, ref) => {
                                                             onFocus={() => {
                                                                 if (timerRef.current) clearTimeout(timerRef.current);
                                                                 timerRef.current = setTimeout(() => {
-                                                                    inputRefs.current[index][`${"sales_product_unit_price_" + index}`].select();
+                                                                    inputRefs.current[index][`${"sales_product_unit_price_" + index}`]?.select();
                                                                 }, 20);
                                                             }}
 
@@ -3401,7 +3401,7 @@ const OrderCreate = forwardRef((props, ref) => {
                                                                     }, 100);
                                                                 } else if (e.key === "ArrowLeft") {
                                                                     timerRef.current = setTimeout(() => {
-                                                                        inputRefs.current[index][`${"sales_product_quantity_" + index}`].select();
+                                                                        inputRefs.current[index][`${"sales_product_quantity_" + index}`]?.select();
                                                                     }, 100);
                                                                 }
                                                             }}
@@ -3489,7 +3489,7 @@ const OrderCreate = forwardRef((props, ref) => {
                                                             onFocus={() => {
                                                                 if (timerRef.current) clearTimeout(timerRef.current);
                                                                 timerRef.current = setTimeout(() => {
-                                                                    inputRefs.current[index][`${"sales_product_unit_price_with_vat_" + index}`].select();
+                                                                    inputRefs.current[index][`${"sales_product_unit_price_with_vat_" + index}`]?.select();
                                                                 }, 20);
                                                             }}
 
@@ -3507,7 +3507,7 @@ const OrderCreate = forwardRef((props, ref) => {
                                                                     }, 100);
                                                                 } else if (e.key === "ArrowLeft") {
                                                                     timerRef.current = setTimeout(() => {
-                                                                        inputRefs.current[index][`${"sales_product_unit_price_" + index}`].select();
+                                                                        inputRefs.current[index][`${"sales_product_unit_price_" + index}`]?.select();
                                                                     }, 50);
                                                                 }
                                                             }}
@@ -3612,7 +3612,7 @@ const OrderCreate = forwardRef((props, ref) => {
                                                                 if (timerRef.current) clearTimeout(timerRef.current);
                                                                 if (e.key === "ArrowLeft") {
                                                                     timerRef.current = setTimeout(() => {
-                                                                        inputRefs.current[index][`${"sales_product_unit_price_with_vat_" + index}`].select();
+                                                                        inputRefs.current[index][`${"sales_product_unit_price_with_vat_" + index}`]?.select();
                                                                     }, 100);
                                                                 }
                                                             }}
@@ -3666,8 +3666,8 @@ const OrderCreate = forwardRef((props, ref) => {
                                                                 delete errors["unit_discount_percent_" + index];
                                                                 setErrors({ ...errors });
 
-                                                                if (/^\d*\.?\d{0,2}$/.test(parseFloat(e.target.value)) === false) {
-                                                                    errors["unit_discount_" + index] = "Max decimal points allowed is 2";
+                                                                if (/^\d*\.?\d{0,8}$/.test(parseFloat(e.target.value)) === false) {
+                                                                    errors["unit_discount_" + index] = "Max decimal points allowed is 8";
                                                                     setErrors({ ...errors });
                                                                 }
 
@@ -3676,10 +3676,10 @@ const OrderCreate = forwardRef((props, ref) => {
 
                                                                 setFormData({ ...formData });
                                                                 timerRef.current = setTimeout(() => {
-                                                                    selectedProducts[index].unit_discount_with_vat = parseFloat(trimTo2Decimals(selectedProducts[index].unit_discount * (1 + (formData.vat_percent / 100))))
+                                                                    selectedProducts[index].unit_discount_with_vat = parseFloat(trimTo8Decimals(selectedProducts[index].unit_discount * (1 + (formData.vat_percent / 100))))
 
-                                                                    selectedProducts[index].unit_discount_percent = parseFloat(trimTo2Decimals(((selectedProducts[index].unit_discount / selectedProducts[index].unit_price) * 100)))
-                                                                    selectedProducts[index].unit_discount_percent_with_vat = parseFloat(trimTo2Decimals(((selectedProducts[index].unit_discount_with_vat / selectedProducts[index].unit_price_with_vat) * 100)))
+                                                                    selectedProducts[index].unit_discount_percent = parseFloat(trimTo8Decimals(((selectedProducts[index].unit_discount / selectedProducts[index].unit_price) * 100)))
+                                                                    selectedProducts[index].unit_discount_percent_with_vat = parseFloat(trimTo8Decimals(((selectedProducts[index].unit_discount_with_vat / selectedProducts[index].unit_price_with_vat) * 100)))
                                                                     CalCulateLineTotals(index);
                                                                     reCalculate(index);
                                                                 }, 100);
@@ -3750,7 +3750,7 @@ const OrderCreate = forwardRef((props, ref) => {
                                                                     }
                                                                 } else if (e.key === "ArrowLeft") {
                                                                     timerRef.current = setTimeout(() => {
-                                                                        inputRefs.current[index][`${"sales_unit_discount_" + index}`].select();
+                                                                        inputRefs.current[index][`${"sales_unit_discount_" + index}`]?.select();
                                                                     }, 100);
                                                                 }
                                                             }}
@@ -3805,8 +3805,8 @@ const OrderCreate = forwardRef((props, ref) => {
                                                                 delete errors["unit_discount_percent_" + index];
                                                                 setErrors({ ...errors });
 
-                                                                if (/^\d*\.?\d{0,2}$/.test(parseFloat(e.target.value)) === false) {
-                                                                    errors["unit_discount_with_vat_" + index] = "Max decimal points allowed is 2";
+                                                                if (/^\d*\.?\d{0,8}$/.test(parseFloat(e.target.value)) === false) {
+                                                                    errors["unit_discount_with_vat_" + index] = "Max decimal points allowed is 8";
                                                                     setErrors({ ...errors });
                                                                 }
 
@@ -3816,9 +3816,9 @@ const OrderCreate = forwardRef((props, ref) => {
                                                                 setFormData({ ...formData });
                                                                 timerRef.current = setTimeout(() => {
 
-                                                                    selectedProducts[index].unit_discount = parseFloat(trimTo2Decimals(selectedProducts[index].unit_discount_with_vat / (1 + (formData.vat_percent / 100))))
-                                                                    selectedProducts[index].unit_discount_percent = parseFloat(trimTo2Decimals(((selectedProducts[index].unit_discount / selectedProducts[index].unit_price) * 100)))
-                                                                    selectedProducts[index].unit_discount_percent_with_vat = parseFloat(trimTo2Decimals(((selectedProducts[index].unit_discount_with_vat / selectedProducts[index].unit_price_with_vat) * 100)))
+                                                                    selectedProducts[index].unit_discount = parseFloat(trimTo8Decimals(selectedProducts[index].unit_discount_with_vat / (1 + (formData.vat_percent / 100))))
+                                                                    selectedProducts[index].unit_discount_percent = parseFloat(trimTo8Decimals(((selectedProducts[index].unit_discount / selectedProducts[index].unit_price) * 100)))
+                                                                    selectedProducts[index].unit_discount_percent_with_vat = parseFloat(trimTo8Decimals(((selectedProducts[index].unit_discount_with_vat / selectedProducts[index].unit_price_with_vat) * 100)))
                                                                     CalCulateLineTotals(index);
                                                                     reCalculate(index);
                                                                 }, 100);
@@ -3843,7 +3843,11 @@ const OrderCreate = forwardRef((props, ref) => {
                                             </td>
                                             {/*<td>
                                                 <div className="input-group mb-3">
-                                                    <input type="number" id={`${"sales_unit_discount_percent" + index}`} disabled={false} name={`${"sales_unit_discount_percent" + index}`} onWheel={(e) => e.target.blur()} className="form-control text-end" value={selectedProducts[index].unit_discount_percent} onChange={(e) => {
+                                                    <input type="number" 
+                                                    id={`${"sales_unit_discount_percent" + index}`}
+                                                     disabled={false} name={`${"sales_unit_discount_percent" + index}`} 
+                                                     onWheel={(e) => e.target.blur()} className="form-control text-end" 
+                                                     value={selectedProducts[index].unit_discount_percent} onChange={(e) => {
                                                         if (timerRef.current) clearTimeout(timerRef.current);
 
                                                         if (parseFloat(e.target.value) === 0) {
@@ -3898,9 +3902,9 @@ const OrderCreate = forwardRef((props, ref) => {
                                                         setFormData({ ...formData });
 
                                                         timerRef.current = setTimeout(() => {
-                                                            selectedProducts[index].unit_discount = parseFloat(trimTo2Decimals(selectedProducts[index].unit_price * (selectedProducts[index].unit_discount_percent / 100)));
-                                                            selectedProducts[index].unit_discount_with_vat = parseFloat(trimTo2Decimals(selectedProducts[index].unit_discount * (1 + (formData.vat_percent / 100))))
-                                                            selectedProducts[index].unit_discount_percent_with_vat = parseFloat(trimTo2Decimals(((selectedProducts[index].unit_discount_with_vat / selectedProducts[index].unit_price_with_vat) * 100)))
+                                                            selectedProducts[index].unit_discount = parseFloat(trimTo8Decimals(selectedProducts[index].unit_price * (selectedProducts[index].unit_discount_percent / 100)));
+                                                            selectedProducts[index].unit_discount_with_vat = parseFloat(trimTo8Decimals(selectedProducts[index].unit_discount * (1 + (formData.vat_percent / 100))))
+                                                            selectedProducts[index].unit_discount_percent_with_vat = parseFloat(trimTo8Decimals(((selectedProducts[index].unit_discount_with_vat / selectedProducts[index].unit_price_with_vat) * 100)))
 
                                                             reCalculate(index);
                                                         }, 300);
@@ -3988,9 +3992,9 @@ const OrderCreate = forwardRef((props, ref) => {
                                                                 setFormData({ ...formData });
 
                                                                 timerRef.current = setTimeout(() => {
-                                                                    selectedProducts[index].unit_discount_with_vat = parseFloat(trimTo2Decimals(selectedProducts[index].unit_price_with_vat * (selectedProducts[index].unit_discount_percent_with_vat / 100)))
-                                                                    selectedProducts[index].unit_discount = parseFloat(trimTo2Decimals(selectedProducts[index].unit_discount_with_vat / (1 + (formData.vat_percent / 100))))
-                                                                    selectedProducts[index].unit_discount_percent = parseFloat(trimTo2Decimals(((selectedProducts[index].unit_discount / selectedProducts[index].unit_price) * 100)))
+                                                                    selectedProducts[index].unit_discount_with_vat = parseFloat(trimTo8Decimals(selectedProducts[index].unit_price_with_vat * (selectedProducts[index].unit_discount_percent_with_vat / 100)))
+                                                                    selectedProducts[index].unit_discount = parseFloat(trimTo8Decimals(selectedProducts[index].unit_discount_with_vat / (1 + (formData.vat_percent / 100))))
+                                                                    selectedProducts[index].unit_discount_percent = parseFloat(trimTo8Decimals(((selectedProducts[index].unit_discount / selectedProducts[index].unit_price) * 100)))
                                                                     CalCulateLineTotals(index);
                                                                     reCalculate(index);
                                                                 }, 100);
@@ -4031,7 +4035,7 @@ const OrderCreate = forwardRef((props, ref) => {
                                                             onFocus={() => {
                                                                 if (timerRef.current) clearTimeout(timerRef.current);
                                                                 timerRef.current = setTimeout(() => {
-                                                                    inputRefs.current[index][`${"sales_product_line_total_" + index}`].select();
+                                                                    inputRefs.current[index][`${"sales_product_line_total_" + index}`]?.select();
                                                                 }, 20);
                                                             }}
 
@@ -4053,7 +4057,7 @@ const OrderCreate = forwardRef((props, ref) => {
                                                                     }, 100);
                                                                 } else if (e.key === "ArrowLeft") {
                                                                     timerRef.current = setTimeout(() => {
-                                                                        inputRefs.current[index][`${"sales_product_unit_discount_with_vat_" + index}`].select();
+                                                                        inputRefs.current[index][`${"sales_product_unit_discount_with_vat_" + index}`]?.select();
                                                                     }, 100);
                                                                 }
                                                             }}
@@ -4102,7 +4106,8 @@ const OrderCreate = forwardRef((props, ref) => {
 
                                                                 timerRef.current = setTimeout(() => {
                                                                     if (selectedProducts[index].quantity > 0) {
-                                                                        selectedProducts[index].unit_price = parseFloat(trimTo8Decimals(selectedProducts[index].line_total / selectedProducts[index].quantity));
+                                                                        selectedProducts[index].unit_price = parseFloat(trimTo8Decimals((selectedProducts[index].line_total / selectedProducts[index].quantity) + selectedProducts[index].unit_discount));
+
                                                                         selectedProducts[index].unit_price_with_vat = parseFloat(trimTo8Decimals(selectedProducts[index].unit_price * (1 + (formData.vat_percent / 100))))
                                                                         selectedProducts[index].unit_discount_percent = parseFloat(trimTo8Decimals(((selectedProducts[index].unit_discount / selectedProducts[index].unit_price) * 100)))
                                                                         selectedProducts[index].unit_discount_percent_with_vat = parseFloat(trimTo8Decimals(((selectedProducts[index].unit_discount_with_vat / selectedProducts[index].unit_price_with_vat) * 100)))
@@ -4149,7 +4154,7 @@ const OrderCreate = forwardRef((props, ref) => {
                                                             onFocus={() => {
                                                                 if (timerRef.current) clearTimeout(timerRef.current);
                                                                 timerRef.current = setTimeout(() => {
-                                                                    inputRefs.current[index][`${"sales_product_line_total_with_vat" + index}`].select();
+                                                                    inputRefs.current[index][`${"sales_product_line_total_with_vat" + index}`]?.select();
                                                                 }, 20);
                                                             }}
 
@@ -4171,7 +4176,7 @@ const OrderCreate = forwardRef((props, ref) => {
                                                                     }, 100);
                                                                 } else if (e.key === "ArrowLeft") {
                                                                     timerRef.current = setTimeout(() => {
-                                                                        inputRefs.current[index][`${"sales_product_line_total_" + index}`].select();
+                                                                        inputRefs.current[index][`${"sales_product_line_total_" + index}`]?.select();
                                                                     }, 100);
                                                                 }
                                                             }}
@@ -4220,7 +4225,7 @@ const OrderCreate = forwardRef((props, ref) => {
 
                                                                 timerRef.current = setTimeout(() => {
                                                                     if (selectedProducts[index].quantity > 0) {
-                                                                        selectedProducts[index].unit_price_with_vat = parseFloat(trimTo8Decimals(selectedProducts[index].line_total_with_vat / selectedProducts[index].quantity));
+                                                                        selectedProducts[index].unit_price_with_vat = parseFloat(trimTo8Decimals((selectedProducts[index].line_total_with_vat / selectedProducts[index].quantity) + selectedProducts[index].unit_discount_with_vat));
                                                                         selectedProducts[index].unit_price = parseFloat(trimTo8Decimals(selectedProducts[index].unit_price_with_vat / (1 + (formData.vat_percent / 100))))
 
                                                                         selectedProducts[index].unit_price_with_vat = parseFloat(trimTo8Decimals(selectedProducts[index].unit_price * (1 + (formData.vat_percent / 100))))
@@ -4447,7 +4452,7 @@ const OrderCreate = forwardRef((props, ref) => {
                                                 onFocus={() => {
                                                     if (timerRef.current) clearTimeout(timerRef.current);
                                                     timerRef.current = setTimeout(() => {
-                                                        discountRef.current.select();
+                                                        discountRef.current?.select();
                                                     }, 20);
                                                 }}
                                                 onChange={(e) => {
@@ -4635,7 +4640,7 @@ const OrderCreate = forwardRef((props, ref) => {
                                                 onFocus={() => {
                                                     if (timerRef.current) clearTimeout(timerRef.current);
                                                     timerRef.current = setTimeout(() => {
-                                                        discountWithVATRef.current.select();
+                                                        discountWithVATRef.current?.select();
                                                     }, 20);
                                                 }}
                                                 onChange={(e) => {
@@ -5044,7 +5049,7 @@ const OrderCreate = forwardRef((props, ref) => {
                                 onFocus={() => {
                                     if (timerRef.current) clearTimeout(timerRef.current);
                                     timerRef.current = setTimeout(() => {
-                                        cashDiscountRef.current.select();
+                                        cashDiscountRef.current?.select();
                                     }, 20);
                                 }}
                             />
