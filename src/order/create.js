@@ -1099,6 +1099,9 @@ const OrderCreate = forwardRef((props, ref) => {
             if (oldProducts[j]?.product_id === selectedProducts[i]?.product_id) {
                 if (formData.id) {
                     oldQty = oldProducts[j].quantity;
+                    if (!selectedProducts[i].stock) {
+                        selectedProducts[i].stock = 0;
+                    }
                     selectedProducts[i].stock += oldQty;
                     setSelectedProducts([...selectedProducts]);
                 }

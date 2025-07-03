@@ -3194,7 +3194,7 @@ const QuotationCreate = forwardRef((props, ref) => {
                                   }, 100);
                                 }} />
                               <span className="input-group-text text-nowrap">
-                                {selectedProducts[index].unit ? selectedProducts[index].unit[0] : 'P'}
+                                {selectedProducts[index].unit ? selectedProducts[index].unit[0]?.toUpperCase() : 'P'}
                               </span>
                             </div>
                             {(errors[`quantity_${index}`] || warnings[`quantity_${index}`]) && (

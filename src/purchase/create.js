@@ -2865,7 +2865,7 @@ const PurchaseCreate = forwardRef((props, ref) => {
                                                                     reCalculate(index);
                                                                 }, 100);
                                                             }} />
-                                                        <span className="input-group-text" id="basic-addon2">{selectedProducts[index].unit ? selectedProducts[index].unit[0] : "U"}</span>
+                                                        <span className="input-group-text" id="basic-addon2">{selectedProducts[index].unit ? selectedProducts[index].unit[0]?.toUpperCase() : "P"}</span>
                                                     </div>
                                                     {(errors[`quantity_${index}`] || warnings[`quantity_${index}`]) && (
                                                         <i

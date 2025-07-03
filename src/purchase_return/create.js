@@ -2197,7 +2197,7 @@ async function reCalculate(productIndex) {
 
 
                                                             }} />
-                                                        <span className="input-group-text" id="basic-addon2">{selectedProducts[index].unit ? selectedProducts[index].unit[0] : "P"}</span>
+                                                        <span className="input-group-text" id="basic-addon2">{selectedProducts[index].unit ? selectedProducts[index].unit[0]?.toUpperCase() : "P"}</span>
                                                     </div>
                                                     {(errors[`quantity_${index}`] || warnings[`quantity_${index}`]) && (
                                                         <i
