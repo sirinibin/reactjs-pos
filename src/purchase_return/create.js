@@ -1027,7 +1027,7 @@ const PurchaseReturnedCreate = forwardRef((props, ref) => {
                     formData.payments_input[0].amount = parseFloat(trimTo2Decimals(formData.payments_input[0].amount));
                 }
             }*/
-            if (!formData.id && purchase && purchase.payment_status !== "not_paid") {
+            if ((!formData.id || formData.payments_input?.length === 1) && purchase && purchase.payment_status !== "not_paid") {
                 let method = "";
                 if (formData.payments_input && formData.payments_input[0]) {
                     method = formData.payments_input[0].method;

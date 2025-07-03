@@ -1502,7 +1502,7 @@ const QuotationCreate = forwardRef((props, ref) => {
 
       setFormData({ ...formData });
 
-      if (!formData.id && formData.type === "invoice") {
+      if ((!formData.id || formData.payments_input?.length === 1) && formData.type === "invoice") {
         let method = "";
         if (formData.payments_input && formData.payments_input[0]) {
           method = formData.payments_input[0].method;

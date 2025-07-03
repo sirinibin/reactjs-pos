@@ -1324,7 +1324,7 @@ const PurchaseCreate = forwardRef((props, ref) => {
             }
 
 
-            if (!formData.id) {
+            if (!formData.id || formData.payments_input?.length === 1) {
                 let method = "";
                 if (formData.payments_input && formData.payments_input[0]) {
                     method = formData.payments_input[0].method;

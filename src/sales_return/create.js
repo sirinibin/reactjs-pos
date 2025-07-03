@@ -318,7 +318,6 @@ const SalesReturnCreate = forwardRef((props, ref) => {
 
                 selectedProducts = [];
                 for (let i = 0; i < selectedProductsTemp.length; i++) {
-                    CalCulateLineTotals(i);
                     selectedProducts.push(selectedProductsTemp[i]);
 
                     //selectedProductsTemp[i].purchase_unit_price = selectedProductsTemp[i].purchasereturn_unit_price;
@@ -1329,7 +1328,7 @@ const SalesReturnCreate = forwardRef((props, ref) => {
                     formData.payments_input[0].amount = parseFloat(trimTo2Decimals(formData.payments_input[0].amount));
                 }
             }*/
-            if (!formData.id && order && order.payment_status !== "not_paid") {
+            if (((!formData.id || formData.payments_input?.length === 1) && order && order.payment_status !== "not_paid")) {
                 let method = "";
                 if (formData.payments_input && formData.payments_input[0]) {
                     method = formData.payments_input[0].method;
