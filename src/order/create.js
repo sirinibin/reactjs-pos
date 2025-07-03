@@ -301,6 +301,11 @@ const OrderCreate = forwardRef((props, ref) => {
                 setSelectedProducts([...selectedProducts]);
 
 
+                selectedProducts.forEach((product, index) => {
+                    CalCulateLineTotals(index);
+                });
+
+
                 if (formData.customer_name && formData.customer_id) {
                     let selectedCustomers = [
                         {
@@ -760,8 +765,8 @@ const OrderCreate = forwardRef((props, ref) => {
 
             if (selectedProducts[i].unit_discount_percent) {
                 unitDiscountPercent = parseFloat(selectedProducts[i].unit_discount_percent)
-                if (/^\d*\.?\d{0,2}$/.test(unitDiscountPercent) === false) {
-                    errors["unit_discount_percent_" + i] = "Max decimal points allowed is 2";
+                if (/^\d*\.?\d{0,8}$/.test(unitDiscountPercent) === false) {
+                    errors["unit_discount_percent_" + i] = "Max decimal points allowed is 8";
                     setErrors({ ...errors });
                     haveErrors = true;
                 }
@@ -1282,9 +1287,12 @@ const OrderCreate = forwardRef((props, ref) => {
             selectedProducts.push(item);
         }
         setSelectedProducts([...selectedProducts]);
+
         if (timerRef.current) clearTimeout(timerRef.current);
 
         timerRef.current = setTimeout(() => {
+            index = getProductIndex(product.id);
+            CalCulateLineTotals(index);
             reCalculate(index);
             checkErrors(index);
             checkWarnings(index);
@@ -1450,6 +1458,19 @@ const OrderCreate = forwardRef((props, ref) => {
     }
     */
 
+    function CalCulateLineTotals(index, skipTotal, skipTotalWithVAT) {
+
+        if (!skipTotal) {
+            selectedProducts[index].line_total = parseFloat(trimTo2Decimals((selectedProducts[index]?.unit_price - selectedProducts[index]?.unit_discount) * selectedProducts[index]?.quantity));
+        }
+
+        if (!skipTotalWithVAT) {
+            selectedProducts[index].line_total_with_vat = parseFloat(trimTo2Decimals((selectedProducts[index]?.unit_price_with_vat - selectedProducts[index]?.unit_discount_with_vat) * selectedProducts[index]?.quantity));
+        }
+
+        setSelectedProducts([...selectedProducts]);
+    }
+
     let [cashDiscount, setCashDiscount] = useState("");
     let [roundingAmount, setRoundingAmount] = useState(0.00);
     let [shipping, setShipping] = useState(0.00);
@@ -1458,6 +1479,7 @@ const OrderCreate = forwardRef((props, ref) => {
 
     let [discountWithVAT, setDiscountWithVAT] = useState(0.00);
     let [discountPercentWithVAT, setDiscountPercentWithVAT] = useState(0.00);
+
 
 
     async function reCalculate(productIndex) {
@@ -1649,6 +1671,7 @@ const OrderCreate = forwardRef((props, ref) => {
 
 
                 for (let i = 0; i < selectedProducts?.length; i++) {
+
                     for (let j = 0; j < res.result?.products?.length; j++) {
                         if (res.result?.products[j].product_id === selectedProducts[i].product_id) {
 
@@ -1657,6 +1680,7 @@ const OrderCreate = forwardRef((props, ref) => {
                         }
                     }
                 }
+                setSelectedProducts([...selectedProducts]);
 
                 setFormData({ ...formData });
             }
@@ -1688,6 +1712,8 @@ const OrderCreate = forwardRef((props, ref) => {
             findTotalPayments();
             setFormData({ ...formData });
             validatePaymentAmounts();
+
+
         } catch (err) {
             console.error("Failed to parse response:", err);
         }
@@ -3267,6 +3293,7 @@ const OrderCreate = forwardRef((props, ref) => {
                                                                     selectedProducts[index].quantity = "";
                                                                     setSelectedProducts([...selectedProducts]);
                                                                     timerRef.current = setTimeout(() => {
+                                                                        CalCulateLineTotals(index);
                                                                         checkWarnings(index);
                                                                         checkErrors(index);
                                                                         reCalculate(index);
@@ -3284,6 +3311,7 @@ const OrderCreate = forwardRef((props, ref) => {
                                                                     selectedProducts[index].quantity = e.target.value;
                                                                     setSelectedProducts([...selectedProducts]);
                                                                     timerRef.current = setTimeout(() => {
+                                                                        CalCulateLineTotals(index);
                                                                         checkWarnings(index);
                                                                         checkErrors(index);
                                                                         reCalculate(index);
@@ -3296,6 +3324,7 @@ const OrderCreate = forwardRef((props, ref) => {
                                                                     selectedProducts[index].quantity = e.target.value;
                                                                     setSelectedProducts([...selectedProducts]);
                                                                     timerRef.current = setTimeout(() => {
+                                                                        CalCulateLineTotals(index);
                                                                         checkErrors(index);
                                                                         checkWarnings(index);
                                                                         reCalculate(index);
@@ -3307,6 +3336,7 @@ const OrderCreate = forwardRef((props, ref) => {
                                                                 product.quantity = parseFloat(e.target.value);
                                                                 selectedProducts[index].quantity = parseFloat(e.target.value);
                                                                 timerRef.current = setTimeout(() => {
+                                                                    CalCulateLineTotals(index);
                                                                     checkErrors(index);
                                                                     checkWarnings(index);
                                                                     reCalculate(index);
@@ -3365,6 +3395,7 @@ const OrderCreate = forwardRef((props, ref) => {
                                                                     selectedProducts[index].unit_price = "";
                                                                     setSelectedProducts([...selectedProducts]);
                                                                     timerRef.current = setTimeout(() => {
+                                                                        CalCulateLineTotals(index);
                                                                         checkErrors(index);
                                                                         reCalculate(index);
                                                                     }, 100);
@@ -3383,6 +3414,7 @@ const OrderCreate = forwardRef((props, ref) => {
                                                                     setSelectedProducts([...selectedProducts]);
                                                                     timerRef.current = setTimeout(() => {
                                                                         //  checkWarnings(index);
+                                                                        CalCulateLineTotals(index);
                                                                         checkErrors(index);
                                                                         reCalculate(index);
                                                                     }, 100);
@@ -3395,6 +3427,7 @@ const OrderCreate = forwardRef((props, ref) => {
                                                                     setSelectedProducts([...selectedProducts]);
                                                                     timerRef.current = setTimeout(() => {
                                                                         //checkWarnings(index);
+                                                                        CalCulateLineTotals(index);
                                                                         checkErrors(index);
                                                                         reCalculate(index);
                                                                     }, 100);
@@ -3414,6 +3447,7 @@ const OrderCreate = forwardRef((props, ref) => {
                                                                     selectedProducts[index].unit_price_with_vat = parseFloat(trimTo8Decimals(selectedProducts[index].unit_price * (1 + (formData.vat_percent / 100))))
                                                                     selectedProducts[index].unit_discount_percent = parseFloat(trimTo2Decimals(((selectedProducts[index].unit_discount / selectedProducts[index].unit_price) * 100)))
                                                                     selectedProducts[index].unit_discount_percent_with_vat = parseFloat(trimTo2Decimals(((selectedProducts[index].unit_discount_with_vat / selectedProducts[index].unit_price_with_vat) * 100)))
+                                                                    CalCulateLineTotals(index);
                                                                     reCalculate(index);
                                                                     checkErrors(index);
                                                                 }, 100);
@@ -3468,6 +3502,7 @@ const OrderCreate = forwardRef((props, ref) => {
                                                                     selectedProducts[index].unit_price = "";
                                                                     setSelectedProducts([...selectedProducts]);
                                                                     timerRef.current = setTimeout(() => {
+                                                                        CalCulateLineTotals(index);
                                                                         reCalculate(index);
                                                                     }, 100);
                                                                 } else if (e.key === "ArrowLeft") {
@@ -3491,6 +3526,7 @@ const OrderCreate = forwardRef((props, ref) => {
                                                                     console.log("errors:", errors);
                                                                     // Set new debounce timer
                                                                     timerRef.current = setTimeout(() => {
+                                                                        CalCulateLineTotals(index);
                                                                         reCalculate(index);
                                                                     }, 100);
                                                                     return;
@@ -3505,6 +3541,7 @@ const OrderCreate = forwardRef((props, ref) => {
                                                                     console.log("errors:", errors);
                                                                     // Set new debounce timer
                                                                     timerRef.current = setTimeout(() => {
+                                                                        CalCulateLineTotals(index);
                                                                         reCalculate(index);
                                                                     }, 100);
                                                                     return;
@@ -3528,6 +3565,7 @@ const OrderCreate = forwardRef((props, ref) => {
                                                                     selectedProducts[index].unit_discount_percent = parseFloat(trimTo2Decimals(((selectedProducts[index].unit_discount / selectedProducts[index].unit_price) * 100)))
                                                                     selectedProducts[index].unit_discount_percent_with_vat = parseFloat(trimTo2Decimals(((selectedProducts[index].unit_discount_with_vat / selectedProducts[index].unit_price_with_vat) * 100)))
 
+                                                                    CalCulateLineTotals(index);
                                                                     reCalculate(index);
                                                                 }, 100);
                                                             }} />
@@ -3588,6 +3626,7 @@ const OrderCreate = forwardRef((props, ref) => {
 
                                                                     setErrors({ ...errors });
                                                                     timerRef.current = setTimeout(() => {
+                                                                        CalCulateLineTotals(index);
                                                                         reCalculate(index);
                                                                     }, 100);
                                                                     return;
@@ -3602,6 +3641,7 @@ const OrderCreate = forwardRef((props, ref) => {
                                                                     errors["unit_discount_" + index] = "Unit discount should be >= 0";
                                                                     setErrors({ ...errors });
                                                                     timerRef.current = setTimeout(() => {
+                                                                        CalCulateLineTotals(index);
                                                                         reCalculate(index);
                                                                     }, 100);
                                                                     return;
@@ -3615,6 +3655,7 @@ const OrderCreate = forwardRef((props, ref) => {
                                                                     // errors["discount_" + index] = "Invalid Discount";
                                                                     setFormData({ ...formData });
                                                                     timerRef.current = setTimeout(() => {
+                                                                        CalCulateLineTotals(index);
                                                                         reCalculate(index);
                                                                     }, 100);
                                                                     //setErrors({...errors});
@@ -3639,6 +3680,7 @@ const OrderCreate = forwardRef((props, ref) => {
 
                                                                     selectedProducts[index].unit_discount_percent = parseFloat(trimTo2Decimals(((selectedProducts[index].unit_discount / selectedProducts[index].unit_price) * 100)))
                                                                     selectedProducts[index].unit_discount_percent_with_vat = parseFloat(trimTo2Decimals(((selectedProducts[index].unit_discount_with_vat / selectedProducts[index].unit_price_with_vat) * 100)))
+                                                                    CalCulateLineTotals(index);
                                                                     reCalculate(index);
                                                                 }, 100);
                                                             }} />
@@ -3723,6 +3765,7 @@ const OrderCreate = forwardRef((props, ref) => {
                                                                     delete errors["unit_discount_with_vat" + index];
                                                                     setErrors({ ...errors });
                                                                     timerRef.current = setTimeout(() => {
+                                                                        CalCulateLineTotals(index);
                                                                         reCalculate(index);
                                                                     }, 100);
                                                                     return;
@@ -3737,6 +3780,7 @@ const OrderCreate = forwardRef((props, ref) => {
                                                                     errors["unit_discount_" + index] = "Unit discount should be >= 0";
                                                                     setErrors({ ...errors });
                                                                     timerRef.current = setTimeout(() => {
+                                                                        CalCulateLineTotals(index);
                                                                         reCalculate(index);
                                                                     }, 100);
                                                                     return;
@@ -3750,6 +3794,7 @@ const OrderCreate = forwardRef((props, ref) => {
                                                                     // errors["discount_" + index] = "Invalid Discount";
                                                                     setFormData({ ...formData });
                                                                     timerRef.current = setTimeout(() => {
+                                                                        CalCulateLineTotals(index);
                                                                         reCalculate(index);
                                                                     }, 100);
                                                                     //setErrors({ ...errors });
@@ -3774,7 +3819,7 @@ const OrderCreate = forwardRef((props, ref) => {
                                                                     selectedProducts[index].unit_discount = parseFloat(trimTo2Decimals(selectedProducts[index].unit_discount_with_vat / (1 + (formData.vat_percent / 100))))
                                                                     selectedProducts[index].unit_discount_percent = parseFloat(trimTo2Decimals(((selectedProducts[index].unit_discount / selectedProducts[index].unit_price) * 100)))
                                                                     selectedProducts[index].unit_discount_percent_with_vat = parseFloat(trimTo2Decimals(((selectedProducts[index].unit_discount_with_vat / selectedProducts[index].unit_price_with_vat) * 100)))
-
+                                                                    CalCulateLineTotals(index);
                                                                     reCalculate(index);
                                                                 }, 100);
                                                             }} />
@@ -3889,6 +3934,7 @@ const OrderCreate = forwardRef((props, ref) => {
                                                                     delete errors["unit_discount_percent_" + index];
                                                                     setErrors({ ...errors });
                                                                     timerRef.current = setTimeout(() => {
+                                                                        CalCulateLineTotals(index);
                                                                         reCalculate(index)
                                                                     }, 100);
                                                                     return;
@@ -3903,6 +3949,7 @@ const OrderCreate = forwardRef((props, ref) => {
                                                                     errors["unit_discount_percent_" + index] = "Unit discount % should be >= 0";
                                                                     setErrors({ ...errors });
                                                                     timerRef.current = setTimeout(() => {
+                                                                        CalCulateLineTotals(index);
                                                                         reCalculate(index);
                                                                     }, 100);
                                                                     return;
@@ -3916,6 +3963,7 @@ const OrderCreate = forwardRef((props, ref) => {
                                                                     //errors["discount_percent_" + index] = "Invalid Discount Percent";
                                                                     setFormData({ ...formData });
                                                                     timerRef.current = setTimeout(() => {
+                                                                        CalCulateLineTotals(index);
                                                                         reCalculate(index);
                                                                     }, 100);
                                                                     //setErrors({ ...errors });
@@ -3943,7 +3991,7 @@ const OrderCreate = forwardRef((props, ref) => {
                                                                     selectedProducts[index].unit_discount_with_vat = parseFloat(trimTo2Decimals(selectedProducts[index].unit_price_with_vat * (selectedProducts[index].unit_discount_percent_with_vat / 100)))
                                                                     selectedProducts[index].unit_discount = parseFloat(trimTo2Decimals(selectedProducts[index].unit_discount_with_vat / (1 + (formData.vat_percent / 100))))
                                                                     selectedProducts[index].unit_discount_percent = parseFloat(trimTo2Decimals(((selectedProducts[index].unit_discount / selectedProducts[index].unit_price) * 100)))
-
+                                                                    CalCulateLineTotals(index);
                                                                     reCalculate(index);
                                                                 }, 100);
                                                             }} />{""}
@@ -3965,11 +4013,243 @@ const OrderCreate = forwardRef((props, ref) => {
                                                     )}
                                                 </div>
                                             </td>
-                                            <td className="text-end" style={{ verticalAlign: 'middle', padding: '0.25rem' }} >
-                                                <Amount amount={trimTo2Decimals((selectedProducts[index].unit_price - selectedProducts[index].unit_discount) * selectedProducts[index].quantity)} />
+                                            <td style={{ verticalAlign: 'middle', padding: '0.25rem' }}>
+                                                <div className="d-flex align-items-center" style={{ minWidth: 0 }}>
+                                                    <div className="input-group flex-nowrap" style={{ flex: '1 1 auto', minWidth: 0 }}>
+                                                        <input type="number"
+                                                            id={`${"sales_product_line_total_" + index}`}
+                                                            name={`${"sales_product_line_total_" + index}`}
+                                                            onWheel={(e) => e.target.blur()}
+                                                            value={selectedProducts[index].line_total}
+                                                            className={`form-control text-end ${errors["line_total_" + index] ? 'is-invalid' : ''} ${warnings["line_total_" + index] ? 'border-warning text-warning' : ''}`}
+                                                            placeholder="Line total"
+                                                            ref={(el) => {
+                                                                if (!inputRefs.current[index]) inputRefs.current[index] = {};
+                                                                inputRefs.current[index][`${"sales_product_line_total_" + index}`] = el;
+                                                            }}
+
+                                                            onFocus={() => {
+                                                                if (timerRef.current) clearTimeout(timerRef.current);
+                                                                timerRef.current = setTimeout(() => {
+                                                                    inputRefs.current[index][`${"sales_product_line_total_" + index}`].select();
+                                                                }, 20);
+                                                            }}
+
+                                                            onKeyDown={(e) => {
+                                                                RunKeyActions(e, product);
+
+                                                                if (timerRef.current) clearTimeout(timerRef.current);
+                                                                if (e.key === "Backspace") {
+                                                                    delete errors["line_total_" + index];
+                                                                    selectedProducts[index].unit_price_with_vat = "";
+                                                                    selectedProducts[index].unit_price = "";
+                                                                    selectedProducts[index].line_total = "";
+                                                                    selectedProducts[index].line_total_with_vat = "";
+                                                                    setSelectedProducts([...selectedProducts]);
+                                                                    timerRef.current = setTimeout(() => {
+                                                                        checkErrors(index);
+                                                                        CalCulateLineTotals(index, true);
+                                                                        reCalculate(index);
+                                                                    }, 100);
+                                                                } else if (e.key === "ArrowLeft") {
+                                                                    timerRef.current = setTimeout(() => {
+                                                                        inputRefs.current[index][`${"sales_product_unit_discount_with_vat_" + index}`].select();
+                                                                    }, 100);
+                                                                }
+                                                            }}
+
+                                                            onChange={(e) => {
+                                                                delete errors["line_total_" + index];
+                                                                if (timerRef.current) clearTimeout(timerRef.current);
+                                                                if (parseFloat(e.target.value) === 0) {
+                                                                    selectedProducts[index].unit_price = e.target.value;
+                                                                    selectedProducts[index].unit_price_with_vat = e.target.value;
+                                                                    selectedProducts[index].line_total = e.target.value;
+                                                                    selectedProducts[index].line_total_with_vat = e.target.value;
+                                                                    setSelectedProducts([...selectedProducts]);
+                                                                    timerRef.current = setTimeout(() => {
+                                                                        //  checkWarnings(index);
+                                                                        checkErrors(index);
+                                                                        CalCulateLineTotals(index, true);
+                                                                        reCalculate(index);
+                                                                    }, 100);
+                                                                    return;
+                                                                }
+
+                                                                if (!e.target.value) {
+                                                                    selectedProducts[index].unit_price = e.target.value;
+                                                                    selectedProducts[index].unit_price_with_vat = e.target.value;
+                                                                    selectedProducts[index].line_total = e.target.value;
+                                                                    selectedProducts[index].line_total_with_vat = e.target.value;
+                                                                    setSelectedProducts([...selectedProducts]);
+                                                                    timerRef.current = setTimeout(() => {
+                                                                        //checkWarnings(index);
+                                                                        checkErrors(index);
+                                                                        CalCulateLineTotals(index, true);
+                                                                        reCalculate(index);
+                                                                    }, 100);
+                                                                    return;
+                                                                }
+
+
+                                                                if (/^\d*\.?\d{0,2}$/.test(parseFloat(e.target.value)) === false) {
+                                                                    errors["line_total_" + index] = "Max decimal points allowed is 2";
+                                                                    setErrors({ ...errors });
+                                                                }
+
+                                                                selectedProducts[index].line_total = parseFloat(e.target.value);
+                                                                setSelectedProducts([...selectedProducts]);
+
+                                                                timerRef.current = setTimeout(() => {
+                                                                    if (selectedProducts[index].quantity > 0) {
+                                                                        selectedProducts[index].unit_price = parseFloat(trimTo8Decimals(selectedProducts[index].line_total / selectedProducts[index].quantity));
+                                                                        selectedProducts[index].unit_price_with_vat = parseFloat(trimTo8Decimals(selectedProducts[index].unit_price * (1 + (formData.vat_percent / 100))))
+                                                                        selectedProducts[index].unit_discount_percent = parseFloat(trimTo8Decimals(((selectedProducts[index].unit_discount / selectedProducts[index].unit_price) * 100)))
+                                                                        selectedProducts[index].unit_discount_percent_with_vat = parseFloat(trimTo8Decimals(((selectedProducts[index].unit_discount_with_vat / selectedProducts[index].unit_price_with_vat) * 100)))
+                                                                    }
+                                                                    CalCulateLineTotals(index, true);
+                                                                    reCalculate(index);
+                                                                    checkErrors(index);
+                                                                }, 100);
+                                                            }} />
+
+                                                    </div>
+                                                    {(errors[`line_total_${index}`] || warnings[`line_total_${index}`]) && (
+                                                        <i
+                                                            className={`bi bi-exclamation-circle-fill ${errors[`line_total_${index}`] ? 'text-danger' : 'text-warning'} ms-2`}
+                                                            data-bs-toggle="tooltip"
+                                                            data-bs-placement="top"
+                                                            data-error={errors[`line_total_${index}`] || ''}
+                                                            data-warning={warnings[`line_total_${index}`] || ''}
+                                                            title={errors[`line_total_${index}`] || warnings[`line_total_${index}`] || ''}
+                                                            style={{
+                                                                fontSize: '1rem',
+                                                                cursor: 'pointer',
+                                                                whiteSpace: 'nowrap',
+                                                            }}
+                                                        ></i>
+                                                    )}
+                                                </div>
                                             </td>
-                                            <td className="text-end" style={{ verticalAlign: 'middle', padding: '0.25rem' }}>
-                                                <Amount amount={trimTo2Decimals(((selectedProducts[index].unit_price_with_vat - selectedProducts[index].unit_discount_with_vat) * selectedProducts[index].quantity))} />
+                                            <td style={{ verticalAlign: 'middle', padding: '0.25rem' }}>
+                                                <div className="d-flex align-items-center" style={{ minWidth: 0 }}>
+                                                    <div className="input-group flex-nowrap" style={{ flex: '1 1 auto', minWidth: 0 }}>
+                                                        <input type="number"
+                                                            id={`${"sales_product_line_total_with_vat" + index}`}
+                                                            name={`${"sales_product_line_total_with_vat" + index}`}
+                                                            onWheel={(e) => e.target.blur()}
+                                                            value={selectedProducts[index].line_total_with_vat}
+                                                            className={`form-control text-end ${errors["line_total_with_vat" + index] ? 'is-invalid' : ''} ${warnings["line_total_with_vat" + index] ? 'border-warning text-warning' : ''}`}
+                                                            placeholder="Line total with VAT"
+                                                            ref={(el) => {
+                                                                if (!inputRefs.current[index]) inputRefs.current[index] = {};
+                                                                inputRefs.current[index][`${"sales_product_line_total_with_vat" + index}`] = el;
+                                                            }}
+
+                                                            onFocus={() => {
+                                                                if (timerRef.current) clearTimeout(timerRef.current);
+                                                                timerRef.current = setTimeout(() => {
+                                                                    inputRefs.current[index][`${"sales_product_line_total_with_vat" + index}`].select();
+                                                                }, 20);
+                                                            }}
+
+                                                            onKeyDown={(e) => {
+                                                                RunKeyActions(e, product);
+
+                                                                if (timerRef.current) clearTimeout(timerRef.current);
+                                                                if (e.key === "Backspace") {
+                                                                    delete errors["line_total_with_vat_" + index];
+                                                                    selectedProducts[index].unit_price_with_vat = "";
+                                                                    selectedProducts[index].unit_price = "";
+                                                                    selectedProducts[index].line_total = "";
+                                                                    selectedProducts[index].line_total_with_vat = "";
+                                                                    setSelectedProducts([...selectedProducts]);
+                                                                    timerRef.current = setTimeout(() => {
+                                                                        checkErrors(index);
+                                                                        CalCulateLineTotals(index, false, true);
+                                                                        reCalculate(index);
+                                                                    }, 100);
+                                                                } else if (e.key === "ArrowLeft") {
+                                                                    timerRef.current = setTimeout(() => {
+                                                                        inputRefs.current[index][`${"sales_product_line_total_" + index}`].select();
+                                                                    }, 100);
+                                                                }
+                                                            }}
+
+                                                            onChange={(e) => {
+                                                                delete errors["line_total_with_vat_" + index];
+                                                                if (timerRef.current) clearTimeout(timerRef.current);
+                                                                if (parseFloat(e.target.value) === 0) {
+                                                                    selectedProducts[index].unit_price = e.target.value;
+                                                                    selectedProducts[index].unit_price_with_vat = e.target.value;
+                                                                    selectedProducts[index].line_total = e.target.value;
+                                                                    selectedProducts[index].line_total_with_vat = e.target.value;
+                                                                    setSelectedProducts([...selectedProducts]);
+                                                                    timerRef.current = setTimeout(() => {
+                                                                        //  checkWarnings(index);
+                                                                        checkErrors(index);
+                                                                        CalCulateLineTotals(index, false, true);
+                                                                        reCalculate(index);
+                                                                    }, 100);
+                                                                    return;
+                                                                }
+
+                                                                if (!e.target.value) {
+                                                                    selectedProducts[index].unit_price = e.target.value;
+                                                                    selectedProducts[index].unit_price_with_vat = e.target.value;
+                                                                    selectedProducts[index].line_total = e.target.value;
+                                                                    selectedProducts[index].line_total_with_vat = e.target.value;
+                                                                    setSelectedProducts([...selectedProducts]);
+                                                                    timerRef.current = setTimeout(() => {
+                                                                        //checkWarnings(index);
+                                                                        checkErrors(index);
+                                                                        CalCulateLineTotals(index, false, true);
+                                                                        reCalculate(index);
+                                                                    }, 100);
+                                                                    return;
+                                                                }
+
+
+                                                                if (/^\d*\.?\d{0,2}$/.test(parseFloat(e.target.value)) === false) {
+                                                                    errors["line_total_with_vat_" + index] = "Max decimal points allowed is 2";
+                                                                    setErrors({ ...errors });
+                                                                }
+
+                                                                selectedProducts[index].line_total_with_vat = parseFloat(e.target.value);
+                                                                setSelectedProducts([...selectedProducts]);
+
+                                                                timerRef.current = setTimeout(() => {
+                                                                    if (selectedProducts[index].quantity > 0) {
+                                                                        selectedProducts[index].unit_price_with_vat = parseFloat(trimTo8Decimals(selectedProducts[index].line_total_with_vat / selectedProducts[index].quantity));
+                                                                        selectedProducts[index].unit_price = parseFloat(trimTo8Decimals(selectedProducts[index].unit_price_with_vat / (1 + (formData.vat_percent / 100))))
+
+                                                                        selectedProducts[index].unit_price_with_vat = parseFloat(trimTo8Decimals(selectedProducts[index].unit_price * (1 + (formData.vat_percent / 100))))
+                                                                        selectedProducts[index].unit_discount_percent = parseFloat(trimTo8Decimals(((selectedProducts[index].unit_discount / selectedProducts[index].unit_price) * 100)))
+                                                                        selectedProducts[index].unit_discount_percent_with_vat = parseFloat(trimTo8Decimals(((selectedProducts[index].unit_discount_with_vat / selectedProducts[index].unit_price_with_vat) * 100)))
+                                                                    }
+                                                                    reCalculate(index);
+                                                                    CalCulateLineTotals(index, false, true);
+                                                                    checkErrors(index);
+                                                                }, 100);
+                                                            }} />
+
+                                                    </div>
+                                                    {(errors[`line_total_with_vat_${index}`] || warnings[`line_total_with_vat_${index}`]) && (
+                                                        <i
+                                                            className={`bi bi-exclamation-circle-fill ${errors[`line_total_with_vat_${index}`] ? 'text-danger' : 'text-warning'} ms-2`}
+                                                            data-bs-toggle="tooltip"
+                                                            data-bs-placement="top"
+                                                            data-error={errors[`line_total_with_vat_${index}`] || ''}
+                                                            data-warning={warnings[`line_total_with_vat_${index}`] || ''}
+                                                            title={errors[`line_total_with_vat_${index}`] || warnings[`line_total_with_vat_${index}`] || ''}
+                                                            style={{
+                                                                fontSize: '1rem',
+                                                                cursor: 'pointer',
+                                                                whiteSpace: 'nowrap',
+                                                            }}
+                                                        ></i>
+                                                    )}
+                                                </div>
                                             </td>
                                         </tr>
                                     )).reverse()}
