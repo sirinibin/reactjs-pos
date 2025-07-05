@@ -1860,6 +1860,7 @@ const OrderIndex = forwardRef((props, ref) => {
                                                             col.key !== "created_by" &&
                                                             col.key !== "created_at" &&
                                                             col.key !== "actions_end" &&
+                                                            col.key !== "customer" &&
                                                             <th><input
                                                                 type="text"
                                                                 id={"sales_" + col.fieldName}
@@ -2015,7 +2016,7 @@ const OrderIndex = forwardRef((props, ref) => {
                                                                 <option value="not_reported">NOT REPORTED</option>
                                                             </select>
                                                         </th>}
-                                                        {col.key === "customer_name" && <th>
+                                                        {col.key === "customer" && <th>
                                                             <Typeahead
                                                                 id="customer_id"
                                                                 filterBy={['additional_keywords']}

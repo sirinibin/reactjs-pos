@@ -2068,6 +2068,7 @@ function SalesReturnIndex(props) {
                                                             col.key !== "created_by" &&
                                                             col.key !== "created_at" &&
                                                             col.key !== "actions_end" &&
+                                                            col.key !== "customer" &&
                                                             <th><input
                                                                 type="text"
                                                                 id={"sales_return_" + col.fieldName}
@@ -2224,7 +2225,7 @@ function SalesReturnIndex(props) {
                                                                 <option value="not_reported">NOT REPORTED</option>
                                                             </select>
                                                         </th>}
-                                                        {col.key === "customer_name" && <th>
+                                                        {col.key === "customer" && <th>
                                                             <Typeahead
                                                                 id="customer_id"
                                                                 filterBy={['additional_keywords']}
