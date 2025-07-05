@@ -692,12 +692,9 @@ function QuotationIndex(props) {
             <span className="text-end">
               <StatsSummary
                 title="Quotation"
-                leftStats={{
+                stats={{
                   "Quotation": totalQuotation,
                   "Profit": profit,
-
-                }}
-                rightStats={{
                   "Profit %": profit && totalQuotation ? (profit / totalQuotation) * 100 : "",
                   "Loss": loss,
                 }}
@@ -706,8 +703,8 @@ function QuotationIndex(props) {
             </span>
             <span className="text-end">
               <StatsSummary
-                title="Sales"
-                leftStats={{
+                title="Qtn. Sales"
+                stats={{
                   "Sales": invoiceTotalSales,
                   "Cash Sales": invoiceTotalCashSales,
                   "Credit Sales": invoiceTotalUnPaidSales,
@@ -717,12 +714,11 @@ function QuotationIndex(props) {
                   "Net Profit %": invoiceNetProfit && invoiceTotalSales ? ((invoiceNetProfit / invoiceTotalSales) * 100) : "",
                   "Paid Sales": invoiceTotalPaidSales,
                   "Sales Discount": invoiceTotalDiscount,
-                }}
-                rightStats={{
                   "Shipping/Handling fees": invoiceTotalShippingHandlingFees,
                   "Net Profit": invoiceNetProfit,
                   "Net Loss": invoiceLoss,
                 }}
+
                 onToggle={handleSummaryToggle}
               />
             </span>

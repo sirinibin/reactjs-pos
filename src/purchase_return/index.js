@@ -878,20 +878,18 @@ function PurchaseReturnIndex(props) {
                         <span className="text-end">
                             <StatsSummary
                                 title="Purchase Return"
-                                leftStats={{
+                                stats={{
                                     "Cash Purchase Return": totalCashPurchaseReturn,
                                     "Credit Purchase Return": totalUnPaidPurchaseReturn,
                                     "Bank Account Purchase Return": totalBankAccountPurchaseReturn,
                                     "Cash Discount Return": totalCashDiscount,
                                     "VAT Return": vatPrice,
-                                }}
-                                rightStats={{
                                     "Purchase Return": totalPurchaseReturn,
                                     "Paid Purchase Return": totalPaidPurchaseReturn,
-                                    "Cash Purchase Return": totalCashPurchaseReturn,
                                     "Purchase Discount Return": totalDiscount,
                                     "Shipping/Handling fees": totalShippingHandlingFees,
                                 }}
+
                                 onToggle={handleSummaryToggle}
                             />
                         </span>

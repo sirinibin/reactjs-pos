@@ -31,6 +31,7 @@
     "quagga": "^0.12.1",
     "react": "^17.0.2",
     "react-barcode": "^1.4.1",
+    "react-beautiful-dnd": "^13.1.1",
     "react-bootstrap": "^2.0.0-rc.0",
     "react-bootstrap-confirmation": "^1.0.4",
     "react-bootstrap-typeahead": "*",

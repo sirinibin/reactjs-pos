@@ -873,14 +873,12 @@ function PurchaseIndex(props) {
                         <span className="text-end">
                             <StatsSummary
                                 title="Purchase"
-                                leftStats={{
+                                stats={{
                                     "Cash purchase": totalCashPurchase,
                                     "Credit purchase": totalUnPaidPurchase,
                                     "Bank account purchase": totalBankAccountPurchase,
                                     "Cash discount": totalCashDiscount,
                                     "VAT paid": vatPrice,
-                                }}
-                                rightStats={{
                                     "Purchase": totalPurchase,
                                     "Paid purchase": totalPaidPurchase,
                                     "Purchase discount": totalDiscount,
@@ -888,6 +886,7 @@ function PurchaseIndex(props) {
                                     "Return Count": returnCount,
                                     "Return Paid Amount": returnPaidAmount,
                                 }}
+
                                 onToggle={handleSummaryToggle}
                             />
                         </span>

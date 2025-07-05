@@ -1323,7 +1323,7 @@ function SalesReturnIndex(props) {
                         <span className="text-end">
                             <StatsSummary
                                 title="Sales Return"
-                                leftStats={{
+                                stats={{
                                     "Sales Return": totalSalesReturn,
                                     "Cash Sales Return": totalCashSalesReturn,
                                     "Credit Sales Return": totalUnPaidSalesReturn,
@@ -1331,8 +1331,6 @@ function SalesReturnIndex(props) {
                                     "Cash Discount Return": totalCashDiscount,
                                     "VAT Return": vatPrice,
                                     "Net Profit Return %": netProfit && totalSalesReturn ? ((netProfit / totalSalesReturn) * 100) : "",
-                                }}
-                                rightStats={{
                                     "Paid Sales Return": totalPaidSalesReturn,
                                     "Sales Discount Return": totalDiscount,
                                     "Shipping/Handling fees Return": totalShippingHandlingFees,

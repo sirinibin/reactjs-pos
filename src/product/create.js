@@ -907,7 +907,7 @@ const ProductCreate = forwardRef((props, ref) => {
 
 
   function IsProductExistsInSet(productID) {
-    for (var i = 0; i < formData.set.products.length; i++) {
+    for (var i = 0; i < formData.set.products?.length; i++) {
       if (formData.set.products[i].product_id === productID) {
         return true;
       }

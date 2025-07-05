@@ -1189,7 +1189,7 @@ function QuotationSalesReturnIndex(props) {
                         <span className="text-end">
                             <StatsSummary
                                 title="Quotation Sales Return"
-                                leftStats={{
+                                stats={{
                                     "Sales Return": totalQuotationSalesReturn,
                                     "Cash Sales Return": totalCashQuotationSalesReturn,
                                     "Credit Sales Return": totalUnPaidQuotationSalesReturn,
@@ -1197,8 +1197,6 @@ function QuotationSalesReturnIndex(props) {
                                     "Cash Discount Return": totalCashDiscount,
                                     "VAT Return": vatPrice,
                                     "Net Profit Return %": netProfit && totalQuotationSalesReturn ? ((netProfit / totalQuotationSalesReturn) * 100) : "",
-                                }}
-                                rightStats={{
                                     "Paid Sales Return": totalPaidQuotationSalesReturn,
                                     "Sales Discount Return": totalDiscount,
                                     "Shipping/Handling fees Return": totalShippingHandlingFees,
