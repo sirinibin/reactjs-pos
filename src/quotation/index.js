@@ -1658,15 +1658,16 @@ function QuotationIndex(props) {
                             </td>
                             <td><Amount amount={trimTo2Decimals(quotation.balance_amount)} /></td>
 
-
                             {store.zatca?.phase === "2" && store.zatca?.connected ? <td style={{ width: "auto", whiteSpace: "nowrap" }}>
-                              {quotation.reported_to_zatca ? <span>&nbsp;<span className="badge bg-success">
-                                Reported
-                                {quotation.reported_to_zatca && quotation.reported_to_zatca_at ? <span>&nbsp;<TimeAgo date={quotation.reported_to_zatca_at} />&nbsp;</span> : ""}
-                                &nbsp;</span></span> : ""}
-                              {!quotation.reported_to_zatca ? <span className="badge bg-warning">
-                                Not Reported
-                                &nbsp;</span> : ""}
+                              {quotation.type === "invoice" && <>
+                                {quotation.reported_to_zatca ? <span>&nbsp;<span className="badge bg-success">
+                                  Reported
+                                  {quotation.reported_to_zatca && quotation.reported_to_zatca_at ? <span>&nbsp;<TimeAgo date={quotation.reported_to_zatca_at} />&nbsp;</span> : ""}
+                                  &nbsp;</span></span> : ""}
+                                {!quotation.reported_to_zatca ? <span className="badge bg-warning">
+                                  Not Reported
+                                  &nbsp;</span> : ""}
+                              </>}
                             </td> : ""}
                             <td style={{ width: "auto", whiteSpace: "nowrap" }} >  {quotation.type}</td>
                             <td style={{ width: "auto", whiteSpace: "nowrap" }} >
