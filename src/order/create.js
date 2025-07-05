@@ -1164,139 +1164,50 @@ const OrderCreate = forwardRef((props, ref) => {
             return null;  // ✅ explicitly return null or a fallback if there's an error
         }
     }
-
     function addProduct(product) {
-        console.log("Inside Add product");
-        if (!formData.store_id) {
-            formData.store_id = localStorage.getItem("store_id");
-        }
-
-        delete errors.product_id;
-        if (!product) {
-            errors.product_id = "Invalid Product";
-            setErrors({ ...errors });
-            console.log("Invalid product:", product);
-            return false;
-        }
-
-        // console.log("product:", product);
-        if (product.product_stores && product.product_stores[formData.store_id]?.retail_unit_price) {
-            product.unit_price = product.product_stores[formData.store_id].retail_unit_price;
-            product.unit_price_with_vat = product.product_stores[formData.store_id].retail_unit_price_with_vat;
-        }
-
-        if (product.product_stores && product.product_stores[formData.store_id]?.purchase_unit_price) {
-            product.purchase_unit_price = product.product_stores[formData.store_id].purchase_unit_price;
-            product.purchase_unit_price_with_vat = product.product_stores[formData.store_id].purchase_unit_price_with_vat;
-        }
-
-
-        if (product.product_stores && product.product_stores[formData.store_id]) {
-            product.unit_discount = 0.00;
-            product.unit_discount_with_vat = 0.00;
-            product.unit_discount_percent = 0.00;
-            product.unit_discount_percent_with_vat = 0.00;
-        }
-
-
-        delete errors.unit_price;
-        if (!product.unit_price) {
-            product["unit_price"] = 0.00;
-        }
-
-        if (!product.purchase_unit_price) {
-            product["purchase_unit_price"] = 0.00;
-        }
-
-        if (!product.purchase_unit_price_with_vat) {
-            product["purchase_unit_price_with_vat"] = 0.00;
-        }
-
-        if (!product.unit_price_with_vat) {
-            product["unit_price_with_vat"] = 0.00;
-        }
-
-        let alreadyAdded = false;
-        let index = false;
-        let quantity = 0.00;
-
-        if (!product.quantity) {
-            product.quantity = 1.00;
-        }
-
         if (!product.id && product.product_id) {
             product.id = product.product_id
         }
 
+        let alreadyAdded = isProductAdded(product.id);
+        let index = getProductIndex(product.id);
 
-
-        if (isProductAdded(product.id) && !product.allow_duplicates) {
-            alreadyAdded = true;
-            index = getProductIndex(product.id);
-            quantity = parseFloat(selectedProducts[index].quantity)
-            //quantity = parseFloat(selectedProducts[index].quantity + product.quantity);
-            if (product.unit_price) {
-                selectedProducts[index].unit_price = product.unit_price;
-                selectedProducts[index].unit_price_with_vat = product.unit_price_with_vat;
-            }
-
-            if (product.unit_discount) {
-                selectedProducts[index].unit_discount = product.unit_discount;
-                //selectedProducts[index].unit_discount = product.unit_discount_percent;
-            }
-            if (product.unit_discount_with_vat) {
-                selectedProducts[index].unit_discount_with_vat = product.unit_discount_with_vat;
-                //selectedProducts[index].unit_discount = product.unit_discount_percent;
-            }
-
-        } else {
-            quantity = parseFloat(product.quantity);
-        }
-
-        delete errors.quantity;
-
-        if (alreadyAdded) {
-            selectedProducts[index].quantity = parseFloat(quantity);
-        }
-
-        if (!alreadyAdded) {
-            let item = {
+        if (!alreadyAdded || product.allow_duplicates) {
+            selectedProducts.push({
                 product_id: product.id,
                 code: product.item_code,
                 prefix_part_number: product.prefix_part_number,
                 part_number: product.part_number,
                 name: product.name,
-                quantity: product.quantity,
+                quantity: 1,
                 product_stores: product.product_stores,
-                unit_price: product.unit_price,
-                unit_price_with_vat: product.unit_price_with_vat,
+                unit_price: product.product_stores[localStorage.getItem("store_id")]?.retail_unit_price ? product.product_stores[formData.store_id]?.retail_unit_price : 0,
+                unit_price_with_vat: product.product_stores[localStorage.getItem("store_id")]?.retail_unit_price_with_vat ? product.product_stores[formData.store_id]?.retail_unit_price_with_vat : 0,
                 unit: product.unit ? product.unit : "",
-                purchase_unit_price: product.purchase_unit_price,
-                purchase_unit_price_with_vat: product.purchase_unit_price_with_vat,
-                unit_discount: product.unit_discount,
-                unit_discount_with_vat: product.unit_discount_with_vat,
-                unit_discount_percent: product.unit_discount_percent,
-                unit_discount_percent_vat: product.unit_discount_percent_with_vat,
-            };
+                purchase_unit_price: product.product_stores[localStorage.getItem("store_id")]?.purchase_unit_price ? product.product_stores[formData.store_id]?.purchase_unit_price : 0,
+                purchase_unit_price_with_vat: product.product_stores[localStorage.getItem("store_id")]?.purchase_unit_price_with_vat ? product.product_stores[formData.store_id]?.purchase_unit_price_with_vat : 0,
+                unit_discount: 0,
+                unit_discount_with_vat: 0,
+                unit_discount_percent: 0,
+                unit_discount_percent_vat: 0,
+                stock: product.product_stores[localStorage.getItem("store_id")]?.stock ? product.product_stores[localStorage.getItem("store_id")]?.stock : 0,
 
-            item.stock = 0;
-            if (product.product_stores && product.product_stores[localStorage.getItem("store_id")]) {
-                item.stock = product.product_stores[localStorage.getItem("store_id")]?.stock;
-            }
-
-            selectedProducts.push(item);
+            });
         }
         setSelectedProducts([...selectedProducts]);
-
+        if (timerRef.current) clearTimeout(timerRef.current);
 
         timerRef.current = setTimeout(() => {
             index = getProductIndex(product.id);
-            CalCulateLineTotals(index);
-            reCalculate(index);
-            checkErrors(index);
-            checkWarnings(index);
-        }, 100);
+            if (alreadyAdded && product.allow_duplicates) {
+                index = selectedProducts?.length - 1;
+            }
 
+            CalCulateLineTotals(index);
+            checkWarnings(index);
+            checkErrors(index);
+            reCalculate(index);
+        }, 100);
         return true;
     }
 
@@ -2272,6 +2183,7 @@ const OrderCreate = forwardRef((props, ref) => {
         PrintRef.current.open(formData);
     }
 
+    const onChangeTriggeredRef = useRef(false);
 
     return (
         <>
@@ -2733,6 +2645,15 @@ const OrderCreate = forwardRef((props, ref) => {
                                 isLoading={false}
                                 isInvalid={!!errors.product_id}
                                 onChange={(selectedItems) => {
+                                    if (onChangeTriggeredRef.current) return;
+                                    onChangeTriggeredRef.current = true;
+
+                                    // Reset after short delay
+                                    setTimeout(() => {
+                                        onChangeTriggeredRef.current = false;
+                                    }, 300);
+
+
                                     if (selectedItems.length === 0) {
                                         errors["product_id"] = "Invalid Product selected";
                                         setErrors(errors);

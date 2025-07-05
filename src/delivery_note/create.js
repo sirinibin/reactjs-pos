@@ -1266,6 +1266,9 @@ const DeliveryNoteCreate = forwardRef((props, ref) => {
     return () => document.removeEventListener("keydown", handleKeyDown);
   }, []);
 
+
+  const onChangeTriggeredRef = useRef(false);
+
   return (
     <>
       <ImageViewerModal ref={imageViewerRef} images={productImages} />
@@ -1617,6 +1620,14 @@ const DeliveryNoteCreate = forwardRef((props, ref) => {
                 isLoading={false}
                 isInvalid={errors.product_id ? true : false}
                 onChange={(selectedItems) => {
+                  if (onChangeTriggeredRef.current) return;
+                  onChangeTriggeredRef.current = true;
+
+                  // Reset after short delay
+                  setTimeout(() => {
+                    onChangeTriggeredRef.current = false;
+                  }, 300);
+
                   if (selectedItems.length === 0) {
                     errors["product_id"] = "Invalid Product selected";
                     setErrors(errors);

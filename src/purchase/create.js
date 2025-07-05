@@ -873,123 +873,34 @@ const PurchaseCreate = forwardRef((props, ref) => {
     }
 
     function addProduct(product) {
-        console.log("Inside Add product");
-        if (!formData.store_id) {
-            errors.product_id = "Please Select a Store and try again";
-            setErrors({ ...errors });
-            return false;
+        if (!product.id && product.product_id) {
+            product.id = product.product_id
         }
 
+        let alreadyAdded = isProductAdded(product.id);
+        let index = getProductIndex(product.id);
 
-        delete errors.product_id;
-        if (!product) {
-            errors.product_id = "Invalid Product";
-            setErrors({ ...errors });
-            return false;
-        }
-
-        if (product.product_stores) {
-            /*
-            productStore = GetProductUnitPriceInStore(
-                formData.store_id,
-                product.stores
-            );
-            */
-
-            if (product.product_stores && product.product_stores[formData.store_id]?.retail_unit_price) {
-                product.purchase_unit_price = product.product_stores[formData.store_id].purchase_unit_price;
-                product.purchase_unit_price_with_vat = product.product_stores[formData.store_id].purchase_unit_price_with_vat;
-            }
-
-
-            if (product.product_stores[formData.store_id]?.retail_unit_price) {
-                product.retail_unit_price = product.product_stores[formData.store_id].retail_unit_price;
-                product.retail_unit_price_with_vat = product.product_stores[formData.store_id].retail_unit_price_with_vat;
-            }
-
-            if (product.product_stores[formData.store_id]?.wholesale_unit_price) {
-                product.wholesale_unit_price = product.product_stores[formData.store_id].wholesale_unit_price;
-                product.wholesale_unit_price_with_vat = product.product_stores[formData.store_id].wholesale_unit_price_with_vat;
-            }
-
-            if (product.product_stores[formData.store_id]) {
-                product.unit_discount = 0.00;
-                product.unit_discount_percent = 0.00;
-                product.unit_discount_with_vat = 0.00;
-                product.unit_discount_percent_with_vat = 0.00;
-            }
-
-
-            /*
-            if (product.product_stores[formData.store_id]) {
-                product.purchase_unit_price = product.product_stores[formData.store_id].purchase_unit_price;
-                product.retail_unit_price = product.product_stores[formData.store_id].retail_unit_price;
-                product.wholesale_unit_price = product.product_stores[formData.store_id].wholesale_unit_price;
-                product.unit_discount = 0.00;
-                product.unit_discount_percent = 0.00;
-            }
-            */
-
-        }
-
-
-
-
-        let alreadyAdded = false;
-        let index = -1;
-        let quantity = 0.00;
-        product.quantity = 1.00;
-
-        if (isProductAdded(product.id) && !product.allow_duplicates) {
-            alreadyAdded = true;
-            index = getProductIndex(product.id);
-            quantity = parseFloat(selectedProducts[index].quantity);
-            // quantity = parseFloat(selectedProducts[index].quantity + product.quantity);
-        } else {
-            quantity = parseFloat(product.quantity);
-        }
-
-        console.log("quantity:", quantity);
-
-        delete errors.quantity;
-
-        if (alreadyAdded) {
-            selectedProducts[index].quantity = parseFloat(quantity);
-            // setSelectedProducts([...selectedProducts]);
-        }
-
-        if (!alreadyAdded) {
-            let item = {
+        if (!alreadyAdded || product.allow_duplicates) {
+            selectedProducts.push({
                 product_id: product.id,
                 code: product.item_code,
+                prefix_part_number: product.prefix_part_number,
                 part_number: product.part_number,
                 name: product.name,
-                quantity: product.quantity,
+                quantity: 1,
                 product_stores: product.product_stores,
-                unit: product.unit,
-                unit_discount: product.unit_discount,
-                unit_discount_with_vat: product.unit_discount_with_vat,
-                unit_discount_percent_with_vat: product.unit_discount_percent_with_vat,
-            };
+                purchase_unit_price: product.product_stores[localStorage.getItem("store_id")]?.purchase_unit_price ? product.product_stores[formData.store_id]?.purchase_unit_price : 0,
+                purchase_unit_price_with_vat: product.product_stores[localStorage.getItem("store_id")]?.purchase_unit_price_with_vat ? product.product_stores[formData.store_id]?.purchase_unit_price_with_vat : 0,
+                unit: product.unit ? product.unit : "",
+                //  purchase_unit_price: product.product_stores[localStorage.getItem("store_id")]?.purchase_unit_price ? product.product_stores[formData.store_id]?.purchase_unit_price : 0,
+                // purchase_unit_price_with_vat: product.product_stores[localStorage.getItem("store_id")]?.purchase_unit_price_with_vat ? product.product_stores[formData.store_id]?.purchase_unit_price_with_vat : 0,
+                unit_discount: 0,
+                unit_discount_with_vat: 0,
+                unit_discount_percent: 0,
+                unit_discount_percent_vat: 0,
+                stock: product.product_stores[localStorage.getItem("store_id")]?.stock ? product.product_stores[localStorage.getItem("store_id")]?.stock : 0,
 
-            if (product.purchase_unit_price) {
-                item.purchase_unit_price = parseFloat(trimTo2Decimals(product.purchase_unit_price));
-            }
-            if (product.purchase_unit_price_with_vat) {
-                item.purchase_unit_price_with_vat = parseFloat(trimTo2Decimals(product.purchase_unit_price_with_vat));
-            }
-
-            /*
-            if (product.retail_unit_price) {
-                item.retail_unit_price = parseFloat(product.retail_unit_price).toFixed(2);
-            }
-         
-            if (product.wholesale_unit_price) {
-                item.wholesale_unit_price = parseFloat(product.wholesale_unit_price).toFixed(2);
-            }*/
-
-            selectedProducts.push(item);
-
+            });
         }
         setSelectedProducts([...selectedProducts]);
 
@@ -1008,15 +919,145 @@ const PurchaseCreate = forwardRef((props, ref) => {
         setFormData({ ...formData });
 
 
+        if (timerRef.current) clearTimeout(timerRef.current);
+
         timerRef.current = setTimeout(() => {
             index = getProductIndex(product.id);
-            CalCulateLineTotals(index)
-            reCalculate();
+            if (alreadyAdded && product.allow_duplicates) {
+                index = selectedProducts?.length - 1;
+            }
+
+            CalCulateLineTotals(index);
+            checkWarnings(index);
+            checkErrors(index);
+            reCalculate(index);
         }, 100);
-
-
         return true;
     }
+    /*
+  function addProduct(product) {
+      console.log("Inside Add product");
+      if (!formData.store_id) {
+          errors.product_id = "Please Select a Store and try again";
+          setErrors({ ...errors });
+          return false;
+      }
+
+
+      delete errors.product_id;
+      if (!product) {
+          errors.product_id = "Invalid Product";
+          setErrors({ ...errors });
+          return false;
+      }
+
+      if (product.product_stores) {
+        
+
+          if (product.product_stores && product.product_stores[formData.store_id]?.retail_unit_price) {
+              product.purchase_unit_price = product.product_stores[formData.store_id].purchase_unit_price;
+              product.purchase_unit_price_with_vat = product.product_stores[formData.store_id].purchase_unit_price_with_vat;
+          }
+
+
+          if (product.product_stores[formData.store_id]?.retail_unit_price) {
+              product.retail_unit_price = product.product_stores[formData.store_id].retail_unit_price;
+              product.retail_unit_price_with_vat = product.product_stores[formData.store_id].retail_unit_price_with_vat;
+          }
+
+          if (product.product_stores[formData.store_id]?.wholesale_unit_price) {
+              product.wholesale_unit_price = product.product_stores[formData.store_id].wholesale_unit_price;
+              product.wholesale_unit_price_with_vat = product.product_stores[formData.store_id].wholesale_unit_price_with_vat;
+          }
+
+          if (product.product_stores[formData.store_id]) {
+              product.unit_discount = 0.00;
+              product.unit_discount_percent = 0.00;
+              product.unit_discount_with_vat = 0.00;
+              product.unit_discount_percent_with_vat = 0.00;
+          }
+
+
+         
+
+      }
+
+
+
+
+      let alreadyAdded = false;
+      let index = -1;
+      let quantity = 0.00;
+      product.quantity = 1.00;
+
+      if (isProductAdded(product.id) && !product.allow_duplicates) {
+          alreadyAdded = true;
+          index = getProductIndex(product.id);
+          quantity = parseFloat(selectedProducts[index].quantity);
+          // quantity = parseFloat(selectedProducts[index].quantity + product.quantity);
+      } else {
+          quantity = parseFloat(product.quantity);
+      }
+
+      console.log("quantity:", quantity);
+
+      delete errors.quantity;
+
+      if (alreadyAdded) {
+          selectedProducts[index].quantity = parseFloat(quantity);
+          // setSelectedProducts([...selectedProducts]);
+      }
+
+      if (!alreadyAdded) {
+          let item = {
+              product_id: product.id,
+              code: product.item_code,
+              part_number: product.part_number,
+              name: product.name,
+              quantity: product.quantity,
+              product_stores: product.product_stores,
+              unit: product.unit,
+              unit_discount: product.unit_discount,
+              unit_discount_with_vat: product.unit_discount_with_vat,
+              unit_discount_percent_with_vat: product.unit_discount_percent_with_vat,
+          };
+
+          if (product.purchase_unit_price) {
+              item.purchase_unit_price = parseFloat(trimTo2Decimals(product.purchase_unit_price));
+          }
+          if (product.purchase_unit_price_with_vat) {
+              item.purchase_unit_price_with_vat = parseFloat(trimTo2Decimals(product.purchase_unit_price_with_vat));
+          }
+
+          selectedProducts.push(item);
+
+      }
+      setSelectedProducts([...selectedProducts]);
+
+
+      formData.products = [];
+      for (var i = 0; i < selectedProducts.length; i++) {
+          formData.products.push({
+              product_id: selectedProducts[i].product_id,
+              quantity: parseFloat(selectedProducts[i].quantity),
+              unit: selectedProducts[i].unit,
+              purchase_unit_price: parseFloat(selectedProducts[i].purchase_unit_price),
+              retail_unit_price: parseFloat(selectedProducts[i].retail_unit_price),
+              wholesale_unit_price: parseFloat(selectedProducts[i].wholesale_unit_price),
+          });
+      }
+      setFormData({ ...formData });
+
+
+      timerRef.current = setTimeout(() => {
+          index = getProductIndex(product.id);
+          CalCulateLineTotals(index)
+          reCalculate();
+      }, 100);
+
+
+      return true;
+  }*/
 
     function getProductIndex(productID) {
         for (var i = 0; i < selectedProducts.length; i++) {
@@ -1913,6 +1954,8 @@ const PurchaseCreate = forwardRef((props, ref) => {
     const discountRef = useRef(null);
     const discountWithVATRef = useRef(null);
 
+    const onChangeTriggeredRef = useRef(false);
+
     return (
         <>
             <ImageViewerModal ref={imageViewerRef} images={productImages} />
@@ -2422,6 +2465,15 @@ const PurchaseCreate = forwardRef((props, ref) => {
                                 isLoading={false}
                                 isInvalid={errors.product_id ? true : false}
                                 onChange={(selectedItems) => {
+                                    if (onChangeTriggeredRef.current) return;
+                                    onChangeTriggeredRef.current = true;
+
+                                    // Reset after short delay
+                                    setTimeout(() => {
+                                        onChangeTriggeredRef.current = false;
+                                    }, 300);
+
+
                                     if (selectedItems.length === 0) {
                                         errors["product_id"] = "Invalid Product selected";
                                         setErrors(errors);
