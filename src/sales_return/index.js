@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useContext, useCallback } from "react";
+import React, { useState, useEffect, useRef, useContext, useCallback, useMemo } from "react";
 import SalesReturnCreate from "./create.js";
 import SalesReturnView from "./view.js";
 
@@ -25,6 +25,7 @@ import Sales from "./../utils/sales.js";
 import OrderPreview from "./../order/preview.js";
 import ReportPreview from "./../order/report.js";
 import OrderPrint from './../order/print.js';
+import { DragDropContext, Droppable, Draggable } from "react-beautiful-dnd";
 
 
 const ExcelFile = ReactExport.ExcelFile;
@@ -1216,8 +1217,184 @@ function SalesReturnIndex(props) {
     }, []);
 
 
+    //Table settings
+
+    const defaultColumns = useMemo(() => [
+        { key: "actions", label: "Actions", fieldName: "actions", visible: true },
+        { key: "id", label: "ID", fieldName: "code", visible: true },
+        { key: "date", label: "Date", fieldName: "date", visible: true },
+        { key: "customer", label: "Customer", fieldName: "customer_name", visible: true },
+        { key: "net_total", label: "Net Total", fieldName: "net_total", visible: true },
+        { key: "amount_paid", label: "Amount Paid", fieldName: "total_payment_received", visible: true },
+        { key: "credit_balance", label: "Credit Balance", fieldName: "balance_amount", visible: true },
+        { key: "reported_to_zatca", label: "Reported to Zatca", fieldName: "zatca.reporting_passed", visible: true },
+        { key: "payment_status", label: "Payment Status", fieldName: "payment_status", visible: true },
+        { key: "payment_methods", label: "Payment Methods", fieldName: "payment_methods", visible: true },
+        { key: "cash_discount", label: "Cash Discount", fieldName: "cash_discount", visible: true },
+        { key: "sales_discount", label: "Sales Discount", fieldName: "discount", visible: true },
+        { key: "net_profit", label: "Net Profit", fieldName: "net_profit", visible: true },
+        { key: "net_loss", label: "Net Loss", fieldName: "net_loss", visible: true },
+        { key: "created_by", label: "Created By", fieldName: "created_by", visible: true },
+        { key: "created_at", label: "Created At", fieldName: "created_at", visible: true },
+        { key: "actions_end", label: "Actions", fieldName: "actions_end", visible: true },
+    ], []);
+
+
+    const [columns, setColumns] = useState(defaultColumns);
+    const [showSettings, setShowSettings] = useState(false);
+
+    useEffect(() => {
+        const saved = localStorage.getItem("sales_return_table_settings");
+        if (saved) setColumns(JSON.parse(saved));
+
+        let missingOrUpdated = false;
+        for (let i = 0; i < defaultColumns.length; i++) {
+            if (!saved)
+                break;
+
+            const savedCol = JSON.parse(saved)?.find(col => col.fieldName === defaultColumns[i].fieldName);
+
+            missingOrUpdated = !savedCol || savedCol.label !== defaultColumns[i].label || savedCol.key !== defaultColumns[i].key;
+
+            if (missingOrUpdated) {
+                break
+            }
+        }
+
+        /*
+        for (let i = 0; i < saved.length; i++) {
+            const savedCol = defaultColumns.find(col => col.fieldName === saved[i].fieldName);
+ 
+            missingOrUpdated = !savedCol || savedCol.label !== saved[i].label || savedCol.key !== saved[i].key;
+ 
+            if (missingOrUpdated) {
+                break
+            }
+        }*/
+
+        if (missingOrUpdated) {
+            localStorage.setItem("sales_return_table_settings", JSON.stringify(defaultColumns));
+            setColumns(defaultColumns);
+        }
+
+        //2nd
+
+    }, [defaultColumns]);
+
+    function RestoreDefaultSettings() {
+        localStorage.setItem("sales_return_table_settings", JSON.stringify(defaultColumns));
+        setColumns(defaultColumns);
+
+        setShowSuccess(true);
+        setSuccessMessage("Successfully restored to default settings!")
+    }
+
+    // Save column settings to localStorage
+    useEffect(() => {
+        localStorage.setItem("sales_return_table_settings", JSON.stringify(columns));
+    }, [columns]);
+
+    const handleToggleColumn = (index) => {
+        const updated = [...columns];
+        updated[index].visible = !updated[index].visible;
+        setColumns(updated);
+    };
+
+    const onDragEnd = (result) => {
+        if (!result.destination) return;
+        const reordered = Array.from(columns);
+        const [moved] = reordered.splice(result.source.index, 1);
+        reordered.splice(result.destination.index, 0, moved);
+        setColumns(reordered);
+    };
+
+
     return (
         <>
+            {/* ⚙️ Settings Modal */}
+            <Modal
+                show={showSettings}
+                onHide={() => setShowSettings(false)}
+                centered
+                size="lg"
+            >
+                <Modal.Header closeButton>
+                    <Modal.Title>
+                        <i
+                            className="bi bi-gear-fill"
+                            style={{ fontSize: "1.2rem", marginRight: "4px" }}
+                            title="Table Settings"
+
+                        />
+                        Sales Return Settings
+                    </Modal.Title>
+                </Modal.Header>
+                <Modal.Body>
+                    {/* Column Settings */}
+                    {showSettings && (
+                        <>
+                            <h6 className="mb-2">Customize Columns</h6>
+                            <DragDropContext onDragEnd={onDragEnd}>
+                                <Droppable droppableId="columns">
+                                    {(provided) => (
+                                        <ul
+                                            className="list-group"
+                                            {...provided.droppableProps}
+                                            ref={provided.innerRef}
+                                        >
+                                            {columns.map((col, index) => (
+                                                <Draggable
+                                                    key={col.key}
+                                                    draggableId={col.key}
+                                                    index={index}
+                                                >
+                                                    {(provided) => (
+                                                        <li
+                                                            className="list-group-item d-flex justify-content-between align-items-center"
+                                                            ref={provided.innerRef}
+                                                            {...provided.draggableProps}
+                                                            {...provided.dragHandleProps}                                                        >
+                                                            <div>
+                                                                <input
+                                                                    style={{ width: "20px", height: "20px" }}
+                                                                    type="checkbox"
+                                                                    className="form-check-input me-2"
+                                                                    checked={col.visible}
+                                                                    onChange={() => {
+                                                                        handleToggleColumn(index);
+                                                                    }}
+                                                                />
+                                                                {col.label}
+                                                            </div>
+                                                            <span style={{ cursor: "grab" }}>☰</span>
+                                                        </li>
+                                                    )}
+                                                </Draggable>
+                                            ))}
+                                            {provided.placeholder}
+                                        </ul>
+                                    )}
+                                </Droppable>
+                            </DragDropContext>
+                        </>
+                    )}
+                </Modal.Body>
+                <Modal.Footer>
+                    <Button variant="secondary" onClick={() => setShowSettings(false)}>
+                        Close
+                    </Button>
+                    <Button
+                        variant="primary"
+                        onClick={() => {
+                            RestoreDefaultSettings();
+                        }}
+                    >
+                        Restore to Default
+                    </Button>
+                </Modal.Footer>
+            </Modal>
+
+
             <Modal show={showPrintTypeSelection} onHide={() => {
                 showPrintTypeSelection = false;
                 setShowPrintTypeSelection(showPrintTypeSelection);
@@ -1401,7 +1578,7 @@ function SalesReturnIndex(props) {
                                 <div className="row">
                                     {totalItems === 0 && (
                                         <div className="col">
-                                            <p className="text-start">No SalesReturns to display</p>
+                                            <p className="text-start">No Sales Returns to display</p>
                                         </div>
                                     )}
                                 </div>
@@ -1510,11 +1687,72 @@ function SalesReturnIndex(props) {
                                         </>
                                     )}
                                 </div>
+                                <div className="row">
+                                    <div className="col text-end">
+                                        <button
+                                            className="btn btn-sm btn-outline-secondary"
+                                            onClick={() => {
+                                                setShowSettings(!showSettings);
+                                            }}
+                                        >
+                                            <i
+                                                className="bi bi-gear-fill"
+                                                style={{ fontSize: "1.2rem" }}
+                                                title="Table Settings"
+
+                                            />
+                                        </button>
+                                    </div>
+                                </div>
                                 <div className="table-responsive" style={{ overflowX: "auto", overflowY: "auto", maxHeight: "500px" }}>
                                     <table className="table table-striped table-sm table-bordered">
                                         <thead>
                                             <tr className="text-center">
-                                                <th>Actions</th>
+                                                {columns.filter(c => c.visible).map((col) => {
+                                                    return (<>
+                                                        {col.key === "actions" && <th key={col.key}>{col.label}</th>}
+                                                        {col.key === "zatca.reporting_passed" && store.zatca?.phase === "2" && store.zatca?.connected && <th>
+                                                            <b
+                                                                style={{
+                                                                    textDecoration: "underline",
+                                                                    cursor: "pointer",
+                                                                }}
+                                                                onClick={() => {
+                                                                    sort(col.fieldName);
+                                                                }}
+                                                            >
+                                                                {col.label}
+                                                                {sortField === col.fieldName && sortOrder === "-" ? (
+                                                                    <i className="bi bi-sort-alpha-up-alt"></i>
+                                                                ) : null}
+                                                                {sortField === col.fieldName && sortOrder === "" ? (
+                                                                    <i className="bi bi-sort-alpha-up"></i>
+                                                                ) : null}
+                                                            </b>
+                                                        </th>}
+                                                        {col.key !== "actions" && col.key !== "zatca.reporting_passed" && <th>
+                                                            <b
+                                                                style={{
+                                                                    textDecoration: "underline",
+                                                                    cursor: "pointer",
+                                                                }}
+                                                                onClick={() => {
+                                                                    sort(col.fieldName);
+                                                                }}
+                                                            >
+                                                                {col.label}
+                                                                {sortField === col.fieldName && sortOrder === "-" ? (
+                                                                    <i className="bi bi-sort-alpha-up-alt"></i>
+                                                                ) : null}
+                                                                {sortField === col.fieldName && sortOrder === "" ? (
+                                                                    <i className="bi bi-sort-alpha-up"></i>
+                                                                ) : null}
+                                                            </b>
+                                                        </th>}
+                                                    </>);
+                                                })}
+
+                                                {/*<th>Actions</th>
                                                 <th>
                                                     <b
                                                         style={{
@@ -1652,25 +1890,7 @@ function SalesReturnIndex(props) {
                                                     </b>
                                                 </th>
 
-                                                {/*<th>
-                                                    <b
-                                                        style={{
-                                                            textDecoration: "underline",
-                                                            cursor: "pointer",
-                                                        }}
-                                                        onClick={() => {
-                                                            sort("payments_count");
-                                                        }}
-                                                    >
-                                                        No.of Payments
-                                                        {sortField === "payments_count" && sortOrder === "-" ? (
-                                                            <i className="bi bi-sort-numeric-down"></i>
-                                                        ) : null}
-                                                        {sortField === "payments_count" && sortOrder === "" ? (
-                                                            <i className="bi bi-sort-numeric-up"></i>
-                                                        ) : null}
-                                                    </b>
-                                                </th>*/}
+                                               
                                                 {store.zatca?.phase === "2" && store.zatca?.connected ? <th>
                                                     <b
                                                         style={{
@@ -1831,13 +2051,293 @@ function SalesReturnIndex(props) {
                                                         ) : null}
                                                     </b>
                                                 </th>
-                                                <th>Actions</th>
+                                                <th>Actions</th>*/}
                                             </tr>
                                         </thead>
 
                                         <thead>
                                             <tr className="text-center">
-                                                <th></th>
+                                                {columns.filter(c => c.visible).map((col) => {
+                                                    return (<>
+                                                        {(col.key === "actions" || col.key === "actions_end") && <th></th>}
+                                                        {col.key !== "actions" &&
+                                                            col.key !== "date" &&
+                                                            col.key !== "zatca.reporting_passed" &&
+                                                            col.key !== "payment_status" &&
+                                                            col.key !== "payment_methods" &&
+                                                            col.key !== "created_by" &&
+                                                            col.key !== "created_at" &&
+                                                            col.key !== "actions_end" &&
+                                                            <th><input
+                                                                type="text"
+                                                                id={"sales_return_" + col.fieldName}
+                                                                name={"sales_return_" + col.fieldName}
+                                                                onChange={(e) =>
+                                                                    searchByFieldValue(col.fieldName, e.target.value)
+                                                                }
+                                                                className="form-control"
+                                                            />
+                                                            </th>}
+                                                        {col.key === "payment_methods" && <th>
+                                                            <Typeahead
+                                                                id="payment_methods"
+                                                                labelKey="name"
+                                                                onChange={(selectedItems) => {
+                                                                    searchByMultipleValuesField(
+                                                                        "payment_methods",
+                                                                        selectedItems
+                                                                    );
+                                                                }}
+                                                                options={paymentMethodOptions}
+                                                                placeholder="Select payment methods"
+                                                                selected={selectedPaymentMethodList}
+                                                                highlightOnlyResult={true}
+                                                                multiple
+                                                            />
+
+                                                        </th>}
+                                                        {col.key === "created_by" && <th>
+                                                            <Typeahead
+                                                                id="created_by"
+
+                                                                labelKey="name"
+                                                                onChange={(selectedItems) => {
+                                                                    searchByMultipleValuesField(
+                                                                        "created_by",
+                                                                        selectedItems
+                                                                    );
+                                                                }}
+                                                                options={userOptions}
+                                                                placeholder="Select Users"
+                                                                selected={selectedCreatedByUsers}
+                                                                highlightOnlyResult={true}
+                                                                onInputChange={(searchTerm, e) => {
+                                                                    suggestUsers(searchTerm);
+                                                                }}
+                                                                multiple
+                                                            />
+                                                        </th>}
+                                                        {col.key === "created_at" && <th>
+                                                            <DatePicker
+                                                                id="created_at"
+                                                                value={createdAtValue}
+                                                                selected={selectedCreatedAtDate}
+                                                                className="form-control"
+                                                                dateFormat="MMM dd yyyy"
+                                                                isClearable={true}
+                                                                onChange={(date) => {
+                                                                    if (!date) {
+                                                                        //  createdAtValue = "";
+                                                                        setCreatedAtValue("");
+                                                                        searchByDateField("created_at", "");
+                                                                        return;
+                                                                    }
+                                                                    searchByDateField("created_at", date);
+                                                                    selectedCreatedAtDate = date;
+                                                                    setSelectedCreatedAtDate(date);
+                                                                }}
+                                                            />
+                                                            <small
+                                                                style={{
+                                                                    color: "blue",
+                                                                    textDecoration: "underline",
+                                                                    cursor: "pointer",
+                                                                }}
+                                                                onClick={(e) =>
+                                                                    setShowCreatedAtDateRange(!showCreatedAtDateRange)
+                                                                }
+                                                            >
+                                                                {showCreatedAtDateRange ? "Less.." : "More.."}
+                                                            </small>
+                                                            <br />
+
+                                                            {showCreatedAtDateRange ? (
+                                                                <span className="text-left">
+                                                                    From:{" "}
+                                                                    <DatePicker
+                                                                        id="created_at_from"
+                                                                        value={createdAtFromValue}
+                                                                        selected={selectedCreatedAtFromDate}
+                                                                        className="form-control"
+                                                                        dateFormat="MMM dd yyyy"
+                                                                        isClearable={true}
+                                                                        onChange={(date) => {
+                                                                            if (!date) {
+                                                                                setCreatedAtFromValue("");
+                                                                                searchByDateField("created_at_from", "");
+                                                                                return;
+                                                                            }
+                                                                            searchByDateField("created_at_from", date);
+                                                                            selectedCreatedAtFromDate = date;
+                                                                            setSelectedCreatedAtFromDate(date);
+                                                                        }}
+                                                                    />
+                                                                    To:{" "}
+                                                                    <DatePicker
+                                                                        id="created_at_to"
+                                                                        value={createdAtToValue}
+                                                                        selected={selectedCreatedAtToDate}
+                                                                        className="form-control"
+                                                                        dateFormat="MMM dd yyyy"
+                                                                        isClearable={true}
+                                                                        onChange={(date) => {
+                                                                            if (!date) {
+                                                                                setCreatedAtToValue("");
+                                                                                searchByDateField("created_at_to", "");
+                                                                                return;
+                                                                            }
+                                                                            searchByDateField("created_at_to", date);
+                                                                            selectedCreatedAtToDate = date;
+                                                                            setSelectedCreatedAtToDate(date);
+                                                                        }}
+                                                                    />
+                                                                </span>
+                                                            ) : null}
+                                                        </th>}
+                                                        {col.key === "payment_status" && <th>
+                                                            <Typeahead
+                                                                id="payment_status"
+                                                                labelKey="name"
+                                                                onChange={(selectedItems) => {
+                                                                    searchByMultipleValuesField(
+                                                                        "payment_status",
+                                                                        selectedItems
+                                                                    );
+                                                                }}
+                                                                options={paymentStatusOptions}
+                                                                placeholder="Select Payment Status"
+                                                                selected={selectedPaymentStatusList}
+                                                                highlightOnlyResult={true}
+                                                                multiple
+                                                            />
+                                                        </th>}
+                                                        {col.key === "zatca.reporting_passed" && store.zatca?.phase === "2" && store.zatca?.connected && <th>
+                                                            <select
+                                                                onChange={(e) => {
+                                                                    searchByFieldValue("zatca.reporting_passed", e.target.value);
+                                                                }}
+                                                            >
+                                                                <option value="" SELECTED>Select</option>
+                                                                <option value="reported">REPORTED</option>
+                                                                <option value="compliance_failed">COMPLIANCE FAILED</option>
+                                                                <option value="reporting_failed">REPORTING FAILED</option>
+                                                                <option value="not_reported">NOT REPORTED</option>
+                                                            </select>
+                                                        </th>}
+                                                        {col.key === "customer_name" && <th>
+                                                            <Typeahead
+                                                                id="customer_id"
+                                                                filterBy={['additional_keywords']}
+                                                                labelKey="search_label"
+                                                                style={{ minWidth: "300px" }}
+                                                                onChange={(selectedItems) => {
+                                                                    searchByMultipleValuesField(
+                                                                        "customer_id",
+                                                                        selectedItems
+                                                                    );
+                                                                }}
+                                                                options={customerOptions}
+                                                                placeholder="Customer Name / Mob / VAT # / ID"
+                                                                selected={selectedCustomers}
+                                                                highlightOnlyResult={true}
+                                                                onInputChange={(searchTerm, e) => {
+                                                                    if (timerRef.current) clearTimeout(timerRef.current);
+                                                                    timerRef.current = setTimeout(() => {
+                                                                        suggestCustomers(searchTerm);
+                                                                    }, 100);
+                                                                }}
+                                                                ref={customerSearchRef}
+                                                                onKeyDown={(e) => {
+                                                                    if (e.key === "Escape") {
+                                                                        setCustomerOptions([]);
+                                                                        customerSearchRef.current?.clear();
+                                                                    }
+                                                                }}
+                                                                multiple
+                                                            />
+                                                        </th>}
+                                                        {col.key === "date" && <th>
+                                                            <div id="calendar-portal" className="date-picker " style={{ minWidth: "125px" }}>
+                                                                <DatePicker
+                                                                    id="date_str"
+                                                                    value={dateValue}
+                                                                    selected={selectedDate}
+                                                                    className="form-control"
+                                                                    dateFormat="MMM dd yyyy"
+                                                                    isClearable={true}
+                                                                    onChange={(date) => {
+                                                                        if (!date) {
+                                                                            setDateValue("");
+                                                                            searchByDateField("date_str", "");
+                                                                            return;
+                                                                        }
+                                                                        searchByDateField("date_str", date);
+                                                                        selectedDate = date;
+                                                                        setSelectedDate(date);
+                                                                    }}
+
+                                                                />
+
+                                                                <br />
+                                                                <small
+                                                                    style={{
+                                                                        color: "blue",
+                                                                        textDecoration: "underline",
+                                                                        cursor: "pointer",
+                                                                    }}
+                                                                    onClick={(e) => setShowDateRange(!showDateRange)}
+                                                                >
+                                                                    {showDateRange ? "Less.." : "More.."}
+                                                                </small>
+                                                                <br />
+
+                                                                {showDateRange ? (
+                                                                    <span className="text-left">
+                                                                        From:{" "}
+                                                                        <DatePicker
+                                                                            id="from_date"
+                                                                            value={fromDateValue}
+                                                                            selected={selectedFromDate}
+                                                                            className="form-control"
+                                                                            dateFormat="MMM dd yyyy"
+                                                                            isClearable={true}
+                                                                            onChange={(date) => {
+                                                                                if (!date) {
+                                                                                    setFromDateValue("");
+                                                                                    searchByDateField("from_date", "");
+                                                                                    return;
+                                                                                }
+                                                                                searchByDateField("from_date", date);
+                                                                                selectedFromDate = date;
+                                                                                setSelectedFromDate(date);
+                                                                            }}
+                                                                        />
+                                                                        To:{" "}
+                                                                        <DatePicker
+                                                                            id="to_date"
+                                                                            value={toDateValue}
+                                                                            selected={selectedToDate}
+                                                                            className="form-control"
+                                                                            dateFormat="MMM dd yyyy"
+                                                                            isClearable={true}
+                                                                            onChange={(date) => {
+                                                                                if (!date) {
+                                                                                    setToDateValue("");
+                                                                                    searchByDateField("to_date", "");
+                                                                                    return;
+                                                                                }
+                                                                                searchByDateField("to_date", date);
+                                                                                selectedToDate = date;
+                                                                                setSelectedToDate(date);
+                                                                            }}
+                                                                        />
+                                                                    </span>
+                                                                ) : null}
+                                                            </div>
+                                                        </th>}
+                                                    </>);
+                                                })}
+                                                {/* <th></th>
                                                 <th>
                                                     <input
                                                         type="text"
@@ -2004,17 +2504,7 @@ function SalesReturnIndex(props) {
                                                     />
                                                 </th>
 
-                                                {/*<th>
-                                                    <input
-                                                        type="text"
-                                                        id="sales_return_payments_count"
-                                                        name="sales_return_payments_count"
-                                                        onChange={(e) =>
-                                                            searchByFieldValue("payments_count", e.target.value)
-                                                        }
-                                                        className="form-control"
-                                                    />
-                                                </th>*/}
+                                               
                                                 {store.zatca?.phase === "2" && store.zatca?.connected ? <th>
                                                     <select
                                                         onChange={(e) => {
@@ -2195,15 +2685,139 @@ function SalesReturnIndex(props) {
                                                         </span>
                                                     ) : null}
                                                 </th>
-                                                <th></th>
+                                                <th></th>*/}
                                             </tr>
                                         </thead>
 
                                         <tbody className="text-center">
                                             {salesreturnList &&
-                                                salesreturnList.map((salesreturn, index) => (
+                                                salesreturnList.map((salesReturn, index) => (
                                                     <tr key={index}>
-                                                        <td style={{ width: "auto", whiteSpace: "nowrap" }} >
+                                                        {columns.filter(c => c.visible).map((col) => {
+                                                            return (<>
+                                                                {(col.key === "actions" || col.key === "actions_end") && <td style={{ width: "auto", whiteSpace: "nowrap" }}>
+                                                                    <Button className="btn btn-light btn-sm" onClick={() => {
+                                                                        openUpdateForm(salesReturn.id);
+                                                                    }}>
+                                                                        <i className="bi bi-pencil"></i>
+                                                                    </Button>&nbsp;
+                                                                    <Button className="btn btn-primary btn-sm" onClick={() => {
+                                                                        openDetailsView(salesReturn.id);
+                                                                    }}>
+                                                                        <i className="bi bi-eye"></i>
+                                                                    </Button>&nbsp;
+                                                                    <Button className="btn btn-primary btn-sm" onClick={() => {
+                                                                        openPrintTypeSelection(salesReturn);
+                                                                    }}>
+                                                                        <i className="bi bi-printer"></i>
+                                                                    </Button>
+                                                                    &nbsp;
+                                                                    <Button className={`btn btn-success btn-sm`} style={{}} onClick={() => {
+                                                                        sendWhatsAppMessage(salesReturn);
+                                                                    }}>
+                                                                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="white" viewBox="0 0 16 16">
+                                                                            <path d="M13.601 2.326A7.875 7.875 0 0 0 8.036 0C3.596 0 0 3.597 0 8.036c0 1.417.37 2.805 1.07 4.03L0 16l3.993-1.05a7.968 7.968 0 0 0 4.043 1.085h.003c4.44 0 8.036-3.596 8.036-8.036 0-2.147-.836-4.166-2.37-5.673ZM8.036 14.6a6.584 6.584 0 0 1-3.35-.92l-.24-.142-2.37.622.63-2.31-.155-.238a6.587 6.587 0 0 1-1.018-3.513c0-3.637 2.96-6.6 6.6-6.6 1.764 0 3.42.69 4.67 1.94a6.56 6.56 0 0 1 1.93 4.668c0 3.637-2.96 6.6-6.6 6.6Zm3.61-4.885c-.198-.1-1.17-.578-1.352-.644-.18-.066-.312-.1-.444.1-.13.197-.51.644-.626.775-.115.13-.23.15-.428.05-.198-.1-.837-.308-1.594-.983-.59-.525-.99-1.174-1.11-1.372-.116-.198-.012-.305.088-.403.09-.09.198-.23.298-.345.1-.115.132-.197.2-.33.065-.13.032-.247-.017-.345-.05-.1-.444-1.07-.61-1.46-.16-.384-.323-.332-.444-.338l-.378-.007c-.13 0-.344.048-.525.23s-.688.672-.688 1.64c0 .967.704 1.9.802 2.03.1.13 1.386 2.116 3.365 2.963.47.203.837.324 1.122.414.472.15.902.13 1.24.08.378-.057 1.17-.48 1.336-.942.165-.462.165-.858.116-.943-.048-.084-.18-.132-.378-.23Z" />
+                                                                        </svg>
+                                                                    </Button>
+                                                                </td>
+                                                                }
+                                                                {(col.fieldName === "code") && <td style={{ width: "auto", whiteSpace: "nowrap" }}>
+                                                                    {salesReturn.code}
+                                                                </td>}
+                                                                {(col.fieldName === "date" || col.fieldName === "created_at") && <td style={{ width: "auto", whiteSpace: "nowrap" }}>
+                                                                    {format(new Date(salesReturn[col.key]), "MMM dd yyyy h:mma")}
+                                                                </td>}
+                                                                {(col.fieldName === "customer_name") && <td style={{ width: "auto", whiteSpace: "nowrap" }}>
+                                                                    <OverflowTooltip value={salesReturn.customer_name} />
+                                                                </td>}
+                                                                {(col.fieldName === "net_total") && <td style={{ width: "auto", whiteSpace: "nowrap" }}>
+                                                                    <Amount amount={trimTo2Decimals(salesReturn.net_total)} />
+                                                                </td>}
+                                                                {(col.fieldName === "total_payment_received") && <td style={{ width: "auto", whiteSpace: "nowrap" }}>
+                                                                    <Button variant="link" onClick={() => {
+                                                                        openPaymentsDialogue(salesReturn);
+                                                                    }}>
+                                                                        <Amount amount={trimTo2Decimals(salesReturn.total_payment_received)} />
+                                                                    </Button>
+                                                                </td>}
+                                                                {(col.fieldName === "balance_amount") && <td style={{ width: "auto", whiteSpace: "nowrap" }}>
+                                                                    <Amount amount={trimTo2Decimals(salesReturn.balance_amount)} />
+                                                                </td>}
+                                                                {(col.fieldName === "zatca.reporting_passed" && store.zatca?.phase === "2" && store.zatca?.connected) && <td style={{ width: "auto", whiteSpace: "nowrap" }}>
+                                                                    {!salesReturn.zatca?.compliance_passed && !salesReturn.zatca?.reporting_passed && salesReturn.zatca?.compliance_check_failed_count > 0 ? <span className="badge bg-danger">
+                                                                        Compliance check failed
+                                                                        {!salesReturn.zatca.compliance_passed && salesReturn.zatca.compliance_check_last_failed_at ? <span>&nbsp;<TimeAgo date={salesReturn.zatca.compliance_check_last_failed_at} />&nbsp;</span> : ""}
+                                                                        &nbsp;</span> : ""}
+                                                                    {!salesReturn.zatca?.reporting_passed && salesReturn.zatca?.reporting_failed_count > 0 ? <span> <span className="badge bg-danger">
+                                                                        Reporting failed
+                                                                        {!salesReturn.zatca.reporting_passed && salesReturn.zatca.reporting_last_failed_at ? <span><TimeAgo date={salesReturn.zatca.reporting_last_failed_at} />&nbsp;</span> : ""}
+                                                                    </span> &nbsp;</span> : ""}
+                                                                    {salesReturn.zatca?.reporting_passed ? <span>&nbsp;<span className="badge bg-success">
+                                                                        Reported
+                                                                        {salesReturn.zatca.reporting_passed && salesReturn.zatca.reporting_passed_at ? <span>&nbsp;<TimeAgo date={salesReturn.zatca.reporting_passed_at} />&nbsp;</span> : ""}
+                                                                        &nbsp;</span></span> : ""}
+
+                                                                    {!salesReturn.zatca?.reporting_passed && !salesReturn.zatca?.compliance_passed && !salesReturn.zatca?.reporting_failed_count && !salesReturn.zatca?.compliance_check_failed_count ? <span className="badge bg-warning">
+                                                                        Not Reported
+                                                                        &nbsp;</span> : ""}
+                                                                    {!salesReturn.zatca.reporting_passed ? <span> &nbsp; <Button disabled={reportingInProgress} style={{ marginTop: "3px" }} className="btn btn btn-sm" onClick={() => {
+                                                                        ReportInvoiceToZatca(salesReturn.id, index);
+                                                                    }}>
+                                                                        {!salesReturn.zatca?.reportingInProgress && (salesReturn.zatca?.reporting_failed_count > 0 || salesReturn.zatca?.compliance_check_failed_count > 0) ? <i class="bi bi-bootstrap-reboot"></i> : ""}
+                                                                        {!salesReturn.zatca?.reportingInProgress && (!salesReturn.zatca?.reporting_failed_count > 0 && !salesReturn.zatca?.compliance_check_failed_count) ? <span class="bi-arrow-right-circle">&nbsp;Report</span> : ""}
+                                                                        {salesReturn.zatca?.reportingInProgress ? <Spinner
+                                                                            as="span"
+                                                                            animation="border"
+                                                                            size="sm"
+                                                                            role="status"
+                                                                            aria-hidden={true}
+                                                                        /> : ""}
+                                                                    </Button></span> : ""}
+                                                                    {salesReturn.zatca?.reporting_passed ? <span>&nbsp;
+                                                                        <Button onClick={() => {
+                                                                            window.open("/zatca/returns/xml/" + salesReturn.code + ".xml", "_blank");
+                                                                        }}><i class="bi bi-filetype-xml"></i> XML
+                                                                        </Button>
+                                                                    </span> : ""}
+                                                                </td>}
+                                                                {(col.fieldName === "payment_status") && <td style={{ width: "auto", whiteSpace: "nowrap" }}>
+                                                                    {salesReturn.payment_status === "paid" ?
+                                                                        <span className="badge bg-success">
+                                                                            Paid
+                                                                        </span> : ""}
+                                                                    {salesReturn.payment_status === "paid_partially" ?
+                                                                        <span className="badge bg-warning">
+                                                                            Paid Partially
+                                                                        </span> : ""}
+                                                                    {salesReturn.payment_status === "not_paid" ?
+                                                                        <span className="badge bg-danger">
+                                                                            Not Paid
+                                                                        </span> : ""}
+                                                                </td>}
+                                                                {(col.fieldName === "payment_methods") && <td style={{ width: "auto", whiteSpace: "nowrap" }}>
+                                                                    {salesReturn.payment_methods &&
+                                                                        salesReturn.payment_methods.map((name) => (
+                                                                            <span className="badge bg-info">{name}</span>
+                                                                        ))}
+                                                                </td>}
+                                                                {(col.fieldName === "cash_discount") && <td style={{ width: "auto", whiteSpace: "nowrap" }}>
+                                                                    <Amount amount={trimTo2Decimals(salesReturn.cash_discount)} />
+                                                                </td>}
+                                                                {(col.fieldName === "discount") && <td style={{ width: "auto", whiteSpace: "nowrap" }}>
+                                                                    {trimTo2Decimals(salesReturn.discount)}
+                                                                </td>}
+                                                                {(col.fieldName === "net_profit") && <td style={{ width: "auto", whiteSpace: "nowrap" }}>
+                                                                    <Amount amount={trimTo2Decimals(salesReturn.net_profit)} />
+                                                                </td>}
+                                                                {(col.fieldName === "net_loss") && <td style={{ width: "auto", whiteSpace: "nowrap" }}>
+                                                                    <Amount amount={trimTo2Decimals(salesReturn.net_loss)} />
+                                                                </td>}
+                                                                {(col.fieldName === "created_by") && <td style={{ width: "auto", whiteSpace: "nowrap" }}>
+                                                                    {salesReturn.created_by_name}
+                                                                </td>}
+                                                            </>)
+                                                        })}
+                                                        {/* <td style={{ width: "auto", whiteSpace: "nowrap" }} >
                                                             <Button className="btn btn-light btn-sm" onClick={() => {
                                                                 openUpdateForm(salesreturn.id, salesreturn.order_id);
                                                             }}>
@@ -2301,15 +2915,7 @@ function SalesReturnIndex(props) {
                                                                 </Button>
                                                             </span> : ""}
                                                         </td> : ""}
-                                                        {/*<td>
-
-                                                            <Button variant="link" onClick={() => {
-                                                                openPaymentsDialogue(salesreturn);
-                                                            }}>
-                                                                {salesreturn.payments_count}
-                                                            </Button>
-
-                                                        </td>*/}
+                                                      
                                                         <td>
                                                             {salesreturn.payment_status === "paid" ?
                                                                 <span className="badge bg-success">
@@ -2356,7 +2962,7 @@ function SalesReturnIndex(props) {
                                                             }}>
                                                                 <i className="bi bi-eye"></i>
                                                             </Button>
-                                                        </td>
+                                                        </td>*/}
                                                     </tr>
                                                 ))}
                                         </tbody>
