@@ -68,7 +68,12 @@ const Products = forwardRef((props, ref) => {
             if (type === "linked_products") {
                 product = model;
                 setProduct(product);
-                searchParams.linked_products_of_product_id = model.product_id;
+                if (model.product_id) {
+                    searchParams.linked_products_of_product_id = model.product_id;
+                } else if (model.id) {
+                    searchParams.linked_products_of_product_id = model.id;
+                }
+
             } else if (type === "quotation_products") {
                 quotation = model;
                 setQuotation(quotation);

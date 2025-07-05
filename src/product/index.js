@@ -28,6 +28,7 @@ import Amount from "../utils/amount.js";
 import { trimTo2Decimals } from "../utils/numberUtils";
 import { highlightWords } from "../utils/search.js";
 import ImageViewerModal from './../utils/ImageViewerModal';
+import Products from "./../utils/products.js";
 
 const columnStyle = {
     width: '20%',
@@ -741,6 +742,12 @@ function ProductIndex(props) {
     };
     */
 
+    const ProductsRef = useRef();
+    function openLinkedProducts(model) {
+        ProductsRef.current.open(model, "linked_products");
+    }
+
+
     const SalesHistoryRef = useRef();
     function openSalesHistory(model) {
         SalesHistoryRef.current.open(model);
@@ -990,8 +997,40 @@ function ProductIndex(props) {
     }
 
 
+    function RunKeyActions(event, product) {
+        const isMac = navigator.userAgentData
+            ? navigator.userAgentData.platform === 'macOS'
+            : /Mac/i.test(navigator.userAgent);
+
+        const isCmdOrCtrl = isMac ? event.metaKey : event.ctrlKey;
+
+        if (event.key === "F10") {
+            openLinkedProducts(product);
+        } else if (event.key === "F4") {
+            openSalesHistory(product);
+        } else if (event.key === "F9") {
+            openSalesReturnHistory(product);
+        } else if (event.key === "F6") {
+            openPurchaseHistory(product);
+        } else if (event.key === "F8") {
+            openPurchaseReturnHistory(product);
+        } else if (event.key === "F3") {
+            openDeliveryNoteHistory(product);
+        } else if (event.key === "F2") {
+            openQuotationHistory(product);
+        } else if (isCmdOrCtrl && event.shiftKey && event.key.toLowerCase() === 'p') {
+            openQuotationSalesHistory(product);
+        } else if (isCmdOrCtrl && event.shiftKey && event.key.toLowerCase() === 'z') {
+            openQuotationSalesReturnHistory(product);
+        } else if (isCmdOrCtrl && event.shiftKey && event.key.toLowerCase() === 'f') {
+            openProductImages(product.product_id);
+        }
+    }
+
+
     return (
         <>
+            <Products ref={ProductsRef} showToastMessage={props.showToastMessage} />
             <ImageViewerModal ref={imageViewerRef} images={productImages} />
             <SalesHistory ref={SalesHistoryRef} showToastMessage={props.showToastMessage} />
             <SalesReturnHistory ref={SalesReturnHistoryRef} showToastMessage={props.showToastMessage} />
@@ -1160,6 +1199,10 @@ function ProductIndex(props) {
                                             open={openProductSearchResult}
                                             isLoading={false}
                                             onKeyDown={(e) => {
+                                                if (selectedProducts[selectedProducts?.length - 1]) {
+                                                    RunKeyActions(e, selectedProducts[selectedProducts?.length - 1]);
+                                                }
+
                                                 if (e.key === "Escape") {
                                                     // setProductOptions([]);
                                                     setOpenProductSearchResult(false);
@@ -3037,67 +3080,75 @@ function ProductIndex(props) {
 
                                                                     <Dropdown.Menu >
                                                                         <Dropdown.Item onClick={() => {
+                                                                            openLinkedProducts(product);
+                                                                        }}>
+                                                                            <i className="bi bi-link"></i>
+                                                                            &nbsp;
+                                                                            Linked Products (F10)
+                                                                        </Dropdown.Item>
+
+                                                                        <Dropdown.Item onClick={() => {
                                                                             openSalesHistory(product);
                                                                         }}>
                                                                             <i className="bi bi-clock-history"></i>
                                                                             &nbsp;
-                                                                            Sales History
+                                                                            Sales History (F4)
                                                                         </Dropdown.Item>
                                                                         <Dropdown.Item onClick={() => {
                                                                             openSalesReturnHistory(product);
                                                                         }}>
                                                                             <i className="bi bi-clock-history"></i>
                                                                             &nbsp;
-                                                                            Sales Return History
+                                                                            Sales Return History (F9)
                                                                         </Dropdown.Item>
                                                                         <Dropdown.Item onClick={() => {
                                                                             openPurchaseHistory(product);
                                                                         }}>
                                                                             <i className="bi bi-clock-history"></i>
                                                                             &nbsp;
-                                                                            Purchase History
+                                                                            Purchase History (F6)
                                                                         </Dropdown.Item>
                                                                         <Dropdown.Item onClick={() => {
                                                                             openPurchaseReturnHistory(product);
                                                                         }}>
                                                                             <i className="bi bi-clock-history"></i>
                                                                             &nbsp;
-                                                                            Purchase Return History
+                                                                            Purchase Return History (F8)
                                                                         </Dropdown.Item>
                                                                         <Dropdown.Item onClick={() => {
                                                                             openDeliveryNoteHistory(product);
                                                                         }}>
                                                                             <i className="bi bi-clock-history"></i>
                                                                             &nbsp;
-                                                                            Delivery Note History
+                                                                            Delivery Note History (F3)
                                                                         </Dropdown.Item>
                                                                         <Dropdown.Item onClick={() => {
                                                                             openQuotationHistory(product);
                                                                         }}>
                                                                             <i className="bi bi-clock-history"></i>
                                                                             &nbsp;
-                                                                            Quotation History
+                                                                            Quotation History  (F2)
                                                                         </Dropdown.Item>
                                                                         <Dropdown.Item onClick={() => {
                                                                             openQuotationSalesHistory(product);
                                                                         }}>
                                                                             <i className="bi bi-clock-history"></i>
                                                                             &nbsp;
-                                                                            Qtn. Sales History
+                                                                            Qtn. Sales History  (CTR + SHIFT + P)
                                                                         </Dropdown.Item>
                                                                         <Dropdown.Item onClick={() => {
                                                                             openQuotationSalesReturnHistory(product);
                                                                         }}>
                                                                             <i className="bi bi-clock-history"></i>
                                                                             &nbsp;
-                                                                            Qtn. Sales Return History
+                                                                            Qtn. Sales Return History (CTR + SHIFT + Z)
                                                                         </Dropdown.Item>
                                                                         <Dropdown.Item onClick={() => {
                                                                             openProductImages(product.id);
                                                                         }}>
                                                                             <i className="bi bi-clock-history"></i>
                                                                             &nbsp;
-                                                                            Images
+                                                                            Images  (CTR + SHIFT + F)
                                                                         </Dropdown.Item>
 
                                                                     </Dropdown.Menu>

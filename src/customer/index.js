@@ -614,7 +614,7 @@ function CustomerIndex(props) {
                                                         searchByFieldValue("ignore_zero_credit_balance", ignoreZeroCreditBalance)
                                                     }}
                                                     className=""
-                                                    id="ignoreOpeningBalance"
+                                                    id="ignoreZeroCreditBalance"
 
                                                 /> &nbsp;Ignore Zero Credit Balance
                                             </span>
@@ -628,7 +628,7 @@ function CustomerIndex(props) {
                                                         searchByFieldValue("ignore_zero_qtn_credit_balance", ignoreZeroQtnCreditBalance)
                                                     }}
                                                     className=""
-                                                    id="ignoreCreditBalance"
+                                                    id="ignoreZeroQtnCreditBalance"
 
                                                 /> &nbsp;Ignore Zero Qtn. Invoice Credit Balance
                                             </span>
