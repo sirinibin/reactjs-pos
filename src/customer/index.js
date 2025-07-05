@@ -453,6 +453,7 @@ function CustomerIndex(props) {
     const timerRef = useRef(null);
 
     let [ignoreZeroCreditBalance, setIgnoreZeroCreditBalance] = useState(false);
+    let [ignoreZeroQtnCreditBalance, setIgnoreZeroQtnCreditBalance] = useState(false);
 
 
     return (
@@ -616,6 +617,20 @@ function CustomerIndex(props) {
                                                     id="ignoreOpeningBalance"
 
                                                 /> &nbsp;Ignore Zero Credit Balance
+                                            </span>
+                                            <span style={{ marginLeft: "10px" }}>
+                                                <input type="checkbox"
+                                                    value={ignoreZeroQtnCreditBalance}
+                                                    checked={ignoreZeroQtnCreditBalance}
+                                                    onChange={(e) => {
+                                                        ignoreZeroQtnCreditBalance = !ignoreZeroQtnCreditBalance;
+                                                        setIgnoreZeroQtnCreditBalance(ignoreZeroQtnCreditBalance);
+                                                        searchByFieldValue("ignore_zero_qtn_credit_balance", ignoreZeroQtnCreditBalance)
+                                                    }}
+                                                    className=""
+                                                    id="ignoreCreditBalance"
+
+                                                /> &nbsp;Ignore Zero Qtn. Invoice Credit Balance
                                             </span>
                                         </p>
                                     </div>
