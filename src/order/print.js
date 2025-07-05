@@ -175,7 +175,7 @@ const OrderPrint = forwardRef((props, ref) => {
 
         model.pageSize = pageSize;
         let totalProducts = model.products?.length;
-        let top = 0;
+        let top = 10;
         let totalPagesInt = parseInt(totalProducts / pageSize);
         let totalPagesFloat = parseFloat(totalProducts / pageSize);
 

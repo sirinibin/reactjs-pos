@@ -37,7 +37,7 @@ const OrderPrintContent2 = forwardRef((props, ref) => {
                         {props.model.code ? props.model.code : ""}
                     </h4>
 
-                    <h4 className="print-value text-center" style={{ fontSize: "3mm", maxWidth: "450px", minWidth: "450px", position: "absolute", left: "350px", top: (240 + page.top) + "px", border: "solid " + border + "px", }}>
+                    <h4 className="print-value text-center" style={{ fontSize: "3.5mm", maxWidth: "450px", minWidth: "450px", position: "absolute", left: "350px", top: (240 + page.top) + "px", border: "solid " + border + "px", }}>
                         {props.model.customer && props.model.customer.name ? props.model.customer.name : "N/A"}
                     </h4>
 
@@ -71,7 +71,7 @@ const OrderPrintContent2 = forwardRef((props, ref) => {
                         {props.model.total_pages ? "Page " + (pageIndex + 1) + " of " + props.model.total_pages : ""}
                     </h4>*/}
 
-                    <table className="print-value" style={{ fontSize: "3mm", position: "absolute", left: "90px", top: (340 + page.top) + "px", border: "solid 0px", }}>
+                    <table className="print-value" style={{ fontSize: "3mm", position: "absolute", left: "90px", top: (345 + page.top) + "px", border: "solid 0px", }}>
                         <tbody>
                             {page.products && page.products.map((product, index) => (
                                 <tr key={product.item_code} style={{ paddingTop: "1px", height: "8px", borderBottom: "solid 0px" }}>
