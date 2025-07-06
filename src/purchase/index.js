@@ -1311,6 +1311,25 @@ function PurchaseIndex(props) {
                                         /> : ""}
                                     </div>
                                 </div>
+
+                                <div className="row">
+                                    <div className="col text-end">
+                                        <button
+                                            className="btn btn-sm btn-outline-secondary"
+                                            onClick={() => {
+                                                setShowSettings(!showSettings);
+                                            }}
+                                        >
+                                            <i
+                                                className="bi bi-gear-fill"
+                                                style={{ fontSize: "1.2rem" }}
+                                                title="Table Settings"
+
+                                            />
+                                        </button>
+                                    </div>
+                                </div>
+
                                 <div className="row">
                                     {totalItems > 0 && (
                                         <>
@@ -1329,28 +1348,11 @@ function PurchaseIndex(props) {
                                         </>
                                     )}
                                 </div>
-                                <div className="row">
-                                    <div className="col text-end">
-                                        <button
-                                            className="btn btn-sm btn-outline-secondary"
-                                            onClick={() => {
-                                                setShowSettings(!showSettings);
-                                            }}
-                                        >
-                                            <i
-                                                className="bi bi-gear-fill"
-                                                style={{ fontSize: "1.2rem" }}
-                                                title="Table Settings"
 
-                                            />
-                                        </button>
-                                    </div>
-                                </div>
                                 <div className="table-responsive" style={{ overflowX: "auto", overflowY: "auto", maxHeight: "500px" }}>
                                     <table className="table table-striped table-sm table-bordered">
                                         <thead>
                                             <tr className="text-center">
-
                                                 {columns.filter(c => c.visible).map((col) => {
                                                     return (<>
                                                         {col.key === "actions" && <th key={col.key}>{col.label}</th>}
@@ -1375,360 +1377,6 @@ function PurchaseIndex(props) {
                                                         </th>}
                                                     </>);
                                                 })}
-                                            </tr>
-                                            <tr className="text-center sub-header">
-
-                                                {/* <th>Actions</th>
-                                                <th>
-                                                    <b
-                                                        style={{
-                                                            textDecoration: "underline",
-                                                            cursor: "pointer",
-                                                        }}
-                                                        onClick={() => {
-                                                            sort("code");
-                                                        }}
-                                                    >
-                                                        ID
-                                                        {sortField === "code" && sortOrder === "-" ? (
-                                                            <i className="bi bi-sort-alpha-up-alt"></i>
-                                                        ) : null}
-                                                        {sortField === "code" && sortOrder === "" ? (
-                                                            <i className="bi bi-sort-alpha-up"></i>
-                                                        ) : null}
-                                                    </b>
-                                                </th>
-                                                <th>
-                                                    <b
-                                                        style={{
-                                                            textDecoration: "underline",
-                                                            cursor: "pointer",
-                                                        }}
-                                                        onClick={() => {
-                                                            sort("date");
-                                                        }}
-                                                    >
-                                                        Date
-                                                        {sortField === "date" && sortOrder === "-" ? (
-                                                            <i className="bi bi-sort-down"></i>
-                                                        ) : null}
-                                                        {sortField === "date" && sortOrder === "" ? (
-                                                            <i className="bi bi-sort-up"></i>
-                                                        ) : null}
-                                                    </b>
-                                                </th>
-
-
-                                                <th>
-                                                    <b
-                                                        style={{
-                                                            textDecoration: "underline",
-                                                            cursor: "pointer",
-                                                        }}
-                                                        onClick={() => {
-                                                            sort("vendor_name");
-                                                        }}
-                                                    >
-                                                        Vendor
-                                                        {sortField === "vendor_name" &&
-                                                            sortOrder === "-" ? (
-                                                            <i className="bi bi-sort-alpha-up-alt"></i>
-                                                        ) : null}
-                                                        {sortField === "vendor_name" && sortOrder === "" ? (
-                                                            <i className="bi bi-sort-alpha-up"></i>
-                                                        ) : null}
-                                                    </b>
-                                                </th>
-
-                                                <th>
-                                                    <b
-                                                        style={{
-                                                            textDecoration: "underline",
-                                                            cursor: "pointer",
-                                                        }}
-                                                        onClick={() => {
-                                                            sort("net_total");
-                                                        }}
-                                                    >
-                                                        Net Total
-                                                        {sortField === "net_total" && sortOrder === "-" ? (
-                                                            <i className="bi bi-sort-numeric-down"></i>
-                                                        ) : null}
-                                                        {sortField === "net_total" && sortOrder === "" ? (
-                                                            <i className="bi bi-sort-numeric-up"></i>
-                                                        ) : null}
-                                                    </b>
-                                                </th>
-
-                                                <th>
-                                                    <b
-                                                        style={{
-                                                            textDecoration: "underline",
-                                                            cursor: "pointer",
-                                                        }}
-                                                        onClick={() => {
-                                                            sort("total_payment_paid");
-                                                        }}
-                                                    >
-                                                        Amount Paid
-                                                        {sortField === "total_payment_paid" && sortOrder === "-" ? (
-                                                            <i className="bi bi-sort-numeric-down"></i>
-                                                        ) : null}
-                                                        {sortField === "total_payment_paid" && sortOrder === "" ? (
-                                                            <i className="bi bi-sort-numeric-up"></i>
-                                                        ) : null}
-                                                    </b>
-                                                </th>
-                                                <th>
-                                                    <b
-                                                        style={{
-                                                            textDecoration: "underline",
-                                                            cursor: "pointer",
-                                                        }}
-                                                        onClick={() => {
-                                                            sort("balance_amount");
-                                                        }}
-                                                    >
-                                                        Credit Balance
-                                                        {sortField === "balance_amount" && sortOrder === "-" ? (
-                                                            <i className="bi bi-sort-numeric-down"></i>
-                                                        ) : null}
-                                                        {sortField === "balance_amount" && sortOrder === "" ? (
-                                                            <i className="bi bi-sort-numeric-up"></i>
-                                                        ) : null}
-                                                    </b>
-                                                </th>
-                                                <th>
-                                                    <b
-                                                        style={{
-                                                            textDecoration: "underline",
-                                                            cursor: "pointer",
-                                                        }}
-                                                        onClick={() => {
-                                                            sort("cash_discount");
-                                                        }}
-                                                    >
-                                                        Cash Discount
-                                                        {sortField === "cash_discount" && sortOrder === "-" ? (
-                                                            <i className="bi bi-sort-numeric-down"></i>
-                                                        ) : null}
-                                                        {sortField === "cash_discount" && sortOrder === "" ? (
-                                                            <i className="bi bi-sort-numeric-up"></i>
-                                                        ) : null}
-                                                    </b>
-                                                </th>
-                                                <th>
-                                                    <b
-                                                        style={{
-                                                            textDecoration: "underline",
-                                                            cursor: "pointer",
-                                                        }}
-                                                        onClick={() => {
-                                                            sort("vendor_invoice_no");
-                                                        }}
-                                                    >
-                                                        Vendor Invoice No.
-                                                        {sortField === "vendor_invoice_no" && sortOrder === "-" ? (
-                                                            <i className="bi bi-sort-alpha-up-alt"></i>
-                                                        ) : null}
-                                                        {sortField === "vendor_invoice_no" && sortOrder === "" ? (
-                                                            <i className="bi bi-sort-alpha-up"></i>
-                                                        ) : null}
-                                                    </b>
-                                                </th>
-                                                <th>
-                                                    <b
-                                                        style={{
-                                                            textDecoration: "underline",
-                                                            cursor: "pointer",
-                                                        }}
-                                                        onClick={() => {
-                                                            sort("payments_count");
-                                                        }}
-                                                    >
-                                                        No.of Payments
-                                                        {sortField === "payments_count" && sortOrder === "-" ? (
-                                                            <i className="bi bi-sort-numeric-down"></i>
-                                                        ) : null}
-                                                        {sortField === "payments_count" && sortOrder === "" ? (
-                                                            <i className="bi bi-sort-numeric-up"></i>
-                                                        ) : null}
-                                                    </b>
-                                                </th>
-                                                <th>
-                                                    <b
-                                                        style={{
-                                                            textDecoration: "underline",
-                                                            cursor: "pointer",
-                                                        }}
-                                                        onClick={() => {
-                                                            sort("payment_status");
-                                                        }}
-                                                    >
-                                                        Payment Status
-                                                        {sortField === "payment_status" && sortOrder === "-" ? (
-                                                            <i className="bi bi-sort-alpha-up-alt"></i>
-                                                        ) : null}
-                                                        {sortField === "payment_status" && sortOrder === "" ? (
-                                                            <i className="bi bi-sort-alpha-up"></i>
-                                                        ) : null}
-                                                    </b>
-                                                </th>
-                                                <th>
-                                                    <b
-                                                        style={{
-                                                            textDecoration: "underline",
-                                                            cursor: "pointer",
-                                                        }}
-                                                        onClick={() => {
-                                                            sort("payment_methods");
-                                                        }}
-                                                    >
-                                                        Payment Methods
-                                                        {sortField === "payment_methods" && sortOrder === "-" ? (
-                                                            <i className="bi bi-sort-alpha-up-alt"></i>
-                                                        ) : null}
-                                                        {sortField === "payment_methods" && sortOrder === "" ? (
-                                                            <i className="bi bi-sort-alpha-up"></i>
-                                                        ) : null}
-                                                    </b>
-                                                </th>
-                                                <th>
-                                                    <b
-                                                        style={{
-                                                            textDecoration: "underline",
-                                                            cursor: "pointer",
-                                                        }}
-                                                        onClick={() => {
-                                                            sort("discount");
-                                                        }}
-                                                    >
-                                                        Purchase Discount
-                                                        {sortField === "discount" && sortOrder === "-" ? (
-                                                            <i className="bi bi-sort-numeric-down"></i>
-                                                        ) : null}
-                                                        {sortField === "discount" && sortOrder === "" ? (
-                                                            <i className="bi bi-sort-numeric-up"></i>
-                                                        ) : null}
-                                                    </b>
-                                                </th>
-                                                <th>
-                                                    <b
-                                                        style={{
-                                                            textDecoration: "underline",
-                                                            cursor: "pointer",
-                                                        }}
-                                                        onClick={() => {
-                                                            sort("vat_price");
-                                                        }}
-                                                    >
-                                                        VAT
-                                                        {sortField === "vat_price" && sortOrder === "-" ? (
-                                                            <i className="bi bi-sort-numeric-down"></i>
-                                                        ) : null}
-                                                        {sortField === "vat_price" && sortOrder === "" ? (
-                                                            <i className="bi bi-sort-numeric-up"></i>
-                                                        ) : null}
-                                                    </b>
-                                                </th>
-                                                <th>
-                                                    <b
-                                                        style={{
-                                                            textDecoration: "underline",
-                                                            cursor: "pointer",
-                                                        }}
-                                                        onClick={() => {
-                                                            sort("return_count");
-                                                        }}
-                                                    >
-                                                        Return Count
-                                                        {sortField === "return_count" && sortOrder === "-" ? (
-                                                            <i className="bi bi-sort-numeric-down"></i>
-                                                        ) : null}
-                                                        {sortField === "return_count" && sortOrder === "" ? (
-                                                            <i className="bi bi-sort-numeric-up"></i>
-                                                        ) : null}
-                                                    </b>
-                                                </th>
-                                                <th>
-                                                    <b
-                                                        style={{
-                                                            textDecoration: "underline",
-                                                            cursor: "pointer",
-                                                        }}
-                                                        onClick={() => {
-                                                            sort("return_amount");
-                                                        }}
-                                                    >
-                                                        Return Paid Amount
-                                                        {sortField === "return_amount" && sortOrder === "-" ? (
-                                                            <i className="bi bi-sort-numeric-down"></i>
-                                                        ) : null}
-                                                        {sortField === "return_amount" && sortOrder === "" ? (
-                                                            <i className="bi bi-sort-numeric-up"></i>
-                                                        ) : null}
-                                                    </b>
-                                                </th>
-                                                <th>
-                                                    <b
-                                                        style={{
-                                                            textDecoration: "underline",
-                                                            cursor: "pointer",
-                                                        }}
-                                                        onClick={() => {
-                                                            sort("created_by");
-                                                        }}
-                                                    >
-                                                        Created By
-                                                        {sortField === "created_by" && sortOrder === "-" ? (
-                                                            <i className="bi bi-sort-alpha-up-alt"></i>
-                                                        ) : null}
-                                                        {sortField === "created_by" && sortOrder === "" ? (
-                                                            <i className="bi bi-sort-alpha-up"></i>
-                                                        ) : null}
-                                                    </b>
-                                                </th>
-
-
-                                                <th>
-                                                    <b
-                                                        style={{
-                                                            textDecoration: "underline",
-                                                            cursor: "pointer",
-                                                        }}
-                                                        onClick={() => {
-                                                            sort("created_at");
-                                                        }}
-                                                    >
-                                                        Created At
-                                                        {sortField === "created_at" && sortOrder === "-" ? (
-                                                            <i className="bi bi-sort-down"></i>
-                                                        ) : null}
-                                                        {sortField === "created_at" && sortOrder === "" ? (
-                                                            <i className="bi bi-sort-up"></i>
-                                                        ) : null}
-                                                    </b>
-                                                </th>
-                                                <th>
-                                                    <b
-                                                        style={{
-                                                            textDecoration: "underline",
-                                                            cursor: "pointer",
-                                                        }}
-                                                        onClick={() => {
-                                                            sort("updated_at");
-                                                        }}
-                                                    >
-                                                        Updated At
-                                                        {sortField === "updated_at" && sortOrder === "-" ? (
-                                                            <i className="bi bi-sort-down"></i>
-                                                        ) : null}
-                                                        {sortField === "updated_at" && sortOrder === "" ? (
-                                                            <i className="bi bi-sort-up"></i>
-                                                        ) : null}
-                                                    </b>
-                                                </th>
-                                                <th>Actions</th>*/}
                                             </tr>
                                         </thead>
 

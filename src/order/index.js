@@ -1248,7 +1248,6 @@ const OrderIndex = forwardRef((props, ref) => {
     let [showPrintTypeSelection, setShowPrintTypeSelection] = useState(false);
 
     //Table settings
-
     const defaultColumns = useMemo(() => [
         { key: "actions", label: "Actions", fieldName: "actions", visible: true },
         { key: "id", label: "ID", fieldName: "code", visible: true },
@@ -1275,16 +1274,6 @@ const OrderIndex = forwardRef((props, ref) => {
     const [columns, setColumns] = useState(defaultColumns);
     const [showSettings, setShowSettings] = useState(false);
     // Load settings from localStorage
-    /*
-        const missingOrUpdated = defaultColumns.filter(defaultCol => {
-            const savedCols = JSON.parse(localStorage.getItem("sales_table_settings"));
-    
-            const savedCol = savedCols.find(col => col.fieldName === defaultCol.fieldName);
-    
-            // If column is missing or its label has changed
-            return !savedCol || savedCol.label !== defaultCol.label;
-        });*/
-
     useEffect(() => {
         const saved = localStorage.getItem("sales_table_settings");
         if (saved) setColumns(JSON.parse(saved));
@@ -1330,69 +1319,6 @@ const OrderIndex = forwardRef((props, ref) => {
         setShowSuccess(true);
         setSuccessMessage("Successfully restored to default settings!")
     }
-
-    /*
-        useEffect(() => {
-            const saved = localStorage.getItem("sales_table_settings");
-    
-            if (saved) {
-                const savedCols = JSON.parse(saved);
-    
-                // Detect new or updated columns (by label)
-                const mergedCols = defaultColumns.map(defaultCol => {
-                    const savedCol = savedCols.find(col => col.fieldName === defaultCol.fieldName);
-    
-                    if (savedCol) {
-                        // Update the label and other default props, but preserve user's settings (like visibility/order)
-                        return {
-                            ...defaultCol,
-                            ...savedCol,
-                            label: defaultCol.label, // Always use the updated label from default
-                        };
-                    } else {
-                        // New column not found in saved settings
-                        return defaultCol;
-                    }
-                });
-    
-                // Save updated settings if new/changed columns are detected
-                const hasChanges = mergedCols.length !== savedCols.length ||
-                    mergedCols.some((col, i) => col.label !== savedCols[i]?.label);
-    
-                if (hasChanges) {
-                    localStorage.setItem("sales_table_settings", JSON.stringify(mergedCols));
-                }
-    
-                setColumns(mergedCols);
-            } else {
-                // First-time load
-                localStorage.setItem("sales_table_settings", JSON.stringify(defaultColumns));
-                setColumns(defaultColumns);
-            }
-        }, [defaultColumns]);
-        */
-
-
-
-    /*
-    useEffect(() => {
-        const saved = localStorage.getItem("sales_table_settings");
-
-        if (saved) {
-            const savedCols = JSON.parse(saved);
-
-            const savedFieldNames = savedCols.map(c => c.fieldName).sort();
-            const defaultFieldNames = defaultColumns.map(c => c.fieldName).sort();
-
-            const structureChanged = JSON.stringify(savedFieldNames) !== JSON.stringify(defaultFieldNames);
-
-            if (structureChanged) {
-                localStorage.setItem("sales_table_settings", JSON.stringify(defaultColumns));
-                setColumns(defaultColumns);
-            }
-        }
-    }, [defaultColumns]);*/
-
 
     // Save column settings to localStorage
     useEffect(() => {
@@ -1500,8 +1426,6 @@ const OrderIndex = forwardRef((props, ref) => {
                     </Button>
                 </Modal.Footer>
             </Modal>
-
-
 
             <OrderPrint ref={PrintRef} />
             {showOrderPreview && <OrderPreview ref={PreviewRef} />}
@@ -1763,6 +1687,25 @@ const OrderIndex = forwardRef((props, ref) => {
                                         /> : ""}
                                     </div>
                                 </div>
+
+                                <div className="row">
+                                    <div className="col text-end">
+                                        <button
+                                            className="btn btn-sm btn-outline-secondary"
+                                            onClick={() => {
+                                                setShowSettings(!showSettings);
+                                            }}
+                                        >
+                                            <i
+                                                className="bi bi-gear-fill"
+                                                style={{ fontSize: "1.2rem" }}
+                                                title="Table Settings"
+
+                                            />
+                                        </button>
+                                    </div>
+                                </div>
+
                                 <div className="row">
                                     {totalItems > 0 && (
                                         <>
@@ -1783,23 +1726,7 @@ const OrderIndex = forwardRef((props, ref) => {
                                         </>
                                     )}
                                 </div>
-                                <div className="row">
-                                    <div className="col text-end">
-                                        <button
-                                            className="btn btn-sm btn-outline-secondary"
-                                            onClick={() => {
-                                                setShowSettings(!showSettings);
-                                            }}
-                                        >
-                                            <i
-                                                className="bi bi-gear-fill"
-                                                style={{ fontSize: "1.2rem" }}
-                                                title="Table Settings"
 
-                                            />
-                                        </button>
-                                    </div>
-                                </div>
                                 <div className="table-responsive" style={{ overflowX: "auto", overflowY: "auto", maxHeight: "500px" }}>
                                     <table className="table table-striped table-bordered table-sm" style={{}}>
                                         <thead>
