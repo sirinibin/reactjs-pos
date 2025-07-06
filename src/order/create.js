@@ -1164,11 +1164,56 @@ const OrderCreate = forwardRef((props, ref) => {
             return null;  // ✅ explicitly return null or a fallback if there's an error
         }
     }
+
+    function addProductFromQuotation(product) {
+        let alreadyAdded = isProductAdded(product.product_id);
+
+        if (!alreadyAdded) {
+            selectedProducts.push({
+                product_id: product.product_id,
+                code: product.item_code,
+                prefix_part_number: product.prefix_part_number,
+                part_number: product.part_number,
+                name: product.name,
+                quantity: 1,
+                //  product_stores: product.product_stores,
+                unit_price: product.unit_price ? product.unit_price : 0,
+                unit_price_with_vat: product.unit_price_with_vat ? product.unit_price_with_vat : 0,
+                unit: product.unit ? product.unit : "",
+                purchase_unit_price: product.purchase_unit_price ? product.purchase_unit_price : 0,
+                purchase_unit_price_with_vat: product.purchase_unit_price_with_vat ? product.purchase_unit_price_with_vat : 0,
+                unit_discount: product.unit_discount ? product.unit_discount : 0,
+                unit_discount_with_vat: product.unit_discount_with_vat ? product.unit_discount_with_vat : 0,
+                unit_discount_percent: product.unit_discount_percent ? product.unit_discount_percent : 0,
+                unit_discount_percent_vat: product.unit_discount_percent_with_vat ? product.unit_discount_percent_with_vat : 0,
+            });
+        }
+        setSelectedProducts([...selectedProducts]);
+        // if (timerRef.current) clearTimeout(timerRef.current);
+
+        timerRef.current = setTimeout(() => {
+            let index = getProductIndex(product.product_id);
+
+            if (alreadyAdded) {
+                index = selectedProducts?.length - 1;
+            }
+            // alert(selectedProducts.length);
+            // alert(index);
+
+            CalCulateLineTotals(index);
+            checkWarnings(index);
+            checkErrors(index);
+            reCalculate(index);
+        }, 100);
+        return true;
+    }
+
     function addProduct(product) {
         if (!product.id && product.product_id) {
             product.id = product.product_id
         }
 
+        console.log(product);
         let alreadyAdded = isProductAdded(product.id);
         let index = getProductIndex(product.id);
 
@@ -1930,7 +1975,7 @@ const OrderCreate = forwardRef((props, ref) => {
         console.log("Selected Products:", selected);
         let addedCount = 0;
         for (var i = 0; i < selected.length; i++) {
-            if (addProduct(selected[i])) {
+            if (addProductFromQuotation(selected[i])) {
                 addedCount++;
             }
         }

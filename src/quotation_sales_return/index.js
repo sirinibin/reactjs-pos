@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useContext, useCallback } from "react";
+import React, { useState, useEffect, useRef, useContext, useCallback, useMemo } from "react";
 import QuotationSalesReturnCreate from "./create.js";
 import QuotationSalesReturnView from "./view.js";
 
@@ -6,9 +6,9 @@ import { Typeahead } from "react-bootstrap-typeahead";
 import { format } from "date-fns";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
-import { Button, Spinner, Modal } from "react-bootstrap";
+import { Button, Spinner, Modal, Alert } from "react-bootstrap";
 import ReactPaginate from "react-paginate";
-
+import { DragDropContext, Droppable, Draggable } from "react-beautiful-dnd";
 import QuotationSalesReturnPaymentCreate from "./../quotation_sales_return_payment/create.js";
 import QuotationSalesReturnPaymentDetailsView from "./../quotation_sales_return_payment/view.js";
 import QuotationSalesReturnPaymentIndex from "./../quotation_sales_return_payment/index.js";
@@ -1131,8 +1131,204 @@ function QuotationSalesReturnIndex(props) {
     }, []);
 
 
+
+    //Table settings
+    const [showSuccess, setShowSuccess] = useState(false);
+    const [successMessage, setSuccessMessage] = useState(false);
+
+    const defaultColumns = useMemo(() => [
+        { key: "actions", label: "Actions", fieldName: "actions", visible: true },
+        { key: "id", label: "Qtn. Sales Return ID", fieldName: "code", visible: true },
+        { key: "date", label: "Date", fieldName: "date", visible: true },
+        { key: "customer", label: "Customer", fieldName: "customer_name", visible: true },
+        { key: "net_total", label: "Net Total", fieldName: "net_total", visible: true },
+        { key: "amount_paid", label: "Amount Paid", fieldName: "total_payment_received", visible: true },
+        { key: "credit_balance", label: "Credit Balance", fieldName: "balance_amount", visible: true },
+        { key: "quotation_code", label: "Qtn. Sales ID", fieldName: "quotation_code", visible: true },
+        { key: "payment_status", label: "Payment Status", fieldName: "payment_status", visible: true },
+        { key: "payment_methods", label: "Payment Methods", fieldName: "payment_methods", visible: true },
+        { key: "cash_discount", label: "Cash Discount", fieldName: "cash_discount", visible: true },
+        { key: "discount", label: "Discount", fieldName: "discount", visible: true },
+        { key: "net_profit", label: "Net Profit", fieldName: "net_profit", visible: true },
+        { key: "net_loss", label: "Net Loss", fieldName: "net_loss", visible: true },
+        { key: "created_by", label: "Created By", fieldName: "created_by", visible: true },
+        { key: "created_at", label: "Created At", fieldName: "created_at", visible: true },
+        { key: "actions_end", label: "Actions", fieldName: "actions_end", visible: true },
+    ], []);
+
+
+    const [columns, setColumns] = useState(defaultColumns);
+    const [showSettings, setShowSettings] = useState(false);
+    // Load settings from localStorage
+    useEffect(() => {
+        const saved = localStorage.getItem("quotation_sales_return_table_settings");
+        if (saved) setColumns(JSON.parse(saved));
+
+        let missingOrUpdated = false;
+        for (let i = 0; i < defaultColumns.length; i++) {
+            if (!saved)
+                break;
+
+            const savedCol = JSON.parse(saved)?.find(col => col.fieldName === defaultColumns[i].fieldName);
+
+            missingOrUpdated = !savedCol || savedCol.label !== defaultColumns[i].label || savedCol.key !== defaultColumns[i].key;
+
+            if (missingOrUpdated) {
+                break
+            }
+        }
+
+        /*
+        for (let i = 0; i < saved.length; i++) {
+            const savedCol = defaultColumns.find(col => col.fieldName === saved[i].fieldName);
+     
+            missingOrUpdated = !savedCol || savedCol.label !== saved[i].label || savedCol.key !== saved[i].key;
+     
+            if (missingOrUpdated) {
+                break
+            }
+        }*/
+
+        if (missingOrUpdated) {
+            localStorage.setItem("quotation_sales_return_table_settings", JSON.stringify(defaultColumns));
+            setColumns(defaultColumns);
+        }
+
+        //2nd
+
+    }, [defaultColumns]);
+
+    function RestoreDefaultSettings() {
+        localStorage.setItem("quotation_sales_return_table_settings", JSON.stringify(defaultColumns));
+        setColumns(defaultColumns);
+
+        setShowSuccess(true);
+        setSuccessMessage("Successfully restored to default settings!")
+    }
+
+    // Save column settings to localStorage
+    useEffect(() => {
+        localStorage.setItem("quotation_sales_return_table_settings", JSON.stringify(columns));
+    }, [columns]);
+
+    const handleToggleColumn = (index) => {
+        const updated = [...columns];
+        updated[index].visible = !updated[index].visible;
+        setColumns(updated);
+    };
+
+    const onDragEnd = (result) => {
+        if (!result.destination) return;
+        const reordered = Array.from(columns);
+        const [moved] = reordered.splice(result.source.index, 1);
+        reordered.splice(result.destination.index, 0, moved);
+        setColumns(reordered);
+    };
+
+
     return (
         <>
+            {/* ⚙️ Settings Modal */}
+            <Modal
+                show={showSettings}
+                onHide={() => setShowSettings(false)}
+                centered
+                size="lg"
+            >
+                <Modal.Header closeButton>
+                    <Modal.Title>
+                        <i
+                            className="bi bi-gear-fill"
+                            style={{ fontSize: "1.2rem", marginRight: "4px" }}
+                            title="Table Settings"
+
+                        />
+                        Qtn. Sales Return Settings
+                    </Modal.Title>
+                </Modal.Header>
+                <Modal.Body>
+                    {/* Column Settings */}
+                    {showSettings && (
+                        <>
+                            <h6 className="mb-2">Customize Columns</h6>
+                            <DragDropContext onDragEnd={onDragEnd}>
+                                <Droppable droppableId="columns">
+                                    {(provided) => (
+                                        <ul
+                                            className="list-group"
+                                            {...provided.droppableProps}
+                                            ref={provided.innerRef}
+                                        >
+                                            {columns.map((col, index) => (
+                                                <Draggable
+                                                    key={col.key}
+                                                    draggableId={col.key}
+                                                    index={index}
+                                                >
+                                                    {(provided) => (
+                                                        <li
+                                                            className="list-group-item d-flex justify-content-between align-items-center"
+                                                            ref={provided.innerRef}
+                                                            {...provided.draggableProps}
+                                                            {...provided.dragHandleProps}                                                        >
+                                                            <div>
+                                                                <input
+                                                                    style={{ width: "20px", height: "20px" }}
+                                                                    type="checkbox"
+                                                                    className="form-check-input me-2"
+                                                                    checked={col.visible}
+                                                                    onChange={() => {
+                                                                        handleToggleColumn(index);
+                                                                    }}
+                                                                />
+                                                                {col.label}
+                                                            </div>
+                                                            <span style={{ cursor: "grab" }}>☰</span>
+                                                        </li>
+                                                    )}
+                                                </Draggable>
+                                            ))}
+                                            {provided.placeholder}
+                                        </ul>
+                                    )}
+                                </Droppable>
+                            </DragDropContext>
+                        </>
+                    )}
+                </Modal.Body>
+                <Modal.Footer>
+                    <Button variant="secondary" onClick={() => setShowSettings(false)}>
+                        Close
+                    </Button>
+                    <Button
+                        variant="primary"
+                        onClick={() => {
+                            RestoreDefaultSettings();
+                            // Save to localStorage here if needed
+                            //setShowSettings(false);
+                        }}
+                    >
+                        Restore to Default
+                    </Button>
+                </Modal.Footer>
+            </Modal>
+
+            <Modal show={showSuccess} onHide={() => setShowSuccess(false)} centered>
+                <Modal.Header closeButton>
+                    <Modal.Title>Success</Modal.Title>
+                </Modal.Header>
+                <Modal.Body>
+                    <Alert variant="success">
+                        {successMessage}
+                    </Alert>
+                </Modal.Body>
+                <Modal.Footer>
+                    <Button variant="secondary" onClick={() => setShowSuccess(false)}>
+                        Close
+                    </Button>
+                </Modal.Footer>
+            </Modal>
+
             <OrderPrint ref={PrintRef} />
             <Modal show={showPrintTypeSelection} onHide={() => {
                 showPrintTypeSelection = false;
@@ -1358,6 +1554,25 @@ function QuotationSalesReturnIndex(props) {
                                         /> : ""}
                                     </div>
                                 </div>
+
+                                <div className="row">
+                                    <div className="col text-end">
+                                        <button
+                                            className="btn btn-sm btn-outline-secondary"
+                                            onClick={() => {
+                                                setShowSettings(!showSettings);
+                                            }}
+                                        >
+                                            <i
+                                                className="bi bi-gear-fill"
+                                                style={{ fontSize: "1.2rem" }}
+                                                title="Table Settings"
+
+                                            />
+                                        </button>
+                                    </div>
+                                </div>
+
                                 <div className="row">
                                     {totalItems > 0 && (
                                         <>
@@ -1380,7 +1595,33 @@ function QuotationSalesReturnIndex(props) {
                                     <table className="table table-striped table-sm table-bordered">
                                         <thead>
                                             <tr className="text-center">
-                                                <th>Actions</th>
+                                                {columns.filter(c => c.visible).map((col) => {
+                                                    return (<>
+                                                        {col.key === "actions" && <th key={col.key}>{col.label}</th>}
+                                                        {col.key !== "actions" && <th>
+                                                            <b
+                                                                style={{
+                                                                    textDecoration: "underline",
+                                                                    cursor: "pointer",
+                                                                }}
+                                                                onClick={() => {
+                                                                    sort(col.fieldName);
+                                                                }}
+                                                            >
+                                                                {col.label}
+                                                                {sortField === col.fieldName && sortOrder === "-" ? (
+                                                                    <i className="bi bi-sort-alpha-up-alt"></i>
+                                                                ) : null}
+                                                                {sortField === col.fieldName && sortOrder === "" ? (
+                                                                    <i className="bi bi-sort-alpha-up"></i>
+                                                                ) : null}
+                                                            </b>
+                                                        </th>}
+                                                    </>);
+                                                })}
+
+
+                                                {/*<th>Actions</th>
                                                 {enableSelection && <th>Select</th>}
                                                 <th>
                                                     <b
@@ -1518,26 +1759,6 @@ function QuotationSalesReturnIndex(props) {
                                                         ) : null}
                                                     </b>
                                                 </th>
-
-                                                {/*<th>
-                                                    <b
-                                                        style={{
-                                                            textDecoration: "underline",
-                                                            cursor: "pointer",
-                                                        }}
-                                                        onClick={() => {
-                                                            sort("payments_count");
-                                                        }}
-                                                    >
-                                                        No.of Payments
-                                                        {sortField === "payments_count" && sortOrder === "-" ? (
-                                                            <i className="bi bi-sort-numeric-down"></i>
-                                                        ) : null}
-                                                        {sortField === "payments_count" && sortOrder === "" ? (
-                                                            <i className="bi bi-sort-numeric-up"></i>
-                                                        ) : null}
-                                                    </b>
-                                                </th>*/}
 
                                                 <th>
                                                     <b
@@ -1680,7 +1901,7 @@ function QuotationSalesReturnIndex(props) {
                                                         ) : null}
                                                     </b>
                                                 </th>
-                                                <th>Actions</th>
+                                                <th>Actions</th>*/}
                                             </tr>
                                         </thead>
 
