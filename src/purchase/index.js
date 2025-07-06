@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useContext, useCallback } from "react";
+import React, { useState, useEffect, useRef, useContext, useCallback, useMemo } from "react";
 import PurchaseCreate from "./create.js";
 import PurchaseView from "./view.js";
 
@@ -6,10 +6,10 @@ import { Typeahead } from "react-bootstrap-typeahead";
 import { format } from "date-fns";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
-import { Button, Spinner, Modal } from "react-bootstrap";
+import { Button, Spinner, Modal, Alert } from "react-bootstrap";
 import ReactPaginate from "react-paginate";
 import PurchaseReturnCreate from "./../purchase_return/create.js";
-
+import { DragDropContext, Droppable, Draggable } from "react-beautiful-dnd";
 import PurchasePaymentIndex from "./../purchase_payment/index.js";
 import PurchaseReturnIndex from "./../purchase_return/index.js";
 import OverflowTooltip from "../utils/OverflowTooltip.js";
@@ -19,6 +19,9 @@ import { WebSocketContext } from "./../utils/WebSocketContext.js";
 import eventEmitter from "./../utils/eventEmitter";
 import Preview from "./../order/preview.js";
 import ReportPreview from "./../order/report.js";
+import { trimTo2Decimals } from "../utils/numberUtils";
+import OrderPreview from "./../order/preview.js";
+import OrderPrint from "./../order/print.js";
 
 
 import ReactExport from 'react-data-export';
@@ -65,9 +68,17 @@ function PurchaseIndex(props) {
     let [selectedCreatedAtFromDate, setSelectedCreatedAtFromDate] = useState(new Date());
     let [selectedCreatedAtToDate, setSelectedCreatedAtToDate] = useState(new Date());
 
+    /*
     let [selectedUpdatedAtDate, setSelectedUpdatedAtDate] = useState(new Date());
     let [selectedUpdatedAtFromDate, setSelectedUpdatedAtFromDate] = useState(new Date());
     let [selectedUpdatedAtToDate, setSelectedUpdatedAtToDate] = useState(new Date());
+        //Updated At filter
+    const [showUpdatedAtDateRange, setShowUpdatedAtDateRange] = useState(false);
+    const [updatedAtValue, setUpdatedAtValue] = useState("");
+    const [updatedAtFromValue, setUpdatedAtFromValue] = useState("");
+    const [updatedAtToValue, setUpdatedAtToValue] = useState("");
+
+    */
 
 
     const [dateValue, setDateValue] = useState("");
@@ -80,11 +91,6 @@ function PurchaseIndex(props) {
     const [createdAtFromValue, setCreatedAtFromValue] = useState("");
     const [createdAtToValue, setCreatedAtToValue] = useState("");
 
-    //Updated At filter
-    const [showUpdatedAtDateRange, setShowUpdatedAtDateRange] = useState(false);
-    const [updatedAtValue, setUpdatedAtValue] = useState("");
-    const [updatedAtFromValue, setUpdatedAtFromValue] = useState("");
-    const [updatedAtToValue, setUpdatedAtToValue] = useState("");
 
     //loader flag
     const [isListLoading, setIsListLoading] = useState(false);
@@ -561,14 +567,14 @@ function PurchaseIndex(props) {
             searchParams["created_at_from"] = "";
             searchParams["created_at_to"] = "";
             searchParams[field] = value;
-        } else if (field === "updated_at") {
-            setUpdatedAtValue(value);
-            setUpdatedAtFromValue("");
-            setUpdatedAtToValue("");
-            searchParams["updated_at_from"] = "";
-            searchParams["updated_at_to"] = "";
-            searchParams[field] = value;
-        }
+        } /*else if (field === "updated_at") {
+             setUpdatedAtValue(value);
+             setUpdatedAtFromValue("");
+             setUpdatedAtToValue("");
+             searchParams["updated_at_from"] = "";
+             searchParams["updated_at_to"] = "";
+             searchParams[field] = value;
+        }*/
 
         if (field === "created_at_from") {
             setCreatedAtFromValue(value);
@@ -582,17 +588,17 @@ function PurchaseIndex(props) {
             searchParams[field] = value;
         }
 
-        if (field === "updated_at_from") {
-            setUpdatedAtFromValue(value);
-            setUpdatedAtValue("");
-            searchParams["updated_at"] = "";
-            searchParams[field] = value;
-        } else if (field === "updated_at_to") {
-            setUpdatedAtToValue(value);
-            setUpdatedAtValue("");
-            searchParams["updated_at"] = "";
-            searchParams[field] = value;
-        }
+        /*  if (field === "updated_at_from") {
+              setUpdatedAtFromValue(value);
+              setUpdatedAtValue("");
+              searchParams["updated_at"] = "";
+              searchParams[field] = value;
+          } else if (field === "updated_at_to") {
+              setUpdatedAtToValue(value);
+              setUpdatedAtValue("");
+              searchParams["updated_at"] = "";
+              searchParams[field] = value;
+          }*/
 
 
         page = 1;
@@ -804,7 +810,7 @@ function PurchaseIndex(props) {
     }
 
     const PurchaseReturnCreateRef = useRef();
-    function openPurchaseReturnForm(id) {
+    function openPurchaseReturnCreateForm(id) {
         PurchaseReturnCreateRef.current.open(undefined, id);
     }
 
@@ -814,7 +820,7 @@ function PurchaseIndex(props) {
     const [selectedPurchase, setSelectedPurchase] = useState({});
     let [showPurchasePaymentHistory, setShowPurchasePaymentHistory] = useState(false);
 
-    function openPaymentsDialogue(purchase) {
+    function openPurchasePaymentsDialogue(purchase) {
         setSelectedPurchase(purchase);
         showPurchasePaymentHistory = true;
         setShowPurchasePaymentHistory(true);
@@ -843,14 +849,6 @@ function PurchaseIndex(props) {
 
     const PurchaseReturnListRef = useRef();
 
-
-    const PreviewRef = useRef();
-    function openPreview(model) {
-        PreviewRef.current.open(model, undefined, "purchase");
-    }
-
-
-
     function sendWhatsAppMessage(model) {
         PreviewRef.current.open(model, "whatsapp", "whatsapp_purchase");
     }
@@ -858,8 +856,295 @@ function PurchaseIndex(props) {
     const vendorSearchRef = useRef();
     const timerRef = useRef(null);
 
+    //Table settings
+    const [showSuccess, setShowSuccess] = useState(false);
+    const [successMessage, setSuccessMessage] = useState(false);
+
+    const defaultColumns = useMemo(() => [
+        { key: "actions", label: "Actions", fieldName: "actions", visible: true },
+        { key: "id", label: "ID", fieldName: "code", visible: true },
+        { key: "date", label: "Date", fieldName: "date", visible: true },
+        { key: "vendor", label: "Vendor", fieldName: "vendor_name", visible: true },
+        { key: "net_total", label: "Net Total", fieldName: "net_total", visible: true },
+        { key: "amount_paid", label: "Amount Paid", fieldName: "total_payment_paid", visible: true },
+        { key: "credit_balance", label: "Credit Balance", fieldName: "balance_amount", visible: true },
+        { key: "cash_discount", label: "Cash Discount", fieldName: "cash_discount", visible: true },
+        { key: "vendor_invoice_no", label: "Vendor Invoice No.", fieldName: "vendor_invoice_no", visible: true },
+        { key: "payment_status", label: "Payment Status", fieldName: "payment_status", visible: true },
+        { key: "payment_methods", label: "Payment Methods", fieldName: "payment_methods", visible: true },
+        { key: "purchase_discount", label: "Purchase Discount", fieldName: "discount", visible: true },
+        { key: "vat_price", label: "VAT", fieldName: "vat_price", visible: true },
+        { key: "return_count", label: "Return Count", fieldName: "return_count", visible: true },
+        { key: "return_paid_amount", label: "Return Paid Amount", fieldName: "return_amount", visible: true },
+        { key: "created_by", label: "Created By", fieldName: "created_by", visible: true },
+        { key: "created_at", label: "Created At", fieldName: "created_at", visible: true },
+        { key: "actions_end", label: "Actions", fieldName: "actions_end", visible: true },
+    ], []);
+
+
+    const [columns, setColumns] = useState(defaultColumns);
+    const [showSettings, setShowSettings] = useState(false);
+    // Load settings from localStorage
+    useEffect(() => {
+        const saved = localStorage.getItem("purchase_table_settings");
+        if (saved) setColumns(JSON.parse(saved));
+
+        let missingOrUpdated = false;
+        for (let i = 0; i < defaultColumns.length; i++) {
+            if (!saved)
+                break;
+
+            const savedCol = JSON.parse(saved)?.find(col => col.fieldName === defaultColumns[i].fieldName);
+
+            missingOrUpdated = !savedCol || savedCol.label !== defaultColumns[i].label || savedCol.key !== defaultColumns[i].key;
+
+            if (missingOrUpdated) {
+                break
+            }
+        }
+
+        /*
+        for (let i = 0; i < saved.length; i++) {
+            const savedCol = defaultColumns.find(col => col.fieldName === saved[i].fieldName);
+ 
+            missingOrUpdated = !savedCol || savedCol.label !== saved[i].label || savedCol.key !== saved[i].key;
+ 
+            if (missingOrUpdated) {
+                break
+            }
+        }*/
+
+        if (missingOrUpdated) {
+            localStorage.setItem("purchase_table_settings", JSON.stringify(defaultColumns));
+            setColumns(defaultColumns);
+        }
+
+        //2nd
+
+    }, [defaultColumns]);
+
+    function RestoreDefaultSettings() {
+        localStorage.setItem("purchase_table_settings", JSON.stringify(defaultColumns));
+        setColumns(defaultColumns);
+
+        setShowSuccess(true);
+        setSuccessMessage("Successfully restored to default settings!")
+    }
+
+    // Save column settings to localStorage
+    useEffect(() => {
+        localStorage.setItem("purchase_table_settings", JSON.stringify(columns));
+    }, [columns]);
+
+    const handleToggleColumn = (index) => {
+        const updated = [...columns];
+        updated[index].visible = !updated[index].visible;
+        setColumns(updated);
+    };
+
+    const onDragEnd = (result) => {
+        if (!result.destination) return;
+        const reordered = Array.from(columns);
+        const [moved] = reordered.splice(result.source.index, 1);
+        reordered.splice(result.destination.index, 0, moved);
+        setColumns(reordered);
+    };
+
+    //Print
+
+    const PrintRef = useRef();
+
+    const openPrint = useCallback(() => {
+        // document.removeEventListener('keydown', handleEnterKey);
+        setShowPrintTypeSelection(false);
+
+        PrintRef.current?.open(selectedPurchase, "purchase");
+    }, [selectedPurchase]);
+
+
+    let [showPrintTypeSelection, setShowPrintTypeSelection] = useState(false);
+
+
+    const printButtonRef = useRef();
+    const printA4ButtonRef = useRef();
+
+    const PreviewRef = useRef();
+    const openPreview = useCallback((purchase) => {
+        setShowPurchasePreview(true);
+        setShowPrintTypeSelection(false);
+
+
+        if (timerRef.current) clearTimeout(timerRef.current);
+        timerRef.current = setTimeout(() => {
+            PreviewRef.current?.open(purchase, undefined, "purchase");
+        }, 100);
+    }, []);
+
+    let [showPurchasePreview, setShowPurchasePreview] = useState(false);
+
+    const openPrintTypeSelection = useCallback((purchase) => {
+        setSelectedPurchase(purchase);
+        if (store.settings?.enable_invoice_print_type_selection) {
+            setShowPurchasePreview(true);
+            setShowPrintTypeSelection(true);
+            if (timerRef.current) clearTimeout(timerRef.current);
+            timerRef.current = setTimeout(() => {
+                printButtonRef.current?.focus();
+            }, 100);
+
+        } else {
+            if (timerRef.current) clearTimeout(timerRef.current);
+            timerRef.current = setTimeout(() => {
+                openPreview(purchase);
+            }, 100);
+        }
+    }, [openPreview, store]);
+
     return (
         <>
+            <OrderPrint ref={PrintRef} />
+            {showPurchasePreview && <OrderPreview ref={PreviewRef} />}
+            <Modal show={showPrintTypeSelection} onHide={() => {
+                showPrintTypeSelection = false;
+                setShowPrintTypeSelection(showPrintTypeSelection);
+            }} centered>
+                <Modal.Header closeButton>
+                    <Modal.Title>Select Print Type</Modal.Title>
+                </Modal.Header>
+                <Modal.Body className="d-flex justify-content-around">
+                    <Button variant="secondary" ref={printButtonRef} onClick={() => {
+                        openPrint(selectedPurchase);
+                    }} onKeyDown={(e) => {
+                        if (timerRef.current) clearTimeout(timerRef.current);
+
+                        if (e.key === "ArrowRight") {
+                            timerRef.current = setTimeout(() => {
+                                printA4ButtonRef.current.focus();
+                            }, 100);
+                        }
+                    }}>
+                        <i className="bi bi-printer"></i> Print
+                    </Button>
+
+                    <Button variant="primary" ref={printA4ButtonRef} onClick={() => {
+                        openPreview(selectedPurchase);
+                    }}
+                        onKeyDown={(e) => {
+                            if (timerRef.current) clearTimeout(timerRef.current);
+
+                            if (e.key === "ArrowLeft") {
+                                timerRef.current = setTimeout(() => {
+                                    printButtonRef.current.focus();
+                                }, 100);
+                            }
+                        }}
+                    >
+                        <i className="bi bi-printer"></i> Print A4 Invoice
+                    </Button>
+                </Modal.Body>
+            </Modal>
+
+            {/* ⚙️ Settings Modal */}
+            <Modal
+                show={showSettings}
+                onHide={() => setShowSettings(false)}
+                centered
+                size="lg"
+            >
+                <Modal.Header closeButton>
+                    <Modal.Title>
+                        <i
+                            className="bi bi-gear-fill"
+                            style={{ fontSize: "1.2rem", marginRight: "4px" }}
+                            title="Table Settings"
+                        />
+                        Purchase Settings
+                    </Modal.Title>
+                </Modal.Header>
+                <Modal.Body>
+                    {/* Column Settings */}
+                    {showSettings && (
+                        <>
+                            <h6 className="mb-2">Customize Columns</h6>
+                            <DragDropContext onDragEnd={onDragEnd}>
+                                <Droppable droppableId="columns">
+                                    {(provided) => (
+                                        <ul
+                                            className="list-group"
+                                            {...provided.droppableProps}
+                                            ref={provided.innerRef}
+                                        >
+                                            {columns.map((col, index) => (
+                                                <Draggable
+                                                    key={col.key}
+                                                    draggableId={col.key}
+                                                    index={index}
+                                                >
+                                                    {(provided) => (
+                                                        <li
+                                                            className="list-group-item d-flex justify-content-between align-items-center"
+                                                            ref={provided.innerRef}
+                                                            {...provided.draggableProps}
+                                                            {...provided.dragHandleProps}                                                        >
+                                                            <div>
+                                                                <input
+                                                                    style={{ width: "20px", height: "20px" }}
+                                                                    type="checkbox"
+                                                                    className="form-check-input me-2"
+                                                                    checked={col.visible}
+                                                                    onChange={() => {
+                                                                        handleToggleColumn(index);
+                                                                    }}
+                                                                />
+                                                                {col.label}
+                                                            </div>
+                                                            <span style={{ cursor: "grab" }}>☰</span>
+                                                        </li>
+                                                    )}
+                                                </Draggable>
+                                            ))}
+                                            {provided.placeholder}
+                                        </ul>
+                                    )}
+                                </Droppable>
+                            </DragDropContext>
+                        </>
+                    )}
+                </Modal.Body>
+                <Modal.Footer>
+                    <Button variant="secondary" onClick={() => setShowSettings(false)}>
+                        Close
+                    </Button>
+                    <Button
+                        variant="primary"
+                        onClick={() => {
+                            RestoreDefaultSettings();
+                            // Save to localStorage here if needed
+                            //setShowSettings(false);
+                        }}
+                    >
+                        Restore to Default
+                    </Button>
+                </Modal.Footer>
+            </Modal>
+
+            <Modal show={showSuccess} onHide={() => setShowSuccess(false)} centered>
+                <Modal.Header closeButton>
+                    <Modal.Title>Success</Modal.Title>
+                </Modal.Header>
+                <Modal.Body>
+                    <Alert variant="success">
+                        {successMessage}
+                    </Alert>
+                </Modal.Body>
+                <Modal.Footer>
+                    <Button variant="secondary" onClick={() => setShowSuccess(false)}>
+                        Close
+                    </Button>
+                </Modal.Footer>
+            </Modal>
+
+
             <ReportPreview ref={ReportPreviewRef} searchParams={searchParams} sortOrder={sortOrder} sortField={sortField} />
             <Preview ref={PreviewRef} />
             <PurchaseCreate ref={CreateFormRef} refreshList={list} showToastMessage={props.showToastMessage} openDetailsView={openDetailsView} />
@@ -1044,12 +1329,56 @@ function PurchaseIndex(props) {
                                         </>
                                     )}
                                 </div>
+                                <div className="row">
+                                    <div className="col text-end">
+                                        <button
+                                            className="btn btn-sm btn-outline-secondary"
+                                            onClick={() => {
+                                                setShowSettings(!showSettings);
+                                            }}
+                                        >
+                                            <i
+                                                className="bi bi-gear-fill"
+                                                style={{ fontSize: "1.2rem" }}
+                                                title="Table Settings"
+
+                                            />
+                                        </button>
+                                    </div>
+                                </div>
                                 <div className="table-responsive" style={{ overflowX: "auto", overflowY: "auto", maxHeight: "500px" }}>
                                     <table className="table table-striped table-sm table-bordered">
                                         <thead>
                                             <tr className="text-center">
 
-                                                <th>Actions</th>
+                                                {columns.filter(c => c.visible).map((col) => {
+                                                    return (<>
+                                                        {col.key === "actions" && <th key={col.key}>{col.label}</th>}
+                                                        {col.key !== "actions" && <th>
+                                                            <b
+                                                                style={{
+                                                                    textDecoration: "underline",
+                                                                    cursor: "pointer",
+                                                                }}
+                                                                onClick={() => {
+                                                                    sort(col.fieldName);
+                                                                }}
+                                                            >
+                                                                {col.label}
+                                                                {sortField === col.fieldName && sortOrder === "-" ? (
+                                                                    <i className="bi bi-sort-alpha-up-alt"></i>
+                                                                ) : null}
+                                                                {sortField === col.fieldName && sortOrder === "" ? (
+                                                                    <i className="bi bi-sort-alpha-up"></i>
+                                                                ) : null}
+                                                            </b>
+                                                        </th>}
+                                                    </>);
+                                                })}
+                                            </tr>
+                                            <tr className="text-center sub-header">
+
+                                                {/* <th>Actions</th>
                                                 <th>
                                                     <b
                                                         style={{
@@ -1340,44 +1669,6 @@ function PurchaseIndex(props) {
                                                         ) : null}
                                                     </b>
                                                 </th>
-                                                {/*<th>
-                                                    <b
-                                                        style={{
-                                                            textDecoration: "underline",
-                                                            cursor: "pointer",
-                                                        }}
-                                                        onClick={() => {
-                                                            sort("retail_profit");
-                                                        }}
-                                                    >
-                                                        Expected Net Retail Profit
-                                                        {sortField === "net_retail_profit" && sortOrder === "-" ? (
-                                                            <i className="bi bi-sort-numeric-down"></i>
-                                                        ) : null}
-                                                        {sortField === "net_retail_profit" && sortOrder === "" ? (
-                                                            <i className="bi bi-sort-numeric-up"></i>
-                                                        ) : null}
-                                                    </b>
-                                                </th>
-                                                <th>
-                                                    <b
-                                                        style={{
-                                                            textDecoration: "underline",
-                                                            cursor: "pointer",
-                                                        }}
-                                                        onClick={() => {
-                                                            sort("wholesale_profit");
-                                                        }}
-                                                    >
-                                                        Expected Net Wholesale Profit
-                                                        {sortField === "net_wholesale_profit" && sortOrder === "-" ? (
-                                                            <i className="bi bi-sort-numeric-down"></i>
-                                                        ) : null}
-                                                        {sortField === "net_wholesale_profit" && sortOrder === "" ? (
-                                                            <i className="bi bi-sort-numeric-up"></i>
-                                                        ) : null}
-                                                    </b>
-                                                </th>*/}
                                                 <th>
                                                     <b
                                                         style={{
@@ -1437,13 +1728,277 @@ function PurchaseIndex(props) {
                                                         ) : null}
                                                     </b>
                                                 </th>
-                                                <th>Actions</th>
+                                                <th>Actions</th>*/}
                                             </tr>
                                         </thead>
 
                                         <thead>
                                             <tr className="text-center">
-                                                <th></th>
+                                                {columns.filter(c => c.visible).map((col) => {
+                                                    return (<>
+                                                        {(col.key === "actions" || col.key === "actions_end") && <th></th>}
+                                                        {col.key !== "actions" &&
+                                                            col.key !== "date" &&
+                                                            col.key !== "payment_status" &&
+                                                            col.key !== "payment_methods" &&
+                                                            col.key !== "created_by" &&
+                                                            col.key !== "created_at" &&
+                                                            col.key !== "actions_end" &&
+                                                            col.key !== "vendor" &&
+                                                            <th><input
+                                                                type="text"
+                                                                id={"purchase_" + col.fieldName}
+                                                                name={"purchase_" + col.fieldName}
+                                                                onChange={(e) =>
+                                                                    searchByFieldValue(col.fieldName, e.target.value)
+                                                                }
+                                                                className="form-control"
+                                                            /></th>}
+                                                        {col.key === "payment_methods" && <th>
+                                                            <Typeahead
+                                                                id="payment_methods"
+
+                                                                labelKey="name"
+                                                                onChange={(selectedItems) => {
+                                                                    searchByMultipleValuesField(
+                                                                        "payment_methods",
+                                                                        selectedItems
+                                                                    );
+                                                                }}
+                                                                options={paymentMethodOptions}
+                                                                placeholder="Select payment methods"
+                                                                selected={selectedPaymentMethodList}
+                                                                highlightOnlyResult={true}
+                                                                multiple
+                                                            />
+                                                        </th>}
+                                                        {col.key === "created_by" && <th>
+                                                            <Typeahead
+                                                                id="created_by"
+
+                                                                labelKey="name"
+                                                                onChange={(selectedItems) => {
+                                                                    searchByMultipleValuesField(
+                                                                        "created_by",
+                                                                        selectedItems
+                                                                    );
+                                                                }}
+                                                                options={userOptions}
+                                                                placeholder="Select Users"
+                                                                selected={selectedCreatedByUsers}
+                                                                highlightOnlyResult={true}
+                                                                onInputChange={(searchTerm, e) => {
+                                                                    suggestUsers(searchTerm);
+                                                                }}
+                                                                multiple
+                                                            />
+                                                        </th>}
+                                                        {col.key === "created_at" && <th>
+                                                            <DatePicker
+                                                                id="created_at"
+                                                                value={createdAtValue}
+                                                                selected={selectedCreatedAtDate}
+                                                                className="form-control"
+                                                                dateFormat="MMM dd yyyy"
+                                                                isClearable={true}
+                                                                onChange={(date) => {
+                                                                    if (!date) {
+                                                                        //  createdAtValue = "";
+                                                                        setCreatedAtValue("");
+                                                                        searchByDateField("created_at", "");
+                                                                        return;
+                                                                    }
+                                                                    searchByDateField("created_at", date);
+                                                                    selectedCreatedAtDate = date;
+                                                                    setSelectedCreatedAtDate(date);
+                                                                }}
+                                                            />
+                                                            <small
+                                                                style={{
+                                                                    color: "blue",
+                                                                    textDecoration: "underline",
+                                                                    cursor: "pointer",
+                                                                }}
+                                                                onClick={(e) =>
+                                                                    setShowCreatedAtDateRange(!showCreatedAtDateRange)
+                                                                }
+                                                            >
+                                                                {showCreatedAtDateRange ? "Less.." : "More.."}
+                                                            </small>
+                                                            <br />
+                                                            {showCreatedAtDateRange ? (
+                                                                <span className="text-left">
+                                                                    From:{" "}
+                                                                    <DatePicker
+                                                                        id="created_at_from"
+                                                                        value={createdAtFromValue}
+                                                                        selected={selectedCreatedAtFromDate}
+                                                                        className="form-control"
+                                                                        dateFormat="MMM dd yyyy"
+                                                                        isClearable={true}
+                                                                        onChange={(date) => {
+                                                                            if (!date) {
+                                                                                setCreatedAtFromValue("");
+                                                                                searchByDateField("created_at_from", "");
+                                                                                return;
+                                                                            }
+                                                                            searchByDateField("created_at_from", date);
+                                                                            selectedCreatedAtFromDate = date;
+                                                                            setSelectedCreatedAtFromDate(date);
+                                                                        }}
+                                                                    />
+                                                                    To:{" "}
+                                                                    <DatePicker
+                                                                        id="created_at_to"
+                                                                        value={createdAtToValue}
+                                                                        selected={selectedCreatedAtToDate}
+                                                                        className="form-control"
+                                                                        dateFormat="MMM dd yyyy"
+                                                                        isClearable={true}
+                                                                        onChange={(date) => {
+                                                                            if (!date) {
+                                                                                setCreatedAtToValue("");
+                                                                                searchByDateField("created_at_to", "");
+                                                                                return;
+                                                                            }
+                                                                            searchByDateField("created_at_to", date);
+                                                                            selectedCreatedAtToDate = date;
+                                                                            setSelectedCreatedAtToDate(date);
+                                                                        }}
+                                                                    />
+                                                                </span>
+                                                            ) : null}
+                                                        </th>}
+                                                        {col.key === "payment_status" && <th>
+                                                            <Typeahead
+                                                                id="payment_status"
+                                                                labelKey="name"
+                                                                onChange={(selectedItems) => {
+                                                                    searchByMultipleValuesField(
+                                                                        "payment_status",
+                                                                        selectedItems
+                                                                    );
+                                                                }}
+                                                                options={paymentStatusOptions}
+                                                                placeholder="Select Payment Status"
+                                                                selected={selectedPaymentStatusList}
+                                                                highlightOnlyResult={true}
+                                                                multiple
+                                                            />
+                                                        </th>}
+                                                        {col.key === "vendor" && <th>
+                                                            <Typeahead
+                                                                id="vendor_id"
+                                                                filterBy={['additional_keywords']}
+                                                                labelKey="search_label"
+                                                                style={{ minWidth: "300px" }}
+                                                                onChange={(selectedItems) => {
+                                                                    searchByMultipleValuesField(
+                                                                        "vendor_id",
+                                                                        selectedItems
+                                                                    );
+                                                                }}
+                                                                options={vendorOptions}
+                                                                placeholder="Vendor Name / Mob / VAT # / ID"
+                                                                selected={selectedVendors}
+                                                                highlightOnlyResult={true}
+                                                                onInputChange={(searchTerm, e) => {
+                                                                    if (timerRef.current) clearTimeout(timerRef.current);
+                                                                    timerRef.current = setTimeout(() => {
+                                                                        suggestVendors(searchTerm);
+                                                                    }, 100);
+                                                                }}
+                                                                ref={vendorSearchRef}
+                                                                onKeyDown={(e) => {
+                                                                    if (e.key === "Escape") {
+                                                                        setVendorOptions([]);
+                                                                        vendorSearchRef.current?.clear();
+                                                                    }
+                                                                }}
+                                                                multiple
+                                                            />
+                                                        </th>}
+                                                        {col.key === "date" && <th>
+                                                            <div id="calendar-portal" className="date-picker " style={{ minWidth: "125px" }}>
+                                                                <DatePicker
+                                                                    id="date_str"
+                                                                    value={dateValue}
+                                                                    selected={selectedDate}
+                                                                    className="form-control"
+                                                                    dateFormat="MMM dd yyyy"
+                                                                    isClearable={true}
+                                                                    onChange={(date) => {
+                                                                        if (!date) {
+                                                                            setDateValue("");
+                                                                            searchByDateField("date_str", "");
+                                                                            return;
+                                                                        }
+                                                                        searchByDateField("date_str", date);
+                                                                        selectedDate = date;
+                                                                        setSelectedDate(date);
+                                                                    }}
+                                                                />
+                                                                <br />
+                                                                <small
+                                                                    style={{
+                                                                        color: "blue",
+                                                                        textDecoration: "underline",
+                                                                        cursor: "pointer",
+                                                                    }}
+                                                                    onClick={(e) => setShowDateRange(!showDateRange)}
+                                                                >
+                                                                    {showDateRange ? "Less.." : "More.."}
+                                                                </small>
+                                                                <br />
+
+                                                                {showDateRange ? (
+                                                                    <span className="text-left">
+                                                                        From:{" "}
+                                                                        <DatePicker
+                                                                            id="from_date"
+                                                                            value={fromDateValue}
+                                                                            selected={selectedFromDate}
+                                                                            className="form-control"
+                                                                            dateFormat="MMM dd yyyy"
+                                                                            isClearable={true}
+                                                                            onChange={(date) => {
+                                                                                if (!date) {
+                                                                                    setFromDateValue("");
+                                                                                    searchByDateField("from_date", "");
+                                                                                    return;
+                                                                                }
+                                                                                searchByDateField("from_date", date);
+                                                                                selectedFromDate = date;
+                                                                                setSelectedFromDate(date);
+                                                                            }}
+                                                                        />
+                                                                        To:{" "}
+                                                                        <DatePicker
+                                                                            id="to_date"
+                                                                            value={toDateValue}
+                                                                            selected={selectedToDate}
+                                                                            className="form-control"
+                                                                            dateFormat="MMM dd yyyy"
+                                                                            isClearable={true}
+                                                                            onChange={(date) => {
+                                                                                if (!date) {
+                                                                                    setToDateValue("");
+                                                                                    searchByDateField("to_date", "");
+                                                                                    return;
+                                                                                }
+                                                                                searchByDateField("to_date", date);
+                                                                                selectedToDate = date;
+                                                                                setSelectedToDate(date);
+                                                                            }}
+                                                                        />
+                                                                    </span>
+                                                                ) : null}
+                                                            </div>
+                                                        </th>}
+                                                    </>);
+                                                })}
+
+                                                {/* <th></th>
                                                 <th>
                                                     <input
                                                         type="text"
@@ -1713,30 +2268,6 @@ function PurchaseIndex(props) {
                                                         className="form-control"
                                                     />
                                                 </th>
-
-                                                {/*<th>
-                                                    <input
-                                                        type="text"
-                                                        id="purchase_net_retail_profit"
-                                                        name="purchase_net_retail_profit"
-                                                        onChange={(e) =>
-                                                            searchByFieldValue("net_retail_profit", e.target.value)
-                                                        }
-                                                        className="form-control"
-                                                    />
-                                                </th>
-
-                                                <th>
-                                                    <input
-                                                        type="text"
-                                                        id="purchase_net_wholesale_profit"
-                                                        name="purchase_net_wholesale_profit"
-                                                        onChange={(e) =>
-                                                            searchByFieldValue("net_wholesale_profit", e.target.value)
-                                                        }
-                                                        className="form-control"
-                                                    />
-                                                </th>*/}
                                                 <th>
                                                     <Typeahead
                                                         id="created_by"
@@ -1913,7 +2444,7 @@ function PurchaseIndex(props) {
                                                         </span>
                                                     ) : null}
                                                 </th>
-                                                <th></th>
+                                                <th></th>*/}
                                             </tr>
                                         </thead>
 
@@ -1921,7 +2452,124 @@ function PurchaseIndex(props) {
                                             {purchaseList &&
                                                 purchaseList.map((purchase) => (
                                                     <tr key={purchase.code}>
-                                                        <td style={{ width: "auto", whiteSpace: "nowrap" }} >
+                                                        {columns.filter(c => c.visible).map((col) => {
+                                                            return (<>
+                                                                {(col.key === "actions" || col.key === "actions_end") && <td style={{ width: "auto", whiteSpace: "nowrap" }}>
+                                                                    <Button className="btn btn-light btn-sm" onClick={() => {
+                                                                        openUpdateForm(purchase.id);
+                                                                    }}>
+                                                                        <i className="bi bi-pencil"></i>
+                                                                    </Button>&nbsp;
+                                                                    <Button className="btn btn-primary btn-sm" onClick={() => {
+                                                                        openDetailsView(purchase.id);
+                                                                    }}>
+                                                                        <i className="bi bi-eye"></i>
+                                                                    </Button>&nbsp;
+                                                                    <Button className="btn btn-primary btn-sm" onClick={() => {
+                                                                        openPrintTypeSelection(purchase);
+                                                                    }}>
+                                                                        <i className="bi bi-printer"></i>
+                                                                    </Button>
+                                                                    &nbsp;
+                                                                    <Button className={`btn btn-success btn-sm`} style={{}} onClick={() => {
+                                                                        sendWhatsAppMessage(purchase);
+                                                                    }}>
+                                                                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="white" viewBox="0 0 16 16">
+                                                                            <path d="M13.601 2.326A7.875 7.875 0 0 0 8.036 0C3.596 0 0 3.597 0 8.036c0 1.417.37 2.805 1.07 4.03L0 16l3.993-1.05a7.968 7.968 0 0 0 4.043 1.085h.003c4.44 0 8.036-3.596 8.036-8.036 0-2.147-.836-4.166-2.37-5.673ZM8.036 14.6a6.584 6.584 0 0 1-3.35-.92l-.24-.142-2.37.622.63-2.31-.155-.238a6.587 6.587 0 0 1-1.018-3.513c0-3.637 2.96-6.6 6.6-6.6 1.764 0 3.42.69 4.67 1.94a6.56 6.56 0 0 1 1.93 4.668c0 3.637-2.96 6.6-6.6 6.6Zm3.61-4.885c-.198-.1-1.17-.578-1.352-.644-.18-.066-.312-.1-.444.1-.13.197-.51.644-.626.775-.115.13-.23.15-.428.05-.198-.1-.837-.308-1.594-.983-.59-.525-.99-1.174-1.11-1.372-.116-.198-.012-.305.088-.403.09-.09.198-.23.298-.345.1-.115.132-.197.2-.33.065-.13.032-.247-.017-.345-.05-.1-.444-1.07-.61-1.46-.16-.384-.323-.332-.444-.338l-.378-.007c-.13 0-.344.048-.525.23s-.688.672-.688 1.64c0 .967.704 1.9.802 2.03.1.13 1.386 2.116 3.365 2.963.47.203.837.324 1.122.414.472.15.902.13 1.24.08.378-.057 1.17-.48 1.336-.942.165-.462.165-.858.116-.943-.048-.084-.18-.132-.378-.23Z" />
+                                                                        </svg>
+                                                                    </Button>
+                                                                    &nbsp;
+                                                                    <Button
+                                                                        className="btn btn-dark btn-sm"
+                                                                        data-bs-toggle="tooltip"
+                                                                        data-bs-placement="top"
+                                                                        title="Create Purchase Return"
+                                                                        onClick={() => {
+                                                                            openPurchaseReturnCreateForm(purchase.id);
+                                                                        }}
+                                                                    >
+                                                                        <i className="bi bi-arrow-left"></i> Return
+                                                                    </Button>
+                                                                </td>
+                                                                }
+                                                                {(col.fieldName === "code") && <td style={{ width: "auto", whiteSpace: "nowrap" }}>
+                                                                    {purchase.code}
+                                                                </td>}
+                                                                {(col.fieldName === "vendor_invoice_no") && <td style={{ width: "auto", whiteSpace: "nowrap" }}>
+                                                                    {purchase.vendor_invoice_no}
+                                                                </td>}
+                                                                {(col.fieldName === "date" || col.fieldName === "created_at") && <td style={{ width: "auto", whiteSpace: "nowrap" }}>
+                                                                    {format(new Date(purchase[col.key]), "MMM dd yyyy h:mma")}
+                                                                </td>}
+                                                                {(col.fieldName === "vendor_name") && <td style={{ width: "auto", whiteSpace: "nowrap" }}>
+                                                                    <OverflowTooltip value={purchase.vendor_name} />
+                                                                </td>}
+                                                                {(col.fieldName === "net_total") && <td style={{ width: "auto", whiteSpace: "nowrap" }}>
+                                                                    <Amount amount={trimTo2Decimals(purchase.net_total)} />
+                                                                </td>}
+                                                                {(col.fieldName === "total_payment_paid") && <td style={{ width: "auto", whiteSpace: "nowrap" }}>
+                                                                    <Button variant="link" onClick={() => {
+                                                                        openPurchasePaymentsDialogue(purchase);
+                                                                    }}>
+                                                                        <Amount amount={trimTo2Decimals(purchase.total_payment_paid)} />
+                                                                    </Button>
+                                                                </td>}
+                                                                {(col.fieldName === "balance_amount") && <td style={{ width: "auto", whiteSpace: "nowrap" }}>
+                                                                    <Amount amount={trimTo2Decimals(purchase.balance_amount)} />
+                                                                </td>}
+
+                                                                {(col.fieldName === "vat_price") && <td style={{ width: "auto", whiteSpace: "nowrap" }}>
+                                                                    <Amount amount={trimTo2Decimals(purchase.vat_price)} />
+                                                                </td>}
+
+                                                                {(col.fieldName === "payment_status") && <td style={{ width: "auto", whiteSpace: "nowrap" }}>
+                                                                    {purchase.payment_status === "paid" ?
+                                                                        <span className="badge bg-success">
+                                                                            Paid
+                                                                        </span> : ""}
+                                                                    {purchase.payment_status === "paid_partially" ?
+                                                                        <span className="badge bg-warning">
+                                                                            Paid Partially
+                                                                        </span> : ""}
+                                                                    {purchase.payment_status === "not_paid" ?
+                                                                        <span className="badge bg-danger">
+                                                                            Not Paid
+                                                                        </span> : ""}
+                                                                </td>}
+                                                                {(col.fieldName === "payment_methods") && <td style={{ width: "auto", whiteSpace: "nowrap" }}>
+                                                                    {purchase.payment_methods &&
+                                                                        purchase.payment_methods.map((name) => (
+                                                                            <span className="badge bg-info">{name}</span>
+                                                                        ))}
+                                                                </td>}
+                                                                {(col.fieldName === "cash_discount") && <td style={{ width: "auto", whiteSpace: "nowrap" }}>
+                                                                    <Amount amount={trimTo2Decimals(purchase.cash_discount)} />
+                                                                </td>}
+                                                                {(col.fieldName === "discount") && <td style={{ width: "auto", whiteSpace: "nowrap" }}>
+                                                                    {trimTo2Decimals(purchase.discount)}
+                                                                </td>}
+
+                                                                {(col.fieldName === "return_count") && <td style={{ width: "auto", whiteSpace: "nowrap" }}>
+                                                                    <Button variant="link" onClick={() => {
+                                                                        openPurchaseReturnsDialogue(purchase);
+                                                                    }}>
+                                                                        {purchase.return_count}
+                                                                    </Button>
+                                                                </td>}
+                                                                {(col.fieldName === "return_amount") && <td style={{ width: "auto", whiteSpace: "nowrap" }}>
+                                                                    <Button variant="link" onClick={() => {
+                                                                        openPurchaseReturnsDialogue(purchase);
+                                                                    }}>
+                                                                        {purchase.return_amount}
+                                                                    </Button>
+                                                                </td>}
+                                                                {(col.fieldName === "created_by") && <td style={{ width: "auto", whiteSpace: "nowrap" }}>
+                                                                    {purchase.created_by_name}
+                                                                </td>}
+                                                            </>)
+                                                        })}
+
+                                                        {/*<td style={{ width: "auto", whiteSpace: "nowrap" }} >
                                                             <Button className="btn btn-light btn-sm" onClick={() => {
                                                                 openUpdateForm(purchase.id);
                                                             }}>
@@ -2033,14 +2681,7 @@ function PurchaseIndex(props) {
                                                             </Button>
                                                         </td>
 
-                                                        {/*<td style={{ width: "auto", whiteSpace: "nowrap" }} >
-                                                            <Amount amount={purchase.net_retail_profit} />
-
-                                                        </td>
-                                                        <td style={{ width: "auto", whiteSpace: "nowrap" }} >
-                                                            <Amount amount={purchase.net_wholesale_profit} />
-
-                                                        </td>*/}
+                                                  
                                                         <td style={{ width: "auto", whiteSpace: "nowrap" }} >{purchase.created_by_name}</td>
                                                         <td style={{ width: "auto", whiteSpace: "nowrap" }} >
                                                             {format(
@@ -2078,7 +2719,7 @@ function PurchaseIndex(props) {
                                                             >
                                                                 <i className="bi bi-arrow-left"></i> Return
                                                             </button>
-                                                        </td>
+                                                        </td>*/}
                                                     </tr>
                                                 ))}
                                         </tbody>
