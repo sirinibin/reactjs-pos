@@ -883,7 +883,7 @@ function PurchaseReturnIndex(props) {
     const [showSettings, setShowSettings] = useState(false);
     // Load settings from localStorage
     useEffect(() => {
-        const saved = localStorage.getItem("purchase_table_settings");
+        const saved = localStorage.getItem("purchase_return_table_settings");
         if (saved) setColumns(JSON.parse(saved));
 
         let missingOrUpdated = false;
@@ -912,7 +912,7 @@ function PurchaseReturnIndex(props) {
         }*/
 
         if (missingOrUpdated) {
-            localStorage.setItem("purchase_table_settings", JSON.stringify(defaultColumns));
+            localStorage.setItem("purchase_return_table_settings", JSON.stringify(defaultColumns));
             setColumns(defaultColumns);
         }
 
@@ -921,7 +921,7 @@ function PurchaseReturnIndex(props) {
     }, [defaultColumns]);
 
     function RestoreDefaultSettings() {
-        localStorage.setItem("purchase_table_settings", JSON.stringify(defaultColumns));
+        localStorage.setItem("purchase_return_table_settings", JSON.stringify(defaultColumns));
         setColumns(defaultColumns);
 
         setShowSuccess(true);
@@ -930,7 +930,7 @@ function PurchaseReturnIndex(props) {
 
     // Save column settings to localStorage
     useEffect(() => {
-        localStorage.setItem("purchase_table_settings", JSON.stringify(columns));
+        localStorage.setItem("purchase_return_table_settings", JSON.stringify(columns));
     }, [columns]);
 
     const handleToggleColumn = (index) => {
