@@ -1595,7 +1595,7 @@ function QuotationSalesReturnIndex(props) {
                                     <table className="table table-striped table-sm table-bordered">
                                         <thead>
                                             <tr className="text-center">
-                                                {columns.filter(c => c.visible).map((col) => {
+                                                {/*columns.filter(c => c.visible).map((col) => {
                                                     return (<>
                                                         {col.key === "actions" && <th key={col.key}>{col.label}</th>}
                                                         {col.key !== "actions" && <th>
@@ -1618,10 +1618,8 @@ function QuotationSalesReturnIndex(props) {
                                                             </b>
                                                         </th>}
                                                     </>);
-                                                })}
-
-
-                                                {/*<th>Actions</th>
+                                                })*/}
+                                                <th>Actions</th>
                                                 {enableSelection && <th>Select</th>}
                                                 <th>
                                                     <b
@@ -1901,14 +1899,14 @@ function QuotationSalesReturnIndex(props) {
                                                         ) : null}
                                                     </b>
                                                 </th>
-                                                <th>Actions</th>*/}
+                                                <th>Actions</th>
                                             </tr>
                                         </thead>
 
                                         <thead>
                                             <tr className="text-center">
                                                 <th></th>
-                                                <th></th>
+                                                {enableSelection && <th></th>}
                                                 <th>
                                                     <input
                                                         type="text"
@@ -1920,7 +1918,6 @@ function QuotationSalesReturnIndex(props) {
                                                         className="form-control"
                                                     />
                                                 </th>
-
                                                 <th>
                                                     <div style={{ minWidth: "125px" }}>
                                                         <DatePicker
