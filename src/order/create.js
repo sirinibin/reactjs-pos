@@ -1166,7 +1166,7 @@ const OrderCreate = forwardRef((props, ref) => {
     }
 
     function addProductFromQuotation(product) {
-        // let alreadyAdded = isProductAdded(product.product_id);
+        let alreadyAdded = isProductAdded(product.product_id);
 
         selectedProducts.push({
             product_id: product.product_id,
@@ -1193,9 +1193,9 @@ const OrderCreate = forwardRef((props, ref) => {
         timerRef.current = setTimeout(() => {
             let index = getProductIndex(product.product_id);
 
-            /*  if (alreadyAdded) {
-                  index = selectedProducts?.length - 1;
-              }*/
+            if (alreadyAdded) {
+                index = selectedProducts?.length - 1;
+            }
             // alert(selectedProducts.length);
             // alert(index);
 
