@@ -887,7 +887,7 @@ function SalesReturnIndex(props) {
             },
         };
         let Select =
-            "select=zatca.compliance_check_last_failed_at,zatca.reporting_passed,zatca.compliance_passed,zatca.reporting_passed_at,zatca.compliane_check_passed_at,zatca.reporting_last_failed_at,zatca.reporting_failed_count,zatca.compliance_check_failed_count,id,code,date,net_total,created_by_name,customer_name,status,created_at,net_profit,net_loss,cash_discount,order_code,order_id,total_payment_paid,payments_count,payment_methods,payment_status,balance_amount,store_id";
+            "select=zatca.compliance_check_last_failed_at,zatca.reporting_passed,zatca.compliance_passed,zatca.reporting_passed_at,zatca.compliane_check_passed_at,zatca.reporting_last_failed_at,zatca.reporting_failed_count,zatca.compliance_check_failed_count,id,code,date,net_total,created_by_name,customer_name,status,created_at,net_profit,net_loss,cash_discount,discount,order_code,order_id,total_payment_paid,payments_count,payment_methods,payment_status,balance_amount,store_id";
         if (localStorage.getItem("store_id")) {
             searchParams.store_id = localStorage.getItem("store_id");
         }
@@ -1231,7 +1231,7 @@ function SalesReturnIndex(props) {
         { key: "payment_status", label: "Payment Status", fieldName: "payment_status", visible: true },
         { key: "payment_methods", label: "Payment Methods", fieldName: "payment_methods", visible: true },
         { key: "cash_discount", label: "Cash Discount", fieldName: "cash_discount", visible: true },
-        { key: "sales_discount", label: "Sales Discount", fieldName: "discount", visible: true },
+        { key: "discount", label: "Discount", fieldName: "discount", visible: true },
         { key: "net_profit", label: "Net Profit", fieldName: "net_profit", visible: true },
         { key: "net_loss", label: "Net Loss", fieldName: "net_loss", visible: true },
         { key: "created_by", label: "Created By", fieldName: "created_by", visible: true },
