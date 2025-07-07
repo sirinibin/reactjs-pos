@@ -9,7 +9,7 @@ import { format } from "date-fns";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 //import { Button, Spinner, Badge, Tooltip, OverlayTrigger } from "react-bootstrap";
-import { Button, Spinner } from "react-bootstrap";
+import { Button, Spinner, Modal, Alert } from "react-bootstrap";
 import ReactPaginate from "react-paginate";
 import SalesHistory from "./sales_history.js";
 import SalesReturnHistory from "./sales_return_history.js";
@@ -29,6 +29,7 @@ import { trimTo2Decimals } from "../utils/numberUtils";
 import { highlightWords } from "../utils/search.js";
 import ImageViewerModal from './../utils/ImageViewerModal';
 import Products from "./../utils/products.js";
+import { DragDropContext, Droppable, Draggable } from "react-beautiful-dnd";
 
 const columnStyle = {
     width: '20%',
@@ -44,9 +45,10 @@ function ProductIndex(props) {
 
 
 
+    /*
     let [selectedDate, setSelectedDate] = useState(new Date());
     let [selectedFromDate, setSelectedFromDate] = useState(new Date());
-    let [selectedToDate, setSelectedToDate] = useState(new Date());
+    let [selectedToDate, setSelectedToDate] = useState(new Date());*/
 
     //list
     const [productList, setProductList] = useState([]);
@@ -74,7 +76,7 @@ function ProductIndex(props) {
 
     //Created By Product Auto Suggestion
     //const [productOptions, setProductOptions] = useState([]);
-    const [selectedCreatedByProducts, setSelectedCreatedByProducts] = useState([]);
+    //    const [selectedCreatedByProducts, setSelectedCreatedByProducts] = useState([]);
 
     //Created By Product Auto Suggestion
     const [categoryOptions, setCategoryOptions] = useState([]);
@@ -246,7 +248,7 @@ function ProductIndex(props) {
         );
         let data = await result.json();
 
-        setProductOptions(data.result);
+        setUserOptions(data.result);
     }
 
 
@@ -307,7 +309,7 @@ function ProductIndex(props) {
 
     function searchByMultipleValuesField(field, values, searchBy) {
         if (field === "created_by") {
-            setSelectedCreatedByProducts(values);
+            setSelectedCreatedByUsers(values);
         } else if (field === "category_id") {
             setSelectedProductCategories(values);
         } else if (field === "brand_id") {
@@ -1028,8 +1030,238 @@ function ProductIndex(props) {
     }
 
 
+    //Table settings
+    const defaultColumns = useMemo(() => [
+        { key: "deleted", label: "Deleted", fieldName: "deleted", visible: true },
+        { key: "actions", label: "Actions", fieldName: "actions", visible: true },
+        { key: "part_number", label: "Part Number", fieldName: "part_number", visible: true },
+        { key: "name", label: "Name", fieldName: "name", visible: true },
+        { key: "barcode", label: "Barcode", fieldName: "ean_12", visible: true },
+        { key: "purchase_unit_price", label: "Purchase Unit Price", fieldName: "stores.purchase_unit_price", visible: true },
+        { key: "wholesale_unit_price", label: "Wholesale Unit Price", fieldName: "stores.wholesale_unit_price", visible: true },
+        { key: "retail_unit_price", label: "Retail Unit Price", fieldName: "stores.retail_unit_price", visible: true },
+        { key: "stock", label: "Stock", fieldName: "stores.stock", visible: true },
+        { key: "set", label: "Set", fieldName: "is_set", visible: true },
+        { key: "categories", label: "Categories", fieldName: "category_name", visible: true },
+        { key: "brand", label: "Brands", fieldName: "brand_name", visible: true },
+        { key: "country", label: "Countries", fieldName: "country_name", visible: true },
+        { key: "rack", label: "Rack", fieldName: "rack", visible: true },
+        { key: "sales_count", label: "Sales Count", fieldName: "stores.sales_count", visible: true },
+        { key: "sales", label: "Sales Amount", fieldName: "stores.sales", visible: true },
+        { key: "sales_quantity", label: "Sales Qty", fieldName: "stores.sales_quantity", visible: true },
+        { key: "sales_profit", label: "Sales Profit", fieldName: "stores.sales_profit", visible: true },
+        { key: "sales_loss", label: "Sales Loss", fieldName: "stores.sales_loss", visible: true },
+        { key: "sales_return_count", label: "Sales Return Count", fieldName: "stores.sales_return_count", visible: true },
+        { key: "sales_return", label: "Sales Return Amount", fieldName: "stores.sales_return", visible: true },
+        { key: "sales_return_quantity", label: "Sales Return Qty", fieldName: "stores.sales_return_quantity", visible: true },
+        { key: "sales_return_profit", label: "Sales Return Profit", fieldName: "stores.sales_return_profit", visible: true },
+        { key: "sales_return_loss", label: "Sales Return Loss", fieldName: "stores.sales_return_loss", visible: true },
+        { key: "purchase_count", label: "Purchase Count", fieldName: "stores.purchase_count", visible: true },
+        { key: "purchase", label: "Purchase Amount", fieldName: "stores.purchase", visible: true },
+        { key: "purchase_quantity", label: "Purchase Qty", fieldName: "stores.purchase_quantity", visible: true },
+        { key: "purchase_return_count", label: "Purchase Return Count", fieldName: "stores.purchase_return_count", visible: true },
+        { key: "purchase_return", label: "Purchase Return Amount", fieldName: "stores.purchase_returnt", visible: true },
+        { key: "purchase_return_quantity", label: "Purchase Return Qty", fieldName: "stores.purchase_return_quantity", visible: true },
+        { key: "quotation_count", label: "Quotation Count", fieldName: "stores.quotation_count", visible: true },
+        { key: "quotation", label: "Quotation Amount", fieldName: "stores.quotation", visible: true },
+        { key: "quotation_quantity", label: "Quotation Sales Qty", fieldName: "stores.quotation_sales_quantity", visible: true },
+        { key: "quotation_sales_count", label: "Quotation Sales Count", fieldName: "stores.quotation_sales_count", visible: true },
+        { key: "quotation_sales", label: "Quotation Sales Amount", fieldName: "stores.quotation_sales", visible: true },
+        { key: "quotation_sales_quantity", label: "Quotation Qty", fieldName: "stores.quotation_quantity", visible: true },
+        { key: "quotation_sales_return_count", label: "Quotation Sales Return Count", fieldName: "stores.quotation_sales_return_count", visible: true },
+        { key: "quotation_sales_return", label: "Quotation Sales Return Amount", fieldName: "stores.quotation_sales_return_amount", visible: true },
+        { key: "quotation_sales_return_quantity", label: "Quotation Sales Return Qty", fieldName: "stores.quotation_sales_return_quantity", visible: true },
+        { key: "delivery_note_count", label: "Delivery Note Count", fieldName: "stores.delivery_note_count", visible: true },
+        { key: "delivery_note_quantity", label: "Delivery Note Qty", fieldName: "stores.delivery_note_quantity", visible: true },
+        { key: "created_by", label: "Created By", fieldName: "created_by", visible: true },
+        { key: "created_at", label: "Created At", fieldName: "created_at", visible: true },
+        { key: "actions_end", label: "Actions", fieldName: "actions_end", visible: true },
+    ], []);
+
+
+    const [columns, setColumns] = useState(defaultColumns);
+    const [showSettings, setShowSettings] = useState(false);
+    // Load settings from localStorage
+    useEffect(() => {
+        const saved = localStorage.getItem("product_table_settings");
+        if (saved) setColumns(JSON.parse(saved));
+
+        let missingOrUpdated = false;
+        for (let i = 0; i < defaultColumns.length; i++) {
+            if (!saved)
+                break;
+
+            const savedCol = JSON.parse(saved)?.find(col => col.fieldName === defaultColumns[i].fieldName);
+
+            missingOrUpdated = !savedCol || savedCol.label !== defaultColumns[i].label || savedCol.key !== defaultColumns[i].key;
+
+            if (missingOrUpdated) {
+                break
+            }
+        }
+
+        /*
+        for (let i = 0; i < saved.length; i++) {
+            const savedCol = defaultColumns.find(col => col.fieldName === saved[i].fieldName);
+ 
+            missingOrUpdated = !savedCol || savedCol.label !== saved[i].label || savedCol.key !== saved[i].key;
+ 
+            if (missingOrUpdated) {
+                break
+            }
+        }*/
+
+        if (missingOrUpdated) {
+            localStorage.setItem("product_table_settings", JSON.stringify(defaultColumns));
+            setColumns(defaultColumns);
+        }
+
+        //2nd
+
+    }, [defaultColumns]);
+
+    function RestoreDefaultSettings() {
+        localStorage.setItem("product_table_settings", JSON.stringify(defaultColumns));
+        setColumns(defaultColumns);
+
+        setShowSuccess(true);
+        setSuccessMessage("Successfully restored to default settings!")
+    }
+
+    // Save column settings to localStorage
+    useEffect(() => {
+        localStorage.setItem("product_table_settings", JSON.stringify(columns));
+    }, [columns]);
+
+    const handleToggleColumn = (index) => {
+        const updated = [...columns];
+        updated[index].visible = !updated[index].visible;
+        setColumns(updated);
+    };
+
+    const onDragEnd = (result) => {
+        if (!result.destination) return;
+        const reordered = Array.from(columns);
+        const [moved] = reordered.splice(result.source.index, 1);
+        reordered.splice(result.destination.index, 0, moved);
+        setColumns(reordered);
+    };
+
+    const [showSuccess, setShowSuccess] = useState(false);
+    const [successMessage, setSuccessMessage] = useState(false);
+
+
+    //Created By User Auto Suggestion
+    const [userOptions, setUserOptions] = useState([]);
+    const [selectedCreatedByUsers, setSelectedCreatedByUsers] = useState([]);
+
+    let [selectedCreatedAtDate, setSelectedCreatedAtDate] = useState(new Date());
+    let [selectedCreatedAtFromDate, setSelectedCreatedAtFromDate] = useState(new Date());
+    let [selectedCreatedAtToDate, setSelectedCreatedAtToDate] = useState(new Date());
+
     return (
         <>
+            {/* ⚙️ Settings Modal */}
+            <Modal
+                show={showSettings}
+                onHide={() => setShowSettings(false)}
+                centered
+                size="lg"
+            >
+                <Modal.Header closeButton>
+                    <Modal.Title>
+                        <i
+                            className="bi bi-gear-fill"
+                            style={{ fontSize: "1.2rem", marginRight: "4px" }}
+                            title="Table Settings"
+                        />
+                        Products Settings
+                    </Modal.Title>
+                </Modal.Header>
+                <Modal.Body>
+                    {/* Column Settings */}
+                    {showSettings && (
+                        <>
+                            <h6 className="mb-2">Customize Columns</h6>
+                            <DragDropContext onDragEnd={onDragEnd}>
+                                <Droppable droppableId="columns">
+                                    {(provided) => (
+                                        <ul
+                                            className="list-group"
+                                            {...provided.droppableProps}
+                                            ref={provided.innerRef}
+                                        >
+                                            {columns.map((col, index) => (
+                                                <Draggable
+                                                    key={col.key}
+                                                    draggableId={col.key}
+                                                    index={index}
+                                                >
+                                                    {(provided) => (
+                                                        <li
+                                                            className="list-group-item d-flex justify-content-between align-items-center"
+                                                            ref={provided.innerRef}
+                                                            {...provided.draggableProps}
+                                                            {...provided.dragHandleProps}                                                        >
+                                                            <div>
+                                                                <input
+                                                                    style={{ width: "20px", height: "20px" }}
+                                                                    type="checkbox"
+                                                                    className="form-check-input me-2"
+                                                                    checked={col.visible}
+                                                                    onChange={() => {
+                                                                        handleToggleColumn(index);
+                                                                    }}
+                                                                />
+                                                                {col.label}
+                                                            </div>
+                                                            <span style={{ cursor: "grab" }}>☰</span>
+                                                        </li>
+                                                    )}
+                                                </Draggable>
+                                            ))}
+                                            {provided.placeholder}
+                                        </ul>
+                                    )}
+                                </Droppable>
+                            </DragDropContext>
+                        </>
+                    )}
+                </Modal.Body>
+                <Modal.Footer>
+                    <Button variant="secondary" onClick={() => setShowSettings(false)}>
+                        Close
+                    </Button>
+                    <Button
+                        variant="primary"
+                        onClick={() => {
+                            RestoreDefaultSettings();
+                            // Save to localStorage here if needed
+                            //setShowSettings(false);
+                        }}
+                    >
+                        Restore to Default
+                    </Button>
+                </Modal.Footer>
+            </Modal>
+
+
+            <Modal show={showSuccess} onHide={() => setShowSuccess(false)} centered>
+                <Modal.Header closeButton>
+                    <Modal.Title>Success</Modal.Title>
+                </Modal.Header>
+                <Modal.Body>
+                    <Alert variant="success">
+                        {successMessage}
+                    </Alert>
+                </Modal.Body>
+                <Modal.Footer>
+                    <Button variant="secondary" onClick={() => setShowSuccess(false)}>
+                        Close
+                    </Button>
+                </Modal.Footer>
+            </Modal>
+
             <Products ref={ProductsRef} showToastMessage={props.showToastMessage} />
             <ImageViewerModal ref={imageViewerRef} images={productImages} />
             <SalesHistory ref={SalesHistoryRef} showToastMessage={props.showToastMessage} />
@@ -1399,6 +1631,24 @@ function ProductIndex(props) {
                                     </div>
                                 </div>
                                 <div className="row">
+                                    <div className="col text-end">
+                                        <button
+                                            className="btn btn-sm btn-outline-secondary"
+                                            onClick={() => {
+                                                setShowSettings(!showSettings);
+                                            }}
+                                        >
+                                            <i
+                                                className="bi bi-gear-fill"
+                                                style={{ fontSize: "1.2rem" }}
+                                                title="Table Settings"
+
+                                            />
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <div className="row">
                                     {totalItems > 0 && (
                                         <>
                                             <div className="col text-start">
@@ -1420,7 +1670,32 @@ function ProductIndex(props) {
                                     <table className="table table-striped table-sm table-bordered">
                                         <thead>
                                             <tr className="text-center">
-                                                <th>Deleted</th>
+                                                {columns.filter(c => c.visible).map((col) => {
+                                                    return (<>
+                                                        {col.key === "deleted" && <th key={col.key}>{col.label}</th>}
+                                                        {col.key === "actions" && <th key={col.key}>{col.label}</th>}
+                                                        {col.key !== "actions" && col.key !== "deleted" && <th>
+                                                            <b
+                                                                style={{
+                                                                    textDecoration: "underline",
+                                                                    cursor: "pointer",
+                                                                }}
+                                                                onClick={() => {
+                                                                    sort(col.fieldName);
+                                                                }}
+                                                            >
+                                                                {col.label}
+                                                                {sortField === col.fieldName && sortProduct === "-" ? (
+                                                                    <i className="bi bi-sort-alpha-up-alt"></i>
+                                                                ) : null}
+                                                                {sortField === col.fieldName && sortProduct === "" ? (
+                                                                    <i className="bi bi-sort-alpha-up"></i>
+                                                                ) : null}
+                                                            </b>
+                                                        </th>}
+                                                    </>);
+                                                })}
+                                                {/*<th>Deleted</th>
                                                 <th style={{}}>Actions</th>
                                                 <th>
                                                     <b
@@ -1481,26 +1756,7 @@ function ProductIndex(props) {
                                                         ) : null}
                                                     </b>
                                                 </th>
-                                                {/*
-                                                <th>
-                                                    <b
-                                                        style={{
-                                                            textDecoration: "underline",
-                                                            cursor: "pointer",
-                                                        }}
-                                                        onClick={() => {
-                                                            sort("rack");
-                                                        }}
-                                                    >
-                                                        Rack
-                                                        {sortField === "rack" && sortProduct === "-" ? (
-                                                            <i className="bi bi-sort-alpha-up-alt"></i>
-                                                        ) : null}
-                                                        {sortField === "rack" && sortProduct === "" ? (
-                                                            <i className="bi bi-sort-alpha-up"></i>
-                                                        ) : null}
-                                                    </b>
-                                                        </th>*/}
+                                             
 
                                                 <th>
                                                     <b
@@ -1559,85 +1815,6 @@ function ProductIndex(props) {
                                                         ) : null}
                                                     </b>
                                                 </th>
-                                                {/*
-                                                <th>
-                                                    <b
-                                                        style={{
-                                                            textDecoration: "underline",
-                                                            cursor: "pointer",
-                                                        }}
-                                                        onClick={() => {
-                                                            sort("stores.wholesale_unit_profit");
-                                                        }}
-                                                    >
-                                                        Wholesale Unit Profit
-                                                        {sortField === "stores.wholesale_unit_profit" && sortProduct === "-" ? (
-                                                            <i className="bi bi-sort-alpha-up-alt"></i>
-                                                        ) : null}
-                                                        {sortField === "stores.wholesale_unit_profit" && sortProduct === "" ? (
-                                                            <i className="bi bi-sort-alpha-up"></i>
-                                                        ) : null}
-                                                    </b>
-                                                </th>
-                                                <th>
-                                                    <b
-                                                        style={{
-                                                            textDecoration: "underline",
-                                                            cursor: "pointer",
-                                                        }}
-                                                        onClick={() => {
-                                                            sort("stores.wholesale_unit_profit_perc");
-                                                        }}
-                                                    >
-                                                        Wholesale Unit Profit %
-                                                        {sortField === "stores.wholesale_unit_profit_perc" && sortProduct === "-" ? (
-                                                            <i className="bi bi-sort-alpha-up-alt"></i>
-                                                        ) : null}
-                                                        {sortField === "stores.wholesale_unit_profit_perc" && sortProduct === "" ? (
-                                                            <i className="bi bi-sort-alpha-up"></i>
-                                                        ) : null}
-                                                    </b>
-                                                </th>
-                                                <th>
-                                                    <b
-                                                        style={{
-                                                            textDecoration: "underline",
-                                                            cursor: "pointer",
-                                                        }}
-                                                        onClick={() => {
-                                                            sort("stores.retail_unit_profit");
-                                                        }}
-                                                    >
-                                                        Retail Unit Profit
-                                                        {sortField === "stores.retail_unit_profit" && sortProduct === "-" ? (
-                                                            <i className="bi bi-sort-alpha-up-alt"></i>
-                                                        ) : null}
-                                                        {sortField === "stores.retail_unit_profit" && sortProduct === "" ? (
-                                                            <i className="bi bi-sort-alpha-up"></i>
-                                                        ) : null}
-                                                    </b>
-                                                </th>
-                                                <th>
-                                                    <b
-                                                        style={{
-                                                            textDecoration: "underline",
-                                                            cursor: "pointer",
-                                                        }}
-                                                        onClick={() => {
-                                                            sort("stores.retail_unit_profit_perc");
-                                                        }}
-                                                    >
-                                                        Retail Unit Profit %
-                                                        {sortField === "stores.retail_unit_profit_perc" && sortProduct === "-" ? (
-                                                            <i className="bi bi-sort-alpha-up-alt"></i>
-                                                        ) : null}
-                                                        {sortField === "stores.retail_unit_profit_perc" && sortProduct === "" ? (
-                                                            <i className="bi bi-sort-alpha-up"></i>
-                                                        ) : null}
-                                                    </b>
-                                                </th>
-                                                        */}
-
                                                 <th>
                                                     <b
                                                         style={{
@@ -2072,7 +2249,6 @@ function ProductIndex(props) {
                                                         ) : null}
                                                     </b>
                                                 </th>
-
                                                 <th>
                                                     <b
                                                         style={{
@@ -2092,7 +2268,6 @@ function ProductIndex(props) {
                                                         ) : null}
                                                     </b>
                                                 </th>
-
                                                 <th>
                                                     <b
                                                         style={{
@@ -2292,12 +2467,380 @@ function ProductIndex(props) {
                                                     </b>
                                                 </th>
                                                 <th>Actions</th>
+                                                */}
                                             </tr>
                                         </thead>
 
                                         <thead>
                                             <tr className="text-center">
-                                                <th>
+                                                {columns.filter(c => c.visible).map((col) => {
+                                                    return (<>
+                                                        {(col.key === "deleted") && <th>
+                                                            <select
+                                                                onChange={(e) => {
+                                                                    searchByFieldValue("deleted", e.target.value);
+                                                                    if (e.target.value === "1") {
+                                                                        deleted = true;
+                                                                        setDeleted(deleted);
+                                                                    } else {
+                                                                        deleted = false;
+                                                                        setDeleted(deleted);
+                                                                    }
+                                                                }}
+                                                            >
+                                                                <option value="0" >NO</option>
+                                                                <option value="1">YES</option>
+                                                            </select>
+                                                        </th>}
+                                                        {(col.key === "actions" || col.key === "actions_end") && <th></th>}
+                                                        {(col.key === "part_number") && <th>
+                                                            <Typeahead
+                                                                id="product_search_by_part_no"
+                                                                filterBy={() => true}
+                                                                size="lg"
+                                                                ref={productSearchByPartNoRef}
+                                                                labelKey="search_label"
+                                                                emptyLabel="No products found"
+                                                                open={openProductSearchResultByPartNo}
+                                                                isLoading={false}
+                                                                onKeyDown={(e) => {
+                                                                    if (e.key === "Escape") {
+                                                                        setProductOptionsByPartNo([]);
+                                                                        setOpenProductSearchResultByPartNo(false);
+                                                                        productSearchByPartNoRef.current?.clear();
+                                                                    }
+                                                                }}
+                                                                onChange={(selectedItems) => {
+                                                                    searchByMultipleValuesField(
+                                                                        "product_id",
+                                                                        selectedItems,
+                                                                        "part_number"
+                                                                    );
+                                                                    // addProduct(selectedItems[0]);
+
+                                                                    setOpenProductSearchResultByPartNo(false);
+                                                                }}
+                                                                options={productOptionsByPartNo}
+                                                                selected={selectedProductsByPartNo}
+                                                                placeholder="Search By Part #"
+                                                                highlightOnlyResult={true}
+                                                                onInputChange={(searchTerm, e) => {
+                                                                    if (timerRef.current) clearTimeout(timerRef.current);
+                                                                    timerRef.current = setTimeout(() => {
+                                                                        suggestProducts(searchTerm, "part_number")
+                                                                    }, 100);
+                                                                }}
+                                                                ignoreDiacritics={true}
+
+                                                                multiple
+                                                            />
+                                                        </th>}
+                                                        {(col.key === "name") && <th>
+                                                            <Typeahead
+                                                                id="product_search_by_name"
+                                                                ref={productSearchByNameRef}
+                                                                filterBy={() => true}
+                                                                size="lg"
+                                                                labelKey="search_label"
+                                                                emptyLabel="No products found"
+                                                                clearButton={true}
+                                                                open={openProductSearchResultByName}
+                                                                isLoading={false}
+                                                                onKeyDown={(e) => {
+                                                                    if (e.key === "Escape") {
+                                                                        setProductOptionsByName([]);
+                                                                        setOpenProductSearchResultByName(false);
+                                                                        productSearchByNameRef.current?.clear();
+                                                                    }
+                                                                }}
+                                                                onChange={(selectedItems) => {
+
+                                                                    searchByMultipleValuesField(
+                                                                        "product_id",
+                                                                        selectedItems,
+                                                                        "name"
+                                                                    );
+
+                                                                    // addProduct(selectedItems[0]);
+
+                                                                    setOpenProductSearchResultByName(false);
+                                                                }}
+                                                                options={productOptionsByName}
+                                                                selected={selectedProductsByName}
+                                                                placeholder="Search By Name | Name in Arabic"
+                                                                highlightOnlyResult={true}
+                                                                onInputChange={(searchTerm, e) => {
+                                                                    if (timerRef.current) clearTimeout(timerRef.current);
+                                                                    timerRef.current = setTimeout(() => {
+                                                                        suggestProducts(searchTerm, "name")
+                                                                    }, 100);
+                                                                }}
+                                                                ignoreDiacritics={true}
+
+                                                                multiple
+                                                            />
+                                                        </th>}
+                                                        {(col.key === "barcode") && <th>
+                                                            <input
+                                                                type="text"
+                                                                id="product_search_by_ean_12"
+                                                                name="product_search_by_part_number_ean_12"
+                                                                onChange={(e) => {
+                                                                    if (e.target.value.length === 13) {
+                                                                        e.target.value = e.target.value.slice(0, -1);
+                                                                    }
+                                                                    searchByFieldValue("ean_12", e.target.value)
+                                                                }}
+                                                                className="form-control"
+                                                            />
+                                                        </th>}
+                                                        {(col.key === "purchase_unit_price" ||
+                                                            col.key === "wholesale_unit_price" ||
+                                                            col.key === "retail_unit_price" ||
+                                                            col.key === "rack" ||
+                                                            col.key === "stock" ||
+                                                            col.key === "sales_count" ||
+                                                            col.key === "sales" ||
+                                                            col.key === "sales_quantity" ||
+                                                            col.key === "sales_profit" ||
+                                                            col.key === "sales_loss" ||
+                                                            col.key === "sales_return_count" ||
+                                                            col.key === "sales_return" ||
+                                                            col.key === "sales_return_quantity" ||
+                                                            col.key === "sales_return_profit" ||
+                                                            col.key === "sales_return_loss" ||
+                                                            col.key === "purchase_count" ||
+                                                            col.key === "purchase" ||
+                                                            col.key === "purchase_quantity" ||
+                                                            col.key === "purchase_return_count" ||
+                                                            col.key === "purchase_return" ||
+                                                            col.key === "purchase_return_quantity" ||
+                                                            col.key === "quotation_count" ||
+                                                            col.key === "quotation" ||
+                                                            col.key === "quotation_quantity" ||
+                                                            col.key === "quotation_sales_count" ||
+                                                            col.key === "quotation_sales" ||
+                                                            col.key === "quotation_sales_quantity" ||
+                                                            col.key === "quotation_sales_return_count" ||
+                                                            col.key === "quotation_sales_return" ||
+                                                            col.key === "quotation_sales_return_quantity" ||
+                                                            col.key === "delivery_note_count" ||
+                                                            col.key === "delivery_note_quantity"
+                                                        ) &&
+                                                            <th>
+                                                                <input
+                                                                    type="text"
+                                                                    id={`product_search_by_${col.key}`}
+                                                                    name={`product_search_by_${col.key}`}
+                                                                    onChange={(e) => {
+                                                                        const value = e.target.value;
+                                                                        if (typeof value === "number") {
+                                                                            searchByFieldValue(col.key, parseFloat(e.target.value))
+                                                                        } else if (typeof value === "string") {
+                                                                            searchByFieldValue(col.key, e.target.value)
+                                                                        }
+                                                                    }}
+                                                                    className="form-control"
+                                                                />
+                                                            </th>}
+
+                                                        {(col.fieldName === "is_set") && <th>
+                                                            <select
+                                                                onChange={(e) => {
+                                                                    searchByFieldValue("is_set", e.target.value);
+                                                                }}
+                                                            >
+                                                                <option value="" >ALL</option>
+                                                                <option value="0" >NO</option>
+                                                                <option value="1">YES</option>
+                                                            </select>
+                                                        </th>}
+                                                        {(col.fieldName === "category_name") && <th>
+                                                            <Typeahead
+                                                                id="category_id"
+
+                                                                labelKey="name"
+                                                                onChange={(selectedItems) => {
+                                                                    searchByMultipleValuesField(
+                                                                        "category_id",
+                                                                        selectedItems
+                                                                    );
+                                                                }}
+                                                                options={categoryOptions}
+                                                                placeholder="Select Categories"
+                                                                selected={selectedProductCategories}
+                                                                highlightOnlyResult={true}
+                                                                onInputChange={(searchTerm, e) => {
+                                                                    suggestCategories(searchTerm);
+                                                                }}
+                                                                ref={categorySearchRef}
+                                                                onKeyDown={(e) => {
+                                                                    if (e.key === "Escape") {
+                                                                        setCategoryOptions([]);
+                                                                        categorySearchRef.current?.clear();
+                                                                    }
+                                                                }}
+                                                                multiple
+                                                            />
+                                                        </th>}
+                                                        {(col.fieldName === "brand_name") && <th>
+                                                            <Typeahead
+                                                                id="brand_id"
+
+                                                                labelKey="name"
+                                                                onChange={(selectedItems) => {
+                                                                    searchByMultipleValuesField(
+                                                                        "brand_id",
+                                                                        selectedItems
+                                                                    );
+                                                                }}
+                                                                options={brandOptions}
+                                                                placeholder="Select brands"
+                                                                selected={selectedProductBrands}
+                                                                highlightOnlyResult={true}
+                                                                onInputChange={(searchTerm, e) => {
+                                                                    suggestBrands(searchTerm);
+                                                                }}
+                                                                ref={brandSearchRef}
+                                                                onKeyDown={(e) => {
+                                                                    if (e.key === "Escape") {
+                                                                        setBrandOptions([]);
+                                                                        brandSearchRef.current?.clear();
+                                                                    }
+                                                                }}
+                                                                multiple
+                                                            />
+                                                        </th>}
+                                                        {(col.fieldName === "country_name") && <th>
+                                                            <Typeahead
+                                                                id="country_code"
+
+                                                                labelKey="label"
+                                                                onChange={(selectedItems) => {
+                                                                    searchByMultipleValuesField(
+                                                                        "country_code",
+                                                                        selectedItems
+                                                                    );
+                                                                }}
+                                                                options={countryOptions}
+                                                                placeholder="Select countries"
+                                                                selected={selectedCountries}
+                                                                highlightOnlyResult={true}
+                                                                ref={countrySearchRef}
+                                                                onKeyDown={(e) => {
+                                                                    if (e.key === "Escape") {
+                                                                        countrySearchRef.current?.clear();
+                                                                    }
+                                                                }}
+                                                                onInputChange={(searchTerm, e) => {
+                                                                    //suggestBrands(searchTerm);
+                                                                }}
+                                                                multiple
+                                                            />
+                                                        </th>}
+
+                                                        {col.key === "created_by" && <th>
+                                                            <Typeahead
+                                                                id="created_by"
+
+                                                                labelKey="name"
+                                                                onChange={(selectedItems) => {
+                                                                    searchByMultipleValuesField(
+                                                                        "created_by",
+                                                                        selectedItems
+                                                                    );
+                                                                }}
+                                                                options={userOptions}
+                                                                placeholder="Select Users"
+                                                                selected={selectedCreatedByUsers}
+                                                                highlightOnlyResult={true}
+                                                                onInputChange={(searchTerm, e) => {
+                                                                    suggestUsers(searchTerm);
+                                                                }}
+                                                                multiple
+                                                            />
+                                                        </th>}
+                                                        {col.key === "created_at" && <th>
+                                                            <DatePicker
+                                                                id="created_at"
+                                                                value={createdAtValue}
+                                                                selected={selectedCreatedAtDate}
+                                                                className="form-control"
+                                                                dateFormat="MMM dd yyyy"
+                                                                isClearable={true}
+                                                                onChange={(date) => {
+                                                                    if (!date) {
+                                                                        //  createdAtValue = "";
+                                                                        setCreatedAtValue("");
+                                                                        searchByDateField("created_at", "");
+                                                                        return;
+                                                                    }
+                                                                    searchByDateField("created_at", date);
+                                                                    selectedCreatedAtDate = date;
+                                                                    setSelectedCreatedAtDate(date);
+                                                                }}
+                                                            />
+                                                            <small
+                                                                style={{
+                                                                    color: "blue",
+                                                                    textDecoration: "underline",
+                                                                    cursor: "pointer",
+                                                                }}
+                                                                onClick={(e) =>
+                                                                    setShowCreatedAtDateRange(!showCreatedAtDateRange)
+                                                                }
+                                                            >
+                                                                {showCreatedAtDateRange ? "Less.." : "More.."}
+                                                            </small>
+                                                            <br />
+
+                                                            {showCreatedAtDateRange ? (
+                                                                <span className="text-left">
+                                                                    From:{" "}
+                                                                    <DatePicker
+                                                                        id="created_at_from"
+                                                                        value={createdAtFromValue}
+                                                                        selected={selectedCreatedAtFromDate}
+                                                                        className="form-control"
+                                                                        dateFormat="MMM dd yyyy"
+                                                                        isClearable={true}
+                                                                        onChange={(date) => {
+                                                                            if (!date) {
+                                                                                setCreatedAtFromValue("");
+                                                                                searchByDateField("created_at_from", "");
+                                                                                return;
+                                                                            }
+                                                                            searchByDateField("created_at_from", date);
+                                                                            selectedCreatedAtFromDate = date;
+                                                                            setSelectedCreatedAtFromDate(date);
+                                                                        }}
+                                                                    />
+                                                                    To:{" "}
+                                                                    <DatePicker
+                                                                        id="created_at_to"
+                                                                        value={createdAtToValue}
+                                                                        selected={selectedCreatedAtToDate}
+                                                                        className="form-control"
+                                                                        dateFormat="MMM dd yyyy"
+                                                                        isClearable={true}
+                                                                        onChange={(date) => {
+                                                                            if (!date) {
+                                                                                setCreatedAtToValue("");
+                                                                                searchByDateField("created_at_to", "");
+                                                                                return;
+                                                                            }
+                                                                            searchByDateField("created_at_to", date);
+                                                                            selectedCreatedAtToDate = date;
+                                                                            setSelectedCreatedAtToDate(date);
+                                                                        }}
+                                                                    />
+                                                                </span>
+                                                            ) : null}
+                                                        </th>}
+                                                    </>);
+                                                })}
+
+                                                {/*<th>
                                                     <select
                                                         onChange={(e) => {
                                                             searchByFieldValue("deleted", e.target.value);
@@ -2315,7 +2858,6 @@ function ProductIndex(props) {
                                                     </select>
                                                 </th>
                                                 <th style={{ minWidth: "100px" }}></th>
-
                                                 <th style={{ minWidth: "250px" }}>
                                                     <Typeahead
                                                         id="product_search_by_part_no"
@@ -2334,12 +2876,6 @@ function ProductIndex(props) {
                                                             }
                                                         }}
                                                         onChange={(selectedItems) => {
-
-                                                            /*
-                                                            if (selectedItems.length === 0) {
-                                                                return;
-                                                            }*/
-
                                                             searchByMultipleValuesField(
                                                                 "product_id",
                                                                 selectedItems,
@@ -2364,16 +2900,6 @@ function ProductIndex(props) {
 
                                                         multiple
                                                     />
-
-                                                    {/*<input
-                                                        type="text"
-                                                        id="product_search_by_part_number"
-                                                        name="product_search_by_part_number"
-                                                        onChange={(e) =>
-                                                            searchByFieldValue("part_number", e.target.value)
-                                                        }
-                                                        className="form-control"
-                                                    />*/}
                                                 </th>
 
                                                 <th style={{ minWidth: "250px" }}>
@@ -2395,11 +2921,6 @@ function ProductIndex(props) {
                                                             }
                                                         }}
                                                         onChange={(selectedItems) => {
-
-                                                            /*
-                                                            if (selectedItems.length === 0) {
-                                                                return;
-                                                            }*/
 
                                                             searchByMultipleValuesField(
                                                                 "product_id",
@@ -2440,18 +2961,7 @@ function ProductIndex(props) {
                                                         className="form-control"
                                                     />
                                                 </th>
-                                                {/*
- 
-                                                <th>
-                                                    <input
-                                                        type="text"
-                                                        id="rack"
-                                                        onChange={(e) =>
-                                                            searchByFieldValue("rack", e.target.value)
-                                                        }
-                                                        className="form-control"
-                                                    />
-                                                    </th>*/}
+                                            
                                                 <th>
                                                     <input
                                                         type="text"
@@ -2487,48 +2997,6 @@ function ProductIndex(props) {
                                                         className="form-control"
                                                     />
                                                 </th>
-                                                {/*
-                                                <th>
-                                                    <input
-                                                        type="text"
-                                                        id="wholesale_unit_profit"
-                                                        onChange={(e) =>
-                                                            searchByFieldValue("wholesale_unit_profit", e.target.value)
-                                                        }
-                                                        className="form-control"
-                                                    />
-                                                </th>
-                                                <th>
-                                                    <input
-                                                        type="text"
-                                                        id="wholesale_unit_profit_perc"
-                                                        onChange={(e) =>
-                                                            searchByFieldValue("wholesale_unit_profit_perc", e.target.value)
-                                                        }
-                                                        className="form-control"
-                                                    />
-                                                </th>
-                                                <th>
-                                                    <input
-                                                        type="text"
-                                                        id="retail_unit_profit"
-                                                        onChange={(e) =>
-                                                            searchByFieldValue("retail_unit_profit", e.target.value)
-                                                        }
-                                                        className="form-control"
-                                                    />
-                                                </th>
-                                                <th>
-                                                    <input
-                                                        type="text"
-                                                        id="retail_unit_profit_perc"
-                                                        onChange={(e) =>
-                                                            searchByFieldValue("retail_unit_profit_perc", e.target.value)
-                                                        }
-                                                        className="form-control"
-                                                    />
-                                                </th>
-                                                    */}
                                                 <th>
                                                     <input
                                                         type="text"
@@ -3039,7 +3507,7 @@ function ProductIndex(props) {
                                                         </span>
                                                     ) : null}
                                                 </th>
-                                                <th></th>
+                                                <th></th>*/}
                                             </tr>
                                         </thead>
 
@@ -3047,7 +3515,197 @@ function ProductIndex(props) {
                                             {productList &&
                                                 productList.map((product) => (
                                                     <tr key={product.id}>
-                                                        <td>{product.deleted ? "YES" : "NO"}</td>
+                                                        {columns.filter(c => c.visible).map((col) => {
+                                                            return (<>
+                                                                {(col.key === "deleted") && <td>{product.deleted ? "YES" : "NO"}</td>}
+                                                                {(col.key === "actions" || col.key === "actions_end") && <td style={{ width: "auto", whiteSpace: "nowrap" }}  >
+                                                                    <span style={{ marginLeft: "-40px" }}>
+                                                                        {!product.deleted && <Button className="btn btn-danger btn-sm" onClick={() => {
+                                                                            confirmDelete(product.id);
+                                                                        }}>
+                                                                            <i className="bi bi-trash"></i>
+                                                                        </Button>}
+                                                                        {product.deleted && <Button className="btn btn-success btn-sm" onClick={() => {
+                                                                            confirmRestore(product.id);
+                                                                        }}>
+                                                                            <i className="bi bi-arrow-counterclockwise"></i>
+                                                                        </Button>}
+
+                                                                        <Button className="btn btn-light btn-sm" onClick={() => {
+                                                                            openUpdateForm(product.id);
+                                                                        }}>
+                                                                            <i className="bi bi-pencil"></i>
+                                                                        </Button>&nbsp;
+
+                                                                        <Button className="btn btn-primary btn-sm" onClick={() => {
+                                                                            openDetailsView(product.id);
+                                                                        }} style={{}}>
+                                                                            <i className="bi bi-eye"></i>
+                                                                        </Button>
+
+                                                                        <Dropdown drop="down" style={{ marginLeft: "100px", marginTop: "-27px" }} >
+                                                                            <Dropdown.Toggle variant="secondary" id="dropdown-secondary" style={{ height: "27px" }}>
+
+                                                                            </Dropdown.Toggle>
+
+                                                                            <Dropdown.Menu >
+                                                                                <Dropdown.Item onClick={() => {
+                                                                                    openLinkedProducts(product);
+                                                                                }}>
+                                                                                    <i className="bi bi-link"></i>
+                                                                                    &nbsp;
+                                                                                    Linked Products (F10)
+                                                                                </Dropdown.Item>
+
+                                                                                <Dropdown.Item onClick={() => {
+                                                                                    openSalesHistory(product);
+                                                                                }}>
+                                                                                    <i className="bi bi-clock-history"></i>
+                                                                                    &nbsp;
+                                                                                    Sales History (F4)
+                                                                                </Dropdown.Item>
+                                                                                <Dropdown.Item onClick={() => {
+                                                                                    openSalesReturnHistory(product);
+                                                                                }}>
+                                                                                    <i className="bi bi-clock-history"></i>
+                                                                                    &nbsp;
+                                                                                    Sales Return History (F9)
+                                                                                </Dropdown.Item>
+                                                                                <Dropdown.Item onClick={() => {
+                                                                                    openPurchaseHistory(product);
+                                                                                }}>
+                                                                                    <i className="bi bi-clock-history"></i>
+                                                                                    &nbsp;
+                                                                                    Purchase History (F6)
+                                                                                </Dropdown.Item>
+                                                                                <Dropdown.Item onClick={() => {
+                                                                                    openPurchaseReturnHistory(product);
+                                                                                }}>
+                                                                                    <i className="bi bi-clock-history"></i>
+                                                                                    &nbsp;
+                                                                                    Purchase Return History (F8)
+                                                                                </Dropdown.Item>
+                                                                                <Dropdown.Item onClick={() => {
+                                                                                    openDeliveryNoteHistory(product);
+                                                                                }}>
+                                                                                    <i className="bi bi-clock-history"></i>
+                                                                                    &nbsp;
+                                                                                    Delivery Note History (F3)
+                                                                                </Dropdown.Item>
+                                                                                <Dropdown.Item onClick={() => {
+                                                                                    openQuotationHistory(product);
+                                                                                }}>
+                                                                                    <i className="bi bi-clock-history"></i>
+                                                                                    &nbsp;
+                                                                                    Quotation History  (F2)
+                                                                                </Dropdown.Item>
+                                                                                <Dropdown.Item onClick={() => {
+                                                                                    openQuotationSalesHistory(product);
+                                                                                }}>
+                                                                                    <i className="bi bi-clock-history"></i>
+                                                                                    &nbsp;
+                                                                                    Qtn. Sales History  (CTR + SHIFT + P)
+                                                                                </Dropdown.Item>
+                                                                                <Dropdown.Item onClick={() => {
+                                                                                    openQuotationSalesReturnHistory(product);
+                                                                                }}>
+                                                                                    <i className="bi bi-clock-history"></i>
+                                                                                    &nbsp;
+                                                                                    Qtn. Sales Return History (CTR + SHIFT + Z)
+                                                                                </Dropdown.Item>
+                                                                                <Dropdown.Item onClick={() => {
+                                                                                    openProductImages(product.id);
+                                                                                }}>
+                                                                                    <i className="bi bi-clock-history"></i>
+                                                                                    &nbsp;
+                                                                                    Images  (CTR + SHIFT + F)
+                                                                                </Dropdown.Item>
+
+                                                                            </Dropdown.Menu>
+                                                                        </Dropdown>
+                                                                    </span>
+                                                                </td>}
+                                                                {(col.key === "part_number") && <td style={{ width: "auto", whiteSpace: "nowrap" }} className="bold-stronger" >{product.prefix_part_number ? product.prefix_part_number + " - " : ""}{product.part_number}</td>}
+                                                                {(col.key === "name") && <td style={{ width: "auto", whiteSpace: "nowrap" }} className="text-start">
+                                                                    <OverflowTooltip value={product.name + (product.name_in_arabic ? " | " + product.name_in_arabic : "")} maxWidth={300} />
+                                                                </td>}
+                                                                {(col.key === "barcode" || col.key === "rack") && <td style={{ width: "auto", whiteSpace: "nowrap" }} >
+                                                                    {product[col.fieldName]}
+                                                                </td>}
+
+
+                                                                {(col.key === "purchase_unit_price" ||
+                                                                    col.key === "wholesale_unit_price" ||
+                                                                    col.key === "retail_unit_price" ||
+                                                                    col.key === "stock" ||
+                                                                    col.key === "sales_count" ||
+                                                                    col.key === "sales" ||
+                                                                    col.key === "sales_quantity" ||
+                                                                    col.key === "sales_profit" ||
+                                                                    col.key === "sales_loss" ||
+                                                                    col.key === "sales_return_count" ||
+                                                                    col.key === "sales_return" ||
+                                                                    col.key === "sales_return_quantity" ||
+                                                                    col.key === "sales_return_profit" ||
+                                                                    col.key === "sales_return_loss" ||
+                                                                    col.key === "purchase_count" ||
+                                                                    col.key === "purchase" ||
+                                                                    col.key === "purchase_quantity" ||
+                                                                    col.key === "purchase_return_count" ||
+                                                                    col.key === "purchase_return" ||
+                                                                    col.key === "purchase_return_quantity" ||
+                                                                    col.key === "quotation_count" ||
+                                                                    col.key === "quotation" ||
+                                                                    col.key === "quotation_quantity" ||
+                                                                    col.key === "quotation_sales_count" ||
+                                                                    col.key === "quotation_sales" ||
+                                                                    col.key === "quotation_sales_quantity" ||
+                                                                    col.key === "quotation_sales_return_count" ||
+                                                                    col.key === "quotation_sales_return" ||
+                                                                    col.key === "quotation_sales_return_quantity" ||
+                                                                    col.key === "delivery_note_count" ||
+                                                                    col.key === "delivery_note_quantity"
+                                                                ) &&
+                                                                    <td>
+                                                                        <b>
+                                                                            {product.product_stores[localStorage.getItem("store_id")][col.key]?.toFixed(2)}
+                                                                        </b>
+                                                                    </td>}
+
+                                                                {(col.fieldName === "is_set") && <td style={{ width: "auto", whiteSpace: "nowrap" }} >
+                                                                    {product.is_set ? "YES" : "NO"}
+                                                                </td>}
+                                                                {(col.fieldName === "category_name") && <td style={{ width: "auto", whiteSpace: "nowrap" }}>
+                                                                    <ul>
+                                                                        {product.category_name &&
+                                                                            product.category_name.map((name) => (
+                                                                                <li key={name}  >{name}</li>
+                                                                            ))}
+                                                                    </ul>
+                                                                </td>}
+                                                                {(col.fieldName === "brand_name") && <td style={{ width: "auto", whiteSpace: "nowrap" }}>
+                                                                    <ul>
+                                                                        {product.brand_name}
+                                                                    </ul>
+                                                                </td>}
+                                                                {(col.fieldName === "country_name") && <td style={{ width: "auto", whiteSpace: "nowrap" }}>
+                                                                    <ul>
+                                                                        {product.country_name}
+                                                                    </ul>
+                                                                </td>}
+                                                                {col.key === "created_by" && <td>
+                                                                    {product.created_by_name}
+                                                                </td>}
+                                                                {col.key === "created_at" && <td style={{ width: "auto", whiteSpace: "nowrap" }} >
+                                                                    {format(
+                                                                        new Date(product.created_at),
+                                                                        "MMM dd yyyy h:mma"
+                                                                    )}
+                                                                </td>}
+                                                            </>);
+                                                        })}
+
+                                                        {/*<td>{product.deleted ? "YES" : "NO"}</td>
                                                         <td style={{ width: "auto", whiteSpace: "nowrap" }}  >
                                                             <span style={{ marginLeft: "-40px" }}>
                                                                 {!product.deleted && <Button className="btn btn-danger btn-sm" onClick={() => {
@@ -3161,7 +3819,7 @@ function ProductIndex(props) {
                                                             <OverflowTooltip value={product.name + (product.name_in_arabic ? " | " + product.name_in_arabic : "")} maxWidth={300} />
                                                         </td>
                                                         <td style={{ width: "auto", whiteSpace: "nowrap" }} >{product.ean_12}</td>
-                                                        {/*<td>{product.rack}</td>*/}
+                                                        <td>{product.rack}</td>
                                                         <td style={{ width: "auto", whiteSpace: "nowrap" }}>
                                                             {product.product_stores && Object.keys(product.product_stores).map((key, index) => {
                                                                 if (localStorage.getItem("store_id") && product.product_stores[key].store_id === localStorage.getItem("store_id")) {
@@ -3214,116 +3872,6 @@ function ProductIndex(props) {
                                                             })}
                                                         </td>
                                                         <td>{product.is_set ? "YES" : "NO"}</td>
-                                                        {/*
-                                                        <td>
-                                                            {product.product_stores && Object.keys(product.product_stores).map((key, index) => {
-                                                                if (localStorage.getItem("store_id") && product.product_stores[key].store_id === localStorage.getItem("store_id")) {
-                                                                    if (product.product_stores[key].wholesale_unit_profit <= 0) {
-                                                                        return (
-                                                                            <OverlayTrigger
-                                                                                key="right"
-                                                                                placement="right"
-                                                                                overlay={
-                                                                                    <Tooltip id={`tooltip-right`}>
-                                                                                        Wholesale unit profit should be greater than zero.
-                                                                                    </Tooltip>
-                                                                                }
-                                                                            >
-                                                                                <span className="badge bg-danger" data-bs-toggle="tooltip" title="Disabled tooltip" ><b> {product.product_stores[key].wholesale_unit_profit?.toFixed(2)}</b></span>
-                                                                            </OverlayTrigger>
-                                                                        );
-                                                                    } else {
-                                                                        return (<b>{product.product_stores[key].wholesale_unit_profit?.toFixed(2)}</b>);
-                                                                    }
-                                                                } else if (!localStorage.getItem("store_id")) {
-                                                                    return (<li><b>{product.product_stores[key].wholesale_unit_profit?.toFixed(2)}</b> {"@" + product.product_stores[key].store_name}</li>);
-                                                                }
-
-                                                                return ""
-                                                            })}
-                                                        </td>
-                                                        <td>
-                                                            {product.product_stores && Object.keys(product.product_stores).map((key, index) => {
-                                                                if (localStorage.getItem("store_id") && product.product_stores[key].store_id === localStorage.getItem("store_id")) {
-                                                                    if (product.product_stores[key].wholesale_unit_profit_perc <= 0) {
-                                                                        return (
-                                                                            <OverlayTrigger
-                                                                                key="right"
-                                                                                placement="right"
-                                                                                overlay={
-                                                                                    <Tooltip id={`tooltip-right`}>
-                                                                                        Wholesale unit profit % should be greater than zero.
-                                                                                    </Tooltip>
-                                                                                }
-                                                                            >
-                                                                                <span className="badge bg-danger"  ><b> {product.product_stores[key].wholesale_unit_profit_perc?.toFixed(2) + "%"}</b></span>
-                                                                            </OverlayTrigger>
-                                                                        );
-                                                                    } else {
-                                                                        return (<b>{product.product_stores[key].wholesale_unit_profit_perc?.toFixed(2) + "%"}</b>);
-                                                                    }
-                                                                } else if (!localStorage.getItem("store_id")) {
-                                                                    return (<li><b>{product.product_stores[key].wholesale_unit_profit_perc?.toFixed(2) + "%"}</b> {"@" + product.product_stores[key].store_name}</li>);
-                                                                }
-
-                                                                return ""
-                                                            })}
-                                                        </td>
-                                                        <td>
-                                                            {product.product_stores && Object.keys(product.product_stores).map((key, index) => {
-                                                                if (localStorage.getItem("store_id") && product.product_stores[key].store_id === localStorage.getItem("store_id")) {
-                                                                    if (product.product_stores[key].retail_unit_profit <= 0) {
-                                                                        return (
-                                                                            <OverlayTrigger
-                                                                                key="right"
-                                                                                placement="right"
-                                                                                overlay={
-                                                                                    <Tooltip id={`tooltip-right`}>
-                                                                                        Reatail unit profit should be greater than zero.
-                                                                                    </Tooltip>
-                                                                                }
-                                                                            >
-                                                                                <span className="badge bg-danger" data-bs-toggle="tooltip" title="Disabled tooltip" ><b> {product.product_stores[key].retail_unit_profit?.toFixed(2)}</b></span>
-                                                                            </OverlayTrigger>
-                                                                        );
-                                                                    } else {
-                                                                        return (<b>{product.product_stores[key].retail_unit_profit?.toFixed(2)}</b>);
-                                                                    }
-                                                                } else if (!localStorage.getItem("store_id")) {
-                                                                    return (<li><b>{product.product_stores[key].retail_unit_profit.toFixed(2)}</b> {"@" + product.product_stores[key].store_name}</li>);
-                                                                }
-
-                                                                return ""
-                                                            })}
-                                                        </td>
-                                                        <td>
-                                                            {product.product_stores && Object.keys(product.product_stores).map((key, index) => {
-                                                                if (localStorage.getItem("store_id") && product.product_stores[key].store_id === localStorage.getItem("store_id")) {
-                                                                    if (product.product_stores[key].retail_unit_profit_perc <= 0) {
-                                                                        return (
-                                                                            <OverlayTrigger
-                                                                                key="right"
-                                                                                placement="right"
-                                                                                overlay={
-                                                                                    <Tooltip id={`tooltip-right`}>
-                                                                                        Retail unit profit % should be greater than zero.
-                                                                                    </Tooltip>
-                                                                                }
-                                                                            >
-                                                                                <span className="badge bg-danger" data-bs-toggle="tooltip" title="Disabled tooltip" ><b> {product.product_stores[key].retail_unit_profit_perc?.toFixed(2) + "%"}</b></span>
-                                                                            </OverlayTrigger>
-                                                                        );
-                                                                    } else {
-                                                                        return (<b>{product.product_stores[key].retail_unit_profit_perc?.toFixed(2) + "%"}</b>);
-                                                                    }
-                                                                } else if (!localStorage.getItem("store_id")) {
-                                                                    return (<li><b>{product.product_stores[key].retail_unit_profit_perc?.toFixed(2) + "%"}</b> {"@" + product.product_stores[key].store_name}</li>);
-                                                                }
-
-                                                                return ""
-                                                            })}
-                                                        </td>*/}
-
                                                         <td style={{ width: "auto", whiteSpace: "nowrap" }}>
                                                             <ul>
                                                                 {product.category_name &&
@@ -3636,7 +4184,7 @@ function ProductIndex(props) {
                                                             }}>
                                                                 <i className="bi bi-eye"></i>
                                                             </Button>
-                                                        </td>
+                                                        </td>*/}
                                                     </tr>
                                                 ))}
                                         </tbody>
