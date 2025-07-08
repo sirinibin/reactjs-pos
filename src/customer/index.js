@@ -1,12 +1,12 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useMemo } from "react";
 import CustomerCreate from "./create.js";
 import CustomerView from "./view.js";
-
+import { DragDropContext, Droppable, Draggable } from "react-beautiful-dnd";
 import { Typeahead } from "react-bootstrap-typeahead";
 import { format } from "date-fns";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
-import { Button, Spinner } from "react-bootstrap";
+import { Button, Spinner, Modal, Alert } from "react-bootstrap";
 import ReactPaginate from "react-paginate";
 import OverflowTooltip from "../utils/OverflowTooltip.js";
 import Amount from "../utils/amount.js";
@@ -15,10 +15,6 @@ import PostingIndex from "./../posting/index.js";
 import { confirm } from 'react-bootstrap-confirmation';
 
 function CustomerIndex(props) {
-
-
-
-    const selectedDate = new Date();
 
     //list
     const [customerList, setCustomerList] = useState([]);
@@ -210,7 +206,7 @@ function CustomerIndex(props) {
             },
         };
         let Select =
-            "select=id,code,deleted,credit_balance,account,name,email,phone,vat_no,created_by_name,created_at,stores";
+            "select=id,code,deleted,credit_limit,credit_balance,account,name,email,phone,vat_no,created_by_name,created_at,stores";
 
         if (localStorage.getItem("store_id")) {
             searchParams.store_id = localStorage.getItem("store_id");
@@ -456,8 +452,231 @@ function CustomerIndex(props) {
     let [ignoreZeroQtnCreditBalance, setIgnoreZeroQtnCreditBalance] = useState(false);
 
 
+    //Table settings
+    const defaultColumns = useMemo(() => [
+        { key: "deleted", label: "Deleted", fieldName: "deleted", visible: true },
+        { key: "actions", label: "Actions", fieldName: "actions", visible: true },
+        { key: "code", label: "ID", fieldName: "code", visible: true },
+        { key: "name", label: "Name", fieldName: "name", visible: true },
+        { key: "sales_amount", label: "Sales Amount", fieldName: "stores.sales_amount", visible: true },
+        { key: "sales_paid_amount", label: "Sales Paid Amount", fieldName: "stores.sales_paid_amount", visible: true },
+        { key: "credit_balance", label: "Credit Balance", fieldName: "credit_balance", visible: true },
+        { key: "credit_limit", label: "Credit Limit", fieldName: "credit_limit", visible: true },
+        { key: "quotation_invoice_balance_amount", label: " Qtn. Invoice Credit Balance Amount", fieldName: "stores.quotation_invoice_balance_amount", visible: true },
+        { key: "sales_count", label: "Sales count", fieldName: "stores.sales_count", visible: true },
+        { key: "sales_balance_amount", label: "Sales Credit Balance", fieldName: "stores.sales_balance_amount", visible: true },
+        { key: "phone", label: "Phone", fieldName: "phone", visible: true },
+        { key: "vat_no", label: "Vat No.", fieldName: "vat_no", visible: true },
+        { key: "sales_paid_count", label: "Sales Paid Count", fieldName: "stores.sales_paid_count", visible: true },
+        { key: "sales_not_paid_count", label: "Sales Unpaid Count", fieldName: "stores.sales_not_paid_count", visible: true },
+        { key: "email", label: "Email", fieldName: "email", visible: true },
+        { key: "sales_profit", label: "Sales Profit", fieldName: "stores.sales_profit", visible: true },
+        { key: "sales_loss", label: "Sales Loss", fieldName: "stores.sales_loss", visible: true },
+        { key: "sales_paid_partially_count", label: "Sales Paid Partially Count", fieldName: "stores.sales_paid_partially_count", visible: true },
+        { key: "sales_return_count", label: "Sales Return Count", fieldName: "stores.sales_return_count", visible: true },
+        { key: "sales_return_amount", label: "Sales Return Amount", fieldName: "stores.sales_return_amount", visible: true },
+        { key: "sales_return_paid_amount", label: "Sales Return Paid Amount", fieldName: "stores.sales_return_paid_amount", visible: true },
+        { key: "sales_return_balance_amount", label: "Sales Return Credit Balance Amount", fieldName: "stores.sales_return_balance_amount", visible: true },
+        { key: "sales_return_profit", label: "Sales Return Profit", fieldName: "stores.sales_return_profit", visible: true },
+        { key: "sales_return_loss", label: "Sales Return Loss", fieldName: "stores.sales_return_loss", visible: true },
+        { key: "sales_return_paid_count", label: "Sales Return Paid Count", fieldName: "stores.sales_return_paid_count", visible: true },
+        { key: "sales_return_not_paid_count", label: "Sales Return Unpaid Count", fieldName: "stores.sales_return_not_paid_count", visible: true },
+        { key: "sales_return_paid_partially_count", label: "Sales Return Paid Partially Count", fieldName: "stores.sales_return_paid_partially_count", visible: true },
+        { key: "quotation_invoice_count", label: "Qtn. Invoice count", fieldName: "stores.quotation_invoice_count", visible: true },
+        { key: "quotation_invoice_amount", label: " Total Qtn. Invoice amount", fieldName: "stores.quotation_invoice_amount", visible: true },
+        { key: "quotation_invoice_paid_amount", label: "Qtn. Invoice paid amount", fieldName: "stores.quotation_invoice_paid_amount", visible: true },
+        { key: "quotation_invoice_profit", label: "Qtn. Invoice Profit", fieldName: "stores.quotation_invoice_profit", visible: true },
+        { key: "quotation_invoice_loss", label: "Qtn. Invoice Loss", fieldName: "stores.quotation_invoice_loss", visible: true },
+        { key: "quotation_invoice_paid_count", label: "Qtn. Invoice Paid Count", fieldName: "stores.quotation_invoice_paid_count", visible: true },
+        { key: "quotation_invoice_not_paid_count", label: "Qtn. Invoice Unpaid Count", fieldName: "stores.quotation_invoice_not_paid_count", visible: true },
+        { key: "quotation_invoice_paid_partially_count", label: "Qtn. Invoice Paid Partially Count", fieldName: "stores.quotation_invoice_paid_partially_count", visible: true },
+        { key: "quotation_count", label: "Quotation Count", fieldName: "stores.quotation_count", visible: true },
+        { key: "quotation_amount", label: "Quotation Amount", fieldName: "stores.quotation_amount", visible: true },
+        { key: "quotation_profit", label: "Quotation Profit", fieldName: "stores.quotation_profit", visible: true },
+        { key: "quotation_loss", label: "Quotation Loss", fieldName: "stores.quotation_loss", visible: true },
+        { key: "delivery_note_count", label: "Delivery Note Count", fieldName: "stores.delivery_note_count", visible: true },
+        { key: "created_by_name", label: "Created By", fieldName: "created_by", visible: true },
+        { key: "created_at", label: "Created At", fieldName: "created_at", visible: true },
+        { key: "actions_end", label: "Actions", fieldName: "actions_end", visible: true },
+    ], []);
+
+
+    const [columns, setColumns] = useState(defaultColumns);
+    const [showSettings, setShowSettings] = useState(false);
+    // Load settings from localStorage
+    useEffect(() => {
+        const saved = localStorage.getItem("customer_table_settings");
+        if (saved) setColumns(JSON.parse(saved));
+
+        let missingOrUpdated = false;
+        for (let i = 0; i < defaultColumns.length; i++) {
+            if (!saved)
+                break;
+
+            const savedCol = JSON.parse(saved)?.find(col => col.fieldName === defaultColumns[i].fieldName);
+
+            missingOrUpdated = !savedCol || savedCol.label !== defaultColumns[i].label || savedCol.key !== defaultColumns[i].key;
+
+            if (missingOrUpdated) {
+                break
+            }
+        }
+
+        /*
+        for (let i = 0; i < saved.length; i++) {
+            const savedCol = defaultColumns.find(col => col.fieldName === saved[i].fieldName);
+ 
+            missingOrUpdated = !savedCol || savedCol.label !== saved[i].label || savedCol.key !== saved[i].key;
+ 
+            if (missingOrUpdated) {
+                break
+            }
+        }*/
+
+        if (missingOrUpdated) {
+            localStorage.setItem("customer_table_settings", JSON.stringify(defaultColumns));
+            setColumns(defaultColumns);
+        }
+
+        //2nd
+
+    }, [defaultColumns]);
+
+    function RestoreDefaultSettings() {
+        localStorage.setItem("sales_table_settings", JSON.stringify(defaultColumns));
+        setColumns(defaultColumns);
+
+        setShowSuccess(true);
+        setSuccessMessage("Successfully restored to default settings!")
+    }
+
+    // Save column settings to localStorage
+    useEffect(() => {
+        localStorage.setItem("customer_table_settings", JSON.stringify(columns));
+    }, [columns]);
+
+    const handleToggleColumn = (index) => {
+        const updated = [...columns];
+        updated[index].visible = !updated[index].visible;
+        setColumns(updated);
+    };
+
+    const onDragEnd = (result) => {
+        if (!result.destination) return;
+        const reordered = Array.from(columns);
+        const [moved] = reordered.splice(result.source.index, 1);
+        reordered.splice(result.destination.index, 0, moved);
+        setColumns(reordered);
+    };
+
+    const [showSuccess, setShowSuccess] = useState(false);
+    const [successMessage, setSuccessMessage] = useState(false);
+
+    let [selectedCreatedAtDate, setSelectedCreatedAtDate] = useState(new Date());
+    let [selectedCreatedAtFromDate, setSelectedCreatedAtFromDate] = useState(new Date());
+    let [selectedCreatedAtToDate, setSelectedCreatedAtToDate] = useState(new Date());
+
     return (
         <>
+            {/* ⚙️ Settings Modal */}
+            <Modal
+                show={showSettings}
+                onHide={() => setShowSettings(false)}
+                centered
+                size="lg"
+            >
+                <Modal.Header closeButton>
+                    <Modal.Title>
+                        <i
+                            className="bi bi-gear-fill"
+                            style={{ fontSize: "1.2rem", marginRight: "4px" }}
+                            title="Table Settings"
+
+                        />
+                        Customer Settings
+                    </Modal.Title>
+                </Modal.Header>
+                <Modal.Body>
+                    {/* Column Settings */}
+                    {showSettings && (
+                        <>
+                            <h6 className="mb-2">Customize Columns</h6>
+                            <DragDropContext onDragEnd={onDragEnd}>
+                                <Droppable droppableId="columns">
+                                    {(provided) => (
+                                        <ul
+                                            className="list-group"
+                                            {...provided.droppableProps}
+                                            ref={provided.innerRef}
+                                        >
+                                            {columns.map((col, index) => (
+                                                <Draggable
+                                                    key={col.key}
+                                                    draggableId={col.key}
+                                                    index={index}
+                                                >
+                                                    {(provided) => (
+                                                        <li
+                                                            className="list-group-item d-flex justify-content-between align-items-center"
+                                                            ref={provided.innerRef}
+                                                            {...provided.draggableProps}
+                                                            {...provided.dragHandleProps}                                                        >
+                                                            <div>
+                                                                <input
+                                                                    style={{ width: "20px", height: "20px" }}
+                                                                    type="checkbox"
+                                                                    className="form-check-input me-2"
+                                                                    checked={col.visible}
+                                                                    onChange={() => {
+                                                                        handleToggleColumn(index);
+                                                                    }}
+                                                                />
+                                                                {col.label}
+                                                            </div>
+                                                            <span style={{ cursor: "grab" }}>☰</span>
+                                                        </li>
+                                                    )}
+                                                </Draggable>
+                                            ))}
+                                            {provided.placeholder}
+                                        </ul>
+                                    )}
+                                </Droppable>
+                            </DragDropContext>
+                        </>
+                    )}
+                </Modal.Body>
+                <Modal.Footer>
+                    <Button variant="secondary" onClick={() => setShowSettings(false)}>
+                        Close
+                    </Button>
+                    <Button
+                        variant="primary"
+                        onClick={() => {
+                            RestoreDefaultSettings();
+                            // Save to localStorage here if needed
+                            //setShowSettings(false);
+                        }}
+                    >
+                        Restore to Default
+                    </Button>
+                </Modal.Footer>
+            </Modal>
+            <Modal show={showSuccess} onHide={() => setShowSuccess(false)} centered>
+                <Modal.Header closeButton>
+                    <Modal.Title>Success</Modal.Title>
+                </Modal.Header>
+                <Modal.Body>
+                    <Alert variant="success">
+                        {successMessage}
+                    </Alert>
+                </Modal.Body>
+                <Modal.Footer>
+                    <Button variant="secondary" onClick={() => setShowSuccess(false)}>
+                        Close
+                    </Button>
+                </Modal.Footer>
+            </Modal>
             <PostingIndex ref={AccountBalanceSheetRef} showToastMessage={props.showToastMessage} />
             <CustomerCreate ref={CreateFormRef} refreshList={list} showToastMessage={props.showToastMessage} openDetailsView={openDetailsView} />
             <CustomerView ref={DetailsViewRef} openUpdateForm={openUpdateForm} openCreateForm={openCreateForm} />
@@ -582,6 +801,24 @@ function CustomerIndex(props) {
                                         /> : ""}
                                     </div>
                                 </div>
+
+                                <div className="row">
+                                    <div className="col text-end">
+                                        <button
+                                            className="btn btn-sm btn-outline-secondary"
+                                            onClick={() => {
+                                                setShowSettings(!showSettings);
+                                            }}
+                                        >
+                                            <i
+                                                className="bi bi-gear-fill"
+                                                style={{ fontSize: "1.2rem" }}
+                                                title="Table Settings"
+                                            />
+                                        </button>
+                                    </div>
+                                </div>
+
                                 <div className="row">
                                     {totalItems > 0 && (
                                         <>
@@ -639,7 +876,32 @@ function CustomerIndex(props) {
                                     <table className="table table-striped table-sm table-bordered">
                                         <thead>
                                             <tr className="text-center">
-                                                <th>Deleted</th>
+                                                {columns.filter(c => c.visible).map((col) => {
+                                                    return (<>
+                                                        {col.key === "deleted" && <th key={col.key}>{col.label}</th>}
+                                                        {col.key === "actions" && <th key={col.key}>{col.label}</th>}
+                                                        {col.key !== "actions" && col.key !== "deleted" && <th>
+                                                            <b
+                                                                style={{
+                                                                    textDecoration: "underline",
+                                                                    cursor: "pointer",
+                                                                }}
+                                                                onClick={() => {
+                                                                    sort(col.fieldName);
+                                                                }}
+                                                            >
+                                                                {col.label}
+                                                                {sortField === col.fieldName && sortCustomer === "-" ? (
+                                                                    <i className="bi bi-sort-alpha-up-alt"></i>
+                                                                ) : null}
+                                                                {sortField === col.fieldName && sortCustomer === "" ? (
+                                                                    <i className="bi bi-sort-alpha-up"></i>
+                                                                ) : null}
+                                                            </b>
+                                                        </th>}
+                                                    </>);
+                                                })}
+                                                {/*<th>Deleted</th>
                                                 <th>Actions</th>
                                                 <th>
                                                     <b
@@ -804,7 +1066,7 @@ function CustomerIndex(props) {
                                                             cursor: "pointer",
                                                         }}
                                                         onClick={() => {
-                                                            sort("mob");
+                                                            sort("phone");
                                                         }}
                                                     >
                                                         Phone
@@ -1399,11 +1661,6 @@ function CustomerIndex(props) {
                                                         ) : null}
                                                     </b>
                                                 </th>
-
-
-
-
-
                                                 <th>
                                                     <b
                                                         style={{
@@ -1442,13 +1699,222 @@ function CustomerIndex(props) {
                                                         ) : null}
                                                     </b>
                                                 </th>
-                                                <th>Actions</th>
+                                                <th>Actions</th>*/}
                                             </tr>
                                         </thead>
 
                                         <thead>
                                             <tr className="text-center">
-                                                <th>
+                                                {columns.filter(c => c.visible).map((col) => {
+                                                    return (<>
+                                                        {(col.key === "deleted") && <th>
+                                                            <select
+                                                                onChange={(e) => {
+                                                                    searchByFieldValue("deleted", e.target.value);
+                                                                    if (e.target.value === "1") {
+                                                                        deleted = true;
+                                                                        setDeleted(deleted);
+                                                                    } else {
+                                                                        deleted = false;
+                                                                        setDeleted(deleted);
+                                                                    }
+                                                                }}
+                                                            >
+                                                                <option value="0" >NO</option>
+                                                                <option value="1">YES</option>
+                                                            </select>
+                                                        </th>}
+                                                        {(col.key === "actions" || col.key === "actions_end") && <th></th>}
+                                                        {(col.key === "name") && <th>
+                                                            <Typeahead
+                                                                id="customer_id"
+                                                                filterBy={['additional_keywords']}
+                                                                labelKey="search_label"
+                                                                style={{ minWidth: "300px" }}
+                                                                onChange={(selectedItems) => {
+                                                                    searchByMultipleValuesField(
+                                                                        "customer_id",
+                                                                        selectedItems
+                                                                    );
+                                                                }}
+                                                                ref={customerSearchRef}
+                                                                onKeyDown={(e) => {
+                                                                    if (e.key === "Escape") {
+                                                                        setCustomerOptions([]);
+                                                                        customerSearchRef.current?.clear();
+                                                                    }
+                                                                }}
+                                                                options={customerOptions}
+                                                                placeholder="Customer Name / Mob / VAT # / ID"
+                                                                selected={selectedCustomers}
+                                                                highlightOnlyResult={true}
+                                                                onInputChange={(searchTerm, e) => {
+                                                                    if (timerRef.current) clearTimeout(timerRef.current);
+                                                                    timerRef.current = setTimeout(() => {
+                                                                        suggestCustomers(searchTerm);
+                                                                    }, 100);
+                                                                }}
+                                                                multiple
+                                                            />
+                                                        </th>}
+                                                        {(col.key === "code" ||
+                                                            col.key === "sales_amount" ||
+                                                            col.key === "sales_paid_amount" ||
+                                                            col.key === "credit_balance" ||
+                                                            col.key === "credit_limit" ||
+                                                            col.key === "quotation_invoice_balance_amount" ||
+                                                            col.key === "sales_count" ||
+                                                            col.key === "sales_balance_amount" ||
+                                                            col.key === "phone" ||
+                                                            col.key === "vat_no" ||
+                                                            col.key === "sales_paid_count" ||
+                                                            col.key === "sales_not_paid_count" ||
+                                                            col.key === "email" ||
+                                                            col.key === "sales_profit" ||
+                                                            col.key === "sales_loss" ||
+                                                            col.key === "sales_paid_partially_count" ||
+                                                            col.key === "sales_return_count" ||
+                                                            col.key === "sales_return_amount" ||
+                                                            col.key === "sales_return_paid_amount" ||
+                                                            col.key === "sales_return_balance_amount" ||
+                                                            col.key === "sales_return_profit" ||
+                                                            col.key === "sales_return_loss" ||
+                                                            col.key === "sales_return_paid_count" ||
+                                                            col.key === "sales_return_not_paid_count" ||
+                                                            col.key === "sales_return_paid_partially_count" ||
+                                                            col.key === "quotation_invoice_count" ||
+                                                            col.key === "quotation_invoice_amount" ||
+                                                            col.key === "quotation_invoice_paid_amount" ||
+                                                            col.key === "quotation_invoice_profit" ||
+                                                            col.key === "quotation_invoice_loss" ||
+                                                            col.key === "quotation_invoice_paid_count" ||
+                                                            col.key === "quotation_invoice_not_paid_count" ||
+                                                            col.key === "quotation_invoice_paid_partially_count" ||
+                                                            col.key === "quotation_count" ||
+                                                            col.key === "quotation_amount" ||
+                                                            col.key === "quotation_profit" ||
+                                                            col.key === "quotation_loss" ||
+                                                            col.key === "delivery_note_count" ||
+                                                            col.key === "quotation_invoice_not_paid_count"
+                                                        ) &&
+                                                            <th>
+                                                                <input
+                                                                    type="text"
+                                                                    id={`customer_search_by_${col.key}`}
+                                                                    name={`customer_search_by_${col.key}`}
+                                                                    onChange={(e) => {
+                                                                        const value = e.target.value;
+                                                                        if (typeof value === "number") {
+                                                                            searchByFieldValue(col.key, parseFloat(e.target.value))
+                                                                        } else if (typeof value === "string") {
+                                                                            searchByFieldValue(col.key, e.target.value)
+                                                                        }
+                                                                    }}
+                                                                    className="form-control"
+                                                                />
+                                                            </th>}
+                                                        {col.key === "created_by_name" && <th>
+                                                            <Typeahead
+                                                                id="created_by"
+
+                                                                labelKey="name"
+                                                                onChange={(selectedItems) => {
+                                                                    searchByMultipleValuesField(
+                                                                        "created_by",
+                                                                        selectedItems
+                                                                    );
+                                                                }}
+                                                                options={userOptions}
+                                                                placeholder="Select Users"
+                                                                selected={selectedCreatedByUsers}
+                                                                highlightOnlyResult={true}
+                                                                onInputChange={(searchTerm, e) => {
+                                                                    suggestUsers(searchTerm);
+                                                                }}
+                                                                multiple
+                                                            />
+                                                        </th>}
+                                                        {col.key === "created_at" && <th>
+                                                            <DatePicker
+                                                                id="created_at"
+                                                                value={createdAtValue}
+                                                                selected={selectedCreatedAtDate}
+                                                                className="form-control"
+                                                                dateFormat="MMM dd yyyy"
+                                                                isClearable={true}
+                                                                onChange={(date) => {
+                                                                    if (!date) {
+                                                                        //  createdAtValue = "";
+                                                                        setCreatedAtValue("");
+                                                                        searchByDateField("created_at", "");
+                                                                        return;
+                                                                    }
+                                                                    searchByDateField("created_at", date);
+                                                                    selectedCreatedAtDate = date;
+                                                                    setSelectedCreatedAtDate(date);
+                                                                }}
+                                                            />
+                                                            <small
+                                                                style={{
+                                                                    color: "blue",
+                                                                    textDecoration: "underline",
+                                                                    cursor: "pointer",
+                                                                }}
+                                                                onClick={(e) =>
+                                                                    setShowCreatedAtDateRange(!showCreatedAtDateRange)
+                                                                }
+                                                            >
+                                                                {showCreatedAtDateRange ? "Less.." : "More.."}
+                                                            </small>
+                                                            <br />
+
+                                                            {showCreatedAtDateRange ? (
+                                                                <span className="text-left">
+                                                                    From:{" "}
+                                                                    <DatePicker
+                                                                        id="created_at_from"
+                                                                        value={createdAtFromValue}
+                                                                        selected={selectedCreatedAtFromDate}
+                                                                        className="form-control"
+                                                                        dateFormat="MMM dd yyyy"
+                                                                        isClearable={true}
+                                                                        onChange={(date) => {
+                                                                            if (!date) {
+                                                                                setCreatedAtFromValue("");
+                                                                                searchByDateField("created_at_from", "");
+                                                                                return;
+                                                                            }
+                                                                            searchByDateField("created_at_from", date);
+                                                                            selectedCreatedAtFromDate = date;
+                                                                            setSelectedCreatedAtFromDate(date);
+                                                                        }}
+                                                                    />
+                                                                    To:{" "}
+                                                                    <DatePicker
+                                                                        id="created_at_to"
+                                                                        value={createdAtToValue}
+                                                                        selected={selectedCreatedAtToDate}
+                                                                        className="form-control"
+                                                                        dateFormat="MMM dd yyyy"
+                                                                        isClearable={true}
+                                                                        onChange={(date) => {
+                                                                            if (!date) {
+                                                                                setCreatedAtToValue("");
+                                                                                searchByDateField("created_at_to", "");
+                                                                                return;
+                                                                            }
+                                                                            searchByDateField("created_at_to", date);
+                                                                            selectedCreatedAtToDate = date;
+                                                                            setSelectedCreatedAtToDate(date);
+                                                                        }}
+                                                                    />
+                                                                </span>
+                                                            ) : null}
+                                                        </th>}
+                                                    </>);
+                                                })}
+
+                                                {/*<th>
                                                     <select
                                                         onChange={(e) => {
                                                             searchByFieldValue("deleted", e.target.value);
@@ -1921,7 +2387,7 @@ function CustomerIndex(props) {
                                                         </span>
                                                     ) : null}
                                                 </th>
-                                                <th></th>
+                                                <th></th>*/}
                                             </tr>
                                         </thead>
 
@@ -1929,7 +2395,119 @@ function CustomerIndex(props) {
                                             {customerList &&
                                                 customerList.map((customer) => (
                                                     <tr key={customer.id}>
-                                                        <td>{customer.deleted ? "YES" : "NO"}</td>
+                                                        {columns.filter(c => c.visible).map((col) => {
+                                                            return (<>
+                                                                {(col.key === "deleted") && <td>{customer.deleted ? "YES" : "NO"}</td>}
+                                                                {(col.key === "actions" || col.key === "actions_end") && <td style={{ width: "auto", whiteSpace: "nowrap" }} >
+                                                                    {!customer.deleted && <><Button className="btn btn-danger btn-sm" onClick={() => {
+                                                                        confirmDelete(customer.id);
+                                                                    }}>
+                                                                        <i className="bi bi-trash"></i>
+                                                                    </Button>&nbsp;</>}
+                                                                    {customer.deleted && <><Button className="btn btn-success btn-sm" onClick={() => {
+                                                                        confirmRestore(customer.id);
+                                                                    }}>
+                                                                        <i className="bi bi-arrow-counterclockwise"></i>
+                                                                    </Button>&nbsp;</>}
+                                                                    <Button className="btn btn-light btn-sm" onClick={() => {
+                                                                        openUpdateForm(customer.id);
+                                                                    }}>
+                                                                        <i className="bi bi-pencil"></i>
+                                                                    </Button>
+
+                                                                    <Button className="btn btn-primary btn-sm" onClick={() => {
+                                                                        openDetailsView(customer.id);
+                                                                    }}>
+                                                                        <i className="bi bi-eye"></i>
+                                                                    </Button>
+                                                                </td>}
+                                                                {(col.key === "name") && <td style={{ width: "auto", whiteSpace: "nowrap" }} className="text-start" >
+                                                                    <OverflowTooltip value={customer.name} />
+                                                                </td>}
+                                                                {(col.key === "credit_balance") && <td style={{ width: "auto", whiteSpace: "nowrap" }} >
+                                                                    {customer.account && <Button variant="link" onClick={() => {
+                                                                        openBalanceSheetDialogue(customer.account);
+                                                                    }}>
+                                                                        <Amount amount={trimTo2Decimals(customer.credit_balance)} />
+
+                                                                    </Button>}
+                                                                    {!customer.account && <Amount amount={trimTo2Decimals(customer.credit_balance)} />}
+                                                                </td>}
+                                                                {(col.key === "code" ||
+                                                                    col.key === "sales_amount" ||
+                                                                    col.key === "sales_paid_amount" ||
+                                                                    col.key === "credit_limit" ||
+                                                                    col.key === "quotation_invoice_balance_amount" ||
+                                                                    col.key === "sales_count" ||
+                                                                    col.key === "sales_balance_amount" ||
+                                                                    col.key === "phone" ||
+                                                                    col.key === "vat_no" ||
+                                                                    col.key === "sales_paid_count" ||
+                                                                    col.key === "sales_not_paid_count" ||
+                                                                    col.key === "email" ||
+                                                                    col.key === "sales_profit" ||
+                                                                    col.key === "sales_loss" ||
+                                                                    col.key === "sales_paid_partially_count" ||
+                                                                    col.key === "sales_return_count" ||
+                                                                    col.key === "sales_return_amount" ||
+                                                                    col.key === "sales_return_paid_amount" ||
+                                                                    col.key === "sales_return_balance_amount" ||
+                                                                    col.key === "sales_return_profit" ||
+                                                                    col.key === "sales_return_loss" ||
+                                                                    col.key === "sales_return_paid_count" ||
+                                                                    col.key === "sales_return_not_paid_count" ||
+                                                                    col.key === "sales_return_paid_partially_count" ||
+                                                                    col.key === "quotation_invoice_count" ||
+                                                                    col.key === "quotation_invoice_amount" ||
+                                                                    col.key === "quotation_invoice_paid_amount" ||
+                                                                    col.key === "quotation_invoice_profit" ||
+                                                                    col.key === "quotation_invoice_loss" ||
+                                                                    col.key === "quotation_invoice_paid_count" ||
+                                                                    col.key === "quotation_invoice_not_paid_count" ||
+                                                                    col.key === "quotation_invoice_paid_partially_count" ||
+                                                                    col.key === "quotation_count" ||
+                                                                    col.key === "quotation_amount" ||
+                                                                    col.key === "quotation_profit" ||
+                                                                    col.key === "quotation_loss" ||
+                                                                    col.key === "delivery_note_count" ||
+                                                                    col.key === "quotation_invoice_not_paid_count" ||
+                                                                    col.key === "created_by_name"
+                                                                ) &&
+                                                                    <td style={{ width: "auto", whiteSpace: "nowrap" }} >
+                                                                        {customer[col.key] && typeof customer[col.key] === "number" ?
+                                                                            <Amount amount={trimTo2Decimals(customer[col.key])} /> : customer[col.key]
+                                                                        }
+
+                                                                        {customer.stores && customer.stores[localStorage.getItem("store_id")][col.key] && <>
+                                                                            {typeof customer.stores[localStorage.getItem("store_id")][col.key] === "number" ?
+                                                                                <Amount amount={trimTo2Decimals(customer.stores[localStorage.getItem("store_id")][col.key])} /> : customer.stores[localStorage.getItem("store_id")][col.key]
+                                                                            }
+                                                                        </>}
+
+                                                                        {/*
+                                                                      
+                                                                        {customer.stores && customer.stores[localStorage.getItem("store_id")][col.key] && typeof customer.stores[localStorage.getItem("store_id")][col.key] === "string" &&
+                                                                            customer.stores[localStorage.getItem("store_id")][col.key] + "str2"
+                                                                        }
+
+                                                                      
+
+                                                                        {customer[col.key] && typeof customer[col.key] === "number" &&
+                                                                            <Amount amount={trimTo2Decimals(customer[col.key])} /> + "-N"
+                                                                        }
+                                                                            */}
+                                                                    </td>}
+
+                                                                {col.key === "created_at" && <td style={{ width: "auto", whiteSpace: "nowrap" }}>
+                                                                    {format(
+                                                                        new Date(customer.created_at),
+                                                                        "MMM dd yyyy h:mma"
+                                                                    )}
+                                                                </td>}
+                                                            </>);
+                                                        })}
+
+                                                        {/*<td>{customer.deleted ? "YES" : "NO"}</td>
                                                         <td style={{ width: "auto", whiteSpace: "nowrap" }} >
                                                             {!customer.deleted && <><Button className="btn btn-danger btn-sm" onClick={() => {
                                                                 confirmDelete(customer.id);
@@ -2377,24 +2955,7 @@ function CustomerIndex(props) {
                                                             }}>
                                                                 <i className="bi bi-eye"></i>
                                                             </Button>
-
-                                                            {/*
-                                                        <button
-                                                            className="btn btn-outline-secondary dropdown-toggle"
-                                                            type="button"
-                                                            data-bs-toggle="dropdown"
-                                                            aria-expanded="false"
-                                                        ></button>
-                                                        <ul className="dropdown-menu">
-                                                            <li>
-                                                                <a href="/" className="dropdown-item">
-                                                                    <i className="bi bi-download"></i>
-                                                                    Download
-                                                                </a>
-                                                            </li>
-                                                        </ul>
-                                                       */}
-                                                        </td>
+                                                        </td>*/}
                                                     </tr>
                                                 ))}
                                         </tbody>
