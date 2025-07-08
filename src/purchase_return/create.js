@@ -1004,52 +1004,22 @@ const PurchaseReturnedCreate = forwardRef((props, ref) => {
                 setFormData({ ...formData });
             }
 
-
-            /*
             if (!formData.id) {
-                let method = "";
-                if (formData.payments_input && formData.payments_input[0]) {
-                    method = formData.payments_input[0].method;
-                }
- 
-                formData.payments_input = [{
-                    "date_str": formData.date_str,
-                    "amount": 0.00,
-                    "method": method,
-                    "deleted": false,
-                }];
- 
-                if (formData.net_total > 0) {
+                if (formData.payments_input?.length === 1) {
                     formData.payments_input[0].amount = parseFloat(trimTo2Decimals(formData.net_total));
-                    if (cashDiscount) {
-                        formData.payments_input[0].amount = formData.payments_input[0].amount - parseFloat(trimTo2Decimals(cashDiscount));
+                    if (formData.payments_input[0].amount > formData.cash_discount) {
+                        formData.payments_input[0].amount = parseFloat(trimTo2Decimals(formData.payments_input[0].amount - formData.cash_discount));
                     }
-                    formData.payments_input[0].amount = parseFloat(trimTo2Decimals(formData.payments_input[0].amount));
                 }
-            }*/
-            if ((!formData.id || formData.payments_input?.length === 1) && purchase && purchase.payment_status !== "not_paid") {
-                let method = "";
-                if (formData.payments_input && formData.payments_input[0]) {
-                    method = formData.payments_input[0].method;
-                }
-
-                if (formData.payments_input[0]) {
-                    formData.payments_input = [{
-                        "date_str": formData.date_str,
-                        "amount": 0.00,
-                        "method": method,
-                        "deleted": false,
-                    }];
-
-                    if (formData.net_total > 0) {
-                        formData.payments_input[0].amount = parseFloat(trimTo2Decimals(formData.net_total));
-                        if (cashDiscount) {
-                            formData.payments_input[0].amount = formData.payments_input[0].amount - parseFloat(trimTo2Decimals(cashDiscount));
-                        }
-                        formData.payments_input[0].amount = parseFloat(trimTo2Decimals(formData.payments_input[0].amount));
+            } else {
+                if (formData.payments_input?.length === 1 && formData.payment_status === "paid") {
+                    formData.payments_input[0].amount = parseFloat(trimTo2Decimals(formData.net_total));
+                    if (formData.payments_input[0].amount > formData.cash_discount) {
+                        formData.payments_input[0].amount = parseFloat(trimTo2Decimals(formData.payments_input[0].amount - formData.cash_discount));
                     }
                 }
             }
+
 
             findTotalPayments();
             setFormData({ ...formData });

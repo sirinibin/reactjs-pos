@@ -1225,7 +1225,7 @@ function SalesReturnIndex(props) {
         { key: "date", label: "Date", fieldName: "date", visible: true },
         { key: "customer", label: "Customer", fieldName: "customer_name", visible: true },
         { key: "net_total", label: "Net Total", fieldName: "net_total", visible: true },
-        { key: "amount_paid", label: "Amount Paid", fieldName: "total_payment_received", visible: true },
+        { key: "total_payment_paid", label: "Amount Paid", fieldName: "total_payment_paid", visible: true },
         { key: "credit_balance", label: "Credit Balance", fieldName: "balance_amount", visible: true },
         { key: "reported_to_zatca", label: "Reported to Zatca", fieldName: "zatca.reporting_passed", visible: true },
         { key: "payment_status", label: "Payment Status", fieldName: "payment_status", visible: true },
@@ -2737,11 +2737,11 @@ function SalesReturnIndex(props) {
                                                                 {(col.fieldName === "net_total") && <td style={{ width: "auto", whiteSpace: "nowrap" }}>
                                                                     <Amount amount={trimTo2Decimals(salesReturn.net_total)} />
                                                                 </td>}
-                                                                {(col.fieldName === "total_payment_received") && <td style={{ width: "auto", whiteSpace: "nowrap" }}>
+                                                                {(col.fieldName === "total_payment_paid") && <td style={{ width: "auto", whiteSpace: "nowrap" }}>
                                                                     <Button variant="link" onClick={() => {
                                                                         openPaymentsDialogue(salesReturn);
                                                                     }}>
-                                                                        <Amount amount={trimTo2Decimals(salesReturn.total_payment_received)} />
+                                                                        <Amount amount={trimTo2Decimals(salesReturn.total_payment_paid)} />
                                                                     </Button>
                                                                 </td>}
                                                                 {(col.fieldName === "balance_amount") && <td style={{ width: "auto", whiteSpace: "nowrap" }}>

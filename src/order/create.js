@@ -207,7 +207,7 @@ const OrderCreate = forwardRef((props, ref) => {
     }
 
 
-    function getOrder(id) {
+    async function getOrder(id) {
         console.log("inside get Order");
         const requestOptions = {
             method: 'GET',
@@ -223,7 +223,7 @@ const OrderCreate = forwardRef((props, ref) => {
         }
         let queryParams = ObjectToSearchQueryParams(searchParams);
 
-        fetch('/v1/order/' + id + "?" + queryParams, requestOptions)
+        await fetch('/v1/order/' + id + "?" + queryParams, requestOptions)
             .then(async response => {
                 const isJson = response.headers.get('content-type')?.includes('application/json');
                 const data = isJson && await response.json();
@@ -289,6 +289,7 @@ const OrderCreate = forwardRef((props, ref) => {
                     for (var i = 0; i < formData.payments_input?.length; i++) {
                         formData.payments_input[i].date_str = formData.payments_input[i].date
                     }
+                    setFormData({ ...formData });
                 }
 
                 if (formData.is_discount_percent) {
@@ -1629,8 +1630,6 @@ const OrderCreate = forwardRef((props, ref) => {
 
                     for (let j = 0; j < res.result?.products?.length; j++) {
                         if (res.result?.products[j].product_id === selectedProducts[i].product_id) {
-
-
                             console.log("Discounts updated from server")
                         }
                     }
@@ -1640,30 +1639,28 @@ const OrderCreate = forwardRef((props, ref) => {
                 setFormData({ ...formData });
             }
 
+            if (!cashDiscount) {
+                formData.cash_discount = 0;
+            } else {
+                formData.cash_discount = cashDiscount;
+            }
 
-            if (!formData.id || formData.payments_input?.length === 1) {
-                let method = "";
-                if (formData.payments_input && formData.payments_input[0]) {
-                    method = formData.payments_input[0].method;
+            if (!formData.id) {
+                if (formData.payments_input?.length === 1) {
+                    formData.payments_input[0].amount = parseFloat(trimTo2Decimals(formData.net_total));
+                    if (formData.payments_input[0].amount > formData.cash_discount) {
+                        formData.payments_input[0].amount = parseFloat(trimTo2Decimals(formData.payments_input[0].amount - formData.cash_discount));
+                    }
                 }
-
-                if (formData.payments_input[0]) {
-                    formData.payments_input = [{
-                        "date_str": formData.date_str,
-                        "amount": 0.00,
-                        "method": method,
-                        "deleted": false,
-                    }];
-
-                    if (formData.net_total > 0) {
-                        formData.payments_input[0].amount = parseFloat(trimTo2Decimals(formData.net_total));
-                        if (cashDiscount) {
-                            formData.payments_input[0].amount = formData.payments_input[0].amount - parseFloat(trimTo2Decimals(cashDiscount));
-                        }
-                        formData.payments_input[0].amount = parseFloat(trimTo2Decimals(formData.payments_input[0].amount));
+            } else {
+                if (formData.payments_input?.length === 1 && formData.payment_status === "paid") {
+                    formData.payments_input[0].amount = parseFloat(trimTo2Decimals(formData.net_total));
+                    if (formData.payments_input[0].amount > formData.cash_discount) {
+                        formData.payments_input[0].amount = parseFloat(trimTo2Decimals(formData.payments_input[0].amount - formData.cash_discount));
                     }
                 }
             }
+
             findTotalPayments();
             setFormData({ ...formData });
             validatePaymentAmounts();
@@ -1685,7 +1682,8 @@ const OrderCreate = forwardRef((props, ref) => {
             }
         }
 
-        totalPaymentAmount = totalPayment;
+        //totalPaymentAmount = totalPayment;
+        // alert(totalPaymentAmount)
         console.log("totalPaymentAmount:", totalPaymentAmount);
         setTotalPaymentAmount(totalPaymentAmount);
         console.log("totalPayment:", totalPayment)
