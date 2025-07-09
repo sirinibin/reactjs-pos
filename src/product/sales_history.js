@@ -642,7 +642,7 @@ const SalesHistory = forwardRef((props, ref) => {
                             <div className="col">
                                 <span className="text-end">
                                     <StatsSummary
-                                        title="Sales history"
+                                        title="Sales History"
                                         stats={{
                                             "Sales": totalSales,
                                             "Net Profit": totalProfit,
