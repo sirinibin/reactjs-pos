@@ -1803,12 +1803,14 @@ function CustomerIndex(props) {
                                                                     id={`customer_search_by_${col.key}`}
                                                                     name={`customer_search_by_${col.key}`}
                                                                     onChange={(e) => {
+
                                                                         const value = e.target.value;
                                                                         if (typeof value === "number") {
                                                                             searchByFieldValue(col.key, parseFloat(e.target.value))
                                                                         } else if (typeof value === "string") {
                                                                             searchByFieldValue(col.key, e.target.value)
                                                                         }
+                                                                        // searchByFieldValue(col.key, e.target.value)
                                                                     }}
                                                                     className="form-control"
                                                                 />
