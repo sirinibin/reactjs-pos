@@ -1,14 +1,18 @@
-import React, { useState, useRef, forwardRef, useImperativeHandle, useEffect } from "react";
+import React, { useState, useRef, forwardRef, useImperativeHandle, useEffect, useMemo } from "react";
 
 import { format } from "date-fns";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
-import { Button, Spinner, Modal, Badge } from "react-bootstrap";
+import { Button, Spinner, Modal, Alert } from "react-bootstrap";
 import ReactPaginate from "react-paginate";
-import NumberFormat from "react-number-format";
 import QuotationCreate from "../quotation/create.js";
-import CustomerView from "../customer/view.js";
 import { Typeahead } from "react-bootstrap-typeahead";
+import { DragDropContext, Droppable, Draggable } from "react-beautiful-dnd";
+import OverflowTooltip from "../utils/OverflowTooltip.js";
+import Amount from "../utils/amount.js";
+import { trimTo2Decimals } from "../utils/numberUtils";
+import StatsSummary from "../utils/StatsSummary.js";
+import CustomerCreate from "./../customer/create.js";
 
 //function ProductIndex(props) {
 
@@ -268,6 +272,12 @@ const QuotationHistory = forwardRef((props, ref) => {
             searchParams["product_id"] = product.id;
         }
 
+        if (statsOpen) {
+            searchParams["stats"] = "1";
+        } else {
+            searchParams["stats"] = "0";
+        }
+
         setSearchParams(searchParams);
         let queryParams = ObjectToSearchQueryParams(searchParams);
         if (queryParams !== "") {
@@ -277,6 +287,8 @@ const QuotationHistory = forwardRef((props, ref) => {
         const d = new Date();
         let diff = d.getTimezoneOffset();
         searchParams["timezone_offset"] = parseFloat(diff / 60);
+
+
 
         // console.log("queryParams:", queryParams);
         //queryParams = encodeURIComponent(queryParams);
@@ -378,15 +390,8 @@ const QuotationHistory = forwardRef((props, ref) => {
         timerRef.current = setTimeout(() => {
             QuotationUpdateFormRef.current.open(id);
         }, 100);
-
-
     }
 
-
-    const CustomerDetailsViewRef = useRef();
-    function openCustomerDetailsView(id) {
-        CustomerDetailsViewRef.current.open(id);
-    }
 
 
     const customerSearchRef = useRef();
@@ -413,13 +418,215 @@ const QuotationHistory = forwardRef((props, ref) => {
 
     let [showQuotationForm, setShowQuotationForm] = useState(false);
 
+
+    //Table settings
+    const [showSuccess, setShowSuccess] = useState(false);
+    const [successMessage, setSuccessMessage] = useState(false);
+
+    const defaultColumns = useMemo(() => [
+        { key: "date", label: "Date", fieldName: "date", visible: true },
+        { key: "quotation_code", label: "Quotation ID", fieldName: "quotation_code", visible: true },
+        { key: "customer_name", label: "Customer", fieldName: "customer_name", visible: true },
+        { key: "type", label: "Type", fieldName: "type", visible: true },
+        { key: "quantity", label: "Qty", fieldName: "quantity", visible: true },
+        { key: "unit_price", label: "Unit Price(without VAT)", fieldName: "unit_price", visible: true },
+        { key: "unit_price_with_vat", label: "Unit Price(with VAT)", fieldName: "unit_price_with_vat", visible: true },
+        { key: "discount", label: "Discount(without VAT)", fieldName: "discount", visible: true },
+        { key: "discount_percent", label: "Discount %", fieldName: "discount_percent", visible: true },
+        { key: "price", label: "Price(without VAT)", fieldName: "price", visible: true },
+        { key: "vat_price", label: "VAT", fieldName: "vat_price", visible: true },
+        { key: "net_price", label: "Net Price(with VAT)", fieldName: "net_price", visible: true },
+        { key: "profit", label: "Profit", fieldName: "profit", visible: true },
+        { key: "loss", label: "Loss", fieldName: "loss", visible: true },
+    ], []);
+
+
+    const [columns, setColumns] = useState(defaultColumns);
+    const [showSettings, setShowSettings] = useState(false);
+    // Load settings from localStorage
+    useEffect(() => {
+        const saved = localStorage.getItem("quotation_" + selectedType + "_history_table_settings");
+        if (saved) setColumns(JSON.parse(saved));
+
+        let missingOrUpdated = false;
+        for (let i = 0; i < defaultColumns.length; i++) {
+            if (!saved)
+                break;
+
+            const savedCol = JSON.parse(saved)?.find(col => col.fieldName === defaultColumns[i].fieldName);
+
+            missingOrUpdated = !savedCol || savedCol.label !== defaultColumns[i].label || savedCol.key !== defaultColumns[i].key;
+
+            if (missingOrUpdated) {
+                break
+            }
+        }
+
+        /*
+        for (let i = 0; i < saved.length; i++) {
+            const savedCol = defaultColumns.find(col => col.fieldName === saved[i].fieldName);
+ 
+            missingOrUpdated = !savedCol || savedCol.label !== saved[i].label || savedCol.key !== saved[i].key;
+ 
+            if (missingOrUpdated) {
+                break
+            }
+        }*/
+
+        if (missingOrUpdated) {
+            localStorage.setItem("quotation_" + selectedType + "_history_table_settings", JSON.stringify(defaultColumns));
+            setColumns(defaultColumns);
+        }
+
+        //2nd
+
+    }, [defaultColumns, selectedType]);
+
+    function RestoreDefaultSettings() {
+        localStorage.setItem("quotation_" + selectedType + "_history_table_settings", JSON.stringify(defaultColumns));
+        setColumns(defaultColumns);
+
+        setShowSuccess(true);
+        setSuccessMessage("Successfully restored to default settings!")
+    }
+
+    // Save column settings to localStorage
+    useEffect(() => {
+        localStorage.setItem("quotation_" + selectedType + "_history_table_settings", JSON.stringify(columns));
+    }, [columns, selectedType]);
+
+    const handleToggleColumn = (index) => {
+        const updated = [...columns];
+        updated[index].visible = !updated[index].visible;
+        setColumns(updated);
+    };
+
+    const onDragEnd = (result) => {
+        if (!result.destination) return;
+        const reordered = Array.from(columns);
+        const [moved] = reordered.splice(result.source.index, 1);
+        reordered.splice(result.destination.index, 0, moved);
+        setColumns(reordered);
+    };
+
+    const [statsOpen, setStatsOpen] = useState(false);
+
+    const handleSummaryToggle = (isOpen) => {
+        setStatsOpen(isOpen);
+    };
+
+
+    const CustomerUpdateFormRef = useRef();
+    function openCustomerUpdateForm(id) {
+        CustomerUpdateFormRef.current.open(id);
+    }
+
     return (
         <>
+            <CustomerCreate ref={CustomerUpdateFormRef} />
+            {/* ⚙️ Settings Modal */}
+            <Modal
+                show={showSettings}
+                onHide={() => setShowSettings(false)}
+                centered
+                size="lg"
+            >
+                <Modal.Header closeButton>
+                    <Modal.Title>
+                        <i
+                            className="bi bi-gear-fill"
+                            style={{ fontSize: "1.2rem", marginRight: "4px" }}
+                            title="Table Settings"
+
+                        />
+                        Quotation History Settings
+                    </Modal.Title>
+                </Modal.Header>
+                <Modal.Body>
+                    {/* Column Settings */}
+                    {showSettings && (
+                        <>
+                            <h6 className="mb-2">Customize Columns</h6>
+                            <DragDropContext onDragEnd={onDragEnd}>
+                                <Droppable droppableId="columns">
+                                    {(provided) => (
+                                        <ul
+                                            className="list-group"
+                                            {...provided.droppableProps}
+                                            ref={provided.innerRef}
+                                        >
+                                            {columns.map((col, index) => (
+                                                <Draggable
+                                                    key={col.key}
+                                                    draggableId={col.key}
+                                                    index={index}
+                                                >
+                                                    {(provided) => (
+                                                        <li
+                                                            className="list-group-item d-flex justify-content-between align-items-center"
+                                                            ref={provided.innerRef}
+                                                            {...provided.draggableProps}
+                                                            {...provided.dragHandleProps}                                                        >
+                                                            <div>
+                                                                <input
+                                                                    style={{ width: "20px", height: "20px" }}
+                                                                    type="checkbox"
+                                                                    className="form-check-input me-2"
+                                                                    checked={col.visible}
+                                                                    onChange={() => {
+                                                                        handleToggleColumn(index);
+                                                                    }}
+                                                                />
+                                                                {col.label}
+                                                            </div>
+                                                            <span style={{ cursor: "grab" }}>☰</span>
+                                                        </li>
+                                                    )}
+                                                </Draggable>
+                                            ))}
+                                            {provided.placeholder}
+                                        </ul>
+                                    )}
+                                </Droppable>
+                            </DragDropContext>
+                        </>
+                    )}
+                </Modal.Body>
+                <Modal.Footer>
+                    <Button variant="secondary" onClick={() => setShowSettings(false)}>
+                        Close
+                    </Button>
+                    <Button
+                        variant="primary"
+                        onClick={() => {
+                            RestoreDefaultSettings();
+                            // Save to localStorage here if needed
+                            //setShowSettings(false);
+                        }}
+                    >
+                        Restore to Default
+                    </Button>
+                </Modal.Footer>
+            </Modal>
+            <Modal show={showSuccess} onHide={() => setShowSuccess(false)} centered>
+                <Modal.Header closeButton>
+                    <Modal.Title>Success</Modal.Title>
+                </Modal.Header>
+                <Modal.Body>
+                    <Alert variant="success">
+                        {successMessage}
+                    </Alert>
+                </Modal.Body>
+                <Modal.Footer>
+                    <Button variant="secondary" onClick={() => setShowSuccess(false)}>
+                        Close
+                    </Button>
+                </Modal.Footer>
+            </Modal>
             {showQuotationForm && <QuotationCreate ref={QuotationUpdateFormRef} onUpdated={handleUpdated} />}
-            <CustomerView ref={CustomerDetailsViewRef} />
             <Modal show={show} size="xl" onHide={handleClose} animation={false} scrollable={true}>
                 <Modal.Header>
-                    <Modal.Title>Quotation History of {product.name} {product.name_in_arabic ? " / " + product.name_in_arabic : ""}</Modal.Title>
+                    <Modal.Title>Quotation {selectedType === "invoice" ? "Sales" : ""} History of {product.name} {product.name_in_arabic ? " / " + product.name_in_arabic : ""}</Modal.Title>
 
                     <div className="col align-self-end text-end">
                         <button
@@ -434,55 +641,32 @@ const QuotationHistory = forwardRef((props, ref) => {
                 <Modal.Body>
                     <div className="container-fluid p-0">
                         <div className="row">
-
                             <div className="col">
-                                <h1 className="text-end">
-                                    Quotation: <Badge bg="secondary">
-                                        <NumberFormat
-                                            value={totalQuotation}
-                                            displayType={"text"}
-                                            thousandSeparator={true}
-                                            suffix={" "}
-                                            renderText={(value, props) => value}
-                                        />
-                                    </Badge>
-                                </h1>
-                                <h1 className="text-end">
-                                    Net Profit: <Badge bg="secondary">
-                                        <NumberFormat
-                                            value={totalProfit}
-                                            displayType={"text"}
-                                            thousandSeparator={true}
-                                            suffix={" "}
-                                            renderText={(value, props) => value}
-                                        />
-                                    </Badge>
-                                </h1>
-                                <h1 className="text-end">
-                                    Loss: <Badge bg="secondary">
-                                        <NumberFormat
-                                            value={totalLoss}
-                                            displayType={"text"}
-                                            thousandSeparator={true}
-                                            suffix={" "}
-                                            renderText={(value, props) => value}
-                                        />
-                                    </Badge>
-                                </h1>
-                                <h1 className="text-end">
-                                    VAT: <Badge bg="secondary">
-                                        <NumberFormat
-                                            value={totalVat.toFixed(2)}
-                                            displayType={"text"}
-                                            thousandSeparator={true}
-                                            suffix={" "}
-                                            renderText={(value, props) => value}
-                                        />
-                                    </Badge>
-                                </h1>
+                                <span className="text-end">
+                                    {selectedType === "quotation" && <StatsSummary
+                                        title={`Quotation History`}
+                                        stats={{
+                                            "Quotation": totalQuotation,
+                                            "Net Profit": totalProfit,
+                                            "Total Loss": totalLoss,
+                                            "VAT Collected": totalVat,
+                                        }}
+                                        onToggle={handleSummaryToggle}
+                                    />}
+                                    {selectedType === "invoice" && <StatsSummary
+                                        title={`Quotation Sales History`}
+                                        stats={{
+                                            "Sales": totalQuotation,
+                                            "Net Profit": totalProfit,
+                                            "Total Loss": totalLoss,
+                                            "VAT Collected": totalVat,
+                                        }}
+                                        onToggle={handleSummaryToggle}
+                                    />}
+                                </span>
                             </div>
-
                         </div>
+
 
                         <div className="row">
                             <div className="col-12">
@@ -592,6 +776,24 @@ const QuotationHistory = forwardRef((props, ref) => {
                                             </div>
                                         </div>
                                         <div className="row">
+                                            <div className="col text-end">
+                                                <button
+                                                    className="btn btn-sm btn-outline-secondary"
+                                                    onClick={() => {
+                                                        setShowSettings(!showSettings);
+                                                    }}
+                                                >
+                                                    <i
+                                                        className="bi bi-gear-fill"
+                                                        style={{ fontSize: "1.2rem" }}
+                                                        title="Table Settings"
+
+                                                    />
+                                                </button>
+                                            </div>
+                                        </div>
+
+                                        <div className="row">
                                             {totalItems > 0 && (
                                                 <>
                                                     <div className="col text-start">
@@ -613,8 +815,30 @@ const QuotationHistory = forwardRef((props, ref) => {
                                             <table className="table table-striped table-sm table-bordered">
                                                 <thead>
                                                     <tr className="text-center">
-
-                                                        <th>
+                                                        {columns.filter(c => c.visible).map((col) => {
+                                                            return (<>
+                                                                {col.key && <th>
+                                                                    <b
+                                                                        style={{
+                                                                            textDecoration: "underline",
+                                                                            cursor: "pointer",
+                                                                        }}
+                                                                        onClick={() => {
+                                                                            sort(col.fieldName);
+                                                                        }}
+                                                                    >
+                                                                        {col.label}
+                                                                        {sortField === col.fieldName && sortProduct === "-" ? (
+                                                                            <i className="bi bi-sort-alpha-up-alt"></i>
+                                                                        ) : null}
+                                                                        {sortField === col.fieldName && sortProduct === "" ? (
+                                                                            <i className="bi bi-sort-alpha-up"></i>
+                                                                        ) : null}
+                                                                    </b>
+                                                                </th>}
+                                                            </>);
+                                                        })}
+                                                        {/*<th>
                                                             <b
                                                                 style={{
                                                                     textDecoration: "underline",
@@ -924,13 +1148,172 @@ const QuotationHistory = forwardRef((props, ref) => {
                                                                     <i className="bi bi-sort-alpha-up"></i>
                                                                 ) : null}
                                                             </b>
-                                                        </th>
+                                                        </th>*/}
                                                     </tr>
                                                 </thead>
 
                                                 <thead>
                                                     <tr className="text-center">
-                                                        <th>
+                                                        {columns.filter(c => c.visible).map((col) => {
+                                                            return (<>
+                                                                {(col.key === "customer_name") && <th>
+                                                                    <Typeahead
+                                                                        id="customer_id"
+                                                                        labelKey="search_label"
+                                                                        filterBy={['additional_keywords']}
+                                                                        onChange={(selectedItems) => {
+                                                                            searchByMultipleValuesField(
+                                                                                "customer_id",
+                                                                                selectedItems
+                                                                            );
+                                                                        }}
+                                                                        options={customerOptions}
+                                                                        placeholder="Customer Name / Mob / VAT # / ID"
+                                                                        selected={selectedCustomers}
+                                                                        highlightOnlyResult={true}
+                                                                        ref={customerSearchRef}
+                                                                        onKeyDown={(e) => {
+                                                                            if (e.key === "Escape") {
+                                                                                setCustomerOptions([]);
+                                                                                customerSearchRef.current?.clear();
+                                                                            }
+                                                                        }}
+                                                                        onInputChange={(searchTerm, e) => {
+                                                                            if (timerRef.current) clearTimeout(timerRef.current);
+                                                                            timerRef.current = setTimeout(() => {
+                                                                                suggestCustomers(searchTerm);
+                                                                            }, 100);
+                                                                        }}
+                                                                        multiple
+                                                                    />
+                                                                </th>}
+                                                                {(col.key === "type") && <th>
+                                                                    <select
+                                                                        onChange={(e) => {
+                                                                            searchByFieldValue("type", e.target.value);
+                                                                            selectedType = e.target.value;
+                                                                            setSelectedType(selectedType);
+
+                                                                        }}
+                                                                        value={selectedType}
+                                                                    >
+                                                                        <option value="" >All</option>
+                                                                        <option value="quotation" >Quotation</option>
+                                                                        <option value="invoice">Invoice</option>
+                                                                    </select>
+                                                                </th>}
+                                                                {(col.key === "quotation_code" ||
+                                                                    col.key === "quantity" ||
+                                                                    col.key === "unit_price" ||
+                                                                    col.key === "unit_price_with_vat" ||
+                                                                    col.key === "discount" ||
+                                                                    col.key === "discount_percent" ||
+                                                                    col.key === "price" ||
+                                                                    col.key === "vat_price" ||
+                                                                    col.key === "net_price" ||
+                                                                    col.key === "profit" ||
+                                                                    col.key === "loss"
+                                                                ) &&
+                                                                    <th>
+                                                                        <input
+                                                                            type="text"
+                                                                            id={`quotation_history_search_by_${col.key}`}
+                                                                            name={`quotation_history_search_by_${col.key}`}
+                                                                            onChange={(e) => {
+                                                                                const value = e.target.value;
+                                                                                if (typeof value === "number") {
+                                                                                    searchByFieldValue(col.key, parseFloat(e.target.value))
+                                                                                } else if (typeof value === "string") {
+                                                                                    searchByFieldValue(col.key, e.target.value)
+                                                                                }
+                                                                            }}
+                                                                            className="form-control"
+                                                                        />
+                                                                    </th>}
+                                                                {col.key === "date" && <th>
+                                                                    <div style={{ minWidth: "100px" }}>
+                                                                        <DatePicker
+                                                                            id="date"
+                                                                            value={dateValue}
+                                                                            selected={selectedDate}
+                                                                            className="form-control"
+                                                                            dateFormat="MMM dd yyyy"
+                                                                            isClearable={true}
+                                                                            onChange={(date) => {
+                                                                                if (!date) {
+                                                                                    setDateValue("");
+                                                                                    searchByDateField("date_str", "");
+                                                                                    return;
+                                                                                }
+                                                                                searchByDateField("date_str", date);
+                                                                                selectedDate = date;
+                                                                                setSelectedDate(date);
+
+                                                                            }}
+                                                                        />
+                                                                        <small
+                                                                            style={{
+                                                                                color: "blue",
+                                                                                textDecoration: "underline",
+                                                                                cursor: "pointer",
+                                                                            }}
+                                                                            onClick={(e) =>
+                                                                                setShowDateRange(!showDateRange)
+                                                                            }
+                                                                        >
+                                                                            {showDateRange ? "Less.." : "More.."}
+                                                                        </small>
+                                                                        <br />
+
+                                                                        {showDateRange ? (
+                                                                            <span className="text-left">
+                                                                                From:{" "}
+                                                                                <DatePicker
+                                                                                    id="date_from"
+                                                                                    value={fromDateValue}
+                                                                                    selected={selectedFromDate}
+                                                                                    className="form-control"
+                                                                                    dateFormat="MMM dd yyyy"
+                                                                                    isClearable={true}
+                                                                                    onChange={(date) => {
+                                                                                        if (!date) {
+                                                                                            setFromDateValue("");
+                                                                                            searchByDateField("from_date", "");
+                                                                                            return;
+                                                                                        }
+                                                                                        searchByDateField("from_date", date);
+                                                                                        selectedFromDate = date;
+                                                                                        setSelectedFromDate(date);
+                                                                                    }}
+                                                                                />
+                                                                                To:{" "}
+                                                                                <DatePicker
+                                                                                    id="date_to"
+                                                                                    value={toDateValue}
+                                                                                    selected={selectedToDate}
+                                                                                    isClearable={true}
+                                                                                    className="form-control"
+                                                                                    dateFormat="MMM dd yyyy"
+                                                                                    onChange={(date) => {
+                                                                                        if (!date) {
+                                                                                            setToDateValue("");
+                                                                                            searchByDateField("to_date", "");
+                                                                                            return;
+                                                                                        }
+                                                                                        searchByDateField("to_date", date);
+                                                                                        selectedToDate = date;
+                                                                                        setSelectedToDate(date);
+                                                                                    }}
+                                                                                />
+                                                                            </span>
+                                                                        ) : null}
+                                                                    </div>
+                                                                </th>}
+                                                            </>);
+                                                        })}
+
+
+                                                        {/*<th>
                                                             <div style={{ minWidth: "100px" }}>
                                                                 <DatePicker
                                                                     id="date"
@@ -1009,16 +1392,7 @@ const QuotationHistory = forwardRef((props, ref) => {
                                                                 ) : null}
                                                             </div>
                                                         </th>
-                                                        {!localStorage.getItem("store_id") ? <th>
-                                                            <input
-                                                                type="text"
-                                                                id="store_name"
-                                                                onChange={(e) =>
-                                                                    searchByFieldValue("store_name", e.target.value)
-                                                                }
-                                                                className="form-control"
-                                                            />
-                                                        </th> : ""}
+                                                       
                                                         <th>
                                                             <input
                                                                 type="text"
@@ -1188,7 +1562,7 @@ const QuotationHistory = forwardRef((props, ref) => {
                                                                 }
                                                                 className="form-control"
                                                             />
-                                                        </th>
+                                                        </th>*/}
                                                     </tr>
                                                 </thead>
 
@@ -1196,7 +1570,49 @@ const QuotationHistory = forwardRef((props, ref) => {
                                                     {historyList &&
                                                         historyList.map((history) => (
                                                             <tr key={history.id}>
-                                                                <td>
+                                                                {columns.filter(c => c.visible).map((col) => {
+                                                                    return (<>
+                                                                        {(col.key === "customer_name") && <td style={{ width: "auto", whiteSpace: "nowrap" }} className="text-start" >
+                                                                            {history.customer_name && <span style={{ cursor: "pointer", color: "blue" }} onClick={() => {
+                                                                                openCustomerUpdateForm(history.customer_id);
+                                                                            }}><OverflowTooltip value={history.customer_name} />
+                                                                            </span>}
+                                                                        </td>}
+                                                                        {(col.key === "quotation_code") && <td style={{ width: "auto", whiteSpace: "nowrap" }} className="text-start" >
+                                                                            <span style={{ cursor: "pointer", color: "blue" }} onClick={() => {
+                                                                                openQuotationUpdateForm(history.quotation_id);
+                                                                            }}> {history.quotation_code}
+                                                                            </span>
+                                                                        </td>}
+                                                                        {(
+
+                                                                            col.key === "quantity" ||
+                                                                            col.key === "type" ||
+                                                                            col.key === "unit_price" ||
+                                                                            col.key === "unit_price_with_vat" ||
+                                                                            col.key === "discount" ||
+                                                                            col.key === "discount_percent" ||
+                                                                            col.key === "price" ||
+                                                                            col.key === "vat_price" ||
+                                                                            col.key === "net_price" ||
+                                                                            col.key === "profit" ||
+                                                                            col.key === "loss"
+
+                                                                        ) &&
+                                                                            <td style={{ width: "auto", whiteSpace: "nowrap" }} >
+                                                                                {history[col.key] && typeof history[col.key] === "number" ?
+                                                                                    <Amount amount={trimTo2Decimals(history[col.key])} /> : history[col.key]
+                                                                                }
+                                                                            </td>}
+                                                                        {col.key === "date" && <td style={{ width: "auto", whiteSpace: "nowrap" }}>
+                                                                            {format(
+                                                                                new Date(history.date),
+                                                                                "MMM dd yyyy h:mma"
+                                                                            )}
+                                                                        </td>}
+                                                                    </>);
+                                                                })}
+                                                                {/*<td>
                                                                     {history.date ? format(
                                                                         new Date(history.date),
                                                                         "MMM dd yyyy h:mma"
@@ -1232,26 +1648,7 @@ const QuotationHistory = forwardRef((props, ref) => {
                                                                 <td>{history.vat_price ? history.vat_price?.toFixed(2) + "   (" + history.vat_percent.toFixed(2) + "%)" : ""}</td>
                                                                 <td>{history.net_price ? history.net_price?.toFixed(2) : ""}</td>
                                                                 <td>{history.profit ? history.profit?.toFixed(2) : ""}</td>
-                                                                <td>{history.loss ? history.loss?.toFixed(2) : ""}</td>
-
-                                                                {/* <td>   
-                                                        <button
-                                                            className="btn btn-outline-secondary dropdown-toggle"
-                                                            type="button"
-                                                            data-bs-toggle="dropdown"
-                                                            aria-expanded="false"
-                                                        ></button>
-                                                        <ul className="dropdown-menu">
-                                                            <li>
-                                                                <a href="/" className="dropdown-item">
-                                                                    <i className="bi bi-download"></i>
-                                                                    Download
-                                                                </a>
-                                                            </li>
-                                                        </ul>
-                                                      
-                                                                </td>
-                                                                 */}
+                                                                <td>{history.loss ? history.loss?.toFixed(2) : ""}</td>*/}
                                                             </tr>
                                                         ))}
                                                 </tbody>
