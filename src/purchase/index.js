@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useRef, useContext, useCallback, useMemo } from "react";
 import PurchaseCreate from "./create.js";
 import PurchaseView from "./view.js";
-
 import { Typeahead } from "react-bootstrap-typeahead";
 import { format } from "date-fns";
 import DatePicker from "react-datepicker";
@@ -22,6 +21,7 @@ import ReportPreview from "./../order/report.js";
 import { trimTo2Decimals } from "../utils/numberUtils";
 import OrderPreview from "./../order/preview.js";
 import OrderPrint from "./../order/print.js";
+import VendorCreate from "./../vendor/create.js";
 
 
 import ReactExport from 'react-data-export';
@@ -652,7 +652,7 @@ function PurchaseIndex(props) {
             },
         };
         let Select =
-            "select=id,code,date,net_total,return_count,return_amount,cash_discount,discount,vat_price,total,store_id,created_by_name,vendor_name,vendor_invoice_no,status,created_at,updated_at,net_retail_profit,net_wholesale_profit,total_payment_paid,payments_count,payment_methods,payment_status,balance_amount";
+            "select=id,code,date,net_total,return_count,return_amount,cash_discount,discount,vat_price,total,store_id,created_by_name,vendor_id,vendor_name,vendor_invoice_no,status,created_at,updated_at,net_retail_profit,net_wholesale_profit,total_payment_paid,payments_count,payment_methods,payment_status,balance_amount";
         if (localStorage.getItem("store_id")) {
             searchParams.store_id = localStorage.getItem("store_id");
         }
@@ -1000,8 +1000,15 @@ function PurchaseIndex(props) {
         }
     }, [openPreview, store]);
 
+
+    const VendorUpdateFormRef = useRef();
+    function openVendorUpdateForm(id) {
+        VendorUpdateFormRef.current.open(id);
+    }
+
     return (
         <>
+            <VendorCreate ref={VendorUpdateFormRef} />
             <OrderPrint ref={PrintRef} />
             {showPurchasePreview && <OrderPreview ref={PreviewRef} />}
             <Modal show={showPrintTypeSelection} onHide={() => {
@@ -2150,7 +2157,10 @@ function PurchaseIndex(props) {
                                                                     {format(new Date(purchase[col.key]), "MMM dd yyyy h:mma")}
                                                                 </td>}
                                                                 {(col.fieldName === "vendor_name") && <td style={{ width: "auto", whiteSpace: "nowrap" }}>
-                                                                    <OverflowTooltip value={purchase.vendor_name} />
+                                                                    {purchase.vendor_name && <span style={{ cursor: "pointer", color: "blue" }} onClick={() => {
+                                                                        openVendorUpdateForm(purchase.vendor_id);
+                                                                    }}><OverflowTooltip value={purchase.vendor_name} />
+                                                                    </span>}
                                                                 </td>}
                                                                 {(col.fieldName === "net_total") && <td style={{ width: "auto", whiteSpace: "nowrap" }}>
                                                                     <Amount amount={trimTo2Decimals(purchase.net_total)} />

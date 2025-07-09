@@ -12,6 +12,7 @@ import OverflowTooltip from "../utils/OverflowTooltip.js";
 import ReportPreview from "./../order/report.js";
 import OrderPreview from "./../order/preview.js"
 import OrderPrint from "./../order/print.js"
+import CustomerCreate from "./../customer/create.js";
 
 function DeliveryNoteIndex(props) {
   const ReportPreviewRef = useRef();
@@ -292,7 +293,7 @@ function DeliveryNoteIndex(props) {
       },
     };
     let Select =
-      "select=id,code,date,created_by_name,customer_name,created_at";
+      "select=id,code,date,created_by_name,customer_id,customer_name,created_at";
     if (localStorage.getItem("store_id")) {
       searchParams.store_id = localStorage.getItem("store_id");
     }
@@ -455,8 +456,14 @@ function DeliveryNoteIndex(props) {
   }, []);
 
 
+  const CustomerUpdateFormRef = useRef();
+  function openCustomerUpdateForm(id) {
+    CustomerUpdateFormRef.current.open(id);
+  }
+
   return (
     <>
+      <CustomerCreate ref={CustomerUpdateFormRef} />
       <OrderPrint ref={PrintRef} />
       <Modal show={showPrintTypeSelection} onHide={() => {
         showPrintTypeSelection = false;
@@ -1021,15 +1028,15 @@ function DeliveryNoteIndex(props) {
                               </Button>
                               &nbsp;
                             </td>
-
                             <td style={{ width: "auto", whiteSpace: "nowrap" }} >{deliverynote.code}</td>
                             <td style={{ width: "auto", whiteSpace: "nowrap" }}>
-
                               {format(new Date(deliverynote.date), "MMM dd yyyy h:mma")}
-
                             </td>
                             <td className="text-start" style={{ width: "auto", whiteSpace: "nowrap" }} >
-                              <OverflowTooltip value={deliverynote.customer_name} />
+                              {deliverynote.customer_name && <span style={{ cursor: "pointer", color: "blue" }} onClick={() => {
+                                openCustomerUpdateForm(deliverynote.customer_id);
+                              }}><OverflowTooltip value={deliverynote.customer_name} />
+                              </span>}
                             </td>
                             <td style={{ width: "auto", whiteSpace: "nowrap" }} >{deliverynote.created_by_name}</td>
                             <td style={{ width: "auto", whiteSpace: "nowrap" }} >

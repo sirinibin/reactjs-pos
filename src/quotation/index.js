@@ -23,6 +23,7 @@ import OrderPrint from "./../order/print.js"
 import { DragDropContext, Droppable, Draggable } from "react-beautiful-dnd";
 import QuotationSalesReturnCreate from "./../quotation_sales_return/create.js";
 import QuotationSalesReturnIndex from "./../quotation_sales_return/index.js";
+import CustomerCreate from "./../customer/create.js";
 
 const shortLocale = {
   ...enUS,
@@ -369,7 +370,7 @@ function QuotationIndex(props) {
       },
     };
     let Select =
-      "select=id,order_code,order_id,reported_to_zatca,reported_to_zatca_at,type,payment_status,payment_methods,total_payment_received,balance_amount,code,date,net_total,created_by_name,customer_name,status,cash_discount,discount_with_vat,created_at,net_profit,net_loss,return_count,return_amount";
+      "select=id,order_code,order_id,reported_to_zatca,reported_to_zatca_at,type,payment_status,payment_methods,total_payment_received,balance_amount,code,date,net_total,created_by_name,customer_id,customer_name,status,cash_discount,discount_with_vat,created_at,net_profit,net_loss,return_count,return_amount";
 
     if (localStorage.getItem("store_id")) {
       searchParams.store_id = localStorage.getItem("store_id");
@@ -768,9 +769,16 @@ function QuotationIndex(props) {
 
   const QuotationSalesReturnListRef = useRef();
 
+
+  const CustomerUpdateFormRef = useRef();
+  function openCustomerUpdateForm(id) {
+    CustomerUpdateFormRef.current.open(id);
+  }
+
+
   return (
     <>
-
+      <CustomerCreate ref={CustomerUpdateFormRef} />
       <Modal show={showQuotationSalesReturns} size="lg" onHide={handleQuotationSalesReturnsClose} animation={false} scrollable={true}>
         <Modal.Header>
           <Modal.Title>Qtn. Sales Returns of Qtn. Sale Order #{selectedQuotation?.code}</Modal.Title>
@@ -2294,7 +2302,10 @@ function QuotationIndex(props) {
                                   {format(new Date(quotation[col.key]), "MMM dd yyyy h:mma")}
                                 </td>}
                                 {(col.fieldName === "customer_name") && <td style={{ width: "auto", whiteSpace: "nowrap" }}>
-                                  <OverflowTooltip value={quotation.customer_name} />
+                                  {quotation.customer_name && <span style={{ cursor: "pointer", color: "blue" }} onClick={() => {
+                                    openCustomerUpdateForm(quotation.customer_id);
+                                  }}><OverflowTooltip value={quotation.customer_name} />
+                                  </span>}
                                 </td>}
                                 {(col.fieldName === "net_total") && <td style={{ width: "auto", whiteSpace: "nowrap" }}>
                                   <Amount amount={trimTo2Decimals(quotation.net_total)} />

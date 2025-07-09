@@ -1854,21 +1854,7 @@ function VendorIndex(props) {
                                                                                 <Amount amount={trimTo2Decimals(vendor.stores[localStorage.getItem("store_id")][col.key])} /> : vendor.stores[localStorage.getItem("store_id")][col.key]
                                                                             }
                                                                         </>}
-
-                                                                        {/*
-                                                                                                                              
-                                                                                                                                {customer.stores && customer.stores[localStorage.getItem("store_id")][col.key] && typeof customer.stores[localStorage.getItem("store_id")][col.key] === "string" &&
-                                                                                                                                    customer.stores[localStorage.getItem("store_id")][col.key] + "str2"
-                                                                                                                                }
-                                                        
-                                                                                                                              
-                                                        
-                                                                                                                                {customer[col.key] && typeof customer[col.key] === "number" &&
-                                                                                                                                    <Amount amount={trimTo2Decimals(customer[col.key])} /> + "-N"
-                                                                                                                                }
-                                                                                                                                    */}
                                                                     </td>}
-
                                                                 {col.key === "created_at" && <td style={{ width: "auto", whiteSpace: "nowrap" }}>
                                                                     {format(
                                                                         new Date(vendor.created_at),

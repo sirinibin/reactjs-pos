@@ -22,8 +22,9 @@ import ReportPreview from "./../order/report.js";
 import { DragDropContext, Droppable, Draggable } from "react-beautiful-dnd";
 import OrderPreview from "./../order/preview.js";
 import OrderPrint from "./../order/print.js";
-
 import ReactExport from 'react-data-export';
+import VendorCreate from "./../vendor/create.js";
+
 const ExcelFile = ReactExport.ExcelFile;
 const ExcelSheet = ReactExport.ExcelFile.ExcelSheet;
 
@@ -997,8 +998,15 @@ function PurchaseReturnIndex(props) {
         }
     }, [openPreview, store]);
 
+    const VendorUpdateFormRef = useRef();
+    function openVendorUpdateForm(id) {
+        VendorUpdateFormRef.current.open(id);
+    }
+
+
     return (
         <>
+            <VendorCreate ref={VendorUpdateFormRef} />
             <OrderPrint ref={PrintRef} />
             {showPurchaseReturnPreview && <OrderPreview ref={PreviewRef} />}
             <Modal show={showPrintTypeSelection} onHide={() => {
@@ -2327,7 +2335,10 @@ function PurchaseReturnIndex(props) {
                                                                     {format(new Date(purchaseReturn[col.key]), "MMM dd yyyy h:mma")}
                                                                 </td>}
                                                                 {(col.fieldName === "vendor_name") && <td style={{ width: "auto", whiteSpace: "nowrap" }}>
-                                                                    <OverflowTooltip value={purchaseReturn.vendor_name} />
+                                                                    {purchaseReturn.vendor_name && <span style={{ cursor: "pointer", color: "blue" }} onClick={() => {
+                                                                        openVendorUpdateForm(purchaseReturn.vendor_id);
+                                                                    }}><OverflowTooltip value={purchaseReturn.vendor_name} />
+                                                                    </span>}
                                                                 </td>}
                                                                 {(col.fieldName === "net_total") && <td style={{ width: "auto", whiteSpace: "nowrap" }}>
                                                                     <Amount amount={trimTo2Decimals(purchaseReturn.net_total)} />

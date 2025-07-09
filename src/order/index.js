@@ -23,6 +23,7 @@ import OrderPreview from "./preview.js";
 import ReportPreview from "./report.js";
 import OrderPrint from './print.js';
 import { DragDropContext, Droppable, Draggable } from "react-beautiful-dnd";
+import CustomerCreate from "./../customer/create.js";
 
 import "./../utils/stickyHeader.css";
 
@@ -554,6 +555,7 @@ const OrderIndex = forwardRef((props, ref) => {
     let [selectedDate, setSelectedDate] = useState(new Date());
     let [selectedFromDate, setSelectedFromDate] = useState(new Date());
     let [selectedToDate, setSelectedToDate] = useState(new Date());
+
     let [selectedCreatedAtDate, setSelectedCreatedAtDate] = useState(new Date());
     let [selectedCreatedAtFromDate, setSelectedCreatedAtFromDate] = useState(new Date());
     let [selectedCreatedAtToDate, setSelectedCreatedAtToDate] = useState(new Date());
@@ -1339,9 +1341,14 @@ const OrderIndex = forwardRef((props, ref) => {
         setColumns(reordered);
     };
 
+    const CustomerUpdateFormRef = useRef();
+    function openCustomerUpdateForm(id) {
+        CustomerUpdateFormRef.current.open(id);
+    }
 
     return (
         <>
+            <CustomerCreate ref={CustomerUpdateFormRef} />
             {/* ⚙️ Settings Modal */}
             <Modal
                 show={showSettings}
@@ -1548,7 +1555,6 @@ const OrderIndex = forwardRef((props, ref) => {
                             />
                         </span>
                     </div>
-
                 </div>
                 <div className="row">
                     <div className="col">
@@ -2110,7 +2116,10 @@ const OrderIndex = forwardRef((props, ref) => {
                                                                     {format(new Date(order[col.key]), "MMM dd yyyy h:mma")}
                                                                 </td>}
                                                                 {(col.fieldName === "customer_name") && <td style={{ width: "auto", whiteSpace: "nowrap" }}>
-                                                                    <OverflowTooltip value={order.customer_name} />
+                                                                    {order.customer_name && <span style={{ cursor: "pointer", color: "blue" }} onClick={() => {
+                                                                        openCustomerUpdateForm(order.customer_id);
+                                                                    }}><OverflowTooltip value={order.customer_name} />
+                                                                    </span>}
                                                                 </td>}
                                                                 {(col.fieldName === "net_total") && <td style={{ width: "auto", whiteSpace: "nowrap" }}>
                                                                     <Amount amount={trimTo2Decimals(order.net_total)} />

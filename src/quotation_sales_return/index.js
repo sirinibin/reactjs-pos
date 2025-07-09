@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef, useContext, useCallback, useMemo } from "react";
 import QuotationSalesReturnCreate from "./create.js";
 import QuotationSalesReturnView from "./view.js";
-
+import CustomerCreate from "./../customer/create.js";
 import { Typeahead } from "react-bootstrap-typeahead";
 import { format } from "date-fns";
 import DatePicker from "react-datepicker";
@@ -1226,9 +1226,15 @@ function QuotationSalesReturnIndex(props) {
         setColumns(reordered);
     };
 
+    const CustomerUpdateFormRef = useRef();
+    function openCustomerUpdateForm(id) {
+        CustomerUpdateFormRef.current.open(id);
+    }
+
 
     return (
         <>
+            <CustomerCreate ref={CustomerUpdateFormRef} />
             {/* ⚙️ Settings Modal */}
             <Modal
                 show={showSettings}
@@ -2591,7 +2597,10 @@ function QuotationSalesReturnIndex(props) {
                                                                     {format(new Date(quotationSalesReturn[col.key]), "MMM dd yyyy h:mma")}
                                                                 </td>}
                                                                 {(col.fieldName === "customer_name") && <td style={{ width: "auto", whiteSpace: "nowrap" }}>
-                                                                    <OverflowTooltip value={quotationSalesReturn.customer_name} />
+                                                                    {quotationSalesReturn.customer_name && <span style={{ cursor: "pointer", color: "blue" }} onClick={() => {
+                                                                        openCustomerUpdateForm(quotationSalesReturn.customer_id);
+                                                                    }}><OverflowTooltip value={quotationSalesReturn.customer_name} />
+                                                                    </span>}
                                                                 </td>}
                                                                 {(col.fieldName === "net_total") && <td style={{ width: "auto", whiteSpace: "nowrap" }}>
                                                                     <Amount amount={trimTo2Decimals(quotationSalesReturn.net_total)} />
