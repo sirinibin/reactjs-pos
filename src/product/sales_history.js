@@ -399,6 +399,7 @@ const SalesHistory = forwardRef((props, ref) => {
             if (e.key === "Escape") {
                 e.preventDefault();
                 e.stopPropagation();
+                SetShow(false);
             }
         };
 
@@ -495,21 +496,6 @@ const SalesHistory = forwardRef((props, ref) => {
         reordered.splice(result.destination.index, 0, moved);
         setColumns(reordered);
     };
-
-
-    useEffect(() => {
-        const handleKeyDown = (e) => {
-            if (e.key === "Escape") {
-                e.preventDefault();
-                e.stopPropagation();
-            }
-        };
-
-        document.addEventListener("keydown", handleKeyDown);
-        return () => document.removeEventListener("keydown", handleKeyDown);
-    }, []);
-
-
 
     const [statsOpen, setStatsOpen] = useState(false);
 
