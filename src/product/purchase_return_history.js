@@ -6,8 +6,8 @@ import "react-datepicker/dist/react-datepicker.css";
 import { Button, Spinner, Modal, Badge } from "react-bootstrap";
 import ReactPaginate from "react-paginate";
 import NumberFormat from "react-number-format";
-import PurchaseReturnView from "../purchase_return/view.js";
-import PurchaseView from "../purchase/view.js";
+import PurchaseReturnCreate from "../purchase_return/create.js";
+import PurchaseCreate from "../purchase/create.js";
 import VendorView from "../vendor/view.js";
 import { Typeahead } from "react-bootstrap-typeahead";
 
@@ -367,14 +367,31 @@ const PurchaseReturnHistory = forwardRef((props, ref) => {
     let [totalPurchaseReturn, setTotalPurchaseReturn] = useState(0.00);
     let [totalVatReturn, setTotalVatReturn] = useState(0.00);
 
-    const PurchaseReturnDetailsViewRef = useRef();
-    function openPurchaseReturnDetailsView(id) {
-        PurchaseReturnDetailsViewRef.current.open(id);
+    let [showPurchaseForm, setShowPurchaseForm] = useState(false);
+    let [showPurchaseReturnForm, setShowPurchaseReturnForm] = useState(false);
+
+    const PurchaseReturnUpdateFormRef = useRef();
+    function openPurchaseReturnUpdateForm(id) {
+        showPurchaseReturnForm = true;
+        setShowPurchaseReturnForm(showPurchaseReturnForm);
+        if (timerRef.current) clearTimeout(timerRef.current);
+
+        timerRef.current = setTimeout(() => {
+            PurchaseReturnUpdateFormRef.current.open(id);
+        }, 100);
     }
 
-    const PurchaseDetailsViewRef = useRef();
-    function openPurchaseDetailsView(id) {
-        PurchaseDetailsViewRef.current.open(id);
+    const PurchaseUpdateFormRef = useRef();
+    function openPurchaseUpdateForm(id) {
+        showPurchaseForm = true;
+        setShowPurchaseForm(showPurchaseForm);
+        if (timerRef.current) clearTimeout(timerRef.current);
+
+        timerRef.current = setTimeout(() => {
+            PurchaseUpdateFormRef.current.open(id);
+        }, 100);
+
+
     }
 
 
@@ -387,10 +404,14 @@ const PurchaseReturnHistory = forwardRef((props, ref) => {
     const vendorSearchRef = useRef();
     const timerRef = useRef(null);
 
+    const handleUpdated = () => {
+        list();
+    };
+
     return (
         <>
-            <PurchaseReturnView ref={PurchaseReturnDetailsViewRef} />
-            <PurchaseView ref={PurchaseDetailsViewRef} />
+            {showPurchaseReturnForm && <PurchaseReturnCreate ref={PurchaseReturnUpdateFormRef} onUpdated={handleUpdated} />}
+            {showPurchaseForm && <PurchaseCreate ref={PurchaseUpdateFormRef} onUpdated={handleUpdated} />}
             <VendorView ref={VendorDetailsViewRef} />
             <Modal show={show} size="xl" onHide={handleClose} animation={false} scrollable={true}>
                 <Modal.Header>
@@ -696,7 +717,7 @@ const PurchaseReturnHistory = forwardRef((props, ref) => {
                                                                     sort("unit_price");
                                                                 }}
                                                             >
-                                                                Unit Price
+                                                                Unit Price(without VAT)
                                                                 {sortField === "unit_price" && sortProduct === "-" ? (
                                                                     <i className="bi bi-sort-alpha-up-alt"></i>
                                                                 ) : null}
@@ -705,6 +726,27 @@ const PurchaseReturnHistory = forwardRef((props, ref) => {
                                                                 ) : null}
                                                             </b>
                                                         </th>
+
+                                                        <th>
+                                                            <b
+                                                                style={{
+                                                                    textDecoration: "underline",
+                                                                    cursor: "pointer",
+                                                                }}
+                                                                onClick={() => {
+                                                                    sort("unit_price_with_vat");
+                                                                }}
+                                                            >
+                                                                Unit Price(with VAT)
+                                                                {sortField === "unit_price_with_vat" && sortProduct === "-" ? (
+                                                                    <i className="bi bi-sort-alpha-up-alt"></i>
+                                                                ) : null}
+                                                                {sortField === "unit_price_with_vat" && sortProduct === "" ? (
+                                                                    <i className="bi bi-sort-alpha-up"></i>
+                                                                ) : null}
+                                                            </b>
+                                                        </th>
+
                                                         <th>
                                                             <b
                                                                 style={{
@@ -973,6 +1015,16 @@ const PurchaseReturnHistory = forwardRef((props, ref) => {
                                                         <th>
                                                             <input
                                                                 type="text"
+                                                                id="unit_price_with_vat"
+                                                                onChange={(e) =>
+                                                                    searchByFieldValue("unit_price_with_vat", e.target.value)
+                                                                }
+                                                                className="form-control"
+                                                            />
+                                                        </th>
+                                                        <th>
+                                                            <input
+                                                                type="text"
                                                                 id="discount"
                                                                 onChange={(e) =>
                                                                     searchByFieldValue("discount", e.target.value)
@@ -1040,7 +1092,7 @@ const PurchaseReturnHistory = forwardRef((props, ref) => {
                                                                     cursor: "pointer",
                                                                 }}
                                                                     onClick={() => {
-                                                                        openPurchaseReturnDetailsView(history.purchase_return_id);
+                                                                        openPurchaseReturnUpdateForm(history.purchase_return_id);
                                                                     }}>{history.purchase_return_code}
                                                                 </td>
                                                                 <td style={{
@@ -1049,7 +1101,7 @@ const PurchaseReturnHistory = forwardRef((props, ref) => {
                                                                     cursor: "pointer",
                                                                 }}
                                                                     onClick={() => {
-                                                                        openPurchaseDetailsView(history.purchase_id);
+                                                                        openPurchaseUpdateForm(history.purchase_id);
                                                                     }}>{history.purchase_code}
                                                                 </td>
                                                                 <td style={{
@@ -1062,7 +1114,8 @@ const PurchaseReturnHistory = forwardRef((props, ref) => {
                                                                     }}>{history.vendor_name}
                                                                 </td>
                                                                 <td>{history.quantity}{history.unit ? history.unit : ""}</td>
-                                                                <td>{history.unit_price.toFixed(2)}</td>
+                                                                <td>{history.unit_price?.toFixed(2)}</td>
+                                                                <td>{history.unit_price_with_vat?.toFixed(2)}</td>
                                                                 <td>{history.discount?.toFixed(2)}</td>
                                                                 <td>{history.discount_percent?.toFixed(2)}</td>
                                                                 <td>{history.price.toFixed(2) + " "}</td>

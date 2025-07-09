@@ -6,8 +6,8 @@ import "react-datepicker/dist/react-datepicker.css";
 import { Button, Spinner, Modal, Badge } from "react-bootstrap";
 import ReactPaginate from "react-paginate";
 import NumberFormat from "react-number-format";
-import QuotationView from "../quotation/view.js";
-import QuotationSalesReturnView from "../quotation_sales_return/view.js";
+import QuotationCreate from "../quotation/create.js";
+import QuotationSalesReturnCreate from "../quotation_sales_return/create.js";
 import CustomerView from "../customer/view.js";
 import { Typeahead } from "react-bootstrap-typeahead";
 
@@ -365,14 +365,27 @@ const QuotationSalesReturnHistory = forwardRef((props, ref) => {
     let [totalQuotationSalesReturn, setTotalQuotationSalesReturn] = useState(0.00);
     let [totalVatReturn, setTotalVatReturn] = useState(0.00);
 
-    const QuotationDetailsViewRef = useRef();
-    function openQuotationDetailsView(id) {
-        QuotationDetailsViewRef.current.open(id);
+    const QuotationUpdateFormRef = useRef();
+    function openQuotationUpdateForm(id) {
+        showQuotationForm = true;
+        setShowQuotationForm(showQuotationForm);
+        if (timerRef.current) clearTimeout(timerRef.current);
+
+        timerRef.current = setTimeout(() => {
+            QuotationUpdateFormRef.current.open(id);
+        }, 100);
+
     }
 
-    const QuotationSalesReturnDetailsViewRef = useRef();
-    function openQuotationSalesReturnDetailsView(id) {
-        QuotationSalesReturnDetailsViewRef.current.open(id);
+    const QuotationSalesReturnUpdateFormRef = useRef();
+    function openQuotationSalesReturnUpdateForm(id) {
+        showQuotationSalesReturnForm = true;
+        setShowQuotationSalesReturnForm(showQuotationSalesReturnForm);
+        if (timerRef.current) clearTimeout(timerRef.current);
+
+        timerRef.current = setTimeout(() => {
+            QuotationSalesReturnUpdateFormRef.current.open(id);
+        }, 100);
     }
 
 
@@ -389,10 +402,17 @@ const QuotationSalesReturnHistory = forwardRef((props, ref) => {
     const timerRef = useRef(null);
 
 
+    const handleUpdated = () => {
+        list();
+    };
+
+    let [showQuotationForm, setShowQuotationForm] = useState(false);
+    let [showQuotationSalesReturnForm, setShowQuotationSalesReturnForm] = useState(false);
+
     return (
         <>
-            <QuotationView ref={QuotationDetailsViewRef} />
-            <QuotationSalesReturnView ref={QuotationSalesReturnDetailsViewRef} />
+            {showQuotationForm && <QuotationCreate ref={QuotationUpdateFormRef} onUpdated={handleUpdated} />}
+            {showQuotationSalesReturnForm && <QuotationSalesReturnCreate ref={QuotationSalesReturnUpdateFormRef} onUpdated={handleUpdated} />}
             <CustomerView ref={CustomerDetailsViewRef} />
             <Modal show={show} size="xl" onHide={handleClose} animation={false} scrollable={true}>
                 <Modal.Header>
@@ -718,11 +738,30 @@ const QuotationSalesReturnHistory = forwardRef((props, ref) => {
                                                                     sort("unit_price");
                                                                 }}
                                                             >
-                                                                Unit Price
+                                                                Unit Price(without VAT)
                                                                 {sortField === "unit_price" && sortProduct === "-" ? (
                                                                     <i className="bi bi-sort-alpha-up-alt"></i>
                                                                 ) : null}
                                                                 {sortField === "unit_price" && sortProduct === "" ? (
+                                                                    <i className="bi bi-sort-alpha-up"></i>
+                                                                ) : null}
+                                                            </b>
+                                                        </th>
+                                                        <th>
+                                                            <b
+                                                                style={{
+                                                                    textDecoration: "underline",
+                                                                    cursor: "pointer",
+                                                                }}
+                                                                onClick={() => {
+                                                                    sort("unit_price_with_vat");
+                                                                }}
+                                                            >
+                                                                Unit Price(with VAT)
+                                                                {sortField === "unit_price_with_vat" && sortProduct === "-" ? (
+                                                                    <i className="bi bi-sort-alpha-up-alt"></i>
+                                                                ) : null}
+                                                                {sortField === "unit_price_with_vat" && sortProduct === "" ? (
                                                                     <i className="bi bi-sort-alpha-up"></i>
                                                                 ) : null}
                                                             </b>
@@ -777,7 +816,7 @@ const QuotationSalesReturnHistory = forwardRef((props, ref) => {
                                                                     sort("price");
                                                                 }}
                                                             >
-                                                                Price
+                                                                Price(without VAT)
                                                                 {sortField === "price" && sortProduct === "-" ? (
                                                                     <i className="bi bi-sort-alpha-up-alt"></i>
                                                                 ) : null}
@@ -817,7 +856,7 @@ const QuotationSalesReturnHistory = forwardRef((props, ref) => {
                                                                     sort("net_price");
                                                                 }}
                                                             >
-                                                                Net Price
+                                                                Net Price(with VAT)
                                                                 {sortField === "net_price" && sortProduct === "-" ? (
                                                                     <i className="bi bi-sort-alpha-up-alt"></i>
                                                                 ) : null}
@@ -1037,6 +1076,16 @@ const QuotationSalesReturnHistory = forwardRef((props, ref) => {
                                                         <th>
                                                             <input
                                                                 type="text"
+                                                                id="unit_price_with_vat"
+                                                                onChange={(e) =>
+                                                                    searchByFieldValue("unit_price_with_vat", e.target.value)
+                                                                }
+                                                                className="form-control"
+                                                            />
+                                                        </th>
+                                                        <th>
+                                                            <input
+                                                                type="text"
                                                                 id="discount"
                                                                 onChange={(e) =>
                                                                     searchByFieldValue("discount", e.target.value)
@@ -1126,7 +1175,7 @@ const QuotationSalesReturnHistory = forwardRef((props, ref) => {
                                                                     cursor: "pointer",
                                                                 }}
                                                                     onClick={() => {
-                                                                        openQuotationSalesReturnDetailsView(history.quotation_sales_return_id);
+                                                                        openQuotationSalesReturnUpdateForm(history.quotation_sales_return_id);
                                                                     }}>{history.quotation_sales_return_code}
                                                                 </td>
                                                                 <td style={{
@@ -1135,7 +1184,7 @@ const QuotationSalesReturnHistory = forwardRef((props, ref) => {
                                                                     cursor: "pointer",
                                                                 }}
                                                                     onClick={() => {
-                                                                        openQuotationDetailsView(history.quotation_id);
+                                                                        openQuotationUpdateForm(history.quotation_id);
                                                                     }}>{history.quotation_code}
                                                                 </td>
                                                                 <td style={{
@@ -1148,7 +1197,8 @@ const QuotationSalesReturnHistory = forwardRef((props, ref) => {
                                                                     }}>{history.customer_name}
                                                                 </td>
                                                                 <td>{history.quantity}{history.unit ? history.unit : ""}</td>
-                                                                <td>{history.unit_price ? history.unit_price?.toFixed(2) : ""}</td>
+                                                                <td>{history.unit_price?.toFixed(2)}</td>
+                                                                <td>{history.unit_price_with_vat?.toFixed(2)}</td>
                                                                 <td>{history.discount ? history.discount?.toFixed(2) : ""}</td>
                                                                 <td>{history.discount_percent ? history.discount_percent?.toFixed(2) : ""}</td>
                                                                 <td>{history.price ? history.price?.toFixed(2) : ""}</td>

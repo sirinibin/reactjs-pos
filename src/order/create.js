@@ -55,45 +55,12 @@ const columnStyle = {
 };
 
 const OrderCreate = forwardRef((props, ref) => {
-
-
-
-    /*
-    function ResetFormData() {
-        for (let key in formData) {
-            if (formData.hasOwnProperty(key)) {
-                formData[key] = "";
-            }
-        }
-    }
-        */
-
-    function ResetForm() {
-        cashDiscount = "";
-        setCashDiscount(cashDiscount);
-
-        shipping = 0.00;
-        setShipping(shipping);
-
-        discount = 0.00;
-        setDiscount(discount);
-
-        roundingAmount = 0.00;
-        setRoundingAmount(roundingAmount);
-
-        discountPercent = 0.00;
-        setDiscountPercent(discountPercent);
-
-        discountWithVAT = 0.00;
-        setDiscountWithVAT(discountWithVAT);
-
-        discountPercentWithVAT = 0.00;
-        setDiscountPercentWithVAT(discountPercentWithVAT);
-
-    }
-
     useImperativeHandle(ref, () => ({
         async open(id) {
+            if (id) {
+                isUpdateForm = true;
+                setIsUpdateForm(isUpdateForm)
+            }
             //ResetFormData();
             errors = {};
             setErrors({ ...errors });
@@ -168,6 +135,32 @@ const OrderCreate = forwardRef((props, ref) => {
 
         },
     }));
+
+    let [isUpdateForm, setIsUpdateForm] = useState(false);
+
+    function ResetForm() {
+        cashDiscount = "";
+        setCashDiscount(cashDiscount);
+
+        shipping = 0.00;
+        setShipping(shipping);
+
+        discount = 0.00;
+        setDiscount(discount);
+
+        roundingAmount = 0.00;
+        setRoundingAmount(roundingAmount);
+
+        discountPercent = 0.00;
+        setDiscountPercent(discountPercent);
+
+        discountWithVAT = 0.00;
+        setDiscountWithVAT(discountWithVAT);
+
+        discountPercentWithVAT = 0.00;
+        setDiscountPercentWithVAT(discountPercentWithVAT);
+
+    }
 
     let [oldProducts, setOldProducts] = useState([]);
 
@@ -899,7 +892,7 @@ const OrderCreate = forwardRef((props, ref) => {
 
         let endPoint = "/v1/order";
         let method = "POST";
-        if (formData.id) {
+        if (isUpdateForm) {
             endPoint = "/v1/order/" + formData.id;
             method = "PUT";
         }
@@ -2281,10 +2274,10 @@ const OrderCreate = forwardRef((props, ref) => {
                 onHide={handleClose} animation={false} backdrop="static" scrollable={true}>
                 <Modal.Header>
                     <Modal.Title>
-                        {formData.id ? "Update Sales Order #" + formData.code : "Create New Sales Order"}
+                        {isUpdateForm ? "Update Sales Order #" + formData.code : "Create New Sales Order"}
 
                     </Modal.Title>
-                    {store.zatca?.phase === "2" && !formData.id && <div style={{ marginLeft: "20px" }}>
+                    {store.zatca?.phase === "2" && !isUpdateForm && <div style={{ marginLeft: "20px" }}>
                         <input type="checkbox" id="sales_report_to_zatca" name="report_to_zatca" checked={formData.enable_report_to_zatca} onChange={(e) => {
                             formData.enable_report_to_zatca = !formData.enable_report_to_zatca;
                             setFormData({ ...formData });
@@ -2314,7 +2307,7 @@ const OrderCreate = forwardRef((props, ref) => {
 
                                 : ""
                             }
-                            {formData.id && !isProcessing ? "Update" : !isProcessing ? "Create" : ""}
+                            {isUpdateForm && !isProcessing ? "Update" : !isProcessing ? "Create" : ""}
 
                         </Button>
 
@@ -5230,7 +5223,7 @@ const OrderCreate = forwardRef((props, ref) => {
                                 Close
                             </Button>
                             <Button variant="primary" onClick={handleCreate}>
-                                {isProcessing ? formData.id ? "Updating...." : "Creating.." : formData.id ? "Update" : "Create"
+                                {isProcessing ? isUpdateForm ? "Updating...." : "Creating.." : isUpdateForm ? "Update" : "Create"
                                 }
                             </Button>
                         </Modal.Footer>

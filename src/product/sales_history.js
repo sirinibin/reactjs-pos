@@ -6,7 +6,7 @@ import "react-datepicker/dist/react-datepicker.css";
 import { Button, Spinner, Modal, Badge } from "react-bootstrap";
 import ReactPaginate from "react-paginate";
 import NumberFormat from "react-number-format";
-import OrderView from "./../order/view.js";
+import OrderCreate from "./../order/create.js";
 import CustomerView from "./../customer/view.js";
 import { Typeahead } from "react-bootstrap-typeahead";
 
@@ -304,9 +304,18 @@ const SalesHistory = forwardRef((props, ref) => {
     let [totalVat, setTotalVat] = useState(0.00);
     let [totalLoss, setTotalLoss] = useState(0.00);
 
-    const OrderDetailsViewRef = useRef();
-    function openOrderDetailsView(id) {
-        OrderDetailsViewRef.current.open(id);
+    let [showOrderForm, setShowOrderForm] = useState(false);
+
+    const OrderUpdateFormRef = useRef();
+
+    async function openOrderUpdateForm(id) {
+        showOrderForm = true;
+        setShowOrderForm(showOrderForm);
+        if (timerRef.current) clearTimeout(timerRef.current);
+
+        timerRef.current = setTimeout(() => {
+            OrderUpdateFormRef.current?.open(id);
+        }, 100);
     }
 
 
@@ -314,8 +323,6 @@ const SalesHistory = forwardRef((props, ref) => {
     function openCustomerDetailsView(id) {
         CustomerDetailsViewRef.current.open(id);
     }
-
-
 
     function searchByMultipleValuesField(field, values) {
         if (field === "customer_id") {
@@ -333,6 +340,10 @@ const SalesHistory = forwardRef((props, ref) => {
 
         list();
     }
+
+    const handleUpdated = () => {
+        list();
+    };
 
     const [customerOptions, setCustomerOptions] = useState([]);
     const [selectedCustomers, setSelectedCustomers] = useState([]);
@@ -392,7 +403,7 @@ const SalesHistory = forwardRef((props, ref) => {
 
     return (
         <>
-            <OrderView ref={OrderDetailsViewRef} />
+            {showOrderForm && <OrderCreate ref={OrderUpdateFormRef} onUpdated={handleUpdated} />}
             <CustomerView ref={CustomerDetailsViewRef} />
             <Modal show={show} size="xl" onHide={handleClose} animation={false} scrollable={true}>
                 <Modal.Header>
@@ -610,26 +621,6 @@ const SalesHistory = forwardRef((props, ref) => {
                                                                 ) : null}
                                                             </b>
                                                         </th>
-
-                                                        {!localStorage.getItem("store_id") ? <th>
-                                                            <b
-                                                                style={{
-                                                                    textDecoration: "underline",
-                                                                    cursor: "pointer",
-                                                                }}
-                                                                onClick={() => {
-                                                                    sort("store_name");
-                                                                }}
-                                                            >
-                                                                Store
-                                                                {sortField === "store_name" && sortProduct === "-" ? (
-                                                                    <i className="bi bi-sort-alpha-up-alt"></i>
-                                                                ) : null}
-                                                                {sortField === "store_name" && sortProduct === "" ? (
-                                                                    <i className="bi bi-sort-alpha-up"></i>
-                                                                ) : null}
-                                                            </b>
-                                                        </th> : ""}
                                                         <th>
                                                             <b
                                                                 style={{
@@ -700,7 +691,7 @@ const SalesHistory = forwardRef((props, ref) => {
                                                                     sort("unit_price");
                                                                 }}
                                                             >
-                                                                Unit Price
+                                                                Unit Price(without VAT)
                                                                 {sortField === "unit_price" && sortProduct === "-" ? (
                                                                     <i className="bi bi-sort-alpha-up-alt"></i>
                                                                 ) : null}
@@ -716,10 +707,29 @@ const SalesHistory = forwardRef((props, ref) => {
                                                                     cursor: "pointer",
                                                                 }}
                                                                 onClick={() => {
+                                                                    sort("unit_price_with_vat");
+                                                                }}
+                                                            >
+                                                                Unit Price(with VAT)
+                                                                {sortField === "unit_price_with_vat" && sortProduct === "-" ? (
+                                                                    <i className="bi bi-sort-alpha-up-alt"></i>
+                                                                ) : null}
+                                                                {sortField === "unit_price_with_vat" && sortProduct === "" ? (
+                                                                    <i className="bi bi-sort-alpha-up"></i>
+                                                                ) : null}
+                                                            </b>
+                                                        </th>
+                                                        <th>
+                                                            <b
+                                                                style={{
+                                                                    textDecoration: "underline",
+                                                                    cursor: "pointer",
+                                                                }}
+                                                                onClick={() => {
                                                                     sort("discount");
                                                                 }}
                                                             >
-                                                                Discount
+                                                                Discount(without VAT)
                                                                 {sortField === "discount" && sortProduct === "-" ? (
                                                                     <i className="bi bi-sort-alpha-up-alt"></i>
                                                                 ) : null}
@@ -757,7 +767,7 @@ const SalesHistory = forwardRef((props, ref) => {
                                                                     sort("price");
                                                                 }}
                                                             >
-                                                                Price
+                                                                Price(without VAT)
                                                                 {sortField === "price" && sortProduct === "-" ? (
                                                                     <i className="bi bi-sort-alpha-up-alt"></i>
                                                                 ) : null}
@@ -797,7 +807,7 @@ const SalesHistory = forwardRef((props, ref) => {
                                                                     sort("net_price");
                                                                 }}
                                                             >
-                                                                Net Price
+                                                                Net Price(with VAT)
                                                                 {sortField === "net_price" && sortProduct === "-" ? (
                                                                     <i className="bi bi-sort-alpha-up-alt"></i>
                                                                 ) : null}
@@ -929,16 +939,6 @@ const SalesHistory = forwardRef((props, ref) => {
                                                                 ) : null}
                                                             </div>
                                                         </th>
-                                                        {!localStorage.getItem("store_id") ? <th>
-                                                            <input
-                                                                type="text"
-                                                                id="store_name"
-                                                                onChange={(e) =>
-                                                                    searchByFieldValue("store_name", e.target.value)
-                                                                }
-                                                                className="form-control"
-                                                            />
-                                                        </th> : ""}
                                                         <th>
                                                             <input
                                                                 type="text"
@@ -997,6 +997,16 @@ const SalesHistory = forwardRef((props, ref) => {
                                                                 id="unit_price"
                                                                 onChange={(e) =>
                                                                     searchByFieldValue("unit_price", e.target.value)
+                                                                }
+                                                                className="form-control"
+                                                            />
+                                                        </th>
+                                                        <th>
+                                                            <input
+                                                                type="text"
+                                                                id="unit_price_with_vat"
+                                                                onChange={(e) =>
+                                                                    searchByFieldValue("unit_price_with_vat", e.target.value)
                                                                 }
                                                                 className="form-control"
                                                             />
@@ -1093,7 +1103,7 @@ const SalesHistory = forwardRef((props, ref) => {
                                                                     cursor: "pointer",
                                                                 }}
                                                                     onClick={() => {
-                                                                        openOrderDetailsView(history.order_id);
+                                                                        openOrderUpdateForm(history.order_id);
                                                                     }}>{history.order_code}
                                                                 </td>
                                                                 <td style={{
@@ -1107,6 +1117,7 @@ const SalesHistory = forwardRef((props, ref) => {
                                                                 </td>
                                                                 <td>{history.quantity}{history.unit ? history.unit : ""}</td>
                                                                 <td>{history.unit_price?.toFixed(2)}</td>
+                                                                <td>{history.unit_price_with_vat?.toFixed(2)}</td>
                                                                 <td>{history.discount?.toFixed(2)}</td>
                                                                 <td>{history.discount_percent?.toFixed(2)}</td>
                                                                 <td>{history.price ? history.price?.toFixed(2) : ""}</td>
