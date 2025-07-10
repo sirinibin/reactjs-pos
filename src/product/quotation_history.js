@@ -666,8 +666,6 @@ const QuotationHistory = forwardRef((props, ref) => {
                                 </span>
                             </div>
                         </div>
-
-
                         <div className="row">
                             <div className="col-12">
                                 <div className="card">
