@@ -4872,7 +4872,7 @@ const QuotationCreate = forwardRef((props, ref) => {
                                 <option value="bank_card">Bank Card</option>
                                 <option value="bank_transfer">Bank Transfer</option>
                                 <option value="bank_cheque">Bank Cheque</option>
-                                {formData.customer_id && <option value="customer_account">Customer Account</option>}
+                                <option value="customer_account">Customer Account</option>
                               </select>
                               {errors["payment_method_" + key] && (
                                 <div style={{ color: "red" }}>

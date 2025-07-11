@@ -3887,7 +3887,7 @@ async function reCalculate(productIndex) {
                                                             <option value="bank_card">Bank Card</option>
                                                             <option value="bank_transfer">Bank Transfer</option>
                                                             <option value="bank_cheque">Bank Cheque</option>
-                                                            {formData.vendor_name && <option value="vendor_account">Vendor Account</option>}
+                                                            <option value="vendor_account">Vendor Account</option>
                                                         </select>
                                                         {errors["payment_method_" + key] && (
                                                             <div style={{ color: "red" }}>
