@@ -1,4 +1,4 @@
-import { React, useState, useRef, forwardRef, useImperativeHandle } from "react";
+import { React, useState, useRef, forwardRef, useImperativeHandle, useMemo, useCallback, useEffect } from "react";
 import { Modal, Button } from 'react-bootstrap';
 import OrderPrintContent from './printContent.js';
 import OrderPrintContent2 from './printContent2.js';
@@ -171,13 +171,15 @@ const OrderPrint = forwardRef((props, ref) => {
     }
 
     function preparePages() {
-        let pageSize = 11;
-
-        model.pageSize = pageSize;
+        if (fontSizes[modelName + "_printPageSize"]) {
+            model.pageSize = fontSizes[modelName + "_printPageSize"];
+        } else {
+            model.pageSize = 11
+        }
         let totalProducts = model.products?.length;
         let top = 10;
-        let totalPagesInt = parseInt(totalProducts / pageSize);
-        let totalPagesFloat = parseFloat(totalProducts / pageSize);
+        let totalPagesInt = parseInt(totalProducts / model.pageSize);
+        let totalPagesFloat = parseFloat(totalProducts / model.pageSize);
 
         let totalPages = totalPagesInt;
         if ((totalPagesFloat - totalPagesInt) > 0) {
@@ -201,7 +203,7 @@ const OrderPrint = forwardRef((props, ref) => {
             for (let j = offset; j < totalProducts; j++) {
                 model.pages[i].products.push(model.products[j]);
 
-                if (model.pages[i].products.length === pageSize) {
+                if (model.pages[i].products.length === model.pageSize) {
                     break;
                 }
             }
@@ -211,7 +213,7 @@ const OrderPrint = forwardRef((props, ref) => {
             }
 
             //top += 1122;
-            offset += pageSize;
+            offset += model.pageSize;
             if ((i + 1) === totalPages) {
                 model.pages[i].lastPage = true;
             }
@@ -601,6 +603,201 @@ const OrderPrint = forwardRef((props, ref) => {
         }
     });
 
+    const defaultFontSizes = useMemo(() => ({
+        "printQrCode": {
+            "height": {
+                "value": 138,
+                "unit": "px",
+                "size": "138px",
+                "step": 1
+            },
+            "width": {
+                "value": 138,
+                "unit": "px",
+                "size": "138px",
+                "step": 1
+            },
+        },
+        "printPageSize": 11,
+        "printFont": "Cairo",
+        "printReportPageSize": 20,
+        "printMarginTop": {
+            "value": 0,
+            "unit": "px",
+            "size": "0px",
+            "step": 3
+        },
+        "printStoreHeader": {
+            "visible": true,
+        },
+        "storeName": {
+            "value": 3.5,
+            "unit": "mm",
+            "size": "3.5mm",
+            "step": 0.1,
+        },
+        "storeTitle": {
+            "value": 2.8,
+            "unit": "mm",
+            "size": "3.8mm",
+            "step": 0.1,
+        },
+        "storeCR": {
+            "value": 2.2,
+            "unit": "mm",
+            "size": "2.2mm",
+            "step": 0.1,
+        },
+        "storeVAT": {
+            "value": 2.2,
+            "unit": "mm",
+            "size": "2.2mm",
+            "step": 0.1,
+        },
+        "storeNameArabic": {
+            "value": 3.5,
+            "unit": "mm",
+            "size": "3.5mm",
+            "step": 0.1,
+        },
+        "storeTitleArabic": {
+            "value": 2.8,
+            "unit": "mm",
+            "size": "3.8mm",
+            "step": 0.1,
+        },
+        "storeCRArabic": {
+            "value": 2.2,
+            "unit": "mm",
+            "size": "2.2mm",
+            "step": 0.1,
+        },
+        "storeVATArabic": {
+            "value": 2.2,
+            "unit": "mm",
+            "size": "2.2mm",
+            "step": 0.1,
+        },
+        "invoiceTitle": {
+            "value": 3,
+            "unit": "mm",
+            "size": "3mm",
+            "step": 0.1,
+        },
+        "invoiceDetails": {
+            "value": 2.2,
+            "unit": "mm",
+            "size": "2.2mm",
+            "step": 0.1,
+        },
+        "invoicePageCount": {
+            "value": 2.2,
+            "unit": "mm",
+            "size": "2.2mm",
+            "step": 0.1,
+        },
+        "tableHead": {
+            "value": 2.2,
+            "unit": "mm",
+            "size": "2.2mm",
+            "step": 0.1,
+        },
+        "tableBody": {
+            "value": 2.2,
+            "unit": "mm",
+            "size": "2.2mm",
+            "step": 0.1,
+        },
+        "tableFooter": {
+            "value": 2.2,
+            "unit": "mm",
+            "size": "2.2mm",
+            "step": 0.1,
+        },
+        "signature": {
+            "value": 2.2,
+            "unit": "mm",
+            "size": "2.2mm",
+            "step": 0.1,
+        },
+        "footer": {
+            "value": 2.2,
+            "unit": "mm",
+            "size": "2.2mm",
+            "step": 0.1,
+        },
+        "bankAccountHeader": {
+            "value": 2.2,
+            "unit": "mm",
+            "size": "2.2mm",
+            "step": 0.1,
+        },
+        "bankAccountBody": {
+            "value": 2.2,
+            "unit": "mm",
+            "size": "2.2mm",
+            "step": 0.1,
+        },
+    }), []);
+
+
+    const getFromLocalStorage = useCallback((key) => {
+        const stored = localStorage.getItem(key);
+        return stored ? JSON.parse(stored) : null;
+    }, []);
+
+    const saveToLocalStorage = useCallback((key, obj) => {
+        localStorage.setItem(key, JSON.stringify(obj));
+    }, []);
+
+    function changePageSize(size) {
+        fontSizes[modelName + "_printPageSize"] = parseInt(size);
+        setFontSizes({ ...fontSizes });
+        saveToLocalStorage("printFontSizes", fontSizes);
+        preparePages();
+    }
+    let [fontSizes, setFontSizes] = useState(defaultFontSizes);
+
+    useEffect(() => {
+        let storedFontSizes = getFromLocalStorage("printFontSizes");
+        if (storedFontSizes) {
+            setFontSizes({ ...storedFontSizes });
+        } else {
+            storedFontSizes = {};
+        }
+
+        let modelNames = [
+            "sales",
+            "whatsapp_sales",
+            "sales_return",
+            "whatsapp_sales_return",
+            "purchase",
+            "whatsapp_purchase",
+            "purchase_return",
+            "whatsapp_purchase_return",
+            "quotation",
+            "whatsapp_quotation",
+            "quotation_sales_return",
+            "whatsapp_quotation_sales_return",
+            "delivery_note",
+            "whatsapp_delivery_note",
+            "customer_deposit",
+            "whatsapp_customer_deposit",
+            "customer_withdrawal",
+            "whatsapp_customer_withdrawal",
+            "balance_sheet",
+            "whatsapp_balance_sheet"
+        ];
+        for (let key1 in modelNames) {
+            for (let key2 in defaultFontSizes) {
+                if (!storedFontSizes[modelNames[key1] + "_" + key2]) {
+                    storedFontSizes[modelNames[key1] + "_" + key2] = defaultFontSizes[key2];
+                }
+            }
+        }
+        setFontSizes({ ...storedFontSizes });
+        saveToLocalStorage("printFontSizes", storedFontSizes);
+    }, [setFontSizes, defaultFontSizes, saveToLocalStorage, getFromLocalStorage]);
 
     // Wrap handlePrint in useCallback to avoid unnecessary re-creations
     /*
@@ -622,17 +819,50 @@ const OrderPrint = forwardRef((props, ref) => {
         <Modal show={show} scrollable={true} size="xl" fullscreen={model.store?.code === "PH2" || model.store?.code === "LGK-SIMULATION" || model.store?.code === "LGK"} onHide={handleClose} animation={false} style={{ overflowY: "auto", height: "auto" }}>
             <Modal.Header className="d-flex flex-wrap align-items-center justify-content-between">
                 <Modal.Title>Invoice Preview</Modal.Title>
-                <div className="col align-self-end text-end">
-                    <Button variant="primary" className="btn btn-primary mb-3" onClick={handlePrint}>
-                        <i className="bi bi-printer"></i> Print
-                    </Button>
-                    <button
-                        type="button"
-                        className="btn-close"
-                        onClick={handleClose}
-                        aria-label="Close"
-                    ></button>
+                <div className="row" style={{ border: "solid 0px" }}>
+                    <div className="col align-self-end text-end" style={{ border: "solid 0px", minWidth: "200px" }}>
+                        <>
+                            <label className="form-label">Page Size:&nbsp;</label>
+                            <select
+                                value={fontSizes[modelName + "_printPageSize"]}
+                                onChange={(e) => {
+                                    changePageSize(e.target.value);
+                                }}
+                                className="form-control pull-right"
+                                style={{
+                                    border: "solid 1px",
+                                    borderColor: "silver",
+                                    width: "55px",
+                                }}
+                            >
+                                <option value="5">5</option>
+                                <option value="6">6</option>
+                                <option value="7">7</option>
+                                <option value="8">8</option>
+                                <option value="9">9</option>
+                                <option value="10">10</option>
+                                <option value="11">11</option>
+                                <option value="12">12</option>
+                                <option value="13">13</option>
+                                <option value="14">14</option>
+                                <option value="15">15</option>
+                                <option value="16">16</option>
+                            </select>
+                        </>
+                    </div>
 
+                    <div className="col align-self-end text-end" style={{ border: "solid 0px", minWidth: "100px" }}>
+                        <Button variant="primary" className="btn btn-primary mb-3" onClick={handlePrint}>
+                            <i className="bi bi-printer"></i> Print
+                        </Button>
+                        <button
+                            type="button"
+                            className="btn-close"
+                            onClick={handleClose}
+                            aria-label="Close"
+                        ></button>
+
+                    </div>
                 </div>
 
             </Modal.Header>

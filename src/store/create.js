@@ -3463,12 +3463,35 @@ const StoreCreate = forwardRef((props, ref) => {
                                     }}
                                     className=""
                                     id="one_line_product_name_in_invoice"
-                                /> &nbsp;Oneline product name in invoice
+                                /> &nbsp;One line product name in invoice
                             </div>
                             <label className="form-label"></label>
                             {errors.one_line_product_name_in_invoice && (
                                 <div style={{ color: "red" }}>
                                     {errors.one_line_product_name_in_invoice}
+                                </div>
+                            )}
+                        </div>
+
+                        <div className="col-md-2">
+                            <div className="input-group mb-3">
+                                <input type="checkbox"
+                                    value={formData.settings.one_line_product_name_in_print_invoice}
+                                    checked={formData.settings.one_line_product_name_in_print_invoice}
+                                    onChange={(e) => {
+                                        errors["one_line_product_name_in_print_invoice"] = "";
+                                        formData.settings.one_line_product_name_in_print_invoice = !formData.settings.one_line_product_name_in_print_invoice;
+                                        setFormData({ ...formData });
+                                        console.log(formData);
+                                    }}
+                                    className=""
+                                    id="one_line_product_name_in_invoice"
+                                /> &nbsp;One line product name in print invoice
+                            </div>
+                            <label className="form-label"></label>
+                            {errors.one_line_product_name_in_print_invoice && (
+                                <div style={{ color: "red" }}>
+                                    {errors.one_line_product_name_in_print_invoice}
                                 </div>
                             )}
                         </div>
