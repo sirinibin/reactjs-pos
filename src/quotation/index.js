@@ -798,7 +798,7 @@ function QuotationIndex(props) {
         </Modal.Body>
       </Modal>
 
-      <QuotationSalesReturnCreate ref={QuotationSalesReturnCreateRef} showToastMessage={props.showToastMessage} refreshSalesList={list} />
+      <QuotationSalesReturnCreate ref={QuotationSalesReturnCreateRef} showToastMessage={props.showToastMessage} refreshList={list} refreshSalesList={list} />
 
       {/* ⚙️ Settings Modal */}
       <Modal

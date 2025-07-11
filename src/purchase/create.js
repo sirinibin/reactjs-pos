@@ -68,6 +68,8 @@ const PurchaseCreate = forwardRef((props, ref) => {
 
     useImperativeHandle(ref, () => ({
         open(id) {
+            errors = {};
+            setErrors({ ...errors });
             selectedProducts = [];
             setSelectedProducts([]);
 
@@ -1421,15 +1423,23 @@ const PurchaseCreate = forwardRef((props, ref) => {
             }
         }
 
+
         totalPaymentAmount = totalPayment;
         console.log("totalPaymentAmount:", totalPaymentAmount);
         setTotalPaymentAmount(totalPaymentAmount);
         console.log("totalPayment:", totalPayment)
-        balanceAmount = (parseFloat(formData.net_total.toFixed(2)) - parseFloat(parseFloat(cashDiscount)?.toFixed(2))) - parseFloat(totalPayment.toFixed(2));
-        balanceAmount = parseFloat(balanceAmount.toFixed(2));
+        balanceAmount = (parseFloat(trimTo2Decimals(formData.net_total)) - parseFloat(trimTo2Decimals(cashDiscount))) - parseFloat(trimTo2Decimals(totalPayment));
+
+        // alert(formData.net_total + "|" + balanceAmount + "|" + cashDiscount + "|" + totalPayment);
+
+        balanceAmount = parseFloat(trimTo2Decimals(balanceAmount));
         setBalanceAmount(balanceAmount);
 
-        if (balanceAmount === parseFloat((parseFloat(formData.net_total.toFixed(2)) - parseFloat(parseFloat(cashDiscount)?.toFixed(2))).toFixed(2))) {
+
+
+
+
+        if (balanceAmount === parseFloat((parseFloat(trimTo2Decimals(formData.net_total)) - parseFloat(trimTo2Decimals(cashDiscount))))) {
             paymentStatus = "not_paid"
         } else if (balanceAmount <= 0) {
             paymentStatus = "paid"

@@ -464,6 +464,9 @@ const QuotationSalesReturnCreate = forwardRef((props, ref) => {
                     // shipping = quotation.shipping_handling_fees;
                     // setShipping(shipping);
 
+                    if (quotation.type === "invoice" && quotation.payment_status === "not_paid") {
+                        formData.payments_input = [];
+                    }
 
                     formData.auto_rounding_amount = quotation.auto_rounding_amount;
 
@@ -550,24 +553,24 @@ const QuotationSalesReturnCreate = forwardRef((props, ref) => {
     const keyPress = useCallback(
         (e) => {
             console.log("e.key:", e.key);
-
+    
             if (!barcodeEnded && e.key != "Enter") {
                 console.log()
                 barcode += e.key;
                 setBarcode(barcode);
             }
-
+    
             if (e.key === "Enter") {
                 document.removeEventListener("keydown", keyPress);
                 console.log("barcode:", barcode);
                 barcodeEnded = true;
                 setBarcodeEnded(true);
             }
-
+    
         },
         []
     );
-
+    
     function addListener() {
         //barcode = "";
         //setBarcode(barcode);
@@ -589,7 +592,7 @@ const QuotationSalesReturnCreate = forwardRef((props, ref) => {
     let [barcode, setBarcode] = useState("");
     function handleKeyDown(event) {
         console.log("event.key:", event.key);
-
+    
         /*
         if (event.key == "Enter") {
             barcode = "";
@@ -1119,17 +1122,17 @@ const QuotationSalesReturnCreate = forwardRef((props, ref) => {
                 errors["unit_price_" + i] = "Max decimal points allowed is 2 - WIITHOUT VAT";
                 setErrors({ ...errors });
                 return;
-    
+     
             }
-    
+     
           
-    
-    
+     
+     
             if (unitPriceWithVAT && /^\d*\.?\d{0,2}$/.test(unitPriceWithVAT) === false) {
                 errors["unit_price_with_vat" + i] = "Max decimal points allowed is 2 - WITH VAT";
                 setErrors({ ...errors });
                 return;
-    
+     
             }*/
 
 
@@ -1236,7 +1239,7 @@ const QuotationSalesReturnCreate = forwardRef((props, ref) => {
                     discount = res.result.discount;
                     setDiscount(discount);
                 }
-
+    
                 if (res.result.discount_with_vat) {
                     discountWithVAT = res.result.discount_with_vat;
                     setDiscountWithVAT(discountWithVAT);
@@ -1256,20 +1259,20 @@ const QuotationSalesReturnCreate = forwardRef((props, ref) => {
                             if (res.result?.products[j].unit_discount_percent) {
                                 selectedProducts[i].unit_discount_percent = res.result?.products[j].unit_discount_percent;
                             }
-
+    
                             if (res.result?.products[j].unit_discount_percent_with_vat) {
                                 selectedProducts[i].unit_discount_percent_with_vat = res.result?.products[j].unit_discount_percent_with_vat;
                             }
-
+    
                             if (res.result?.products[j].unit_discount) {
                                 selectedProducts[i].unit_discount = res.result?.products[j].unit_discount;
                             }
-
-
+    
+    
                             if (res.result?.products[j].unit_price) {
                                 selectedProducts[i].unit_price = res.result?.products[j].unit_price;
                             }
-
+    
                             if (res.result?.products[j].unit_price_with_vat) {
                                 selectedProducts[i].unit_price_with_vat = res.result?.products[j].unit_price_with_vat;
                             }*/
@@ -1280,7 +1283,7 @@ const QuotationSalesReturnCreate = forwardRef((props, ref) => {
                             } else if (res.result?.products[j].unit_price === 0 || !res.result?.products[j].unit_price) {
                                 selectedProducts[i].unit_price = "";
                             }
-    
+     
                             if (res.result?.products[j].unit_price_with_vat) {
                                 selectedProducts[i].unit_price_with_vat = res.result?.products[j].unit_price_with_vat;
                             } else if (res.result?.products[j].unit_price_with_vat === 0 || !res.result?.products[j].unit_price_with_vat) {
@@ -1307,14 +1310,14 @@ const QuotationSalesReturnCreate = forwardRef((props, ref) => {
                 if (formData.payments_input && formData.payments_input[0]) {
                     method = formData.payments_input[0].method;
                 }
-
+    
                 formData.payments_input = [{
                     "date_str": formData.date_str,
                     "amount": 0.00,
                     "method": method,
                     "deleted": false,
                 }];
-
+    
                 if (formData.net_total > 0) {
                     formData.payments_input[0].amount = parseFloat(trimTo2Decimals(formData.net_total));
                     if (cashDiscount) {
@@ -1382,7 +1385,7 @@ const QuotationSalesReturnCreate = forwardRef((props, ref) => {
 
         totalPaymentAmount = totalPayment;
         setTotalPaymentAmount(totalPaymentAmount);
-        balanceAmount = (parseFloat(trimTo2Decimals(formData.net_total)) - parseFloat(parseFloat(trimTo2Decimals(cashDiscount)))) - parseFloat(trimTo2Decimals(totalPayment));
+        balanceAmount = (parseFloat(trimTo2Decimals(formData.net_total)) - parseFloat(trimTo2Decimals(cashDiscount))) - parseFloat(trimTo2Decimals(totalPayment));
         balanceAmount = parseFloat(trimTo2Decimals(balanceAmount));
         setBalanceAmount(balanceAmount);
 

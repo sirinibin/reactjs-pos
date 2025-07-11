@@ -459,6 +459,10 @@ const PurchaseReturnedCreate = forwardRef((props, ref) => {
 
                 formData.is_discount_percent = true;
 
+                if (purchase.payment_status === "not_paid") {
+                    formData.payments_input = [];
+                }
+
 
                 cashDiscount = parseFloat(purchase.cash_discount - purchase.return_cash_discount);
                 setCashDiscount(cashDiscount)
@@ -1148,11 +1152,11 @@ async function reCalculate(productIndex) {
         setTotalPaymentAmount(totalPaymentAmount);
         // balanceAmount = (netTotal - cashDiscount) - totalPayment;
 
-        balanceAmount = (parseFloat(formData.net_total) - parseFloat(parseFloat(cashDiscount)?.toFixed(2))) - parseFloat(totalPayment.toFixed(2));
-        balanceAmount = parseFloat(balanceAmount.toFixed(2));
+        balanceAmount = (parseFloat(trimTo2Decimals(formData.net_total)) - parseFloat(trimTo2Decimals(cashDiscount))) - parseFloat(trimTo2Decimals(totalPayment));
+        balanceAmount = parseFloat(trimTo2Decimals(balanceAmount));
         setBalanceAmount(balanceAmount);
 
-        if (balanceAmount === parseFloat((parseFloat(formData.net_total) - parseFloat(parseFloat(cashDiscount)?.toFixed(2))).toFixed(2))) {
+        if (balanceAmount === parseFloat((parseFloat(trimTo2Decimals(formData.net_total)) - parseFloat(trimTo2Decimals(cashDiscount))))) {
             paymentStatus = "not_paid"
         } else if (balanceAmount <= 0) {
             paymentStatus = "paid"
@@ -3771,12 +3775,11 @@ async function reCalculate(productIndex) {
                             )}
                         </div>
 
-
                         <div className="col-md-8">
                             <label className="form-label">Payments received</label>
 
                             <div class="table-responsive" style={{ maxWidth: "900px" }}>
-                                <Button variant="secondary" style={{ alignContent: "right" }} onClick={addNewPayment}>
+                                <Button variant="secondary" disabled={purchase?.payment_status === "not_paid"} style={{ alignContent: "right" }} onClick={addNewPayment}>
                                     Create new payment
                                 </Button>
                                 <table class="table table-striped table-sm table-bordered">

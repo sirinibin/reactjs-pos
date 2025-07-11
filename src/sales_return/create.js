@@ -460,6 +460,11 @@ const SalesReturnCreate = forwardRef((props, ref) => {
 
                     formData.auto_rounding_amount = order.auto_rounding_amount;
 
+                    if (order.payment_status === "not_paid") {
+                        formData.payments_input = [];
+
+                    }
+
                     if (!order.auto_rounding_amount) {
                         if (data.result?.rounding_amount) {
                             roundingAmount = data.result.rounding_amount;
@@ -1311,6 +1316,10 @@ const SalesReturnCreate = forwardRef((props, ref) => {
                     formData.payments_input[0].amount = parseFloat(trimTo2Decimals(formData.net_total));
                     if (formData.payments_input[0].amount > formData.cash_discount) {
                         formData.payments_input[0].amount = parseFloat(trimTo2Decimals(formData.payments_input[0].amount - formData.cash_discount));
+                    }
+
+                    if (formData.payments_input[0].amount > order?.total_payment_received) {
+                        formData.payments_input[0].amount = order.total_payment_received;
                     }
                 }
             } else {

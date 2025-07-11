@@ -59,8 +59,10 @@ const OrderCreate = forwardRef((props, ref) => {
         async open(id) {
             if (id) {
                 isUpdateForm = true;
-                setIsUpdateForm(isUpdateForm)
+            } else {
+                isUpdateForm = false;
             }
+            setIsUpdateForm(isUpdateForm)
             //ResetFormData();
             errors = {};
             setErrors({ ...errors });

@@ -3124,6 +3124,32 @@ const StoreCreate = forwardRef((props, ref) => {
 
 
 
+
+                        <div className="col-md-2">
+                            <div className="input-group mb-3">
+                                <input type="checkbox"
+                                    value={formData.settings.enable_auto_payment_close_on_return}
+                                    checked={formData.settings.enable_auto_payment_close_on_return}
+                                    onChange={(e) => {
+                                        errors["enable_auto_payment_close_on_return"] = "";
+                                        formData.settings.enable_auto_payment_close_on_return = !formData.settings.enable_auto_payment_close_on_return;
+                                        setFormData({ ...formData });
+                                        console.log(formData);
+                                    }}
+                                    className=""
+                                    id="enable_auto_payment_close_on_return"
+
+                                /> &nbsp;Enable Auto Payment Close On Return
+                            </div>
+                            <label className="form-label"></label>
+                            {errors.enable_auto_payment_close_on_return && (
+                                <div style={{ color: "red" }}>
+                                    {errors.enable_auto_payment_close_on_return}
+                                </div>
+                            )}
+                        </div>
+
+
                         <div className="col-md-2">
                             <div className="input-group mb-3">
                                 <input type="checkbox"

@@ -1716,7 +1716,7 @@ const QuotationCreate = forwardRef((props, ref) => {
     console.log("totalPaymentAmount:", totalPaymentAmount);
     setTotalPaymentAmount(totalPaymentAmount);
     console.log("totalPayment:", totalPayment)
-    balanceAmount = (parseFloat(trimTo2Decimals(formData.net_total)) - parseFloat(parseFloat(trimTo2Decimals(cashDiscount)))) - parseFloat(trimTo2Decimals(totalPayment));
+    balanceAmount = (parseFloat(trimTo2Decimals(formData.net_total)) - parseFloat(trimTo2Decimals(cashDiscount))) - parseFloat(trimTo2Decimals(totalPayment));
     balanceAmount = parseFloat(trimTo2Decimals(balanceAmount));
     setBalanceAmount(balanceAmount);
 
