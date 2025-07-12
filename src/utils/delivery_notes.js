@@ -4,15 +4,16 @@ import { Typeahead } from "react-bootstrap-typeahead";
 import "react-datepicker/dist/react-datepicker.css";
 import DeliveryNoteCreate from "./../delivery_note/create.js";
 import DeliveryNoteView from "./../delivery_note/view.js";
-
 import { format } from "date-fns";
 import DatePicker from "react-datepicker";
 import ReactPaginate from "react-paginate";
 import OverflowTooltip from "../utils/OverflowTooltip.js";
+import Draggable from "react-draggable";
 
 //function ProductIndex(props) {
 
 const DeliveryNotes = forwardRef((props, ref) => {
+    const dragRef = useRef(null);
     const [show, SetShow] = useState(false);
 
     function handleClose() {
@@ -440,7 +441,32 @@ const DeliveryNotes = forwardRef((props, ref) => {
 
     return (
         <>
-            <Modal show={show} size="xl" onHide={handleClose} animation={false} scrollable={true}>
+            <Modal show={show} size="xl" onHide={handleClose} animation={false} scrollable={true}
+                backdrop={false}                // ✅ Allow editing background
+                keyboard={false}
+                centered={false}                // ❌ disable auto-centering
+                enforceFocus={false}            // ✅ allow focus outside
+                dialogAs={({ children, ...props }) => (
+                    <Draggable handle=".modal-header" nodeRef={dragRef}>
+                        <div
+                            ref={dragRef}
+                            className="modal-dialog modal-xl"    // ✅ preserve Bootstrap xl class
+                            {...props}
+                            style={{
+                                position: "absolute",
+                                top: "10%",
+                                left: "20%",
+                                transform: "translate(-50%, -50%)",
+                                margin: "0",
+                                zIndex: 1055,
+                                width: "65%",           // Full width inside container
+                            }}
+                        >
+                            <div className="modal-content">{children}</div>
+                        </div>
+                    </Draggable>
+                )}
+            >
                 <Modal.Header>
                     <Modal.Title>Select Delivery Note</Modal.Title>
 

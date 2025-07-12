@@ -24,6 +24,7 @@ import ReportPreview from "./report.js";
 import OrderPrint from './print.js';
 import { DragDropContext, Droppable, Draggable } from "react-beautiful-dnd";
 import CustomerCreate from "./../customer/create.js";
+import Draggable2 from "react-draggable";
 
 import "./../utils/stickyHeader.css";
 
@@ -54,6 +55,7 @@ const TimeAgo = ({ date }) => {
 
 
 const OrderIndex = forwardRef((props, ref) => {
+    const dragRef = useRef(null);
     const { lastMessage } = useContext(WebSocketContext);
 
 
@@ -2257,7 +2259,32 @@ const OrderIndex = forwardRef((props, ref) => {
             </div >
 
 
-            <Modal show={showOrderPaymentHistory} size="lg" onHide={handleOrderPaymentHistoryClose} animation={false} scrollable={true}>
+            <Modal show={showOrderPaymentHistory} size="lg" onHide={handleOrderPaymentHistoryClose} animation={false} scrollable={true}
+                backdrop={false}                // ✅ Allow editing background
+                keyboard={false}
+                centered={false}                // ❌ disable auto-centering
+                enforceFocus={false}            // ✅ allow focus outside
+                dialogAs={({ children, ...props }) => (
+                    <Draggable2 handle=".modal-header" nodeRef={dragRef}>
+                        <div
+                            ref={dragRef}
+                            className="modal-dialog modal-lg"    // ✅ preserve Bootstrap xl class
+                            {...props}
+                            style={{
+                                position: "absolute",
+                                top: "10%",
+                                left: "20%",
+                                transform: "translate(-50%, -50%)",
+                                margin: "0",
+                                zIndex: 1055,
+                                width: "65%",           // Full width inside container
+                            }}
+                        >
+                            <div className="modal-content">{children}</div>
+                        </div>
+                    </Draggable2>
+                )}
+            >
                 <Modal.Header>
                     <Modal.Title>Payment history of Order #{selectedOrder?.code}</Modal.Title>
 
@@ -2276,7 +2303,32 @@ const OrderIndex = forwardRef((props, ref) => {
                 </Modal.Body>
             </Modal>
 
-            <Modal show={showOrderReturns} size="lg" onHide={handleOrderReturnsClose} animation={false} scrollable={true}>
+            <Modal show={showOrderReturns} size="lg" onHide={handleOrderReturnsClose} animation={false} scrollable={true}
+                backdrop={false}                // ✅ Allow editing background
+                keyboard={false}
+                centered={false}                // ❌ disable auto-centering
+                enforceFocus={false}            // ✅ allow focus outside
+                dialogAs={({ children, ...props }) => (
+                    <Draggable2 handle=".modal-header" nodeRef={dragRef}>
+                        <div
+                            ref={dragRef}
+                            className="modal-dialog modal-lg"    // ✅ preserve Bootstrap xl class
+                            {...props}
+                            style={{
+                                position: "absolute",
+                                top: "10%",
+                                left: "20%",
+                                transform: "translate(-50%, -50%)",
+                                margin: "0",
+                                zIndex: 1055,
+                                width: "65%",           // Full width inside container
+                            }}
+                        >
+                            <div className="modal-content">{children}</div>
+                        </div>
+                    </Draggable2>
+                )}
+            >
                 <Modal.Header>
                     <Modal.Title>Sales Returns of Sale Order #{selectedOrder?.code}</Modal.Title>
 

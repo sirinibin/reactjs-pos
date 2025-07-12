@@ -15,6 +15,7 @@ import eventEmitter from "./eventEmitter";
 import OrderCreate from "./../order/create.js";
 import { formatDistanceToNowStrict } from "date-fns";
 import { enUS } from "date-fns/locale";
+import Draggable from "react-draggable";
 
 
 const shortLocale = {
@@ -37,6 +38,8 @@ const TimeAgo = ({ date }) => {
 };
 
 const Quotations = forwardRef((props, ref) => {
+    const dragRef = useRef(null);
+
     useImperativeHandle(ref, () => ({
         open(enableSelectionValue, selectedCustomers, typeValue, selectedPaymentStatusList) {
             enableSelection = enableSelectionValue;
@@ -645,7 +648,32 @@ const Quotations = forwardRef((props, ref) => {
     return (
         <>
             {showUpdateOrderForm && <OrderCreate ref={SalesUpdateFormRef} />}
-            <Modal show={show} size="xl" onHide={handleClose} animation={false} scrollable={true}>
+            <Modal show={show} size="xl" onHide={handleClose} animation={false} scrollable={true}
+                backdrop={false}                // ✅ Allow editing background
+                keyboard={false}
+                centered={false}                // ❌ disable auto-centering
+                enforceFocus={false}            // ✅ allow focus outside
+                dialogAs={({ children, ...props }) => (
+                    <Draggable handle=".modal-header" nodeRef={dragRef}>
+                        <div
+                            ref={dragRef}
+                            className="modal-dialog modal-xl"    // ✅ preserve Bootstrap xl class
+                            {...props}
+                            style={{
+                                position: "absolute",
+                                top: "10%",
+                                left: "20%",
+                                transform: "translate(-50%, -50%)",
+                                margin: "0",
+                                zIndex: 1055,
+                                width: "65%",           // Full width inside container
+                            }}
+                        >
+                            <div className="modal-content">{children}</div>
+                        </div>
+                    </Draggable>
+                )}
+            >
                 <Modal.Header>
                     <Modal.Title>{enableSelection && "Select Quotation"}</Modal.Title>
                     <div className="col align-self-end text-end">

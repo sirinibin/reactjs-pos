@@ -18,13 +18,12 @@ import StatsSummary from "../utils/StatsSummary.js";
 import eventEmitter from "./../utils/eventEmitter";
 
 import ReactExport from 'react-data-export';
+import Draggable from "react-draggable";
 const ExcelFile = ReactExport.ExcelFile;
 const ExcelSheet = ReactExport.ExcelFile.ExcelSheet;
 
-
-
-
 const Purchases = forwardRef((props, ref) => {
+    const dragRef = useRef(null);
     const [show, SetShow] = useState(false);
     useImperativeHandle(ref, () => ({
         open(selectedVendorsValue, selectedPaymentStatusListValue) {
@@ -876,7 +875,32 @@ const Purchases = forwardRef((props, ref) => {
 
     return (
         <>
-            <Modal show={show} size="xl" onHide={handleClose} animation={false} scrollable={true}>
+            <Modal show={show} size="xl" onHide={handleClose} animation={false} scrollable={true}
+                backdrop={false}                // ✅ Allow editing background
+                keyboard={false}
+                centered={false}                // ❌ disable auto-centering
+                enforceFocus={false}            // ✅ allow focus outside
+                dialogAs={({ children, ...props }) => (
+                    <Draggable handle=".modal-header" nodeRef={dragRef}>
+                        <div
+                            ref={dragRef}
+                            className="modal-dialog modal-xl"    // ✅ preserve Bootstrap xl class
+                            {...props}
+                            style={{
+                                position: "absolute",
+                                top: "10%",
+                                left: "20%",
+                                transform: "translate(-50%, -50%)",
+                                margin: "0",
+                                zIndex: 1055,
+                                width: "65%",           // Full width inside container
+                            }}
+                        >
+                            <div className="modal-content">{children}</div>
+                        </div>
+                    </Draggable>
+                )}
+            >
                 <Modal.Header>
                     <Modal.Title>Select Purchase</Modal.Title>
 

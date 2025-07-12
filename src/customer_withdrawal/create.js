@@ -22,6 +22,7 @@ import { confirm } from 'react-bootstrap-confirmation';
 import InfoDialog from './../utils/InfoDialog';
 import { highlightWords } from "../utils/search.js";
 import Amount from "../utils/amount.js";
+import Draggable from "react-draggable";
 
 const columnStyle = {
     width: '20%',
@@ -923,13 +924,40 @@ const CustomerWithdrawalCreate = forwardRef((props, ref) => {
         return () => document.removeEventListener("keydown", handleKeyDown);
     }, []);
 
+    const dragRef = useRef(null);
 
     return (
         <>
             <Modal show={showInvoiceTypeSelection} onHide={() => {
                 showInvoiceTypeSelection = false;
                 setShowInvoiceTypeSelection(showInvoiceTypeSelection);
-            }} centered>
+            }}
+                backdrop={false}
+                keyboard={false}
+                centered={false}
+                enforceFocus={false}
+                dialogAs={({ children, ...props }) => (
+                    <Draggable handle=".modal-header" nodeRef={dragRef}>
+                        <div
+                            ref={dragRef}
+                            className="modal-dialog"
+                            {...props}
+                            style={{
+                                position: "absolute",
+                                top: "27%",
+                                left: "27%",
+                                transform: "translate(-50%, -50%)",
+                                margin: "0",
+                                zIndex: 1055,
+                                maxWidth: "600px", // or "90%" for responsive
+                                width: "100%",
+                            }}
+                        >
+                            <div className="modal-content">{children}</div>
+                        </div>
+                    </Draggable>
+                )}
+            >
                 <Modal.Header closeButton>
                     <Modal.Title>Select Invoice Type</Modal.Title>
                 </Modal.Header>

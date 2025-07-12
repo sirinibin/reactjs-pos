@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef, forwardRef, useCallback, useImperativeHandle } from "react";
 import { Modal, Button } from "react-bootstrap";
-
+import Draggable from "react-draggable";
 import { Spinner } from "react-bootstrap";
 import { Typeahead, Menu, MenuItem } from "react-bootstrap-typeahead";
 import DatePicker from "react-datepicker";
@@ -917,14 +917,41 @@ const CustomerDepositCreate = forwardRef((props, ref) => {
         return () => document.removeEventListener("keydown", handleKeyDown);
     }, []);
 
-
+    const dragRef = useRef(null);
     return (
         <>
             <Modal show={showInvoiceTypeSelection} onHide={() => {
                 showInvoiceTypeSelection = false;
                 setShowInvoiceTypeSelection(showInvoiceTypeSelection);
-            }} centered>
-                <Modal.Header closeButton>
+            }}
+                backdrop={false}
+                keyboard={false}
+                centered={false}
+                enforceFocus={false}
+                dialogAs={({ children, ...props }) => (
+                    <Draggable handle=".modal-header" nodeRef={dragRef}>
+                        <div
+                            ref={dragRef}
+                            className="modal-dialog"
+                            {...props}
+                            style={{
+                                position: "absolute",
+                                top: "27%",
+                                left: "27%",
+                                transform: "translate(-50%, -50%)",
+                                margin: "0",
+                                zIndex: 1055,
+                                maxWidth: "600px", // or "90%" for responsive
+                                width: "100%",
+                            }}
+                        >
+                            <div className="modal-content">{children}</div>
+                        </div>
+                    </Draggable>
+                )}
+
+            >
+                <Modal.Header closeButton className="cursor-move">
                     <Modal.Title>Select Invoice Type</Modal.Title>
                 </Modal.Header>
                 <Modal.Body className="d-flex justify-content-around">

@@ -1,13 +1,14 @@
-import React, { useState, forwardRef, useImperativeHandle } from "react";
+import React, { useState, forwardRef, useImperativeHandle, useRef } from "react";
 
 
 import PurchaseReturnIndex from "../purchase_return/index.js";
 
 import "react-datepicker/dist/react-datepicker.css";
 import { Modal } from "react-bootstrap";
-
+import Draggable from "react-draggable";
 
 const PurchaseReturns = forwardRef((props, ref) => {
+    const dragRef = useRef(null);
     const [show, SetShow] = useState(false);
 
     let [selectedVendors, setSelectedVendors] = useState([]);
@@ -81,7 +82,32 @@ const PurchaseReturns = forwardRef((props, ref) => {
 
     return (
         <>
-            <Modal show={show} size="xl" onHide={handleClose} animation={false} scrollable={true}>
+            <Modal show={show} size="xl" onHide={handleClose} animation={false} scrollable={true}
+                backdrop={false}                // ✅ Allow editing background
+                keyboard={false}
+                centered={false}                // ❌ disable auto-centering
+                enforceFocus={false}            // ✅ allow focus outside
+                dialogAs={({ children, ...props }) => (
+                    <Draggable handle=".modal-header" nodeRef={dragRef}>
+                        <div
+                            ref={dragRef}
+                            className="modal-dialog modal-xl"    // ✅ preserve Bootstrap xl class
+                            {...props}
+                            style={{
+                                position: "absolute",
+                                top: "10%",
+                                left: "20%",
+                                transform: "translate(-50%, -50%)",
+                                margin: "0",
+                                zIndex: 1055,
+                                width: "65%",           // Full width inside container
+                            }}
+                        >
+                            <div className="modal-content">{children}</div>
+                        </div>
+                    </Draggable>
+                )}
+            >
                 <Modal.Header>
                     <Modal.Title>Select Purchase Return</Modal.Title>
 

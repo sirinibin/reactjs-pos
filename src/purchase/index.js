@@ -22,6 +22,7 @@ import { trimTo2Decimals } from "../utils/numberUtils";
 import OrderPreview from "./../order/preview.js";
 import OrderPrint from "./../order/print.js";
 import VendorCreate from "./../vendor/create.js";
+import Draggable2 from "react-draggable";
 
 
 import ReactExport from 'react-data-export';
@@ -29,6 +30,7 @@ const ExcelFile = ReactExport.ExcelFile;
 const ExcelSheet = ReactExport.ExcelFile.ExcelSheet;
 
 function PurchaseIndex(props) {
+    const dragRef = useRef(null);
     const ReportPreviewRef = useRef();
     function openReportPreview() {
         ReportPreviewRef.current.open("purchase_report");
@@ -2410,7 +2412,32 @@ function PurchaseIndex(props) {
                 </div>
             </div>
 
-            <Modal show={showPurchasePaymentHistory} size="lg" onHide={handlePaymentHistoryClose} animation={false} scrollable={true}>
+            <Modal show={showPurchasePaymentHistory} size="lg" onHide={handlePaymentHistoryClose} animation={false} scrollable={true}
+                backdrop={false}                // ✅ Allow editing background
+                keyboard={false}
+                centered={false}                // ❌ disable auto-centering
+                enforceFocus={false}            // ✅ allow focus outside
+                dialogAs={({ children, ...props }) => (
+                    <Draggable2 handle=".modal-header" nodeRef={dragRef}>
+                        <div
+                            ref={dragRef}
+                            className="modal-dialog modal-lg"    // ✅ preserve Bootstrap xl class
+                            {...props}
+                            style={{
+                                position: "absolute",
+                                top: "10%",
+                                left: "20%",
+                                transform: "translate(-50%, -50%)",
+                                margin: "0",
+                                zIndex: 1055,
+                                width: "65%",           // Full width inside container
+                            }}
+                        >
+                            <div className="modal-content">{children}</div>
+                        </div>
+                    </Draggable2>
+                )}
+            >
                 <Modal.Header>
                     <Modal.Title>Payment history of Purchase #{selectedPurchase.code}</Modal.Title>
 
@@ -2429,7 +2456,32 @@ function PurchaseIndex(props) {
                 </Modal.Body>
             </Modal>
 
-            <Modal show={showPurchaseReturns} size="lg" onHide={handlePurchaseReturnsClose} animation={false} scrollable={true}>
+            <Modal show={showPurchaseReturns} size="lg" onHide={handlePurchaseReturnsClose} animation={false} scrollable={true}
+                backdrop={false}                // ✅ Allow editing background
+                keyboard={false}
+                centered={false}                // ❌ disable auto-centering
+                enforceFocus={false}            // ✅ allow focus outside
+                dialogAs={({ children, ...props }) => (
+                    <Draggable2 handle=".modal-header" nodeRef={dragRef}>
+                        <div
+                            ref={dragRef}
+                            className="modal-dialog modal-lg"    // ✅ preserve Bootstrap xl class
+                            {...props}
+                            style={{
+                                position: "absolute",
+                                top: "10%",
+                                left: "20%",
+                                transform: "translate(-50%, -50%)",
+                                margin: "0",
+                                zIndex: 1055,
+                                width: "65%",           // Full width inside container
+                            }}
+                        >
+                            <div className="modal-content">{children}</div>
+                        </div>
+                    </Draggable2>
+                )}
+            >
                 <Modal.Header>
                     <Modal.Title>Purchase Returns of Purchase Order #{selectedPurchase.code}</Modal.Title>
 

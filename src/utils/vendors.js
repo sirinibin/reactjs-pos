@@ -11,8 +11,10 @@ import OverflowTooltip from "../utils/OverflowTooltip.js";
 import PostingIndex from "./../posting/index.js";
 import Amount from "../utils/amount.js";
 import { trimTo2Decimals } from "../utils/numberUtils";
+import Draggable from "react-draggable";
 
 const Vendors = forwardRef((props, ref) => {
+    const dragRef = useRef(null);
     const [show, SetShow] = useState(false);
 
     function handleClose() {
@@ -379,7 +381,32 @@ const Vendors = forwardRef((props, ref) => {
     return (
         <>
             <PostingIndex ref={AccountBalanceSheetRef} showToastMessage={props.showToastMessage} />
-            <Modal show={show} size="xl" onHide={handleClose} animation={false} scrollable={true}>
+            <Modal show={show} size="xl" onHide={handleClose} animation={false} scrollable={true}
+                backdrop={false}                // ✅ Allow editing background
+                keyboard={false}
+                centered={false}                // ❌ disable auto-centering
+                enforceFocus={false}            // ✅ allow focus outside
+                dialogAs={({ children, ...props }) => (
+                    <Draggable handle=".modal-header" nodeRef={dragRef}>
+                        <div
+                            ref={dragRef}
+                            className="modal-dialog modal-xl"    // ✅ preserve Bootstrap xl class
+                            {...props}
+                            style={{
+                                position: "absolute",
+                                top: "10%",
+                                left: "20%",
+                                transform: "translate(-50%, -50%)",
+                                margin: "0",
+                                zIndex: 1055,
+                                width: "65%",           // Full width inside container
+                            }}
+                        >
+                            <div className="modal-content">{children}</div>
+                        </div>
+                    </Draggable>
+                )}
+            >
                 <Modal.Header>
                     <Modal.Title>Select vendor</Modal.Title>
 

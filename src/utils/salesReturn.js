@@ -24,6 +24,7 @@ import eventEmitter from "./../utils/eventEmitter";
 import Sales from "./../utils/sales.js";
 import Preview from "./../order/preview.js";
 import ReportPreview from "./../order/report.js";
+import Draggable from "react-draggable";
 
 const ExcelFile = ReactExport.ExcelFile;
 const ExcelSheet = ReactExport.ExcelFile.ExcelSheet;
@@ -50,7 +51,7 @@ const TimeAgo = ({ date }) => {
 
 
 const SalesReturn = forwardRef((props, ref) => {
-
+    const dragRef = useRef(null);
 
     useImperativeHandle(ref, () => ({
         open(selectedCustomers, selectedPaymentStatusList) {
@@ -1205,7 +1206,32 @@ const SalesReturn = forwardRef((props, ref) => {
 
     return (
         <>
-            <Modal show={show} size="xl" onHide={handleClose} animation={false} scrollable={true}>
+            <Modal show={show} size="xl" onHide={handleClose} animation={false} scrollable={true}
+                backdrop={false}                // ✅ Allow editing background
+                keyboard={false}
+                centered={false}                // ❌ disable auto-centering
+                enforceFocus={false}            // ✅ allow focus outside
+                dialogAs={({ children, ...props }) => (
+                    <Draggable handle=".modal-header" nodeRef={dragRef}>
+                        <div
+                            ref={dragRef}
+                            className="modal-dialog modal-xl"    // ✅ preserve Bootstrap xl class
+                            {...props}
+                            style={{
+                                position: "absolute",
+                                top: "10%",
+                                left: "20%",
+                                transform: "translate(-50%, -50%)",
+                                margin: "0",
+                                zIndex: 1055,
+                                width: "65%",           // Full width inside container
+                            }}
+                        >
+                            <div className="modal-content">{children}</div>
+                        </div>
+                    </Draggable>
+                )}
+            >
                 <Modal.Header>
                     <Modal.Title>Select Sales Return</Modal.Title>
 
@@ -2361,7 +2387,9 @@ const SalesReturn = forwardRef((props, ref) => {
                             </div>
                         </div>
 
-                        <Modal show={showSalesReturnPaymentHistory} size="lg" onHide={handlePaymentHistoryClose} animation={false} scrollable={true}>
+                        <Modal show={showSalesReturnPaymentHistory} size="lg" onHide={handlePaymentHistoryClose} animation={false} scrollable={true}
+
+                        >
                             <Modal.Header>
                                 <Modal.Title>Payment history of Sales Return #{selectedSalesReturn.code}</Modal.Title>
 

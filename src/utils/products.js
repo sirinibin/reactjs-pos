@@ -20,10 +20,12 @@ import OverflowTooltip from "./OverflowTooltip.js";
 import Dropdown from 'react-bootstrap/Dropdown';
 import StatsSummary from "./StatsSummary.js";
 import countryList from 'react-select-country-list'
+import Draggable from "react-draggable";
 
 //function ProductIndex(props) {
 
 const Products = forwardRef((props, ref) => {
+    const dragRef = useRef(null);
     const [show, SetShow] = useState(false);
 
     function handleClose() {
@@ -662,7 +664,32 @@ const Products = forwardRef((props, ref) => {
 
     return (
         <>
-            <Modal show={show} size="xl" onHide={handleClose} animation={false} scrollable={true}>
+            <Modal show={show} size="xl" onHide={handleClose} animation={false} scrollable={true}
+                backdrop={false}                // ✅ Allow editing background
+                keyboard={false}
+                centered={false}                // ❌ disable auto-centering
+                enforceFocus={false}            // ✅ allow focus outside
+                dialogAs={({ children, ...props }) => (
+                    <Draggable handle=".modal-header" nodeRef={dragRef}>
+                        <div
+                            ref={dragRef}
+                            className="modal-dialog modal-xl"    // ✅ preserve Bootstrap xl class
+                            {...props}
+                            style={{
+                                position: "absolute",
+                                top: "10%",
+                                left: "20%",
+                                transform: "translate(-50%, -50%)",
+                                margin: "0",
+                                zIndex: 1055,
+                                width: "65%",           // Full width inside container
+                            }}
+                        >
+                            <div className="modal-content">{children}</div>
+                        </div>
+                    </Draggable>
+                )}
+            >
                 <Modal.Header>
                     <Modal.Title>
                         {type === "linked_products" ?
