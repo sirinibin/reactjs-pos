@@ -23,13 +23,18 @@ const ImageGallery = forwardRef((props, ref) => {
             setImages(formatted);
         },
         async uploadAllImages() {
-            images.forEach(async (img, indexOffset) => {
+            //  await sleep(3000); // Sleep for 2 seconds
+            await images.forEach(async (img, indexOffset) => {
                 if (img.file) {
                     await uploadToServer(img, indexOffset);
                 }
             });
         }
     }));
+
+    /* function sleep(ms) {
+         return new Promise(resolve => setTimeout(resolve, ms));
+     }*/
 
     const handleImageChange = async (e) => {
         const files = Array.from(e.target.files || []);

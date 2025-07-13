@@ -615,10 +615,13 @@ const ProductCreate = forwardRef((props, ref) => {
         formData.id = data.result?.id;
         setFormData({ ...formData });
 
+        // alert("Starting Images upload")
         await ImageGalleryRef.current.uploadAllImages();
+        //alert("Images upload done")
 
         if (timerRef.current) clearTimeout(timerRef.current);
         timerRef.current = setTimeout(() => {
+          // alert("Going to product view")
           setProcessing(false);
 
           console.log("Response after creating  product:");
@@ -636,7 +639,6 @@ const ProductCreate = forwardRef((props, ref) => {
           handleClose();
           if (props.openDetailsView)
             props.openDetailsView(data.result.id);
-
 
         }, 300);
 
