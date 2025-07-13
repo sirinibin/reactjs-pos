@@ -12,15 +12,17 @@
 @font-face {
   font-family: 'Arial';
   src: url('./fonts/alfont_com_arial-1.ttf') format('truetype');
-  font-weight: normal;
+  font-weight: 600;
   font-style:normal;
+  font-display: swap;
 }
 
 @font-face {
   font-family: 'IBM Plex Sans Arabic Regular';
   src: url('./fonts/alfont_com_IBMPlexSansArabic-Regular.ttf') format('truetype');
-  font-weight: normal;
+  font-weight: 600;
   font-style:normal;
+  font-display: swap;
 }
 
 
@@ -28,41 +30,43 @@
 @font-face {
   font-family: 'Andulus';
   src: url('./fonts/alfont_com_AlFont_com_22-andlso.ttf') format('truetype');
-  font-weight: normal;
+  font-weight: 600;
   font-style:normal;
+  font-display: swap;
 }
 
 @font-face {
   font-family: 'Sakkal Majalla';
   src: url('./fonts/alfont_com_majalla.ttf') format('truetype');
-  font-weight: normal;
+  font-weight: 600;
   font-style:normal;
+  font-display: swap;
 }
-
-
-
 
 
 
 @font-face {
   font-family: 'Noto Naskh Regular';
   src: url('./fonts/NotoNaskhArabic-Regular.ttf') format('truetype');
-  font-weight: normal;
+  font-weight: 600;
   font-style:normal;
+  font-display: swap;
 }
 
 @font-face {
   font-family: 'Simplified Arabic';
   src: url('./fonts/Simplified-Arabic.ttf') format('truetype');
-  font-weight: normal;
+  font-weight: 600;
   font-style:normal;
+  font-display: swap;
 }
 
 @font-face {
   font-family: 'Traditional Arabic';
   src: url('./fonts/alfont_com_AlFont_com_TRAD.ttf') format('truetype');
-  font-weight: normal;
+  font-weight: 600;
   font-style:normal;
+  font-display: swap;
 }
 
 
@@ -72,23 +76,26 @@
 @font-face {
   font-family: 'Noto Naskh Medium';
   src: url('./fonts/NotoNaskhArabic-Medium.ttf') format('truetype');
-  font-weight: normal;
+  font-weight: 600;
   font-style:normal;
+  font-display: swap;
 }
 
 
 @font-face {
   font-family: 'Noto Naskh Bold';
   src: url('./fonts/NotoNaskhArabic-Bold.ttf') format('truetype');
-  font-weight: normal;
+  font-weight: 600;
   font-style:normal;
+  font-display: swap;
 }
 
 @font-face {
   font-family: 'Noto Naskh Semi Bold';
   src: url('./fonts/NotoNaskhArabic-SemiBold.ttf') format('truetype');
-  font-weight: normal;
-  font-style:normal;
+  font-weight: 600;
+  font-display: swap;
+  font-style: normal; 
 }
 
 
@@ -97,16 +104,18 @@
 @font-face {
   font-family: 'Thuluth Regular';
   src: url('./fonts/A-Thuluth-Regular.ttf') format('truetype');
-  font-weight: normal;
+  font-weight: 600;
   font-style:normal;
+  font-display: swap;
 }
 
 
 @font-face {
   font-family: 'Akhbar Regular';
   src: url('./fonts/Akhbar-MT-Regular.ttf') format('truetype');
-  font-weight: normal;
+  font-weight: 600;
   font-style:normal;
+  font-display: swap;
 }
 
 
@@ -114,8 +123,9 @@
 @font-face {
   font-family: 'Tahoma';
   src: url('./fonts/alfont_com_AlFont_com_103-Tahoma.ttf') format('truetype');
-  font-weight: normal;
+  font-weight: 600;
   font-style:normal;
+  font-display: swap;
 }
 
 
@@ -124,16 +134,18 @@
 @font-face {
   font-family: 'Wafeq Regular';
   src: url('./fonts/alfont_com_Wafeq-Regular.otf') format('truetype');
-  font-weight: normal;
+  font-weight: 600;
   font-style:normal;
+  font-display: swap;
 }
 
 
 @font-face {
   font-family: 'Wafeq Light';
   src: url('./fonts/alfont_com_Wafeq-Light.otf') format('truetype');
-  font-weight: normal;
+  font-weight: 600;
   font-style:normal;
+  font-display: swap;
 }
 
 
@@ -141,8 +153,9 @@
 @font-face {
   font-family: 'Calibri Light';
   src: url('./fonts/CalibriLightArabic.ttf') format('truetype');
-  font-weight: normal;
+  font-weight: 600;
   font-style:normal;
+  font-display: swap;
 }
 
 
