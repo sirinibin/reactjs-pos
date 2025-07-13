@@ -117,7 +117,7 @@ const BalanceSheetPrintPreview = forwardRef((props, ref) => {
                 firstPage: false,
             });
             for (let j = offset; j < totalPosts; j++) {
-                for (let k = 0; k < model.posts[j].posts.length; k++) {
+                for (let k = 0; k < model.posts[j].posts?.length; k++) {
                     model.pages[i].posts.push({
                         "no": no,
                         "date": model.posts[j].posts[k].date,
@@ -135,17 +135,17 @@ const BalanceSheetPrintPreview = forwardRef((props, ref) => {
                         "reference_model": model.posts[j].reference_model,
                     });
                     no++;
-                    if (model.pages[i].posts.length === model.pageSize) {
+                    if (model.pages[i].posts?.length === model.pageSize) {
                         break;
                     }
                 }
-                if (model.pages[i].posts.length === model.pageSize) {
+                if (model.pages[i].posts?.length === model.pageSize) {
                     break;
                 }
             }
 
-            if (model.pages[i].posts.length < model.pageSize) {
-                for (let s = model.pages[i].posts.length; s < model.pageSize; s++) {
+            if (model.pages[i].posts?.length < model.pageSize) {
+                for (let s = model.pages[i].posts?.length; s < model.pageSize; s++) {
                     model.pages[i].posts.push({});
                 }
             }

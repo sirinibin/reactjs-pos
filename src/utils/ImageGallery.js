@@ -24,7 +24,7 @@ const ImageGallery = forwardRef((props, ref) => {
         },
         async uploadAllImages() {
             //  await sleep(3000); // Sleep for 2 seconds
-            await images.forEach(async (img, indexOffset) => {
+            images.forEach(async (img, indexOffset) => {
                 if (img.file) {
                     await uploadToServer(img, indexOffset);
                 }
