@@ -845,7 +845,7 @@ const PreviewContentWithSellerInfo = forwardRef((props, ref) => {
                                                     unicodeBidi: 'isolate',
                                                     borderRight: tableBorderThickness,
                                                     /* wordBreak: "break-word",*/
-                                                    overflowWrap: "break-word",
+                                                    /* overflowWrap: "break-word",*/
                                                     whiteSpace: "normal"
 
                                                 }}>
