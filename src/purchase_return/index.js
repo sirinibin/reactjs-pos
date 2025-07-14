@@ -96,7 +96,6 @@ function PurchaseReturnIndex(props) {
         }
 
         if (props.selectedVendors?.length > 0) {
-
             searchByMultipleValuesField("vendor_id", props.selectedVendors, true);
         }
 

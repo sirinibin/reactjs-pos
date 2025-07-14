@@ -46,6 +46,8 @@ const TimeAgo = ({ date }) => {
 
 
 function QuotationIndex(props) {
+  let [enableSelection, setEnableSelection] = useState(false);
+
   const { lastMessage } = useContext(WebSocketContext);
 
   const ReportPreviewRef = useRef();
@@ -132,6 +134,20 @@ function QuotationIndex(props) {
   const [selectedStatusList, setSelectedStatusList] = useState([]);
 
   useEffect(() => {
+    if (props.enableSelection) {
+      setEnableSelection(props.enableSelection);
+    } else {
+      setEnableSelection(false);
+    }
+
+    if (props.selectedCustomers?.length > 0) {
+      searchByMultipleValuesField("customer_id", props.selectedCustomers, true);
+    }
+
+    if (props.selectedPaymentStatusList) {
+      searchByMultipleValuesField("payment_status", props.selectedPaymentStatusList, true);
+    }
+
     list();
     getStore(localStorage.getItem("store_id"));
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -319,7 +335,7 @@ function QuotationIndex(props) {
     list();
   }
 
-  function searchByMultipleValuesField(field, values) {
+  function searchByMultipleValuesField(field, values, noList) {
     if (field === "created_by") {
       setSelectedCreatedByUsers(values);
     } else if (field === "customer_id") {
@@ -341,7 +357,9 @@ function QuotationIndex(props) {
     page = 1;
     setPage(page);
 
-    list();
+    if (!noList) {
+      list();
+    }
   }
 
 
@@ -656,6 +674,7 @@ function QuotationIndex(props) {
 
   const defaultColumns = useMemo(() => [
     { key: "actions", label: "Actions", fieldName: "actions", visible: true },
+    { key: "select", label: "Select", fieldName: "select", visible: true },
     { key: "id", label: "ID", fieldName: "code", visible: true },
     { key: "date", label: "Date", fieldName: "date", visible: true },
     { key: "customer", label: "Customer", fieldName: "customer_name", visible: true },
@@ -684,7 +703,13 @@ function QuotationIndex(props) {
   const [showSettings, setShowSettings] = useState(false);
   // Load settings from localStorage
   useEffect(() => {
-    const saved = localStorage.getItem("quotation_table_settings");
+    let saved = "";
+    if (enableSelection === true) {
+      saved = localStorage.getItem("select_quotation_table_settings");
+    } else {
+      saved = localStorage.getItem("quotation_table_settings");
+    }
+
     if (saved) setColumns(JSON.parse(saved));
 
     let missingOrUpdated = false;
@@ -713,16 +738,26 @@ function QuotationIndex(props) {
     }*/
 
     if (missingOrUpdated) {
-      localStorage.setItem("quotation_table_settings", JSON.stringify(defaultColumns));
+      if (enableSelection === true) {
+        localStorage.setItem("select_quotation_table_settings", JSON.stringify(defaultColumns));
+      } else {
+        localStorage.setItem("quotation_table_settings", JSON.stringify(defaultColumns));
+      }
+
       setColumns(defaultColumns);
     }
 
     //2nd
 
-  }, [defaultColumns]);
+  }, [defaultColumns, enableSelection]);
 
   function RestoreDefaultSettings() {
-    localStorage.setItem("quotation_table_settings", JSON.stringify(defaultColumns));
+    if (enableSelection === true) {
+      localStorage.setItem("select_quotation_table_settings", JSON.stringify(defaultColumns));
+    } else {
+      localStorage.setItem("quotation_table_settings", JSON.stringify(defaultColumns));
+    }
+
     setColumns(defaultColumns);
 
     setShowSuccess(true);
@@ -731,8 +766,13 @@ function QuotationIndex(props) {
 
   // Save column settings to localStorage
   useEffect(() => {
-    localStorage.setItem("quotation_table_settings", JSON.stringify(columns));
-  }, [columns]);
+    if (enableSelection === true) {
+      localStorage.setItem("select_quotation_table_settings", JSON.stringify(columns));
+    } else {
+      localStorage.setItem("quotation_table_settings", JSON.stringify(columns));
+    }
+
+  }, [columns, enableSelection]);
 
   const handleToggleColumn = (index) => {
     const updated = [...columns];
@@ -769,11 +809,14 @@ function QuotationIndex(props) {
 
   const QuotationSalesReturnListRef = useRef();
 
-
   const CustomerUpdateFormRef = useRef();
   function openCustomerUpdateForm(id) {
     CustomerUpdateFormRef.current.open(id);
   }
+
+  const handleSelected = (selected) => {
+    props.onSelectQuotation(selected); // Send to parent
+  };
 
 
   return (
@@ -831,35 +874,66 @@ function QuotationIndex(props) {
                       {...provided.droppableProps}
                       ref={provided.innerRef}
                     >
-                      {columns.map((col, index) => (
-                        <Draggable
-                          key={col.key}
-                          draggableId={col.key}
-                          index={index}
-                        >
-                          {(provided) => (
-                            <li
-                              className="list-group-item d-flex justify-content-between align-items-center"
-                              ref={provided.innerRef}
-                              {...provided.draggableProps}
-                              {...provided.dragHandleProps}                                                        >
-                              <div>
-                                <input
-                                  style={{ width: "20px", height: "20px" }}
-                                  type="checkbox"
-                                  className="form-check-input me-2"
-                                  checked={col.visible}
-                                  onChange={() => {
-                                    handleToggleColumn(index);
-                                  }}
-                                />
-                                {col.label}
-                              </div>
-                              <span style={{ cursor: "grab" }}>☰</span>
-                            </li>
-                          )}
-                        </Draggable>
-                      ))}
+                      {columns.map((col, index) => {
+                        return (
+                          <>
+                            {col.key === "select" && enableSelection && <Draggable
+                              key={col.key}
+                              draggableId={col.key}
+                              index={index}
+                            >
+                              {(provided) => (
+                                <li
+                                  className="list-group-item d-flex justify-content-between align-items-center"
+                                  ref={provided.innerRef}
+                                  {...provided.draggableProps}
+                                  {...provided.dragHandleProps}                                                        >
+                                  <div>
+                                    <input
+                                      style={{ width: "20px", height: "20px" }}
+                                      type="checkbox"
+                                      className="form-check-input me-2"
+                                      checked={col.visible}
+                                      onChange={() => {
+                                        handleToggleColumn(index);
+                                      }}
+                                    />
+                                    {col.label}
+                                  </div>
+                                  <span style={{ cursor: "grab" }}>☰</span>
+                                </li>
+                              )}
+                            </Draggable>}
+
+                            {col.key !== "select" && <Draggable
+                              key={col.key}
+                              draggableId={col.key}
+                              index={index}
+                            >
+                              {(provided) => (
+                                <li
+                                  className="list-group-item d-flex justify-content-between align-items-center"
+                                  ref={provided.innerRef}
+                                  {...provided.draggableProps}
+                                  {...provided.dragHandleProps}                                                        >
+                                  <div>
+                                    <input
+                                      style={{ width: "20px", height: "20px" }}
+                                      type="checkbox"
+                                      className="form-check-input me-2"
+                                      checked={col.visible}
+                                      onChange={() => {
+                                        handleToggleColumn(index);
+                                      }}
+                                    />
+                                    {col.label}
+                                  </div>
+                                  <span style={{ cursor: "grab" }}>☰</span>
+                                </li>
+                              )}
+                            </Draggable>}
+                          </>)
+                      })}
                       {provided.placeholder}
                     </ul>
                   )}
@@ -1169,6 +1243,7 @@ function QuotationIndex(props) {
                         {columns.filter(c => c.visible).map((col) => {
                           return (<>
                             {col.key === "actions" && <th key={col.key}>{col.label}</th>}
+                            {col.key === "select" && enableSelection && <th key={col.key}>{col.label}</th>}
                             {col.key === "zatca.reporting_passed" && store.zatca?.phase === "2" && store.zatca?.connected && <th>
                               <b
                                 style={{
@@ -1188,7 +1263,7 @@ function QuotationIndex(props) {
                                 ) : null}
                               </b>
                             </th>}
-                            {col.key !== "actions" && col.key !== "zatca.reporting_passed" && <th>
+                            {col.key !== "actions" && col.key !== "select" && col.key !== "zatca.reporting_passed" && <th>
                               <b
                                 style={{
                                   textDecoration: "underline",
@@ -1214,6 +1289,7 @@ function QuotationIndex(props) {
                         {columns.filter(c => c.visible).map((col) => {
                           return (<>
                             {(col.key === "actions" || col.key === "actions_end") && <th></th>}
+                            {col.key === "select" && enableSelection && <th>{col.label}</th>}
                             {col.key !== "actions" &&
                               col.key !== "date" &&
                               col.key !== "reported_to_zatca" &&
@@ -2288,6 +2364,13 @@ function QuotationIndex(props) {
                                     }}
                                   >
                                     <i className="bi bi-arrow-left"></i> Return
+                                  </Button>
+                                </td>}
+                                {(col.key === "select" && enableSelection) && <td style={{ width: "auto", whiteSpace: "nowrap" }}>
+                                  <Button className="btn btn-success btn-sm" onClick={() => {
+                                    handleSelected(quotation);
+                                  }}>
+                                    Select
                                   </Button>
                                 </td>}
                                 {(col.fieldName === "code") && <td style={{ width: "auto", whiteSpace: "nowrap" }}>

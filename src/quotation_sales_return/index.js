@@ -94,11 +94,12 @@ function QuotationSalesReturnIndex(props) {
 
     let [enableSelection, setEnableSelection] = useState(true);
     useEffect(() => {
-        if (!props.onSelectQuotationSalesReturn) {
-            setEnableSelection(false);
+        if (props.enableSelection) {
+            setEnableSelection(props.enableSelection);
         } else {
-            setEnableSelection(true);
+            setEnableSelection(false);
         }
+
 
         if (props.selectedCustomers?.length > 0) {
             searchByMultipleValuesField("customer_id", props.selectedCustomers, true);
