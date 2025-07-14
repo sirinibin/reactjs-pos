@@ -1141,7 +1141,7 @@ function SalesReturnIndex(props) {
 
     const SalesRef = useRef();
     function openSales() {
-        SalesRef.current.open();
+        SalesRef.current.open(true);
     }
 
     const handleSelectedSale = (selected) => {

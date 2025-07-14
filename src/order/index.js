@@ -55,6 +55,8 @@ const TimeAgo = ({ date }) => {
 
 
 const OrderIndex = forwardRef((props, ref) => {
+    let [enableSelection, setEnableSelection] = useState(false);
+
     const dragRef = useRef(null);
     const { lastMessage } = useContext(WebSocketContext);
 
@@ -636,6 +638,20 @@ const OrderIndex = forwardRef((props, ref) => {
 
 
     useEffect(() => {
+        if (props.enableSelection) {
+            setEnableSelection(props.enableSelection);
+        } else {
+            setEnableSelection(false);
+        }
+
+        if (props.selectedCustomers?.length > 0) {
+            searchByMultipleValuesField("customer_id", props.selectedCustomers, true);
+        }
+
+        if (props.selectedPaymentStatusList) {
+            searchByMultipleValuesField("payment_status", props.selectedPaymentStatusList, true);
+        }
+
         list();
         if (localStorage.getItem("store_id")) {
             getStore(localStorage.getItem("store_id"));
@@ -847,7 +863,7 @@ const OrderIndex = forwardRef((props, ref) => {
         list();
     }
 
-    function searchByMultipleValuesField(field, values) {
+    function searchByMultipleValuesField(field, values, noList) {
         if (field === "created_by") {
             setSelectedCreatedByUsers(values);
         } else if (field === "customer_id") {
@@ -867,7 +883,9 @@ const OrderIndex = forwardRef((props, ref) => {
         page = 1;
         setPage(page);
 
-        list();
+        if (!noList) {
+            list();
+        }
     }
 
 
@@ -1254,6 +1272,7 @@ const OrderIndex = forwardRef((props, ref) => {
     //Table settings
     const defaultColumns = useMemo(() => [
         { key: "actions", label: "Actions", fieldName: "actions", visible: true },
+        { key: "select", label: "Select", fieldName: "select", visible: true },
         { key: "id", label: "ID", fieldName: "code", visible: true },
         { key: "date", label: "Date", fieldName: "date", visible: true },
         { key: "customer", label: "Customer", fieldName: "customer_name", visible: true },
@@ -1279,7 +1298,13 @@ const OrderIndex = forwardRef((props, ref) => {
     const [showSettings, setShowSettings] = useState(false);
     // Load settings from localStorage
     useEffect(() => {
-        const saved = localStorage.getItem("sales_table_settings");
+        let saved = "";
+        if (enableSelection === true) {
+            saved = localStorage.getItem("select_sales_table_settings");
+        } else {
+            saved = localStorage.getItem("sales_table_settings");
+        }
+
         if (saved) setColumns(JSON.parse(saved));
 
         let missingOrUpdated = false;
@@ -1308,16 +1333,26 @@ const OrderIndex = forwardRef((props, ref) => {
         }*/
 
         if (missingOrUpdated) {
-            localStorage.setItem("sales_table_settings", JSON.stringify(defaultColumns));
+            if (enableSelection === true) {
+                localStorage.setItem("select_sales_table_settings", JSON.stringify(defaultColumns));
+            } else {
+                localStorage.setItem("sales_table_settings", JSON.stringify(defaultColumns));
+            }
+
             setColumns(defaultColumns);
         }
 
         //2nd
 
-    }, [defaultColumns]);
+    }, [defaultColumns, enableSelection]);
 
     function RestoreDefaultSettings() {
-        localStorage.setItem("sales_table_settings", JSON.stringify(defaultColumns));
+        if (enableSelection === true) {
+            localStorage.setItem("select_sales_table_settings", JSON.stringify(defaultColumns));
+        } else {
+            localStorage.setItem("sales_table_settings", JSON.stringify(defaultColumns));
+        }
+
         setColumns(defaultColumns);
 
         setShowSuccess(true);
@@ -1326,8 +1361,12 @@ const OrderIndex = forwardRef((props, ref) => {
 
     // Save column settings to localStorage
     useEffect(() => {
-        localStorage.setItem("sales_table_settings", JSON.stringify(columns));
-    }, [columns]);
+        if (enableSelection === true) {
+            localStorage.setItem("select_sales_table_settings", JSON.stringify(columns));
+        } else {
+            localStorage.setItem("sales_table_settings", JSON.stringify(columns));
+        }
+    }, [columns, enableSelection]);
 
     const handleToggleColumn = (index) => {
         const updated = [...columns];
@@ -1347,6 +1386,10 @@ const OrderIndex = forwardRef((props, ref) => {
     function openCustomerUpdateForm(id) {
         CustomerUpdateFormRef.current.open(id);
     }
+
+    const handleSelected = (selected) => {
+        props.onSelectSale(selected); // Send to parent
+    };
 
     return (
         <>
@@ -1382,35 +1425,66 @@ const OrderIndex = forwardRef((props, ref) => {
                                             {...provided.droppableProps}
                                             ref={provided.innerRef}
                                         >
-                                            {columns.map((col, index) => (
-                                                <Draggable
-                                                    key={col.key}
-                                                    draggableId={col.key}
-                                                    index={index}
-                                                >
-                                                    {(provided) => (
-                                                        <li
-                                                            className="list-group-item d-flex justify-content-between align-items-center"
-                                                            ref={provided.innerRef}
-                                                            {...provided.draggableProps}
-                                                            {...provided.dragHandleProps}                                                        >
-                                                            <div>
-                                                                <input
-                                                                    style={{ width: "20px", height: "20px" }}
-                                                                    type="checkbox"
-                                                                    className="form-check-input me-2"
-                                                                    checked={col.visible}
-                                                                    onChange={() => {
-                                                                        handleToggleColumn(index);
-                                                                    }}
-                                                                />
-                                                                {col.label}
-                                                            </div>
-                                                            <span style={{ cursor: "grab" }}>☰</span>
-                                                        </li>
-                                                    )}
-                                                </Draggable>
-                                            ))}
+                                            {columns.map((col, index) => {
+                                                return (
+                                                    <>
+                                                        {col.key === "select" && enableSelection && <Draggable
+                                                            key={col.key}
+                                                            draggableId={col.key}
+                                                            index={index}
+                                                        >
+                                                            {(provided) => (
+                                                                <li
+                                                                    className="list-group-item d-flex justify-content-between align-items-center"
+                                                                    ref={provided.innerRef}
+                                                                    {...provided.draggableProps}
+                                                                    {...provided.dragHandleProps}                                                        >
+                                                                    <div>
+                                                                        <input
+                                                                            style={{ width: "20px", height: "20px" }}
+                                                                            type="checkbox"
+                                                                            className="form-check-input me-2"
+                                                                            checked={col.visible}
+                                                                            onChange={() => {
+                                                                                handleToggleColumn(index);
+                                                                            }}
+                                                                        />
+                                                                        {col.label}
+                                                                    </div>
+                                                                    <span style={{ cursor: "grab" }}>☰</span>
+                                                                </li>
+                                                            )}
+                                                        </Draggable>}
+
+                                                        {col.key !== "select" && <Draggable
+                                                            key={col.key}
+                                                            draggableId={col.key}
+                                                            index={index}
+                                                        >
+                                                            {(provided) => (
+                                                                <li
+                                                                    className="list-group-item d-flex justify-content-between align-items-center"
+                                                                    ref={provided.innerRef}
+                                                                    {...provided.draggableProps}
+                                                                    {...provided.dragHandleProps}                                                        >
+                                                                    <div>
+                                                                        <input
+                                                                            style={{ width: "20px", height: "20px" }}
+                                                                            type="checkbox"
+                                                                            className="form-check-input me-2"
+                                                                            checked={col.visible}
+                                                                            onChange={() => {
+                                                                                handleToggleColumn(index);
+                                                                            }}
+                                                                        />
+                                                                        {col.label}
+                                                                    </div>
+                                                                    <span style={{ cursor: "grab" }}>☰</span>
+                                                                </li>
+                                                            )}
+                                                        </Draggable>}
+                                                    </>)
+                                            })}
                                             {provided.placeholder}
                                         </ul>
                                     )}
@@ -1742,6 +1816,7 @@ const OrderIndex = forwardRef((props, ref) => {
                                                 {columns.filter(c => c.visible).map((col) => {
                                                     return (<>
                                                         {col.key === "actions" && <th key={col.key}>{col.label}</th>}
+                                                        {col.key === "select" && enableSelection && <th key={col.key}>{col.label}</th>}
                                                         {col.key === "zatca.reporting_passed" && store.zatca?.phase === "2" && store.zatca?.connected && <th>
                                                             <b
                                                                 style={{
@@ -1761,7 +1836,7 @@ const OrderIndex = forwardRef((props, ref) => {
                                                                 ) : null}
                                                             </b>
                                                         </th>}
-                                                        {col.key !== "actions" && col.key !== "zatca.reporting_passed" && <th>
+                                                        {col.key !== "actions" && col.key !== "select" && col.key !== "zatca.reporting_passed" && <th>
                                                             <b
                                                                 style={{
                                                                     textDecoration: "underline",
@@ -1787,7 +1862,9 @@ const OrderIndex = forwardRef((props, ref) => {
                                                 {columns.filter(c => c.visible).map((col) => {
                                                     return (<>
                                                         {(col.key === "actions" || col.key === "actions_end") && <th></th>}
+                                                        {col.key === "select" && enableSelection && <th></th>}
                                                         {col.key !== "actions" &&
+                                                            col.key !== "select" &&
                                                             col.key !== "date" &&
                                                             col.key !== "zatca.reporting_passed" &&
                                                             col.key !== "payment_status" &&
@@ -2109,8 +2186,14 @@ const OrderIndex = forwardRef((props, ref) => {
                                                                     >
                                                                         <i className="bi bi-arrow-left"></i> Return
                                                                     </Button>
-                                                                </td>
-                                                                }
+                                                                </td>}
+                                                                {(col.key === "select" && enableSelection) && <td style={{ width: "auto", whiteSpace: "nowrap" }}>
+                                                                    <Button className="btn btn-success btn-sm" onClick={() => {
+                                                                        handleSelected(order);
+                                                                    }}>
+                                                                        Select
+                                                                    </Button>
+                                                                </td>}
                                                                 {(col.fieldName === "code") && <td style={{ width: "auto", whiteSpace: "nowrap" }}>
                                                                     {order.code}
                                                                 </td>}

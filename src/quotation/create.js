@@ -1801,7 +1801,7 @@ const QuotationCreate = forwardRef((props, ref) => {
 
   const SalesRef = useRef();
   function openSales() {
-    SalesRef.current.open(selectedCustomers);
+    SalesRef.current.open(false, selectedCustomers);
   }
 
   const handleSelectedSale = (selectedSale) => {

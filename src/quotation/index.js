@@ -1289,8 +1289,9 @@ function QuotationIndex(props) {
                         {columns.filter(c => c.visible).map((col) => {
                           return (<>
                             {(col.key === "actions" || col.key === "actions_end") && <th></th>}
-                            {col.key === "select" && enableSelection && <th>{col.label}</th>}
+                            {col.key === "select" && enableSelection && <th></th>}
                             {col.key !== "actions" &&
+                              col.key !== "select" &&
                               col.key !== "date" &&
                               col.key !== "reported_to_zatca" &&
                               col.key !== "payment_status" &&

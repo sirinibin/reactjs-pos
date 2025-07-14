@@ -869,7 +869,7 @@ const CustomerDepositCreate = forwardRef((props, ref) => {
                 name: "Paid partially",
             }
         ];
-        SalesRef.current.open(selectedCustomers, selectedPaymentStatusList);
+        SalesRef.current.open(true, selectedCustomers, selectedPaymentStatusList);
     }
 
     const PurchaseReturnsRef = useRef();

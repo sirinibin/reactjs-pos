@@ -81,7 +81,7 @@ const Quotations = forwardRef((props, ref) => {
                 )}
             >
                 <Modal.Header>
-                    <Modal.Title>{"Select Quotation"}</Modal.Title>
+                    <Modal.Title>{enableSelection ? "Select Quotation" : "Quotations"}</Modal.Title>
                     <div className="col align-self-end text-end">
                         <button
                             type="button"
