@@ -409,6 +409,17 @@ function PurchaseReturnIndex(props) {
 
     async function suggestVendors(searchTerm) {
         console.log("Inside handle suggestVendors");
+        setVendorOptions([]);
+
+        console.log("searchTerm:" + searchTerm);
+        if (!searchTerm) {
+            /*
+            setTimeout(() => {
+                setOpenVendorSearchResult(false);
+            }, 100);*/
+
+            return;
+        }
 
         var params = {
             query: searchTerm,
@@ -421,7 +432,7 @@ function PurchaseReturnIndex(props) {
 
         var queryString = ObjectToSearchQueryParams(params);
         if (queryString !== "") {
-            queryString = `&${queryString}`;
+            queryString = "&" + queryString;
         }
 
         const requestOptions = {
@@ -432,12 +443,52 @@ function PurchaseReturnIndex(props) {
             },
         };
 
-        let Select = "select=id,additional_keywords,code,vat_no,name,phone,name_in_arabic,phone_in_arabic,search_label";
-        let result = await fetch(`/v1/vendor?${Select}${queryString}`, requestOptions);
+        let Select = "select=id,credit_balance,credit_limit,additional_keywords,code,use_remarks_in_purchases,remarks,vat_no,name,phone,name_in_arabic,phone_in_arabic,search_label";
+        // setIsVendorsLoading(true);
+        let result = await fetch(
+            "/v1/vendor?" + Select + queryString,
+            requestOptions
+        );
         let data = await result.json();
+        if (!data.result || data.result.length === 0) {
+            // openVendorSearchResult = false;
+            // setOpenVendorSearchResult(false);
+            return;
+        }
 
-        setVendorOptions(data.result);
+        //openVendorSearchResult = true;
+        //setOpenVendorSearchResult(true);
+
+        if (data.result) {
+            const filtered = data.result.filter((opt) => customVendorFilter(opt, searchTerm));
+            setVendorOptions(filtered);
+        } else {
+            setVendorOptions([]);
+        }
+        // setIsVendorsLoading(false);
     }
+
+    const customVendorFilter = useCallback((option, query) => {
+        const normalize = (str) => str?.toLowerCase().replace(/\s+/g, " ").trim() || "";
+
+        const q = normalize(query);
+        const qWords = q.split(" ");
+
+        const fields = [
+            option.code,
+            option.vat_no,
+            option.name,
+            option.name_in_arabic,
+            option.phone,
+            option.search_label,
+            option.phone_in_arabic,
+            ...(Array.isArray(option.additional_keywords) ? option.additional_keywords : []),
+        ];
+
+        const searchable = normalize(fields.join(" "));
+
+        return qWords.every((word) => searchable.includes(word));
+    }, []);
 
     async function suggestUsers(searchTerm) {
         console.log("Inside handle suggestUsers");

@@ -697,6 +697,7 @@ function QuotationSalesReturnIndex(props) {
         setCustomerOptions(filtered);
         // setIsCustomersLoading(false);
     }
+
     async function suggestUsers(searchTerm) {
         console.log("Inside handle suggestUsers");
         setCustomerOptions([]);

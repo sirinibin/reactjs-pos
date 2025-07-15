@@ -320,8 +320,6 @@ const Preview = forwardRef((props, ref) => {
                 }
             }
 
-
-
         } else if (model.modelName === "quotation_sales_return" || model.modelName === "whatsapp_quotation_sales_return") {
             if (model.payment_status === "not_paid") {
                 model.invoiceTitle = "CREDIT RETURN INVOICE | فاتورة إرجاع الائتمان";
