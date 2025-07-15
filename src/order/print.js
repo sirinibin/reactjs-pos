@@ -38,6 +38,12 @@ const OrderPrint = forwardRef((props, ref) => {
 
                 setInvoiceTitle(modelName);
 
+
+                if (modelName === "sales_return" || modelName === "whatsapp_sales_return" || modelName === "purchase_return" || modelName === "whatsapp_purchase_return" || modelName === "quotation_sales_return" || modelName === "whatsapp_quotation_sales_return") {
+                    model.products = model.products?.filter(product => product.selected);
+                }
+
+
                 if (model.store?.code === "PH2" || model.store?.code === "LGK-SIMULATION" || model.store?.code === "LGK") {
 
 
