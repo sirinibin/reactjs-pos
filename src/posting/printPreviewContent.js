@@ -3,6 +3,7 @@ import NumberFormat from "react-number-format";
 import { format } from "date-fns";
 import n2words from 'n2words'
 import Amount from "../utils/amount.js";
+import { trimTo2Decimals } from "../utils/numberUtils";
 
 const BalanceSheetPrintPreviewContent = forwardRef((props, ref) => {
 
@@ -524,22 +525,10 @@ const BalanceSheetPrintPreviewContent = forwardRef((props, ref) => {
                                                 </span>}
                                             </th>
                                             <td className="text-end" style={{ width: "auto", padding: "3px", whiteSpace: "nowrap", border: "solid 0px", borderRight: tableBorderThickness }}>
-                                                <NumberFormat
-                                                    value={parseFloat(post.credit_amount)?.toFixed(2)}
-                                                    displayType={"text"}
-                                                    thousandSeparator={true}
-                                                    suffix={""}
-                                                    renderText={(value, props) => value}
-                                                />
+                                                <Amount amount={trimTo2Decimals(post.credit_amount)} />
                                             </td>
                                             <td className="text-end" style={{ width: "auto", padding: "3px", whiteSpace: "nowrap", border: "solid 0px" }}>
-                                                <NumberFormat
-                                                    value={parseFloat(post.balance_amount)?.toFixed(2)}
-                                                    displayType={"text"}
-                                                    thousandSeparator={true}
-                                                    suffix={""}
-                                                    renderText={(value, props) => value}
-                                                />
+                                                <Amount amount={trimTo2Decimals(post.balance_amount)} />
                                             </td>
                                             {/*<td style={{ width: "auto", whiteSpace: "nowrap", padding: "3px", borderRight: tableBorderThickness }}>{toTitleCaseFromUnderscore(post.reference_model)}</td>*/}
 
@@ -550,25 +539,10 @@ const BalanceSheetPrintPreviewContent = forwardRef((props, ref) => {
                                             <b>Amount</b>
                                         </td>
                                         <td colSpan={2} style={{ textAlign: "right", padding: "3px", borderRight: tableBorderThickness }}><b>
-                                            <NumberFormat
-                                                value={props.model.debitTotal?.toFixed(2)}
-                                                displayType={"text"}
-                                                thousandSeparator={true}
-                                                suffix={""}
-                                                renderText={(value, props) => value}
-                                            />
-
+                                            <Amount amount={trimTo2Decimals(props.model.debitTotal)} />
                                         </b></td>
                                         <td colSpan={2} style={{ textAlign: "right", padding: "3px", borderRight: tableBorderThickness }}><b>
-                                            <NumberFormat
-                                                value={props.model.creditTotal?.toFixed(2)}
-                                                displayType={"text"}
-                                                thousandSeparator={true}
-                                                suffix={""}
-                                                renderText={(value, props) => value}
-                                            />
-
-
+                                            <Amount amount={trimTo2Decimals(props.model.creditTotal)} />
                                         </b></td>
                                         <td colSpan={2}></td>
 
@@ -596,25 +570,10 @@ const BalanceSheetPrintPreviewContent = forwardRef((props, ref) => {
                                             <b>Total Amount</b>
                                         </td>
                                         <td colSpan={2} style={{ textAlign: "right", padding: "3px", borderRight: tableBorderThickness }}><b>
-                                            <NumberFormat
-                                                value={props.model.creditTotal > props.model.debitTotal ? props.model.creditTotal?.toFixed(2) : props.model.debitTotal?.toFixed(2)}
-                                                displayType={"text"}
-                                                thousandSeparator={true}
-                                                suffix={""}
-                                                renderText={(value, props) => value}
-                                            />
-
+                                            <Amount amount={props.model.creditTotal > props.model.debitTotal ? trimTo2Decimals(props.model.creditTotal) : trimTo2Decimals(props.model.debitTotal)} />
                                         </b></td>
                                         <td colSpan={2} style={{ textAlign: "right", padding: "3px", borderRight: tableBorderThickness }}><b>
-                                            <NumberFormat
-                                                value={props.model.creditTotal > props.model.debitTotal ? props.model.creditTotal?.toFixed(2) : props.model.debitTotal?.toFixed(2)}
-                                                displayType={"text"}
-                                                thousandSeparator={true}
-                                                suffix={""}
-                                                renderText={(value, props) => value}
-                                            />
-
-
+                                            <Amount amount={props.model.creditTotal > props.model.debitTotal ? trimTo2Decimals(props.model.creditTotal) : trimTo2Decimals(props.model.debitTotal)} />
                                         </b></td>
                                         <td colSpan={2}></td>
 

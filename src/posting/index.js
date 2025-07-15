@@ -360,38 +360,6 @@ const PostingIndex = forwardRef((props, ref) => {
     }
 
     function RemoveOpeningBalance(posting) {
-        /*
-        if (debitBalance > 0) {
-            if (debitBalanceBoughtDown > 0) {
-                debitBalance += debitBalanceBoughtDown;
-            }
-
-            if (creditBalanceBoughtDown > 0) {
-                if (creditBalanceBoughtDown > debitBalance) {
-                    debitBalance = creditBalanceBoughtDown - debitBalance;
-                } else {
-                    debitBalance = debitBalance - creditBalanceBoughtDown;
-                }
-            }
-            setDebitBalance(debitBalance);
-        }
-
-        if (creditBalance > 0) {
-            if (debitBalanceBoughtDown > 0) {
-                if (creditBalance > debitBalanceBoughtDown) {
-                    creditBalance = creditBalance - debitBalanceBoughtDown;
-                } else {
-                    creditBalance = debitBalanceBoughtDown - creditBalance;
-                }
-
-            }
-
-            if (creditBalanceBoughtDown > 0) {
-                creditBalance += creditBalanceBoughtDown;
-            }
-            setCreditBalance(creditBalance);
-        }*/
-
         if (debitBalanceBoughtDown > 0) {
             debitTotal -= debitBalanceBoughtDown;
             setDebitTotal(debitTotal);
@@ -402,9 +370,6 @@ const PostingIndex = forwardRef((props, ref) => {
             setCreditTotal(creditTotal);
         }
 
-
-
-        //  alert(selectedAccount.type)
         let lastPostBalance = 0;
 
         for (let i = 0; i < posting?.length; i++) {
@@ -445,7 +410,19 @@ const PostingIndex = forwardRef((props, ref) => {
             setCreditBalance(0);
         }
 
+        return posting;
+    }
 
+    function RemoveDiscountAllowed(posting) {
+        for (let i = 0; i < posting?.length; i++) {
+            for (let j = 0; j < posting[i].posts?.length; j++) {
+                if (posting[i].posts[j].account_name === "CASH DISCOUNT ALLOWED") {
+                    posting[i].posts[j - 1].credit += posting[i].posts[j].credit;
+                    posting[i].posts[j - 1].balance -= posting[i].posts[j].credit;
+                    delete posting[i].posts[j];
+                }
+            }
+        }
 
         return posting;
     }
@@ -580,6 +557,11 @@ const PostingIndex = forwardRef((props, ref) => {
                     selectedAccount.posting = RemoveOpeningBalance(selectedAccount.posting);
                     setPostingList([...selectedAccount.posting]);
                 }
+
+                if (ignoreDiscountAllowed) {
+                    selectedAccount.posting = RemoveDiscountAllowed(selectedAccount.posting);
+                    setPostingList([...selectedAccount.posting]);
+                }
             })
             .catch((error) => {
                 setIsListLoading(false);
@@ -667,7 +649,13 @@ const PostingIndex = forwardRef((props, ref) => {
             account.posts = RemoveOpeningBalance(allPostings);
         }
 
+        if (ignoreDiscountAllowed) {
+            list();
+            account.posts = RemoveDiscountAllowed(account.posts);
+        }
+
         account.ignoreOpeningBalance = ignoreOpeningBalance;
+        account.ignoreDiscountAllowed = ignoreDiscountAllowed;
 
 
         /*
@@ -786,6 +774,7 @@ const PostingIndex = forwardRef((props, ref) => {
     };
 
     let [ignoreOpeningBalance, setIgnoreOpeningBalance] = useState(false)
+    let [ignoreDiscountAllowed, setIgnoreDiscountAllowed] = useState(false)
 
     return (
         <>
@@ -996,8 +985,6 @@ const PostingIndex = forwardRef((props, ref) => {
                                         <div className="row">
                                             <div className="col text-start">
                                                 <p className="text-start">
-
-
                                                     <span style={{ marginLeft: "10px" }}>
                                                         <input type="checkbox"
                                                             value={ignoreOpeningBalance}
@@ -1012,8 +999,23 @@ const PostingIndex = forwardRef((props, ref) => {
 
                                                         /> &nbsp;Ignore Opening Balance
                                                     </span>
+                                                    {selectedAccount?.reference_model === "customer" && <span style={{ marginLeft: "10px" }}>
+                                                        <input type="checkbox"
+                                                            value={ignoreDiscountAllowed}
+                                                            checked={ignoreDiscountAllowed}
+                                                            onChange={(e) => {
+                                                                ignoreDiscountAllowed = !ignoreDiscountAllowed;
+                                                                setIgnoreDiscountAllowed(ignoreDiscountAllowed);
+                                                                list();
+                                                            }}
+                                                            className=""
+                                                            id="ignoreOpeningBalance"
+
+                                                        /> &nbsp;Ignore Discount Allowed A/c
+                                                    </span>}
                                                 </p>
                                             </div>
+
                                         </div>
                                         <div className="table-responsive" style={{ overflowX: "auto" }}>
                                             <table className="table table-striped table-sm table-bordered">

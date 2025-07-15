@@ -118,6 +118,10 @@ const BalanceSheetPrintPreview = forwardRef((props, ref) => {
             });
             for (let j = offset; j < totalPosts; j++) {
                 for (let k = 0; k < model.posts[j].posts?.length; k++) {
+                    if (!model.posts[j].posts[k]) {
+                        continue;
+                    }
+
                     model.pages[i].posts.push({
                         "no": no,
                         "date": model.posts[j].posts[k].date,
