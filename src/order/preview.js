@@ -310,9 +310,18 @@ const Preview = forwardRef((props, ref) => {
 
             if (model.type === "invoice" && model.payment_status === "not_paid") {
                 model.invoiceTitle = "CREDIT INVOICE | فاتورة ائتمانية";
+                if (model.store.code === "LGK-SIMULATION" || model.store.code === "LGK") {
+                    model.invoiceTitle = "CREDIT SALES ORDER | أمر مبيعات الائتمان";
+                }
             } else if (model.type === "invoice") {
                 model.invoiceTitle = "INVOICE | فاتورة";
+                if (model.store.code === "LGK-SIMULATION" || model.store.code === "LGK") {
+                    model.invoiceTitle = "SALES ORDER | أمر المبيعات";
+                }
             }
+
+
+
         } else if (model.modelName === "quotation_sales_return" || model.modelName === "whatsapp_quotation_sales_return") {
             if (model.payment_status === "not_paid") {
                 model.invoiceTitle = "CREDIT RETURN INVOICE | فاتورة إرجاع الائتمان";
