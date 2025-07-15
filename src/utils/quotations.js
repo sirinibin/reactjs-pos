@@ -17,11 +17,11 @@ const Quotations = forwardRef((props, ref) => {
             enableSelection = enableSelectionValue;
             setEnableSelection(enableSelection);
 
-            type = "";
-            setType(type);
-
             if (typeValue) {
-                type = typeValue
+                type = typeValue;
+                setType(type);
+            } else {
+                type = "";
                 setType(type);
             }
 

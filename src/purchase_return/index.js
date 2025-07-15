@@ -89,10 +89,10 @@ function PurchaseReturnIndex(props) {
 
 
     useEffect(() => {
-        if (!props.onSelectPurchaseReturn) {
-            setEnableSelection(false);
+        if (props.enableSelection) {
+            setEnableSelection(props.enableSelection);
         } else {
-            setEnableSelection(true);
+            setEnableSelection(false);
         }
 
         if (props.selectedVendors?.length > 0) {
@@ -834,7 +834,7 @@ function PurchaseReturnIndex(props) {
 
     const PurchasesRef = useRef();
     function openPurchases() {
-        PurchasesRef.current.open();
+        PurchasesRef.current.open(true);
     }
 
     const handleSelectedPurchase = (selected) => {
@@ -883,7 +883,13 @@ function PurchaseReturnIndex(props) {
     const [showSettings, setShowSettings] = useState(false);
     // Load settings from localStorage
     useEffect(() => {
-        const saved = localStorage.getItem("purchase_return_table_settings");
+        let saved = "";
+        if (enableSelection === true) {
+            saved = localStorage.getItem("select_purchase_return_table_settings");
+        } else {
+            saved = localStorage.getItem("purchase_return_table_settings");
+        }
+
         if (saved) setColumns(JSON.parse(saved));
 
         let missingOrUpdated = false;
@@ -912,16 +918,24 @@ function PurchaseReturnIndex(props) {
         }*/
 
         if (missingOrUpdated) {
-            localStorage.setItem("purchase_return_table_settings", JSON.stringify(defaultColumns));
+            if (enableSelection === true) {
+                localStorage.setItem("select_purchase_return_table_settings", JSON.stringify(defaultColumns));
+            } else {
+                localStorage.setItem("purchase_return_table_settings", JSON.stringify(defaultColumns));
+            }
             setColumns(defaultColumns);
         }
 
         //2nd
 
-    }, [defaultColumns]);
+    }, [defaultColumns, enableSelection]);
 
     function RestoreDefaultSettings() {
-        localStorage.setItem("purchase_return_table_settings", JSON.stringify(defaultColumns));
+        if (enableSelection === true) {
+            localStorage.setItem("select_purchase_return_table_settings", JSON.stringify(defaultColumns));
+        } else {
+            localStorage.setItem("purchase_return_table_settings", JSON.stringify(defaultColumns));
+        }
         setColumns(defaultColumns);
 
         setShowSuccess(true);
@@ -930,8 +944,12 @@ function PurchaseReturnIndex(props) {
 
     // Save column settings to localStorage
     useEffect(() => {
-        localStorage.setItem("purchase_return_table_settings", JSON.stringify(columns));
-    }, [columns]);
+        if (enableSelection === true) {
+            localStorage.setItem("select_purchase_return_table_settings", JSON.stringify(columns));
+        } else {
+            localStorage.setItem("purchase_return_table_settings", JSON.stringify(columns));
+        }
+    }, [columns, enableSelection]);
 
     const handleToggleColumn = (index) => {
         const updated = [...columns];
@@ -1081,35 +1099,7 @@ function PurchaseReturnIndex(props) {
                                             {columns.map((col, index) => {
                                                 return (
                                                     <>
-                                                        {col.key === "select" && enableSelection && <Draggable
-                                                            key={col.key}
-                                                            draggableId={col.key}
-                                                            index={index}
-                                                        >
-                                                            {(provided) => (
-                                                                <li
-                                                                    className="list-group-item d-flex justify-content-between align-items-center"
-                                                                    ref={provided.innerRef}
-                                                                    {...provided.draggableProps}
-                                                                    {...provided.dragHandleProps}                                                        >
-                                                                    <div>
-                                                                        <input
-                                                                            style={{ width: "20px", height: "20px" }}
-                                                                            type="checkbox"
-                                                                            className="form-check-input me-2"
-                                                                            checked={col.visible}
-                                                                            onChange={() => {
-                                                                                handleToggleColumn(index);
-                                                                            }}
-                                                                        />
-                                                                        {col.label}
-                                                                    </div>
-                                                                    <span style={{ cursor: "grab" }}>☰</span>
-                                                                </li>
-                                                            )}
-                                                        </Draggable>}
-
-                                                        {col.key !== "select" && <Draggable
+                                                        {((col.key === "select" && enableSelection) || col.key !== "select") && <Draggable
                                                             key={col.key}
                                                             draggableId={col.key}
                                                             index={index}
@@ -1692,7 +1682,7 @@ function PurchaseReturnIndex(props) {
                                                 {columns.filter(c => c.visible).map((col) => {
                                                     return (<>
                                                         {(col.key === "actions" || col.key === "actions_end") && <th></th>}
-                                                        {col.key === "select" && enableSelection && <th>{col.label}</th>}
+                                                        {col.key === "select" && enableSelection && <th></th>}
                                                         {col.key !== "actions" &&
                                                             col.key !== "date" &&
                                                             col.key !== "payment_status" &&

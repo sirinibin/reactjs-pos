@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useRef, forwardRef, useCallback, useImperativeHandle } from "react";
 import { Modal, Button } from "react-bootstrap";
-
 import { Spinner } from "react-bootstrap";
 import { Typeahead, Menu, MenuItem } from "react-bootstrap-typeahead";
 import DatePicker from "react-datepicker";
@@ -10,7 +9,7 @@ import VendorCreate from "./../vendor/create.js";
 import CustomerView from "./../customer/view.js";
 import Customers from "./../utils/customers.js";
 import Vendors from "./../utils/vendors.js";
-import SalesReturn from "./../utils/salesReturn.js";
+import SalesReturns from "./../utils/salesReturn.js";
 import Purchases from "./../utils/purchases.js";
 import QuotationSalesReturns from "./../utils/quotation_sales_returns.js";
 import CustomerDepositPreview from './../customer_deposit/preview.js';
@@ -841,7 +840,7 @@ const CustomerWithdrawalCreate = forwardRef((props, ref) => {
                 name: "Paid partially",
             }
         ];
-        SalesReturnsRef.current.open(selectedCustomers, selectedPaymentStatusList);
+        SalesReturnsRef.current.open(true, selectedCustomers, selectedPaymentStatusList);
     }
 
     const PurchasesRef = useRef();
@@ -856,7 +855,7 @@ const CustomerWithdrawalCreate = forwardRef((props, ref) => {
                 name: "Paid partially",
             }
         ];
-        PurchasesRef.current.open(selectedVendors, selectedPaymentStatusList);
+        PurchasesRef.current.open(true, selectedVendors, selectedPaymentStatusList);
     }
 
     const QuotationSalesReturnsRef = useRef();
@@ -874,7 +873,7 @@ const CustomerWithdrawalCreate = forwardRef((props, ref) => {
                 name: "Paid partially",
             }
         ];
-        QuotationSalesReturnsRef.current.open(selectedCustomers, selectedPaymentStatusList);
+        QuotationSalesReturnsRef.current.open(true, selectedCustomers, selectedPaymentStatusList);
     }
 
 
@@ -988,7 +987,7 @@ const CustomerWithdrawalCreate = forwardRef((props, ref) => {
             <CustomerDepositPreview ref={PreviewRef} />
             <Customers ref={CustomersRef} onSelectCustomer={handleSelectedCustomer} showToastMessage={props.showToastMessage} />
             <Vendors ref={VendorsRef} onSelectVendor={handleSelectedVendor} showToastMessage={props.showToastMessage} />
-            <SalesReturn ref={SalesReturnsRef} onSelectSalesReturn={handleSelectedSalesReturn} showToastMessage={props.showToastMessage} />
+            <SalesReturns ref={SalesReturnsRef} onSelectSalesReturn={handleSelectedSalesReturn} showToastMessage={props.showToastMessage} />
             <Purchases ref={PurchasesRef} onSelectPurchase={handleSelectedPurchase} showToastMessage={props.showToastMessage} />
             <QuotationSalesReturns ref={QuotationSalesReturnsRef} onSelectQuotationSalesReturn={handleSelectedQuotationSalesReturn} showToastMessage={props.showToastMessage} />
             <CustomerCreate ref={CustomerCreateFormRef} openDetailsView={openCustomerDetailsView} showToastMessage={props.showToastMessage} />

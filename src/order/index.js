@@ -1428,35 +1428,7 @@ const OrderIndex = forwardRef((props, ref) => {
                                             {columns.map((col, index) => {
                                                 return (
                                                     <>
-                                                        {col.key === "select" && enableSelection && <Draggable
-                                                            key={col.key}
-                                                            draggableId={col.key}
-                                                            index={index}
-                                                        >
-                                                            {(provided) => (
-                                                                <li
-                                                                    className="list-group-item d-flex justify-content-between align-items-center"
-                                                                    ref={provided.innerRef}
-                                                                    {...provided.draggableProps}
-                                                                    {...provided.dragHandleProps}                                                        >
-                                                                    <div>
-                                                                        <input
-                                                                            style={{ width: "20px", height: "20px" }}
-                                                                            type="checkbox"
-                                                                            className="form-check-input me-2"
-                                                                            checked={col.visible}
-                                                                            onChange={() => {
-                                                                                handleToggleColumn(index);
-                                                                            }}
-                                                                        />
-                                                                        {col.label}
-                                                                    </div>
-                                                                    <span style={{ cursor: "grab" }}>☰</span>
-                                                                </li>
-                                                            )}
-                                                        </Draggable>}
-
-                                                        {col.key !== "select" && <Draggable
+                                                        {((col.key === "select" && enableSelection) || col.key !== "select") && <Draggable
                                                             key={col.key}
                                                             draggableId={col.key}
                                                             index={index}

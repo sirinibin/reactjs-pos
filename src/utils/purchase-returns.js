@@ -1,84 +1,47 @@
-import React, { useState, forwardRef, useImperativeHandle, useRef } from "react";
-
-
-import PurchaseReturnIndex from "../purchase_return/index.js";
-
-import "react-datepicker/dist/react-datepicker.css";
+import React, { useState, useRef, forwardRef, useImperativeHandle } from "react";
 import { Modal } from "react-bootstrap";
+import "react-datepicker/dist/react-datepicker.css";
 import Draggable from "react-draggable";
+import PurchaseReturnIndex from "./../purchase_return/index.js";
+
 
 const PurchaseReturns = forwardRef((props, ref) => {
     const dragRef = useRef(null);
-    const [show, SetShow] = useState(false);
-
     let [selectedVendors, setSelectedVendors] = useState([]);
     let [selectedPaymentStatusList, setSelectedPaymentStatusList] = useState([]);
+    let [enableSelection, setEnableSelection] = useState(false);
 
     useImperativeHandle(ref, () => ({
-        open(selectedVendorsValue, selectedPaymentStatusListValue) {
+        open(enableSelectionValue, selectedVendorsValue, selectedPaymentStatusListValue) {
+            enableSelection = enableSelectionValue;
+            setEnableSelection(enableSelection);
+
             if (selectedVendorsValue?.length > 0) {
                 selectedVendors = selectedVendorsValue;
-                setSelectedVendors(selectedVendors);
+                setSelectedVendors([...selectedVendors]);
             }
 
-            if (selectedPaymentStatusListValue?.length > 0) {
+            if (selectedPaymentStatusListValue) {
                 selectedPaymentStatusList = selectedPaymentStatusListValue;
-                setSelectedPaymentStatusList(selectedPaymentStatusList);
+                setSelectedPaymentStatusList([...selectedPaymentStatusList]);
             }
 
-
-            getStore(localStorage.getItem("store_id"));
             SetShow(true);
         },
     }));
 
+    const [show, SetShow] = useState(false);
 
     function handleClose() {
         SetShow(false);
     };
 
-
-
-
-    let [store, setStore] = useState({});
-
-    function getStore(id) {
-        console.log("inside get Store");
-        const requestOptions = {
-            method: 'GET',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': localStorage.getItem("access_token"),
-            },
-        };
-
-        fetch('/v1/store/' + id, requestOptions)
-            .then(async response => {
-                const isJson = response.headers.get('content-type')?.includes('application/json');
-                const data = isJson && await response.json();
-
-                // check for error response
-                if (!response.ok) {
-                    const error = (data && data.errors);
-                    return Promise.reject(error);
-                }
-
-                console.log("Response:");
-                console.log(data);
-
-                store = data.result;
-                setStore({ ...store });
-            })
-            .catch(error => {
-
-            });
-    }
-
-
     const handleSelected = (selected) => {
         props.onSelectPurchaseReturn(selected); // Send to parent
         handleClose();
     };
+
+
 
     return (
         <>
@@ -109,8 +72,7 @@ const PurchaseReturns = forwardRef((props, ref) => {
                 )}
             >
                 <Modal.Header>
-                    <Modal.Title>Select Purchase Return</Modal.Title>
-
+                    <Modal.Title>{enableSelection ? "Select PurchaseReturn" : "PurchaseReturns"}</Modal.Title>
                     <div className="col align-self-end text-end">
                         <button
                             type="button"
@@ -124,6 +86,7 @@ const PurchaseReturns = forwardRef((props, ref) => {
                 <Modal.Body>
                     <>
                         <PurchaseReturnIndex
+                            enableSelection={enableSelection}
                             onSelectPurchaseReturn={handleSelected}
                             selectedVendors={selectedVendors}
                             selectedPaymentStatusList={selectedPaymentStatusList}

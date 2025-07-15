@@ -1,85 +1,47 @@
-import React, { useState, forwardRef, useImperativeHandle, useRef } from "react";
-
-
-import QuotationSalesReturnIndex from "../quotation_sales_return/index.js";
-
-import "react-datepicker/dist/react-datepicker.css";
+import React, { useState, useRef, forwardRef, useImperativeHandle } from "react";
 import { Modal } from "react-bootstrap";
+import "react-datepicker/dist/react-datepicker.css";
 import Draggable from "react-draggable";
+import QuotationSalesReturnIndex from "./../quotation_sales_return/index.js";
 
 
 const QuotationSalesReturns = forwardRef((props, ref) => {
     const dragRef = useRef(null);
-    const [show, SetShow] = useState(false);
-
     let [selectedCustomers, setSelectedCustomers] = useState([]);
     let [selectedPaymentStatusList, setSelectedPaymentStatusList] = useState([]);
+    let [enableSelection, setEnableSelection] = useState(false);
 
     useImperativeHandle(ref, () => ({
-        open(selectedCustomersValue, selectedPaymentStatusListValue) {
+        open(enableSelectionValue, selectedCustomersValue, selectedPaymentStatusListValue) {
+            enableSelection = enableSelectionValue;
+            setEnableSelection(enableSelection);
+
             if (selectedCustomersValue?.length > 0) {
                 selectedCustomers = selectedCustomersValue;
-                setSelectedCustomers(selectedCustomers);
+                setSelectedCustomers([...selectedCustomers]);
             }
 
-            if (selectedPaymentStatusListValue?.length > 0) {
+            if (selectedPaymentStatusListValue) {
                 selectedPaymentStatusList = selectedPaymentStatusListValue;
-                setSelectedPaymentStatusList(selectedPaymentStatusList);
+                setSelectedPaymentStatusList([...selectedPaymentStatusList]);
             }
 
-
-            getStore(localStorage.getItem("store_id"));
             SetShow(true);
         },
     }));
 
+    const [show, SetShow] = useState(false);
 
     function handleClose() {
         SetShow(false);
     };
 
-
-
-
-    let [store, setStore] = useState({});
-
-    function getStore(id) {
-        console.log("inside get Store");
-        const requestOptions = {
-            method: 'GET',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': localStorage.getItem("access_token"),
-            },
-        };
-
-        fetch('/v1/store/' + id, requestOptions)
-            .then(async response => {
-                const isJson = response.headers.get('content-type')?.includes('application/json');
-                const data = isJson && await response.json();
-
-                // check for error response
-                if (!response.ok) {
-                    const error = (data && data.errors);
-                    return Promise.reject(error);
-                }
-
-                console.log("Response:");
-                console.log(data);
-
-                store = data.result;
-                setStore({ ...store });
-            })
-            .catch(error => {
-
-            });
-    }
-
-
     const handleSelected = (selected) => {
         props.onSelectQuotationSalesReturn(selected); // Send to parent
         handleClose();
     };
+
+
 
     return (
         <>
@@ -110,8 +72,7 @@ const QuotationSalesReturns = forwardRef((props, ref) => {
                 )}
             >
                 <Modal.Header>
-                    <Modal.Title>Select Quotation Sales Return</Modal.Title>
-
+                    <Modal.Title>{enableSelection ? "Select Qtn. Sales Return" : "Qtn. Sales Returns"}</Modal.Title>
                     <div className="col align-self-end text-end">
                         <button
                             type="button"
@@ -125,6 +86,7 @@ const QuotationSalesReturns = forwardRef((props, ref) => {
                 <Modal.Body>
                     <>
                         <QuotationSalesReturnIndex
+                            enableSelection={enableSelection}
                             onSelectQuotationSalesReturn={handleSelected}
                             selectedCustomers={selectedCustomers}
                             selectedPaymentStatusList={selectedPaymentStatusList}

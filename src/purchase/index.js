@@ -30,6 +30,8 @@ const ExcelFile = ReactExport.ExcelFile;
 const ExcelSheet = ReactExport.ExcelFile.ExcelSheet;
 
 function PurchaseIndex(props) {
+    let [enableSelection, setEnableSelection] = useState(false);
+
     const dragRef = useRef(null);
     const ReportPreviewRef = useRef();
     function openReportPreview() {
@@ -153,6 +155,20 @@ function PurchaseIndex(props) {
 
 
     useEffect(() => {
+        if (props.enableSelection) {
+            setEnableSelection(props.enableSelection);
+        } else {
+            setEnableSelection(false);
+        }
+
+        if (props.selectedVendors?.length > 0) {
+            searchByMultipleValuesField("vendor_id", props.selectedVendors, true);
+        }
+
+        if (props.selectedPaymentStatusList) {
+            searchByMultipleValuesField("payment_status", props.selectedPaymentStatusList, true);
+        }
+
         list();
         getStore(localStorage.getItem("store_id"));
         // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -612,7 +628,7 @@ function PurchaseIndex(props) {
     const [selectedPaymentMethodList, setSelectedPaymentMethodList] = useState([]);
     const [selectedPaymentStatusList, setSelectedPaymentStatusList] = useState([]);
 
-    function searchByMultipleValuesField(field, values) {
+    function searchByMultipleValuesField(field, values, noList) {
         if (field === "created_by") {
             setSelectedCreatedByUsers(values);
         } else if (field === "vendor_id") {
@@ -632,7 +648,9 @@ function PurchaseIndex(props) {
         page = 1;
         setPage(page);
 
-        list();
+        if (!noList) {
+            list();
+        }
     }
 
     let [totalPaidPurchase, setTotalPaidPurchase] = useState(0.00);
@@ -864,6 +882,7 @@ function PurchaseIndex(props) {
 
     const defaultColumns = useMemo(() => [
         { key: "actions", label: "Actions", fieldName: "actions", visible: true },
+        { key: "select", label: "Select", fieldName: "select", visible: true },
         { key: "id", label: "ID", fieldName: "code", visible: true },
         { key: "date", label: "Date", fieldName: "date", visible: true },
         { key: "vendor", label: "Vendor", fieldName: "vendor_name", visible: true },
@@ -888,7 +907,13 @@ function PurchaseIndex(props) {
     const [showSettings, setShowSettings] = useState(false);
     // Load settings from localStorage
     useEffect(() => {
-        const saved = localStorage.getItem("purchase_table_settings");
+        let saved = "";
+        if (enableSelection === true) {
+            saved = localStorage.getItem("select_purchase_table_settings");
+        } else {
+            saved = localStorage.getItem("purchase_table_settings");
+        }
+
         if (saved) setColumns(JSON.parse(saved));
 
         let missingOrUpdated = false;
@@ -917,16 +942,25 @@ function PurchaseIndex(props) {
         }*/
 
         if (missingOrUpdated) {
-            localStorage.setItem("purchase_table_settings", JSON.stringify(defaultColumns));
+            if (enableSelection === true) {
+                localStorage.setItem("select_purchase_table_settings", JSON.stringify(defaultColumns));
+            } else {
+                localStorage.setItem("purchase_table_settings", JSON.stringify(defaultColumns));
+            }
             setColumns(defaultColumns);
         }
 
         //2nd
 
-    }, [defaultColumns]);
+    }, [defaultColumns, enableSelection]);
 
     function RestoreDefaultSettings() {
-        localStorage.setItem("purchase_table_settings", JSON.stringify(defaultColumns));
+        if (enableSelection === true) {
+            localStorage.setItem("select_purchase_table_settings", JSON.stringify(defaultColumns));
+        } else {
+            localStorage.setItem("purchase_table_settings", JSON.stringify(defaultColumns));
+        }
+
         setColumns(defaultColumns);
 
         setShowSuccess(true);
@@ -935,8 +969,12 @@ function PurchaseIndex(props) {
 
     // Save column settings to localStorage
     useEffect(() => {
-        localStorage.setItem("purchase_table_settings", JSON.stringify(columns));
-    }, [columns]);
+        if (enableSelection === true) {
+            localStorage.setItem("select_purchase_table_settings", JSON.stringify(columns));
+        } else {
+            localStorage.setItem("purchase_table_settings", JSON.stringify(columns));
+        }
+    }, [columns, enableSelection]);
 
     const handleToggleColumn = (index) => {
         const updated = [...columns];
@@ -1007,6 +1045,11 @@ function PurchaseIndex(props) {
     function openVendorUpdateForm(id) {
         VendorUpdateFormRef.current.open(id);
     }
+
+    const handleSelected = (selected) => {
+        props.onSelectPurchase(selected); // Send to parent
+    };
+
 
     return (
         <>
@@ -1083,35 +1126,38 @@ function PurchaseIndex(props) {
                                             {...provided.droppableProps}
                                             ref={provided.innerRef}
                                         >
-                                            {columns.map((col, index) => (
-                                                <Draggable
-                                                    key={col.key}
-                                                    draggableId={col.key}
-                                                    index={index}
-                                                >
-                                                    {(provided) => (
-                                                        <li
-                                                            className="list-group-item d-flex justify-content-between align-items-center"
-                                                            ref={provided.innerRef}
-                                                            {...provided.draggableProps}
-                                                            {...provided.dragHandleProps}                                                        >
-                                                            <div>
-                                                                <input
-                                                                    style={{ width: "20px", height: "20px" }}
-                                                                    type="checkbox"
-                                                                    className="form-check-input me-2"
-                                                                    checked={col.visible}
-                                                                    onChange={() => {
-                                                                        handleToggleColumn(index);
-                                                                    }}
-                                                                />
-                                                                {col.label}
-                                                            </div>
-                                                            <span style={{ cursor: "grab" }}>☰</span>
-                                                        </li>
-                                                    )}
-                                                </Draggable>
-                                            ))}
+                                            {columns.map((col, index) => {
+                                                return (
+                                                    <>
+                                                        {((col.key === "select" && enableSelection) || col.key !== "select") && <Draggable
+                                                            key={col.key}
+                                                            draggableId={col.key}
+                                                            index={index}
+                                                        >
+                                                            {(provided) => (
+                                                                <li
+                                                                    className="list-group-item d-flex justify-content-between align-items-center"
+                                                                    ref={provided.innerRef}
+                                                                    {...provided.draggableProps}
+                                                                    {...provided.dragHandleProps}                                                        >
+                                                                    <div>
+                                                                        <input
+                                                                            style={{ width: "20px", height: "20px" }}
+                                                                            type="checkbox"
+                                                                            className="form-check-input me-2"
+                                                                            checked={col.visible}
+                                                                            onChange={() => {
+                                                                                handleToggleColumn(index);
+                                                                            }}
+                                                                        />
+                                                                        {col.label}
+                                                                    </div>
+                                                                    <span style={{ cursor: "grab" }}>☰</span>
+                                                                </li>
+                                                            )}
+                                                        </Draggable>}
+                                                    </>)
+                                            })}
                                             {provided.placeholder}
                                         </ul>
                                     )}
@@ -1365,7 +1411,8 @@ function PurchaseIndex(props) {
                                                 {columns.filter(c => c.visible).map((col) => {
                                                     return (<>
                                                         {col.key === "actions" && <th key={col.key}>{col.label}</th>}
-                                                        {col.key !== "actions" && <th>
+                                                        {col.key === "select" && enableSelection && <th key={col.key}>{col.label}</th>}
+                                                        {col.key !== "actions" && col.key !== "select" && <th>
                                                             <b
                                                                 style={{
                                                                     textDecoration: "underline",
@@ -1394,7 +1441,9 @@ function PurchaseIndex(props) {
                                                 {columns.filter(c => c.visible).map((col) => {
                                                     return (<>
                                                         {(col.key === "actions" || col.key === "actions_end") && <th></th>}
+                                                        {col.key === "select" && enableSelection && <th></th>}
                                                         {col.key !== "actions" &&
+                                                            col.key !== "select" &&
                                                             col.key !== "date" &&
                                                             col.key !== "payment_status" &&
                                                             col.key !== "payment_methods" &&
@@ -2149,6 +2198,13 @@ function PurchaseIndex(props) {
                                                                     </Button>
                                                                 </td>
                                                                 }
+                                                                {(col.key === "select" && enableSelection) && <td style={{ width: "auto", whiteSpace: "nowrap" }}>
+                                                                    <Button className="btn btn-success btn-sm" onClick={() => {
+                                                                        handleSelected(purchase);
+                                                                    }}>
+                                                                        Select
+                                                                    </Button>
+                                                                </td>}
                                                                 {(col.fieldName === "code") && <td style={{ width: "auto", whiteSpace: "nowrap" }}>
                                                                     {purchase.code}
                                                                 </td>}
