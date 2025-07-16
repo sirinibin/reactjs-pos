@@ -462,7 +462,7 @@ function CustomerIndex(props) {
         { key: "sales_paid_amount", label: "Sales Paid Amount", fieldName: "stores.sales_paid_amount", visible: true },
         { key: "credit_balance", label: "Credit Balance", fieldName: "credit_balance", visible: true },
         { key: "credit_limit", label: "Credit Limit", fieldName: "credit_limit", visible: true },
-        { key: "quotation_invoice_balance_amount", label: " Qtn. Invoice Credit Balance Amount", fieldName: "stores.quotation_invoice_balance_amount", visible: true },
+        { key: "quotation_invoice_balance_amount", label: "Qtn. Invoice Credit Balance Amount", fieldName: "stores.quotation_invoice_balance_amount", visible: true },
         { key: "sales_count", label: "Sales count", fieldName: "stores.sales_count", visible: true },
         { key: "sales_balance_amount", label: "Sales Credit Balance", fieldName: "stores.sales_balance_amount", visible: true },
         { key: "phone", label: "Phone", fieldName: "phone", visible: true },
@@ -482,18 +482,36 @@ function CustomerIndex(props) {
         { key: "sales_return_paid_count", label: "Sales Return Paid Count", fieldName: "stores.sales_return_paid_count", visible: true },
         { key: "sales_return_not_paid_count", label: "Sales Return Unpaid Count", fieldName: "stores.sales_return_not_paid_count", visible: true },
         { key: "sales_return_paid_partially_count", label: "Sales Return Paid Partially Count", fieldName: "stores.sales_return_paid_partially_count", visible: true },
+
+
+
+        { key: "quotation_count", label: "Quotation Count", fieldName: "stores.quotation_count", visible: true },
+        { key: "quotation_amount", label: "Quotation Amount", fieldName: "stores.quotation_amount", visible: true },
+        { key: "quotation_profit", label: "Quotation Profit", fieldName: "stores.quotation_profit", visible: true },
+        { key: "quotation_loss", label: "Quotation Loss", fieldName: "stores.quotation_loss", visible: true },
+
+
         { key: "quotation_invoice_count", label: "Qtn. Invoice count", fieldName: "stores.quotation_invoice_count", visible: true },
-        { key: "quotation_invoice_amount", label: " Total Qtn. Invoice amount", fieldName: "stores.quotation_invoice_amount", visible: true },
+        { key: "quotation_invoice_amount", label: "Total Qtn. Invoice amount", fieldName: "stores.quotation_invoice_amount", visible: true },
         { key: "quotation_invoice_paid_amount", label: "Qtn. Invoice paid amount", fieldName: "stores.quotation_invoice_paid_amount", visible: true },
         { key: "quotation_invoice_profit", label: "Qtn. Invoice Profit", fieldName: "stores.quotation_invoice_profit", visible: true },
         { key: "quotation_invoice_loss", label: "Qtn. Invoice Loss", fieldName: "stores.quotation_invoice_loss", visible: true },
         { key: "quotation_invoice_paid_count", label: "Qtn. Invoice Paid Count", fieldName: "stores.quotation_invoice_paid_count", visible: true },
         { key: "quotation_invoice_not_paid_count", label: "Qtn. Invoice Unpaid Count", fieldName: "stores.quotation_invoice_not_paid_count", visible: true },
         { key: "quotation_invoice_paid_partially_count", label: "Qtn. Invoice Paid Partially Count", fieldName: "stores.quotation_invoice_paid_partially_count", visible: true },
-        { key: "quotation_count", label: "Quotation Count", fieldName: "stores.quotation_count", visible: true },
-        { key: "quotation_amount", label: "Quotation Amount", fieldName: "stores.quotation_amount", visible: true },
-        { key: "quotation_profit", label: "Quotation Profit", fieldName: "stores.quotation_profit", visible: true },
-        { key: "quotation_loss", label: "Quotation Loss", fieldName: "stores.quotation_loss", visible: true },
+
+        { key: "quotation_sales_return_count", label: "Qtn. Sales Return Count", fieldName: "stores.quotation_sales_return_count", visible: true },
+        { key: "quotation_sales_return_amount", label: "Qtn. Sales Return Amount", fieldName: "stores.quotation_sales_return_amount", visible: true },
+        { key: "quotation_sales_return_paid_amount", label: "Qtn. Sales Return Paid Amount", fieldName: "stores.quotation_sales_return_paid_amount", visible: true },
+        { key: "quotation_sales_return_balance_amount", label: "Qtn. Sales Return Credit Balance Amount", fieldName: "stores.quotation_sales_return_balance_amount", visible: true },
+        { key: "quotation_sales_return_profit", label: "Qtn. Sales Return Profit", fieldName: "stores.quotation_sales_return_profit", visible: true },
+        { key: "quotation_sales_return_loss", label: "Qtn. Sales Return Loss", fieldName: "stores.quotation_sales_return_loss", visible: true },
+        { key: "quotation_sales_return_paid_count", label: "Qtn. Sales Return Paid Count", fieldName: "stores.quotation_sales_return_paid_count", visible: true },
+        { key: "quotation_sales_return_not_paid_count", label: "Qtn. Sales Return Unpaid Count", fieldName: "stores.quotation_sales_return_not_paid_count", visible: true },
+        { key: "quotation_sales_return_paid_partially_count", label: "Qtn. Sales Return Paid Partially Count", fieldName: "stores.quotation_sales_return_paid_partially_count", visible: true },
+
+
+
         { key: "delivery_note_count", label: "Delivery Note Count", fieldName: "stores.delivery_note_count", visible: true },
         { key: "created_by_name", label: "Created By", fieldName: "created_by", visible: true },
         { key: "created_at", label: "Created At", fieldName: "created_at", visible: true },
@@ -1773,6 +1791,7 @@ function CustomerIndex(props) {
                                                             col.key === "sales_profit" ||
                                                             col.key === "sales_loss" ||
                                                             col.key === "sales_paid_partially_count" ||
+
                                                             col.key === "sales_return_count" ||
                                                             col.key === "sales_return_amount" ||
                                                             col.key === "sales_return_paid_amount" ||
@@ -1782,6 +1801,17 @@ function CustomerIndex(props) {
                                                             col.key === "sales_return_paid_count" ||
                                                             col.key === "sales_return_not_paid_count" ||
                                                             col.key === "sales_return_paid_partially_count" ||
+
+                                                            col.key === "quotation_sales_return_count" ||
+                                                            col.key === "quotation_sales_return_amount" ||
+                                                            col.key === "quotation_sales_return_paid_amount" ||
+                                                            col.key === "quotation_sales_return_balance_amount" ||
+                                                            col.key === "quotation_sales_return_profit" ||
+                                                            col.key === "quotation_sales_return_loss" ||
+                                                            col.key === "quotation_sales_return_paid_count" ||
+                                                            col.key === "quotation_sales_return_not_paid_count" ||
+                                                            col.key === "quotation_sales_return_paid_partially_count" ||
+
                                                             col.key === "quotation_invoice_count" ||
                                                             col.key === "quotation_invoice_amount" ||
                                                             col.key === "quotation_invoice_paid_amount" ||
@@ -2450,6 +2480,7 @@ function CustomerIndex(props) {
                                                                     col.key === "sales_profit" ||
                                                                     col.key === "sales_loss" ||
                                                                     col.key === "sales_paid_partially_count" ||
+
                                                                     col.key === "sales_return_count" ||
                                                                     col.key === "sales_return_amount" ||
                                                                     col.key === "sales_return_paid_amount" ||
@@ -2459,6 +2490,18 @@ function CustomerIndex(props) {
                                                                     col.key === "sales_return_paid_count" ||
                                                                     col.key === "sales_return_not_paid_count" ||
                                                                     col.key === "sales_return_paid_partially_count" ||
+
+                                                                    col.key === "quotation_sales_return_count" ||
+                                                                    col.key === "quotation_sales_return_amount" ||
+                                                                    col.key === "quotation_sales_return_paid_amount" ||
+                                                                    col.key === "quotation_sales_return_balance_amount" ||
+                                                                    col.key === "quotation_sales_return_profit" ||
+                                                                    col.key === "quotation_sales_return_loss" ||
+                                                                    col.key === "quotation_sales_return_paid_count" ||
+                                                                    col.key === "quotation_sales_return_not_paid_count" ||
+                                                                    col.key === "quotation_sales_return_paid_partially_count" ||
+
+
                                                                     col.key === "quotation_invoice_count" ||
                                                                     col.key === "quotation_invoice_amount" ||
                                                                     col.key === "quotation_invoice_paid_amount" ||
