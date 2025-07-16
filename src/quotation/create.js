@@ -389,6 +389,8 @@ const QuotationCreate = forwardRef((props, ref) => {
           payment_status: quotation.payment_status,
           code: quotation.code,
           remarks: quotation.remarks,
+          phone: quotation.phone,
+          vat_no: quotation.vat_no,
           store_id: quotation.store_id,
           customer_id: quotation.customer_id,
           // date_str: quotation.date_str,

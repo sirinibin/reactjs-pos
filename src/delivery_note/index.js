@@ -398,8 +398,19 @@ function DeliveryNoteIndex(props) {
   }
 
 
+  /*
   function sendWhatsAppMessage(model) {
     PreviewRef.current.open(model, "whatsapp", "delivery_note");
+  }*/
+
+  function sendWhatsAppMessage(modal) {
+    showOrderPreview = true;
+    setShowOrderPreview(true);
+    if (timerRef.current) clearTimeout(timerRef.current);
+
+    timerRef.current = setTimeout(() => {
+      PreviewRef.current?.open(modal, "whatsapp", "delivery_note");
+    }, 100);
   }
 
   const customerSearchRef = useRef();

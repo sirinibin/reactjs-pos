@@ -179,7 +179,14 @@ const QuotationSalesReturnView = forwardRef((props, ref) => {
 
 
     function sendWhatsAppMessage() {
-        PreviewRef.current.open(model, "whatsapp", "whatsapp_quotation_sales_return");
+        showOrderPreview = true;
+        setShowOrderPreview(true);
+        if (timerRef.current) clearTimeout(timerRef.current);
+
+        timerRef.current = setTimeout(() => {
+            PreviewRef.current.open(model, "whatsapp", "whatsapp_quotation_sales_return");
+            handleClose();
+        }, 100);
     }
 
 

@@ -117,7 +117,14 @@ const QuotationView = forwardRef((props, ref) => {
     };
 
     function sendWhatsAppMessage() {
-        PreviewRef.current.open(model, "whatsapp", "whatsapp_quotation");
+        showOrderPreview = true;
+        setShowOrderPreview(true);
+        if (timerRef.current) clearTimeout(timerRef.current);
+
+        timerRef.current = setTimeout(() => {
+            PreviewRef.current?.open(model, "whatsapp", "whatsapp_quotation");
+            handleClose();
+        }, 100);
     }
 
     //Printing

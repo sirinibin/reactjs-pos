@@ -893,7 +893,13 @@ function PurchaseReturnIndex(props) {
     };
 
     function sendWhatsAppMessage(model) {
-        PreviewRef.current.open(model, "whatsapp", "whatsapp_purchase_return");
+        showPurchaseReturnPreview = true;
+        setShowPurchaseReturnPreview(true);
+        if (timerRef.current) clearTimeout(timerRef.current);
+
+        timerRef.current = setTimeout(() => {
+            PreviewRef.current?.open(model, "whatsapp", "whatsapp_purchase_return");
+        }, 100);
     }
 
     const vendorSearchRef = useRef();

@@ -1104,7 +1104,14 @@ function QuotationSalesReturnIndex(props) {
         */
 
     function sendWhatsAppMessage(model) {
-        PreviewRef.current.open(model, "whatsapp", "whatsapp_quotation_sales_return");
+        showOrderPreview = true;
+        setShowOrderPreview(showOrderPreview);
+
+        if (timerRef.current) clearTimeout(timerRef.current);
+
+        timerRef.current = setTimeout(() => {
+            PreviewRef.current.open(model, "whatsapp", "whatsapp_quotation_sales_return");
+        }, 100);
     }
 
     const customerSearchRef = useRef();
