@@ -698,7 +698,13 @@ const PostingIndex = forwardRef((props, ref) => {
             account.posts = RemoveOpeningBalance(allPostings);
         }
 
+        if (ignoreDiscountAllowed) {
+            list();
+            account.posts = RemoveDiscountAllowed(account.posts);
+        }
+
         account.ignoreOpeningBalance = ignoreOpeningBalance;
+        account.ignoreDiscountAllowed = ignoreDiscountAllowed;
 
         PreviewRef.current.open(account, "whatsapp");
     }

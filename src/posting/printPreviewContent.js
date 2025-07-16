@@ -504,13 +504,7 @@ const BalanceSheetPrintPreviewContent = forwardRef((props, ref) => {
                                                 </span>}
                                             </th>
                                             <td className="text-end" style={{ width: "auto", padding: "3px", whiteSpace: "nowrap", border: "solid 0px", borderRight: tableBorderThickness }}>
-                                                <NumberFormat
-                                                    value={parseFloat(post.debit_amount)?.toFixed(2)}
-                                                    displayType={"text"}
-                                                    thousandSeparator={true}
-                                                    suffix={""}
-                                                    renderText={(value, props) => value}
-                                                />
+                                                <Amount amount={trimTo2Decimals(post.debit_amount)} />
                                             </td>
                                             <th style={{ width: "auto", padding: "3px", alignContent: "start", whiteSpace: "nowrap", borderRightWidth: "0px" }}>
                                                 {post.credit_account_name && <span>
