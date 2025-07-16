@@ -2420,7 +2420,7 @@ function QuotationIndex(props) {
                                   <Amount amount={trimTo2Decimals(quotation.balance_amount)} />
                                 </td>}
                                 {(col.fieldName === "reported_to_zatca" && store.zatca?.phase === "2" && store.zatca?.connected) && <td style={{ width: "auto", whiteSpace: "nowrap" }}>
-                                  {quotation.type === "invoice" && <>
+                                  {quotation.type === "invoice" && quotation.order_id && <>
                                     {quotation.reported_to_zatca ? <span>&nbsp;<span className="badge bg-success">
                                       Reported
                                       {quotation.reported_to_zatca && quotation.reported_to_zatca_at ? <span>&nbsp;<TimeAgo date={quotation.reported_to_zatca_at} />&nbsp;</span> : ""}
