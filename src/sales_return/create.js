@@ -28,6 +28,7 @@ import { OverlayTrigger, Tooltip } from 'react-bootstrap';
 import ProductCreate from "./../product/create.js";
 import ProductView from "./../product/view.js";
 import ImageViewerModal from './../utils/ImageViewerModal';
+import ProductHistory from "./../product/product_history.js";
 //import OverflowTooltip from "../utils/OverflowTooltip.js";
 import * as bootstrap from 'bootstrap';
 
@@ -664,6 +665,8 @@ const SalesReturnCreate = forwardRef((props, ref) => {
 
         if (event.key === "F10") {
             openLinkedProducts(product);
+        } else if (isCmdOrCtrl && event.shiftKey && event.key.toLowerCase() === 'b') {
+            openProductHistory(product);
         } else if (event.key === "F4") {
             openSalesHistory(product);
         } else if (event.key === "F9") {
@@ -1754,8 +1757,15 @@ const SalesReturnCreate = forwardRef((props, ref) => {
     const discountRef = useRef(null);
     const discountWithVATRef = useRef(null);
 
+    const ProductHistoryRef = useRef();
+    function openProductHistory(model) {
+        ProductHistoryRef.current.open(model);
+    }
+
+
     return (
         <>
+            <ProductHistory ref={ProductHistoryRef} showToastMessage={props.showToastMessage} />
             <ImageViewerModal ref={imageViewerRef} images={productImages} />
             <ProductView ref={ProductDetailsViewRef} />
             <Products ref={ProductsRef} showToastMessage={props.showToastMessage} />
@@ -2169,6 +2179,13 @@ const SalesReturnCreate = forwardRef((props, ref) => {
                                                                 <i className="bi bi-link"></i>
                                                                 &nbsp;
                                                                 Linked Products (F10)
+                                                            </Dropdown.Item>
+                                                            <Dropdown.Item onClick={() => {
+                                                                openProductHistory(product);
+                                                            }}>
+                                                                <i className="bi bi-clock-history"></i>
+                                                                &nbsp;
+                                                                History (CTR + SHIFT + B)
                                                             </Dropdown.Item>
 
                                                             <Dropdown.Item onClick={() => {

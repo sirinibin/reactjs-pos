@@ -12,6 +12,7 @@ import "react-datepicker/dist/react-datepicker.css";
 import { Button, Spinner, Modal, Alert } from "react-bootstrap";
 import ReactPaginate from "react-paginate";
 import SalesHistory from "./sales_history.js";
+import ProductHistory from "./product_history.js";
 import SalesReturnHistory from "./sales_return_history.js";
 
 import PurchaseHistory from "./purchase_history.js";
@@ -749,6 +750,10 @@ function ProductIndex(props) {
         ProductsRef.current.open(model, "linked_products");
     }
 
+    const ProductHistoryRef = useRef();
+    function openProductHistory(model) {
+        ProductHistoryRef.current.open(model);
+    }
 
     const SalesHistoryRef = useRef();
     function openSalesHistory(model) {
@@ -1008,6 +1013,8 @@ function ProductIndex(props) {
 
         if (event.key === "F10") {
             openLinkedProducts(product);
+        } else if (isCmdOrCtrl && event.shiftKey && event.key.toLowerCase() === 'b') {
+            openProductHistory(product);
         } else if (event.key === "F4") {
             openSalesHistory(product);
         } else if (event.key === "F9") {
@@ -1264,6 +1271,9 @@ function ProductIndex(props) {
 
             <Products ref={ProductsRef} showToastMessage={props.showToastMessage} />
             <ImageViewerModal ref={imageViewerRef} images={productImages} />
+
+            <ProductHistory ref={ProductHistoryRef} showToastMessage={props.showToastMessage} />
+
             <SalesHistory ref={SalesHistoryRef} showToastMessage={props.showToastMessage} />
             <SalesReturnHistory ref={SalesReturnHistoryRef} showToastMessage={props.showToastMessage} />
 
@@ -3555,6 +3565,14 @@ function ProductIndex(props) {
                                                                                     <i className="bi bi-link"></i>
                                                                                     &nbsp;
                                                                                     Linked Products (F10)
+                                                                                </Dropdown.Item>
+
+                                                                                <Dropdown.Item onClick={() => {
+                                                                                    openProductHistory(product);
+                                                                                }}>
+                                                                                    <i className="bi bi-clock-history"></i>
+                                                                                    &nbsp;
+                                                                                    History (CTR + SHIFT + B)
                                                                                 </Dropdown.Item>
 
                                                                                 <Dropdown.Item onClick={() => {

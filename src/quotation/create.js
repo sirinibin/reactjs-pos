@@ -39,6 +39,8 @@ import * as bootstrap from 'bootstrap';
 //import OverflowTooltip from "../utils/OverflowTooltip.js";
 import ImageViewerModal from './../utils/ImageViewerModal';
 import { highlightWords } from "../utils/search.js";
+import ProductHistory from "./../product/product_history.js";
+
 const columnStyle = {
   width: '20%',
   overflow: 'hidden',
@@ -1773,9 +1775,18 @@ const QuotationCreate = forwardRef((props, ref) => {
     }
     findTotalPayments()
   }
+
   function RunKeyActions(event, product) {
+    const isMac = navigator.userAgentData
+      ? navigator.userAgentData.platform === 'macOS'
+      : /Mac/i.test(navigator.userAgent);
+
+    const isCmdOrCtrl = isMac ? event.metaKey : event.ctrlKey;
+
     if (event.key === "F10") {
       openLinkedProducts(product);
+    } else if (isCmdOrCtrl && event.shiftKey && event.key.toLowerCase() === 'b') {
+      openProductHistory(product);
     } else if (event.key === "F4") {
       openSalesHistory(product);
     } else if (event.key === "F9") {
@@ -1788,8 +1799,11 @@ const QuotationCreate = forwardRef((props, ref) => {
       openDeliveryNoteHistory(product);
     } else if (event.key === "F2") {
       openQuotationHistory(product);
+    } else if (isCmdOrCtrl && event.shiftKey && event.key.toLowerCase() === 'f') {
+      openProductImages(product.product_id);
     }
   }
+
 
 
   const ProductDetailsViewRef = useRef();
@@ -1977,8 +1991,15 @@ const QuotationCreate = forwardRef((props, ref) => {
 
   const onChangeTriggeredRef = useRef(false);
 
+  const ProductHistoryRef = useRef();
+  function openProductHistory(model) {
+    ProductHistoryRef.current.open(model);
+  }
+
+
   return (
     <>
+      <ProductHistory ref={ProductHistoryRef} showToastMessage={props.showToastMessage} />
       <ImageViewerModal ref={imageViewerRef} images={productImages} />
       <InfoDialog
         show={showInfo}
@@ -2872,6 +2893,13 @@ const QuotationCreate = forwardRef((props, ref) => {
                                   <i className="bi bi-link"></i>
                                   &nbsp;
                                   Linked Products (F10)
+                                </Dropdown.Item>
+                                <Dropdown.Item onClick={() => {
+                                  openProductHistory(product);
+                                }}>
+                                  <i className="bi bi-clock-history"></i>
+                                  &nbsp;
+                                  History (CTR + SHIFT + B)
                                 </Dropdown.Item>
 
                                 <Dropdown.Item onClick={() => {

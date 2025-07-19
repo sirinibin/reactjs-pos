@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef, forwardRef, useImperativeHandle, useCallback } from "react";
 import OrderPreview from "./preview.js";
 import { Modal, Button } from "react-bootstrap";
-
+import ProductHistory from "./../product/product_history.js";
 import CustomerCreate from "./../customer/create.js";
 import ProductCreate from "./../product/create.js";
 import UserCreate from "./../user/create.js";
@@ -1941,6 +1941,8 @@ const OrderCreate = forwardRef((props, ref) => {
 
         if (event.key === "F10") {
             openLinkedProducts(product);
+        } else if (isCmdOrCtrl && event.shiftKey && event.key.toLowerCase() === 'b') {
+            openProductHistory(product);
         } else if (event.key === "F4") {
             openSalesHistory(product);
         } else if (event.key === "F9") {
@@ -2222,8 +2224,15 @@ const OrderCreate = forwardRef((props, ref) => {
 
     const onChangeTriggeredRef = useRef(false);
 
+    const ProductHistoryRef = useRef();
+    function openProductHistory(model) {
+        ProductHistoryRef.current.open(model);
+    }
+
+
     return (
         <>
+            <ProductHistory ref={ProductHistoryRef} showToastMessage={props.showToastMessage} />
             <OrderPrint ref={PrintRef} />
             <CustomerCreate ref={CustomerUpdateFormRef} showToastMessage={props.showToastMessage} onUpdated={handleCustomerUpdated} />
             <ImageViewerModal ref={imageViewerRef} images={productImages} />
@@ -3073,6 +3082,13 @@ const OrderCreate = forwardRef((props, ref) => {
                                                                 <i className="bi bi-link"></i>
                                                                 &nbsp;
                                                                 Linked Products (F10)
+                                                            </Dropdown.Item>
+                                                            <Dropdown.Item onClick={() => {
+                                                                openProductHistory(product);
+                                                            }}>
+                                                                <i className="bi bi-clock-history"></i>
+                                                                &nbsp;
+                                                                History (CTR + SHIFT + B)
                                                             </Dropdown.Item>
 
                                                             <Dropdown.Item onClick={() => {
