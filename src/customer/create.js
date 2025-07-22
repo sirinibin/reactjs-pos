@@ -250,40 +250,16 @@ const CustomerCreate = forwardRef((props, ref) => {
         }
 
         if (formData.vat_no && store.zatca?.phase === "2") {
-            if (!formData.national_address?.building_no) {
-                errors["national_address_building_no"] = "Building number is required";
-                haveErrors = true;
-            } else {
-                if (!isValidNDigitNumber(formData.national_address?.building_no, 4)) {
-                    errors["national_address_building_no"] = "Building number should be 4 digits";
-                    haveErrors = true;
-                }
-            }
 
-            if (!formData.national_address?.street_name) {
-                errors["national_address_street_name"] = "Street name is required";
-                haveErrors = true;
-            }
-
-            if (!formData.national_address?.district_name) {
-                errors["national_address_district_name"] = "District name is required";
-                haveErrors = true;
-            }
-
-            if (!formData.national_address?.city_name) {
-                errors["national_address_city_name"] = "City name is required";
+            if (formData.national_address?.building_no && !isValidNDigitNumber(formData.national_address?.building_no, 4)) {
+                errors["national_address_building_no"] = "Building number should be 4 digits";
                 haveErrors = true;
             }
 
 
-            if (!formData.national_address?.zipcode) {
-                errors["national_address_zipcode"] = "Zipcode is required";
+            if (formData.national_address?.zipcode && !isValidNDigitNumber(formData.national_address?.zipcode, 5)) {
+                errors["national_address_zipcode"] = "Zipcode should be 5 digits";
                 haveErrors = true;
-            } else {
-                if (!isValidNDigitNumber(formData.national_address?.zipcode, 5)) {
-                    errors["national_address_zipcode"] = "Zipcode should be 5 digits";
-                    haveErrors = true;
-                }
             }
         }
 

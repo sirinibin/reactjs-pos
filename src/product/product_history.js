@@ -657,6 +657,7 @@ const ProductHistory = forwardRef((props, ref) => {
         { key: "reference_code", label: "ID", fieldName: "reference_code", visible: true },
         { key: "customer_name", label: "Customer", fieldName: "customer_name", visible: true },
         { key: "vendor_name", label: "Vendor", fieldName: "vendor_name", visible: true },
+        { key: "stock", label: "Stock", fieldName: "stock", visible: true },
         { key: "quantity", label: "Qty", fieldName: "quantity", visible: true },
         { key: "unit_price", label: "Unit Price(without VAT)", fieldName: "unit_price", visible: true },
         { key: "unit_price_with_vat", label: "Unit Price(with VAT)", fieldName: "unit_price_with_vat", visible: true },
@@ -1503,6 +1504,7 @@ const ProductHistory = forwardRef((props, ref) => {
                                                                 </th>}
                                                                 {(col.key === "reference_code" ||
                                                                     col.key === "quantity" ||
+                                                                    col.key === "stock" ||
                                                                     col.key === "unit_price" ||
                                                                     col.key === "unit_price_with_vat" ||
                                                                     col.key === "discount" ||
@@ -1871,6 +1873,7 @@ const ProductHistory = forwardRef((props, ref) => {
                                                                         </td>}
                                                                         {(
                                                                             col.key === "quantity" ||
+                                                                            col.key === "stock" ||
                                                                             col.key === "discount" ||
                                                                             col.key === "discount_percent" ||
                                                                             col.key === "price" ||
