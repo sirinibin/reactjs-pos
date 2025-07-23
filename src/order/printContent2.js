@@ -28,7 +28,7 @@ const OrderPrintContent2 = forwardRef((props, ref) => {
                     }}
 
                 >
-                    <h2 className="print-value" style={{ textAlign: "center", minWidth: "350px", fontSize: "4mm", position: "absolute", left: "300px", top: (184 + page.top) + "px", border: "solid " + border + "px", textDecoration: "underline", }}>
+                    <h2 className="print-value" style={{ textAlign: "center", minWidth: "350px", fontSize: "4mm", position: "absolute", left: "300px", top: (179 + page.top) + "px", border: "solid " + border + "px", textDecoration: "underline", }}>
                         {/*"TAX INVOICE / فاتورة ضريبية"*/}
                         {props.model.invoiceTitle}
                     </h2>
@@ -42,7 +42,7 @@ const OrderPrintContent2 = forwardRef((props, ref) => {
                     </h4>
 
 
-                    <h4 className="print-value" style={{ fontSize: "3.5mm", position: "absolute", left: "600px", top: (203 + page.top) + "px", border: "solid " + border + "px", }}>
+                    <h4 className="print-value" style={{ fontSize: "3.5mm", position: "absolute", left: "600px", top: (198 + page.top) + "px", border: "solid " + border + "px", }}>
                         {props.model.date ? format(
                             new Date(props.model.date),
                             "yyyy-MM-dd"
@@ -71,7 +71,7 @@ const OrderPrintContent2 = forwardRef((props, ref) => {
                         {props.model.total_pages ? "Page " + (pageIndex + 1) + " of " + props.model.total_pages : ""}
                     </h4>*/}
 
-                    <table className="print-value" style={{ fontSize: "3mm", position: "absolute", left: "90px", top: (345 + page.top) + "px", border: "solid 0px", }}>
+                    <table className="print-value" style={{ fontSize: "3mm", position: "absolute", left: "90px", top: (340 + page.top) + "px", border: "solid 0px", }}>
                         <tbody>
                             {page.products && page.products.map((product, index) => (
                                 <tr key={product.item_code} style={{ paddingTop: "1px", height: "6px", borderBottom: "solid 1px" }}>
@@ -174,7 +174,7 @@ const OrderPrintContent2 = forwardRef((props, ref) => {
                         </tbody>
                     </table>
 
-                    {page.lastPage ? <table className="print-value" style={{ minWidth: "150px", fontSize: "3mm", position: "absolute", left: "678px", top: (750 + page.top) + "px", border: "solid 0px", }}>
+                    {page.lastPage ? <table className="print-value" style={{ minWidth: "150px", fontSize: "3mm", position: "absolute", left: "678px", top: (745 + page.top) + "px", border: "solid 0px", }}>
                         <tbody>
                             <tr className="text-end" style={{ verticalAlign: "center", border: "solid 0px", }}>
                                 <td style={{ width: "99px", paddingRight: "5px", paddingTop: "10px" }}>
@@ -260,11 +260,11 @@ const OrderPrintContent2 = forwardRef((props, ref) => {
                     </h4> : ""}*/}
 
 
-                    {page.lastPage && props.model?.modelName !== "delivery_note" ? <h4 className="print-value" style={{ fontSize: "3.5mm", position: "absolute", left: "100px", top: (850 + page.top) + "px" }}>
+                    {page.lastPage && props.model?.modelName !== "delivery_note" ? <h4 className="print-value" style={{ fontSize: "3.5mm", position: "absolute", left: "100px", top: (845 + page.top) + "px" }}>
                         {n2words(props.model.net_total, { lang: 'en' }) + " saudi riyals"}
                     </h4> : ""}
 
-                    {page.lastPage && props.model?.modelName !== "delivery_note" ? <h4 className="print-value" dir="rtl" style={{ fontSize: "3.5mm", position: "absolute", right: "545px", top: (860 + page.top) + "px" }}>
+                    {page.lastPage && props.model?.modelName !== "delivery_note" ? <h4 className="print-value" dir="rtl" style={{ fontSize: "3.5mm", position: "absolute", right: "545px", top: (855 + page.top) + "px" }}>
                         {n2words(props.model.net_total, { lang: 'ar' }) + " ريال سعودي  "}
                     </h4> : ""}
 
@@ -273,7 +273,7 @@ const OrderPrintContent2 = forwardRef((props, ref) => {
                         {props.model.delivered_by_user ? props.model.delivered_by_user.name : ""}
                     </h4>*/}
 
-                    {page.lastPage && props.model?.modelName !== "quotation" && props.model?.modelName !== "quotation_sales_return" && props.model?.modelName !== "delivery_note" ? <div className="print-value" style={{ position: "absolute", left: "95px", top: (660 + page.top) + "px" }} >
+                    {page.lastPage && props.model?.modelName !== "quotation" && props.model?.modelName !== "quotation_sales_return" && props.model?.modelName !== "delivery_note" ? <div className="print-value" style={{ position: "absolute", left: "95px", top: (640 + page.top) + "px" }} >
                         {/*!props.model.zatca?.qr_code && props.model.QRImageData ? <img className="text-start" src={props.model.QRImageData} style={{ width: "102px", height: "94px" }} alt="Invoice QR Code" /> : ""*/}
                         {/*props.model.zatca?.qr_code ? <QRCodeCanvas value={props.model.zatca?.qr_code} style={{ width: "102px", height: "94px" }} size={100} / > : ""*/}
                         {props.model.store?.zatca?.phase === "1" && props.model.QRImageData ? <img src={props.model.QRImageData} style={{ width: "100px", height: "100px", border: "solid 0px" }} alt="Invoice QR Code" /> : ""}
@@ -282,12 +282,12 @@ const OrderPrintContent2 = forwardRef((props, ref) => {
 
                     </div> : ""}
 
-                    <h4 className="print-value" style={{ fontSize: "2.8mm", position: "absolute", left: "162px", top: (765 + page.top) + "px", border: "solid " + border + "px", }}>
+                    <h4 className="print-value" style={{ fontSize: "2.8mm", position: "absolute", left: "162px", top: (760 + page.top) + "px", border: "solid " + border + "px", }}>
                         {props.model.remarks ? props.model.remarks : "N/A"}
                     </h4>
 
 
-                    <h4 className="print-value" style={{ fontSize: "4.7mm", position: "absolute", left: "200px", top: (818 + page.top) + "px", border: "solid " + border + "px", }}>
+                    <h4 className="print-value" style={{ fontSize: "4.7mm", position: "absolute", left: "200px", top: (813 + page.top) + "px", border: "solid " + border + "px", }}>
                         {props.model.customer && props.model.customer.vat_no ? props.model.customer.vat_no : "N/A"}
                     </h4>
                 </div>
