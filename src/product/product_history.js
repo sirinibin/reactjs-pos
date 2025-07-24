@@ -151,7 +151,7 @@ const ProductHistory = forwardRef((props, ref) => {
 
     //Search params
     const [searchParams, setSearchParams] = useState({});
-    let [sortField, setSortField] = useState("created_at");
+    let [sortField, setSortField] = useState("date");
     let [sortProduct, setSortProduct] = useState("-");
 
     function ObjectToSearchQueryParams(object) {
@@ -762,6 +762,10 @@ const ProductHistory = forwardRef((props, ref) => {
             return "Qtn. Sales Return";
         } else if (type === "delivery_note") {
             return "Delivery Note";
+        } else if (type === "stock_adjustment_by_adding") {
+            return "Stock Adjustment By Adding";
+        } else if (type === "stock_adjustment_by_removing") {
+            return "Stock Adjustment By Removing";
         }
     }
 
@@ -1500,6 +1504,9 @@ const ProductHistory = forwardRef((props, ref) => {
                                                                         <option value="quotation_invoice" >Qtn. Sales</option>
                                                                         <option value="quotation_sales_return" >Qtn. Sales Return</option>
                                                                         <option value="delivery_note">Delivery Note</option>
+                                                                        <option value="stock_adjustment_by_adding">Stock Adjustment By Adding</option>
+                                                                        <option value="stock_adjustment_by_removing">Stock Adjustment By Removing</option>
+
                                                                     </select>
                                                                 </th>}
                                                                 {(col.key === "reference_code" ||
@@ -1858,10 +1865,10 @@ const ProductHistory = forwardRef((props, ref) => {
                                                                             </span>}
                                                                         </td>}
                                                                         {(col.key === "reference_code") && <td style={{ width: "auto", whiteSpace: "nowrap" }} className="text-start" >
-                                                                            <span style={{ cursor: "pointer", color: "blue" }} onClick={() => {
+                                                                            {history.reference_type !== "stock_adjustment_by_adding" && history.reference_type !== "stock_adjustment_by_removing" ? <span style={{ cursor: "pointer", color: "blue" }} onClick={() => {
                                                                                 openReferenceUpdateForm(history);
                                                                             }}> {history.reference_code}
-                                                                            </span>
+                                                                            </span> : history.reference_code}
                                                                         </td>}
                                                                         {(col.key === "reference_type") && <td style={{ width: "auto", whiteSpace: "nowrap" }} className="text-start" >
                                                                             {getTypeLabel(history.reference_type)}
