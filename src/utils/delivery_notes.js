@@ -846,6 +846,7 @@ const DeliveryNotes = forwardRef((props, ref) => {
                                                                     ref={customerSearchRef}
                                                                     onKeyDown={(e) => {
                                                                         if (e.key === "Escape") {
+
                                                                             setCustomerOptions([]);
                                                                             customerSearchRef.current?.clear();
                                                                         }

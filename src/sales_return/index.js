@@ -2537,6 +2537,9 @@ function SalesReturnIndex(props) {
                                                         ref={customerSearchRef}
                                                         onKeyDown={(e) => {
                                                             if (e.key === "Escape") {
+                                                                formData.customer_id = "";
+                                                                formData.customer_name = "";
+                                                                setFormData({ ...formData });
                                                                 setCustomerOptions([]);
                                                                 customerSearchRef.current?.clear();
                                                             }

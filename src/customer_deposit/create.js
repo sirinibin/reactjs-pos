@@ -1123,9 +1123,8 @@ const CustomerDepositCreate = forwardRef((props, ref) => {
                                             errors.customer_id = "";
                                             setErrors(errors);
                                             if (selectedItems.length === 0) {
-                                                // errors.customer_id = "Invalid Customer selected";
-                                                //setErrors(errors);
                                                 formData.customer_id = "";
+                                                formData.customer_name = "";
                                                 setFormData({ ...formData });
                                                 setSelectedCustomers([]);
                                                 return;

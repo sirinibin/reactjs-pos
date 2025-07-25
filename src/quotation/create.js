@@ -2195,6 +2195,8 @@ const QuotationCreate = forwardRef((props, ref) => {
                       delete errors["customer_id"];
                       setErrors(errors);
                       formData.customer_id = "";
+                      formData.customer_name = "";
+                      formData.customerName = "";
                       setFormData({ ...formData });
                       setSelectedCustomers([]);
                       return;
@@ -2210,6 +2212,11 @@ const QuotationCreate = forwardRef((props, ref) => {
                   ref={customerSearchRef}
                   onKeyDown={(e) => {
                     if (e.key === "Escape") {
+                      formData.customer_id = "";
+                      formData.customer_name = "";
+                      formData.customerName = "";
+                      setFormData({ ...formData });
+                      setSelectedCustomers([]);
                       setCustomerOptions([]);
                       customerSearchRef.current?.clear();
                     }

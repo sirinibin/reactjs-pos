@@ -1132,6 +1132,7 @@ const CustomerWithdrawalCreate = forwardRef((props, ref) => {
                                                 // errors.customer_id = "Invalid Customer selected";
                                                 //setErrors(errors);
                                                 formData.customer_id = "";
+                                                formData.customer_name = "";
                                                 setFormData({ ...formData });
                                                 setSelectedCustomers([]);
                                                 return;
@@ -1156,9 +1157,9 @@ const CustomerWithdrawalCreate = forwardRef((props, ref) => {
                                             if (e.key === "Escape") {
                                                 delete errors.customer_id;
                                                 //setErrors(errors);
+                                                formData.customerName = "";
                                                 formData.customer_id = "";
                                                 formData.customer_name = "";
-                                                formData.customerName = "";
                                                 setFormData({ ...formData });
                                                 setSelectedCustomers([]);
                                                 setCustomerOptions([]);

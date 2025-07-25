@@ -1408,6 +1408,7 @@ const DeliveryNoteCreate = forwardRef((props, ref) => {
                     delete errors["customer_id"];
                     setErrors(errors);
                     formData.customer_id = "";
+                    formData.customer_name = "";
                     setFormData({ ...formData });
                     setSelectedCustomers([]);
                     return;
