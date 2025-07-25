@@ -19,7 +19,9 @@ const StoreCreate = forwardRef((props, ref) => {
             formData = {
                 national_address: {},
                 bank_account: {},
-                settings: {},
+                settings: {
+                    invoice: invoiceSettings,
+                },
                 zatca: {
                     phase: "1",
                     env: "NonProduction",
@@ -59,12 +61,12 @@ const StoreCreate = forwardRef((props, ref) => {
                     padding_count: 3
                 },
                 customer_serial_number: {
-                    prefix: "CUST",
+                    prefix: "C",
                     start_from_count: 1,
                     padding_count: 4
                 },
                 vendor_serial_number: {
-                    prefix: "VND",
+                    prefix: "V",
                     start_from_count: 1,
                     padding_count: 4
                 },
@@ -74,12 +76,12 @@ const StoreCreate = forwardRef((props, ref) => {
                     padding_count: 4
                 },
                 customer_deposit_serial_number: {
-                    prefix: "CUST-RCVBLE",
+                    prefix: "RCVBLE",
                     start_from_count: 1,
                     padding_count: 4
                 },
                 customer_withdrawal_serial_number: {
-                    prefix: "CUST-PYBLE",
+                    prefix: "PYBLE",
                     start_from_count: 1,
                     padding_count: 4
                 },
@@ -99,6 +101,7 @@ const StoreCreate = forwardRef((props, ref) => {
                     padding_count: 6
                 },
             };
+
             setFormData({ ...formData });
             if (id) {
                 getStore(id);
@@ -108,6 +111,119 @@ const StoreCreate = forwardRef((props, ref) => {
         },
 
     }));
+
+    function deepFillEmptyStrings(target, defaults) {
+        if (typeof target !== 'object' || target === null) return;
+
+        for (const key in defaults) {
+            const defaultVal = defaults[key];
+            const targetVal = target[key];
+
+            // If both are objects (but not arrays), go deeper
+            if (
+                typeof defaultVal === 'object' &&
+                defaultVal !== null &&
+                !Array.isArray(defaultVal)
+            ) {
+                if (
+                    typeof targetVal !== 'object' ||
+                    targetVal === null ||
+                    Array.isArray(targetVal)
+                ) {
+                    target[key] = {};
+                }
+                deepFillEmptyStrings(target[key], defaultVal);
+            } else {
+                if (typeof targetVal === 'undefined' || targetVal === null || targetVal === '') {
+                    target[key] = defaultVal;
+                }
+            }
+        }
+    }
+
+
+    const invoiceSettings = {
+        quotation_sales_titles: {
+            paid: "TAX INVOICE | الفاتورة الضريبية",
+            credit: "CREDIT TAX INVOICE | فاتورة ضريبة الائتمان",
+            cash: "CASH TAX INVOICE | فاتورة ضريبية نقدية",
+        },
+        quotation_sales_return_titles: {
+            paid: "SALES RETURN TAX INVOICE | فاتورة ضريبة المبيعات المرتجعة",
+            credit: "SALES RETURN CREDIT TAX INVOICE | إقرار مبيعات فاتورة ضريبة الائتمان",
+            cash: "SALES RETURN CASH TAX INVOICE | إقرار مبيعات فاتورة ضريبية نقدية",
+        },
+        quotation_title: "QUOTATION | اقتباس",
+        delivery_note_title: "DELIVERY NOTE | مذكرة التسليم",
+        payable_title: "PAYMENT RECEIPT (PAYABLE / REFUND) | إيصال الدفع (مستحق الدفع / مسترد)",
+        receivable_title: "PAYMENT RECEIPT (RECEIVABLE) | إيصال الدفع (مستحق القبض)",
+        phase1: {
+            sales_titles: {
+                paid: "TAX INVOICE | الفاتورة الضريبية",
+                credit: "CREDIT TAX INVOICE | فاتورة ضريبة الائتمان",
+                cash: "CASH TAX INVOICE | فاتورة ضريبية نقدية",
+            },
+            sales_return_titles: {
+                paid: "SALES RETURN TAX INVOICE | فاتورة ضريبة المبيعات المرتجعة",
+                credit: "SALES RETURN CREDIT TAX INVOICE | إقرار مبيعات فاتورة ضريبة الائتمان",
+                cash: "SALES RETURN CASH TAX INVOICE | إقرار مبيعات فاتورة ضريبية نقدية",
+            },
+            purchase_titles: {
+                paid: "PURCHASE TAX INVOICE | فاتورة ضريبة الشراء",
+                credit: "CREDIT PURCHASE TAX INVOICE | فاتورة ضريبة الشراء بالائتمان",
+                cash: "CASH PURCHASE TAX INVOICE | فاتورة ضريبة الشراء النقدي",
+            },
+            purchase_return_titles: {
+                paid: "PURCHASE RETURN TAX INVOICE | فاتورة ضريبة إرجاع المشتريات",
+                credit: "CREDIT PURCHASE RETURN TAX INVOICE | فاتورة ضريبة إرجاع الشراء بالائتمان",
+                cash: "CASH PURCHASE RETURN TAX INVOICE | فاتورة ضريبة إرجاع الشراء النقدي",
+            },
+        },
+        phase2: {
+            sales_titles: {
+                paid: "SIMPLIFIED TAX INVOICE | فاتورة ضريبية مبسطة",
+                credit: "SIMPLIFIED CREDIT TAX INVOICE | فاتورة ضريبة الائتمان المبسطة",
+                cash: "SIMPLIFIED CASH TAX INVOICE | فاتورة ضريبية نقدية مبسطة",
+            },
+            sales_return_titles: {
+                paid: "SIMPLIFIED CREDIT NOTE TAX INVOICE | فاتورة ضريبية مبسطة لملاحظة الائتمان",
+                credit: "SIMPLIFIED CREDIT NOTE CREDIT TAX INVOICE | مذكرة ائتمان مبسطة فاتورة ضريبة الائتمان",
+                cash: "SIMPLIFIED CREDIT NOTE CASH TAX INVOICE | فاتورة ضريبية نقدية مبسطة",
+            },
+            purchase_titles: {
+                paid: "PURCHASE TAX INVOICE | فاتورة ضريبة الشراء",
+                credit: "CREDIT PURCHASE TAX INVOICE | فاتورة ضريبة الشراء بالائتمان",
+                cash: "CASH PURCHASE TAX INVOICE | فاتورة ضريبة الشراء النقدي",
+            },
+            purchase_return_titles: {
+                paid: "PURCHASE RETURN TAX INVOICE | فاتورة ضريبة إرجاع المشتريات",
+                credit: "CREDIT PURCHASE RETURN TAX INVOICE | فاتورة ضريبة إرجاع الشراء بالائتمان",
+                cash: "CASH PURCHASE RETURN TAX INVOICE | فاتورة ضريبة إرجاع الشراء النقدي",
+            },
+        },
+        phase2_b2b: {
+            sales_titles: {
+                paid: "STANDARD TAX INVOICE | فاتورة ضريبية قياسية",
+                credit: "STANDARD CREDIT TAX INVOICE | فاتورة ضريبة الائتمان القياسية",
+                cash: "STANDARD CASH TAX INVOICE | فاتورة ضريبية نقدية قياسية",
+            },
+            sales_return_titles: {
+                paid: "STANDARD CREDIT NOTE TAX INVOICE | فاتورة ضريبية لسند ائتمان قياسي",
+                credit: "STANDARD CREDIT NOTE CREDIT TAX INVOICE | فاتورة ضريبة الائتمان القياسية",
+                cash: "STANDARD CREDIT NOTE CASH TAX INVOICE | فاتورة ضريبية نقدية بسند ائتمان قياسي",
+            },
+            purchase_titles: {
+                paid: "PURCHASE TAX INVOICE | فاتورة ضريبة الشراء",
+                credit: "CREDIT PURCHASE TAX INVOICE | فاتورة ضريبة الشراء بالائتمان",
+                cash: "CASH PURCHASE TAX INVOICE | فاتورة ضريبة الشراء النقدي",
+            },
+            purchase_return_titles: {
+                paid: "PURCHASE RETURN TAX INVOICE | فاتورة ضريبة إرجاع المشتريات",
+                credit: "CREDIT PURCHASE RETURN TAX INVOICE | فاتورة ضريبة إرجاع الشراء بالائتمان",
+                cash: "CASH PURCHASE RETURN TAX INVOICE | فاتورة ضريبة إرجاع الشراء النقدي",
+            },
+        },
+    };
 
     useEffect(() => {
         const listener = event => {
@@ -270,6 +386,11 @@ const StoreCreate = forwardRef((props, ref) => {
                 console.log("Response:");
                 console.log(data);
                 let storeData = data.result;
+
+                deepFillEmptyStrings(storeData.settings.invoice, invoiceSettings);
+
+
+
                 storeData.logo = "";
 
                 selectedCountries = [];
@@ -1787,6 +1908,1091 @@ const StoreCreate = forwardRef((props, ref) => {
                                 </div>
                             )}
                         </div>
+
+                        <h6><b>Zatca Phase 1 Invoice Titles</b></h6>
+                        <h6><b>Sales</b></h6>
+                        <div className="row">
+                            <div className="col-md-4">
+                                <label className="form-label">Paid*</label>
+                                <div className="input-group mb-3">
+                                    <input
+                                        value={formData.settings?.invoice?.phase1?.sales_titles?.paid}
+                                        type='string'
+                                        onChange={(e) => {
+
+                                            errors["settings_invoice_phase1_sales_titles_paid"] = "";
+                                            formData.settings.invoice.phase1.sales_titles.paid = e.target.value;
+                                            setFormData({ ...formData });
+                                            console.log(formData);
+                                        }}
+                                        className="form-control"
+                                        id="settings.invoice.phase1.sales_titles.paid"
+                                        placeholder="Invoice title"
+                                    />
+                                </div>
+                                {errors.settings?.invoice?.phase1?.sales_titles?.paid && (
+                                    <div style={{ color: "red" }}>
+                                        {errors.settings.invoice.phase1.sales_titles.paid}
+                                    </div>
+                                )}
+                            </div>
+                            <div className="col-md-4">
+                                <label className="form-label">Credit*</label>
+                                <div className="input-group mb-3">
+                                    <input
+                                        value={formData.settings?.invoice?.phase1?.sales_titles?.credit}
+                                        type='string'
+                                        onChange={(e) => {
+
+                                            errors["settings_invoice_phase1_sales_titles_credit"] = "";
+                                            formData.settings.invoice.phase1.sales_titles.credit = e.target.value;
+                                            setFormData({ ...formData });
+                                            console.log(formData);
+                                        }}
+                                        className="form-control"
+                                        id="settings.invoice.phase1.sales_titles.credit"
+                                        placeholder="Invoice title"
+                                    />
+                                </div>
+                                {errors.settings?.invoice?.phase1?.sales_titles?.credit && (
+                                    <div style={{ color: "red" }}>
+                                        {errors.settings.invoice.phase1.sales_titles.credit}
+                                    </div>
+                                )}
+                            </div>
+                            <div className="col-md-4">
+                                <label className="form-label">Cash*</label>
+                                <div className="input-group mb-3">
+                                    <input
+                                        value={formData.settings?.invoice?.phase1?.sales_titles?.cash}
+                                        type='string'
+                                        onChange={(e) => {
+
+                                            errors["settings_invoice_phase1_sales_titles_cash"] = "";
+                                            formData.settings.invoice.phase1.sales_titles.cash = e.target.value;
+                                            setFormData({ ...formData });
+                                            console.log(formData);
+                                        }}
+                                        className="form-control"
+                                        id="settings.invoice.phase1.sales_titles.cash"
+                                        placeholder="Invoice title"
+                                    />
+                                </div>
+                                {errors.settings?.invoice?.phase1?.sales_titles?.cash && (
+                                    <div style={{ color: "red" }}>
+                                        {errors.settings.invoice.phase1.sales_titles.cash}
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+
+                        <h6><b>Sales Return</b></h6>
+                        <div className="row">
+                            <div className="col-md-4">
+                                <label className="form-label">Paid*</label>
+                                <div className="input-group mb-3">
+                                    <input
+                                        value={formData.settings?.invoice?.phase1?.sales_return_titles?.paid}
+                                        type='string'
+                                        onChange={(e) => {
+
+                                            errors["settings_invoice_phase1_sales_return_titles_paid"] = "";
+                                            formData.settings.invoice.phase1.sales_return_titles.paid = e.target.value;
+                                            setFormData({ ...formData });
+                                            console.log(formData);
+                                        }}
+                                        className="form-control"
+                                        id="settings.invoice.phase1.sales_return_titles.paid"
+                                        placeholder="Invoice title"
+                                    />
+                                </div>
+                                {errors.settings?.invoice?.phase1?.sales_return_titles?.paid && (
+                                    <div style={{ color: "red" }}>
+                                        {errors.settings.invoice.phase1.sales_return_titles.paid}
+                                    </div>
+                                )}
+                            </div>
+                            <div className="col-md-4">
+                                <label className="form-label">Credit*</label>
+                                <div className="input-group mb-3">
+                                    <input
+                                        value={formData.settings?.invoice?.phase1?.sales_return_titles?.credit}
+                                        type='string'
+                                        onChange={(e) => {
+
+                                            errors["settings_invoice_phase1_sales_return_titles_credit"] = "";
+                                            formData.settings.invoice.phase1.sales_return_titles.credit = e.target.value;
+                                            setFormData({ ...formData });
+                                            console.log(formData);
+                                        }}
+                                        className="form-control"
+                                        id="settings.invoice.phase1.sales_return_titles.credit"
+                                        placeholder="Invoice title"
+                                    />
+                                </div>
+                                {errors.settings?.invoice?.phase1?.sales_return_titles?.credit && (
+                                    <div style={{ color: "red" }}>
+                                        {errors.settings.invoice.phase1.sales_return_titles.credit}
+                                    </div>
+                                )}
+                            </div>
+                            <div className="col-md-4">
+                                <label className="form-label">Cash*</label>
+                                <div className="input-group mb-3">
+                                    <input
+                                        value={formData.settings?.invoice?.phase1?.sales_return_titles?.cash}
+                                        type='string'
+                                        onChange={(e) => {
+
+                                            errors["settings_invoice_phase1_sales_return_titles_cash"] = "";
+                                            formData.settings.invoice.phase1.sales_return_titles.cash = e.target.value;
+                                            setFormData({ ...formData });
+                                            console.log(formData);
+                                        }}
+                                        className="form-control"
+                                        id="settings.invoice.phase1.sales_return_titles.cash"
+                                        placeholder="Invoice title"
+                                    />
+                                </div>
+                                {errors.settings?.invoice?.phase1?.sales_return_titles?.cash && (
+                                    <div style={{ color: "red" }}>
+                                        {errors.settings.invoice.phase1.sales_return_titles.cash}
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+
+
+                        <h6><b>Purchase</b></h6>
+                        <div className="row">
+                            <div className="col-md-4">
+                                <label className="form-label">Paid*</label>
+                                <div className="input-group mb-3">
+                                    <input
+                                        value={formData.settings?.invoice?.phase1?.purchase_titles?.paid}
+                                        type='string'
+                                        onChange={(e) => {
+
+                                            errors["settings_invoice_phase1_purchase_titles_paid"] = "";
+                                            formData.settings.invoice.phase1.purchase_titles.paid = e.target.value;
+                                            setFormData({ ...formData });
+                                            console.log(formData);
+                                        }}
+                                        className="form-control"
+                                        id="settings.invoice.phase1.purchase_titles.paid"
+                                        placeholder="Invoice title"
+                                    />
+                                </div>
+                                {errors.settings?.invoice?.phase1?.purchase_titles?.paid && (
+                                    <div style={{ color: "red" }}>
+                                        {errors.settings.invoice.phase1.purchase_titles.paid}
+                                    </div>
+                                )}
+                            </div>
+                            <div className="col-md-4">
+                                <label className="form-label">Credit*</label>
+                                <div className="input-group mb-3">
+                                    <input
+                                        value={formData.settings?.invoice?.phase1?.purchase_titles?.credit}
+                                        type='string'
+                                        onChange={(e) => {
+
+                                            errors["settings_invoice_phase1_purchase_titles_credit"] = "";
+                                            formData.settings.invoice.phase1.purchase_titles.credit = e.target.value;
+                                            setFormData({ ...formData });
+                                            console.log(formData);
+                                        }}
+                                        className="form-control"
+                                        id="settings.invoice.phase1.purchase_titles.credit"
+                                        placeholder="Invoice title"
+                                    />
+                                </div>
+                                {errors.settings?.invoice?.phase1?.purchase_titles?.credit && (
+                                    <div style={{ color: "red" }}>
+                                        {errors.settings.invoice.phase1.purchase_titles.credit}
+                                    </div>
+                                )}
+                            </div>
+                            <div className="col-md-4">
+                                <label className="form-label">Cash*</label>
+                                <div className="input-group mb-3">
+                                    <input
+                                        value={formData.settings?.invoice?.phase1?.purchase_titles?.cash}
+                                        type='string'
+                                        onChange={(e) => {
+
+                                            errors["settings_invoice_phase1_purchase_titles_cash"] = "";
+                                            formData.settings.invoice.phase1.purchase_titles.cash = e.target.value;
+                                            setFormData({ ...formData });
+                                            console.log(formData);
+                                        }}
+                                        className="form-control"
+                                        id="settings.invoice.phase1.purchase_titles.cash"
+                                        placeholder="Invoice title"
+                                    />
+                                </div>
+                                {errors.settings?.invoice?.phase1?.purchase_titles?.cash && (
+                                    <div style={{ color: "red" }}>
+                                        {errors.settings.invoice.phase1.purchase_titles.cash}
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+
+                        <h6><b>Purchase Return</b></h6>
+                        <div className="row">
+                            <div className="col-md-4">
+                                <label className="form-label">Paid*</label>
+                                <div className="input-group mb-3">
+                                    <input
+                                        value={formData.settings?.invoice?.phase1?.purchase_return_titles?.paid}
+                                        type='string'
+                                        onChange={(e) => {
+
+                                            errors["settings_invoice_phase1_purchase_return_titles_paid"] = "";
+                                            formData.settings.invoice.phase1.purchase_return_titles.paid = e.target.value;
+                                            setFormData({ ...formData });
+                                            console.log(formData);
+                                        }}
+                                        className="form-control"
+                                        id="settings.invoice.phase1.purchase_return_titles.paid"
+                                        placeholder="Invoice title"
+                                    />
+                                </div>
+                                {errors.settings?.invoice?.phase1?.purchase_return_titles?.paid && (
+                                    <div style={{ color: "red" }}>
+                                        {errors.settings.invoice.phase1.purchase_return_titles.paid}
+                                    </div>
+                                )}
+                            </div>
+                            <div className="col-md-4">
+                                <label className="form-label">Credit*</label>
+                                <div className="input-group mb-3">
+                                    <input
+                                        value={formData.settings?.invoice?.phase1?.purchase_return_titles?.credit}
+                                        type='string'
+                                        onChange={(e) => {
+
+                                            errors["settings_invoice_phase1_purchase_return_titles_credit"] = "";
+                                            formData.settings.invoice.phase1.purchase_return_titles.credit = e.target.value;
+                                            setFormData({ ...formData });
+                                            console.log(formData);
+                                        }}
+                                        className="form-control"
+                                        id="settings.invoice.phase1.purchase_return_titles.credit"
+                                        placeholder="Invoice title"
+                                    />
+                                </div>
+                                {errors.settings?.invoice?.phase1?.purchase_return_titles?.credit && (
+                                    <div style={{ color: "red" }}>
+                                        {errors.settings.invoice.phase1.purchase_return_titles.credit}
+                                    </div>
+                                )}
+                            </div>
+                            <div className="col-md-4">
+                                <label className="form-label">Cash*</label>
+                                <div className="input-group mb-3">
+                                    <input
+                                        value={formData.settings?.invoice?.phase1?.purchase_return_titles?.cash}
+                                        type='string'
+                                        onChange={(e) => {
+
+                                            errors["settings_invoice_phase1_purchase_return_titles_cash"] = "";
+                                            formData.settings.invoice.phase1.purchase_return_titles.cash = e.target.value;
+                                            setFormData({ ...formData });
+                                            console.log(formData);
+                                        }}
+                                        className="form-control"
+                                        id="settings.invoice.phase1.purchase_return_titles.cash"
+                                        placeholder="Invoice title"
+                                    />
+                                </div>
+                                {errors.settings?.invoice?.phase1?.purchase_return_titles?.cash && (
+                                    <div style={{ color: "red" }}>
+                                        {errors.settings.invoice.phase1.purchase_return_titles.cash}
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+
+
+                        <h6><b>Zatca Phase 2 Invoice Titles</b></h6>
+                        <h6><b>Sales</b></h6>
+                        <div className="row">
+                            <div className="col-md-4">
+                                <label className="form-label">Paid B2C*</label>
+                                <div className="input-group mb-3">
+                                    <input
+                                        value={formData.settings?.invoice?.phase2?.sales_titles?.paid}
+                                        type='string'
+                                        onChange={(e) => {
+
+                                            errors["settings_invoice_phase2_sales_titles_paid"] = "";
+                                            formData.settings.invoice.phase2.sales_titles.paid = e.target.value;
+                                            setFormData({ ...formData });
+                                            console.log(formData);
+                                        }}
+                                        className="form-control"
+                                        id="settings.invoice.phase2.sales_titles.paid"
+                                        placeholder="Invoice title"
+                                    />
+                                </div>
+                                {errors.settings?.invoice?.phase2?.sales_titles?.paid && (
+                                    <div style={{ color: "red" }}>
+                                        {errors.settings.invoice.phase2.sales_titles.paid}
+                                    </div>
+                                )}
+                            </div>
+                            <div className="col-md-4">
+                                <label className="form-label">Credit B2C*</label>
+                                <div className="input-group mb-3">
+                                    <input
+                                        value={formData.settings?.invoice?.phase2?.sales_titles?.credit}
+                                        type='string'
+                                        onChange={(e) => {
+
+                                            errors["settings_invoice_phase2_sales_titles_credit"] = "";
+                                            formData.settings.invoice.phase2.sales_titles.credit = e.target.value;
+                                            setFormData({ ...formData });
+                                            console.log(formData);
+                                        }}
+                                        className="form-control"
+                                        id="settings.invoice.phase2.sales_titles.credit"
+                                        placeholder="Invoice title"
+                                    />
+                                </div>
+                                {errors.settings?.invoice?.phase2?.sales_titles?.credit && (
+                                    <div style={{ color: "red" }}>
+                                        {errors.settings.invoice.phase2.sales_titles.credit}
+                                    </div>
+                                )}
+                            </div>
+                            <div className="col-md-4">
+                                <label className="form-label">Cash B2C*</label>
+                                <div className="input-group mb-3">
+                                    <input
+                                        value={formData.settings?.invoice?.phase2?.sales_titles?.cash}
+                                        type='string'
+                                        onChange={(e) => {
+
+                                            errors["settings_invoice_phase2_sales_titles_cash"] = "";
+                                            formData.settings.invoice.phase2.sales_titles.cash = e.target.value;
+                                            setFormData({ ...formData });
+                                            console.log(formData);
+                                        }}
+                                        className="form-control"
+                                        id="settings.invoice.phase2.sales_titles.cash"
+                                        placeholder="Invoice title"
+                                    />
+                                </div>
+                                {errors.settings?.invoice?.phase2?.sales_titles?.cash && (
+                                    <div style={{ color: "red" }}>
+                                        {errors.settings.invoice.phase2.sales_titles.cash}
+                                    </div>
+                                )}
+                            </div>
+
+                            <div className="col-md-4">
+                                <label className="form-label">Paid B2B*</label>
+                                <div className="input-group mb-3">
+                                    <input
+                                        value={formData.settings?.invoice?.phase2_b2b?.sales_titles?.paid}
+                                        type='string'
+                                        onChange={(e) => {
+
+                                            errors["settings_invoice_phase2_b2b_sales_titles_paid"] = "";
+                                            formData.settings.invoice.phase2_b2b.sales_titles.paid = e.target.value;
+                                            setFormData({ ...formData });
+                                            console.log(formData);
+                                        }}
+                                        className="form-control"
+                                        id="settings.invoice.phase2_b2b.sales_titles.paid"
+                                        placeholder="Invoice title"
+                                    />
+                                </div>
+                                {errors.settings?.invoice?.phase2_b2b?.sales_titles?.paid && (
+                                    <div style={{ color: "red" }}>
+                                        {errors.settings.invoice.phase2_b2b.sales_titles.paid}
+                                    </div>
+                                )}
+                            </div>
+                            <div className="col-md-4">
+                                <label className="form-label">Credit B2B*</label>
+                                <div className="input-group mb-3">
+                                    <input
+                                        value={formData.settings?.invoice?.phase2_b2b?.sales_titles?.credit}
+                                        type='string'
+                                        onChange={(e) => {
+
+                                            errors["settings_invoice_phase2_b2b_sales_titles_credit"] = "";
+                                            formData.settings.invoice.phase2_b2b.sales_titles.credit = e.target.value;
+                                            setFormData({ ...formData });
+                                            console.log(formData);
+                                        }}
+                                        className="form-control"
+                                        id="settings.invoice.phase2_b2b.sales_titles.credit"
+                                        placeholder="Invoice title"
+                                    />
+                                </div>
+                                {errors.settings?.invoice?.phase2_b2b?.sales_titles?.credit && (
+                                    <div style={{ color: "red" }}>
+                                        {errors.settings.invoice.phase2_b2b.sales_titles.credit}
+                                    </div>
+                                )}
+                            </div>
+                            <div className="col-md-4">
+                                <label className="form-label">Cash B2B*</label>
+                                <div className="input-group mb-3">
+                                    <input
+                                        value={formData.settings?.invoice?.phase2_b2b?.sales_titles?.cash}
+                                        type='string'
+                                        onChange={(e) => {
+
+                                            errors["settings_invoice_phase2_b2b_sales_titles_cash"] = "";
+                                            formData.settings.invoice.phase2_b2b.sales_titles.cash = e.target.value;
+                                            setFormData({ ...formData });
+                                            console.log(formData);
+                                        }}
+                                        className="form-control"
+                                        id="settings.invoice.phase2_b2b.sales_titles.cash"
+                                        placeholder="Invoice title"
+                                    />
+                                </div>
+                                {errors.settings?.invoice?.phase2_b2b?.sales_titles?.cash && (
+                                    <div style={{ color: "red" }}>
+                                        {errors.settings.invoice.phase2_b2b.sales_titles.cash}
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+
+                        <h6><b>Sales Return</b></h6>
+                        <div className="row">
+                            <div className="col-md-4">
+                                <label className="form-label">Paid B2C*</label>
+                                <div className="input-group mb-3">
+                                    <input
+                                        value={formData.settings?.invoice?.phase2?.sales_return_titles?.paid}
+                                        type='string'
+                                        onChange={(e) => {
+
+                                            errors["settings_invoice_phase2_sales_return_titles_paid"] = "";
+                                            formData.settings.invoice.phase2.sales_return_titles.paid = e.target.value;
+                                            setFormData({ ...formData });
+                                            console.log(formData);
+                                        }}
+                                        className="form-control"
+                                        id="settings.invoice.phase2.sales_return_titles.paid"
+                                        placeholder="Invoice title"
+                                    />
+                                </div>
+                                {errors.settings?.invoice?.phase2?.sales_return_titles?.paid && (
+                                    <div style={{ color: "red" }}>
+                                        {errors.settings.invoice.phase2.sales_return_titles.paid}
+                                    </div>
+                                )}
+                            </div>
+                            <div className="col-md-4">
+                                <label className="form-label">Credit B2C*</label>
+                                <div className="input-group mb-3">
+                                    <input
+                                        value={formData.settings?.invoice?.phase2?.sales_return_titles?.credit}
+                                        type='string'
+                                        onChange={(e) => {
+
+                                            errors["settings_invoice_phase1_sales_return_titles_credit"] = "";
+                                            formData.settings.invoice.phase2.sales_return_titles.credit = e.target.value;
+                                            setFormData({ ...formData });
+                                            console.log(formData);
+                                        }}
+                                        className="form-control"
+                                        id="settings.invoice.phase2.sales_return_titles.credit"
+                                        placeholder="Invoice title"
+                                    />
+                                </div>
+                                {errors.settings?.invoice?.phase2?.sales_return_titles?.credit && (
+                                    <div style={{ color: "red" }}>
+                                        {errors.settings.invoice.phase2.sales_return_titles.credit}
+                                    </div>
+                                )}
+                            </div>
+                            <div className="col-md-4">
+                                <label className="form-label">Cash B2C*</label>
+                                <div className="input-group mb-3">
+                                    <input
+                                        value={formData.settings?.invoice?.phase2?.sales_return_titles?.cash}
+                                        type='string'
+                                        onChange={(e) => {
+
+                                            errors["settings_invoice_phase2_sales_return_titles_cash"] = "";
+                                            formData.settings.invoice.phase2.sales_return_titles.cash = e.target.value;
+                                            setFormData({ ...formData });
+                                            console.log(formData);
+                                        }}
+                                        className="form-control"
+                                        id="settings.invoice.phase2.sales_return_titles.cash"
+                                        placeholder="Invoice title"
+                                    />
+                                </div>
+                                {errors.settings?.invoice?.phase2?.sales_return_titles?.cash && (
+                                    <div style={{ color: "red" }}>
+                                        {errors.settings.invoice.phase2.sales_return_titles.cash}
+                                    </div>
+                                )}
+                            </div>
+
+                            <div className="col-md-4">
+                                <label className="form-label">Paid B2B*</label>
+                                <div className="input-group mb-3">
+                                    <input
+                                        value={formData.settings?.invoice?.phase2_b2b?.sales_return_titles?.paid}
+                                        type='string'
+                                        onChange={(e) => {
+
+                                            errors["settings_invoice_phase2_b2b_sales_return_titles_paid"] = "";
+                                            formData.settings.invoice.phase2_b2b.sales_return_titles.paid = e.target.value;
+                                            setFormData({ ...formData });
+                                            console.log(formData);
+                                        }}
+                                        className="form-control"
+                                        id="settings.invoice.phase2_b2b.sales_return_titles.paid"
+                                        placeholder="Invoice title"
+                                    />
+                                </div>
+                                {errors.settings?.invoice?.phase2_b2b?.sales_return_titles?.paid && (
+                                    <div style={{ color: "red" }}>
+                                        {errors.settings.invoice.phase2_b2b.sales_return_titles.paid}
+                                    </div>
+                                )}
+                            </div>
+                            <div className="col-md-4">
+                                <label className="form-label">Credit B2B*</label>
+                                <div className="input-group mb-3">
+                                    <input
+                                        value={formData.settings?.invoice?.phase2_b2b?.sales_return_titles?.credit}
+                                        type='string'
+                                        onChange={(e) => {
+
+                                            errors["settings_invoice_phase1_b2b_sales_return_titles_credit"] = "";
+                                            formData.settings.invoice.phase2_b2b.sales_return_titles.credit = e.target.value;
+                                            setFormData({ ...formData });
+                                            console.log(formData);
+                                        }}
+                                        className="form-control"
+                                        id="settings.invoice.phase2_b2b.sales_return_titles.credit"
+                                        placeholder="Invoice title"
+                                    />
+                                </div>
+                                {errors.settings?.invoice?.phase2_b2b?.sales_return_titles?.credit && (
+                                    <div style={{ color: "red" }}>
+                                        {errors.settings.invoice.phase2_b2b.sales_return_titles.credit}
+                                    </div>
+                                )}
+                            </div>
+                            <div className="col-md-4">
+                                <label className="form-label">Cash B2B*</label>
+                                <div className="input-group mb-3">
+                                    <input
+                                        value={formData.settings?.invoice?.phase2_b2b?.sales_return_titles?.cash}
+                                        type='string'
+                                        onChange={(e) => {
+
+                                            errors["settings_invoice_phase2_b2b_sales_return_titles_cash"] = "";
+                                            formData.settings.invoice.phase2_b2b.sales_return_titles.cash = e.target.value;
+                                            setFormData({ ...formData });
+                                            console.log(formData);
+                                        }}
+                                        className="form-control"
+                                        id="settings.invoice.phase2_b2b.sales_return_titles.cash"
+                                        placeholder="Invoice title"
+                                    />
+                                </div>
+                                {errors.settings?.invoice?.phase2_b2b?.sales_return_titles?.cash && (
+                                    <div style={{ color: "red" }}>
+                                        {errors.settings.invoice.phase2_b2b.sales_return_titles.cash}
+                                    </div>
+                                )}
+                            </div>
+
+                        </div>
+
+
+                        <h6><b>Purchase</b></h6>
+                        <div className="row">
+                            <div className="col-md-4">
+                                <label className="form-label">Paid B2C*</label>
+                                <div className="input-group mb-3">
+                                    <input
+                                        value={formData.settings?.invoice?.phase2?.purchase_titles?.paid}
+                                        type='string'
+                                        onChange={(e) => {
+
+                                            errors["settings_invoice_phase2_purchase_titles_paid"] = "";
+                                            formData.settings.invoice.phase2.purchase_titles.paid = e.target.value;
+                                            setFormData({ ...formData });
+                                            console.log(formData);
+                                        }}
+                                        className="form-control"
+                                        id="settings.invoice.phase2.purchase_titles.paid"
+                                        placeholder="Invoice title"
+                                    />
+                                </div>
+                                {errors.settings?.invoice?.phase2?.purchase_titles?.paid && (
+                                    <div style={{ color: "red" }}>
+                                        {errors.settings.invoice.phase2.purchase_titles.paid}
+                                    </div>
+                                )}
+                            </div>
+                            <div className="col-md-4">
+                                <label className="form-label">Credit B2C*</label>
+                                <div className="input-group mb-3">
+                                    <input
+                                        value={formData.settings?.invoice?.phase2?.purchase_titles?.credit}
+                                        type='string'
+                                        onChange={(e) => {
+
+                                            errors["settings_invoice_phase2_purchase_titles_credit"] = "";
+                                            formData.settings.invoice.phase2.purchase_titles.credit = e.target.value;
+                                            setFormData({ ...formData });
+                                            console.log(formData);
+                                        }}
+                                        className="form-control"
+                                        id="settings.invoice.phase2.purchase_titles.credit"
+                                        placeholder="Invoice title"
+                                    />
+                                </div>
+                                {errors.settings?.invoice?.phase2?.purchase_titles?.credit && (
+                                    <div style={{ color: "red" }}>
+                                        {errors.settings.invoice.phase2.purchase_titles.credit}
+                                    </div>
+                                )}
+                            </div>
+                            <div className="col-md-4">
+                                <label className="form-label">Cash B2C*</label>
+                                <div className="input-group mb-3">
+                                    <input
+                                        value={formData.settings?.invoice?.phase2?.purchase_titles?.cash}
+                                        type='string'
+                                        onChange={(e) => {
+
+                                            errors["settings_invoice_phase2_purchase_titles_cash"] = "";
+                                            formData.settings.invoice.phase2.purchase_titles.cash = e.target.value;
+                                            setFormData({ ...formData });
+                                            console.log(formData);
+                                        }}
+                                        className="form-control"
+                                        id="settings.invoice.phase2.purchase_titles.cash"
+                                        placeholder="Invoice title"
+                                    />
+                                </div>
+                                {errors.settings?.invoice?.phase2?.purchase_titles?.cash && (
+                                    <div style={{ color: "red" }}>
+                                        {errors.settings.invoice.phase2.purchase_titles.cash}
+                                    </div>
+                                )}
+                            </div>
+
+                            <div className="col-md-4">
+                                <label className="form-label">Paid B2B*</label>
+                                <div className="input-group mb-3">
+                                    <input
+                                        value={formData.settings?.invoice?.phase2_b2b?.purchase_titles?.paid}
+                                        type='string'
+                                        onChange={(e) => {
+
+                                            errors["settings_invoice_phase2_b2b_purchase_titles_paid"] = "";
+                                            formData.settings.invoice.phase2_b2b.purchase_titles.paid = e.target.value;
+                                            setFormData({ ...formData });
+                                            console.log(formData);
+                                        }}
+                                        className="form-control"
+                                        id="settings.invoice.phase2_b2b.purchase_titles.paid"
+                                        placeholder="Invoice title"
+                                    />
+                                </div>
+                                {errors.settings?.invoice?.phase2_b2b?.purchase_titles?.paid && (
+                                    <div style={{ color: "red" }}>
+                                        {errors.settings.invoice.phase2_b2b.purchase_titles.paid}
+                                    </div>
+                                )}
+                            </div>
+                            <div className="col-md-4">
+                                <label className="form-label">Credit B2B*</label>
+                                <div className="input-group mb-3">
+                                    <input
+                                        value={formData.settings?.invoice?.phase2_b2b?.purchase_titles?.credit}
+                                        type='string'
+                                        onChange={(e) => {
+
+                                            errors["settings_invoice_phase2_b2b_purchase_titles_credit"] = "";
+                                            formData.settings.invoice.phase2_b2b.purchase_titles.credit = e.target.value;
+                                            setFormData({ ...formData });
+                                            console.log(formData);
+                                        }}
+                                        className="form-control"
+                                        id="settings.invoice.phase2_b2b.purchase_titles.credit"
+                                        placeholder="Invoice title"
+                                    />
+                                </div>
+                                {errors.settings?.invoice?.phase2_b2b?.purchase_titles?.credit && (
+                                    <div style={{ color: "red" }}>
+                                        {errors.settings.invoice.phase2_b2b.purchase_titles.credit}
+                                    </div>
+                                )}
+                            </div>
+                            <div className="col-md-4">
+                                <label className="form-label">Cash B2B*</label>
+                                <div className="input-group mb-3">
+                                    <input
+                                        value={formData.settings?.invoice?.phase2_b2b?.purchase_titles?.cash}
+                                        type='string'
+                                        onChange={(e) => {
+
+                                            errors["settings_invoice_phase2_b2b_purchase_titles_cash"] = "";
+                                            formData.settings.invoice.phase2_b2b.purchase_titles.cash = e.target.value;
+                                            setFormData({ ...formData });
+                                            console.log(formData);
+                                        }}
+                                        className="form-control"
+                                        id="settings.invoice.phase2_b2b.purchase_titles.cash"
+                                        placeholder="Invoice title"
+                                    />
+                                </div>
+                                {errors.settings?.invoice?.phase2_b2b?.purchase_titles?.cash && (
+                                    <div style={{ color: "red" }}>
+                                        {errors.settings.invoice.phase2_b2b.purchase_titles.cash}
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+
+                        <h6><b>Purchase Return</b></h6>
+                        <div className="row">
+                            <div className="col-md-4">
+                                <label className="form-label">Paid*</label>
+                                <div className="input-group mb-">
+                                    <input
+                                        value={formData.settings?.invoice?.phase2?.purchase_return_titles?.paid}
+                                        type='string'
+                                        onChange={(e) => {
+
+                                            errors["settings_invoice_phase1_purchase_return_titles_paid"] = "";
+                                            formData.settings.invoice.phase2.purchase_return_titles.paid = e.target.value;
+                                            setFormData({ ...formData });
+                                            console.log(formData);
+                                        }}
+                                        className="form-control"
+                                        id="settings.invoice.phase2.purchase_return_titles.paid"
+                                        placeholder="Invoice title"
+                                    />
+                                </div>
+                                {errors.settings?.invoice?.phase2?.purchase_return_titles?.paid && (
+                                    <div style={{ color: "red" }}>
+                                        {errors.settings.invoice.phase2.purchase_return_titles.paid}
+                                    </div>
+                                )}
+                            </div>
+                            <div className="col-md-4">
+                                <label className="form-label">Credit*</label>
+                                <div className="input-group mb-3">
+                                    <input
+                                        value={formData.settings?.invoice?.phase2?.purchase_return_titles?.credit}
+                                        type='string'
+                                        onChange={(e) => {
+
+                                            errors["settings_invoice_phase1_purchase_return_titles_credit"] = "";
+                                            formData.settings.invoice.phase2.purchase_return_titles.credit = e.target.value;
+                                            setFormData({ ...formData });
+                                            console.log(formData);
+                                        }}
+                                        className="form-control"
+                                        id="settings.invoice.phase2.purchase_return_titles.credit"
+                                        placeholder="Invoice title"
+                                    />
+                                </div>
+                                {errors.settings?.invoice?.phase2?.purchase_return_titles?.credit && (
+                                    <div style={{ color: "red" }}>
+                                        {errors.settings.invoice.phase2.purchase_return_titles.credit}
+                                    </div>
+                                )}
+                            </div>
+                            <div className="col-md-4">
+                                <label className="form-label">Cash*</label>
+                                <div className="input-group mb-3">
+                                    <input
+                                        value={formData.settings?.invoice?.phase2?.purchase_return_titles?.cash}
+                                        type='string'
+                                        onChange={(e) => {
+
+                                            errors["settings_invoice_phase2_purchase_return_titles_cash"] = "";
+                                            formData.settings.invoice.phase2.purchase_return_titles.cash = e.target.value;
+                                            setFormData({ ...formData });
+                                            console.log(formData);
+                                        }}
+                                        className="form-control"
+                                        id="settings.invoice.phase2.purchase_return_titles.cash"
+                                        placeholder="Invoice title"
+                                    />
+                                </div>
+                                {errors.settings?.invoice?.phase2?.purchase_return_titles?.cash && (
+                                    <div style={{ color: "red" }}>
+                                        {errors.settings.invoice.phase2.purchase_return_titles.cash}
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+
+                        <h6><b>Other Invoice Titles</b></h6>
+                        <div className="row">
+                            <div className="col-md-4">
+                                <label className="form-label">Quotation*</label>
+                                <div className="input-group mb-3">
+                                    <input
+                                        value={formData.settings?.invoice?.quotation_title}
+                                        type='string'
+                                        onChange={(e) => {
+
+                                            errors["settings_invoice_quotation_title"] = "";
+                                            formData.settings.invoice.quotation_title = e.target.value;
+                                            setFormData({ ...formData });
+                                            console.log(formData);
+                                        }}
+                                        className="form-control"
+                                        id="settings.invoice.quotation_titled"
+                                        placeholder="Invoice title"
+                                    />
+                                </div>
+                                {errors.settings?.invoice?.quotation_title && (
+                                    <div style={{ color: "red" }}>
+                                        {errors.settings.invoice.quotation_title}
+                                    </div>
+                                )}
+                            </div>
+                            <div className="col-md-4">
+                                <label className="form-label">Delivery Note*</label>
+                                <div className="input-group mb-3">
+                                    <input
+                                        value={formData.settings?.invoice?.delivery_note_title}
+                                        type='string'
+                                        onChange={(e) => {
+
+                                            errors["settings_invoice_delivery_note"] = "";
+                                            formData.settings.invoice.delivery_note_title = e.target.value;
+                                            setFormData({ ...formData });
+                                            console.log(formData);
+                                        }}
+                                        className="form-control"
+                                        id="settings.invoice.delivery_note_title"
+                                        placeholder="Invoice title"
+                                    />
+                                </div>
+                                {errors.settings?.invoice?.delivery_note_title && (
+                                    <div style={{ color: "red" }}>
+                                        {errors.settings.invoice.delivery_note_title}
+                                    </div>
+                                )}
+                            </div>
+                            <div className="col-md-4">
+                                <label className="form-label">Payable*</label>
+                                <div className="input-group mb-3">
+                                    <input
+                                        value={formData.settings?.invoice?.payable_title}
+                                        type='string'
+                                        onChange={(e) => {
+
+                                            errors["settings_invoice_payable_title"] = "";
+                                            formData.settings.invoice.payable_title = e.target.value;
+                                            setFormData({ ...formData });
+                                            console.log(formData);
+                                        }}
+                                        className="form-control"
+                                        id="settings.invoice.payable_title"
+                                        placeholder="Invoice title"
+                                    />
+                                </div>
+                                {errors.settings?.invoice?.payable_title && (
+                                    <div style={{ color: "red" }}>
+                                        {errors.settings.invoice.payable_title}
+                                    </div>
+                                )}
+                            </div>
+                            <div className="col-md-4">
+                                <label className="form-label">Receivable*</label>
+                                <div className="input-group mb-3">
+                                    <input
+                                        value={formData.settings?.invoice?.receivable_title}
+                                        type='string'
+                                        onChange={(e) => {
+                                            errors["settings_invoice_receivable_title"] = "";
+                                            formData.settings.invoice.receivable_title = e.target.value;
+                                            setFormData({ ...formData });
+                                            console.log(formData);
+                                        }}
+                                        className="form-control"
+                                        id="settings.invoice.receivable_title"
+                                        placeholder="Invoice title"
+                                    />
+                                </div>
+                                {errors.settings?.invoice?.receivable_title && (
+                                    <div style={{ color: "red" }}>
+                                        {errors.settings.invoice.receivable_title}
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+
+
+                        <h6><b>Qtn. Sales</b></h6>
+                        <div className="row">
+                            <div className="col-md-4">
+                                <label className="form-label">Paid*</label>
+                                <div className="input-group mb-">
+                                    <input
+                                        value={formData.settings?.invoice?.quotation_sales_titles?.paid}
+                                        type='string'
+                                        onChange={(e) => {
+
+                                            errors["settings_invoice_quotation_sales_titles"] = "";
+                                            formData.settings.invoice.quotation_sales_titles.paid = e.target.value;
+                                            setFormData({ ...formData });
+                                            console.log(formData);
+                                        }}
+                                        className="form-control"
+                                        id="settings.invoice.quotation_sales_titles.paid"
+                                        placeholder="Invoice title"
+                                    />
+                                </div>
+                                {errors.settings?.invoice?.quotation_sales_titles?.paid && (
+                                    <div style={{ color: "red" }}>
+                                        {errors.settings.invoice.quotation_sales_titles.paid}
+                                    </div>
+                                )}
+                            </div>
+                            <div className="col-md-4">
+                                <label className="form-label">Credit*</label>
+                                <div className="input-group mb-3">
+                                    <input
+                                        value={formData.settings?.invoice?.quotation_sales_titles?.credit}
+                                        type='string'
+                                        onChange={(e) => {
+
+                                            errors["settings_invoice_quotation_sales_titles"] = "";
+                                            formData.settings.invoice.quotation_sales_titles.credit = e.target.value;
+                                            setFormData({ ...formData });
+                                            console.log(formData);
+                                        }}
+                                        className="form-control"
+                                        id="settings.invoice.quotation_sales_titles.credit"
+                                        placeholder="Invoice title"
+                                    />
+                                </div>
+                                {errors.settings?.invoice?.quotation_sales_titles?.credit && (
+                                    <div style={{ color: "red" }}>
+                                        {errors.settings.invoice.quotation_sales_titles.credit}
+                                    </div>
+                                )}
+                            </div>
+                            <div className="col-md-4">
+                                <label className="form-label">Cash*</label>
+                                <div className="input-group mb-3">
+                                    <input
+                                        value={formData.settings?.invoice?.quotation_sales_titles?.cash}
+                                        type='string'
+                                        onChange={(e) => {
+
+                                            errors["settings_invoice_quotation_sales_titles_cash"] = "";
+                                            formData.settings.invoice.quotation_sales_titles.cash = e.target.value;
+                                            setFormData({ ...formData });
+                                            console.log(formData);
+                                        }}
+                                        className="form-control"
+                                        id="settings.invoice.quotation_sales_titles.cash"
+                                        placeholder="Invoice title"
+                                    />
+                                </div>
+                                {errors.settings?.invoice?.quotation_sales_titles?.cash && (
+                                    <div style={{ color: "red" }}>
+                                        {errors.settings.invoice.quotation_sales_titles.cash}
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+
+                        <h6><b>Qtn. Sales Return</b></h6>
+                        <div className="row">
+                            <div className="col-md-4">
+                                <label className="form-label">Paid*</label>
+                                <div className="input-group mb-">
+                                    <input
+                                        value={formData.settings?.invoice?.quotation_sales_return_titles?.paid}
+                                        type='string'
+                                        onChange={(e) => {
+
+                                            errors["settings_invoice_quotation_sales_return_titles"] = "";
+                                            formData.settings.invoice.quotation_sales_return_titles.paid = e.target.value;
+                                            setFormData({ ...formData });
+                                            console.log(formData);
+                                        }}
+                                        className="form-control"
+                                        id="settings.invoice.quotation_sales_return_titles.paid"
+                                        placeholder="Invoice title"
+                                    />
+                                </div>
+                                {errors.settings?.invoice?.quotation_sales_return_titles?.paid && (
+                                    <div style={{ color: "red" }}>
+                                        {errors.settings.invoice.quotation_sales_return_titles.paid}
+                                    </div>
+                                )}
+                            </div>
+                            <div className="col-md-4">
+                                <label className="form-label">Credit*</label>
+                                <div className="input-group mb-3">
+                                    <input
+                                        value={formData.settings?.invoice?.quotation_sales_return_titles?.credit}
+                                        type='string'
+                                        onChange={(e) => {
+
+                                            errors["settings_invoice_quotation_sales_return_titles"] = "";
+                                            formData.settings.invoice.quotation_sales_return_titles.credit = e.target.value;
+                                            setFormData({ ...formData });
+                                            console.log(formData);
+                                        }}
+                                        className="form-control"
+                                        id="settings.invoice.quotation_sales_return_titles.credit"
+                                        placeholder="Invoice title"
+                                    />
+                                </div>
+                                {errors.settings?.invoice?.quotation_sales_return_titles?.credit && (
+                                    <div style={{ color: "red" }}>
+                                        {errors.settings.invoice.quotation_sales_return_titles.credit}
+                                    </div>
+                                )}
+                            </div>
+                            <div className="col-md-4">
+                                <label className="form-label">Cash*</label>
+                                <div className="input-group mb-3">
+                                    <input
+                                        value={formData.settings?.invoice?.quotation_sales_return_titles?.cash}
+                                        type='string'
+                                        onChange={(e) => {
+                                            errors["settings_invoice_quotation_sales_return_titles_cash"] = "";
+                                            formData.settings.invoice.quotation_sales_return_titles.cash = e.target.value;
+                                            setFormData({ ...formData });
+                                            console.log(formData);
+                                        }}
+                                        className="form-control"
+                                        id="settings.invoice.quotation_sales_return_titles.cash"
+                                        placeholder="Invoice title"
+                                    />
+                                </div>
+                                {errors.settings?.invoice?.quotation_sales_return_titles?.cash && (
+                                    <div style={{ color: "red" }}>
+                                        {errors.settings.invoice.quotation_sales_return_titles.cash}
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+
 
                         <h6><b>Serial Numbers</b></h6>
                         <h6><b>Sales ID's:</b> {formData.sales_serial_number.prefix.toUpperCase()}-{String(formData.sales_serial_number.start_from_count).padStart(formData.sales_serial_number.padding_count, '0')}, {formData.sales_serial_number.prefix.toUpperCase()}-{String((formData.sales_serial_number.start_from_count + 1)).padStart(formData.sales_serial_number.padding_count, '0')}...</h6>
