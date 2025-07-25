@@ -470,6 +470,7 @@ const StoreCreate = forwardRef((props, ref) => {
         console.log("Inside handle Create");
 
         formData.use_products_from_store_id = [];
+
         /*
         for (var i = 0; i < selectedStores.length; i++) {
             formData.use_products_from_store_id.push(selectedStores[i].id);
@@ -686,6 +687,7 @@ const StoreCreate = forwardRef((props, ref) => {
         }
         console.log("formData.logo:", formData.logo);
 
+        deepFillEmptyStrings(formData.settings.invoice, invoiceSettings);
 
         let endPoint = "/v1/store";
         let method = "POST";
