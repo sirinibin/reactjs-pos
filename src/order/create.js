@@ -1543,7 +1543,7 @@ const OrderCreate = forwardRef((props, ref) => {
                     }
                 }
 
-                setTimeout(() => setShowToast(false), 3000);
+                setTimeout(() => setShowToast(false), 2000);
 
                 if (props.refreshList) {
                     props.refreshList();
