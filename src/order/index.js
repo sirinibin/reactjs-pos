@@ -1663,7 +1663,9 @@ const OrderIndex = forwardRef((props, ref) => {
                             hide={true.toString()}
                             variant="primary"
                             className="btn btn-primary mb-3"
-                            onClick={openCreateForm}
+                            onClick={() => {
+                                openCreateForm();
+                            }}
                         >
                             <i className="bi bi-plus-lg"></i> Create
                         </Button>

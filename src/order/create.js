@@ -134,9 +134,89 @@ const OrderCreate = forwardRef((props, ref) => {
             setFormData({ ...formData });
             reCalculate();
             setShow(true);
-
         },
     }));
+
+    async function open(id) {
+        if (id) {
+            isUpdateForm = true;
+        } else {
+            isUpdateForm = false;
+        }
+        setIsUpdateForm(isUpdateForm)
+        //ResetFormData();
+        errors = {};
+        setErrors({ ...errors });
+        warnings = {};
+        setWarnings({ ...warnings });
+
+        selectedProducts = [];
+        setSelectedProducts([]);
+
+        selectedCustomers = [];
+        setSelectedCustomers([]);
+        formData.customer_id = "";
+        formData.customer_name = "";
+
+        if (localStorage.getItem("user_id")) {
+            selectedDeliveredByUsers = [{
+                id: localStorage.getItem("user_id"),
+                name: localStorage.getItem("user_name"),
+            }];
+            formData.delivered_by = localStorage.getItem("user_id");
+            setFormData({ ...formData });
+            setSelectedDeliveredByUsers([...selectedDeliveredByUsers]);
+        }
+
+        if (localStorage.getItem('store_id')) {
+            getStore(localStorage.getItem('store_id'));
+            formData["store_id"] = localStorage.getItem('store_id');
+            formData["store_name"] = localStorage.getItem('store_name');
+            setFormData({ ...formData });
+            console.log("formData.store_id:", formData.store_id);
+            console.log("formData.store_id:", formData.store_id);
+        }
+
+
+
+        formData.id = undefined;
+        formData.enable_report_to_zatca = false;
+        formData.discount = 0.00;
+        formData.phone = "";
+        formData.code = "";
+        formData.discount_percent = 0.00;
+        formData.discount_percent_with_vat = 0.00;
+        formData.discount_with_vat = 0.00;
+        formData.shipping_handling_fees = 0.00;
+        formData.partial_payment_amount = 0.00;
+        formData.payment_method = "";
+        formData.payment_status = "";
+        formData.remarks = ""
+        formData.rounding_amount = 0.00;
+        formData.auto_rounding_amount = true;
+        formData.net_total = 0.00;
+        formData.date_str = new Date();
+        formData.payments_input = [
+            {
+                "date_str": formData.date_str,
+                // "amount": "",
+                "amount": 0.00,
+                "method": "",
+                "deleted": false,
+            }
+        ];
+
+        ResetForm();
+
+        if (id) {
+            getOrder(id);
+        }
+
+        setFormData({ ...formData });
+        reCalculate();
+        setShow(true);
+
+    }
 
     let [isUpdateForm, setIsUpdateForm] = useState(false);
 
@@ -218,6 +298,8 @@ const OrderCreate = forwardRef((props, ref) => {
         }
         let queryParams = ObjectToSearchQueryParams(searchParams);
 
+        setProcessing(true);
+
         await fetch('/v1/order/' + id + "?" + queryParams, requestOptions)
             .then(async response => {
                 const isJson = response.headers.get('content-type')?.includes('application/json');
@@ -234,6 +316,513 @@ const OrderCreate = forwardRef((props, ref) => {
                 console.log("Response:");
                 console.log(data);
 
+                setProcessing(false);
+
+                formData = data.result;
+                oldProducts = formData.products.map(obj => ({ ...obj }));
+                setOldProducts([...oldProducts]);
+
+                formData.enable_report_to_zatca = false;
+                formData.date_str = data.result.date;
+
+                if (data.result?.cash_discount) {
+                    cashDiscount = data.result.cash_discount;
+                    setCashDiscount(cashDiscount);
+                } else {
+                    cashDiscount = "";
+                    setCashDiscount(cashDiscount);
+                }
+
+                if (data.result?.rounding_amount) {
+                    roundingAmount = data.result.rounding_amount;
+                    setRoundingAmount(roundingAmount);
+                } else {
+                    roundingAmount = 0;
+                    setRoundingAmount(roundingAmount);
+                }
+
+                if (data.result?.discount) {
+                    discount = formData.discount;
+                    setDiscount(discount);
+                }
+
+                if (data.result?.discount_with_vat) {
+                    discountWithVAT = formData.discount_with_vat;
+                    setDiscountWithVAT(discountWithVAT);
+                }
+
+                if (data.result?.discount_percent) {
+                    discountPercent = formData.discount_percent;
+                    setDiscountPercent(discountPercent);
+                }
+
+                if (data.result?.shipping_handling_fees) {
+                    shipping = formData.shipping_handling_fees;
+                    setShipping(shipping);
+                }
+
+
+                if (data.result?.payments) {
+                    console.log("data.result.payments:", data.result.payments);
+                    formData.payments_input = data.result.payments;
+                    for (var i = 0; i < formData.payments_input?.length; i++) {
+                        formData.payments_input[i].date_str = formData.payments_input[i].date
+                    }
+                    setFormData({ ...formData });
+                }
+
+                if (formData.is_discount_percent) {
+                    formData.discountValue = formData.discount_percent;
+                } else {
+                    formData.discountValue = formData.discount;
+                }
+
+                selectedProducts = formData.products;
+                setSelectedProducts([...selectedProducts]);
+
+
+                selectedProducts.forEach((product, index) => {
+                    CalCulateLineTotals(index);
+                });
+
+
+                if (formData.customer_name && formData.customer_id) {
+                    let selectedCustomers = [
+                        {
+                            id: formData.customer_id,
+                            name: formData.customer_name,
+                            search_label: formData.customer.search_label,
+                        }
+                    ];
+                    setSelectedCustomers([...selectedCustomers]);
+                }
+
+                reCalculate();
+                setFormData({ ...formData });
+
+
+                checkWarnings();
+                checkErrors();
+            })
+            .catch(error => {
+                setProcessing(false);
+                setErrors(error);
+            });
+    }
+
+
+    function formatLoadedSales(data) {
+        oldProducts = formData.products.map(obj => ({ ...obj }));
+        setOldProducts([...oldProducts]);
+
+        formData.enable_report_to_zatca = false;
+        formData.date_str = data.result.date;
+
+        if (data.result?.cash_discount) {
+            cashDiscount = data.result.cash_discount;
+            setCashDiscount(cashDiscount);
+        } else {
+            cashDiscount = "";
+            setCashDiscount(cashDiscount);
+        }
+
+        if (data.result?.rounding_amount) {
+            roundingAmount = data.result.rounding_amount;
+            setRoundingAmount(roundingAmount);
+        } else {
+            roundingAmount = 0;
+            setRoundingAmount(roundingAmount);
+        }
+
+        if (data.result?.discount) {
+            discount = formData.discount;
+            setDiscount(discount);
+        }
+
+        if (data.result?.discount_with_vat) {
+            discountWithVAT = formData.discount_with_vat;
+            setDiscountWithVAT(discountWithVAT);
+        }
+
+        if (data.result?.discount_percent) {
+            discountPercent = formData.discount_percent;
+            setDiscountPercent(discountPercent);
+        }
+
+        if (data.result?.shipping_handling_fees) {
+            shipping = formData.shipping_handling_fees;
+            setShipping(shipping);
+        }
+
+
+        if (data.result?.payments) {
+            console.log("data.result.payments:", data.result.payments);
+            formData.payments_input = data.result.payments;
+            for (var i = 0; i < formData.payments_input?.length; i++) {
+                formData.payments_input[i].date_str = formData.payments_input[i].date
+            }
+            setFormData({ ...formData });
+        }
+
+        if (formData.is_discount_percent) {
+            formData.discountValue = formData.discount_percent;
+        } else {
+            formData.discountValue = formData.discount;
+        }
+
+        selectedProducts = formData.products;
+        setSelectedProducts([...selectedProducts]);
+
+
+        selectedProducts.forEach((product, index) => {
+            CalCulateLineTotals(index);
+        });
+
+
+        if (formData.customer_name && formData.customer_id && formData.customer_name && formData.customer?.search_label) {
+            let selectedCustomers = [
+                {
+                    id: formData.customer_id,
+                    name: formData.customer_name,
+                    search_label: formData.customer.search_label,
+                }
+            ];
+            setSelectedCustomers([...selectedCustomers]);
+        }
+
+        reCalculate();
+        setFormData({ ...formData });
+
+
+        checkWarnings();
+        checkErrors();
+    }
+
+
+    async function getPreviousOrder(id) {
+        console.log("inside get Order");
+        const requestOptions = {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': localStorage.getItem('access_token'),
+            },
+        };
+
+        let searchParams = {};
+        if (localStorage.getItem("store_id")) {
+            searchParams.store_id = localStorage.getItem("store_id");
+        }
+        let queryParams = ObjectToSearchQueryParams(searchParams);
+
+        setProcessing(true);
+
+        await fetch('/v1/previous-order/' + id + "?" + queryParams, requestOptions)
+            .then(async response => {
+                const isJson = response.headers.get('content-type')?.includes('application/json');
+                const data = isJson && await response.json();
+
+                // check for error response
+                if (!response.ok) {
+                    const error = (data && data.errors);
+                    return Promise.reject(error);
+                }
+
+                setErrors({});
+
+                setProcessing(false);
+                console.log("Response:");
+                console.log(data);
+
+                if (!data.result) {
+                    disablePreviousButton = true;
+                    setDisablePreviousButton(true);
+                    return;
+                } else {
+                    disablePreviousButton = false;
+                    setDisablePreviousButton(false);
+                }
+
+                formData = data.result;
+                oldProducts = formData.products.map(obj => ({ ...obj }));
+                setOldProducts([...oldProducts]);
+
+                formData.enable_report_to_zatca = false;
+                formData.date_str = data.result.date;
+
+                if (data.result?.cash_discount) {
+                    cashDiscount = data.result.cash_discount;
+                    setCashDiscount(cashDiscount);
+                } else {
+                    cashDiscount = "";
+                    setCashDiscount(cashDiscount);
+                }
+
+                if (data.result?.rounding_amount) {
+                    roundingAmount = data.result.rounding_amount;
+                    setRoundingAmount(roundingAmount);
+                } else {
+                    roundingAmount = 0;
+                    setRoundingAmount(roundingAmount);
+                }
+
+                if (data.result?.discount) {
+                    discount = formData.discount;
+                    setDiscount(discount);
+                }
+
+                if (data.result?.discount_with_vat) {
+                    discountWithVAT = formData.discount_with_vat;
+                    setDiscountWithVAT(discountWithVAT);
+                }
+
+                if (data.result?.discount_percent) {
+                    discountPercent = formData.discount_percent;
+                    setDiscountPercent(discountPercent);
+                }
+
+                if (data.result?.shipping_handling_fees) {
+                    shipping = formData.shipping_handling_fees;
+                    setShipping(shipping);
+                }
+
+
+                if (data.result?.payments) {
+                    console.log("data.result.payments:", data.result.payments);
+                    formData.payments_input = data.result.payments;
+                    for (var i = 0; i < formData.payments_input?.length; i++) {
+                        formData.payments_input[i].date_str = formData.payments_input[i].date
+                    }
+                    setFormData({ ...formData });
+                }
+
+                if (formData.is_discount_percent) {
+                    formData.discountValue = formData.discount_percent;
+                } else {
+                    formData.discountValue = formData.discount;
+                }
+
+                selectedProducts = formData.products;
+                setSelectedProducts([...selectedProducts]);
+
+
+                selectedProducts.forEach((product, index) => {
+                    CalCulateLineTotals(index);
+                });
+
+
+                if (formData.customer_name && formData.customer_id) {
+                    let selectedCustomers = [
+                        {
+                            id: formData.customer_id,
+                            name: formData.customer_name,
+                            search_label: formData.customer.search_label,
+                        }
+                    ];
+                    setSelectedCustomers([...selectedCustomers]);
+                }
+
+                reCalculate();
+                setFormData({ ...formData });
+
+
+                checkWarnings();
+                checkErrors();
+            })
+            .catch(error => {
+                setProcessing(false);
+                setErrors(error);
+            });
+    }
+
+    async function getNextOrder(id) {
+        console.log("inside get Order");
+        const requestOptions = {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': localStorage.getItem('access_token'),
+            },
+        };
+
+        let searchParams = {};
+        if (localStorage.getItem("store_id")) {
+            searchParams.store_id = localStorage.getItem("store_id");
+        }
+        let queryParams = ObjectToSearchQueryParams(searchParams);
+
+        setProcessing(true);
+
+        await fetch('/v1/next-order/' + id + "?" + queryParams, requestOptions)
+            .then(async response => {
+                const isJson = response.headers.get('content-type')?.includes('application/json');
+                const data = isJson && await response.json();
+
+                // check for error response
+                if (!response.ok) {
+                    const error = (data && data.errors);
+                    return Promise.reject(error);
+                }
+
+                setErrors({});
+
+                setProcessing(false);
+
+                console.log("Response:");
+                console.log(data);
+
+
+                if (!data.result) {
+                    isUpdateForm = false;
+                    setIsUpdateForm(false);
+
+                    openCreateForm();
+                    return;
+                }
+
+                isUpdateForm = true;
+                setIsUpdateForm(true);
+
+                disablePreviousButton = false;
+                setDisablePreviousButton(false);
+
+
+                formData = data.result;
+
+                oldProducts = formData.products.map(obj => ({ ...obj }));
+                setOldProducts([...oldProducts]);
+
+                formData.enable_report_to_zatca = false;
+                formData.date_str = data.result.date;
+
+                if (data.result?.cash_discount) {
+                    cashDiscount = data.result.cash_discount;
+                    setCashDiscount(cashDiscount);
+                } else {
+                    cashDiscount = "";
+                    setCashDiscount(cashDiscount);
+                }
+
+                if (data.result?.rounding_amount) {
+                    roundingAmount = data.result.rounding_amount;
+                    setRoundingAmount(roundingAmount);
+                } else {
+                    roundingAmount = 0;
+                    setRoundingAmount(roundingAmount);
+                }
+
+                if (data.result?.discount) {
+                    discount = formData.discount;
+                    setDiscount(discount);
+                }
+
+                if (data.result?.discount_with_vat) {
+                    discountWithVAT = formData.discount_with_vat;
+                    setDiscountWithVAT(discountWithVAT);
+                }
+
+                if (data.result?.discount_percent) {
+                    discountPercent = formData.discount_percent;
+                    setDiscountPercent(discountPercent);
+                }
+
+                if (data.result?.shipping_handling_fees) {
+                    shipping = formData.shipping_handling_fees;
+                    setShipping(shipping);
+                }
+
+
+                if (data.result?.payments) {
+                    console.log("data.result.payments:", data.result.payments);
+                    formData.payments_input = data.result.payments;
+                    for (var i = 0; i < formData.payments_input?.length; i++) {
+                        formData.payments_input[i].date_str = formData.payments_input[i].date
+                    }
+                    setFormData({ ...formData });
+                }
+
+                if (formData.is_discount_percent) {
+                    formData.discountValue = formData.discount_percent;
+                } else {
+                    formData.discountValue = formData.discount;
+                }
+
+                selectedProducts = formData.products;
+                setSelectedProducts([...selectedProducts]);
+
+
+                selectedProducts.forEach((product, index) => {
+                    CalCulateLineTotals(index);
+                });
+
+
+                if (formData.customer_name && formData.customer_id) {
+                    let selectedCustomers = [
+                        {
+                            id: formData.customer_id,
+                            name: formData.customer_name,
+                            search_label: formData.customer.search_label,
+                        }
+                    ];
+                    setSelectedCustomers([...selectedCustomers]);
+                }
+
+                reCalculate();
+                setFormData({ ...formData });
+
+
+                checkWarnings();
+                checkErrors();
+            })
+            .catch(error => {
+                setProcessing(false);
+                setErrors(error);
+            });
+    }
+
+    async function getLastOrder() {
+        console.log("inside get Order");
+        const requestOptions = {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': localStorage.getItem('access_token'),
+            },
+        };
+
+        let searchParams = {};
+        if (localStorage.getItem("store_id")) {
+            searchParams.store_id = localStorage.getItem("store_id");
+        }
+        let queryParams = ObjectToSearchQueryParams(searchParams);
+
+        setProcessing(true);
+
+        await fetch("/v1/last-order?" + queryParams, requestOptions)
+            .then(async response => {
+                const isJson = response.headers.get('content-type')?.includes('application/json');
+                const data = isJson && await response.json();
+
+                // check for error response
+                if (!response.ok) {
+                    const error = (data && data.errors);
+                    return Promise.reject(error);
+                }
+
+                setErrors({});
+
+                setProcessing(false);
+
+                console.log("Response:");
+                console.log(data);
+
+                if (data.result) {
+                    isUpdateForm = true;
+                    setIsUpdateForm(true);
+                } else {
+                    isUpdateForm = false;
+                    setIsUpdateForm(false);
+                }
                 formData = data.result;
                 oldProducts = formData.products.map(obj => ({ ...obj }));
                 setOldProducts([...oldProducts]);
@@ -364,6 +953,7 @@ const OrderCreate = forwardRef((props, ref) => {
         "payment_amount": [],
     });
     const [isProcessing, setProcessing] = useState(false);
+    const [isSubmitting, setIsSubmitting] = useState(false);
 
 
     //fields
@@ -917,7 +1507,7 @@ const OrderCreate = forwardRef((props, ref) => {
         }
         let queryParams = ObjectToSearchQueryParams(searchParams);
 
-        setProcessing(true);
+        setIsSubmitting(true);
         fetch(endPoint + "?" + queryParams, requestOptions)
             .then(async (response) => {
                 const isJson = response.headers
@@ -934,42 +1524,55 @@ const OrderCreate = forwardRef((props, ref) => {
                 }
 
                 setErrors({});
-                setProcessing(false);
+                setIsSubmitting(false);
 
                 console.log("Response:");
                 console.log(data);
 
                 if (formData.id) {
+                    setToastMessage(`Updated Successfully✅`);
+                    setShowToast(true);
                     if (props.showToastMessage) {
                         if (props.showToastMessage) props.showToastMessage("Sale updated successfully!", "success");
                     }
                 } else {
+                    setToastMessage(`Created Successfully✅`);
+                    setShowToast(true);
                     if (props.showToastMessage) {
                         if (props.showToastMessage) props.showToastMessage("Sale created successfully!", "success");
                     }
                 }
 
+                setTimeout(() => setShowToast(false), 3000);
+
                 if (props.refreshList) {
                     props.refreshList();
                 }
 
-                handleClose();
-                formData.products = [];
-                selectedProducts = [];
-                setSelectedProducts([]);
-                formData.customer_id = "";
-                setSelectedCustomers([]);
+                // handleClose();
+                /*    formData.products = [];
+                    selectedProducts = [];
+                    setSelectedProducts([]);
+                    formData.customer_id = "";
+                    setSelectedCustomers([]);*/
+                if (data.result?.id) {
+                    isUpdateForm = true;
+                    setIsUpdateForm(true);
+                }
+                formData = data.result;
                 setFormData({ ...formData });
-                reCalculate();
-
+                formatLoadedSales(data);
                 if (props.onUpdated) {
                     props.onUpdated();
                 }
 
-                openDetailsView(data.result.id);
+                openPrintTypeSelection();
+                //  reCalculate();
+
+                //openDetailsView(data.result.id);
             })
             .catch((error) => {
-                setProcessing(false);
+                setIsSubmitting(false);
                 console.log("Inside catch");
                 console.log(error);
                 setErrors({ ...error });
@@ -1700,9 +2303,10 @@ const OrderCreate = forwardRef((props, ref) => {
     }
 
     const DetailsViewRef = useRef();
+    /*
     function openDetailsView(id) {
         DetailsViewRef.current.open(id);
-    }
+    }*/
 
     const CustomerCreateFormRef = useRef();
     function openCustomerCreateForm() {
@@ -2030,6 +2634,7 @@ const OrderCreate = forwardRef((props, ref) => {
     const [toastMessage, setToastMessage] = useState("");
 
     const PreviewRef = useRef();
+    /*
     function openPreview() {
         let model = formData;
         model.products = selectedProducts;
@@ -2040,6 +2645,7 @@ const OrderCreate = forwardRef((props, ref) => {
         }
         PreviewRef.current.open(model, undefined, "sales");
     }
+        */
 
 
 
@@ -2229,6 +2835,66 @@ const OrderCreate = forwardRef((props, ref) => {
         ProductHistoryRef.current.open(model);
     }
 
+    //Preview
+
+
+    let [showOrderPreview, setShowOrderPreview] = useState(false);
+    let [showPrintTypeSelection, setShowPrintTypeSelection] = useState(false);
+    const openPreview = useCallback(() => {
+        setShowOrderPreview(true);
+        setShowPrintTypeSelection(false);
+
+        if (timerRef.current) clearTimeout(timerRef.current);
+
+        timerRef.current = setTimeout(() => {
+            //if (model.id === salesID) {
+            PreviewRef.current?.open(formData, undefined, "sales");
+            //  handleClose();
+            //}
+
+        }, 100);
+
+    }, [formData]);
+
+    const openPrintTypeSelection = useCallback(() => {
+        if (store.settings?.enable_invoice_print_type_selection) {
+            // showPrintTypeSelection = true;
+            setShowOrderPreview(true);
+            setShowPrintTypeSelection(true);
+            if (timerRef.current) clearTimeout(timerRef.current);
+            timerRef.current = setTimeout(() => {
+                printButtonRef.current?.focus();
+            }, 100);
+
+        } else {
+            openPreview();
+        }
+    }, [openPreview, store]);
+
+    const printButtonRef = useRef();
+    const printA4ButtonRef = useRef();
+
+    //const CreateFormRef = useRef();
+    let [disablePreviousButton, setDisablePreviousButton] = useState(false)
+    async function openCreateForm() {
+        disablePreviousButton = false;
+        setDisablePreviousButton(false);
+        open();
+        // CreateFormRef.current.open();
+    }
+
+    async function openPreviousForm() {
+        getPreviousOrder(formData.id);
+    }
+
+    async function openNextForm() {
+        getNextOrder(formData.id);
+    }
+
+    async function openLastForm() {
+        getLastOrder();
+    }
+
 
     return (
         <>
@@ -2236,7 +2902,50 @@ const OrderCreate = forwardRef((props, ref) => {
             <OrderPrint ref={PrintRef} />
             <CustomerCreate ref={CustomerUpdateFormRef} showToastMessage={props.showToastMessage} onUpdated={handleCustomerUpdated} />
             <ImageViewerModal ref={imageViewerRef} images={productImages} />
-            <OrderPreview ref={PreviewRef} />
+
+            <Modal show={showPrintTypeSelection} onHide={() => {
+                showPrintTypeSelection = false;
+                setShowPrintTypeSelection(showPrintTypeSelection);
+            }} centered>
+                <Modal.Header closeButton>
+                    <Modal.Title>Select Print Type</Modal.Title>
+                </Modal.Header>
+                <Modal.Body className="d-flex justify-content-around">
+
+
+
+                    <Button variant="secondary" ref={printButtonRef} onClick={() => {
+                        openPrint();
+                    }} onKeyDown={(e) => {
+                        if (timerRef.current) clearTimeout(timerRef.current);
+
+                        if (e.key === "ArrowRight") {
+                            timerRef.current = setTimeout(() => {
+                                printA4ButtonRef.current.focus();
+                            }, 100);
+                        }
+                    }}>
+                        <i className="bi bi-printer"></i> Print
+                    </Button>
+
+                    <Button variant="primary" ref={printA4ButtonRef} onClick={() => {
+                        openPreview();
+                    }}
+                        onKeyDown={(e) => {
+                            if (timerRef.current) clearTimeout(timerRef.current);
+
+                            if (e.key === "ArrowLeft") {
+                                timerRef.current = setTimeout(() => {
+                                    printButtonRef.current.focus();
+                                }, 100);
+                            }
+                        }}
+                    >
+                        <i className="bi bi-printer"></i> Print A4 Invoice
+                    </Button>
+                </Modal.Body>
+            </Modal >
+            {showOrderPreview && <OrderPreview ref={PreviewRef} />}
             <div
                 className="toast-container position-fixed top-0 end-0 p-3"
                 style={{ zIndex: 9999 }}
@@ -2296,6 +3005,50 @@ const OrderCreate = forwardRef((props, ref) => {
                     </div>}
                     <div className="col align-self-end text-end">
 
+                        <Button
+                            variant="primary"
+                            className="btn btn-primary"
+                            disabled={disablePreviousButton}
+                            onClick={(e) => {
+                                e.preventDefault();
+
+                                if (isUpdateForm) {
+                                    openPreviousForm();
+                                } else {
+                                    openLastForm();
+                                }
+
+                            }}
+                        >
+                            <i className="bi-chevron-double-left"></i> Previous
+                        </Button>
+                        &nbsp;&nbsp;
+                        <Button
+                            disabled={!isUpdateForm}
+                            variant="primary"
+                            className="btn btn-primary"
+                            onClick={(e) => {
+                                e.preventDefault();
+
+                                openNextForm();
+                            }}
+                        >
+                            Next  <i className="bi-chevron-double-right"></i>
+                        </Button>
+                        &nbsp;&nbsp;
+                        <Button
+                            disabled={!isUpdateForm}
+                            variant="primary"
+                            className="btn btn-primary"
+                            onClick={(e) => {
+                                e.preventDefault();
+
+                                openCreateForm();
+                            }}
+                        >
+                            <i className="bi bi-plus"></i>  Create New
+                        </Button>
+                        &nbsp;&nbsp;
                         <Button variant="secondary" onClick={openPrint}>
                             <i className="bi bi-printer"></i> Print
                         </Button>
@@ -2307,7 +3060,7 @@ const OrderCreate = forwardRef((props, ref) => {
                         &nbsp;&nbsp;
 
                         <Button variant="primary" onClick={handleCreate}>
-                            {isProcessing ?
+                            {isSubmitting ?
                                 <Spinner
                                     as="span"
                                     animation="border"
@@ -2318,7 +3071,7 @@ const OrderCreate = forwardRef((props, ref) => {
 
                                 : ""
                             }
-                            {isUpdateForm && !isProcessing ? "Update" : !isProcessing ? "Create" : ""}
+                            {isUpdateForm && !isSubmitting ? "Update" : !isSubmitting ? "Create" : ""}
 
                         </Button>
 
@@ -2331,11 +3084,24 @@ const OrderCreate = forwardRef((props, ref) => {
                     </div>
                 </Modal.Header>
                 <Modal.Body>
+
                     <div style={{
                         maxHeight: "50px",        // Adjust based on design
                         minHeight: "50px",
                         overflowY: "scroll",
                     }}>
+                        {isProcessing && (
+                            <div
+
+                                style={{
+                                    display: "flex",
+                                    justifyContent: "center",
+                                    alignItems: "center",
+
+                                }}
+
+                            ><Spinner animation="grow" variant="primary" /></div>
+                        )}
                         {errors && Object.keys(errors).length > 0 && (
                             <div
                                 style={{

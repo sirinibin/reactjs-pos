@@ -928,6 +928,7 @@ const Preview = forwardRef((props, ref) => {
 
 
     const handlePrint = useCallback(() => {
+
         setIsProcessing(true);
         const element = printAreaRef.current;
         if (!element) return;
@@ -949,6 +950,9 @@ const Preview = forwardRef((props, ref) => {
                 iframe.contentWindow?.focus();
                 iframe.contentWindow?.print();
             };
+
+            handleClose();
+
         });
     }, [getFileName]);
 
@@ -1106,6 +1110,7 @@ const Preview = forwardRef((props, ref) => {
             setDefaultMessage(message);
             setDefaultNumber(whatsAppNo);
             setShowWhatsAppMessageModal(true);
+            handleClose();
         }, 100);
 
     }, [getFileName, model, phone, modelName, formatPhoneForWhatsApp]);
@@ -1488,8 +1493,10 @@ const Preview = forwardRef((props, ref) => {
 
                 if (whatsAppShare) {
                     openWhatsAppShare();
+                    //handleClose();
                 } else {
                     handlePrint();
+                    // handleClose();
                 }
                 // openPrintTypeSelection();
                 // Call your function here
