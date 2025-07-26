@@ -189,6 +189,8 @@ const OrderView = forwardRef((props, ref) => {
     const [show, SetShow] = useState(false);
 
     function handleClose() {
+        // model = "";
+        setModel("");
         SetShow(false);
     };
 
@@ -251,8 +253,11 @@ const OrderView = forwardRef((props, ref) => {
         if (timerRef.current) clearTimeout(timerRef.current);
 
         timerRef.current = setTimeout(() => {
-            PreviewRef.current?.open(model, undefined, "sales");
-            handleClose();
+            if (model.id) {
+                PreviewRef.current?.open(model, undefined, "sales");
+                handleClose();
+            }
+
         }, 100);
 
     }, [model]);
