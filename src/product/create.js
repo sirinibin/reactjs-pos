@@ -3335,7 +3335,7 @@ const ProductCreate = forwardRef((props, ref) => {
 
             <h4>Link Products</h4>
             <div className="col-md-12">
-              <label className="form-label">Linked Products</label>
+              {/*<label className="form-label">Linked Products</label>*/}
               <Typeahead
                 id="linked_product_id"
                 labelKey="search_label"
@@ -3345,9 +3345,15 @@ const ProductCreate = forwardRef((props, ref) => {
                 onChange={(selectedItems) => {
 
                   // alert(selectedItems[selectedItems.length - 1].part_number);
-                  if (!IsProductExistsInLinkedProducts(selectedItems[selectedItems.length - 1].id)) {
+                  if (selectedItems.length > selectedLinkedProducts.length) {
+                    if (!IsProductExistsInLinkedProducts(selectedItems[selectedItems.length - 1].id)) {
+                      setSelectedLinkedProducts(selectedItems);
+                    }
+                  } else {
                     setSelectedLinkedProducts(selectedItems);
                   }
+
+
 
                   setOpenProductSearchResult(false);
                   /*
@@ -3368,7 +3374,7 @@ const ProductCreate = forwardRef((props, ref) => {
                 open={openProductSearchResult}
                 onKeyDown={(e) => {
                   if (e.key === "Escape") {
-                    // setProductOptions([]);
+                    setProductOptions([]);
                     setOpenProductSearchResult(false);
                     // productSearchRef.current?.clear();
                   }
