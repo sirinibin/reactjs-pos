@@ -10,10 +10,13 @@ import { trimTo2Decimals } from "../utils/numberUtils";
 
 const OrderView = forwardRef((props, ref) => {
 
-
+    let [salesID, setSalesID] = useState("");
     useImperativeHandle(ref, () => ({
+
         open(id) {
             if (id) {
+                salesID = id;
+                setSalesID(salesID);
                 getOrder(id);
                 getCashDiscounts(id);
                 getPayments(id);
@@ -253,14 +256,14 @@ const OrderView = forwardRef((props, ref) => {
         if (timerRef.current) clearTimeout(timerRef.current);
 
         timerRef.current = setTimeout(() => {
-            if (model.id) {
+            if (model.id === salesID) {
                 PreviewRef.current?.open(model, undefined, "sales");
                 handleClose();
             }
 
         }, 100);
 
-    }, [model]);
+    }, [model, salesID]);
 
     function sendWhatsAppMessage() {
         setShowPrintTypeSelection(false);
