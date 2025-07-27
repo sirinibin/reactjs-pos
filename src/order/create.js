@@ -1566,6 +1566,8 @@ const OrderCreate = forwardRef((props, ref) => {
                     props.onUpdated();
                 }
 
+                // openCreateForm();
+
                 openPrintTypeSelection();
                 //  reCalculate();
 
@@ -2649,29 +2651,7 @@ const OrderCreate = forwardRef((props, ref) => {
 
 
 
-    function sendWhatsAppMessage() {
-        let model = formData;
-        model.products = selectedProducts;
-        model.payment_status = paymentStatus;
-        model.date = formData.date_str;
 
-        if (!formData.code) {
-            formData.code = Math.floor(10000 + Math.random() * 90000).toString();;
-            model.code = formData.code;
-        }
-        delete errors["phone"];
-        setErrors({ ...errors });
-
-        if (model.phone) {
-            if (!validatePhoneNumber(model.phone)) {
-                errors["phone"] = "Invalid phone no."
-                setErrors({ ...errors });
-                return;
-            }
-        }
-
-        PreviewRef.current.open(model, "whatsapp", "whatsapp_sales");
-    }
 
 
     function validatePhoneNumber(input) {
@@ -2823,11 +2803,6 @@ const OrderCreate = forwardRef((props, ref) => {
     };
 
 
-    const PrintRef = useRef();
-    function openPrint() {
-        PrintRef.current.open(formData);
-    }
-
     const onChangeTriggeredRef = useRef(false);
 
     const ProductHistoryRef = useRef();
@@ -2836,6 +2811,47 @@ const OrderCreate = forwardRef((props, ref) => {
     }
 
     //Preview
+    function sendWhatsAppMessage() {
+        let model = formData;
+        model.products = selectedProducts;
+        model.payment_status = paymentStatus;
+        model.date = formData.date_str;
+
+        if (!formData.code) {
+            formData.code = Math.floor(10000 + Math.random() * 90000).toString();;
+            model.code = formData.code;
+        }
+        delete errors["phone"];
+        setErrors({ ...errors });
+
+        if (model.phone) {
+            if (!validatePhoneNumber(model.phone)) {
+                errors["phone"] = "Invalid phone no."
+                setErrors({ ...errors });
+                return;
+            }
+        }
+
+        setShowOrderPreview(true);
+        if (timerRef.current) clearTimeout(timerRef.current);
+
+        timerRef.current = setTimeout(() => {
+            PreviewRef.current?.open(model, "whatsapp", "whatsapp_sales");
+        }, 100);
+    }
+
+
+    const PrintRef = useRef();
+    let [showOrderPrintPreview, setShowOrderPrintPreview] = useState(false);
+    function openPrint() {
+        setShowOrderPrintPreview(true);
+        setShowPrintTypeSelection(false);
+        if (timerRef.current) clearTimeout(timerRef.current);
+
+        timerRef.current = setTimeout(() => {
+            PrintRef.current.open(formData);
+        }, 100);
+    }
 
 
     let [showOrderPreview, setShowOrderPreview] = useState(false);
@@ -2895,11 +2911,16 @@ const OrderCreate = forwardRef((props, ref) => {
         getLastOrder();
     }
 
+    async function handlePrintClose() {
+        openCreateForm();
+    }
+
 
     return (
         <>
             <ProductHistory ref={ProductHistoryRef} showToastMessage={props.showToastMessage} />
-            <OrderPrint ref={PrintRef} />
+            {showOrderPrintPreview && <OrderPrint ref={PrintRef} onPrintClose={handlePrintClose} />}
+            {showOrderPreview && <OrderPreview ref={PreviewRef} onPrintClose={handlePrintClose} />}
             <CustomerCreate ref={CustomerUpdateFormRef} showToastMessage={props.showToastMessage} onUpdated={handleCustomerUpdated} />
             <ImageViewerModal ref={imageViewerRef} images={productImages} />
 
@@ -2945,7 +2966,7 @@ const OrderCreate = forwardRef((props, ref) => {
                     </Button>
                 </Modal.Body>
             </Modal >
-            {showOrderPreview && <OrderPreview ref={PreviewRef} />}
+
             <div
                 className="toast-container position-fixed top-0 end-0 p-3"
                 style={{ zIndex: 9999 }}
@@ -3049,12 +3070,12 @@ const OrderCreate = forwardRef((props, ref) => {
                             <i className="bi bi-plus"></i>  Create New
                         </Button>
                         &nbsp;&nbsp;
-                        <Button variant="secondary" onClick={openPrint}>
+                        <Button variant="secondary" disabled={!isUpdateForm} onClick={openPrint}>
                             <i className="bi bi-printer"></i> Print
                         </Button>
                         &nbsp;&nbsp;
 
-                        <Button variant="primary" onClick={openPreview}>
+                        <Button variant="primary" disabled={!isUpdateForm} onClick={openPreview}>
                             <i className="bi bi-printer"></i> Print A4 Invoice
                         </Button>
                         &nbsp;&nbsp;

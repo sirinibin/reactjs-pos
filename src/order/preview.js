@@ -658,9 +658,7 @@ const Preview = forwardRef((props, ref) => {
 
     const [show, setShow] = useState(props.show);
 
-    function handleClose() {
-        setShow(false);
-    }
+
 
 
     let [qrContent, setQrContent] = useState("");
@@ -897,6 +895,13 @@ const Preview = forwardRef((props, ref) => {
     }
     */
 
+    const handleClose = useCallback(() => {
+        setShow(false);
+        if (props.onPrintClose) {
+            props.onPrintClose();
+        }
+    }, [props]);
+
     const printAreaRef = useRef();
 
     const getFileName = useCallback(() => {
@@ -954,7 +959,7 @@ const Preview = forwardRef((props, ref) => {
             handleClose();
 
         });
-    }, [getFileName]);
+    }, [getFileName, handleClose]);
 
 
 
@@ -1110,7 +1115,6 @@ const Preview = forwardRef((props, ref) => {
             setDefaultMessage(message);
             setDefaultNumber(whatsAppNo);
             setShowWhatsAppMessageModal(true);
-            handleClose();
         }, 100);
 
     }, [getFileName, model, phone, modelName, formatPhoneForWhatsApp]);
@@ -1126,6 +1130,7 @@ const Preview = forwardRef((props, ref) => {
 
         if (timerRef.current) clearTimeout(timerRef.current);
         timerRef.current = setTimeout(() => {
+            handleClose();
             window.open(whatsappUrl, "_blank");
         }, 100);
 

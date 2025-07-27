@@ -408,9 +408,12 @@ const OrderPrint = forwardRef((props, ref) => {
 
     const [show, setShow] = useState(props.show);
 
-    function handleClose() {
+    const handleClose = useCallback(() => {
+        if (props.onPrintClose) {
+            props.onPrintClose();
+        }
         setShow(false);
-    }
+    }, [props]);
 
 
     let [qrContent, setQrContent] = useState("");
@@ -820,6 +823,26 @@ const OrderPrint = forwardRef((props, ref) => {
           }, 500);
       }, [autoPrint]);*/
 
+
+    useEffect(() => {
+        const handleEnterKey = (event) => {
+            const tag = event.target.tagName.toLowerCase();
+            const isInput = tag === 'input' || tag === 'textarea' || event.target.isContentEditable;
+
+            if (!show) {
+                return;
+            }
+
+            if (event.key === 'Enter' && !isInput) {
+                handlePrint();
+            }
+        };
+
+        document.addEventListener('keydown', handleEnterKey);
+        return () => {
+            document.removeEventListener('keydown', handleEnterKey);
+        };
+    }, [handlePrint, show]); // no dependencies
 
     return (<>
         <Modal show={show} scrollable={true} size="xl" fullscreen={model.store?.code === "PH2" || model.store?.code === "LGK-SIMULATION" || model.store?.code === "LGK"} onHide={handleClose} animation={false} style={{ overflowY: "auto", height: "auto" }}>
