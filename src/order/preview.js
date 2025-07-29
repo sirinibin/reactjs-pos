@@ -905,7 +905,7 @@ const Preview = forwardRef((props, ref) => {
     const printAreaRef = useRef();
 
     const getFileName = useCallback(() => {
-        let filename = model.store.code + "_";
+        let filename = model.store?.code + "_";
 
         if (modelName === "sales" || modelName === "whatsapp_sales") {
             filename += "Sales";
@@ -933,6 +933,8 @@ const Preview = forwardRef((props, ref) => {
 
 
     const handlePrint = useCallback(() => {
+
+        //  alert(getFileName());
 
         setIsProcessing(true);
         const element = printAreaRef.current;

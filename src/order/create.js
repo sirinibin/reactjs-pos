@@ -1263,6 +1263,11 @@ const OrderCreate = forwardRef((props, ref) => {
 
     function handleCreate(event) {
         event.preventDefault();
+
+        if (isSubmitting) {
+            return;
+        }
+
         let haveErrors = false;
 
         if (!cashDiscount) {
@@ -2856,6 +2861,7 @@ const OrderCreate = forwardRef((props, ref) => {
 
     let [showOrderPreview, setShowOrderPreview] = useState(false);
     let [showPrintTypeSelection, setShowPrintTypeSelection] = useState(false);
+
     const openPreview = useCallback(() => {
         setShowOrderPreview(true);
         setShowPrintTypeSelection(false);
@@ -2864,13 +2870,15 @@ const OrderCreate = forwardRef((props, ref) => {
 
         timerRef.current = setTimeout(() => {
             //if (model.id === salesID) {
-            PreviewRef.current?.open(formData, undefined, "sales");
+            if (!isSubmitting) {
+                PreviewRef.current?.open(formData, undefined, "sales");
+            }
             //  handleClose();
             //}
 
         }, 100);
 
-    }, [formData]);
+    }, [formData, isSubmitting]);
 
     const openPrintTypeSelection = useCallback(() => {
         if (store.settings?.enable_invoice_print_type_selection) {
@@ -2883,9 +2891,14 @@ const OrderCreate = forwardRef((props, ref) => {
             }, 100);
 
         } else {
-            openPreview();
+            if (timerRef.current) clearTimeout(timerRef.current);
+            timerRef.current = setTimeout(() => {
+                if (!isSubmitting) {
+                    openPreview();
+                }
+            }, 100);
         }
-    }, [openPreview, store]);
+    }, [openPreview, store, isSubmitting]);
 
     const printButtonRef = useRef();
     const printA4ButtonRef = useRef();
@@ -2895,7 +2908,9 @@ const OrderCreate = forwardRef((props, ref) => {
     async function openCreateForm() {
         disablePreviousButton = false;
         setDisablePreviousButton(false);
-        open();
+        if (!isSubmitting) {
+            open();
+        }
         // CreateFormRef.current.open();
     }
 
@@ -3080,7 +3095,11 @@ const OrderCreate = forwardRef((props, ref) => {
                         </Button>
                         &nbsp;&nbsp;
 
-                        <Button variant="primary" onClick={handleCreate}>
+                        <Button variant="primary" onClick={(e) => {
+                            e.preventDefault();
+
+                            handleCreate(e);
+                        }}>
                             {isSubmitting ?
                                 <Spinner
                                     as="span"
@@ -6027,9 +6046,24 @@ const OrderCreate = forwardRef((props, ref) => {
                             <Button variant="secondary" onClick={handleClose}>
                                 Close
                             </Button>
-                            <Button variant="primary" onClick={handleCreate}>
-                                {isProcessing ? isUpdateForm ? "Updating...." : "Creating.." : isUpdateForm ? "Update" : "Create"
+                            <Button variant="primary" onClick={(e) => {
+                                e.preventDefault();
+
+                                handleCreate(e);
+                            }}>
+                                {isSubmitting ?
+                                    <Spinner
+                                        as="span"
+                                        animation="border"
+                                        size="sm"
+                                        role="status"
+                                        aria-hidden={true}
+                                    />
+
+                                    : ""
                                 }
+                                {isUpdateForm && !isSubmitting ? "Update" : !isSubmitting ? "Create" : ""}
+
                             </Button>
                         </Modal.Footer>
                     </form>
