@@ -930,6 +930,27 @@ const Preview = forwardRef((props, ref) => {
         return filename;
     }, [model, modelName])
 
+    const handleDownload = () => {
+        const element = printAreaRef.current;
+        if (!element) return;
+
+        const fileName = getFileName(); // Get filename in advance
+
+        html2pdf()
+            .set({
+                margin: 0,
+                filename: `${fileName}.pdf`, // Force download with this name
+                image: { type: 'jpeg', quality: 0.98 },
+                html2canvas: { scale: 2, useCORS: true },
+                jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+            })
+            .from(element)
+            .save()
+            .catch((err) => {
+                console.error("PDF download failed:", err);
+            });
+    };
+
 
 
     const handlePrint = useCallback(() => {
@@ -1653,9 +1674,26 @@ const Preview = forwardRef((props, ref) => {
 
                     {/* Print & Close Buttons */}
                     <div className="d-flex align-items-center">
+                        <Button variant="primary" className="d-flex align-items-center gap-2" onClick={(e) => {
+                            e.preventDefault();
+                            handleDownload()
+                        }}>
+                            <i className="bi bi-file-earmark-arrow-down"></i>PDF
+                        </Button>&nbsp;&nbsp;
+
+
                         <Button
                             variant={whatsAppShare ? "success" : "primary"}
-                            onClick={whatsAppShare ? openWhatsAppShare : handlePrint}
+                            onClick={(e) => {
+                                e.preventDefault();
+
+                                if (whatsAppShare) {
+                                    openWhatsAppShare();
+                                } else {
+                                    handlePrint();
+                                }
+
+                            }}
                             className="me-2"
                         >
                             {isProcessing ?
