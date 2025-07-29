@@ -1247,14 +1247,14 @@ const ProductCreate = forwardRef((props, ref) => {
       newStock -= parseFloat(productStores[localStorage.getItem('store_id')].sales_return_quantity);
     }
 
-    // if (store.settings.update_product_stock_on_quotation_sales) {
-    if (productStores[localStorage.getItem('store_id')].quotation_sales_quantity) {
-      newStock -= parseFloat(productStores[localStorage.getItem('store_id')].quotation_sales_quantity);
+    if (store.settings.update_product_stock_on_quotation_sales) {
+      if (productStores[localStorage.getItem('store_id')].quotation_sales_quantity) {
+        newStock -= parseFloat(productStores[localStorage.getItem('store_id')].quotation_sales_quantity);
+      }
+      if (productStores[localStorage.getItem('store_id')].quotation_sales_return_quantity) {
+        newStock += parseFloat(productStores[localStorage.getItem('store_id')].quotation_sales_return_quantity);
+      }
     }
-    if (productStores[localStorage.getItem('store_id')].quotation_sales_return_quantity) {
-      newStock += parseFloat(productStores[localStorage.getItem('store_id')].quotation_sales_return_quantity);
-    }
-    //}
     // alert(productStores[localStorage.getItem('store_id')].stocks_added)
 
     if (productStores[localStorage.getItem('store_id')].stocks_added) {
