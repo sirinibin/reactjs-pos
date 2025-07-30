@@ -155,7 +155,7 @@ const PreviewContent = forwardRef((props, ref) => {
                                     <div className="col-md-8 print-value" dir="ltr" style={{ borderColor: detailsBorderColor, width: detailsValuesColumnWidthPercent, padding: "3px" }} >{props.model.date ? format(
                                         new Date(props.model.date),
                                         "yyyy-MM-dd h:mma"
-                                    ) : "<DATETIME>"} {" | " + getArabicDate(props.model.date)}</div>
+                                    ) : "<DATETIME>"} {props.model.date ? " | " + getArabicDate(props.model.date) : ""}</div>
                                 </div>
                             </>}
                             {(props.modelName !== "quotation" || props.model.type === "invoice") && <>

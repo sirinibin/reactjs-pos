@@ -1548,7 +1548,13 @@ const OrderCreate = forwardRef((props, ref) => {
                     }
                 }
 
-                setTimeout(() => setShowToast(false), 2000);
+                setTimeout(() => {
+                    setToastMessage(`Preparing Print Preview...`);
+                    setShowToast(true);
+                    setTimeout(() => setShowToast(false), 1000);
+                }, 800);
+
+
 
                 if (props.refreshList) {
                     props.refreshList();
@@ -1565,15 +1571,20 @@ const OrderCreate = forwardRef((props, ref) => {
                     setIsUpdateForm(true);
                 }
                 formData = data.result;
+                //formData.date = data.result?.date;
+                //formData.code = data.result?.code;
+                // alert(formData.code + "|" + formData.date);
                 setFormData({ ...formData });
-                formatLoadedSales(data);
+                openPrintTypeSelection();
+
                 if (props.onUpdated) {
                     props.onUpdated();
                 }
 
                 // openCreateForm();
 
-                openPrintTypeSelection();
+
+                formatLoadedSales(data);
                 //  reCalculate();
 
                 //openDetailsView(data.result.id);
@@ -2870,7 +2881,7 @@ const OrderCreate = forwardRef((props, ref) => {
 
         timerRef.current = setTimeout(() => {
             //if (model.id === salesID) {
-            if (!isSubmitting) {
+            if (!isSubmitting && formData.id && formData.code && formData.date) {
                 PreviewRef.current?.open(formData, undefined, "sales");
             }
             //  handleClose();
@@ -2891,6 +2902,8 @@ const OrderCreate = forwardRef((props, ref) => {
             }, 100);
 
         } else {
+            //openPreview();
+
             if (timerRef.current) clearTimeout(timerRef.current);
             timerRef.current = setTimeout(() => {
                 if (!isSubmitting) {
