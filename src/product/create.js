@@ -1293,6 +1293,10 @@ const ProductCreate = forwardRef((props, ref) => {
     setProductStores({ ...productStores });
   }
 
+  function handleDeleteImage(index) {
+    formData.images = formData.images.filter((_, i) => i !== index);
+    setFormData({ ...formData });
+  }
 
 
   return (
@@ -3510,7 +3514,14 @@ const ProductCreate = forwardRef((props, ref) => {
             </div>
             <div className="col-md-12">
               <label className="form-label">Product photos</label>
-              <ImageGallery ref={ImageGalleryRef} id={formData.id} storeID={formData.store_id} storedImages={formData.images} modelName={"product"} />
+              <ImageGallery
+                ref={ImageGalleryRef}
+                id={formData.id}
+                storeID={formData.store_id}
+                storedImages={formData.images}
+                modelName={"product"}
+                handleDelete={handleDeleteImage}
+              />
             </div>
 
             {/*<div className="col-md-6">

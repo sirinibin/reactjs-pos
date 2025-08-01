@@ -101,6 +101,10 @@ const ImageGallery = forwardRef((props, ref) => {
             });
         }
         setImages(images.filter((_, i) => i !== index));
+
+        if (props.handleDelete) {
+            props.handleDelete(index);
+        }
     };
 
     const showPrev = () => setModalIndex(modalIndex === 0 ? images.length - 1 : modalIndex - 1);
