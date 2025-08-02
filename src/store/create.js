@@ -4330,7 +4330,53 @@ const StoreCreate = forwardRef((props, ref) => {
 
                         <h6><b>Settings</b></h6>
 
+                        <div className="col-md-2">
+                            <div className="input-group mb-3">
+                                <input type="checkbox"
+                                    value={formData.settings.enable_auto_sales_payment_close_on_purchase}
+                                    checked={formData.settings.enable_auto_sales_payment_close_on_purchase}
+                                    onChange={(e) => {
+                                        errors["enable_auto_sales_payment_close_on_purchase"] = "";
+                                        formData.settings.enable_auto_sales_payment_close_on_purchase = !formData.settings.enable_auto_sales_payment_close_on_purchase;
+                                        setFormData({ ...formData });
+                                        console.log(formData);
+                                    }}
+                                    className=""
+                                    id="enable_auto_sales_payment_close_on_purchase"
 
+                                /> &nbsp;Enable Auto Sales Payment Close On Purchase
+                            </div>
+                            <label className="form-label"></label>
+                            {errors.enable_auto_sales_payment_close_on_purchase && (
+                                <div style={{ color: "red" }}>
+                                    {errors.enable_auto_sales_payment_close_on_purchase}
+                                </div>
+                            )}
+                        </div>
+
+                        <div className="col-md-2">
+                            <div className="input-group mb-3">
+                                <input type="checkbox"
+                                    value={formData.settings.enable_auto_purchase_payment_close_on_sales}
+                                    checked={formData.settings.enable_auto_purchase_payment_close_on_sales}
+                                    onChange={(e) => {
+                                        errors["enable_auto_purchase_payment_close_on_sales"] = "";
+                                        formData.settings.enable_auto_purchase_payment_close_on_sales = !formData.settings.enable_auto_purchase_payment_close_on_sales;
+                                        setFormData({ ...formData });
+                                        console.log(formData);
+                                    }}
+                                    className=""
+                                    id="enable_auto_purchase_payment_close_on_sales"
+
+                                /> &nbsp;Enable Auto Purchase Payment Close On Sales
+                            </div>
+                            <label className="form-label"></label>
+                            {errors.enable_auto_purchase_payment_close_on_sales && (
+                                <div style={{ color: "red" }}>
+                                    {errors.enable_auto_purchase_payment_close_on_sales}
+                                </div>
+                            )}
+                        </div>
 
 
                         <div className="col-md-2">

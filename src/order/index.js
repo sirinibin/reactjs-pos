@@ -1824,7 +1824,7 @@ const OrderIndex = forwardRef((props, ref) => {
                                                     return (<>
                                                         {col.key === "actions" && <th key={col.key}>{col.label}</th>}
                                                         {col.key === "select" && enableSelection && <th key={col.key}>{col.label}</th>}
-                                                        {col.key === "zatca.reporting_passed" && store.zatca?.phase === "2" && store.zatca?.connected && <th>
+                                                        {col.key === "reported_to_zatca" && store.zatca?.phase === "2" && store.zatca?.connected && <th>
                                                             <b
                                                                 style={{
                                                                     textDecoration: "underline",
@@ -1843,7 +1843,7 @@ const OrderIndex = forwardRef((props, ref) => {
                                                                 ) : null}
                                                             </b>
                                                         </th>}
-                                                        {col.key !== "actions" && col.key !== "select" && col.key !== "zatca.reporting_passed" && <th>
+                                                        {col.key !== "actions" && col.key !== "select" && col.key !== "reported_to_zatca" && <th>
                                                             <b
                                                                 style={{
                                                                     textDecoration: "underline",
@@ -1873,7 +1873,7 @@ const OrderIndex = forwardRef((props, ref) => {
                                                         {col.key !== "actions" &&
                                                             col.key !== "select" &&
                                                             col.key !== "date" &&
-                                                            col.key !== "zatca.reporting_passed" &&
+                                                            col.key !== "reported_to_zatca" &&
                                                             col.key !== "payment_status" &&
                                                             col.key !== "payment_methods" &&
                                                             col.key !== "created_by" &&
@@ -2022,7 +2022,7 @@ const OrderIndex = forwardRef((props, ref) => {
                                                                 multiple
                                                             />
                                                         </th>}
-                                                        {col.key === "zatca.reporting_passed" && store.zatca?.phase === "2" && store.zatca?.connected && <th>
+                                                        {col.key === "reported_to_zatca" && store.zatca?.phase === "2" && store.zatca?.connected && <th>
                                                             <select
                                                                 onChange={(e) => {
                                                                     searchByFieldValue("zatca.reporting_passed", e.target.value);
