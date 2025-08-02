@@ -241,14 +241,16 @@ const CustomerCreate = forwardRef((props, ref) => {
             haveErrors = true;
         }
 
-        /*
-        if (formData.vat_no && !isValidNDigitNumber(formData.vat_no, 15)) {
-            errors["vat_no"] = "VAT No. should be 15 digits";
-            haveErrors = true;
-        } else if (formData.vat_no && !NumberStartAndEndWith(formData.vat_no, 3)) {
-            errors["vat_no"] = "VAT No should start and end with 3";
-            haveErrors = true;
-        }*/
+        if (formData.country_code === "" || formData.country_code === "SA") {
+            if (formData.vat_no && !isValidNDigitNumber(formData.vat_no, 15)) {
+                errors["vat_no"] = "VAT No. should be 15 digits";
+                haveErrors = true;
+            } else if (formData.vat_no && !NumberStartAndEndWith(formData.vat_no, 3)) {
+                errors["vat_no"] = "VAT No should start and end with 3";
+                haveErrors = true;
+            }
+        }
+
 
         if (formData.vat_no && store.zatca?.phase === "2") {
 
