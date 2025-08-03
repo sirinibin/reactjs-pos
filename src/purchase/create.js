@@ -349,6 +349,7 @@ const PurchaseCreate = forwardRef((props, ref) => {
 
                 formData = {
                     id: purchase.id,
+                    vendor_invoice_no: purchase.vendor_invoice_no,
                     auto_rounding_amount: purchase.auto_rounding_amount,
                     code: purchase.code,
                     store_id: purchase.store_id,
@@ -2120,12 +2121,6 @@ const PurchaseCreate = forwardRef((props, ref) => {
                                     <i className="bi x-lg"> </i>
                                     {errors.store_id}
                                 </div>
-                                {formData.store_id && !errors.store_id && (
-                                    <div style={{ color: "green" }}>
-                                        <i className="bi bi-check-lg"> </i>
-                                        Looks good!
-                                    </div>
-                                )}
                             </div>
                         </div> : ""}
                         <div className="col-md-10">
@@ -2279,12 +2274,7 @@ const PurchaseCreate = forwardRef((props, ref) => {
                                         {errors.bar_code}
                                     </div>
                                 )}
-                                {formData.bar_code && !errors.bar_code && (
-                                    <div style={{ color: "green" }}>
-                                        <i className="bi bi-check-lg"> </i>
-                                        Looks good!
-                                    </div>
-                                )}
+                            
                             </div>
                         </div>
                                 */}
@@ -2312,12 +2302,7 @@ const PurchaseCreate = forwardRef((props, ref) => {
                                         {errors.vendor_invoice_no}
                                     </div>
                                 )}
-                                {formData.vendor_invoice_no && !errors.rack && (
-                                    <div style={{ color: "green" }}>
-                                        <i className="bi bi-check-lg"> </i>
-                                        Looks good!
-                                    </div>
-                                )}
+
                             </div>
                         </div>
 
