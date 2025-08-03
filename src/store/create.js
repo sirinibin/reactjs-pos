@@ -4330,6 +4330,31 @@ const StoreCreate = forwardRef((props, ref) => {
 
                         <h6><b>Settings</b></h6>
 
+
+                        <div className="col-md-2">
+                            <div className="input-group mb-3">
+                                <input type="checkbox"
+                                    value={formData.settings.disable_purchases_on_accounts}
+                                    checked={formData.settings.disable_purchases_on_accounts}
+                                    onChange={(e) => {
+                                        errors["disable_purchases_on_accounts"] = "";
+                                        formData.settings.disable_purchases_on_accounts = !formData.settings.disable_purchases_on_accounts;
+                                        setFormData({ ...formData });
+                                        console.log(formData);
+                                    }}
+                                    className=""
+                                    id="disable_purchases_on_accounts"
+
+                                /> &nbsp;Disable Purchases On Accounts
+                            </div>
+                            <label className="form-label"></label>
+                            {errors.disable_purchases_on_accounts && (
+                                <div style={{ color: "red" }}>
+                                    {errors.disable_purchases_on_accounts}
+                                </div>
+                            )}
+                        </div>
+
                         <div className="col-md-2">
                             <div className="input-group mb-3">
                                 <input type="checkbox"
