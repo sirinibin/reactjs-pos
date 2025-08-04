@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef, forwardRef, useImperativeHandle, useCallback } from "react";
 import Preview from "./../order/preview.js";
-import { Modal, Button } from "react-bootstrap";
+import { Modal, Button, Form } from "react-bootstrap";
 import StoreCreate from "../store/create.js";
 import VendorCreate from "./../vendor/create.js";
 import ProductCreate from "./../product/create.js";
@@ -30,6 +30,7 @@ import ImageViewerModal from './../utils/ImageViewerModal';
 import * as bootstrap from 'bootstrap';
 import { highlightWords } from "../utils/search.js";
 import ProductHistory from "./../product/product_history.js";
+import Resizer from "react-image-file-resizer";
 
 const columnStyle = {
     width: '20%',
@@ -1969,6 +1970,84 @@ const PurchaseCreate = forwardRef((props, ref) => {
     function openProductHistory(model) {
         ProductHistoryRef.current.open(model);
     }
+
+    //Image upload
+    const [selectedImage, setSelectedImage] = useState(null);
+    const [previewUrl, setPreviewUrl] = useState(null);
+    const [uploading, setUploading] = useState(false);
+
+    const resizeImage = (file) => {
+        return new Promise((resolve) => {
+            Resizer.imageFileResizer(
+                file,
+                800, // max width
+                800, // max height
+                "JPEG",
+                80, // quality
+                0, // rotation
+                (uri) => {
+                    resolve(uri);
+                },
+                "blob"
+            );
+        });
+    };
+
+    const handleFileChange = async (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        const resizedImage = await resizeImage(file);
+        setSelectedImage(resizedImage);
+        setPreviewUrl(URL.createObjectURL(resizedImage));
+    };
+    const handleUpload = async () => {
+        if (!selectedImage) return;
+
+        const formData = new FormData();
+        formData.append("image", selectedImage);
+
+        let endPoint = "/v1/purchase/upload/image";
+        let method = "POST";
+
+        let searchParams = {};
+        if (localStorage.getItem("store_id")) {
+            searchParams.store_id = localStorage.getItem("store_id");
+        }
+        let queryParams = new URLSearchParams(searchParams).toString();
+
+        const requestOptions = {
+            method: method,
+            headers: {
+                Accept: "application/json",
+                Authorization: localStorage.getItem("access_token"),
+                // Note: DO NOT add Content-Type manually for multipart/form-data
+            },
+            body: formData,
+        };
+
+        setUploading(true);
+
+        try {
+            const response = await fetch(`${endPoint}?${queryParams}`, requestOptions);
+            const isJson = response.headers
+                .get("content-type")
+                ?.includes("application/json");
+            const data = isJson ? await response.json() : null;
+
+            if (!response.ok) {
+                const error = data?.errors || "Upload failed";
+                throw new Error(error);
+            }
+
+            alert("Image uploaded successfully!");
+        } catch (error) {
+            console.error("Upload error:", error);
+            alert("Upload failed");
+        } finally {
+            setUploading(false);
+        }
+    };
 
 
     return (
@@ -4839,6 +4918,23 @@ const PurchaseCreate = forwardRef((props, ref) => {
                                 </table>
 
                             </div>
+                        </div>
+                        <div className="col-md-4">
+                            <label className="form-label">Import data from Image</label>
+                            <Form.Group controlId="formFile" className="mb-3">
+                                <Form.Label>Upload Image</Form.Label>
+                                <Form.Control type="file" accept="image/*" onChange={handleFileChange} />
+                            </Form.Group>
+
+                            {previewUrl && (
+                                <div className="mb-3">
+                                    <img src={previewUrl} alt="Preview" className="img-thumbnail" style={{ maxWidth: "300px" }} />
+                                </div>
+                            )}
+
+                            <Button onClick={handleUpload} disabled={uploading}>
+                                {uploading ? "Uploading..." : "Upload"}
+                            </Button>
                         </div>
 
 

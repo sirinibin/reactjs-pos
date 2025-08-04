@@ -4,6 +4,7 @@ import { format } from "date-fns";
 import n2words from 'n2words'
 import { QRCodeCanvas } from "qrcode.react";
 import { trimTo2Decimals } from "../utils/numberUtils";
+import "./template_print.css";
 
 const OrderPrintContent = forwardRef((props, ref) => {
     //Non-A4
