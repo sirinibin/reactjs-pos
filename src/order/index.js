@@ -1931,11 +1931,13 @@ const OrderIndex = forwardRef((props, ref) => {
                                                         {col.key === "created_at" && <th>
                                                             <DatePicker
                                                                 id="created_at"
+                                                                autoComplete="off"
                                                                 value={createdAtValue}
                                                                 selected={selectedCreatedAtDate}
                                                                 className="form-control"
                                                                 dateFormat="MMM dd yyyy"
                                                                 isClearable={true}
+
                                                                 onChange={(date) => {
                                                                     if (!date) {
                                                                         //  createdAtValue = "";
@@ -1967,6 +1969,7 @@ const OrderIndex = forwardRef((props, ref) => {
                                                                     From:{" "}
                                                                     <DatePicker
                                                                         id="created_at_from"
+                                                                        autoComplete="off"
                                                                         value={createdAtFromValue}
                                                                         selected={selectedCreatedAtFromDate}
                                                                         className="form-control"
@@ -1986,6 +1989,7 @@ const OrderIndex = forwardRef((props, ref) => {
                                                                     To:{" "}
                                                                     <DatePicker
                                                                         id="created_at_to"
+                                                                        autoComplete="off"
                                                                         value={createdAtToValue}
                                                                         selected={selectedCreatedAtToDate}
                                                                         className="form-control"
@@ -2071,6 +2075,7 @@ const OrderIndex = forwardRef((props, ref) => {
                                                             <div id="calendar-portal" className="date-picker " style={{ minWidth: "125px" }}>
                                                                 <DatePicker
                                                                     id="date_str"
+                                                                    autoComplete="off"
                                                                     value={dateValue}
                                                                     selected={selectedDate}
                                                                     className="form-control"
@@ -2107,6 +2112,7 @@ const OrderIndex = forwardRef((props, ref) => {
                                                                         From:{" "}
                                                                         <DatePicker
                                                                             id="from_date"
+                                                                            autoComplete="off"
                                                                             value={fromDateValue}
                                                                             selected={selectedFromDate}
                                                                             className="form-control"
@@ -2126,6 +2132,7 @@ const OrderIndex = forwardRef((props, ref) => {
                                                                         To:{" "}
                                                                         <DatePicker
                                                                             id="to_date"
+                                                                            autoComplete="off"
                                                                             value={toDateValue}
                                                                             selected={selectedToDate}
                                                                             className="form-control"
