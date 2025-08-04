@@ -790,6 +790,8 @@ const OrderIndex = forwardRef((props, ref) => {
         // setIsCustomersLoading(false);
     }
 
+
+
     async function suggestUsers(searchTerm) {
         console.log("Inside handle suggestUsers");
         setCustomerOptions([]);
