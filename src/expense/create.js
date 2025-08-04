@@ -24,7 +24,7 @@ const ExpenseCreate = forwardRef((props, ref) => {
                 images_content: [],
             };
             formData.date_str = new Date();
-            setFormData({ formData });
+            setFormData({ ...formData });
 
             if (id) {
                 getExpense(id);
@@ -440,12 +440,29 @@ const ExpenseCreate = forwardRef((props, ref) => {
 
                             <div className="input-group mb-3">
                                 <input
-                                    value={formData.amount ? formData.amount : ""}
+                                    value={formData.amount}
                                     type='number'
                                     onChange={(e) => {
                                         errors["amount"] = "";
                                         setErrors({ ...errors });
-                                        formData.amount = parseFloat(e.target.value);
+
+
+                                        if (parseFloat(e.target.value) === 0) {
+                                            formData.amount = 0;
+                                            setFormData({ ...formData });
+                                            return;
+                                        }
+
+                                        if (!e.target.value) {
+                                            formData.amount = "";
+                                            setFormData({ ...formData });
+                                            return;
+                                        }
+
+                                        if (e.target.value) {
+                                            formData.amount = parseFloat(e.target.value);
+                                        }
+
                                         setFormData({ ...formData });
                                         console.log(formData);
                                     }}
@@ -459,20 +476,16 @@ const ExpenseCreate = forwardRef((props, ref) => {
                                         {errors.amount}
                                     </div>
                                 )}
-                                {formData.amount && !errors.amount && (
-                                    <div style={{ color: "green" }}>
-                                        <i className="bi bi-check-lg"> </i>
-                                        Looks good!
-                                    </div>
-                                )}
+
                             </div>
                         </div>
-                        <div className="col-md-4">
+
+                        <div className="col-md-3">
                             <label className="form-label">Date*</label>
                             <div className="input-group mb-3">
                                 <DatePicker
                                     id="date_str"
-                                    selected={formData.date_str ? new Date(formData.date_str) : new Date()}
+                                    selected={formData.date_str ? new Date(formData.date_str) : null}
                                     value={formData.date_str ? format(
                                         new Date(formData.date_str),
                                         "MMMM d, yyyy h:mm aa"
@@ -497,6 +510,7 @@ const ExpenseCreate = forwardRef((props, ref) => {
                             </div>
                         </div>
 
+
                         <div className="col-md-6">
                             <label className="form-label">Description*</label>
                             <div className="input-group mb-3">
@@ -520,12 +534,7 @@ const ExpenseCreate = forwardRef((props, ref) => {
                                         {errors.description}
                                     </div>
                                 )}
-                                {formData.description && !errors.description && (
-                                    <div style={{ color: "green" }}>
-                                        <i className="bi bi-check-lg"> </i>
-                                        Looks good!
-                                    </div>
-                                )}
+
                             </div>
                         </div>
 
@@ -573,12 +582,7 @@ const ExpenseCreate = forwardRef((props, ref) => {
                                         {errors.category_id}
                                     </div>
                                 )}
-                                {formData.category_id && !errors.category_id && (
-                                    <div style={{ color: "green" }}>
-                                        <i className="bi bi-check-lg"> </i>
-                                        Looks good!
-                                    </div>
-                                )}
+
                             </div>
                         </div>
 
@@ -696,12 +700,7 @@ const ExpenseCreate = forwardRef((props, ref) => {
                                         {errors.image}
                                     </div>
                                 )}
-                                {formData.image && !errors.image && (
-                                    <div style={{ color: "green" }}>
-                                        <i className="bi bi-check-lg"> </i>
-                                        Looks good!
-                                    </div>
-                                )}
+
                             </div>
                         </div>
 
