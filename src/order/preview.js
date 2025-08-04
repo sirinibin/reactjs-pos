@@ -1117,8 +1117,12 @@ const Preview = forwardRef((props, ref) => {
         }
 
 
+        // alert("Type:" + model?.type);
+        // alert("modelName:" + modelName);
         let message = "";
-        if (modelName === "quotation" && model?.type !== "invoice") {
+        if ((modelName === "quotation" || modelName === "whatsapp_quotation") && model?.type === "invoice") {
+            message = `Hello, here is your Invoice:\n${window.location.origin}/pdfs/${getFileName()}.pdf`;
+        } if ((modelName === "quotation" || modelName === "whatsapp_quotation") && model?.type === "quotation") {
             message = `Hello, here is your Quotation:\n${window.location.origin}/pdfs/${getFileName()}.pdf`;
         } else if (modelName === "delivery_note" || modelName === "whatsapp_delivery_note") {
             message = `Hello, here is your Delivery Note:\n${window.location.origin}/pdfs/${getFileName()}.pdf`;
@@ -1129,6 +1133,9 @@ const Preview = forwardRef((props, ref) => {
         } else {
             message = `Hello, here is your Invoice:\n${window.location.origin}/pdfs/${getFileName()}.pdf`;
         }
+
+
+        //alert(message);
 
         if (timerRef.current) clearTimeout(timerRef.current);
 
