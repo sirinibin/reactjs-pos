@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useMemo } from "react";
+import React, { useState, useEffect, useRef, useMemo, useCallback } from "react";
 import CustomerCreate from "./create.js";
 import CustomerView from "./view.js";
 import { DragDropContext, Droppable, Draggable } from "react-beautiful-dnd";
@@ -303,6 +303,78 @@ function CustomerIndex(props) {
     //Customer Auto Suggestion
     const [customerOptions, setCustomerOptions] = useState([]);
     const [selectedCustomers, setSelectedCustomers] = useState([]);
+
+
+    const customCustomerFilter = useCallback((option, query) => {
+        const normalize = (str) => str?.toLowerCase().replace(/\s+/g, " ").trim() || "";
+
+        const q = normalize(query);
+        const qWords = q.split(" ");
+
+        const fields = [
+            option.code,
+            option.vat_no,
+            option.name,
+            option.name_in_arabic,
+            option.phone,
+            option.search_label,
+            option.phone_in_arabic,
+            ...(Array.isArray(option.additional_keywords) ? option.additional_keywords : []),
+        ];
+
+        const searchable = normalize(fields.join(" "));
+
+        return qWords.every((word) => searchable.includes(word));
+    }, []);
+
+
+    async function suggestCustomers(searchTerm) {
+        console.log("Inside handle suggestCustomers");
+        setCustomerOptions([]);
+
+        console.log("searchTerm:" + searchTerm);
+        if (!searchTerm) {
+            return;
+        }
+
+        var params = {
+            query: searchTerm,
+        };
+
+        if (localStorage.getItem("store_id")) {
+            params.store_id = localStorage.getItem("store_id");
+        }
+
+        var queryString = ObjectToSearchQueryParams(params);
+        if (queryString !== "") {
+            queryString = "&" + queryString;
+        }
+
+        const requestOptions = {
+            method: "GET",
+            headers: {
+                "Content-Type": "application/json",
+                Authorization: localStorage.getItem("access_token"),
+            },
+        };
+
+        let Select = "select=id,code,credit_limit,credit_balance,additional_keywords,remarks,use_remarks_in_sales,vat_no,name,phone,name_in_arabic,phone_in_arabic,search_label";
+        // setIsCustomersLoading(true);
+        let result = await fetch(
+            "/v1/customer?" + Select + queryString,
+            requestOptions
+        );
+        let data = await result.json();
+
+        const filtered = data.result.filter((opt) => customCustomerFilter(opt, searchTerm));
+
+        setCustomerOptions(filtered);
+        // setCustomerOptions(filtered);
+        // setIsCustomersLoading(false);
+    }
+
+
+    /*
     async function suggestCustomers(searchTerm) {
         console.log("Inside handle suggestCustomers");
 
@@ -337,6 +409,7 @@ function CustomerIndex(props) {
 
         setCustomerOptions(data.result);
     }
+        */
 
     const AccountBalanceSheetRef = useRef();
     function openBalanceSheetDialogue(account) {
