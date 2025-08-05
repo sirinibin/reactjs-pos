@@ -563,8 +563,8 @@ const PreviewContent = forwardRef((props, ref) => {
                                                 {props.modelName !== "delivery_note" && <>
                                                     <td className="text-end" style={{ borderRight: tableBorderThickness, paddingRight: "3px" }} >
                                                         {product.unit_price ? <Amount amount={trimTo2Decimals(product.unit_price)} /> : ""}
-                                                        {product.purchase_unit_price && props.modelName === "purchase" ? <Amount amount={trimTo2Decimals(product.purchase_unit_price)} /> : ""}
-                                                        {product.purchasereturn_unit_price && props.modelName === "purchase_return" ? <Amount amount={trimTo2Decimals(product.purchasereturn_unit_price)} /> : ""}
+                                                        {product.purchase_unit_price && (props.modelName === "purchase" || props.modelName === "whatsapp_purchase") ? <Amount amount={trimTo2Decimals(product.purchase_unit_price)} /> : ""}
+                                                        {product.purchasereturn_unit_price && (props.modelName === "purchase_return" || props.modelName === "whatsapp_purchase_return") ? <Amount amount={trimTo2Decimals(product.purchasereturn_unit_price)} /> : ""}
                                                     </td>
                                                     <td style={{ borderRight: tableBorderThickness, paddingRight: "3px" }} className="text-end">
                                                         {/*product.unit_discount_percent ? "(" + trimTo2Decimals(product.unit_discount_percent) + "%)" : ""}{product.unit_discount ? " " + trimTo2Decimals(product.unit_discount * product.quantity) : ""*/}
@@ -572,19 +572,19 @@ const PreviewContent = forwardRef((props, ref) => {
                                                     </td>
                                                     <td style={{ borderRight: tableBorderThickness, paddingRight: "3px" }} className="text-end">
                                                         {product.unit_price ? <Amount amount={trimTo2Decimals((product.unit_price - product.unit_discount) * product.quantity)} /> : ""}
-                                                        {product.purchase_unit_price && props.modelName === "purchase" ? <Amount amount={trimTo2Decimals((product.purchase_unit_price - product.unit_discount) * product.quantity)} /> : ""}
-                                                        {product.purchasereturn_unit_price && props.modelName === "purchase_return" ? <Amount amount={trimTo2Decimals((product.purchasereturn_unit_price - product.unit_discount) * product.quantity)} /> : ""}
+                                                        {product.purchase_unit_price && (props.modelName === "purchase" || props.modelName === "whatsapp_purchase") ? <Amount amount={trimTo2Decimals((product.purchase_unit_price - product.unit_discount) * product.quantity)} /> : ""}
+                                                        {product.purchasereturn_unit_price && (props.modelName === "purchase_return" || props.modelName === "whatsapp_purchase_return") ? <Amount amount={trimTo2Decimals((product.purchasereturn_unit_price - product.unit_discount) * product.quantity)} /> : ""}
                                                     </td>
                                                     {!props.model.hideVAT && <>
                                                         <td style={{ borderRight: tableBorderThickness, paddingRight: "3px" }} className="text-end">
                                                             {product.unit_price ? <Amount amount={trimTo2Decimals((product.unit_price - product.unit_discount) * product.quantity) * (props.model.vat_percent / 100)} /> : ""}
-                                                            {product.purchase_unit_price && props.modelName === "purchase" ? <Amount amount={trimTo2Decimals((product.purchase_unit_price - product.unit_discount) * product.quantity) * (props.model.vat_percent / 100)} /> : ""}
-                                                            {product.purchasereturn_unit_price && props.modelName === "purchase_return" ? <Amount amount={trimTo2Decimals((product.purchasereturn_unit_price - product.unit_discount) * product.quantity) * (props.model.vat_percent / 100)} /> : ""}
+                                                            {product.purchase_unit_price && (props.modelName === "purchase" || props.modelName === "whatsapp_purchase") ? <Amount amount={trimTo2Decimals((product.purchase_unit_price - product.unit_discount) * product.quantity) * (props.model.vat_percent / 100)} /> : ""}
+                                                            {product.purchasereturn_unit_price && (props.modelName === "purchase_return" || props.modelName === "whatsapp_purchase_return") ? <Amount amount={trimTo2Decimals((product.purchasereturn_unit_price - product.unit_discount) * product.quantity) * (props.model.vat_percent / 100)} /> : ""}
                                                         </td>
                                                         <td style={{ paddingRight: "3px" }} className="text-end">
                                                             {product.unit_price ? <Amount amount={trimTo2Decimals(((product.unit_price - product.unit_discount) * product.quantity) + (((product.unit_price - product.unit_discount) * product.quantity) * (props.model.vat_percent / 100)))} /> : ""}
-                                                            {product.purchase_unit_price && props.modelName === "purchase" ? <Amount amount={trimTo2Decimals(((product.purchase_unit_price - product.unit_discount) * product.quantity) + (((product.purchase_unit_price - product.unit_discount) * product.quantity) * (props.model.vat_percent / 100)))} /> : ""}
-                                                            {product.purchasereturn_unit_price && props.modelName === "purchase_return" ? <Amount amount={trimTo2Decimals(((product.purchasereturn_unit_price - product.unit_discount) * product.quantity) + (((product.purchasereturn_unit_price - product.unit_discount) * product.quantity) * (props.model.vat_percent / 100)))} /> : ""}
+                                                            {product.purchase_unit_price && (props.modelName === "purchase" || props.modelName === "whatsapp_purchase") ? <Amount amount={trimTo2Decimals(((product.purchase_unit_price - product.unit_discount) * product.quantity) + (((product.purchase_unit_price - product.unit_discount) * product.quantity) * (props.model.vat_percent / 100)))} /> : ""}
+                                                            {product.purchasereturn_unit_price && (props.modelName === "purchase_return" || props.modelName === "whatsapp_purchase_return") ? <Amount amount={trimTo2Decimals(((product.purchasereturn_unit_price - product.unit_discount) * product.quantity) + (((product.purchasereturn_unit_price - product.unit_discount) * product.quantity) * (props.model.vat_percent / 100)))} /> : ""}
                                                         </td>
                                                     </>}
                                                 </>}
