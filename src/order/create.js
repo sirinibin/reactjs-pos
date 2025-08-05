@@ -96,6 +96,18 @@ const OrderCreate = forwardRef((props, ref) => {
                 console.log("formData.store_id:", formData.store_id);
             }
 
+            discount = 0;
+            setDiscount(discount);
+
+            discountPercentWithVAT = 0;
+            setDiscountPercentWithVAT(discountPercentWithVAT);
+
+            discount = 0;
+            setDiscount(discount);
+
+            discountPercent = 0;
+            setDiscountPercent(discountPercent);
+
 
 
             formData.id = undefined;
@@ -177,6 +189,17 @@ const OrderCreate = forwardRef((props, ref) => {
             console.log("formData.store_id:", formData.store_id);
         }
 
+        discount = 0;
+        setDiscount(discount);
+
+        discountPercentWithVAT = 0;
+        setDiscountPercentWithVAT(discountPercentWithVAT);
+
+        discount = 0;
+        setDiscount(discount);
+
+        discountPercent = 0;
+        setDiscountPercent(discountPercent);
 
 
         formData.id = undefined;
@@ -543,6 +566,8 @@ const OrderCreate = forwardRef((props, ref) => {
                     setDisablePreviousButton(false);
                 }
 
+                ResetForm();
+
                 formData = data.result;
                 oldProducts = formData.products.map(obj => ({ ...obj }));
                 setOldProducts([...oldProducts]);
@@ -686,6 +711,8 @@ const OrderCreate = forwardRef((props, ref) => {
                 disablePreviousButton = false;
                 setDisablePreviousButton(false);
 
+                ResetForm();
+
 
                 formData = data.result;
 
@@ -694,6 +721,8 @@ const OrderCreate = forwardRef((props, ref) => {
 
                 formData.enable_report_to_zatca = false;
                 formData.date_str = data.result.date;
+
+
 
                 if (data.result?.cash_discount) {
                     cashDiscount = data.result.cash_discount;
