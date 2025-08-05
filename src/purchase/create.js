@@ -2040,7 +2040,7 @@ const PurchaseCreate = forwardRef((props, ref) => {
                 throw new Error(error);
             }
 
-            alert("Image uploaded successfully!");
+            // alert("Image uploaded successfully!");
         } catch (error) {
             console.error("Upload error:", error);
             alert("Upload failed");
