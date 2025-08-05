@@ -396,10 +396,9 @@ const CustomerDepositPreview = forwardRef((props, ref) => {
 
     function setReceiptTitle(modelName) {
         model.modelName = modelName;
-        console.log("model:", model);
         if (model.modelName === "customer_deposit" || model.modelName === "whatsapp_customer_deposit") {
             // model.ReceiptTitle = "PAYMENT RECEIPT (RECEIVABLE) | إيصال الدفع (مستحق القبض)";
-            model.ReceiptTitle = model.store.settings?.invoice?.receivabale_title;
+            model.ReceiptTitle = model.store.settings?.invoice?.receivable_title;
         } else if (model.modelName === "customer_withdrawal" || model.modelName === "whatsapp_customer_withdrawal") {
             //model.ReceiptTitle = "PAYMENT RECEIPT (PAYABLE / REFUND) | إيصال الدفع (مستحق الدفع / مسترد)";
             model.ReceiptTitle = model.store.settings?.invoice?.payable_title;
