@@ -618,7 +618,7 @@ const PreviewContent = forwardRef((props, ref) => {
                                         <tr style={{ borderBottom: tableBorderThickness }}>
                                             <th className="text-end print-label" style={{ padding: "2px", borderRight: tableBorderThickness }}>
                                                 {!props.model.hideVAT && <>
-                                                    <b> Total (without VAT) الإجمالي (بدون ضريبة القيمة المضافة) :</b>
+                                                    <b> Total (without VAT) <span dir="rtl">الإجمالي (بدون ضريبة القيمة المضافة)</span> :</b>
                                                 </>}
                                                 {props.model.hideVAT && <>
                                                     <b> Total المجموع :</b>
@@ -648,7 +648,7 @@ const PreviewContent = forwardRef((props, ref) => {
                                         {!props.model.hideVAT && <>
                                             <tr style={{ borderBottom: tableBorderThickness }}>
                                                 <th className="text-end print-label" style={{ padding: "2px", borderRight: tableBorderThickness }}>
-                                                    Total Taxable Amount (without VAT)  إجمالي المبلغ الخاضع للضريبة (بدون ضريبة القيمة المضافة) :
+                                                    Total Taxable Amount (without VAT)  <span dir="rtl">إجمالي المبلغ الخاضع للضريبة (بدون ضريبة القيمة المضافة)</span> :
                                                 </th>
                                                 <td className="text-end print-table-value" colSpan="1" style={{ paddingRight: "3px" }}>
                                                     <Amount amount={trimTo2Decimals(((props.model.net_total - props.model.rounding_amount) - props.model.vat_price))} />
@@ -677,7 +677,7 @@ const PreviewContent = forwardRef((props, ref) => {
                                         <tr>
                                             <th className="text-end print-label" style={{ padding: "2px", width: `${props.modelName !== "quotation" ? "70%" : "90%"}`, borderRight: tableBorderThickness }}>
                                                 {!props.model.hideVAT && <>
-                                                    Net Total (with VAT)  الإجمالي الصافي (مع ضريبة القيمة المضافة) :
+                                                    Net Total (with VAT) <span dir="rtl">الإجمالي الصافي (مع ضريبة القيمة المضافة)</span>  :
                                                 </>}
                                                 {props.model.hideVAT && <>
                                                     Net Total صافي المجموع :
