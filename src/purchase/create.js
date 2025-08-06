@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useRef, forwardRef, useImperativeHandle, useCallback } from "react";
 import Preview from "./../order/preview.js";
 import { Modal, Button, Form } from "react-bootstrap";
-import StoreCreate from "../store/create.js";
 import VendorCreate from "./../vendor/create.js";
 import ProductCreate from "./../product/create.js";
 import UserCreate from "./../user/create.js";
@@ -74,9 +73,6 @@ const PurchaseCreate = forwardRef((props, ref) => {
             setErrors({ ...errors });
             selectedProducts = [];
             setSelectedProducts([]);
-
-            selectedStores = [];
-            setSelectedStores([]);
 
             selectedVendors = [];
             setSelectedVendors([]);
@@ -233,10 +229,7 @@ const PurchaseCreate = forwardRef((props, ref) => {
         status: "created",
     });
 
-    //Store Auto Suggestion
-    const [storeOptions, setStoreOptions] = useState([]);
-    let [selectedStores, setSelectedStores] = useState([]);
-    const [isStoresLoading, setIsStoresLoading] = useState(false);
+
 
     //Vendor Auto Suggestion
     const [vendorOptions, setVendorOptions] = useState([]);
@@ -422,43 +415,6 @@ const PurchaseCreate = forwardRef((props, ref) => {
                 return `search[${key}]=` + encodeURIComponent(object[key]);
             })
             .join("&");
-    }
-
-    async function suggestStores(searchTerm) {
-        console.log("Inside handle suggestStores");
-        setStoreOptions([]);
-
-        console.log("searchTerm:" + searchTerm);
-        if (!searchTerm) {
-            return;
-        }
-
-        var params = {
-            name: searchTerm,
-        };
-        var queryString = ObjectToSearchQueryParams(params);
-        if (queryString !== "") {
-            queryString = "&" + queryString;
-        }
-
-        const requestOptions = {
-            method: "GET",
-            headers: {
-                "Content-Type": "application/json",
-                Authorization: localStorage.getItem("access_token"),
-            },
-        };
-
-        let Select = "select=id,name";
-        setIsStoresLoading(true);
-        let result = await fetch(
-            "/v1/store?" + Select + queryString,
-            requestOptions
-        );
-        let data = await result.json();
-
-        setStoreOptions(data.result);
-        setIsStoresLoading(false);
     }
 
     const customVendorFilter = useCallback((option, query) => {
@@ -1573,11 +1529,6 @@ const PurchaseCreate = forwardRef((props, ref) => {
     }
 
 
-    const StoreCreateFormRef = useRef();
-    function openStoreCreateForm() {
-        StoreCreateFormRef.current.open();
-    }
-
     const ProductCreateFormRef = useRef();
     function openProductCreateForm() {
         ProductCreateFormRef.current.open();
@@ -1716,7 +1667,7 @@ const PurchaseCreate = forwardRef((props, ref) => {
             model.code = formData.code;
         }
 
-        errors["phone"] = ""
+        delete errors["phone"];
         setErrors({ ...errors });
 
         if (model.phone) {
@@ -2088,7 +2039,6 @@ const PurchaseCreate = forwardRef((props, ref) => {
             <ProductView ref={ProductDetailsViewRef} openUpdateForm={openProductUpdateForm} openCreateForm={openProductCreateForm} />
             <ProductCreate ref={ProductCreateFormRef} showToastMessage={props.showToastMessage} />
 
-            <StoreCreate ref={StoreCreateFormRef} showToastMessage={props.showToastMessage} />
 
             <UserCreate ref={UserCreateFormRef} showToastMessage={props.showToastMessage} />
             <SignatureCreate ref={SignatureCreateFormRef} showToastMessage={props.showToastMessage} />
@@ -2161,47 +2111,6 @@ const PurchaseCreate = forwardRef((props, ref) => {
                         )}
                     </div>
                     <form className="row g-3 needs-validation" onSubmit={handleCreate}>
-                        {!localStorage.getItem('store_name') ? <div className="col-md-6">
-                            <label className="form-label">Purchase to Store*</label>
-
-                            <div className="input-group mb-3">
-                                <Typeahead
-                                    id="store_id"
-
-                                    labelKey="name"
-                                    isLoading={isStoresLoading}
-                                    isInvalid={errors.store_id ? true : false}
-                                    onChange={(selectedItems) => {
-                                        errors.store_id = "";
-                                        setErrors(errors);
-                                        if (selectedItems.length === 0) {
-                                            errors.store_id = "Invalid Store selected";
-                                            setErrors(errors);
-                                            setFormData({ ...formData });
-                                            setSelectedStores([]);
-                                            return;
-                                        }
-                                        formData.store_id = selectedItems[0].id;
-                                        setFormData({ ...formData });
-                                        setSelectedStores(selectedItems);
-                                        //SetPriceOfAllProducts(selectedItems[0].id);
-                                    }}
-                                    options={storeOptions}
-                                    placeholder="Select Store"
-                                    selected={selectedStores}
-                                    highlightOnlyResult={true}
-                                    onInputChange={(searchTerm, e) => {
-                                        suggestStores(searchTerm);
-                                    }}
-                                />
-                                <Button hide={true.toString()} onClick={openStoreCreateForm} className="btn btn-outline-secondary btn-primary btn-sm" type="button" id="button-addon1"> <i className="bi bi-plus-lg"></i> New</Button>
-
-                                <div style={{ color: "red" }}>
-                                    <i className="bi x-lg"> </i>
-                                    {errors.store_id}
-                                </div>
-                            </div>
-                        </div> : ""}
                         <div className="col-md-10">
                             <label className="form-label">Vendor</label>
                             <Typeahead
@@ -2366,7 +2275,7 @@ const PurchaseCreate = forwardRef((props, ref) => {
                                     value={formData.vendor_invoice_no ? formData.vendor_invoice_no : ""}
                                     type='string'
                                     onChange={(e) => {
-                                        errors["vendor_invoice_no"] = "";
+                                        delete errors["vendor_invoice_no"];
                                         setErrors({ ...errors });
                                         formData.vendor_invoice_no = e.target.value;
                                         setFormData({ ...formData });
@@ -2426,7 +2335,7 @@ const PurchaseCreate = forwardRef((props, ref) => {
                                     value={formData.phone ? formData.phone : ""}
                                     type='string'
                                     onChange={(e) => {
-                                        errors["phone"] = "";
+                                        delete errors["phone"];
                                         setErrors({ ...errors });
                                         formData.phone = e.target.value;
                                         setFormData({ ...formData });
@@ -2461,7 +2370,7 @@ const PurchaseCreate = forwardRef((props, ref) => {
                                     value={formData.vat_no ? formData.vat_no : ""}
                                     type='string'
                                     onChange={(e) => {
-                                        errors["vat_no"] = "";
+                                        delete errors["vat_no"];
                                         setErrors({ ...errors });
                                         formData.vat_no = e.target.value;
                                         setFormData({ ...formData });
@@ -2486,7 +2395,7 @@ const PurchaseCreate = forwardRef((props, ref) => {
                                     value={formData.address}
                                     type='string'
                                     onChange={(e) => {
-                                        errors["address"] = "";
+                                        delete errors["address"];
                                         setErrors({ ...errors });
                                         formData.address = e.target.value;
                                         setFormData({ ...formData });
@@ -2512,7 +2421,7 @@ const PurchaseCreate = forwardRef((props, ref) => {
                                     value={formData.remarks}
                                     type='string'
                                     onChange={(e) => {
-                                        errors["remarks"] = "";
+                                        delete errors["remarks"];
                                         setErrors({ ...errors });
                                         formData.remarks = e.target.value;
                                         setFormData({ ...formData });
@@ -3495,8 +3404,8 @@ const PurchaseCreate = forwardRef((props, ref) => {
                                                                     return;
                                                                 }
 
-                                                                errors["unit_discount_with_vat_" + index] = "";
-                                                                errors["unit_discount_percent_" + index] = "";
+                                                                delete errors["unit_discount_with_vat_" + index];
+                                                                delete errors["unit_discount_percent_" + index];
                                                                 setErrors({ ...errors });
 
 
@@ -4055,13 +3964,13 @@ const PurchaseCreate = forwardRef((props, ref) => {
                                         <td className="text-end">
                                             <input type="number" id="purchase_shipping_fees" name="purchase_shipping_fees" onWheel={(e) => e.target.blur()} style={{ width: "150px" }} className="text-start" value={shipping} onChange={(e) => {
                                                 if (timerRef.current) clearTimeout(timerRef.current);
-                                                errors["shipping_handling_fees"] = "";
+                                                delete errors["shipping_handling_fees"];
                                                 setErrors({ ...errors });
 
                                                 if (parseFloat(e.target.value) === 0) {
                                                     shipping = 0;
                                                     setShipping(shipping);
-                                                    errors["shipping_handling_fees"] = "";
+                                                    delete errors["shipping_handling_fees"];
                                                     setErrors({ ...errors });
                                                     timerRef.current = setTimeout(() => {
                                                         reCalculate();
@@ -4095,7 +4004,7 @@ const PurchaseCreate = forwardRef((props, ref) => {
                                                 }
 
 
-                                                if (/^\d*\.?\d{0,2}$/.test(parseFloat(e.target.value)) === false) {
+                                                if (/^\d*\.?\d{0, 2}$/.test(parseFloat(e.target.value)) === false) {
                                                     errors["shipping_handling_fees"] = "Max. decimal points allowed is 2";
                                                     setErrors({ ...errors });
                                                 }
@@ -4133,7 +4042,7 @@ const PurchaseCreate = forwardRef((props, ref) => {
                                                     discountPercent = 0;
                                                     setDiscountPercent(discountPercent);
 
-                                                    errors["discount_percent"] = "";
+                                                    delete errors["discount_percent"];
                                                     setErrors({ ...errors });
                                                     timerRef.current = setTimeout(() => {
                                                         reCalculate();
@@ -4501,7 +4410,7 @@ const PurchaseCreate = forwardRef((props, ref) => {
                                             if (parseFloat(e.target.value) === 0) {
                                                 formData.vat_percent = parseFloat(e.target.value);
                                                 setFormData({ ...formData });
-                                                errors["vat_percent"] = "";
+                                                delete errors["vat_percent"];
                                                 setErrors({ ...errors });
                                                 reCalculate();
                                                 return;
@@ -4527,7 +4436,7 @@ const PurchaseCreate = forwardRef((props, ref) => {
                                                 setErrors({ ...errors });
                                                 return;
                                             }
-                                            errors["vat_percent"] = "";
+                                            delete errors["vat_percent"];
                                             setErrors({ ...errors });
 
                                             formData.vat_percent = e.target.value;
@@ -4805,7 +4714,7 @@ const PurchaseCreate = forwardRef((props, ref) => {
                                                         <input id={`${"purchase_payment_amount" + key}`} name={`${"purchase_payment_amount" + key}`}
                                                             type='number' value={formData.payments_input[key].amount} className="form-control "
                                                             onChange={(e) => {
-                                                                errors["payment_amount_" + key] = "";
+                                                                delete errors["payment_amount_" + key];
                                                                 setErrors({ ...errors });
 
                                                                 if (!e.target.value) {
@@ -4833,7 +4742,7 @@ const PurchaseCreate = forwardRef((props, ref) => {
                                                         <select value={formData.payments_input[key].method} className="form-control "
                                                             onChange={(e) => {
                                                                 // errors["payment_method"] = [];
-                                                                errors["payment_method_" + key] = "";
+                                                                delete errors["payment_method_" + key];
                                                                 setErrors({ ...errors });
 
                                                                 if (!e.target.value) {
