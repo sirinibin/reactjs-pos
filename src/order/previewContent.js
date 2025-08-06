@@ -677,10 +677,10 @@ const PreviewContent = forwardRef((props, ref) => {
                                         <tr>
                                             <th className="text-end print-label" style={{ padding: "2px", width: `${props.modelName !== "quotation" ? "70%" : "90%"}`, borderRight: tableBorderThickness }}>
                                                 {!props.model.hideVAT && <>
-                                                    Net Total (with VAT) <span dir="rtl">الإجمالي الصافي (مع ضريبة القيمة المضافة)</span>  :
+                                                    Net Total (with VAT) <span dir="rtl">الإجمالي الصافي (مع ضريبة القيمة المضافة)</span>:
                                                 </>}
                                                 {props.model.hideVAT && <>
-                                                    Net Total صافي المجموع :
+                                                    Net Total <span dir="rtl">صافي المجموع</span>:
                                                 </>}
                                             </th>
                                             <td className="text-end" colSpan="1" style={{ width: "10%", paddingRight: "3px" }}>
