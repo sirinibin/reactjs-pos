@@ -92,6 +92,12 @@ const BalanceSheetPrintPreview = forwardRef((props, ref) => {
             model.pageSize = 20
         }
 
+        if (fontSizes[modelName + "_balanceSheetpMaxFirstPageSize"]) {
+            model.maxFirstPageSize = fontSizes[modelName + "_balanceSheetpMaxFirstPageSize"];
+        } else {
+            model.maxFirstPageSize = 26
+        }
+
         let totalPosts = model.posts.length;
         let top = 0;
         let totalPagesInt = parseInt(totalPosts / model.pageSize);
@@ -143,7 +149,7 @@ const BalanceSheetPrintPreview = forwardRef((props, ref) => {
                         break;
                     }
 
-                    if (i === 0 && model.pages[i].posts?.length > 26) {
+                    if (i === 0 && model.pages[i].posts?.length > (model.maxFirstPageSize - 1)) {
                         break
                     }
                 }
@@ -152,7 +158,7 @@ const BalanceSheetPrintPreview = forwardRef((props, ref) => {
                     break;
                 }
 
-                if (i === 0 && model.pages[i].posts?.length > 26) {
+                if (i === 0 && model.pages[i].posts?.length > (model.maxFirstPageSize - 1)) {
                     break
                 }
 
@@ -537,6 +543,7 @@ const handlePrint = useCallback(async () => {
     const defaultFontSizes = useMemo(() => ({
         "pageSize": 15,
         "balanceSheetpPageSize": 20,
+        "balanceSheetpMaxFirstPageSize": 26,
         "font": "Noto Naskh Semi Bold",
         "reportPageSize": 20,
         "marginTop": {
@@ -811,6 +818,13 @@ const handlePrint = useCallback(async () => {
         preparePages();
     }
 
+    function changeMaxFirstPageSize(size) {
+        fontSizes[modelName + "_balanceSheetpMaxFirstPageSize"] = parseInt(size);
+        setFontSizes({ ...fontSizes });
+        saveToLocalStorage("fontSizes", fontSizes);
+        preparePages();
+    }
+
 
     return (<>
         <WhatsAppModal
@@ -866,7 +880,7 @@ const handlePrint = useCallback(async () => {
 
                     {/* Margin Control */}
 
-                    <div className="d-flex align-items-center border rounded bg-light p-2" style={{ marginRight: "200px" }}>
+                    <div className="d-flex align-items-center border rounded bg-light p-2" style={{ marginRight: "100px" }}>
                         <button className="btn btn-outline-secondary" onClick={() => decrementSize(modelName + "_marginTop")}>−</button>
                         <span className="mx-2">Margin Top: {fontSizes[modelName + "_marginTop"]?.size}</span>
                         <button className="btn btn-outline-secondary" onClick={() => incrementSize(modelName + "_marginTop")}>+</button>
@@ -898,6 +912,41 @@ const handlePrint = useCallback(async () => {
                             <option value="30">30</option>
                             <option value="35">35</option>
                             <option value="40">40</option>
+                        </select>
+                    </>
+
+                    <>
+                        <label className="form-label">Max. 1st Page Size:</label>
+                        <select
+                            value={fontSizes[modelName + "_balanceSheetpMaxFirstPageSize"]}
+                            onChange={(e) => {
+                                changeMaxFirstPageSize(e.target.value);
+                            }}
+                            className="form-control pull-right"
+                            style={{
+                                border: "solid 1px",
+                                borderColor: "silver",
+                                width: "55px",
+                            }}
+                        >
+                            <option value="10">10</option>
+                            <option value="15">15</option>
+                            <option value="20">20</option>
+                            <option value="21">21</option>
+                            <option value="22">22</option>
+                            <option value="23">23</option>
+                            <option value="24">24</option>
+                            <option value="25">25</option>
+                            <option value="26">26</option>
+                            <option value="27">27</option>
+                            <option value="28">28</option>
+                            <option value="29">29</option>
+                            <option value="30">30</option>
+                            <option value="31">31</option>
+                            <option value="32">32</option>
+                            <option value="33">33</option>
+                            <option value="34">34</option>
+                            <option value="35">35</option>
                         </select>
                     </>
 
