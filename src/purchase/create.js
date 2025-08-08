@@ -2523,13 +2523,14 @@ const PurchaseCreate = forwardRef((props, ref) => {
                                                     padding: '4px 8px',
                                                     borderBottom: '1px solid #ddd',
                                                 }}>
-                                                    <div style={{ width: '3%' }}></div>
-                                                    <div style={{ width: '18%' }}>Part Number</div>
-                                                    <div style={{ width: '45%' }}>Name</div>
-                                                    <div style={{ width: '9%' }}>Unit Price</div>
-                                                    <div style={{ width: '5%' }}>Stock</div>
-                                                    <div style={{ width: '10%' }}>Brand</div>
-                                                    <div style={{ width: '10%' }}>Country</div>
+                                                    <div style={{ width: '3%', border: "solid 0px", }}></div>
+                                                    <div style={{ width: '16%', border: "solid 0px", }}>Part Number</div>
+                                                    <div style={{ width: '39%', border: "solid 0px", }}>Name</div>
+                                                    <div style={{ width: '12%', border: "solid 0px", }}>Unit Price</div>
+                                                    <div style={{ width: '5%', border: "solid 0px", }}>Stock</div>
+                                                    <div style={{ width: '5%', border: "solid 0px", }}>Photos</div>
+                                                    <div style={{ width: '10%', border: "solid 0px", }}>Brand</div>
+                                                    <div style={{ width: '10%', border: "solid 0px", }}>Country</div>
                                                 </div>
                                             </MenuItem>
 
@@ -2583,7 +2584,7 @@ const PurchaseCreate = forwardRef((props, ref) => {
                                                                     }}
                                                                 />
                                                             </div>
-                                                            <div style={{ ...columnStyle, width: '18%' }}>
+                                                            <div style={{ ...columnStyle, width: '16%' }}>
                                                                 {highlightWords(
                                                                     option.prefix_part_number
                                                                         ? `${option.prefix_part_number} - ${option.part_number}`
@@ -2592,7 +2593,7 @@ const PurchaseCreate = forwardRef((props, ref) => {
                                                                     isActive
                                                                 )}
                                                             </div>
-                                                            <div style={{ ...columnStyle, width: '45%' }}>
+                                                            <div style={{ ...columnStyle, width: '39%' }}>
                                                                 {highlightWords(
                                                                     option.name_in_arabic
                                                                         ? `${option.name} - ${option.name_in_arabic}`
@@ -2601,13 +2602,29 @@ const PurchaseCreate = forwardRef((props, ref) => {
                                                                     isActive
                                                                 )}
                                                             </div>
-                                                            <div style={{ ...columnStyle, width: '9%' }}>
+                                                            <div style={{ ...columnStyle, width: '12%' }}>
                                                                 {option.product_stores?.[localStorage.getItem("store_id")]?.retail_unit_price && (
-                                                                    <Amount amount={trimTo2Decimals(option.product_stores?.[localStorage.getItem("store_id")]?.retail_unit_price)} />
+                                                                    <>
+                                                                        <Amount amount={trimTo2Decimals(option.product_stores?.[localStorage.getItem("store_id")]?.retail_unit_price)} />+
+                                                                    </>
+                                                                )}
+                                                                {option.product_stores?.[localStorage.getItem("store_id")]?.retail_unit_price_with_vat && (
+                                                                    <>
+                                                                        |<Amount amount={trimTo2Decimals(option.product_stores?.[localStorage.getItem("store_id")]?.retail_unit_price_with_vat)} />
+                                                                    </>
                                                                 )}
                                                             </div>
                                                             <div style={{ ...columnStyle, width: '5%' }}>
                                                                 {option.product_stores?.[localStorage.getItem("store_id")]?.stock ?? ''}
+                                                            </div>
+                                                            <div style={{ ...columnStyle, width: '5%' }}>
+                                                                <button class="btn btn-outline-primary" onClick={(e) => {
+                                                                    e.preventDefault();
+                                                                    e.stopPropagation();
+                                                                    openProductImages(option.id)
+                                                                }}>
+                                                                    <i class="bi bi-images"></i>
+                                                                </button>
                                                             </div>
                                                             <div style={{ ...columnStyle, width: '10%' }}>
                                                                 {highlightWords(option.brand_name, searchWords, isActive)}

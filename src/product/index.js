@@ -1495,10 +1495,11 @@ function ProductIndex(props) {
                                                                 borderBottom: '1px solid #ddd',
                                                             }}>
                                                                 <div style={{ width: '3%' }}></div>
-                                                                <div style={{ width: '18%' }}>Part Number</div>
-                                                                <div style={{ width: '45%' }}>Name</div>
-                                                                <div style={{ width: '9%' }}>Unit Price</div>
+                                                                <div style={{ width: '16%' }}>Part Number</div>
+                                                                <div style={{ width: '39%' }}>Name</div>
+                                                                <div style={{ width: '12%' }}>Unit Price</div>
                                                                 <div style={{ width: '5%' }}>Stock</div>
+                                                                <div style={{ width: '5%', border: "solid 0px", }}>Photos</div>
                                                                 <div style={{ width: '10%' }}>Brand</div>
                                                                 <div style={{ width: '10%' }}>Country</div>
                                                             </div>
@@ -1572,7 +1573,7 @@ function ProductIndex(props) {
                                                                                 }}
                                                                             />
                                                                         </div>
-                                                                        <div style={{ ...columnStyle, width: '18%' }}>
+                                                                        <div style={{ ...columnStyle, width: '16%' }}>
                                                                             {highlightWords(
                                                                                 option.prefix_part_number
                                                                                     ? `${option.prefix_part_number} - ${option.part_number}`
@@ -1581,7 +1582,7 @@ function ProductIndex(props) {
                                                                                 isActive
                                                                             )}
                                                                         </div>
-                                                                        <div style={{ ...columnStyle, width: '45%' }}>
+                                                                        <div style={{ ...columnStyle, width: '39%' }}>
                                                                             {highlightWords(
                                                                                 option.name_in_arabic
                                                                                     ? `${option.name} - ${option.name_in_arabic}`
@@ -1590,13 +1591,30 @@ function ProductIndex(props) {
                                                                                 isActive
                                                                             )}
                                                                         </div>
-                                                                        <div style={{ ...columnStyle, width: '9%' }}>
+                                                                        <div style={{ ...columnStyle, width: '12%' }}>
                                                                             {option.product_stores?.[localStorage.getItem("store_id")]?.retail_unit_price && (
-                                                                                <Amount amount={trimTo2Decimals(option.product_stores?.[localStorage.getItem("store_id")]?.retail_unit_price)} />
+                                                                                <>
+                                                                                    <Amount amount={trimTo2Decimals(option.product_stores?.[localStorage.getItem("store_id")]?.retail_unit_price)} />+
+                                                                                </>
+                                                                            )}
+                                                                            {option.product_stores?.[localStorage.getItem("store_id")]?.retail_unit_price_with_vat && (
+                                                                                <>
+                                                                                    |<Amount amount={trimTo2Decimals(option.product_stores?.[localStorage.getItem("store_id")]?.retail_unit_price_with_vat)} />
+                                                                                </>
                                                                             )}
                                                                         </div>
                                                                         <div style={{ ...columnStyle, width: '5%' }}>
                                                                             {option.product_stores?.[localStorage.getItem("store_id")]?.stock ?? ''}
+                                                                        </div>
+                                                                        <div style={{ ...columnStyle, width: '5%' }}>
+                                                                            <button class="btn btn-outline-primary" onClick={(e) => {
+                                                                                e.preventDefault();
+                                                                                e.stopPropagation();
+                                                                                openProductImages(option.id)
+                                                                            }}>
+                                                                                <i class="bi bi-images"></i>
+                                                                            </button>
+
                                                                         </div>
                                                                         <div style={{ ...columnStyle, width: '10%' }}>
                                                                             {highlightWords(option.brand_name, searchWords, isActive)}
@@ -3551,9 +3569,16 @@ function ProductIndex(props) {
                                                                             openDetailsView(product.id);
                                                                         }} style={{}}>
                                                                             <i className="bi bi-eye"></i>
+                                                                        </Button>&nbsp;
+                                                                        <Button className="btn btn-outline-primary btn-sm" onClick={(e) => {
+                                                                            e.preventDefault();
+                                                                            e.stopPropagation();
+                                                                            openProductImages(product.id)
+                                                                        }}>
+                                                                            <i class="bi bi-images"></i>
                                                                         </Button>
 
-                                                                        <Dropdown drop="down" style={{ marginLeft: "100px", marginTop: "-27px" }} >
+                                                                        <Dropdown drop="down" style={{ marginLeft: "130px", marginTop: "-27px" }} >
                                                                             <Dropdown.Toggle variant="secondary" id="dropdown-secondary" style={{ height: "27px" }}>
 
                                                                             </Dropdown.Toggle>
