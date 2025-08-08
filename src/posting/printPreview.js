@@ -142,10 +142,20 @@ const BalanceSheetPrintPreview = forwardRef((props, ref) => {
                     if (model.pages[i].posts?.length === model.pageSize) {
                         break;
                     }
+
+                    if (i === 0 && model.pages[i].posts?.length > 26) {
+                        break
+                    }
                 }
+
                 if (model.pages[i].posts?.length === model.pageSize) {
                     break;
                 }
+
+                if (i === 0 && model.pages[i].posts?.length > 26) {
+                    break
+                }
+
             }
 
             if (model.pages[i].posts?.length < model.pageSize) {
