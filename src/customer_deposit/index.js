@@ -390,7 +390,7 @@ function CustomerDepositIndex(props) {
             },
         };
         let Select =
-            "select=id,code,date,type,net_total,payment_methods,payments,bank_reference_no,description,remarks,customer_id,customer_name,vendor_id,vendor_name,created_by_name,created_at";
+            "select=id,code,date,type,net_total,payment_methods,payments,bank_reference_no,description,remarks,customer_id,customer_name,customer_name_arabic,vendor_id,vendor_name,vendor_name_arabic,created_by_name,created_at";
 
         if (localStorage.getItem("store_id")) {
             searchParams.store_id = localStorage.getItem("store_id");
@@ -1384,10 +1384,10 @@ function CustomerDepositIndex(props) {
                                                         </td>
                                                         <td style={{ width: "auto", whiteSpace: "nowrap" }} >  {customerdeposit.type}</td>
                                                         <td style={{ width: "auto", whiteSpace: "nowrap" }} >
-                                                            {customerdeposit.customer_name && <OverflowTooltip value={customerdeposit.customer_name} maxWidth={300} />}
+                                                            {customerdeposit.customer_name && <OverflowTooltip value={customerdeposit.customer_name + (customerdeposit.customer_name_arabic ? "|" + customerdeposit.customer_name_arabic : "")} maxWidth={300} />}
                                                         </td>
                                                         <td style={{ width: "auto", whiteSpace: "nowrap" }} >
-                                                            {customerdeposit.vendor_name && <OverflowTooltip value={customerdeposit.vendor_name} maxWidth={300} />}
+                                                            {customerdeposit.vendor_name && <OverflowTooltip value={customerdeposit.vendor_name + (customerdeposit.vendor_name_arabic ? "|" + customerdeposit.vendor_name_arabic : "")} maxWidth={300} />}
                                                         </td>
                                                         <td style={{ width: "auto", whiteSpace: "nowrap" }} >
                                                             <Amount amount={trimTo2Decimals(customerdeposit.net_total)} />

@@ -390,7 +390,7 @@ function CustomerWithdrawalIndex(props) {
             },
         };
         let Select =
-            "select=id,code,date,type,net_total,payment_methods,payments,bank_reference_no,description,remarks,customer_id,customer_name,vendor_id,vendor_name,created_by_name,created_at";
+            "select=id,code,date,type,net_total,payment_methods,payments,bank_reference_no,description,remarks,customer_id,customer_name,customer_name_arabic,vendor_id,vendor_name,vendor_name_arabic,created_by_name,created_at";
 
         if (localStorage.getItem("store_id")) {
             searchParams.store_id = localStorage.getItem("store_id");
@@ -1384,10 +1384,10 @@ function CustomerWithdrawalIndex(props) {
                                                         </td>
                                                         <td style={{ width: "auto", whiteSpace: "nowrap" }} >  {customerwithdrawal.type}</td>
                                                         <td style={{ width: "auto", whiteSpace: "nowrap" }} >
-                                                            {customerwithdrawal.customer_name && <OverflowTooltip value={customerwithdrawal.customer_name} maxWidth={300} />}
+                                                            {customerwithdrawal.customer_name && <OverflowTooltip value={customerwithdrawal.customer_name + (customerwithdrawal.customer_name_arabic ? "|" + customerwithdrawal.customer_name_arabic : "")} maxWidth={300} />}
                                                         </td>
                                                         <td style={{ width: "auto", whiteSpace: "nowrap" }} >
-                                                            {customerwithdrawal.vendor_name && <OverflowTooltip value={customerwithdrawal.vendor_name} maxWidth={300} />}
+                                                            {customerwithdrawal.vendor_name && <OverflowTooltip value={customerwithdrawal.vendor_name + (customerwithdrawal.vendor_name_arabic ? "|" + customerwithdrawal.vendor_name_arabic : "")} maxWidth={300} />}
                                                         </td>
                                                         <td style={{ width: "auto", whiteSpace: "nowrap" }} >
                                                             <Amount amount={trimTo2Decimals(customerwithdrawal.net_total)} />
