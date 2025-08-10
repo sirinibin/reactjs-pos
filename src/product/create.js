@@ -2676,7 +2676,7 @@ const ProductCreate = forwardRef((props, ref) => {
                           <div style={{ width: '3%', border: "solid 0px", }}></div>
                           <div style={{ width: '14%', border: "solid 0px", }}>Part Number</div>
                           <div style={{ width: '29%', border: "solid 0px", }}>Name</div>
-                          <div style={{ width: '12%', border: "solid 0px", }}>Unit Price</div>
+                          <div style={{ width: '12%', border: "solid 0px", }}>S.Unit Price</div>
                           <div style={{ width: '5%', border: "solid 0px", }}>Stock</div>
                           <div style={{ width: '5%', border: "solid 0px", }}>Photos</div>
                           <div style={{ width: '10%', border: "solid 0px", }}>Brand</div>
@@ -3443,7 +3443,7 @@ const ProductCreate = forwardRef((props, ref) => {
                           <div style={{ width: '3%', border: "solid 0px", }}></div>
                           <div style={{ width: '14%', border: "solid 0px", }}>Part Number</div>
                           <div style={{ width: '29%', border: "solid 0px", }}>Name</div>
-                          <div style={{ width: '12%', border: "solid 0px", }}>Unit Price</div>
+                          <div style={{ width: '12%', border: "solid 0px", }}>S.Unit Price</div>
                           <div style={{ width: '5%', border: "solid 0px", }}>Stock</div>
                           <div style={{ width: '5%', border: "solid 0px", }}>Photos</div>
                           <div style={{ width: '10%', border: "solid 0px", }}>Brand</div>

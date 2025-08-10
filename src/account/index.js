@@ -160,7 +160,7 @@ function AccountIndex(props) {
             },
         };
         let Select =
-            "select=id,store_id,name,type,phone,vat_no,number,search_label,open,balance,debit_total,credit_total,created_at,updated_at,reference_model,reference_id,debit_or_credit_balance";
+            "select=id,store_id,name,name_arabic,type,phone,vat_no,number,search_label,open,balance,debit_total,credit_total,created_at,updated_at,reference_model,reference_id,debit_or_credit_balance";
 
         if (localStorage.getItem("store_id")) {
             searchParams.store_id = localStorage.getItem("store_id");
@@ -1088,7 +1088,7 @@ function AccountIndex(props) {
                                                             <Button variant="link" onClick={() => {
                                                                 openBalanceSheetDialogue(account);
                                                             }}>
-                                                                <OverflowTooltip value={account.name} />
+                                                                {(account.name && account.name_arabic) ? <OverflowTooltip value={account.name + " | " + account.name_arabic} /> : <OverflowTooltip value={account.name} />}
 
                                                             </Button>
                                                         </td>

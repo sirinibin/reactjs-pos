@@ -1497,7 +1497,7 @@ function ProductIndex(props) {
                                                                 <div style={{ width: '3%' }}></div>
                                                                 <div style={{ width: '14%' }}>Part Number</div>
                                                                 <div style={{ width: '29%' }}>Name</div>
-                                                                <div style={{ width: '12%' }}>Unit Price</div>
+                                                                <div style={{ width: '12%' }}>S.Unit Price</div>
                                                                 <div style={{ width: '5%' }}>Stock</div>
                                                                 <div style={{ width: '5%', border: "solid 0px", }}>Photos</div>
                                                                 <div style={{ width: '10%' }}>Brand</div>

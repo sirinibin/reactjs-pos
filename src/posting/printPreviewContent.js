@@ -172,7 +172,7 @@ const BalanceSheetPrintPreviewContent = forwardRef((props, ref) => {
 
                         <div className="row" dir="ltr" style={{ borderBottom: detailsBorderThickness }} >
                             <div className="col-md-4 print-label" dir="ltr" style={{ borderRight: detailsBorderThickness, borderColor: detailsBorderColor, width: detailsLabelsColumnWidthPercent, padding: "3px" }} ><b>Account Name | إسم الحساب:</b></div>
-                            <div className="col-md-8 print-value" dir="ltr" style={{ borderColor: detailsBorderColor, width: detailsValuesColumnWidthPercent, padding: "3px" }} >{props.model.name ? props.model.name : ""}</div>
+                            <div className="col-md-8 print-value" dir="ltr" style={{ borderColor: detailsBorderColor, width: detailsValuesColumnWidthPercent, padding: "3px" }} >{(props.model.name && props.model?.name_arabic) ? props.model.name + " | " + props.model?.name_arabic : props.model?.name}</div>
                         </div>
                         <div className="row" dir="ltr" style={{ borderBottom: detailsBorderThickness }} >
                             <div className="col-md-4 print-label" dir="ltr" style={{ borderRight: detailsBorderThickness, borderColor: detailsBorderColor, width: detailsLabelsColumnWidthPercent, padding: "3px" }} ><b>Account Number | رقم الحساب:</b></div>

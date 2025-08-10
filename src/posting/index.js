@@ -800,7 +800,7 @@ const PostingIndex = forwardRef((props, ref) => {
             <BalanceSheetPrintPreview ref={PreviewRef} />
             <Modal show={showAccountBalanceSheet} fullscreen onHide={handleAccountBalanceSheetClose} animation={false} scrollable={true}>
                 <Modal.Header>
-                    <Modal.Title>Balance sheet of {selectedAccount?.name + " A/c (#" + selectedAccount?.number + ")"} {selectedAccount?.vat_no ? "  VAT #" + selectedAccount.vat_no : ""} </Modal.Title>
+                    <Modal.Title>Balance sheet of {selectedAccount?.name + (selectedAccount?.name_arabic ? " | " + selectedAccount?.name_arabic : "") + " A/c (#" + selectedAccount?.number + ")"} {selectedAccount?.vat_no ? "  VAT #" + selectedAccount.vat_no : ""} </Modal.Title>
 
                     <div className="col align-self-end text-end">
                         &nbsp;&nbsp;

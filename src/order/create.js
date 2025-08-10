@@ -1,6 +1,6 @@
-import React, { useState, useEffect, useRef, forwardRef, useImperativeHandle, useCallback } from "react";
+import React, { useState, useEffect, useRef, forwardRef, useImperativeHandle, useCallback, useMemo } from "react";
 import OrderPreview from "./preview.js";
-import { Modal, Button } from "react-bootstrap";
+import { Modal, Button, Alert } from "react-bootstrap";
 import ProductHistory from "./../product/product_history.js";
 import CustomerCreate from "./../customer/create.js";
 import ProductCreate from "./../product/create.js";
@@ -44,6 +44,8 @@ import * as bootstrap from 'bootstrap';
 //import OverflowTooltip from "../utils/OverflowTooltip.js";
 import { highlightWords } from "../utils/search.js";
 import OrderPrint from './print.js';
+import { DragDropContext, Droppable, Draggable } from "react-beautiful-dnd";
+
 
 const columnStyle = {
     width: '20%',
@@ -2973,9 +2975,205 @@ const OrderCreate = forwardRef((props, ref) => {
         openCreateForm();
     }
 
+    //Product Search Settings
+    const [showProductSearchSettings, setShowProductSearchSettings] = useState(false);
+
+    // Initial column config
+    /*  const [defaultsearchProductsColumns, setDefaultsearchProductsColumns] = useState([
+          { key: "part_number", label: "Part Number", visible: true },
+          { key: "name", label: "Name", visible: true },
+          { key: "unit_price", label: "S.Unit Price", visible: true },
+          { key: "stock", label: "Stock", visible: true },
+          { key: "photos", label: "Photos", visible: true },
+          { key: "brand", label: "Brand", visible: true },
+          { key: "purchase_price", label: "P.Unit Price", visible: true },
+          { key: "country", label: "Country", visible: true },
+      ]);*/
+
+    const defaultSearchProductsColumns = useMemo(() => [
+        { key: "part_number", label: "Part Number", fieldName: "part_number", visible: true },
+        { key: "name", label: "Name", fieldName: "name", visible: true },
+        { key: "unit_price", label: "S.Unit Price", fieldName: "unit_price", visible: true },
+        { key: "stock", label: "Stock", fieldName: "stock", visible: true },
+        { key: "photos", label: "Photos", fieldName: "photos", visible: true },
+        { key: "brand", label: "Brand", fieldName: "brand", visible: true },
+        { key: "purchase_price", label: "P.Unit Price", fieldName: "purchase_price", visible: true },
+        { key: "country", label: "Country", fieldName: "country", visible: true },
+    ], []);
+
+    const [searchProductsColumns, setSearchProductsColumns] = useState(defaultSearchProductsColumns);
+
+    const handleToggleColumn = (index) => {
+        const updated = [...searchProductsColumns];
+        updated[index].visible = !updated[index].visible;
+        setSearchProductsColumns(updated);
+    };
+
+    const onDragEnd = (result) => {
+        if (!result.destination) return;
+        const reordered = Array.from(searchProductsColumns);
+        const [moved] = reordered.splice(result.source.index, 1);
+        reordered.splice(result.destination.index, 0, moved);
+        setSearchProductsColumns(reordered);
+    };
+
+
+
+    function RestoreDefaultSettings() {
+        localStorage.setItem("sales_product_search_settings", JSON.stringify(defaultSearchProductsColumns));
+
+        setSearchProductsColumns(defaultSearchProductsColumns);
+
+        setShowSuccess(true);
+        setSuccessMessage("Successfully restored to default settings!")
+    }
+
+
+    // Load settings from localStorage
+    useEffect(() => {
+        let saved = "";
+        saved = localStorage.getItem("sales_product_search_settings");
+
+        if (saved) setSearchProductsColumns(JSON.parse(saved));
+
+        let missingOrUpdated = false;
+        for (let i = 0; i < defaultSearchProductsColumns.length; i++) {
+            if (!saved)
+                break;
+
+            const savedCol = JSON.parse(saved)?.find(col => col.fieldName === defaultSearchProductsColumns[i].fieldName);
+
+            missingOrUpdated = !savedCol || savedCol.label !== defaultSearchProductsColumns[i].label || savedCol.key !== defaultSearchProductsColumns[i].key;
+
+            if (missingOrUpdated) {
+                break
+            }
+        }
+
+
+        if (missingOrUpdated) {
+            localStorage.setItem("sales_product_search_settings", JSON.stringify(defaultSearchProductsColumns));
+
+            setSearchProductsColumns(defaultSearchProductsColumns);
+        }
+    }, [defaultSearchProductsColumns]);
+
+
+    useEffect(() => {
+        localStorage.setItem("sales_product_search_settings", JSON.stringify(searchProductsColumns));
+    }, [searchProductsColumns]);
+
+    const [showSuccess, setShowSuccess] = useState(false);
+    const [successMessage, setSuccessMessage] = useState(false);
+
+
 
     return (
         <>
+
+            <Modal show={showSuccess} onHide={() => setShowSuccess(false)} centered>
+                <Modal.Header closeButton>
+                    <Modal.Title>Success</Modal.Title>
+                </Modal.Header>
+                <Modal.Body>
+                    <Alert variant="success">
+                        {successMessage}
+                    </Alert>
+                </Modal.Body>
+                <Modal.Footer>
+                    <Button variant="secondary" onClick={() => setShowSuccess(false)}>
+                        Close
+                    </Button>
+                </Modal.Footer>
+            </Modal>
+
+            <Modal
+                show={showProductSearchSettings}
+                onHide={() => setShowProductSearchSettings(false)}
+                centered
+                size="lg"
+            >
+                <Modal.Header closeButton>
+                    <Modal.Title>
+                        <i
+                            className="bi bi-gear-fill"
+                            style={{ fontSize: "1.2rem", marginRight: "4px" }}
+                            title="Table Settings"
+
+                        />
+                        Product Search Settings
+                    </Modal.Title>
+                </Modal.Header>
+                <Modal.Body>
+                    {/* Column Settings */}
+                    {showProductSearchSettings && (
+                        <>
+                            <h6 className="mb-2">Customize Columns</h6>
+                            <DragDropContext onDragEnd={onDragEnd}>
+                                <Droppable droppableId="columns">
+                                    {(provided) => (
+                                        <ul
+                                            className="list-group"
+                                            {...provided.droppableProps}
+                                            ref={provided.innerRef}
+                                        >
+                                            {searchProductsColumns.map((col, index) => {
+                                                return (
+                                                    <>
+                                                        <Draggable
+                                                            key={col.key}
+                                                            draggableId={col.key}
+                                                            index={index}
+                                                        >
+                                                            {(provided) => (
+                                                                <li
+                                                                    className="list-group-item d-flex justify-content-between align-items-center"
+                                                                    ref={provided.innerRef}
+                                                                    {...provided.draggableProps}
+                                                                    {...provided.dragHandleProps}                                                        >
+                                                                    <div>
+                                                                        <input
+                                                                            style={{ width: "20px", height: "20px" }}
+                                                                            type="checkbox"
+                                                                            className="form-check-input me-2"
+                                                                            checked={col.visible}
+                                                                            onChange={() => {
+                                                                                handleToggleColumn(index);
+                                                                            }}
+                                                                        />
+                                                                        {col.label}
+                                                                    </div>
+                                                                    <span style={{ cursor: "grab" }}>☰</span>
+                                                                </li>
+                                                            )}
+                                                        </Draggable>
+                                                    </>)
+                                            })}
+                                            {provided.placeholder}
+                                        </ul>
+                                    )}
+                                </Droppable>
+                            </DragDropContext>
+                        </>
+                    )}
+                </Modal.Body>
+                <Modal.Footer>
+                    <Button variant="secondary" onClick={() => setShowProductSearchSettings(false)}>
+                        Close
+                    </Button>
+                    <Button
+                        variant="primary"
+                        onClick={() => {
+                            RestoreDefaultSettings();
+                            // Save to localStorage here if needed
+                            //setShowSettings(false);
+                        }}
+                    >
+                        Restore to Default
+                    </Button>
+                </Modal.Footer>
+            </Modal>
+
             <ProductHistory ref={ProductHistoryRef} showToastMessage={props.showToastMessage} />
             {showOrderPrintPreview && <OrderPrint ref={PrintRef} onPrintClose={handlePrintClose} />}
             {showOrderPreview && <OrderPreview ref={PreviewRef} onPrintClose={handlePrintClose} />}
@@ -3603,16 +3801,33 @@ const OrderCreate = forwardRef((props, ref) => {
                                                     padding: '4px 8px',
                                                     border: "solid 0px",
                                                     borderBottom: '1px solid #ddd',
+                                                    pointerEvents: "auto" // <-- allow click here
                                                 }}>
                                                     <div style={{ width: '3%', border: "solid 0px", }}></div>
                                                     <div style={{ width: '14%', border: "solid 0px", }}>Part Number</div>
                                                     <div style={{ width: '29%', border: "solid 0px", }}>Name</div>
-                                                    <div style={{ width: '12%', border: "solid 0px", }}>Unit Price</div>
+                                                    <div style={{ width: '12%', border: "solid 0px", }}>S.Unit Price</div>
                                                     <div style={{ width: '5%', border: "solid 0px", }}>Stock</div>
                                                     <div style={{ width: '5%', border: "solid 0px", }}>Photos</div>
                                                     <div style={{ width: '10%', border: "solid 0px", }}>Brand</div>
                                                     <div style={{ width: '12%', border: "solid 0px", }}>P.Unit Price</div>
                                                     <div style={{ width: '10%', border: "solid 0px", }}>Country</div>
+                                                    {/* Settings icon on right */}
+                                                    <div
+                                                        style={{
+                                                            position: "absolute",
+                                                            right: "8px",
+                                                            top: "50%",
+                                                            transform: "translateY(-50%)",
+                                                            cursor: "pointer",
+                                                        }}
+                                                        onClick={(e) => {
+                                                            e.stopPropagation();
+                                                            setShowProductSearchSettings(true);
+                                                        }}
+                                                    >
+                                                        <i className="bi bi-gear-fill" />
+                                                    </div>
                                                 </div>
                                             </MenuItem>
 
