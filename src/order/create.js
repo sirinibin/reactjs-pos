@@ -2991,6 +2991,7 @@ const OrderCreate = forwardRef((props, ref) => {
       ]);*/
 
     const defaultSearchProductsColumns = useMemo(() => [
+        { key: "select", label: "Select", fieldName: "select", visible: true },
         { key: "part_number", label: "Part Number", fieldName: "part_number", visible: true },
         { key: "name", label: "Name", fieldName: "name", visible: true },
         { key: "unit_price", label: "S.Unit Price", fieldName: "unit_price", visible: true },
@@ -3803,7 +3804,20 @@ const OrderCreate = forwardRef((props, ref) => {
                                                     borderBottom: '1px solid #ddd',
                                                     pointerEvents: "auto" // <-- allow click here
                                                 }}>
-                                                    <div style={{ width: '3%', border: "solid 0px", }}></div>
+                                                    {searchProductsColumns.filter(c => c.visible).map((col) => {
+                                                        return (<>
+                                                            {col.key === "select" && <div style={{ width: '3%', border: "solid 0px", }}></div>}
+                                                            {col.key === "part_number" && <div style={{ width: '14%', border: "solid 0px", }}>Part Number</div>}
+                                                            {col.key === "name" && <div style={{ width: '29%', border: "solid 0px", }}>Name</div>}
+                                                            {col.key === "unit_price" && <div style={{ width: '12%', border: "solid 0px", }}>S.Unit Price</div>}
+                                                            {col.key === "stock" && <div style={{ width: '5%', border: "solid 0px", }}>Stock</div>}
+                                                            {col.key === "photos" && <div style={{ width: '5%', border: "solid 0px", }}>Photos</div>}
+                                                            {col.key === "brand" && <div style={{ width: '10%', border: "solid 0px", }}>Brand</div>}
+                                                            {col.key === "purchase_price" && <div style={{ width: '12%', border: "solid 0px", }}>P.Unit Price</div>}
+                                                            {col.key === "country" && <div style={{ width: '10%', border: "solid 0px", }}>Country</div>}
+                                                        </>)
+                                                    })}
+                                                    {/* <div style={{ width: '3%', border: "solid 0px", }}></div>
                                                     <div style={{ width: '14%', border: "solid 0px", }}>Part Number</div>
                                                     <div style={{ width: '29%', border: "solid 0px", }}>Name</div>
                                                     <div style={{ width: '12%', border: "solid 0px", }}>S.Unit Price</div>
@@ -3811,7 +3825,7 @@ const OrderCreate = forwardRef((props, ref) => {
                                                     <div style={{ width: '5%', border: "solid 0px", }}>Photos</div>
                                                     <div style={{ width: '10%', border: "solid 0px", }}>Brand</div>
                                                     <div style={{ width: '12%', border: "solid 0px", }}>P.Unit Price</div>
-                                                    <div style={{ width: '10%', border: "solid 0px", }}>Country</div>
+                                                    <div style={{ width: '10%', border: "solid 0px", }}>Country</div>*/}
                                                     {/* Settings icon on right */}
                                                     <div
                                                         style={{
@@ -3838,7 +3852,137 @@ const OrderCreate = forwardRef((props, ref) => {
                                                 return (
                                                     <MenuItem option={option} position={index} key={index} style={{ padding: "0px" }}>
                                                         <div style={{ display: 'flex', padding: '4px 8px' }}>
-                                                            <div
+                                                            {searchProductsColumns.filter(c => c.visible).map((col) => {
+                                                                return (<>
+                                                                    {col.key === "select" &&
+                                                                        <div
+                                                                            className="form-check"
+                                                                            style={{ ...columnStyle, width: '3%' }}
+                                                                            onClick={e => {
+                                                                                e.stopPropagation();     // Stop click bubbling to parent MenuItem
+                                                                                checked = !checked;
+
+                                                                                if (timerRef.current) clearTimeout(timerRef.current);
+                                                                                timerRef.current = setTimeout(() => {
+                                                                                    if (checked) {
+                                                                                        addProduct(option);
+                                                                                    } else {
+                                                                                        removeProduct(option);
+                                                                                    }
+                                                                                }, 100);
+
+                                                                            }}
+                                                                        >
+                                                                            <input
+                                                                                className="form-check-input"
+                                                                                type="checkbox"
+                                                                                value={checked}
+                                                                                checked={checked}
+                                                                                onClick={e => {
+                                                                                    e.stopPropagation();     // Stop click bubbling to parent MenuItem
+                                                                                }}
+                                                                                onChange={e => {
+                                                                                    e.preventDefault();      // Prevent default selection behavior
+                                                                                    e.stopPropagation();
+
+                                                                                    checked = !checked;
+
+                                                                                    if (timerRef.current) clearTimeout(timerRef.current);
+                                                                                    timerRef.current = setTimeout(() => {
+                                                                                        if (checked) {
+                                                                                            addProduct(option);
+                                                                                        } else {
+                                                                                            removeProduct(option);
+                                                                                        }
+                                                                                    }, 100);
+                                                                                }}
+                                                                            />
+                                                                        </div>
+                                                                    }
+                                                                    {col.key === "part_number" &&
+                                                                        <div style={{ ...columnStyle, width: '14%' }}>
+                                                                            {highlightWords(
+                                                                                option.prefix_part_number
+                                                                                    ? `${option.prefix_part_number} - ${option.part_number}`
+                                                                                    : option.part_number,
+                                                                                searchWords,
+                                                                                isActive
+                                                                            )}
+                                                                        </div>
+                                                                    }
+                                                                    {col.key === "name" &&
+                                                                        <div style={{ ...columnStyle, width: '29%' }}>
+                                                                            {highlightWords(
+                                                                                option.name_in_arabic
+                                                                                    ? `${option.name} - ${option.name_in_arabic}`
+                                                                                    : option.name,
+                                                                                searchWords,
+                                                                                isActive
+                                                                            )}
+                                                                        </div>
+                                                                    }
+                                                                    {col.key === "unit_price" &&
+                                                                        <div style={{ ...columnStyle, width: '12%' }}>
+                                                                            {option.product_stores?.[localStorage.getItem("store_id")]?.retail_unit_price && (
+                                                                                <>
+                                                                                    <Amount amount={trimTo2Decimals(option.product_stores?.[localStorage.getItem("store_id")]?.retail_unit_price)} />+
+                                                                                </>
+                                                                            )}
+                                                                            {option.product_stores?.[localStorage.getItem("store_id")]?.retail_unit_price_with_vat && (
+                                                                                <>
+                                                                                    |<Amount amount={trimTo2Decimals(option.product_stores?.[localStorage.getItem("store_id")]?.retail_unit_price_with_vat)} />
+                                                                                </>
+                                                                            )}
+                                                                        </div>
+                                                                    }
+                                                                    {col.key === "stock" &&
+                                                                        <div style={{ ...columnStyle, width: '5%' }}>
+                                                                            {option.product_stores?.[localStorage.getItem("store_id")]?.stock ?? ''}
+                                                                        </div>
+                                                                    }
+                                                                    {col.key === "photos" &&
+                                                                        <div style={{ ...columnStyle, width: '5%' }}>
+                                                                            <button
+                                                                                type="button"
+                                                                                className={isActive ? "btn btn-outline-light btn-sm" : "btn btn-outline-primary btn-sm"}
+                                                                                onClick={(e) => {
+                                                                                    e.preventDefault();
+                                                                                    e.stopPropagation();
+                                                                                    openProductImages(option.id);
+                                                                                }}
+                                                                            >
+                                                                                <i className="bi bi-images" aria-hidden="true" />
+                                                                            </button>
+                                                                        </div>
+                                                                    }
+                                                                    {col.key === "brand" &&
+                                                                        <div style={{ ...columnStyle, width: '10%' }}>
+                                                                            {highlightWords(option.brand_name, searchWords, isActive)}
+                                                                        </div>
+                                                                    }
+                                                                    {col.key === "purchase_price" &&
+                                                                        <div style={{ ...columnStyle, width: '12%' }}>
+                                                                            {option.product_stores?.[localStorage.getItem("store_id")]?.purchase_unit_price && (
+                                                                                <>
+                                                                                    <Amount amount={trimTo2Decimals(option.product_stores?.[localStorage.getItem("store_id")]?.purchase_unit_price)} />+
+                                                                                </>
+                                                                            )}
+                                                                            {option.product_stores?.[localStorage.getItem("store_id")]?.purchase_unit_price_with_vat && (
+                                                                                <>
+                                                                                    |<Amount amount={trimTo2Decimals(option.product_stores?.[localStorage.getItem("store_id")]?.purchase_unit_price_with_vat)} />
+                                                                                </>
+                                                                            )}
+                                                                        </div>
+                                                                    }
+                                                                    {col.key === "country" &&
+                                                                        <div style={{ ...columnStyle, width: '10%' }}>
+                                                                            {highlightWords(option.country_name, searchWords, isActive)}
+                                                                        </div>
+                                                                    }
+                                                                </>)
+                                                            })}
+
+                                                            {/* <div
                                                                 className="form-check"
                                                                 style={{ ...columnStyle, width: '3%' }}
                                                                 onClick={e => {
@@ -3944,7 +4088,7 @@ const OrderCreate = forwardRef((props, ref) => {
                                                             </div>
                                                             <div style={{ ...columnStyle, width: '10%' }}>
                                                                 {highlightWords(option.country_name, searchWords, isActive)}
-                                                            </div>
+                                                            </div>*/}
                                                         </div>
                                                     </MenuItem>
                                                 );
