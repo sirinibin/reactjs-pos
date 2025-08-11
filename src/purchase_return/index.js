@@ -635,7 +635,7 @@ function PurchaseReturnIndex(props) {
             },
         };
         let Select =
-            "select=id,code,purchase_code,vat_price,cash_discount,purchase_id,date,net_total,created_by_name,vendor_name,vendor_id,vendor_invoice_no,status,created_at,total_payment_paid,payments_count,payment_methods,payment_status,balance_amount,store_id";
+            "select=id,code,purchase_code,vat_price,cash_discount,purchase_id,date,net_total,created_by_name,vendor_name,vendor_name_arabic,vendor_id,vendor_invoice_no,status,created_at,total_payment_paid,payments_count,payment_methods,payment_status,balance_amount,store_id";
         if (localStorage.getItem("store_id")) {
             searchParams.store_id = localStorage.getItem("store_id");
         }
@@ -2383,7 +2383,7 @@ function PurchaseReturnIndex(props) {
                                                                 {(col.fieldName === "vendor_name") && <td style={{ width: "auto", whiteSpace: "nowrap" }}>
                                                                     {purchaseReturn.vendor_name && <span style={{ cursor: "pointer", color: "blue" }} onClick={() => {
                                                                         openVendorUpdateForm(purchaseReturn.vendor_id);
-                                                                    }}><OverflowTooltip value={purchaseReturn.vendor_name} />
+                                                                    }}><OverflowTooltip value={purchaseReturn.vendor_name + (purchaseReturn.vendor_name_arabic ? " | " + purchaseReturn.vendor_name_arabic : "")} />
                                                                     </span>}
                                                                 </td>}
                                                                 {(col.fieldName === "net_total") && <td style={{ width: "auto", whiteSpace: "nowrap" }}>

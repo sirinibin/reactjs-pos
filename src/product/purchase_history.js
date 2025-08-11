@@ -1429,7 +1429,7 @@ const PurchaseHistory = forwardRef((props, ref) => {
                                                                         {(col.key === "vendor_name") && <td style={{ width: "auto", whiteSpace: "nowrap" }} className="text-start" >
                                                                             {history.vendor_name && <span style={{ cursor: "pointer", color: "blue" }} onClick={() => {
                                                                                 openVendorUpdateForm(history.vendor_id);
-                                                                            }}><OverflowTooltip value={history.vendor_name} />
+                                                                            }}><OverflowTooltip value={history.vendor_name + (history.vendor_name_arabic ? " | " + history.vendor_name_arabic : "")} />
                                                                             </span>}
                                                                         </td>}
                                                                         {(col.key === "purchase_code") && <td style={{ width: "auto", whiteSpace: "nowrap" }} className="text-start" >

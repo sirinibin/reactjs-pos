@@ -433,7 +433,7 @@ function QuotationIndex(props) {
       },
     };
     let Select =
-      "select=id,order_code,order_id,reported_to_zatca,reported_to_zatca_at,type,payment_status,payment_methods,total_payment_received,balance_amount,code,date,net_total,created_by_name,customer_id,customer_name,status,cash_discount,discount_with_vat,created_at,net_profit,net_loss,return_count,return_amount";
+      "select=id,order_code,order_id,reported_to_zatca,reported_to_zatca_at,type,payment_status,payment_methods,total_payment_received,balance_amount,code,date,net_total,created_by_name,customer_id,customer_name,customer_name_arabic,status,cash_discount,discount_with_vat,created_at,net_profit,net_loss,return_count,return_amount";
 
     if (localStorage.getItem("store_id")) {
       searchParams.store_id = localStorage.getItem("store_id");
@@ -2407,7 +2407,7 @@ function QuotationIndex(props) {
                                 {(col.fieldName === "customer_name") && <td style={{ width: "auto", whiteSpace: "nowrap" }}>
                                   {quotation.customer_name && <span style={{ cursor: "pointer", color: "blue" }} onClick={() => {
                                     openCustomerUpdateForm(quotation.customer_id);
-                                  }}><OverflowTooltip value={quotation.customer_name} />
+                                  }}><OverflowTooltip value={quotation.customer_name + (quotation.customer_name_arabic ? " | " + quotation.customer_name_arabic : "")} />
                                   </span>}
                                 </td>}
                                 {(col.fieldName === "net_total") && <td style={{ width: "auto", whiteSpace: "nowrap" }}>

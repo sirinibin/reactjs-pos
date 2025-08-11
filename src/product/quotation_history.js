@@ -1573,7 +1573,7 @@ const QuotationHistory = forwardRef((props, ref) => {
                                                                         {(col.key === "customer_name") && <td style={{ width: "auto", whiteSpace: "nowrap" }} className="text-start" >
                                                                             {history.customer_name && <span style={{ cursor: "pointer", color: "blue" }} onClick={() => {
                                                                                 openCustomerUpdateForm(history.customer_id);
-                                                                            }}><OverflowTooltip value={history.customer_name} />
+                                                                            }}><OverflowTooltip value={history.customer_name + (history.customer_name_arabic ? " | " + history.customer_name_arabic : "")} />
                                                                             </span>}
                                                                         </td>}
                                                                         {(col.key === "quotation_code") && <td style={{ width: "auto", whiteSpace: "nowrap" }} className="text-start" >

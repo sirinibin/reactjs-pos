@@ -293,7 +293,7 @@ function DeliveryNoteIndex(props) {
       },
     };
     let Select =
-      "select=id,code,date,created_by_name,customer_id,customer_name,created_at";
+      "select=id,code,date,created_by_name,customer_id,customer_name,customer_name_arabic,created_at";
     if (localStorage.getItem("store_id")) {
       searchParams.store_id = localStorage.getItem("store_id");
     }
@@ -1046,7 +1046,7 @@ function DeliveryNoteIndex(props) {
                             <td className="text-start" style={{ width: "auto", whiteSpace: "nowrap" }} >
                               {deliverynote.customer_name && <span style={{ cursor: "pointer", color: "blue" }} onClick={() => {
                                 openCustomerUpdateForm(deliverynote.customer_id);
-                              }}><OverflowTooltip value={deliverynote.customer_name} />
+                              }}><OverflowTooltip value={deliverynote.customer_name + (deliverynote.customer_name_arabic ? " | " + deliverynote.customer_name_arabic : "")} />
                               </span>}
                             </td>
                             <td style={{ width: "auto", whiteSpace: "nowrap" }} >{deliverynote.created_by_name}</td>

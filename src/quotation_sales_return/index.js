@@ -835,7 +835,7 @@ function QuotationSalesReturnIndex(props) {
             },
         };
         let Select =
-            "select=id,code,date,net_total,created_by_name,customer_name,customer_id,status,created_at,net_profit,net_loss,cash_discount,quotation_code,quotation_id,total_payment_paid,payments_count,payment_methods,payment_status,balance_amount,store_id";
+            "select=id,code,date,net_total,created_by_name,customer_name,customer_name_arabic,customer_id,status,created_at,net_profit,net_loss,cash_discount,quotation_code,quotation_id,total_payment_paid,payments_count,payment_methods,payment_status,balance_amount,store_id";
         if (localStorage.getItem("store_id")) {
             searchParams.store_id = localStorage.getItem("store_id");
         }
@@ -2623,7 +2623,7 @@ function QuotationSalesReturnIndex(props) {
                                                                 {(col.fieldName === "customer_name") && <td style={{ width: "auto", whiteSpace: "nowrap" }}>
                                                                     {quotationSalesReturn.customer_name && <span style={{ cursor: "pointer", color: "blue" }} onClick={() => {
                                                                         openCustomerUpdateForm(quotationSalesReturn.customer_id);
-                                                                    }}><OverflowTooltip value={quotationSalesReturn.customer_name} />
+                                                                    }}><OverflowTooltip value={quotationSalesReturn.customer_name + (quotationSalesReturn.customer_name_arabic ? " | " + quotationSalesReturn.customer_name_arabic : "")} />
                                                                     </span>}
                                                                 </td>}
                                                                 {(col.fieldName === "net_total") && <td style={{ width: "auto", whiteSpace: "nowrap" }}>

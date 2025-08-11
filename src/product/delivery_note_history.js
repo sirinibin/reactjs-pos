@@ -815,7 +815,7 @@ const DeliveryNoteHistory = forwardRef((props, ref) => {
                                                                 }}
                                                                     onClick={() => {
                                                                         openCustomerDetailsView(history.customer_id);
-                                                                    }}>{history.customer_name}
+                                                                    }}>{history.customer_name + (history.customer_name_arabic ? " | " + history.customer_name_arabic : "")}
                                                                 </td>
                                                                 <td>{history.quantity}{history.unit ? history.unit : ""}</td>
 
