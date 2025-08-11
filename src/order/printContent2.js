@@ -38,7 +38,7 @@ const OrderPrintContent2 = forwardRef((props, ref) => {
                     </h4>
 
                     <h4 className="print-value text-center" style={{ fontSize: "3.5mm", maxWidth: "450px", minWidth: "450px", position: "absolute", left: "350px", top: (234 + page.top) + "px", border: "solid " + border + "px", }}>
-                        {props.model.customer && props.model.customer.name ? props.model.customer.name : "N/A"}
+                        {props.model.customer && props.model.customer.name ? props.model.customer.name + (props.model.customer.name_in_arabic ? " | " + props.model.customer.name_in_arabic : "") : "N/A"}
                     </h4>
 
 
