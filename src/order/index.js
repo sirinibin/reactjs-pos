@@ -1382,13 +1382,15 @@ const OrderIndex = forwardRef((props, ref) => {
     }, [defaultColumns, enableSelection]);
 
     function RestoreDefaultSettings() {
+        const clonedDefaults = defaultColumns.map(col => ({ ...col }));
+
         if (enableSelection === true) {
-            localStorage.setItem("select_sales_table_settings", JSON.stringify(defaultColumns));
+            localStorage.setItem("select_sales_table_settings", JSON.stringify(clonedDefaults));
         } else {
-            localStorage.setItem("sales_table_settings", JSON.stringify(defaultColumns));
+            localStorage.setItem("sales_table_settings", JSON.stringify(clonedDefaults));
         }
 
-        setColumns(defaultColumns);
+        setColumns(clonedDefaults);
 
         setShowSuccess(true);
         setSuccessMessage("Successfully restored to default settings!")
