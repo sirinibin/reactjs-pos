@@ -202,7 +202,7 @@ function VendorIndex(props) {
             },
         };
         let Select =
-            "select=id,code,credit_limit,email,deleted,name,credit_balance,account,phone,vat_no,created_by_name,created_at,stores";
+            "select=id,code,credit_limit,email,deleted,name,name_in_arabic,credit_balance,account,phone,vat_no,created_by_name,created_at,stores";
 
         if (localStorage.getItem("store_id")) {
             searchParams.store_id = localStorage.getItem("store_id");
@@ -1810,7 +1810,7 @@ function VendorIndex(props) {
                                                                     </Button>
                                                                 </td>}
                                                                 {(col.key === "name") && <td style={{ width: "auto", whiteSpace: "nowrap" }} className="text-start" >
-                                                                    <OverflowTooltip value={vendor.name} />
+                                                                    <OverflowTooltip value={vendor.name + (vendor.name_in_arabic ? " | " + vendor.name_in_arabic : "")} />
                                                                 </td>}
                                                                 {(col.key === "credit_balance") && <td style={{ width: "auto", whiteSpace: "nowrap" }} >
                                                                     {vendor.account && <Button variant="link" onClick={() => {

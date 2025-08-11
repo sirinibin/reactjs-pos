@@ -206,7 +206,7 @@ function CustomerIndex(props) {
             },
         };
         let Select =
-            "select=id,code,deleted,credit_limit,credit_balance,account,name,email,phone,vat_no,created_by_name,created_at,stores";
+            "select=id,code,deleted,credit_limit,credit_balance,account,name,name_in_arabic,email,phone,vat_no,created_by_name,created_at,stores";
 
         if (localStorage.getItem("store_id")) {
             searchParams.store_id = localStorage.getItem("store_id");
@@ -2527,7 +2527,7 @@ function CustomerIndex(props) {
                                                                     </Button>
                                                                 </td>}
                                                                 {(col.key === "name") && <td style={{ width: "auto", whiteSpace: "nowrap" }} className="text-start" >
-                                                                    <OverflowTooltip value={customer.name} />
+                                                                    <OverflowTooltip value={customer.name + (customer.name_in_arabic ? " | " + customer.name_in_arabic : "")} />
                                                                 </td>}
                                                                 {(col.key === "credit_balance") && <td style={{ width: "auto", whiteSpace: "nowrap" }} >
                                                                     {customer.account && <Button variant="link" onClick={() => {
