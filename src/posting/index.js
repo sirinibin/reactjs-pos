@@ -709,7 +709,7 @@ const PostingIndex = forwardRef((props, ref) => {
         PreviewRef.current.open(account, "whatsapp");
     }
 
-    /*
+
     function toTitleCaseFromUnderscore(str) {
         let newStr = str
             .split('_')
@@ -723,7 +723,7 @@ const PostingIndex = forwardRef((props, ref) => {
         }
         return newStr;
     }
-        */
+
 
     const SalesUpdateFormRef = useRef();
     const SalesReturnUpdateFormRef = useRef();
@@ -1145,7 +1145,7 @@ const PostingIndex = forwardRef((props, ref) => {
                                                                 ) : null}
                                                             </b>
                                                         </th>
-                                                        {/*<th>
+                                                        {localStorage.getItem("user_role") === "Admin" && <th>
                                                             <b
                                                                 style={{
                                                                     textDecoration: "underline",
@@ -1163,10 +1163,7 @@ const PostingIndex = forwardRef((props, ref) => {
                                                                     <i className="bi bi-sort-alpha-up"></i>
                                                                 ) : null}
                                                             </b>
-                                                        </th>*/}
-
-
-
+                                                        </th>}
 
                                                         {/*
                                                 <th>
@@ -1378,13 +1375,17 @@ const PostingIndex = forwardRef((props, ref) => {
                                                                 }
                                                                 className="form-control"
                                                             />
+                                                        </th>
 
-                                                            {/*<select className="form-control" onChange={(e) =>
+                                                        {localStorage.getItem("user_role") === "Admin" && <th style={{ width: "80px" }}>
+                                                            <select className="form-control" onChange={(e) =>
                                                                 searchByFieldValue("reference_model", e.target.value)
                                                             }>
                                                                 <option value="">All</option>
                                                                 <option value="sales">Sales</option>
                                                                 <option value="sales_return">Sales Return</option>
+                                                                <option value="quotation_sales">Qtn. Sales</option>
+                                                                <option value="quotation_sales_return">Qt. Sales Return</option>
                                                                 <option value="purchase">Purchase</option>
                                                                 <option value="purchase_return">Purchase Return</option>
                                                                 <option value="capital">Capital</option>
@@ -1392,9 +1393,8 @@ const PostingIndex = forwardRef((props, ref) => {
                                                                 <option value="expense">Expense</option>
                                                                 <option value="customer_deposit">Customer Receivable</option>
                                                                 <option value="customer_withdrawal">Customer Payable</option>
-                                                            </select>*/}
-
-                                                        </th>
+                                                            </select>
+                                                        </th>}
 
                                                         {/*
                                                 <th style={{ minWidth: "150px" }}>
@@ -1483,7 +1483,7 @@ const PostingIndex = forwardRef((props, ref) => {
                                                                 <tr key={`${posting.id}-${index}`}>
                                                                     {/* Date column */}
                                                                     <td style={{ width: "auto", whiteSpace: "nowrap" }}>
-                                                                        {format(new Date(post.date), "MMM dd yyyy h:mma")}
+                                                                        {post.date ? format(new Date(post.date), "MMM dd yyyy h:mma") : ""}
                                                                     </td>
 
                                                                     {/* Reference code - show only in first row of group (optional) */}
@@ -1542,6 +1542,7 @@ const PostingIndex = forwardRef((props, ref) => {
                                                                     <td className="text-end" style={{ whiteSpace: "nowrap" }}>
                                                                         <Amount amount={post.balance} />
                                                                     </td>
+                                                                    {localStorage.getItem("user_role") === "Admin" && <td style={{ width: "auto", whiteSpace: "nowrap" }} >{toTitleCaseFromUnderscore(posting.reference_model)}</td>}
                                                                 </tr>
                                                             ))
 
