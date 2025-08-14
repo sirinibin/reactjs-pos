@@ -1186,7 +1186,7 @@ const OrderCreate = forwardRef((props, ref) => {
             },
         };
 
-        let Select = `select=id,allow_duplicates,additional_keywords,search_label,set.name,item_code,prefix_part_number,country_name,brand_name,part_number,name,unit,name_in_arabic,product_stores.${localStorage.getItem('store_id')}.purchase_unit_price,product_stores.${localStorage.getItem('store_id')}.purchase_unit_price_with_vat,product_stores.${localStorage.getItem('store_id')}.retail_unit_price,product_stores.${localStorage.getItem('store_id')}.retail_unit_price_with_vat,product_stores.${localStorage.getItem('store_id')}.stock`;
+        let Select = `select=id,rack,allow_duplicates,additional_keywords,search_label,set.name,item_code,prefix_part_number,country_name,brand_name,part_number,name,unit,name_in_arabic,product_stores.${localStorage.getItem('store_id')}.purchase_unit_price,product_stores.${localStorage.getItem('store_id')}.purchase_unit_price_with_vat,product_stores.${localStorage.getItem('store_id')}.retail_unit_price,product_stores.${localStorage.getItem('store_id')}.retail_unit_price_with_vat,product_stores.${localStorage.getItem('store_id')}.stock`;
         // setIsProductsLoading(true);
         let result = await fetch(
             "/v1/product?" + Select + queryString + "&limit=50&sort=country_name",
@@ -2982,14 +2982,15 @@ const OrderCreate = forwardRef((props, ref) => {
 
     const defaultSearchProductsColumns = useMemo(() => [
         { key: "select", label: "Select", fieldName: "select", width: 3, visible: true },
-        { key: "part_number", label: "Part Number", fieldName: "part_number", width: 14, visible: true },
-        { key: "name", label: "Name", fieldName: "name", width: 29, visible: true },
+        { key: "part_number", label: "Part Number", fieldName: "part_number", width: 12, visible: true },
+        { key: "name", label: "Name", fieldName: "name", width: 26, visible: true },
         { key: "unit_price", label: "S.Unit Price", fieldName: "unit_price", width: 12, visible: true },
         { key: "stock", label: "Stock", fieldName: "stock", width: 5, visible: true },
         { key: "photos", label: "Photos", fieldName: "photos", width: 5, visible: true },
         { key: "brand", label: "Brand", fieldName: "brand", width: 10, visible: true },
         { key: "purchase_price", label: "P.Unit Price", fieldName: "purchase_price", width: 12, visible: true },
         { key: "country", label: "Country", fieldName: "country", width: 10, visible: true },
+        { key: "rack", label: "Rack", fieldName: "rack", width: 5, visible: true },
     ], []);
 
 
@@ -3030,24 +3031,26 @@ const OrderCreate = forwardRef((props, ref) => {
 
     // Load settings from localStorage
     useEffect(() => {
+        const clonedDefaults = defaultSearchProductsColumns.map(col => ({ ...col }));
+
         let saved = localStorage.getItem("sales_product_search_settings");
         if (saved) {
             setSearchProductsColumns(JSON.parse(saved));
         } else {
-            setSearchProductsColumns(defaultSearchProductsColumns.map(col => ({ ...col })));
+            setSearchProductsColumns(clonedDefaults.map(col => ({ ...col })));
         }
 
         let missingOrUpdated = false;
-        for (let i = 0; i < defaultSearchProductsColumns.length; i++) {
+        for (let i = 0; i < clonedDefaults.length; i++) {
             if (!saved) break;
 
-            const savedCol = JSON.parse(saved)?.find(col => col.fieldName === defaultSearchProductsColumns[i].fieldName);
-            missingOrUpdated = !savedCol || savedCol.label !== defaultSearchProductsColumns[i].label || savedCol.key !== defaultSearchProductsColumns[i].key;
+            const savedCol = JSON.parse(saved)?.find(col => col.fieldName === clonedDefaults[i].fieldName);
+            missingOrUpdated = !savedCol || savedCol.label !== clonedDefaults[i].label || savedCol.key !== clonedDefaults[i].key;
             if (missingOrUpdated) break;
         }
 
         if (missingOrUpdated) {
-            const clonedDefaults = defaultSearchProductsColumns.map(col => ({ ...col }));
+
             localStorage.setItem("sales_product_search_settings", JSON.stringify(clonedDefaults));
             setSearchProductsColumns(clonedDefaults);
         }
@@ -3809,6 +3812,7 @@ const OrderCreate = forwardRef((props, ref) => {
                                                             {col.key === "brand" && <div style={{ width: getColumnWidth(col), border: "solid 0px", }}>Brand</div>}
                                                             {col.key === "purchase_price" && <div style={{ width: getColumnWidth(col), border: "solid 0px", }}>P.Unit Price</div>}
                                                             {col.key === "country" && <div style={{ width: getColumnWidth(col), border: "solid 0px", }}>Country</div>}
+                                                            {col.key === "rack" && <div style={{ width: getColumnWidth(col), border: "solid 0px", }}>Rack</div>}
                                                         </>)
                                                     })}
                                                     {/* Settings icon on right */}
@@ -3962,6 +3966,11 @@ const OrderCreate = forwardRef((props, ref) => {
                                                                     {col.key === "country" &&
                                                                         <div style={{ ...columnStyle, width: getColumnWidth(col) }}>
                                                                             {highlightWords(option.country_name, searchWords, isActive)}
+                                                                        </div>
+                                                                    }
+                                                                    {col.key === "rack" &&
+                                                                        <div style={{ ...columnStyle, width: getColumnWidth(col) }}>
+                                                                            {highlightWords(option.rack, searchWords, isActive)}
                                                                         </div>
                                                                     }
                                                                 </>)
