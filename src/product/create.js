@@ -194,6 +194,7 @@ const ProductCreate = forwardRef((props, ref) => {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json', // Send as JSON
+          Authorization: localStorage.getItem("access_token"),
         },
         body: JSON.stringify({ text }), // Convert the payload to JSON
       });
