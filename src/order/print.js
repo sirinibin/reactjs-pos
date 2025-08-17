@@ -2,6 +2,7 @@ import { React, useState, useRef, forwardRef, useImperativeHandle, useMemo, useC
 import { Modal, Button } from 'react-bootstrap';
 import OrderPrintContent from './printContent.js';
 import OrderPrintContent2 from './printContent2.js';
+//import OrderPrintContent3 from './printContent3.js';
 
 import { useReactToPrint } from 'react-to-print';
 import { Invoice } from '@axenda/zatca';
@@ -45,14 +46,9 @@ const OrderPrint = forwardRef((props, ref) => {
 
 
                 if (model.store?.code === "PH2" || model.store?.code === "LGK-SIMULATION" || model.store?.code === "LGK") {
-
-
                     preparePages();
                 } else {
-
-
-
-
+                    //  preparePages();
 
                     if (model.delivered_by) {
                         getUser(model.delivered_by);
@@ -576,47 +572,47 @@ const OrderPrint = forwardRef((props, ref) => {
     let [modelName, setModelName] = useState("sales");
 
     /*
-    async function getOrder(id) {
-        console.log("inside get Order");
-        const requestOptions = {
-            method: 'GET',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': localStorage.getItem('access_token'),
-            },
-        };
-
-        let searchParams = {};
-        if (localStorage.getItem("store_id")) {
-            searchParams.store_id = localStorage.getItem("store_id");
-        }
-        let queryParams = ObjectToSearchQueryParams(searchParams);
-
-
-
-        await fetch('/v1/order/' + id + "?" + queryParams, requestOptions)
-            .then(async response => {
-                const isJson = response.headers.get('content-type')?.includes('application/json');
-                const data = isJson && await response.json();
-
-                // check for error response
-                if (!response.ok) {
-                    const error = (data && data.errors);
-                    return Promise.reject(error);
-                }
-
-                console.log("Response:");
-                console.log(data);
-
-                model = data.result;
-                setModel({ ...model });
-
-                return model;
-            })
-            .catch(error => {
-
-            });
-    }*/
+        async function getOrder(id) {
+            console.log("inside get Order");
+            const requestOptions = {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': localStorage.getItem('access_token'),
+                },
+            };
+    
+            let searchParams = {};
+            if (localStorage.getItem("store_id")) {
+                searchParams.store_id = localStorage.getItem("store_id");
+            }
+            let queryParams = ObjectToSearchQueryParams(searchParams);
+    
+    
+    
+            await fetch('/v1/order/' + id + "?" + queryParams, requestOptions)
+                .then(async response => {
+                    const isJson = response.headers.get('content-type')?.includes('application/json');
+                    const data = isJson && await response.json();
+    
+                    // check for error response
+                    if (!response.ok) {
+                        const error = (data && data.errors);
+                        return Promise.reject(error);
+                    }
+    
+                    console.log("Response:");
+                    console.log(data);
+    
+                    model = data.result;
+                    setModel({ ...model });
+    
+                    return model;
+                })
+                .catch(error => {
+    
+                });
+        }*/
 
 
 
@@ -767,6 +763,7 @@ const OrderPrint = forwardRef((props, ref) => {
             });
     }
 
+
     function getUser(id) {
         console.log("inside get User(Delivered by)");
         const requestOptions = {
@@ -799,8 +796,6 @@ const OrderPrint = forwardRef((props, ref) => {
 
             });
     }
-
-
 
     /*
     function print() {

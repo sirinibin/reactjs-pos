@@ -39,6 +39,9 @@ const columnStyle = {
   paddingRight: '8px',
 };
 
+
+
+
 const ProductCreate = forwardRef((props, ref) => {
 
 
@@ -180,6 +183,39 @@ const ProductCreate = forwardRef((props, ref) => {
     item_code: "",
     images: [],
   });
+
+  const translateText = useCallback(async (text) => {
+    if (store.settings.enable_auto_translation_to_arabic !== true) {
+      return;
+    }
+
+    try {
+      const response = await fetch('/v1/translate', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json', // Send as JSON
+        },
+        body: JSON.stringify({ text }), // Convert the payload to JSON
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to fetch translation');
+      }
+
+      const data = await response.json();
+
+      // Create a new copy of formData and update it
+      setFormData((prevFormData) => ({
+        ...prevFormData,
+        name_in_arabic: data.translatedText,
+      }));
+
+      return data.translatedText;
+    } catch (error) {
+      console.error('Translation error:', error);
+      return '';
+    }
+  }, [store]);
 
   const [show, SetShow] = useState(false);
 
@@ -1388,7 +1424,6 @@ const ProductCreate = forwardRef((props, ref) => {
           <form className="row g-3 needs-validation" onSubmit={handleCreate}>
             <div className="col-md-6">
               <label className="form-label">Name*</label>
-
               <div className="input-group mb-3">
                 <input
                   id="product_name"
@@ -1400,11 +1435,17 @@ const ProductCreate = forwardRef((props, ref) => {
                     setErrors({ ...errors });
                     formData.name = e.target.value;
                     setFormData({ ...formData });
-                    console.log(formData);
+
+                    // Auto-translate to Arabic]
+
+                    if (timerRef.current) clearTimeout(timerRef.current);
+                    timerRef.current = setTimeout(async () => {
+                      translateText(e.target.value);
+                    }, 100);
+
                   }}
                   className="form-control"
                   placeholder="Name"
-
                 />
                 {errors.name && (
                   <div style={{ color: "red" }}>
@@ -1415,39 +1456,8 @@ const ProductCreate = forwardRef((props, ref) => {
               </div>
             </div>
 
-            {/*
-                        <div className="col-md-6">
-                            <label className="form-label">ean_12</label>
-
-                            <div className="input-group mb-3">
-                                <input
-                                    value={formData.ean_12 ? formData.ean_12 : ""}
-                                    type='string'
-                                    onChange={(e) => {
-                                        errors["name"] = "";
-                                        setErrors({ ...errors });
-                                        formData.ean_12 = e.target.value;
-                                        setFormData({ ...formData });
-                                        console.log(formData);
-                                    }}
-                                    className="form-control"
-                                    id="ean_12"
-                                    placeholder="ean_12"
-                                />
-                                {errors.ean_12 && (
-                                    <div style={{ color: "red" }}>
-                                        <i className="bi bi-x-lg"> </i>
-                                        {errors.ean_12}
-                                    </div>
-                                )}
-                               
-                            </div>
-                        </div>
-                                */}
-
             <div className="col-md-6">
-              <label className="form-label">Name In Arabic </label>
-
+              <label className="form-label">Name In Arabic</label>
               <div className="input-group mb-3">
                 <input
                   id="product_name_arabic"
@@ -1455,11 +1465,10 @@ const ProductCreate = forwardRef((props, ref) => {
                   value={formData.name_in_arabic ? formData.name_in_arabic : ""}
                   type="string"
                   onChange={(e) => {
-                    errors["v"] = "";
+                    errors["name_in_arabic"] = "";
                     setErrors({ ...errors });
                     formData.name_in_arabic = e.target.value;
                     setFormData({ ...formData });
-                    console.log(formData);
                   }}
                   className="form-control"
                   placeholder="Name In Arabic"
@@ -1470,7 +1479,6 @@ const ProductCreate = forwardRef((props, ref) => {
                     {errors.name_in_arabic}
                   </div>
                 )}
-
               </div>
             </div>
 
