@@ -1911,32 +1911,6 @@ const StoreCreate = forwardRef((props, ref) => {
                             )}
                         </div>
 
-                        <div className="row">
-
-                            <div className="col-md-2">
-                                <div className="input-group mb-3">
-                                    <input type="checkbox"
-                                        value={formData.settings.enable_auto_translation_to_arabic}
-                                        checked={formData.settings.enable_auto_translation_to_arabic}
-                                        onChange={(e) => {
-                                            errors["enable_auto_translation_to_arabic"] = "";
-                                            formData.settings.enable_auto_translation_to_arabic = !formData.settings.enable_auto_translation_to_arabic;
-                                            setFormData({ ...formData });
-                                            console.log(formData);
-                                        }}
-                                        className=""
-                                        id="enable_auto_translation_to_arabic"
-
-                                    /> &nbsp;Enable Auto Translation to Arabic
-                                </div>
-                                <label className="form-label"></label>
-                                {errors.enable_auto_translation_to_arabic && (
-                                    <div style={{ color: "red" }}>
-                                        {errors.enable_auto_translation_to_arabic}
-                                    </div>
-                                )}
-                            </div>
-                        </div>
 
 
 
@@ -4361,6 +4335,30 @@ const StoreCreate = forwardRef((props, ref) => {
                         <h6><b>Settings</b></h6>
 
 
+
+                        <div className="col-md-2">
+                            <div className="input-group mb-3">
+                                <input type="checkbox"
+                                    value={formData.settings.enable_auto_translation_to_arabic}
+                                    checked={formData.settings.enable_auto_translation_to_arabic}
+                                    onChange={(e) => {
+                                        errors["enable_auto_translation_to_arabic"] = "";
+                                        formData.settings.enable_auto_translation_to_arabic = !formData.settings.enable_auto_translation_to_arabic;
+                                        setFormData({ ...formData });
+                                        console.log(formData);
+                                    }}
+                                    className=""
+                                    id="enable_auto_translation_to_arabic"
+
+                                /> &nbsp;Enable Auto Translation to Arabic
+                            </div>
+                            <label className="form-label"></label>
+                            {errors.enable_auto_translation_to_arabic && (
+                                <div style={{ color: "red" }}>
+                                    {errors.enable_auto_translation_to_arabic}
+                                </div>
+                            )}
+                        </div>
                         <div className="col-md-2">
                             <div className="input-group mb-3">
                                 <input type="checkbox"
