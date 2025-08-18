@@ -2592,11 +2592,11 @@ function CustomerIndex(props) {
                                                                     col.key === "created_by_name"
                                                                 ) &&
                                                                     <td style={{ width: "auto", whiteSpace: "nowrap" }} >
-                                                                        {customer[col.key] && typeof customer[col.key] === "number" ?
-                                                                            <Amount amount={trimTo2Decimals(customer[col.key])} /> : customer[col.key]
+                                                                        {customer !== undefined && customer[col.key] && typeof customer[col.key] === "number" ?
+                                                                            <Amount amount={trimTo2Decimals(customer[col.key])} /> : customer !== undefined ? customer[col.key] : ""
                                                                         }
 
-                                                                        {customer.stores && customer.stores[localStorage.getItem("store_id")][col.key] && <>
+                                                                        {customer !== undefined && customer.stores && customer.stores[localStorage.getItem("store_id")] && customer.stores[localStorage.getItem("store_id")][col.key] && <>
                                                                             {typeof customer.stores[localStorage.getItem("store_id")][col.key] === "number" ?
                                                                                 <Amount amount={trimTo2Decimals(customer.stores[localStorage.getItem("store_id")][col.key])} /> : customer.stores[localStorage.getItem("store_id")][col.key]
                                                                             }
