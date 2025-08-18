@@ -1846,10 +1846,10 @@ function VendorIndex(props) {
                                                                     col.key === "created_by_name"
                                                                 ) &&
                                                                     <td style={{ width: "auto", whiteSpace: "nowrap" }} >
-                                                                        {vendor[col.key] && typeof vendor[col.key] === "number" ?
+                                                                        {vendor && vendor[col.key] && typeof vendor[col.key] === "number" ?
                                                                             <Amount amount={trimTo2Decimals(vendor[col.key])} /> : vendor[col.key]
                                                                         }
-                                                                        {vendor.stores && vendor.stores[localStorage.getItem("store_id")][col.key] && <>
+                                                                        {vendor && vendor.stores && vendor.stores[localStorage.getItem("store_id")] && vendor.stores[localStorage.getItem("store_id")][col.key] && <>
                                                                             {typeof vendor.stores[localStorage.getItem("store_id")][col.key] === "number" ?
                                                                                 <Amount amount={trimTo2Decimals(vendor.stores[localStorage.getItem("store_id")][col.key])} /> : vendor.stores[localStorage.getItem("store_id")][col.key]
                                                                             }
