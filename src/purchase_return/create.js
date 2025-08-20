@@ -23,7 +23,7 @@ import PurchaseHistory from "./../product/purchase_history.js";
 import PurchaseReturnHistory from "./../product/purchase_return_history.js";
 import QuotationHistory from "./../product/quotation_history.js";
 import DeliveryNoteHistory from "./../product/delivery_note_history.js";
-import Products from "./../utils/products.js";
+import Products from "../utils/products.js";
 //import Amount from "../utils/amount.js";
 import { OverlayTrigger, Tooltip } from 'react-bootstrap';
 import ResizableTableCell from './../utils/ResizableTableCell';

@@ -24,7 +24,7 @@ import PurchaseReturnHistory from "./../product/purchase_return_history.js";
 import QuotationHistory from "./../product/quotation_history.js";
 import QuotationSalesReturnHistory from "./../product/quotation_sales_return_history.js";
 import DeliveryNoteHistory from "./../product/delivery_note_history.js";
-import Products from "./../utils/products.js";
+import Products from "../utils/products.js";
 import ImageViewerModal from './../utils/ImageViewerModal';
 import { highlightWords } from "../utils/search.js";
 import ProductHistory from "./../product/product_history.js";

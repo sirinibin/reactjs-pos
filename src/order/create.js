@@ -27,7 +27,7 @@ import PurchaseReturnHistory from "./../product/purchase_return_history.js";
 import QuotationHistory from "./../product/quotation_history.js";
 import QuotationSalesReturnHistory from "./../product/quotation_sales_return_history.js";
 import DeliveryNoteHistory from "./../product/delivery_note_history.js";
-import Products from "./../utils/products.js";
+import Products from "../utils/products.js";
 import Quotations from "./../utils/quotations.js";
 import Quotation from "./../quotation/create.js";
 import DeliveryNote from "./../delivery_note/create.js";
@@ -2581,7 +2581,7 @@ const OrderCreate = forwardRef((props, ref) => {
     }
 
     function openProducts() {
-        ProductsRef.current.open();
+        ProductsRef.current.open(true);
     }
 
     function RunKeyActions(event, product) {
@@ -2615,6 +2615,26 @@ const OrderCreate = forwardRef((props, ref) => {
             openProductImages(product.product_id);
         }
     }
+
+    const handleSelectedProductsFromProducts = (selected) => {
+        console.log("Selected Products:", selected);
+        let addedCount = 0;
+        for (var i = 0; i < selected.length; i++) {
+            if (addProduct(selected[i])) {
+                addedCount++;
+            }
+        }
+
+
+        setToastMessage(`${addedCount} product${addedCount !== 1 ? "s" : ""} added ✅`);
+        setShowToast(true);
+
+        setTimeout(() => setShowToast(false), 3000);
+        if (selected.length > 0) {
+            setFormData({ ...formData });
+        };
+    };
+
 
 
     const handleSelectedProducts = (selected, selectedCustomers, modelName, modelID, modelCode, remarks, model) => {
@@ -3251,7 +3271,7 @@ const OrderCreate = forwardRef((props, ref) => {
             <DeliveryNote ref={DeliveryNoteRef} onSelectProducts={handleSelectedProducts} showToastMessage={props.showToastMessage} />
             <Quotations ref={QuotationsRef} onSelectQuotation={handleSelectedQuotation} showToastMessage={props.showToastMessage} />
             <DeliveryNotes ref={DeliveryNotesRef} onSelectDeliveryNote={handleSelectedDeliveryNote} showToastMessage={props.showToastMessage} />
-            <Products ref={ProductsRef} onSelectProducts={handleSelectedProducts} showToastMessage={props.showToastMessage} />
+            <Products ref={ProductsRef} onSelectProducts={handleSelectedProductsFromProducts} showToastMessage={props.showToastMessage} />
             <SalesHistory ref={SalesHistoryRef} showToastMessage={props.showToastMessage} />
             <SalesReturnHistory ref={SalesReturnHistoryRef} showToastMessage={props.showToastMessage} />
 

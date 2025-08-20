@@ -380,7 +380,7 @@ const SalesReturnHistory = forwardRef((props, ref) => {
         if (timerRef.current) clearTimeout(timerRef.current);
 
         timerRef.current = setTimeout(() => {
-            OrderUpdateFormRef.current.open(id);
+            OrderUpdateFormRef.current?.open(id);
         }, 100);
 
     }
@@ -392,7 +392,7 @@ const SalesReturnHistory = forwardRef((props, ref) => {
         if (timerRef.current) clearTimeout(timerRef.current);
 
         timerRef.current = setTimeout(() => {
-            SalesReturnUpdateFormRef.current.open(id);
+            SalesReturnUpdateFormRef.current?.open(id);
         }, 100);
 
     }
@@ -538,7 +538,7 @@ const SalesReturnHistory = forwardRef((props, ref) => {
 
     const CustomerUpdateFormRef = useRef();
     function openCustomerUpdateForm(id) {
-        CustomerUpdateFormRef.current.open(id);
+        CustomerUpdateFormRef.current?.open(id);
     }
 
     return (

@@ -29,7 +29,7 @@ import Amount from "../utils/amount.js";
 import { trimTo2Decimals } from "../utils/numberUtils";
 import { highlightWords } from "../utils/search.js";
 import ImageViewerModal from './../utils/ImageViewerModal';
-import Products from "./../utils/products.js";
+import Products from "../utils/products.js";
 import { DragDropContext, Droppable, Draggable } from "react-beautiful-dnd";
 
 const columnStyle = {
@@ -43,7 +43,7 @@ const columnStyle = {
 function ProductIndex(props) {
     const countryOptions = useMemo(() => countryList().getData(), [])
 
-
+    let [enableSelection, setEnableSelection] = useState(false);
 
 
     /*
@@ -88,6 +88,12 @@ function ProductIndex(props) {
 
 
     useEffect(() => {
+        if (props.enableSelection) {
+            setEnableSelection(props.enableSelection);
+        } else {
+            setEnableSelection(false);
+        }
+
         list();
         getStore(localStorage.getItem("store_id"));
         // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -1040,6 +1046,7 @@ function ProductIndex(props) {
     //Table settings
     const defaultColumns = useMemo(() => [
         { key: "deleted", label: "Deleted", fieldName: "deleted", visible: true },
+        { key: "select", label: "Select", fieldName: "select", visible: true },
         { key: "actions", label: "Actions", fieldName: "actions", visible: true },
         { key: "part_number", label: "Part Number", fieldName: "part_number", visible: true },
         { key: "name", label: "Name", fieldName: "name", visible: true },
@@ -1090,7 +1097,13 @@ function ProductIndex(props) {
     const [showSettings, setShowSettings] = useState(false);
     // Load settings from localStorage
     useEffect(() => {
-        const saved = localStorage.getItem("product_table_settings");
+        let saved = "";
+        if (enableSelection === true) {
+            saved = localStorage.getItem("select_product_table_settings");
+        } else {
+            saved = localStorage.getItem("product_table_settings");
+        }
+
         if (saved) setColumns(JSON.parse(saved));
 
         let missingOrUpdated = false;
@@ -1119,16 +1132,24 @@ function ProductIndex(props) {
         }*/
 
         if (missingOrUpdated) {
-            localStorage.setItem("product_table_settings", JSON.stringify(defaultColumns));
+            if (enableSelection === true) {
+                localStorage.setItem("select_product_table_settings", JSON.stringify(defaultColumns));
+            } else {
+                localStorage.setItem("product_table_settings", JSON.stringify(defaultColumns));
+            }
             setColumns(defaultColumns);
         }
 
         //2nd
 
-    }, [defaultColumns]);
+    }, [defaultColumns, enableSelection]);
 
     function RestoreDefaultSettings() {
-        localStorage.setItem("product_table_settings", JSON.stringify(defaultColumns));
+        if (enableSelection === true) {
+            localStorage.setItem("select_product_table_settings", JSON.stringify(defaultColumns));
+        } else {
+            localStorage.setItem("product_table_settings", JSON.stringify(defaultColumns));
+        }
         setColumns(defaultColumns);
 
         setShowSuccess(true);
@@ -1137,8 +1158,12 @@ function ProductIndex(props) {
 
     // Save column settings to localStorage
     useEffect(() => {
-        localStorage.setItem("product_table_settings", JSON.stringify(columns));
-    }, [columns]);
+        if (enableSelection === true) {
+            localStorage.setItem("select_product_table_settings", JSON.stringify(columns));
+        } else {
+            localStorage.setItem("product_table_settings", JSON.stringify(columns));
+        }
+    }, [columns, enableSelection]);
 
     const handleToggleColumn = (index) => {
         const updated = [...columns];
@@ -1215,7 +1240,11 @@ function ProductIndex(props) {
 
     function RestoreSearchDefaultSettings() {
         const clonedDefaults = defaultSearchProductsColumns.map(col => ({ ...col }));
-        localStorage.setItem("product_search_settings", JSON.stringify(clonedDefaults));
+        if (enableSelection === true) {
+            localStorage.setItem("select_product_search_settings", JSON.stringify(clonedDefaults));
+        } else {
+            localStorage.setItem("product_search_settings", JSON.stringify(clonedDefaults));
+        }
         setSearchProductsColumns(clonedDefaults);
 
         setShowSuccess(true);
@@ -1227,7 +1256,13 @@ function ProductIndex(props) {
     useEffect(() => {
         const clonedDefaults = defaultSearchProductsColumns.map(col => ({ ...col }));
 
-        let saved = localStorage.getItem("product_search_settings");
+        let saved = "";
+        if (enableSelection === true) {
+            saved = localStorage.getItem("select_product_search_settings");
+        } else {
+            saved = localStorage.getItem("product_search_settings");
+        }
+
         if (saved) {
             setSearchProductsColumns(JSON.parse(saved));
         } else {
@@ -1245,10 +1280,14 @@ function ProductIndex(props) {
 
         if (missingOrUpdated) {
 
-            localStorage.setItem("product_search_settings", JSON.stringify(clonedDefaults));
+            if (enableSelection === true) {
+                localStorage.setItem("select_product_search_settings", JSON.stringify(clonedDefaults));
+            } else {
+                localStorage.setItem("product_search_settings", JSON.stringify(clonedDefaults));
+            }
             setSearchProductsColumns(clonedDefaults);
         }
-    }, [defaultSearchProductsColumns]);
+    }, [defaultSearchProductsColumns, enableSelection]);
 
 
     // Skip the first run so we don't overwrite saved settings during initial hydration
@@ -1258,9 +1297,53 @@ function ProductIndex(props) {
             isFirstRun.current = false;
             return;
         }
-        localStorage.setItem("product_search_settings", JSON.stringify(searchProductsColumns));
-    }, [searchProductsColumns]);
 
+        if (enableSelection === true) {
+            localStorage.setItem("select_product_search_settings", JSON.stringify(searchProductsColumns));
+        } else {
+            localStorage.setItem("product_search_settings", JSON.stringify(searchProductsColumns));
+        }
+    }, [searchProductsColumns, enableSelection]);
+
+    //Select products
+
+    const [choosenProducts, setChoosenProducts] = useState([]);
+    const handleSelect = (product) => {
+        setChoosenProducts((prev) => {
+            const exists = prev.some((p) => p.id === product.id);
+            if (exists) {
+                return prev.filter((p) => p.id !== product.id); // remove
+            } else {
+                return [...prev, product]; // add
+            }
+        });
+    };
+
+    const isAllSelected = productList.every((p) =>
+        choosenProducts.some((cp) => cp.id === p.id)
+    );
+
+    const handleSelectAll = (e) => {
+        if (e.target.checked) {
+            // Add all products from current page
+            const newSelections = productList.filter(
+                (p) => !choosenProducts.some((cp) => cp.id === p.id)
+            );
+            setChoosenProducts((prev) => [...prev, ...newSelections]);
+        } else {
+            // Remove all current page products
+            setChoosenProducts((prev) =>
+                prev.filter((cp) => !productList.some((p) => p.id === cp.id))
+            );
+        }
+    };
+
+    const handleSendSelected = () => {
+        if (props.onSelectProducts) {
+            props.onSelectProducts(choosenProducts);
+        }
+        // handleClose();
+    };
 
 
     return (
@@ -1383,35 +1466,38 @@ function ProductIndex(props) {
                                             {...provided.droppableProps}
                                             ref={provided.innerRef}
                                         >
-                                            {columns.map((col, index) => (
-                                                <Draggable
-                                                    key={col.key}
-                                                    draggableId={col.key}
-                                                    index={index}
-                                                >
-                                                    {(provided) => (
-                                                        <li
-                                                            className="list-group-item d-flex justify-content-between align-items-center"
-                                                            ref={provided.innerRef}
-                                                            {...provided.draggableProps}
-                                                            {...provided.dragHandleProps}                                                        >
-                                                            <div>
-                                                                <input
-                                                                    style={{ width: "20px", height: "20px" }}
-                                                                    type="checkbox"
-                                                                    className="form-check-input me-2"
-                                                                    checked={col.visible}
-                                                                    onChange={() => {
-                                                                        handleToggleColumn(index);
-                                                                    }}
-                                                                />
-                                                                {col.label}
-                                                            </div>
-                                                            <span style={{ cursor: "grab" }}>☰</span>
-                                                        </li>
-                                                    )}
-                                                </Draggable>
-                                            ))}
+                                            {columns.map((col, index) => {
+                                                return (
+                                                    <>
+                                                        {((col.key === "select" && enableSelection) || col.key !== "select") && <Draggable
+                                                            key={col.key}
+                                                            draggableId={col.key}
+                                                            index={index}
+                                                        >
+                                                            {(provided) => (
+                                                                <li
+                                                                    className="list-group-item d-flex justify-content-between align-items-center"
+                                                                    ref={provided.innerRef}
+                                                                    {...provided.draggableProps}
+                                                                    {...provided.dragHandleProps}                                                        >
+                                                                    <div>
+                                                                        <input
+                                                                            style={{ width: "20px", height: "20px" }}
+                                                                            type="checkbox"
+                                                                            className="form-check-input me-2"
+                                                                            checked={col.visible}
+                                                                            onChange={() => {
+                                                                                handleToggleColumn(index);
+                                                                            }}
+                                                                        />
+                                                                        {col.label}
+                                                                    </div>
+                                                                    <span style={{ cursor: "grab" }}>☰</span>
+                                                                </li>
+                                                            )}
+                                                        </Draggable>}
+                                                    </>)
+                                            })}
                                             {provided.placeholder}
                                         </ul>
                                     )}
@@ -1944,6 +2030,9 @@ function ProductIndex(props) {
                                                     showing {offset + 1}-{offset + currentPageItemsCount} of{" "}
                                                     {totalItems}
                                                 </p>
+                                                {enableSelection && <Button className="btn btn-success btn-sm" onClick={handleSendSelected}>
+                                                    Select {choosenProducts.length} products
+                                                </Button>}
                                             </div>
 
                                             <div className="col text-end">
@@ -1962,7 +2051,14 @@ function ProductIndex(props) {
                                                     return (<>
                                                         {col.key === "deleted" && <th key={col.key}>{col.label}</th>}
                                                         {col.key === "actions" && <th key={col.key}>{col.label}</th>}
-                                                        {col.key !== "actions" && col.key !== "deleted" && <th>
+                                                        {col.key === "select" && enableSelection && <th key={col.key}>
+                                                            <input
+                                                                type="checkbox"
+                                                                checked={isAllSelected}
+                                                                onChange={handleSelectAll}
+                                                            /> All
+                                                        </th>}
+                                                        {col.key !== "actions" && col.key !== "deleted" && col.key !== "select" && <th>
                                                             <b
                                                                 style={{
                                                                     textDecoration: "underline",
@@ -2781,6 +2877,7 @@ function ProductIndex(props) {
                                                             </select>
                                                         </th>}
                                                         {(col.key === "actions" || col.key === "actions_end") && <th></th>}
+                                                        {col.key === "select" && enableSelection && <th></th>}
                                                         {(col.key === "part_number") && <th>
                                                             <Typeahead
                                                                 id="product_search_by_part_no"
@@ -3806,6 +3903,13 @@ function ProductIndex(props) {
                                                         {columns.filter(c => c.visible).map((col) => {
                                                             return (<>
                                                                 {(col.key === "deleted") && <td>{product.deleted ? "YES" : "NO"}</td>}
+                                                                {(col.key === "select" && enableSelection) && <td style={{ width: "auto", whiteSpace: "nowrap" }}>
+                                                                    <input
+                                                                        type="checkbox"
+                                                                        checked={choosenProducts.some((p) => p.id === product.id)}
+                                                                        onChange={() => handleSelect(product)}
+                                                                    />
+                                                                </td>}
                                                                 {(col.key === "actions" || col.key === "actions_end") && <td style={{ width: "auto", whiteSpace: "nowrap" }}  >
                                                                     <span style={{ marginLeft: "-40px" }}>
                                                                         {!product.deleted && <Button className="btn btn-danger btn-sm" onClick={() => {

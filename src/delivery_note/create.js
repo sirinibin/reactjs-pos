@@ -18,7 +18,7 @@ import PurchaseHistory from "./../product/purchase_history.js";
 import PurchaseReturnHistory from "./../product/purchase_return_history.js";
 import QuotationHistory from "./../product/quotation_history.js";
 import DeliveryNoteHistory from "./../product/delivery_note_history.js";
-import Products from "./../utils/products.js";
+import Products from "../utils/products.js";
 import Customers from "./../utils/customers.js";
 import ResizableTableCell from './../utils/ResizableTableCell';
 import ImageViewerModal from './../utils/ImageViewerModal';
@@ -942,6 +942,8 @@ const DeliveryNoteCreate = forwardRef((props, ref) => {
       selectedProducts[index].quantity = parseFloat(quantity);
     }
 
+    //alert("Adding product: " + product.part_number + " with quantity: " + quantity);
+
     if (!alreadyAdded) {
       let item = {
         product_id: product.id,
@@ -1207,7 +1209,7 @@ const DeliveryNoteCreate = forwardRef((props, ref) => {
   };
 
   function openProducts() {
-    ProductsRef.current.open();
+    ProductsRef.current.open(true);
   }
 
 
