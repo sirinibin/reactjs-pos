@@ -1,6 +1,6 @@
-import React, { useState, useEffect, useRef, forwardRef, useImperativeHandle, useCallback } from "react";
+import React, { useState, useEffect, useRef, forwardRef, useMemo, useImperativeHandle, useCallback } from "react";
 import Preview from "./../order/preview.js";
-import { Modal, Button, Form } from "react-bootstrap";
+import { Modal, Button, Form, Alert } from "react-bootstrap";
 import VendorCreate from "./../vendor/create.js";
 import ProductCreate from "./../product/create.js";
 import UserCreate from "./../user/create.js";
@@ -30,6 +30,7 @@ import * as bootstrap from 'bootstrap';
 import { highlightWords } from "../utils/search.js";
 import ProductHistory from "./../product/product_history.js";
 import Resizer from "react-image-file-resizer";
+import { DragDropContext, Droppable, Draggable } from "react-beautiful-dnd";
 
 const columnStyle = {
     width: '20%',
@@ -576,7 +577,7 @@ const PurchaseCreate = forwardRef((props, ref) => {
         };
 
         // let Select = "select=id,item_code,bar_code,name,product_stores,unit,part_number,name_in_arabic";
-        let Select = `select=id,allow_duplicates,additional_keywords,search_label,set.name,item_code,prefix_part_number,country_name,brand_name,part_number,name,unit,name_in_arabic,product_stores.${localStorage.getItem('store_id')}.purchase_unit_price,product_stores.${localStorage.getItem('store_id')}.purchase_unit_price_with_vat,product_stores.${localStorage.getItem('store_id')}.retail_unit_price,product_stores.${localStorage.getItem('store_id')}.retail_unit_price_with_vat,product_stores.${localStorage.getItem('store_id')}.wholesale_unit_price,product_stores.${localStorage.getItem('store_id')}.wholesale_unit_price_with_vat,product_stores.${localStorage.getItem('store_id')}.stock`;
+        let Select = `select=id,rack,allow_duplicates,additional_keywords,search_label,set.name,item_code,prefix_part_number,country_name,brand_name,part_number,name,unit,name_in_arabic,product_stores.${localStorage.getItem('store_id')}.purchase_unit_price,product_stores.${localStorage.getItem('store_id')}.purchase_unit_price_with_vat,product_stores.${localStorage.getItem('store_id')}.retail_unit_price,product_stores.${localStorage.getItem('store_id')}.retail_unit_price_with_vat,product_stores.${localStorage.getItem('store_id')}.wholesale_unit_price,product_stores.${localStorage.getItem('store_id')}.wholesale_unit_price_with_vat,product_stores.${localStorage.getItem('store_id')}.stock`;
         //  setIsProductsLoading(true);
         let result = await fetch(
             "/v1/product?" + Select + queryString + "&limit=50&sort=-country_name",
@@ -2000,9 +2001,198 @@ const PurchaseCreate = forwardRef((props, ref) => {
         }
     };
 
+    //Search settings
+
+
+    const [showProductSearchSettings, setShowProductSearchSettings] = useState(false);
+    const defaultSearchProductsColumns = useMemo(() => [
+        { key: "select", label: "Select", fieldName: "select", width: 3, visible: true },
+        { key: "part_number", label: "Part Number", fieldName: "part_number", width: 12, visible: true },
+        { key: "name", label: "Name", fieldName: "name", width: 26, visible: true },
+        { key: "unit_price", label: "S.Unit Price", fieldName: "unit_price", width: 12, visible: true },
+        { key: "stock", label: "Stock", fieldName: "stock", width: 5, visible: true },
+        { key: "photos", label: "Photos", fieldName: "photos", width: 5, visible: true },
+        { key: "brand", label: "Brand", fieldName: "brand", width: 10, visible: true },
+        { key: "purchase_price", label: "P.Unit Price", fieldName: "purchase_price", width: 12, visible: true },
+        { key: "country", label: "Country", fieldName: "country", width: 10, visible: true },
+        { key: "rack", label: "Rack", fieldName: "rack", width: 5, visible: true },
+    ], []);
+
+
+
+    const [searchProductsColumns, setSearchProductsColumns] = useState(defaultSearchProductsColumns);
+
+    const visibleColumns = searchProductsColumns.filter(c => c.visible);
+
+    const totalWidth = visibleColumns.reduce((sum, col) => sum + col.width, 0);
+
+    const getColumnWidth = (col) => `${(col.width / totalWidth) * 100}%`;
+
+    const handleToggleColumn = (index) => {
+        const updated = [...searchProductsColumns];
+        updated[index].visible = !updated[index].visible;
+        setSearchProductsColumns(updated);
+    };
+
+    const onDragEnd = (result) => {
+        if (!result.destination) return;
+        const reordered = Array.from(searchProductsColumns);
+        const [moved] = reordered.splice(result.source.index, 1);
+        reordered.splice(result.destination.index, 0, moved);
+        setSearchProductsColumns(reordered);
+    };
+
+
+
+    function RestoreDefaultSettings() {
+        const clonedDefaults = defaultSearchProductsColumns.map(col => ({ ...col }));
+        localStorage.setItem("purchase_product_search_settings", JSON.stringify(clonedDefaults));
+        setSearchProductsColumns(clonedDefaults);
+
+        setShowSuccess(true);
+        setSuccessMessage("Successfully restored to default settings!");
+    }
+
+
+    // Load settings from localStorage
+    useEffect(() => {
+        const clonedDefaults = defaultSearchProductsColumns.map(col => ({ ...col }));
+
+        let saved = localStorage.getItem("purchase_product_search_settings");
+        if (saved) {
+            setSearchProductsColumns(JSON.parse(saved));
+        } else {
+            setSearchProductsColumns(clonedDefaults.map(col => ({ ...col })));
+        }
+
+        let missingOrUpdated = false;
+        for (let i = 0; i < clonedDefaults.length; i++) {
+            if (!saved) break;
+
+            const savedCol = JSON.parse(saved)?.find(col => col.fieldName === clonedDefaults[i].fieldName);
+            missingOrUpdated = !savedCol || savedCol.label !== clonedDefaults[i].label || savedCol.key !== clonedDefaults[i].key;
+            if (missingOrUpdated) break;
+        }
+
+        if (missingOrUpdated) {
+
+            localStorage.setItem("purchase_product_search_settings", JSON.stringify(clonedDefaults));
+            setSearchProductsColumns(clonedDefaults);
+        }
+    }, [defaultSearchProductsColumns]);
+
+
+    useEffect(() => {
+        localStorage.setItem("purchase_product_search_settings", JSON.stringify(searchProductsColumns));
+    }, [searchProductsColumns]);
+
+    const [showSuccess, setShowSuccess] = useState(false);
+    const [successMessage, setSuccessMessage] = useState(false);
 
     return (
         <>
+            <Modal show={showSuccess} onHide={() => setShowSuccess(false)} centered>
+                <Modal.Header closeButton>
+                    <Modal.Title>Success</Modal.Title>
+                </Modal.Header>
+                <Modal.Body>
+                    <Alert variant="success">
+                        {successMessage}
+                    </Alert>
+                </Modal.Body>
+                <Modal.Footer>
+                    <Button variant="secondary" onClick={() => setShowSuccess(false)}>
+                        Close
+                    </Button>
+                </Modal.Footer>
+            </Modal>
+
+            <Modal
+                show={showProductSearchSettings}
+                onHide={() => setShowProductSearchSettings(false)}
+                centered
+                size="lg"
+            >
+                <Modal.Header closeButton>
+                    <Modal.Title>
+                        <i
+                            className="bi bi-gear-fill"
+                            style={{ fontSize: "1.2rem", marginRight: "4px" }}
+                            title="Table Settings"
+
+                        />
+                        Product Search Settings
+                    </Modal.Title>
+                </Modal.Header>
+                <Modal.Body>
+                    {/* Column Settings */}
+                    {showProductSearchSettings && (
+                        <>
+                            <h6 className="mb-2">Customize Columns</h6>
+                            <DragDropContext onDragEnd={onDragEnd}>
+                                <Droppable droppableId="columns">
+                                    {(provided) => (
+                                        <ul
+                                            className="list-group"
+                                            {...provided.droppableProps}
+                                            ref={provided.innerRef}
+                                        >
+                                            {searchProductsColumns.map((col, index) => {
+                                                return (
+                                                    <>
+                                                        <Draggable
+                                                            key={col.key}
+                                                            draggableId={col.key}
+                                                            index={index}
+                                                        >
+                                                            {(provided) => (
+                                                                <li
+                                                                    className="list-group-item d-flex justify-content-between align-items-center"
+                                                                    ref={provided.innerRef}
+                                                                    {...provided.draggableProps}
+                                                                    {...provided.dragHandleProps}                                                        >
+                                                                    <div>
+                                                                        <input
+                                                                            style={{ width: "20px", height: "20px" }}
+                                                                            type="checkbox"
+                                                                            className="form-check-input me-2"
+                                                                            checked={col.visible}
+                                                                            onChange={() => {
+                                                                                handleToggleColumn(index);
+                                                                            }}
+                                                                        />
+                                                                        {col.label}
+                                                                    </div>
+                                                                    <span style={{ cursor: "grab" }}>☰</span>
+                                                                </li>
+                                                            )}
+                                                        </Draggable>
+                                                    </>)
+                                            })}
+                                            {provided.placeholder}
+                                        </ul>
+                                    )}
+                                </Droppable>
+                            </DragDropContext>
+                        </>
+                    )}
+                </Modal.Body>
+                <Modal.Footer>
+                    <Button variant="secondary" onClick={() => setShowProductSearchSettings(false)}>
+                        Close
+                    </Button>
+                    <Button
+                        variant="primary"
+                        onClick={() => {
+                            RestoreDefaultSettings();
+                            // Save to localStorage here if needed
+                            //setShowSettings(false);
+                        }}
+                    >
+                        Restore to Default
+                    </Button>
+                </Modal.Footer>
+            </Modal>
             <ProductHistory ref={ProductHistoryRef} showToastMessage={props.showToastMessage} />
             <ImageViewerModal ref={imageViewerRef} images={productImages} />
             <div
@@ -2515,23 +2705,45 @@ const PurchaseCreate = forwardRef((props, ref) => {
                                             {/* Header */}
                                             <MenuItem disabled style={{ position: 'sticky', top: 0, padding: 0, margin: 0 }}>
                                                 <div style={{
-
                                                     background: '#f8f9fa',
                                                     zIndex: 2,
                                                     display: 'flex',
                                                     fontWeight: 'bold',
                                                     padding: '4px 8px',
+                                                    border: "solid 0px",
                                                     borderBottom: '1px solid #ddd',
+                                                    pointerEvents: "auto" // <-- allow click here
                                                 }}>
-                                                    <div style={{ width: '3%', border: "solid 0px", }}></div>
-                                                    <div style={{ width: '14%', border: "solid 0px", }}>Part Number</div>
-                                                    <div style={{ width: '29%', border: "solid 0px", }}>Name</div>
-                                                    <div style={{ width: '12%', border: "solid 0px", }}>S.Unit Price</div>
-                                                    <div style={{ width: '5%', border: "solid 0px", }}>Stock</div>
-                                                    <div style={{ width: '5%', border: "solid 0px", }}>Photos</div>
-                                                    <div style={{ width: '10%', border: "solid 0px", }}>Brand</div>
-                                                    <div style={{ width: '12%', border: "solid 0px", }}>P.Unit Price</div>
-                                                    <div style={{ width: '10%', border: "solid 0px", }}>Country</div>
+                                                    {searchProductsColumns.filter(c => c.visible).map((col) => {
+                                                        return (<>
+                                                            {col.key === "select" && <div style={{ width: getColumnWidth(col), border: "solid 0px", }}></div>}
+                                                            {col.key === "part_number" && <div style={{ width: getColumnWidth(col), border: "solid 0px", }}>Part Number</div>}
+                                                            {col.key === "name" && <div style={{ width: getColumnWidth(col), border: "solid 0px", }}>Name</div>}
+                                                            {col.key === "unit_price" && <div style={{ width: getColumnWidth(col), border: "solid 0px", }}>S.Unit Price</div>}
+                                                            {col.key === "stock" && <div style={{ width: getColumnWidth(col), border: "solid 0px", }}>Stock</div>}
+                                                            {col.key === "photos" && <div style={{ width: getColumnWidth(col), border: "solid 0px", }}>Photos</div>}
+                                                            {col.key === "brand" && <div style={{ width: getColumnWidth(col), border: "solid 0px", }}>Brand</div>}
+                                                            {col.key === "purchase_price" && <div style={{ width: getColumnWidth(col), border: "solid 0px", }}>P.Unit Price</div>}
+                                                            {col.key === "country" && <div style={{ width: getColumnWidth(col), border: "solid 0px", }}>Country</div>}
+                                                            {col.key === "rack" && <div style={{ width: getColumnWidth(col), border: "solid 0px", }}>Rack</div>}
+                                                        </>)
+                                                    })}
+                                                    {/* Settings icon on right */}
+                                                    <div
+                                                        style={{
+                                                            position: "absolute",
+                                                            right: "8px",
+                                                            top: "50%",
+                                                            transform: "translateY(-50%)",
+                                                            cursor: "pointer",
+                                                        }}
+                                                        onClick={(e) => {
+                                                            e.stopPropagation();
+                                                            setShowProductSearchSettings(true);
+                                                        }}
+                                                    >
+                                                        <i className="bi bi-gear-fill" />
+                                                    </div>
                                                 </div>
                                             </MenuItem>
 
@@ -2542,113 +2754,140 @@ const PurchaseCreate = forwardRef((props, ref) => {
                                                 return (
                                                     <MenuItem option={option} position={index} key={index} style={{ padding: "0px" }}>
                                                         <div style={{ display: 'flex', padding: '4px 8px' }}>
-                                                            <div
-                                                                className="form-check"
-                                                                style={{ ...columnStyle, width: '3%' }}
-                                                                onClick={e => {
-                                                                    e.stopPropagation();     // Stop click bubbling to parent MenuItem
-                                                                    checked = !checked;
+                                                            {searchProductsColumns.filter(c => c.visible).map((col) => {
+                                                                return (<>
+                                                                    {col.key === "select" &&
+                                                                        <div
+                                                                            className="form-check"
+                                                                            style={{ ...columnStyle, width: getColumnWidth(col) }}
+                                                                            onClick={e => {
+                                                                                e.stopPropagation();     // Stop click bubbling to parent MenuItem
+                                                                                checked = !checked;
 
-                                                                    if (timerRef.current) clearTimeout(timerRef.current);
-                                                                    timerRef.current = setTimeout(() => {
-                                                                        if (checked) {
-                                                                            addProduct(option);
-                                                                        } else {
-                                                                            removeProduct(option);
-                                                                        }
-                                                                    }, 100);
+                                                                                if (timerRef.current) clearTimeout(timerRef.current);
+                                                                                timerRef.current = setTimeout(() => {
+                                                                                    if (checked) {
+                                                                                        addProduct(option);
+                                                                                    } else {
+                                                                                        removeProduct(option);
+                                                                                    }
+                                                                                }, 100);
 
-                                                                }}
-                                                            >
-                                                                <input
-                                                                    className="form-check-input"
-                                                                    type="checkbox"
-                                                                    value={checked}
-                                                                    checked={checked}
-                                                                    onClick={e => {
-                                                                        e.stopPropagation();     // Stop click bubbling to parent MenuItem
-                                                                    }}
-                                                                    onChange={e => {
-                                                                        e.preventDefault();      // Prevent default selection behavior
-                                                                        e.stopPropagation();
+                                                                            }}
+                                                                        >
+                                                                            <input
+                                                                                className="form-check-input"
+                                                                                type="checkbox"
+                                                                                value={checked}
+                                                                                checked={checked}
+                                                                                onClick={e => {
+                                                                                    e.stopPropagation();     // Stop click bubbling to parent MenuItem
+                                                                                }}
+                                                                                onChange={e => {
+                                                                                    e.preventDefault();      // Prevent default selection behavior
+                                                                                    e.stopPropagation();
 
-                                                                        checked = !checked;
+                                                                                    checked = !checked;
 
-                                                                        if (timerRef.current) clearTimeout(timerRef.current);
-                                                                        timerRef.current = setTimeout(() => {
-                                                                            if (checked) {
-                                                                                addProduct(option);
-                                                                            } else {
-                                                                                removeProduct(option);
-                                                                            }
-                                                                        }, 100);
-                                                                    }}
-                                                                />
-                                                            </div>
-                                                            <div style={{ ...columnStyle, width: '14%' }}>
-                                                                {highlightWords(
-                                                                    option.prefix_part_number
-                                                                        ? `${option.prefix_part_number} - ${option.part_number}`
-                                                                        : option.part_number,
-                                                                    searchWords,
-                                                                    isActive
-                                                                )}
-                                                            </div>
-                                                            <div style={{ ...columnStyle, width: '29%' }}>
-                                                                {highlightWords(
-                                                                    option.name_in_arabic
-                                                                        ? `${option.name} - ${option.name_in_arabic}`
-                                                                        : option.name,
-                                                                    searchWords,
-                                                                    isActive
-                                                                )}
-                                                            </div>
-                                                            <div style={{ ...columnStyle, width: '12%' }}>
-                                                                {option.product_stores?.[localStorage.getItem("store_id")]?.retail_unit_price && (
-                                                                    <>
-                                                                        <Amount amount={trimTo2Decimals(option.product_stores?.[localStorage.getItem("store_id")]?.retail_unit_price)} />+
-                                                                    </>
-                                                                )}
-                                                                {option.product_stores?.[localStorage.getItem("store_id")]?.retail_unit_price_with_vat && (
-                                                                    <>
-                                                                        |<Amount amount={trimTo2Decimals(option.product_stores?.[localStorage.getItem("store_id")]?.retail_unit_price_with_vat)} />
-                                                                    </>
-                                                                )}
-                                                            </div>
-                                                            <div style={{ ...columnStyle, width: '5%' }}>
-                                                                {option.product_stores?.[localStorage.getItem("store_id")]?.stock ?? ''}
-                                                            </div>
-                                                            <div style={{ ...columnStyle, width: '5%' }}>
-                                                                <button
-                                                                    type="button"
-                                                                    className={isActive ? "btn btn-outline-light btn-sm" : "btn btn-outline-primary btn-sm"}
-                                                                    onClick={(e) => {
-                                                                        e.preventDefault();
-                                                                        e.stopPropagation();
-                                                                        openProductImages(option.id);
-                                                                    }}
-                                                                >
-                                                                    <i className="bi bi-images" aria-hidden="true" />
-                                                                </button>
-                                                            </div>
-                                                            <div style={{ ...columnStyle, width: '10%' }}>
-                                                                {highlightWords(option.brand_name, searchWords, isActive)}
-                                                            </div>
-                                                            <div style={{ ...columnStyle, width: '12%' }}>
-                                                                {option.product_stores?.[localStorage.getItem("store_id")]?.purchase_unit_price && (
-                                                                    <>
-                                                                        <Amount amount={trimTo2Decimals(option.product_stores?.[localStorage.getItem("store_id")]?.purchase_unit_price)} />+
-                                                                    </>
-                                                                )}
-                                                                {option.product_stores?.[localStorage.getItem("store_id")]?.purchase_unit_price_with_vat && (
-                                                                    <>
-                                                                        |<Amount amount={trimTo2Decimals(option.product_stores?.[localStorage.getItem("store_id")]?.purchase_unit_price_with_vat)} />
-                                                                    </>
-                                                                )}
-                                                            </div>
-                                                            <div style={{ ...columnStyle, width: '10%' }}>
-                                                                {highlightWords(option.country_name, searchWords, isActive)}
-                                                            </div>
+                                                                                    if (timerRef.current) clearTimeout(timerRef.current);
+                                                                                    timerRef.current = setTimeout(() => {
+                                                                                        if (checked) {
+                                                                                            addProduct(option);
+                                                                                        } else {
+                                                                                            removeProduct(option);
+                                                                                        }
+                                                                                    }, 100);
+                                                                                }}
+                                                                            />
+                                                                        </div>
+                                                                    }
+                                                                    {col.key === "part_number" &&
+                                                                        <div style={{ ...columnStyle, width: getColumnWidth(col) }}>
+                                                                            {highlightWords(
+                                                                                option.prefix_part_number
+                                                                                    ? `${option.prefix_part_number} - ${option.part_number}`
+                                                                                    : option.part_number,
+                                                                                searchWords,
+                                                                                isActive
+                                                                            )}
+                                                                        </div>
+                                                                    }
+                                                                    {col.key === "name" &&
+                                                                        <div style={{ ...columnStyle, width: getColumnWidth(col) }}>
+                                                                            {highlightWords(
+                                                                                option.name_in_arabic
+                                                                                    ? `${option.name} - ${option.name_in_arabic}`
+                                                                                    : option.name,
+                                                                                searchWords,
+                                                                                isActive
+                                                                            )}
+                                                                        </div>
+                                                                    }
+                                                                    {col.key === "unit_price" &&
+                                                                        <div style={{ ...columnStyle, width: getColumnWidth(col) }}>
+                                                                            {option.product_stores?.[localStorage.getItem("store_id")]?.retail_unit_price && (
+                                                                                <>
+                                                                                    <Amount amount={trimTo2Decimals(option.product_stores?.[localStorage.getItem("store_id")]?.retail_unit_price)} />+
+                                                                                </>
+                                                                            )}
+                                                                            {option.product_stores?.[localStorage.getItem("store_id")]?.retail_unit_price_with_vat && (
+                                                                                <>
+                                                                                    |<Amount amount={trimTo2Decimals(option.product_stores?.[localStorage.getItem("store_id")]?.retail_unit_price_with_vat)} />
+                                                                                </>
+                                                                            )}
+                                                                        </div>
+                                                                    }
+                                                                    {col.key === "stock" &&
+                                                                        <div style={{ ...columnStyle, width: getColumnWidth(col) }}>
+                                                                            {option.product_stores?.[localStorage.getItem("store_id")]?.stock ?? ''}
+                                                                        </div>
+                                                                    }
+                                                                    {col.key === "photos" &&
+                                                                        <div style={{ ...columnStyle, width: getColumnWidth(col) }}>
+                                                                            <button
+                                                                                type="button"
+                                                                                className={isActive ? "btn btn-outline-light btn-sm" : "btn btn-outline-primary btn-sm"}
+                                                                                onClick={(e) => {
+                                                                                    e.preventDefault();
+                                                                                    e.stopPropagation();
+                                                                                    openProductImages(option.id);
+                                                                                }}
+                                                                            >
+                                                                                <i className="bi bi-images" aria-hidden="true" />
+                                                                            </button>
+                                                                        </div>
+                                                                    }
+                                                                    {col.key === "brand" &&
+                                                                        <div style={{ ...columnStyle, width: getColumnWidth(col) }}>
+                                                                            {highlightWords(option.brand_name, searchWords, isActive)}
+                                                                        </div>
+                                                                    }
+                                                                    {col.key === "purchase_price" &&
+                                                                        <div style={{ ...columnStyle, width: getColumnWidth(col) }}>
+                                                                            {option.product_stores?.[localStorage.getItem("store_id")]?.purchase_unit_price && (
+                                                                                <>
+                                                                                    <Amount amount={trimTo2Decimals(option.product_stores?.[localStorage.getItem("store_id")]?.purchase_unit_price)} />+
+                                                                                </>
+                                                                            )}
+                                                                            {option.product_stores?.[localStorage.getItem("store_id")]?.purchase_unit_price_with_vat && (
+                                                                                <>
+                                                                                    |<Amount amount={trimTo2Decimals(option.product_stores?.[localStorage.getItem("store_id")]?.purchase_unit_price_with_vat)} />
+                                                                                </>
+                                                                            )}
+                                                                        </div>
+                                                                    }
+                                                                    {col.key === "country" &&
+                                                                        <div style={{ ...columnStyle, width: getColumnWidth(col) }}>
+                                                                            {highlightWords(option.country_name, searchWords, isActive)}
+                                                                        </div>
+                                                                    }
+                                                                    {col.key === "rack" &&
+                                                                        <div style={{ ...columnStyle, width: getColumnWidth(col) }}>
+                                                                            {highlightWords(option.rack, searchWords, isActive)}
+                                                                        </div>
+                                                                    }
+                                                                </>)
+                                                            })}
                                                         </div>
                                                     </MenuItem>
                                                 );
