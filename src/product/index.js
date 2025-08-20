@@ -94,6 +94,17 @@ function ProductIndex(props) {
             setEnableSelection(false);
         }
 
+
+        searchParams["linked_products_of_product_id"] = "";
+
+        if (props.type === "linked_products") {
+            if (props.model?.product_id) {
+                searchParams.linked_products_of_product_id = props.model.product_id;
+            } else if (props.model?.id) {
+                searchParams.linked_products_of_product_id = props.model.id;
+            }
+        }
+
         list();
         getStore(localStorage.getItem("store_id"));
         // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -753,7 +764,7 @@ function ProductIndex(props) {
 
     const ProductsRef = useRef();
     function openLinkedProducts(model) {
-        ProductsRef.current.open(model, "linked_products");
+        ProductsRef.current.open(false, "linked_products", model);
     }
 
     const ProductHistoryRef = useRef();

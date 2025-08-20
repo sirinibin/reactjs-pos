@@ -10,11 +10,19 @@ const Products = forwardRef((props, ref) => {
     // let [selectedCustomers, setSelectedCustomers] = useState([]);
     // let [selectedPaymentStatusList, setSelectedPaymentStatusList] = useState([]);
     let [enableSelection, setEnableSelection] = useState(false);
+    let [type, setType] = useState("");
+    let [product, setProduct] = useState({});
 
     useImperativeHandle(ref, () => ({
-        open(enableSelectionValue) {
+        open(enableSelectionValue, productType, model) {
             enableSelection = enableSelectionValue;
             setEnableSelection(enableSelection);
+
+            type = productType;
+            setType(type);
+
+            product = model;
+            setProduct(product);
 
             /*
             if (selectedCustomersValue?.length > 0) {
@@ -76,7 +84,11 @@ const Products = forwardRef((props, ref) => {
                 )}
             >
                 <Modal.Header>
-                    <Modal.Title>{enableSelection ? "Select Products" : "Products"}</Modal.Title>
+                    <Modal.Title>
+                        {enableSelection ? "Select" : ""}
+
+                        {type && product && type === "linked_products" ? ` Linked Products of #${product.name}` : " Products"}
+                    </Modal.Title>
                     <div className="col align-self-end text-end">
                         <button
                             type="button"
@@ -91,6 +103,8 @@ const Products = forwardRef((props, ref) => {
                     <>
                         <ProductIndex
                             enableSelection={enableSelection}
+                            type={type}
+                            model={product}
                             onSelectProducts={handleSelected}
                         />
                     </>

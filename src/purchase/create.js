@@ -1583,7 +1583,7 @@ const PurchaseCreate = forwardRef((props, ref) => {
 
     const ProductsRef = useRef();
     function openLinkedProducts(model) {
-        ProductsRef.current.open(model, "linked_products");
+        ProductsRef.current.open(true, "linked_products", model);
     }
 
 
