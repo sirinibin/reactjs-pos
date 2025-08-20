@@ -1330,7 +1330,7 @@ function ProductIndex(props) {
         });
     };
 
-    const isAllSelected = productList.every((p) =>
+    const isAllSelected = productList?.every((p) =>
         choosenProducts.some((cp) => cp.id === p.id)
     );
 
