@@ -19,9 +19,7 @@ import ProductView from "./../product/view.js";
 import { Spinner } from "react-bootstrap";
 //import debounce from 'lodash.debounce';
 import ResizableTableCell from './../utils/ResizableTableCell';
-
 import { Dropdown } from 'react-bootstrap';
-
 import SalesHistory from "./../product/sales_history.js";
 import SalesReturnHistory from "./../product/sales_return_history.js";
 import PurchaseHistory from "./../product/purchase_history.js";
@@ -3057,7 +3055,13 @@ const OrderCreate = forwardRef((props, ref) => {
     }, [defaultSearchProductsColumns]);
 
 
+    // Skip the first run so we don't overwrite saved settings during initial hydration
+    const isFirstRun = useRef(true);
     useEffect(() => {
+        if (isFirstRun.current) {
+            isFirstRun.current = false;
+            return;
+        }
         localStorage.setItem("sales_product_search_settings", JSON.stringify(searchProductsColumns));
     }, [searchProductsColumns]);
 

@@ -2002,8 +2002,6 @@ const PurchaseCreate = forwardRef((props, ref) => {
     };
 
     //Search settings
-
-
     const [showProductSearchSettings, setShowProductSearchSettings] = useState(false);
     const defaultSearchProductsColumns = useMemo(() => [
         { key: "select", label: "Select", fieldName: "select", width: 3, visible: true },
@@ -2082,7 +2080,13 @@ const PurchaseCreate = forwardRef((props, ref) => {
     }, [defaultSearchProductsColumns]);
 
 
+    // Skip the first run so we don't overwrite saved settings during initial hydration
+    const isFirstRun = useRef(true);
     useEffect(() => {
+        if (isFirstRun.current) {
+            isFirstRun.current = false;
+            return;
+        }
         localStorage.setItem("purchase_product_search_settings", JSON.stringify(searchProductsColumns));
     }, [searchProductsColumns]);
 
