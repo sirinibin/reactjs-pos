@@ -1261,7 +1261,7 @@ function AccountIndex(props) {
                                                     </tr>
                                                 ))}
                                             <tr>
-                                                <td colSpan={3}></td>
+                                                <td colSpan={4}></td>
                                                 <td><b>
                                                     <Amount amount={debitBalanceTotal} />
                                                 </b></td>
