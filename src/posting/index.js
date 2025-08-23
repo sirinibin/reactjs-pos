@@ -573,13 +573,19 @@ const PostingIndex = forwardRef((props, ref) => {
 
 
                 if (ignoreOpeningBalance) {
-                    selectedAccount.posting = RemoveOpeningBalance(selectedAccount.posting);
-                    setPostingList([...selectedAccount.posting]);
+                    postingList = RemoveOpeningBalance(postingList);
+                    setPostingList([...postingList]);
+                    selectedAccount.posting = postingList;
+                    setSelectedAccount({ ...selectedAccount });
                 }
 
                 if (ignoreDiscountAllowed) {
-                    selectedAccount.posting = RemoveDiscountAllowed(selectedAccount.posting);
-                    setPostingList([...selectedAccount.posting]);
+                    postingList = RemoveDiscountAllowed(postingList);
+                    setPostingList([...postingList]);
+                    selectedAccount.posting = postingList;
+                    setSelectedAccount({ ...selectedAccount });
+                    //   postingList = selectedAccount.posting;
+                    // setPostingList(postingList);
                 }
             })
             .catch((error) => {
