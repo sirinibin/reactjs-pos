@@ -1669,6 +1669,7 @@ const PostingIndex = forwardRef((props, ref) => {
 
                                                     {selectedAccount ? <tr>
                                                         <td ></td>
+                                                        {localStorage.getItem("user_role") === "Admin" && <td></td>}
                                                         <td className="text-end">Amount</td>
                                                         <td style={{ textAlign: "right" }}><b>{<Amount amount={debitTotal} />}</b></td>
                                                         <td style={{ textAlign: "right" }}><b>{<Amount amount={creditTotal} />}</b></td>
@@ -1676,6 +1677,7 @@ const PostingIndex = forwardRef((props, ref) => {
                                                     </tr> : ""}
                                                     {selectedAccount && <tr>
                                                         <td ></td>
+                                                        {localStorage.getItem("user_role") === "Admin" && <td></td>}
                                                         <td className="text-end">Due Amount</td>
                                                         <td style={{ textAlign: "right", color: "red" }}><b>{debitBalance > 0 ? "To Closing Balance  " : ""} {debitBalance > 0 ? <Amount amount={selectedAccount.type === "liability" && store?.settings?.show_minus_on_liability_balance_in_balance_sheet ? debitBalance * (-1) : debitBalance} /> : ""} </b></td>
                                                         <td style={{ textAlign: "right", color: "red" }}><b>{creditBalance > 0 ? "By Closing Balance  " : ""} {creditBalance > 0 ? <Amount amount={selectedAccount.type === "liability" && store?.settings?.show_minus_on_liability_balance_in_balance_sheet ? creditBalance * (-1) : creditBalance} /> : ""}  </b></td>
@@ -1683,6 +1685,7 @@ const PostingIndex = forwardRef((props, ref) => {
                                                     </tr>}
                                                     {selectedAccount && !store?.settings?.hide_total_amount_row_in_balance_sheet && < tr >
                                                         <td ></td>
+                                                        {localStorage.getItem("user_role") === "Admin" && <td></td>}
                                                         <td className="text-end">Total Amount</td>
                                                         <td style={{ textAlign: "right" }}><b>{creditTotal > debitTotal ? <Amount amount={creditTotal} /> : <Amount amount={debitTotal} />}</b></td>
                                                         <td style={{ textAlign: "right" }}><b>{creditTotal > debitTotal ? <Amount amount={creditTotal} /> : <Amount amount={debitTotal} />}</b></td>
