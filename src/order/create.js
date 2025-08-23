@@ -76,6 +76,8 @@ const OrderCreate = forwardRef((props, ref) => {
             setSelectedCustomers([]);
             formData.customer_id = "";
             formData.customer_name = "";
+            formData.customerName = "";
+            customerSearchRef?.current?.clear();
 
             if (localStorage.getItem("user_id")) {
                 selectedDeliveredByUsers = [{
@@ -111,7 +113,9 @@ const OrderCreate = forwardRef((props, ref) => {
 
 
             formData.id = undefined;
+            formData.vat_no = "";
             formData.enable_report_to_zatca = false;
+            formData.customerName = "";
             formData.discount = 0.00;
             formData.phone = "";
             formData.code = "";
@@ -170,6 +174,8 @@ const OrderCreate = forwardRef((props, ref) => {
         setSelectedCustomers([]);
         formData.customer_id = "";
         formData.customer_name = "";
+        formData.customerName = "";
+        customerSearchRef?.current?.clear();
 
         if (localStorage.getItem("user_id")) {
             selectedDeliveredByUsers = [{
@@ -204,6 +210,8 @@ const OrderCreate = forwardRef((props, ref) => {
 
 
         formData.id = undefined;
+
+        formData.vat_no = "";
         formData.enable_report_to_zatca = false;
         formData.discount = 0.00;
         formData.phone = "";
