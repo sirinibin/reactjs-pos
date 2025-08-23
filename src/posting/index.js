@@ -486,6 +486,12 @@ const PostingIndex = forwardRef((props, ref) => {
                     return Promise.reject(error);
                 }
 
+                if (data.result) {
+                    setPostingList(data.result);
+                    selectedAccount.posting = data.result;
+                    setSelectedAccount({ ...selectedAccount });
+                }
+
                 setIsListLoading(false);
                 setIsRefreshInProcess(false);
 
@@ -493,15 +499,6 @@ const PostingIndex = forwardRef((props, ref) => {
                     selectedAccount = data.meta.account;
                     setSelectedAccount({ ...selectedAccount });
                 }
-
-                if (data.result) {
-                    setPostingList(data.result);
-                    selectedAccount.posting = data.result;
-                    setSelectedAccount({ ...selectedAccount });
-                }
-
-
-
 
                 let pageCount = parseInt((data.total_count + pageSize - 1) / pageSize);
 
@@ -550,7 +547,6 @@ const PostingIndex = forwardRef((props, ref) => {
                     creditBalanceBoughtDown = 0.00;
                     setCreditBalanceBoughtDown(0.00);
                 }
-
 
 
                 if (ignoreOpeningBalance) {
@@ -1048,12 +1044,12 @@ const PostingIndex = forwardRef((props, ref) => {
                                                     </b>
                                                 </th>
                                                         */}
-                                                        <th style={{ width: "20px" }}>
+                                                        {/*<th style={{ width: "20px" }}>
                                                             <b
                                                             >
                                                                 No.
                                                             </b>
-                                                        </th>
+                                                        </th>*/}
                                                         <th>
                                                             <b
                                                                 style={{
@@ -1198,7 +1194,7 @@ const PostingIndex = forwardRef((props, ref) => {
 
                                                 <thead>
                                                     <tr className="text-center">
-                                                        <th></th>
+                                                        {/* <th></th>*/}
 
 
                                                         {/*
@@ -1478,7 +1474,7 @@ const PostingIndex = forwardRef((props, ref) => {
 
                                                 <tbody className="text-center">
                                                     {selectedAccount && (debitBalanceBoughtDown > 0 || creditBalanceBoughtDown > 0) && !ignoreOpeningBalance ? <tr>
-                                                        <td></td>
+                                                        {/* <td></td>*/}
                                                         <td></td>
                                                         <td></td>
                                                         <td style={{ textAlign: "right", color: "red" }}><b>{debitBalanceBoughtDown > 0 ? "To Opening Balance  " : ""} {debitBalanceBoughtDown > 0 ? <Amount amount={debitBalanceBoughtDown} /> : ""}</b></td>
@@ -1489,11 +1485,12 @@ const PostingIndex = forwardRef((props, ref) => {
                                                     {postingList &&
                                                         postingList?.map((posting, index1) => (
                                                             posting.posts?.map((post, index2) => (
-                                                                <tr key={`${posting.id}-${index1}`}>
+                                                                <tr key={`${posting.id}-${index1}-${index2}`}>
                                                                     {/* Date column */}
-                                                                    <td style={{ width: "auto", whiteSpace: "nowrap" }}>
+                                                                    {/* <td style={{ width: "auto", whiteSpace: "nowrap" }}>
                                                                         {((page - 1) * pageSize) + (index1 + 1)}
-                                                                    </td>
+                                                                        {",I2:" + index2}
+                                                                    </td>*/}
                                                                     <td style={{ width: "auto", whiteSpace: "nowrap" }}>
                                                                         {post.date ? format(new Date(post.date), "MMM dd yyyy h:mma") : ""}
                                                                     </td>
