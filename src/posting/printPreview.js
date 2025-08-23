@@ -84,102 +84,173 @@ const BalanceSheetPrintPreview = forwardRef((props, ref) => {
     }));
 
 
-
+    // ...existing code...
     function preparePages() {
-        if (fontSizes[modelName + "_balanceSheetpPageSize"]) {
-            model.pageSize = fontSizes[modelName + "_balanceSheetpPageSize"];
-        } else {
-            model.pageSize = 20
-        }
+        // read configured sizes (fallbacks)
+        model.pageSize = Number(fontSizes[modelName + "_balanceSheetpPageSize"]) || 20;
+        model.maxFirstPageSize = Number(fontSizes[modelName + "_balanceSheetpMaxFirstPageSize"]) || 26;
 
-        if (fontSizes[modelName + "_balanceSheetpMaxFirstPageSize"]) {
-            model.maxFirstPageSize = fontSizes[modelName + "_balanceSheetpMaxFirstPageSize"];
-        } else {
-            model.maxFirstPageSize = 26
-        }
+        const pageSize = model.pageSize;
+        const maxFirst = model.maxFirstPageSize;
 
-        let totalPosts = model.posts.length;
-        let top = 0;
-        let totalPagesInt = parseInt(totalPosts / model.pageSize);
-        let totalPagesFloat = parseFloat(totalPosts / model.pageSize);
-
-        let totalPages = totalPagesInt;
-        if ((totalPagesFloat - totalPagesInt) > 0) {
-            totalPages++;
-        }
-
-        model.total_pages = totalPages;
-
-
-        model.pages = [];
+        // Flatten nested model.posts -> group.posts into a single linear array
+        const flatPosts = [];
         let no = 1;
-        let offset = 0;
-
-        for (let i = 0; i < totalPages; i++) {
-            model.pages.push({
-                top: top,
-                posts: [],
-                lastPage: false,
-                firstPage: false,
-            });
-            for (let j = offset; j < totalPosts; j++) {
-                for (let k = 0; k < model.posts[j].posts?.length; k++) {
-                    if (!model.posts[j].posts[k]) {
-                        continue;
-                    }
-
-                    model.pages[i].posts.push({
-                        "no": no,
-                        "date": model.posts[j].posts[k].date,
-                        "debit_account": model.posts[j].posts[k].debit_or_credit === "debit" ? "To " + model.posts[j].posts[k].account_name + " A/c #" + model.posts[j].posts[k].account_number + " Dr." : "",
-                        "debit_account_name": model.posts[j].posts[k].debit_or_credit === "debit" ? model.posts[j].posts[k].account_name : "",
-                        "debit_account_number": model.posts[j].posts[k].debit_or_credit === "debit" ? model.posts[j].posts[k].account_number : "",
-                        "credit_account": model.posts[j].posts[k].debit_or_credit === "credit" ? "By " + model.posts[j].posts[k].account_name + " A/c #" + model.posts[j].posts[k].account_number + " Cr." : "",
-                        "credit_account_number": model.posts[j].posts[k].debit_or_credit === "credit" ? model.posts[j].posts[k].account_number : "",
-                        "credit_account_name": model.posts[j].posts[k].debit_or_credit === "credit" ? model.posts[j].posts[k].account_name : "",
-                        "debit_or_credit": model.posts[j].posts[k].debit_or_credit,
-                        "debit_amount": model.posts[j].posts[k].debit ? model.posts[j].posts[k].debit : "",
-                        "credit_amount": model.posts[j].posts[k].credit ? model.posts[j].posts[k].credit : "",
-                        "balance_amount": model.posts[j].posts[k].balance ? model.posts[j].posts[k].balance : "",
-                        "reference_code": model.posts[j].reference_code,
-                        "reference_model": model.posts[j].reference_model,
+        if (Array.isArray(model.posts)) {
+            for (let j = 0; j < model.posts.length; j++) {
+                const group = model.posts[j];
+                const groupPosts = Array.isArray(group?.posts) ? group.posts : [];
+                for (let k = 0; k < groupPosts.length; k++) {
+                    const p = groupPosts[k];
+                    if (!p) continue;
+                    flatPosts.push({
+                        no: no,
+                        date: p.date,
+                        debit_account: p.debit_or_credit === "debit" ? `To ${p.account_name} A/c #${p.account_number} Dr.` : "",
+                        debit_account_name: p.debit_or_credit === "debit" ? p.account_name : "",
+                        debit_account_number: p.debit_or_credit === "debit" ? p.account_number : "",
+                        credit_account: p.debit_or_credit === "credit" ? `By ${p.account_name} A/c #${p.account_number} Cr.` : "",
+                        credit_account_number: p.debit_or_credit === "credit" ? p.account_number : "",
+                        credit_account_name: p.debit_or_credit === "credit" ? p.account_name : "",
+                        debit_or_credit: p.debit_or_credit,
+                        debit_amount: p.debit ?? "",
+                        credit_amount: p.credit ?? "",
+                        balance_amount: p.balance ?? "",
+                        reference_code: group?.reference_code,
+                        reference_model: group?.reference_model,
                     });
                     no++;
+                }
+            }
+        }
+
+        // Build pages: first page limited by maxFirst (but padded to pageSize), rest by pageSize
+        const firstPageCap = Math.min(pageSize, maxFirst);
+        const pages = [];
+        let idx = 0;
+
+        if (flatPosts.length > 0) {
+            const firstPagePosts = flatPosts.slice(0, firstPageCap);
+            // pad first page to full pageSize to keep layout consistent
+            while (firstPagePosts.length < pageSize) firstPagePosts.push({});
+            pages.push({ top: 0, posts: firstPagePosts, lastPage: false, firstPage: true });
+            idx = firstPageCap;
+        }
+
+        while (idx < flatPosts.length) {
+            const pagePosts = flatPosts.slice(idx, idx + pageSize);
+            while (pagePosts.length < pageSize) pagePosts.push({});
+            pages.push({ top: 0, posts: pagePosts, lastPage: false, firstPage: false });
+            idx += pageSize;
+        }
+
+        if (pages.length > 0) {
+            pages[pages.length - 1].lastPage = true;
+        }
+
+        model.pages = pages;
+        model.total_pages = pages.length;
+    }
+    // ...existing code...
+    /*
+    
+        function preparePages() {
+            if (fontSizes[modelName + "_balanceSheetpPageSize"]) {
+                model.pageSize = fontSizes[modelName + "_balanceSheetpPageSize"];
+            } else {
+                model.pageSize = 20
+            }
+    
+            if (fontSizes[modelName + "_balanceSheetpMaxFirstPageSize"]) {
+                model.maxFirstPageSize = fontSizes[modelName + "_balanceSheetpMaxFirstPageSize"];
+            } else {
+                model.maxFirstPageSize = 26
+            }
+    
+            let totalPosts = model.posts.length;
+            let top = 0;
+            let totalPagesInt = parseInt(totalPosts / model.pageSize);
+            let totalPagesFloat = parseFloat(totalPosts / model.pageSize);
+    
+            let totalPages = totalPagesInt;
+            if ((totalPagesFloat - totalPagesInt) > 0) {
+                totalPages++;
+            }
+    
+            model.total_pages = totalPages;
+    
+    
+            model.pages = [];
+            let no = 1;
+            let offset = 0;
+    
+            for (let i = 0; i < totalPages; i++) {
+                model.pages.push({
+                    top: top,
+                    posts: [],
+                    lastPage: false,
+                    firstPage: false,
+                });
+                for (let j = offset; j < totalPosts; j++) {
+                    for (let k = 0; k < model.posts[j].posts?.length; k++) {
+                        if (!model.posts[j].posts[k]) {
+                            continue;
+                        }
+    
+                        model.pages[i].posts.push({
+                            "no": no,
+                            "date": model.posts[j].posts[k].date,
+                            "debit_account": model.posts[j].posts[k].debit_or_credit === "debit" ? "To " + model.posts[j].posts[k].account_name + " A/c #" + model.posts[j].posts[k].account_number + " Dr." : "",
+                            "debit_account_name": model.posts[j].posts[k].debit_or_credit === "debit" ? model.posts[j].posts[k].account_name : "",
+                            "debit_account_number": model.posts[j].posts[k].debit_or_credit === "debit" ? model.posts[j].posts[k].account_number : "",
+                            "credit_account": model.posts[j].posts[k].debit_or_credit === "credit" ? "By " + model.posts[j].posts[k].account_name + " A/c #" + model.posts[j].posts[k].account_number + " Cr." : "",
+                            "credit_account_number": model.posts[j].posts[k].debit_or_credit === "credit" ? model.posts[j].posts[k].account_number : "",
+                            "credit_account_name": model.posts[j].posts[k].debit_or_credit === "credit" ? model.posts[j].posts[k].account_name : "",
+                            "debit_or_credit": model.posts[j].posts[k].debit_or_credit,
+                            "debit_amount": model.posts[j].posts[k].debit ? model.posts[j].posts[k].debit : "",
+                            "credit_amount": model.posts[j].posts[k].credit ? model.posts[j].posts[k].credit : "",
+                            "balance_amount": model.posts[j].posts[k].balance ? model.posts[j].posts[k].balance : "",
+                            "reference_code": model.posts[j].reference_code,
+                            "reference_model": model.posts[j].reference_model,
+                        });
+                        no++;
+                        if (model.pages[i].posts?.length === model.pageSize) {
+                            break;
+                        }
+    
+                        if (i === 0 && model.pages[i].posts?.length > (model.maxFirstPageSize - 1)) {
+                            break
+                        }
+                    }
+    
+    
                     if (model.pages[i].posts?.length === model.pageSize) {
                         break;
                     }
-
+    
+                    /*
                     if (i === 0 && model.pages[i].posts?.length > (model.maxFirstPageSize - 1)) {
                         break
+                    }*/
+    /*
+                }
+    
+                if (model.pages[i].posts?.length < model.pageSize) {
+                    for (let s = model.pages[i].posts?.length; s < model.pageSize; s++) {
+                        model.pages[i].posts.push({});
                     }
                 }
-
-                if (model.pages[i].posts?.length === model.pageSize) {
-                    break;
+                offset += model.pageSize;
+    
+                if (i === 0) {
+                    model.pages[i].firstPage = true;
                 }
-
-                if (i === 0 && model.pages[i].posts?.length > (model.maxFirstPageSize - 1)) {
-                    break
-                }
-
-            }
-
-            if (model.pages[i].posts?.length < model.pageSize) {
-                for (let s = model.pages[i].posts?.length; s < model.pageSize; s++) {
-                    model.pages[i].posts.push({});
+    
+                if ((i + 1) === totalPages) {
+                    model.pages[i].lastPage = true;
                 }
             }
-            offset += model.pageSize;
-
-            if (i === 0) {
-                model.pages[i].firstPage = true;
-            }
-
-            if ((i + 1) === totalPages) {
-                model.pages[i].lastPage = true;
-            }
-        }
-    }
+        }*/
 
 
     let [model, setModel] = useState({});

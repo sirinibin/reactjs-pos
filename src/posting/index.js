@@ -1048,6 +1048,12 @@ const PostingIndex = forwardRef((props, ref) => {
                                                     </b>
                                                 </th>
                                                         */}
+                                                        <th style={{ width: "20px" }}>
+                                                            <b
+                                                            >
+                                                                No.
+                                                            </b>
+                                                        </th>
                                                         <th>
                                                             <b
                                                                 style={{
@@ -1192,6 +1198,8 @@ const PostingIndex = forwardRef((props, ref) => {
 
                                                 <thead>
                                                     <tr className="text-center">
+                                                        <th></th>
+
 
                                                         {/*
                                                 <th style={{ minWidth: "250px" }}>
@@ -1472,16 +1480,20 @@ const PostingIndex = forwardRef((props, ref) => {
                                                     {selectedAccount && (debitBalanceBoughtDown > 0 || creditBalanceBoughtDown > 0) && !ignoreOpeningBalance ? <tr>
                                                         <td></td>
                                                         <td></td>
+                                                        <td></td>
                                                         <td style={{ textAlign: "right", color: "red" }}><b>{debitBalanceBoughtDown > 0 ? "To Opening Balance  " : ""} {debitBalanceBoughtDown > 0 ? <Amount amount={debitBalanceBoughtDown} /> : ""}</b></td>
                                                         <td style={{ textAlign: "right", color: "red" }}><b>{creditBalanceBoughtDown > 0 ? "By Opening Balance  " : ""} {creditBalanceBoughtDown > 0 ? <Amount amount={creditBalanceBoughtDown} /> : ""} </b></td>
                                                         <td colSpan={2}></td>
                                                     </tr> : ""}
 
                                                     {postingList &&
-                                                        postingList?.map((posting) => (
-                                                            posting.posts?.map((post, index) => (
-                                                                <tr key={`${posting.id}-${index}`}>
+                                                        postingList?.map((posting, index1) => (
+                                                            posting.posts?.map((post, index2) => (
+                                                                <tr key={`${posting.id}-${index1}`}>
                                                                     {/* Date column */}
+                                                                    <td style={{ width: "auto", whiteSpace: "nowrap" }}>
+                                                                        {((page - 1) * pageSize) + (index1 + 1)}
+                                                                    </td>
                                                                     <td style={{ width: "auto", whiteSpace: "nowrap" }}>
                                                                         {post.date ? format(new Date(post.date), "MMM dd yyyy h:mma") : ""}
                                                                     </td>
