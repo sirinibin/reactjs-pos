@@ -100,7 +100,7 @@ const PostingIndex = forwardRef((props, ref) => {
     let [toDateValue, setToDateValue] = useState("");
 
     //list
-    const [postingList, setPostingList] = useState([]);
+    let [postingList, setPostingList] = useState([]);
 
     //pagination
     let [pageSize, setPageSize] = useState(10);
@@ -486,11 +486,34 @@ const PostingIndex = forwardRef((props, ref) => {
                     return Promise.reject(error);
                 }
 
-                if (data.result) {
-                    setPostingList(data.result);
-                    selectedAccount.posting = data.result;
+                postingList = data.result;
+                setPostingList(postingList);
+
+                if (postingList) {
+                    selectedAccount.posting = postingList;
                     setSelectedAccount({ ...selectedAccount });
                 }
+
+                let no = 1;
+                if (Array.isArray(postingList)) {
+                    for (let j = 0; j < postingList.length; j++) {
+                        const group = postingList[j];
+                        const groupPosts = Array.isArray(group?.posts) ? group.posts : [];
+
+                        for (let k = 0; k < groupPosts.length; k++) {
+                            const p = groupPosts[k];
+                            if (!p) continue;
+
+                            // console.log(postingList[j].posts[k])
+                            postingList[j].posts[k]["no"] = ((page - 1) * pageSize) + parseInt(no);
+                            //  alert("n:" + postingList[j].posts[k]["no"])
+                            no++;
+                        }
+                    }
+                }
+
+                setPostingList([...postingList]);
+
 
                 setIsListLoading(false);
                 setIsRefreshInProcess(false);
@@ -1044,12 +1067,12 @@ const PostingIndex = forwardRef((props, ref) => {
                                                     </b>
                                                 </th>
                                                         */}
-                                                        {/*<th style={{ width: "20px" }}>
+                                                        {localStorage.getItem("user_role") === "Admin" && <th style={{ width: "20px" }}>
                                                             <b
                                                             >
                                                                 No.
                                                             </b>
-                                                        </th>*/}
+                                                        </th>}
                                                         <th>
                                                             <b
                                                                 style={{
@@ -1194,7 +1217,7 @@ const PostingIndex = forwardRef((props, ref) => {
 
                                                 <thead>
                                                     <tr className="text-center">
-                                                        {/* <th></th>*/}
+                                                        {localStorage.getItem("user_role") === "Admin" && <th></th>}
 
 
                                                         {/*
@@ -1474,7 +1497,7 @@ const PostingIndex = forwardRef((props, ref) => {
 
                                                 <tbody className="text-center">
                                                     {selectedAccount && (debitBalanceBoughtDown > 0 || creditBalanceBoughtDown > 0) && !ignoreOpeningBalance ? <tr>
-                                                        {/* <td></td>*/}
+                                                        {localStorage.getItem("user_role") === "Admin" && <td></td>}
                                                         <td></td>
                                                         <td></td>
                                                         <td style={{ textAlign: "right", color: "red" }}><b>{debitBalanceBoughtDown > 0 ? "To Opening Balance  " : ""} {debitBalanceBoughtDown > 0 ? <Amount amount={debitBalanceBoughtDown} /> : ""}</b></td>
@@ -1487,10 +1510,10 @@ const PostingIndex = forwardRef((props, ref) => {
                                                             posting.posts?.map((post, index2) => (
                                                                 <tr key={`${posting.id}-${index1}-${index2}`}>
                                                                     {/* Date column */}
-                                                                    {/* <td style={{ width: "auto", whiteSpace: "nowrap" }}>
-                                                                        {((page - 1) * pageSize) + (index1 + 1)}
-                                                                        {",I2:" + index2}
-                                                                    </td>*/}
+                                                                    {localStorage.getItem("user_role") === "Admin" && <td style={{ width: "auto", whiteSpace: "nowrap" }}>
+                                                                        {/*((page - 1) * pageSize) + (index1 + 1)*/}
+                                                                        {post.no}
+                                                                    </td>}
                                                                     <td style={{ width: "auto", whiteSpace: "nowrap" }}>
                                                                         {post.date ? format(new Date(post.date), "MMM dd yyyy h:mma") : ""}
                                                                     </td>
