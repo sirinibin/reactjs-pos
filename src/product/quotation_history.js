@@ -13,10 +13,10 @@ import Amount from "../utils/amount.js";
 import { trimTo2Decimals } from "../utils/numberUtils";
 import StatsSummary from "../utils/StatsSummary.js";
 import CustomerCreate from "./../customer/create.js";
-
-//function ProductIndex(props) {
+import Draggable2 from "react-draggable";
 
 const QuotationHistory = forwardRef((props, ref) => {
+    const dragRef = useRef(null);
 
     useImperativeHandle(ref, () => ({
         open(model, selectedCustomers, type) {
@@ -624,7 +624,33 @@ const QuotationHistory = forwardRef((props, ref) => {
                 </Modal.Footer>
             </Modal>
             {showQuotationForm && <QuotationCreate ref={QuotationUpdateFormRef} onUpdated={handleUpdated} />}
-            <Modal show={show} size="xl" onHide={handleClose} animation={false} scrollable={true}>
+            <Modal
+                show={show}
+                size="xl"
+                onHide={handleClose}
+                animation={false}
+                scrollable={true}
+                dialogAs={({ children, ...props }) => (
+                    <Draggable2 handle=".modal-header" nodeRef={dragRef}>
+                        <div
+                            ref={dragRef}
+                            className="modal-dialog modal-xl"    // ✅ preserve Bootstrap xl class
+                            {...props}
+                            style={{
+                                position: "absolute",
+                                top: "10%",
+                                left: "20%",
+                                transform: "translate(-50%, -50%)",
+                                margin: "0",
+                                zIndex: 1055,
+                                width: "65%",           // Full width inside container
+                            }}
+                        >
+                            <div className="modal-content">{children}</div>
+                        </div>
+                    </Draggable2>
+                )}
+            >
                 <Modal.Header>
                     <Modal.Title>Quotation {selectedType === "invoice" ? "Sales" : ""} History of {product.name} {product.name_in_arabic ? " / " + product.name_in_arabic : ""}</Modal.Title>
 
