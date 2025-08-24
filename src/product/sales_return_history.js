@@ -417,6 +417,7 @@ const SalesReturnHistory = forwardRef((props, ref) => {
             if (e.key === "Escape") {
                 e.preventDefault();
                 e.stopPropagation();
+                SetShow(false);
             }
         };
 
