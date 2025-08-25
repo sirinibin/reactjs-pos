@@ -588,18 +588,9 @@ const SalesReturnView = forwardRef((props, ref) => {
                 <Table striped bordered hover responsive="xl">
                     <tbody>
                         <tr>
-                            <td><b>Zatca compliance passed</b><br /> {model.zatca?.compliance_passed ? "YES" : "NO"}</td>
-                            <td><b>Zatca compliance passed At</b><br /> {model.zatca?.compliance_passed_at ? format(
-                                new Date(model.zatca?.compliance_passed_at),
-                                "MMM dd yyyy h:mm:ssa"
-                            ) : "Not set"}</td>
-                            <td><b>Compliance Invoice Hash</b><br /> {model.zatca?.compliance_invoice_hash} </td>
-
-                        </tr>
-                        <tr>
                             <td><b>Zatca reporting/clearance passed</b><br /> {model.zatca?.reporting_passed ? "YES" : "NO"}</td>
-                            <td><b>Zatca reporting/clearance passed At</b><br /> {model.zatca?.compliance_passed_at ? format(
-                                new Date(model.zatca?.compliance_passed_at),
+                            <td><b>Zatca reporting/clearance passed At</b><br /> {model.zatca?.reporting_passed_at ? format(
+                                new Date(model.zatca?.reporting_passed_at),
                                 "MMM dd yyyy h:mm:ssa"
                             ) : "Not set"} </td>
                             <td><b>Reported Invoice Hash</b><br />{model.zatca?.reporting_invoice_hash}</td>
