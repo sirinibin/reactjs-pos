@@ -598,7 +598,7 @@ const SalesReturnView = forwardRef((props, ref) => {
                         </tr>
                         <tr>
                             <td><b>Zatca reporting/clearance passed</b><br /> {model.zatca?.reporting_passed ? "YES" : "NO"}</td>
-                            <td><b>Zatca reporting/clearance passed At</b><br /> {model.zatca?.reporting_passed_at ? format(
+                            <td><b>Zatca reporting/clearance passed At</b><br /> {model.zatca?.compliance_passed_at ? format(
                                 new Date(model.zatca?.compliance_passed_at),
                                 "MMM dd yyyy h:mm:ssa"
                             ) : "Not set"} </td>
