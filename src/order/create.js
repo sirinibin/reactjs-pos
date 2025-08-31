@@ -2524,7 +2524,7 @@ const OrderCreate = forwardRef((props, ref) => {
     //Import products from delivery notes
     const DeliveryNotesRef = useRef();
     function openDeliveryNotes(model) {
-        DeliveryNotesRef.current.open(model, selectedCustomers);
+        DeliveryNotesRef.current.open(true, selectedCustomers);
     }
 
     const DeliveryNoteRef = useRef();
@@ -2660,7 +2660,6 @@ const OrderCreate = forwardRef((props, ref) => {
         if (selectedCustomers && !formData.id) {
             formData.customer_id = selectedCustomers[0]?.id;
 
-
             setSelectedCustomers(selectedCustomers);
         }
 
@@ -2669,26 +2668,26 @@ const OrderCreate = forwardRef((props, ref) => {
             setFormData({ ...formData });
         }
 
-        if (model.cash_discount) {
+        if (model?.cash_discount) {
             cashDiscount = model.cash_discount;
             setCashDiscount(cashDiscount);
             setFormData({ ...formData });
         }
 
 
-        if (model.shipping_handling_fees) {
+        if (model?.shipping_handling_fees) {
             shipping = model.shipping_handling_fees;
             setShipping(shipping);
             setFormData({ ...formData });
         }
 
-        if (model.discount) {
+        if (model?.discount) {
             discount = model.discount;
             setDiscount(discount);
             setFormData({ ...formData });
         }
 
-        if (model.discount_with_vat) {
+        if (model?.discount_with_vat) {
             discountWithVAT = model.discount_with_vat;
             setDiscountWithVAT(discountWithVAT);
             setFormData({ ...formData });
