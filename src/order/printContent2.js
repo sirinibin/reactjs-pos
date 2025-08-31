@@ -124,7 +124,7 @@ const OrderPrintContent2 = forwardRef((props, ref) => {
                                             </h4> : ""*/}
                                         </div>}
                                         {!props.model?.store?.settings?.one_line_product_name_in_print_invoice && <div>
-                                            {product.name && product.name_in_arabic ? <h4 className="print-value-new" style={{ fontSize: "3mm", position: "relative", top: "-11px" }}>
+                                            {product.name && product.name_in_arabic ? <h4 className="print-value-new" style={{ fontSize: "3mm", position: "relative", top: "2px" }}>
                                                 {product.name + " | "}
                                                 <span dir="rtl">{product.name_in_arabic}</span>
                                             </h4> : ""}
