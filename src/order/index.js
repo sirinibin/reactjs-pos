@@ -1633,8 +1633,8 @@ const OrderIndex = forwardRef((props, ref) => {
                                     "Shipping/Handling fees": totalShippingHandlingFees,
                                     "Net Profit": netProfit,
                                     "Net Loss": loss,
-                                    "Return Count": returnCount,
-                                    "Return Paid Amount": returnPaidAmount,
+                                    //"Return Count": returnCount,
+                                    //"Return Paid Amount": returnPaidAmount,
                                 }}
                                 onToggle={handleSummaryToggle}
                             />
