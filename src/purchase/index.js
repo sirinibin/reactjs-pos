@@ -49,8 +49,8 @@ function PurchaseIndex(props) {
     let [totalCashDiscount, setTotalCashDiscount] = useState(0.00);
     //let [netRetailProfit, setNetRetailProfit] = useState(0.00);
     //let [netWholesaleProfit, setNetWholesaleProfit] = useState(0.00);
-    const [returnCount, setReturnCount] = useState(0.00);
-    const [returnPaidAmount, setReturnPaidAmount] = useState(0.00);
+    //const [returnCount, setReturnCount] = useState(0.00);
+    //const [returnPaidAmount, setReturnPaidAmount] = useState(0.00);
 
     //list
     const [purchaseList, setPurchaseList] = useState([]);
@@ -793,8 +793,8 @@ function PurchaseIndex(props) {
                 setTotalUnPaidPurchase(data.meta.unpaid_purchase);
                 setTotalCashPurchase(data.meta.cash_purchase);
                 setTotalBankAccountPurchase(data.meta.bank_account_purchase);
-                setReturnCount(data.meta.return_count);
-                setReturnPaidAmount(data.meta.return_amount);
+                // setReturnCount(data.meta.return_count);
+                // setReturnPaidAmount(data.meta.return_amount);
 
             })
             .catch((error) => {
@@ -1276,8 +1276,8 @@ function PurchaseIndex(props) {
                                     "Paid purchase": totalPaidPurchase,
                                     "Purchase discount": totalDiscount,
                                     "Shipping/Handling fees": totalShippingHandlingFees,
-                                    "Return Count": returnCount,
-                                    "Return Paid Amount": returnPaidAmount,
+                                    // "Return Count": returnCount,
+                                    // "Return Paid Amount": returnPaidAmount,
                                 }}
 
                                 onToggle={handleSummaryToggle}
