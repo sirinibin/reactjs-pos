@@ -677,8 +677,8 @@ const OrderIndex = forwardRef((props, ref) => {
     const [totalCashSales, setTotalCashSales] = useState(0.00);
     const [totalBankAccountSales, setTotalBankAccountSales] = useState(0.00);
     const [loss, setLoss] = useState(0.00);
-    const [returnCount, setReturnCount] = useState(0.00);
-    const [returnPaidAmount, setReturnPaidAmount] = useState(0.00);
+    //const [returnCount, setReturnCount] = useState(0.00);
+    //const [returnPaidAmount, setReturnPaidAmount] = useState(0.00);
 
     let [store, setStore] = useState({});
 
@@ -1010,8 +1010,8 @@ const OrderIndex = forwardRef((props, ref) => {
                 setTotalUnPaidSales(data.meta.unpaid_sales);
                 setTotalCashSales(data.meta.cash_sales);
                 setTotalBankAccountSales(data.meta.bank_account_sales);
-                setReturnCount(data.meta.return_count);
-                setReturnPaidAmount(data.meta.return_amount);
+                //setReturnCount(data.meta.return_count);
+                //setReturnPaidAmount(data.meta.return_amount);
 
             })
             .catch((error) => {
