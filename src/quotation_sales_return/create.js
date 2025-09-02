@@ -32,6 +32,10 @@ import OverflowTooltip from "../utils/OverflowTooltip.js";
 import * as bootstrap from 'bootstrap';
 import ProductHistory from "./../product/product_history.js";
 
+
+import CustomerWithdrawalUpdateForm from "../customer_withdrawal/create.js";
+import QuotationSalesUpdateForm from "../quotation/create.js";
+
 const QuotationSalesReturnCreate = forwardRef((props, ref) => {
 
 
@@ -95,6 +99,7 @@ const QuotationSalesReturnCreate = forwardRef((props, ref) => {
                     "deleted": false,
                 }
             ];
+
 
             ResetForm();
             if (localStorage.getItem("user_id")) {
@@ -291,6 +296,7 @@ const QuotationSalesReturnCreate = forwardRef((props, ref) => {
                         formData.payments_input[i].date_str = formData.payments_input[i].date
                     }
                 }
+                setFormData({ ...formData });
 
 
                 if (formData.customer_name && formData.customer_id) {
@@ -1331,8 +1337,14 @@ const QuotationSalesReturnCreate = forwardRef((props, ref) => {
             }*/
             if ((!formData.id || formData.payments_input?.length === 1) && quotation && quotation.payment_status !== "not_paid") {
                 let method = "";
+                let reference_code = "";
+                let reference_type = "";
+                let reference_id = "";
                 if (formData.payments_input && formData.payments_input[0]) {
                     method = formData.payments_input[0].method;
+                    reference_code = formData.payments_input[0].reference_code;
+                    reference_type = formData.payments_input[0].reference_type;
+                    reference_id = formData.payments_input[0].reference_id;
                 }
 
                 formData.payments_input = [{
@@ -1340,7 +1352,11 @@ const QuotationSalesReturnCreate = forwardRef((props, ref) => {
                     "amount": 0.00,
                     "method": method,
                     "deleted": false,
+                    "reference_code": reference_code,
+                    "reference_type": reference_type,
+                    "reference_id": reference_id,
                 }];
+
 
                 if (formData.net_total > 0) {
                     formData.payments_input[0].amount = parseFloat(trimTo2Decimals(formData.net_total));
@@ -1779,9 +1795,39 @@ const QuotationSalesReturnCreate = forwardRef((props, ref) => {
         ProductHistoryRef.current.open(model);
     }
 
+    //Payment Reference form
+    const CustomerWithdrawalUpdateFormRef = useRef();
+    const QuotationSalesUpdateFormRef = useRef();
+
+    let [showReferenceUpdateForm, setShowReferenceUpdateForm] = useState(false);
+    function openReferenceUpdateForm(id, referenceModel) {
+        showReferenceUpdateForm = true;
+        setShowReferenceUpdateForm(showReferenceUpdateForm);
+
+        if (timerRef.current) clearTimeout(timerRef.current);
+        timerRef.current = setTimeout(() => {
+            if (referenceModel === "customer_withdrawal") {
+                CustomerWithdrawalUpdateFormRef.current.open(id);
+            } else if (referenceModel === "quotation_sales") {
+                QuotationSalesUpdateFormRef.current.open(id);
+            }
+        }, 50);
+    }
+
+    const handleReferenceUpdated = () => {
+        if (formData.id) {
+            getQuotationSalesReturn(formData.id);
+        }
+    };
+
+
 
     return (
         <>
+            {showReferenceUpdateForm && <>
+                <CustomerWithdrawalUpdateForm ref={CustomerWithdrawalUpdateFormRef} onUpdated={handleReferenceUpdated} />
+                <QuotationSalesUpdateForm ref={QuotationSalesUpdateFormRef} onUpdated={handleReferenceUpdated} />
+            </>}
             <ProductHistory ref={ProductHistoryRef} showToastMessage={props.showToastMessage} />
             <ImageViewerModal ref={imageViewerRef} images={productImages} />
             <ProductView ref={ProductDetailsViewRef} />
@@ -4046,6 +4092,9 @@ const QuotationSalesReturnCreate = forwardRef((props, ref) => {
                                             Payment method
                                         </th>
                                         <th>
+                                            Reference
+                                        </th>
+                                        <th>
                                             Action
                                         </th>
                                     </thead>
@@ -4139,12 +4188,23 @@ const QuotationSalesReturnCreate = forwardRef((props, ref) => {
                                                             <option value="bank_card">Bank Card</option>
                                                             <option value="bank_transfer">Bank Transfer</option>
                                                             <option value="bank_cheque">Bank Cheque</option>
+                                                            <option value="quotation_sales">Qtn. Sales</option>
                                                             <option value="customer_account">Customer Account</option>
                                                         </select>
                                                         {errors["payment_method_" + key] && (
                                                             <div style={{ color: "red" }}>
                                                                 {errors["payment_method_" + key]}
                                                             </div>
+                                                        )}
+                                                    </td>
+                                                    <td style={{ width: "200px" }}>
+                                                        {formData.payments_input[key] && (
+                                                            <span
+                                                                style={{ cursor: "pointer", color: "blue" }}
+                                                                onClick={() => openReferenceUpdateForm(formData.payments_input[key].reference_id, formData.payments_input[key].reference_type)}
+                                                            >
+                                                                {formData.payments_input[key].reference_code}
+                                                            </span>
                                                         )}
                                                     </td>
                                                     <td style={{ width: "200px" }}>
@@ -4176,7 +4236,7 @@ const QuotationSalesReturnCreate = forwardRef((props, ref) => {
                                                     </div>
                                                 )}
                                             </td>
-                                            <td colSpan={1}>
+                                            <td colSpan={2}>
                                                 <b>Payment status: </b>
                                                 {paymentStatus === "paid" ?
                                                     <span className="badge bg-success">

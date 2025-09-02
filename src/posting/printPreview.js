@@ -118,6 +118,8 @@ const BalanceSheetPrintPreview = forwardRef((props, ref) => {
                         balance_amount: p.balance ?? "",
                         reference_code: group?.reference_code,
                         reference_model: group?.reference_model,
+                        reference_code2: p?.reference_code,
+                        reference_model2: p?.reference_model,
                     });
                     no++;
                 }

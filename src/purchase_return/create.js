@@ -32,6 +32,9 @@ import ProductHistory from "./../product/product_history.js";
 //import OverflowTooltip from "../utils/OverflowTooltip.js";
 import * as bootstrap from 'bootstrap';
 
+import VendorDepositCreate from "../customer_deposit/create.js";
+import PurchaseUpdateForm from "../purchase/create.js";
+
 
 const PurchaseReturnedCreate = forwardRef((props, ref) => {
     function ResetForm() {
@@ -1593,8 +1596,38 @@ async function reCalculate(productIndex) {
     }
 
 
+    //Payment Reference form
+    const VendorDepositUpdateFormRef = useRef();
+    const PurchaseUpdateFormRef = useRef();
+
+    let [showReferenceUpdateForm, setShowReferenceUpdateForm] = useState(false);
+    function openReferenceUpdateForm(id, referenceModel) {
+        showReferenceUpdateForm = true;
+        setShowReferenceUpdateForm(showReferenceUpdateForm);
+
+        if (timerRef.current) clearTimeout(timerRef.current);
+        timerRef.current = setTimeout(() => {
+            if (referenceModel === "vendor_deposit") {
+                VendorDepositUpdateFormRef.current.open(id);
+            } else if (referenceModel === "purchase") {
+                PurchaseUpdateFormRef.current.open(id);
+            }
+        }, 50);
+    }
+
+    const handleReferenceUpdated = () => {
+        if (formData.id) {
+            getPurchaseReturn(formData.id);
+        }
+    };
+
+
     return (
         <>
+            {showReferenceUpdateForm && <>
+                <VendorDepositCreate ref={VendorDepositUpdateFormRef} onUpdated={handleReferenceUpdated} />
+                <PurchaseUpdateForm ref={PurchaseUpdateFormRef} onUpdated={handleReferenceUpdated} />
+            </>}
             <ProductHistory ref={ProductHistoryRef} showToastMessage={props.showToastMessage} />
             <ImageViewerModal ref={imageViewerRef} images={productImages} />
             <Products ref={ProductsRef} showToastMessage={props.showToastMessage} />
@@ -3809,6 +3842,9 @@ async function reCalculate(productIndex) {
                                             Payment method
                                         </th>
                                         <th>
+                                            Reference
+                                        </th>
+                                        <th>
                                             Action
                                         </th>
                                     </thead>
@@ -3902,6 +3938,7 @@ async function reCalculate(productIndex) {
                                                             <option value="bank_card">Bank Card</option>
                                                             <option value="bank_transfer">Bank Transfer</option>
                                                             <option value="bank_cheque">Bank Cheque</option>
+                                                            <option value="purchase">Purchase</option>
                                                             <option value="vendor_account">Vendor Account</option>
                                                         </select>
                                                         {errors["payment_method_" + key] && (
@@ -3909,6 +3946,16 @@ async function reCalculate(productIndex) {
                                                                 <i className="bi bi-x-lg"> </i>
                                                                 {errors["payment_method_" + key]}
                                                             </div>
+                                                        )}
+                                                    </td>
+                                                    <td style={{ width: "200px" }}>
+                                                        {formData.payments_input[key] && (
+                                                            <span
+                                                                style={{ cursor: "pointer", color: "blue" }}
+                                                                onClick={() => openReferenceUpdateForm(formData.payments_input[key].reference_id, formData.payments_input[key].reference_type)}
+                                                            >
+                                                                {formData.payments_input[key].reference_code}
+                                                            </span>
                                                         )}
                                                     </td>
                                                     <td style={{ width: "200px" }}>
@@ -3940,7 +3987,7 @@ async function reCalculate(productIndex) {
                                                     </div>
                                                 )}
                                             </td>
-                                            <td colSpan={1}>
+                                            <td colSpan={2}>
                                                 <b>Payment status: </b>
                                                 {paymentStatus === "paid" ?
                                                     <span className="badge bg-success">

@@ -41,6 +41,7 @@ function PurchaseReturnIndex(props) {
 
 
     let [totalPurchaseReturn, setTotalPurchaseReturn] = useState(0.00);
+    let [totalPurchasePurchaseReturn, setTotalPurchasePurchaseReturn] = useState(0.00);
     let [vatPrice, setVatPrice] = useState(0.00);
     let [totalDiscount, setTotalDiscount] = useState(0.00);
 
@@ -696,6 +697,7 @@ function PurchaseReturnIndex(props) {
                 setOffset((page - 1) * pageSize);
                 setCurrentPageItemsCount(data.result.length);
                 setTotalPurchaseReturn(data.meta.total_purchase_return);
+                setTotalPurchasePurchaseReturn(data.meta.purchase_purchase_return);
                 setVatPrice(data.meta.vat_price);
                 setTotalDiscount(data.meta.discount);
                 setTotalCashDiscount(data.meta.cash_discount);
@@ -864,6 +866,10 @@ function PurchaseReturnIndex(props) {
         {
             id: "bank_cheque",
             name: "Bank Cheque",
+        },
+        {
+            id: "purchase",
+            name: "Purchase",
         },
         {
             id: "vendor_account",
@@ -1249,6 +1255,7 @@ function PurchaseReturnIndex(props) {
                                     "Cash Discount Return": totalCashDiscount,
                                     "VAT Return": vatPrice,
                                     "Purchase Return": totalPurchaseReturn,
+                                    "Purchase Return paid by purchase": totalPurchasePurchaseReturn,
                                     "Paid Purchase Return": totalPaidPurchaseReturn,
                                     "Purchase Discount Return": totalDiscount,
                                     "Shipping/Handling fees": totalShippingHandlingFees,

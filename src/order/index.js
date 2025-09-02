@@ -630,6 +630,14 @@ const OrderIndex = forwardRef((props, ref) => {
             name: "Bank Cheque",
         },
         {
+            id: "sales_return",
+            name: "Sales Return",
+        },
+        {
+            id: "purchase",
+            name: "Purchase",
+        },
+        {
             id: "customer_account",
             name: "Customer account",
         },
@@ -676,6 +684,8 @@ const OrderIndex = forwardRef((props, ref) => {
     const [totalUnPaidSales, setTotalUnPaidSales] = useState(0.00);
     const [totalCashSales, setTotalCashSales] = useState(0.00);
     const [totalBankAccountSales, setTotalBankAccountSales] = useState(0.00);
+    const [totalSalesReturnSales, setTotalSalesReturnSales] = useState(0.00);
+    const [totalPurchaseSales, setTotalPurchaseSales] = useState(0.00);
     const [loss, setLoss] = useState(0.00);
     //const [returnCount, setReturnCount] = useState(0.00);
     //const [returnPaidAmount, setReturnPaidAmount] = useState(0.00);
@@ -1010,6 +1020,8 @@ const OrderIndex = forwardRef((props, ref) => {
                 setTotalUnPaidSales(data.meta.unpaid_sales);
                 setTotalCashSales(data.meta.cash_sales);
                 setTotalBankAccountSales(data.meta.bank_account_sales);
+                setTotalPurchaseSales(data.meta.purchase_sales);
+                setTotalSalesReturnSales(data.meta.sales_return_sales);
                 //setReturnCount(data.meta.return_count);
                 //setReturnPaidAmount(data.meta.return_amount);
 
@@ -1625,6 +1637,8 @@ const OrderIndex = forwardRef((props, ref) => {
                                     "Cash Sales": totalCashSales,
                                     "Credit Sales": totalUnPaidSales,
                                     "Bank Account Sales": totalBankAccountSales,
+                                    "Sales paid By Sales Return": totalSalesReturnSales,
+                                    "Sales paid By Purchase": totalPurchaseSales,
                                     "Cash Discount": totalCashDiscount,
                                     "VAT Collected": vatPrice,
                                     "Net Profit %": netProfit && totalSales ? ((netProfit / totalSales) * 100) : "",

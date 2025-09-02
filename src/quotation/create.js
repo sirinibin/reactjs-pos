@@ -43,6 +43,10 @@ import { highlightWords } from "../utils/search.js";
 import ProductHistory from "./../product/product_history.js";
 import { DragDropContext, Droppable, Draggable } from "react-beautiful-dnd";
 
+
+import CustomerDepositCreate from "../customer_deposit/create.js";
+import QuotationSalesReturnUpdateForm from "../quotation_sales_return/create.js";
+
 const columnStyle = {
   width: '20%',
   overflow: 'hidden',
@@ -2100,8 +2104,38 @@ const QuotationCreate = forwardRef((props, ref) => {
   const [successMessage, setSuccessMessage] = useState(false);
 
 
+  //Payment Reference form
+  const CustomerDepositUpdateFormRef = useRef();
+  const QuotationSalesReturnUpdateFormRef = useRef();
+
+  let [showReferenceUpdateForm, setShowReferenceUpdateForm] = useState(false);
+  function openReferenceUpdateForm(id, referenceModel) {
+    showReferenceUpdateForm = true;
+    setShowReferenceUpdateForm(showReferenceUpdateForm);
+
+    if (timerRef.current) clearTimeout(timerRef.current);
+    timerRef.current = setTimeout(() => {
+      if (referenceModel === "customer_deposit") {
+        CustomerDepositUpdateFormRef.current.open(id);
+      } else if (referenceModel === "quotation_sales_return") {
+        QuotationSalesReturnUpdateFormRef.current.open(id);
+      }
+    }, 50);
+  }
+
+  const handleReferenceUpdated = () => {
+    if (formData.id) {
+      getQuotation(formData.id);
+    }
+  };
+
+
   return (
     <>
+      {showReferenceUpdateForm && <>
+        <CustomerDepositCreate ref={CustomerDepositUpdateFormRef} onUpdated={handleReferenceUpdated} />
+        <QuotationSalesReturnUpdateForm ref={QuotationSalesReturnUpdateFormRef} onUpdated={handleReferenceUpdated} />
+      </>}
       <Modal show={showSuccess} onHide={() => setShowSuccess(false)} centered>
         <Modal.Header closeButton>
           <Modal.Title>Success</Modal.Title>
@@ -5106,6 +5140,9 @@ const QuotationCreate = forwardRef((props, ref) => {
                           Payment method
                         </th>
                         <th>
+                          Reference
+                        </th>
+                        <th>
                           Action
                         </th>
                       </thead>}
@@ -5197,6 +5234,7 @@ const QuotationCreate = forwardRef((props, ref) => {
                                 <option value="bank_card">Bank Card</option>
                                 <option value="bank_transfer">Bank Transfer</option>
                                 <option value="bank_cheque">Bank Cheque</option>
+                                <option value="quotation_sales_return">Qtn. Sales Return</option>
                                 <option value="customer_account">Customer Account</option>
                               </select>
                               {errors["payment_method_" + key] && (
@@ -5204,6 +5242,16 @@ const QuotationCreate = forwardRef((props, ref) => {
 
                                   {errors["payment_method_" + key]}
                                 </div>
+                              )}
+                            </td>
+                            <td style={{ width: "200px" }}>
+                              {formData.payments_input[key] && (
+                                <span
+                                  style={{ cursor: "pointer", color: "blue" }}
+                                  onClick={() => openReferenceUpdateForm(formData.payments_input[key].reference_id, formData.payments_input[key].reference_type)}
+                                >
+                                  {formData.payments_input[key].reference_code}
+                                </span>
                               )}
                             </td>
                             <td style={{ width: "200px" }}>
@@ -5235,7 +5283,7 @@ const QuotationCreate = forwardRef((props, ref) => {
                             </div>
                           )}
                         </td>
-                        <td colSpan={1}>
+                        <td colSpan={2}>
                           <b>Payment status: </b>
                           {paymentStatus === "paid" ?
                             <span className="badge bg-success">

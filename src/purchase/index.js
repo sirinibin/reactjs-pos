@@ -148,6 +148,14 @@ function PurchaseIndex(props) {
             name: "Bank Cheque",
         },
         {
+            id: "sales",
+            name: "Sales",
+        },
+        {
+            id: "purchase_return",
+            name: "Purchase Return",
+        },
+        {
             id: "vendor_account",
             name: "Vendor Account",
         },
@@ -710,6 +718,8 @@ function PurchaseIndex(props) {
     let [totalUnPaidPurchase, setTotalUnPaidPurchase] = useState(0.00);
     let [totalCashPurchase, setTotalCashPurchase] = useState(0.00);
     let [totalBankAccountPurchase, setTotalBankAccountPurchase] = useState(0.00);
+    let [totalSalesPurchase, setTotalSalesPurchase] = useState(0.00);
+    let [totalPurchaseReturnPurchase, setTotalPurchaseReturnPurchase] = useState(0.00);
 
 
     let [statsOpen, setStatsOpen] = useState(false);
@@ -793,6 +803,8 @@ function PurchaseIndex(props) {
                 setTotalUnPaidPurchase(data.meta.unpaid_purchase);
                 setTotalCashPurchase(data.meta.cash_purchase);
                 setTotalBankAccountPurchase(data.meta.bank_account_purchase);
+                setTotalSalesPurchase(data.meta.sales_purchase);
+                setTotalPurchaseReturnPurchase(data.meta.purchase_return_purchase);
                 // setReturnCount(data.meta.return_count);
                 // setReturnPaidAmount(data.meta.return_amount);
 
@@ -1270,6 +1282,8 @@ function PurchaseIndex(props) {
                                     "Cash purchase": totalCashPurchase,
                                     "Credit purchase": totalUnPaidPurchase,
                                     "Bank account purchase": totalBankAccountPurchase,
+                                    "Purchases paid by sales": totalSalesPurchase,
+                                    "Purchases paid by purchase return": totalPurchaseReturnPurchase,
                                     "Cash discount": totalCashDiscount,
                                     "VAT paid": vatPrice,
                                     "Purchase": totalPurchase,

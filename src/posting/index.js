@@ -10,11 +10,11 @@ import BalanceSheetPrintPreview from './printPreview.js';
 import Amount from "../utils/amount.js";
 import OverflowTooltip from "../utils/OverflowTooltip.js";
 import OrderCreate from "../order/create.js";
-import SalesReturnCreate from "../sales_return/create.js";
 import QuotationSalesReturnCreate from "../quotation_sales_return/create.js";
 import PurchaseCreate from "../purchase/create.js";
-import PurchaseReturnCreate from "../purchase_return/create.js";
 import CustomerDepositCreate from "../customer_deposit/create.js";
+import SalesReturnCreate from "../sales_return/create.js";
+import PurchaseReturnCreate from "../purchase_return/create.js";
 import CustomerWithdrawalCreate from "../customer_withdrawal/create.js";
 import ExpenseCreate from "../expense/create.js";
 import CapitalCreate from "../capital/create.js";
@@ -751,11 +751,11 @@ const PostingIndex = forwardRef((props, ref) => {
 
 
     const SalesUpdateFormRef = useRef();
-    const SalesReturnUpdateFormRef = useRef();
     const QuotationSalesReturnUpdateFormRef = useRef();
     const PurchaseUpdateFormRef = useRef();
-    const PurchaseReturnUpdateFormRef = useRef();
     const CustomerReceivableUpdateFormRef = useRef();
+    const SalesReturnUpdateFormRef = useRef();
+    const PurchaseReturnUpdateFormRef = useRef();
     const CustomerPayableUpdateFormRef = useRef();
     const ExpenseUpdateFormRef = useRef();
     const CapitalUpdateFormRef = useRef();
@@ -812,11 +812,11 @@ const PostingIndex = forwardRef((props, ref) => {
             {showUpdateForm && <>
                 <OrderCreate ref={SalesUpdateFormRef} onUpdated={handleUpdated} />
                 <QuotationCreate ref={QuotationUpdateFormRef} onUpdated={handleUpdated} />
-                <SalesReturnCreate ref={SalesReturnUpdateFormRef} onUpdated={handleUpdated} />
                 <QuotationSalesReturnCreate ref={QuotationSalesReturnUpdateFormRef} onUpdated={handleUpdated} />
-                <PurchaseCreate ref={PurchaseUpdateFormRef} onUpdated={handleUpdated} />
                 <PurchaseReturnCreate ref={PurchaseReturnUpdateFormRef} onUpdated={handleUpdated} />
                 <CustomerDepositCreate ref={CustomerReceivableUpdateFormRef} onUpdated={handleUpdated} />
+                <SalesReturnCreate ref={SalesReturnUpdateFormRef} onUpdated={handleUpdated} />
+                <PurchaseCreate ref={PurchaseUpdateFormRef} onUpdated={handleUpdated} />
                 <CustomerWithdrawalCreate ref={CustomerPayableUpdateFormRef} onUpdated={handleUpdated} />
                 <ExpenseCreate ref={ExpenseUpdateFormRef} onUpdated={handleUpdated} />
                 <CapitalCreate ref={CapitalUpdateFormRef} onUpdated={handleUpdated} />
@@ -1534,16 +1534,26 @@ const PostingIndex = forwardRef((props, ref) => {
                                                                                 {posting.reference_code}
                                                                             </span>
                                                                         )}
+                                                                        {post.reference_code && (
+                                                                            <> / <span
+                                                                                style={{ cursor: "pointer", color: "blue" }}
+                                                                                onClick={() => openUpdateForm(post.reference_id, post.reference_model)}
+                                                                            >
+                                                                                {post.reference_code}
+                                                                            </span>
+                                                                            </>
+                                                                        )}
                                                                     </td>
 
                                                                     {/* Debit side */}
                                                                     < td className="p-1 ps-3 w-40" style={{ minWidth: "300px", maxWidth: "300px" }}>
                                                                         <div className="d-flex justify-content-between align-items-center w-100">
-                                                                            {post.debit_or_credit === "debit" && (
+                                                                            {post?.debit_or_credit === "debit" && (
                                                                                 <div className="d-flex me-2" style={{ maxWidth: '70%' }}>
                                                                                     <span className="text-nowrap me-1">To</span>
                                                                                     <span className="text-truncate" style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                                                                                        <OverflowTooltip value={post.account_name} />
+                                                                                        {/*<OverflowTooltip value={post?.account_name} />*/}
+                                                                                        {post?.account_name}
                                                                                     </span>
                                                                                     <span className="ms-1 text-nowrap">
                                                                                         A/c #{post.account_number} Dr.

@@ -421,6 +421,8 @@ function QuotationIndex(props) {
   const [invoiceTotalBankAccountSales, setInvoiceTotalBankAccountSales] = useState(0.00);
   const [invoiceLoss, setInvoiceLoss] = useState(0.00);
 
+  const [invoiceTotalSalesReturnSales, setInvoiceTotalSalesReturnSales] = useState(0.00);
+
   let [statsOpen, setStatsOpen] = useState(false);
 
 
@@ -510,6 +512,7 @@ function QuotationIndex(props) {
         setInvoiceTotalUnPaidSales(data.meta.invoice_unpaid_sales);
         setInvoiceTotalCashSales(data.meta.invoice_cash_sales);
         setInvoiceTotalBankAccountSales(data.meta.invoice_bank_account_sales);
+        setInvoiceTotalSalesReturnSales(data.meta.invoice_sales_return_sales);
       })
       .catch((error) => {
         setIsListLoading(false);
@@ -650,6 +653,10 @@ function QuotationIndex(props) {
     {
       id: "bank_cheque",
       name: "Bank Cheque",
+    },
+    {
+      id: "quotation_sales_return",
+      name: "Qtn. Sales Return",
     },
   ];
   const [selectedPaymentMethodList, setSelectedPaymentMethodList] = useState([]);
@@ -1061,6 +1068,7 @@ function QuotationIndex(props) {
                   "Cash Sales": invoiceTotalCashSales,
                   "Credit Sales": invoiceTotalUnPaidSales,
                   "Bank Account Sales": invoiceTotalBankAccountSales,
+                  "Sales paid by sales return": invoiceTotalSalesReturnSales,
                   "Cash Discount": invoiceTotalCashDiscount,
                   "VAT Collected": invoiceVatPrice,
                   "Net Profit %": invoiceNetProfit && invoiceTotalSales ? ((invoiceNetProfit / invoiceTotalSales) * 100) : "",

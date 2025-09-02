@@ -31,6 +31,9 @@ import { highlightWords } from "../utils/search.js";
 import ProductHistory from "./../product/product_history.js";
 import Resizer from "react-image-file-resizer";
 import { DragDropContext, Droppable, Draggable } from "react-beautiful-dnd";
+import PurchaseReturnCreate from "../purchase_return/create.js";
+import VendorWithdrawalCreate from "../customer_withdrawal/create.js";
+import SalesUpdateForm from "../order/create.js";
 
 const columnStyle = {
     width: '20%',
@@ -2093,8 +2096,43 @@ const PurchaseCreate = forwardRef((props, ref) => {
     const [showSuccess, setShowSuccess] = useState(false);
     const [successMessage, setSuccessMessage] = useState(false);
 
+    //Payment Reference form
+    const PurchaseReturnUpdateFormRef = useRef();
+    const VendorWithdrawalUpdateFormRef = useRef();
+    const SalesUpdateFormRef = useRef();
+
+    let [showReferenceUpdateForm, setShowReferenceUpdateForm] = useState(false);
+    function openReferenceUpdateForm(id, referenceModel) {
+        showReferenceUpdateForm = true;
+        setShowReferenceUpdateForm(showReferenceUpdateForm);
+
+        if (timerRef.current) clearTimeout(timerRef.current);
+        timerRef.current = setTimeout(() => {
+            if (referenceModel === "vendor_withdrawal") {
+                VendorWithdrawalUpdateFormRef.current.open(id);
+            } else if (referenceModel === "sales") {
+                SalesUpdateFormRef.current.open(id);
+            } else if (referenceModel === "purchase_return") {
+                PurchaseReturnUpdateFormRef.current.open(id);
+            }
+        }, 50);
+    }
+
+    const handleReferenceUpdated = () => {
+        if (formData.id) {
+            getPurchase(formData.id);
+        }
+    };
+
+
     return (
         <>
+            {showReferenceUpdateForm && <>
+                <VendorWithdrawalCreate ref={VendorWithdrawalUpdateFormRef} onUpdated={handleReferenceUpdated} />
+                <SalesUpdateForm ref={SalesUpdateFormRef} onUpdated={handleReferenceUpdated} />
+                <PurchaseReturnCreate ref={PurchaseReturnUpdateFormRef} onUpdated={handleReferenceUpdated} />
+            </>}
+
             <Modal show={showSuccess} onHide={() => setShowSuccess(false)} centered>
                 <Modal.Header closeButton>
                     <Modal.Title>Success</Modal.Title>
@@ -4954,6 +4992,9 @@ const PurchaseCreate = forwardRef((props, ref) => {
                                                 Payment method
                                             </th>
                                             <th>
+                                                Reference
+                                            </th>
+                                            <th>
                                                 Action
                                             </th>
                                         </thead>}
@@ -5046,6 +5087,8 @@ const PurchaseCreate = forwardRef((props, ref) => {
                                                             <option value="bank_card">Bank Card</option>
                                                             <option value="bank_transfer">Bank Transfer</option>
                                                             <option value="bank_cheque">Bank Cheque</option>
+                                                            <option value="sales">Sales</option>
+                                                            <option value="purchase_return">Purchase Return</option>
                                                             <option value="vendor_account">Vendor Account</option>
                                                         </select>
                                                         {errors["payment_method_" + key] && (
@@ -5053,6 +5096,16 @@ const PurchaseCreate = forwardRef((props, ref) => {
                                                                 <i className="bi bi-x-lg"> </i>
                                                                 {errors["payment_method_" + key]}
                                                             </div>
+                                                        )}
+                                                    </td>
+                                                    <td style={{ width: "200px" }}>
+                                                        {formData.payments_input[key] && (
+                                                            <span
+                                                                style={{ cursor: "pointer", color: "blue" }}
+                                                                onClick={() => openReferenceUpdateForm(formData.payments_input[key].reference_id, formData.payments_input[key].reference_type)}
+                                                            >
+                                                                {formData.payments_input[key].reference_code}
+                                                            </span>
                                                         )}
                                                     </td>
                                                     <td style={{ width: "200px" }}>
@@ -5084,7 +5137,7 @@ const PurchaseCreate = forwardRef((props, ref) => {
                                                     </div>
                                                 )}
                                             </td>
-                                            <td colSpan={1}>
+                                            <td colSpan={2}>
                                                 <b>Payment status: </b>
                                                 {paymentStatus === "paid" ?
                                                     <span className="badge bg-success">

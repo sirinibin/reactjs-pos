@@ -32,6 +32,9 @@ import ProductHistory from "./../product/product_history.js";
 //import OverflowTooltip from "../utils/OverflowTooltip.js";
 import * as bootstrap from 'bootstrap';
 
+import CustomerWithdrawalCreate from "../customer_withdrawal/create.js";
+import SalesCreate from "../order/create.js";
+
 const SalesReturnCreate = forwardRef((props, ref) => {
 
 
@@ -1762,9 +1765,41 @@ const SalesReturnCreate = forwardRef((props, ref) => {
         ProductHistoryRef.current.open(model);
     }
 
+    //Payment Reference form
+    const CustomerWithdrawalUpdateFormRef = useRef();
+    const SalesUpdateFormRef = useRef();
+
+    let [showReferenceUpdateForm, setShowReferenceUpdateForm] = useState(false);
+    function openReferenceUpdateForm(id, referenceModel) {
+        showReferenceUpdateForm = true;
+        setShowReferenceUpdateForm(showReferenceUpdateForm);
+
+        if (timerRef.current) clearTimeout(timerRef.current);
+        timerRef.current = setTimeout(() => {
+            if (referenceModel === "customer_withdrawal") {
+                CustomerWithdrawalUpdateFormRef.current.open(id);
+            } else if (referenceModel === "sales") {
+                SalesUpdateFormRef.current.open(id);
+            }
+        }, 50);
+    }
+
+    const handleReferenceUpdated = () => {
+        if (formData.id) {
+            getSalesReturn(formData.id);
+        }
+    };
+
+
 
     return (
         <>
+            {showReferenceUpdateForm && <>
+                <CustomerWithdrawalCreate ref={CustomerWithdrawalUpdateFormRef} onUpdated={handleReferenceUpdated} />
+                <SalesCreate ref={SalesUpdateFormRef} onUpdated={handleReferenceUpdated} />
+            </>}
+
+
             <ProductHistory ref={ProductHistoryRef} showToastMessage={props.showToastMessage} />
             <ImageViewerModal ref={imageViewerRef} images={productImages} />
             <ProductView ref={ProductDetailsViewRef} />
@@ -4076,6 +4111,9 @@ const SalesReturnCreate = forwardRef((props, ref) => {
                                             Payment method
                                         </th>
                                         <th>
+                                            Reference
+                                        </th>
+                                        <th>
                                             Action
                                         </th>
                                     </thead>
@@ -4169,12 +4207,23 @@ const SalesReturnCreate = forwardRef((props, ref) => {
                                                             <option value="bank_card">Bank Card</option>
                                                             <option value="bank_transfer">Bank Transfer</option>
                                                             <option value="bank_cheque">Bank Cheque</option>
+                                                            <option value="sales">Sales</option>
                                                             <option value="customer_account">Customer Account</option>
                                                         </select>
                                                         {errors["payment_method_" + key] && (
                                                             <div style={{ color: "red" }}>
                                                                 {errors["payment_method_" + key]}
                                                             </div>
+                                                        )}
+                                                    </td>
+                                                    <td style={{ width: "200px" }}>
+                                                        {formData.payments_input[key] && (
+                                                            <span
+                                                                style={{ cursor: "pointer", color: "blue" }}
+                                                                onClick={() => openReferenceUpdateForm(formData.payments_input[key].reference_id, formData.payments_input[key].reference_type)}
+                                                            >
+                                                                {formData.payments_input[key].reference_code}
+                                                            </span>
                                                         )}
                                                     </td>
                                                     <td style={{ width: "200px" }}>
@@ -4206,7 +4255,7 @@ const SalesReturnCreate = forwardRef((props, ref) => {
                                                     </div>
                                                 )}
                                             </td>
-                                            <td colSpan={1}>
+                                            <td colSpan={2}>
                                                 <b>Payment status: </b>
                                                 {paymentStatus === "paid" ?
                                                     <span className="badge bg-success">

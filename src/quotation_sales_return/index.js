@@ -49,6 +49,7 @@ function QuotationSalesReturnIndex(props) {
     let [totalUnPaidQuotationSalesReturn, setTotalUnPaidQuotationSalesReturn] = useState(0.00);
     let [totalCashQuotationSalesReturn, setTotalCashQuotationSalesReturn] = useState(0.00);
     let [totalBankAccountQuotationSalesReturn, setTotalBankAccountQuotationSalesReturn] = useState(0.00);
+    let [totalQuotationSalesQuotationSalesReturn, setTotalQuotationSalesQuotationSalesReturn] = useState(0.00);
 
     //list
     const [quotationsalesreturnList, setQuotationSalesReturnList] = useState([]);
@@ -907,6 +908,7 @@ function QuotationSalesReturnIndex(props) {
                 setTotalPaidQuotationSalesReturn(data.meta.paid_quotation_sales_return);
                 setTotalUnPaidQuotationSalesReturn(data.meta.unpaid_quotation_sales_return);
                 setTotalCashQuotationSalesReturn(data.meta.cash_quotation_sales_return);
+                setTotalQuotationSalesQuotationSalesReturn(data.meta.quotation_sales_quotation_sales_return);
                 setTotalBankAccountQuotationSalesReturn(data.meta.bank_account_quotation_sales_return);
 
             })
@@ -1041,6 +1043,10 @@ function QuotationSalesReturnIndex(props) {
         {
             id: "bank_cheque",
             name: "Bank Cheque",
+        },
+        {
+            id: "quotation_sales",
+            name: "Qtn. Sales",
         },
         {
             id: "customer_account",
@@ -1452,6 +1458,7 @@ function QuotationSalesReturnIndex(props) {
                                     "Cash Sales Return": totalCashQuotationSalesReturn,
                                     "Credit Sales Return": totalUnPaidQuotationSalesReturn,
                                     "Bank Account Sales Return": totalBankAccountQuotationSalesReturn,
+                                    "Sales Return paid by sales": totalQuotationSalesQuotationSalesReturn,
                                     "Cash Discount Return": totalCashDiscount,
                                     "VAT Return": vatPrice,
                                     "Net Profit Return %": netProfit && totalQuotationSalesReturn ? ((netProfit / totalQuotationSalesReturn) * 100) : "",

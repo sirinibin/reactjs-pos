@@ -72,6 +72,7 @@ function SalesReturnIndex(props) {
     let [totalUnPaidSalesReturn, setTotalUnPaidSalesReturn] = useState(0.00);
     let [totalCashSalesReturn, setTotalCashSalesReturn] = useState(0.00);
     let [totalBankAccountSalesReturn, setTotalBankAccountSalesReturn] = useState(0.00);
+    let [totalSalesSalesReturn, setTotalSalesSalesReturn] = useState(0.00);
 
     //list
     const [salesreturnList, setSalesReturnList] = useState([]);
@@ -1011,6 +1012,7 @@ function SalesReturnIndex(props) {
                 setTotalUnPaidSalesReturn(data.meta.unpaid_sales_return);
                 setTotalCashSalesReturn(data.meta.cash_sales_return);
                 setTotalBankAccountSalesReturn(data.meta.bank_account_sales_return);
+                setTotalSalesSalesReturn(data.meta.sales_sales_return);
 
             })
             .catch((error) => {
@@ -1584,6 +1586,7 @@ function SalesReturnIndex(props) {
                                     "Cash Sales Return": totalCashSalesReturn,
                                     "Credit Sales Return": totalUnPaidSalesReturn,
                                     "Bank Account Sales Return": totalBankAccountSalesReturn,
+                                    "Sales Return paid by Sales": totalSalesSalesReturn,
                                     "Cash Discount Return": totalCashDiscount,
                                     "VAT Return": vatPrice,
                                     "Net Profit Return %": netProfit && totalSalesReturn ? ((netProfit / totalSalesReturn) * 100) : "",
