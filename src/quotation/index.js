@@ -658,6 +658,10 @@ function QuotationIndex(props) {
       id: "quotation_sales_return",
       name: "Qtn. Sales Return",
     },
+    {
+      id: "customer_account",
+      name: "Customer Account",
+    },
   ];
   const [selectedPaymentMethodList, setSelectedPaymentMethodList] = useState([]);
 
