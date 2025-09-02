@@ -1148,6 +1148,10 @@ function SalesReturnIndex(props) {
             name: "Bank Cheque",
         },
         {
+            id: "sales",
+            name: "Sales",
+        },
+        {
             id: "customer_account",
             name: "Customer account",
         },
