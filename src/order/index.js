@@ -1183,7 +1183,12 @@ const OrderIndex = forwardRef((props, ref) => {
     }
 
     function openUpdateForm(id) {
-        CreateFormRef.current?.open(id);
+        setShowOrderCreateForm(true);
+        if (timerRef.current) clearTimeout(timerRef.current);
+
+        timerRef.current = setTimeout(() => {
+            CreateFormRef.current?.open(id);
+        }, 50);
     }
 
 
