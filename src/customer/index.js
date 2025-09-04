@@ -13,6 +13,7 @@ import Amount from "../utils/amount.js";
 import { trimTo2Decimals } from "../utils/numberUtils";
 import PostingIndex from "./../posting/index.js";
 import { confirm } from 'react-bootstrap-confirmation';
+import CustomerPending from "./../utils/customer_pending.js";
 
 function CustomerIndex(props) {
 
@@ -206,7 +207,7 @@ function CustomerIndex(props) {
             },
         };
         let Select =
-            "select=id,code,deleted,credit_limit,credit_balance,account,name,name_in_arabic,email,phone,vat_no,created_by_name,created_at,stores";
+            "select=id,code,deleted,search_label,credit_limit,credit_balance,account,name,name_in_arabic,email,phone,vat_no,created_by_name,created_at,stores";
 
         if (localStorage.getItem("store_id")) {
             searchParams.store_id = localStorage.getItem("store_id");
@@ -412,8 +413,14 @@ function CustomerIndex(props) {
         */
 
     const AccountBalanceSheetRef = useRef();
+    /*
     function openBalanceSheetDialogue(account) {
         AccountBalanceSheetRef.current.open(account);
+    }*/
+
+    const CustomerPendingRef = useRef();
+    function openCustomerPending(customer) {
+        CustomerPendingRef.current.open(false, customer);
     }
 
 
@@ -667,8 +674,13 @@ function CustomerIndex(props) {
     let [selectedCreatedAtFromDate, setSelectedCreatedAtFromDate] = useState(new Date());
     let [selectedCreatedAtToDate, setSelectedCreatedAtToDate] = useState(new Date());
 
+    const handlePendingUpdated = () => {
+        list();
+    };
+
     return (
         <>
+            <CustomerPending ref={CustomerPendingRef} handleUpdated={handlePendingUpdated} />
             {/* ⚙️ Settings Modal */}
             <Modal
                 show={showSettings}
@@ -2531,7 +2543,8 @@ function CustomerIndex(props) {
                                                                 </td>}
                                                                 {(col.key === "credit_balance") && <td style={{ width: "auto", whiteSpace: "nowrap" }} >
                                                                     {customer.account && <Button variant="link" onClick={() => {
-                                                                        openBalanceSheetDialogue(customer.account);
+                                                                        // openBalanceSheetDialogue(customer.account);
+                                                                        openCustomerPending(customer);
                                                                     }}>
                                                                         <Amount amount={trimTo2Decimals(customer.credit_balance)} />
 

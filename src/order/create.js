@@ -1576,6 +1576,10 @@ const OrderCreate = forwardRef((props, ref) => {
                 console.log("Response:");
                 console.log(data);
 
+                if (props.handleUpdated) {
+                    props.handleUpdated();
+                }
+
                 if (formData.id) {
                     setToastMessage(`Updated Successfully✅`);
                     setShowToast(true);
@@ -2642,7 +2646,7 @@ const OrderCreate = forwardRef((props, ref) => {
         setShowToast(true);
 
         setTimeout(() => setShowToast(false), 3000);
-        if (selected.length > 0) {
+        if (selected?.length > 0) {
             setFormData({ ...formData });
         };
     };
@@ -6270,7 +6274,7 @@ const OrderCreate = forwardRef((props, ref) => {
                                     Create new payment
                                 </Button>
                                 <table class="table table-striped table-sm table-bordered">
-                                    {formData.payments_input && formData.payments_input.length > 0 &&
+                                    {formData.payments_input && formData.payments_input?.length > 0 &&
                                         <thead>
                                             <th>
                                                 Date

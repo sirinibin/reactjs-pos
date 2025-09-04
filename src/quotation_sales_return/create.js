@@ -1010,6 +1010,10 @@ const QuotationSalesReturnCreate = forwardRef((props, ref) => {
                     return Promise.reject(error);
                 }
 
+                if (props.handleUpdated) {
+                    props.handleUpdated();
+                }
+
                 setErrors({});
                 setProcessing(false);
 

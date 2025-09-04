@@ -31,11 +31,19 @@ const ExcelSheet = ReactExport.ExcelFile.ExcelSheet;
 
 function PurchaseIndex(props) {
     let [enableSelection, setEnableSelection] = useState(false);
+    let [pendingView, setPendingView] = useState(false);
+
 
     const dragRef = useRef(null);
+
+    let [showReportPreview, setShowReportPreview] = useState(false);
     const ReportPreviewRef = useRef();
     function openReportPreview() {
-        ReportPreviewRef.current.open("purchase_report");
+        setShowReportPreview(true);
+        if (timerRef.current) clearTimeout(timerRef.current);
+        timerRef.current = setTimeout(() => {
+            ReportPreviewRef.current?.open("purchase_report");
+        }, 100);
     }
 
 
@@ -165,6 +173,8 @@ function PurchaseIndex(props) {
     useEffect(() => {
         if (props.enableSelection) {
             setEnableSelection(props.enableSelection);
+        } else if (props.pendingView) {
+            setPendingView(props.pendingView);
         } else {
             setEnableSelection(false);
         }
@@ -177,7 +187,7 @@ function PurchaseIndex(props) {
             searchByMultipleValuesField("payment_status", props.selectedPaymentStatusList, true);
         }
 
-        list();
+        //list();
         getStore(localStorage.getItem("store_id"));
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
@@ -880,23 +890,42 @@ function PurchaseIndex(props) {
     }
 
 
+
+    let [showPurchaseCreate, setShowPurchaseCreate] = useState(false)
     function openUpdateForm(id) {
-        CreateFormRef.current.open(id);
+        setShowPurchaseCreate(true);
+        if (timerRef.current) clearTimeout(timerRef.current);
+
+        timerRef.current = setTimeout(() => {
+            CreateFormRef.current?.open(id);
+        }, 100);
     }
 
+    let [showPurchaseView, setShowPurchaseView] = useState(false);
     const DetailsViewRef = useRef();
     function openDetailsView(id) {
-        DetailsViewRef.current.open(id);
+        setShowPurchaseView(true);
+
+        if (timerRef.current) clearTimeout(timerRef.current);
+        timerRef.current = setTimeout(() => {
+            DetailsViewRef.current?.open(id);
+        }, 100);
     }
 
     const CreateFormRef = useRef();
     function openCreateForm() {
-        CreateFormRef.current.open();
+        CreateFormRef.current?.open(undefined, selectedVendors);
     }
 
+    let [showPurchaseReturnCreate, setShowPurchaseReturnCreate] = useState(true);
     const PurchaseReturnCreateRef = useRef();
     function openPurchaseReturnCreateForm(id) {
-        PurchaseReturnCreateRef.current.open(undefined, id);
+        setShowPurchaseReturnCreate(true);
+
+        if (timerRef.current) clearTimeout(timerRef.current);
+        timerRef.current = setTimeout(() => {
+            PurchaseReturnCreateRef.current?.open(undefined, id);
+        }, 100);
     }
 
 
@@ -932,10 +961,16 @@ function PurchaseIndex(props) {
         setShowPurchaseReturns(false);
     }
 
-    const PurchaseReturnListRef = useRef();
 
+    let [showPreview, setShowPreview] = useState(false);
+    const PurchaseReturnListRef = useRef();
     function sendWhatsAppMessage(model) {
-        PreviewRef.current.open(model, "whatsapp", "whatsapp_purchase");
+        setShowPreview(true);
+
+        if (timerRef.current) clearTimeout(timerRef.current);
+        timerRef.current = setTimeout(() => {
+            PreviewRef.current?.open(model, "whatsapp", "whatsapp_purchase");
+        }, 100);
     }
 
     const vendorSearchRef = useRef();
@@ -975,6 +1010,8 @@ function PurchaseIndex(props) {
         let saved = "";
         if (enableSelection === true) {
             saved = localStorage.getItem("select_purchase_table_settings");
+        } else if (pendingView === true) {
+            saved = localStorage.getItem("pending_purchase_table_settings");
         } else {
             saved = localStorage.getItem("purchase_table_settings");
         }
@@ -1009,6 +1046,8 @@ function PurchaseIndex(props) {
         if (missingOrUpdated) {
             if (enableSelection === true) {
                 localStorage.setItem("select_purchase_table_settings", JSON.stringify(defaultColumns));
+            } else if (pendingView === true) {
+                localStorage.setItem("pending_purchase_table_settings", JSON.stringify(defaultColumns));
             } else {
                 localStorage.setItem("purchase_table_settings", JSON.stringify(defaultColumns));
             }
@@ -1017,11 +1056,13 @@ function PurchaseIndex(props) {
 
         //2nd
 
-    }, [defaultColumns, enableSelection]);
+    }, [defaultColumns, enableSelection, pendingView]);
 
     function RestoreDefaultSettings() {
         if (enableSelection === true) {
             localStorage.setItem("select_purchase_table_settings", JSON.stringify(defaultColumns));
+        } else if (pendingView === true) {
+            localStorage.setItem("pending_purchase_table_settings", JSON.stringify(defaultColumns));
         } else {
             localStorage.setItem("purchase_table_settings", JSON.stringify(defaultColumns));
         }
@@ -1036,10 +1077,12 @@ function PurchaseIndex(props) {
     useEffect(() => {
         if (enableSelection === true) {
             localStorage.setItem("select_purchase_table_settings", JSON.stringify(columns));
+        } else if (pendingView === true) {
+            localStorage.setItem("pending_purchase_table_settings", JSON.stringify(columns));
         } else {
             localStorage.setItem("purchase_table_settings", JSON.stringify(columns));
         }
-    }, [columns, enableSelection]);
+    }, [columns, enableSelection, pendingView]);
 
     const handleToggleColumn = (index) => {
         const updated = [...columns];
@@ -1057,13 +1100,18 @@ function PurchaseIndex(props) {
 
     //Print
 
+    let [showOrderPrint, setShowOrderPrint] = useState(false);
     const PrintRef = useRef();
-
     const openPrint = useCallback(() => {
-        // document.removeEventListener('keydown', handleEnterKey);
+        setShowOrderPrint(true);
         setShowPrintTypeSelection(false);
 
-        PrintRef.current?.open(selectedPurchase, "purchase");
+        if (timerRef.current) clearTimeout(timerRef.current);
+
+        timerRef.current = setTimeout(() => {
+            PrintRef.current?.open(selectedPurchase, "purchase");
+        }, 100);
+
     }, [selectedPurchase]);
 
 
@@ -1106,20 +1154,33 @@ function PurchaseIndex(props) {
     }, [openPreview, store]);
 
 
+    let [showVendorUpdateForm, setShowVendorUpdateForm] = useState(false);
     const VendorUpdateFormRef = useRef();
     function openVendorUpdateForm(id) {
-        VendorUpdateFormRef.current.open(id);
+        setShowVendorUpdateForm(true);
+
+        if (timerRef.current) clearTimeout(timerRef.current);
+
+        timerRef.current = setTimeout(() => {
+            VendorUpdateFormRef.current?.open(id);
+        }, 100);
     }
 
     const handleSelected = (selected) => {
         props.onSelectPurchase(selected); // Send to parent
     };
 
+    const handleUpdated = () => {
+        if (props.handleUpdated) {
+            props.handleUpdated();
+        }
+    };
+
 
     return (
         <>
-            <VendorCreate ref={VendorUpdateFormRef} />
-            <OrderPrint ref={PrintRef} />
+            {showVendorUpdateForm && <VendorCreate ref={VendorUpdateFormRef} />}
+            {showOrderPrint && <OrderPrint ref={PrintRef} />}
             {showPurchasePreview && <OrderPreview ref={PreviewRef} />}
             <Modal show={showPrintTypeSelection} onHide={() => {
                 showPrintTypeSelection = false;
@@ -1265,11 +1326,11 @@ function PurchaseIndex(props) {
             </Modal>
 
 
-            <ReportPreview ref={ReportPreviewRef} searchParams={searchParams} sortOrder={sortOrder} sortField={sortField} />
-            <Preview ref={PreviewRef} />
-            <PurchaseCreate ref={CreateFormRef} refreshList={list} showToastMessage={props.showToastMessage} openDetailsView={openDetailsView} />
-            <PurchaseView ref={DetailsViewRef} openUpdateForm={openUpdateForm} openCreateForm={openCreateForm} />
-            <PurchaseReturnCreate refreshList={list} ref={PurchaseReturnCreateRef} showToastMessage={props.showToastMessage} />
+            {showReportPreview && <ReportPreview ref={ReportPreviewRef} searchParams={searchParams} sortOrder={sortOrder} sortField={sortField} />}
+            {showPreview && <Preview ref={PreviewRef} />}
+            {showPurchaseCreate && <PurchaseCreate ref={CreateFormRef} handleUpdated={handleUpdated} refreshList={list} showToastMessage={props.showToastMessage} openDetailsView={openDetailsView} />}
+            {showPurchaseView && <PurchaseView ref={DetailsViewRef} openUpdateForm={openUpdateForm} openCreateForm={openCreateForm} />}
+            {showPurchaseReturnCreate && <PurchaseReturnCreate refreshList={list} ref={PurchaseReturnCreateRef} showToastMessage={props.showToastMessage} />}
 
             <div className="container-fluid p-0">
                 <div className="row">
@@ -2575,7 +2636,7 @@ function PurchaseIndex(props) {
                     </div>
                 </Modal.Header>
                 <Modal.Body>
-                    <PurchasePaymentIndex ref={PurchasePaymentListRef} showToastMessage={props.showToastMessage} purchase={selectedPurchase} refreshPurchaseList={list} />
+                    {showPurchasePaymentHistory && <PurchasePaymentIndex ref={PurchasePaymentListRef} showToastMessage={props.showToastMessage} purchase={selectedPurchase} refreshPurchaseList={list} />}
                 </Modal.Body>
             </Modal>
 
@@ -2619,7 +2680,7 @@ function PurchaseIndex(props) {
                     </div>
                 </Modal.Header>
                 <Modal.Body>
-                    <PurchaseReturnIndex ref={PurchaseReturnListRef} showToastMessage={props.showToastMessage} purchase={selectedPurchase} refreshPurchaseList={list} />
+                    {showPurchaseReturns && <PurchaseReturnIndex ref={PurchaseReturnListRef} showToastMessage={props.showToastMessage} purchase={selectedPurchase} refreshPurchaseList={list} />}
                 </Modal.Body>
             </Modal>
         </>

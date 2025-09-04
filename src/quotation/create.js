@@ -978,6 +978,9 @@ const QuotationCreate = forwardRef((props, ref) => {
           //const error = data.errors
           return Promise.reject(error);
         }
+        if (props.handleUpdated) {
+          props.handleUpdated();
+        }
 
         setErrors({});
         setProcessing(false);

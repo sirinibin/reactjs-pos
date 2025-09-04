@@ -56,6 +56,7 @@ const TimeAgo = ({ date }) => {
 
 const OrderIndex = forwardRef((props, ref) => {
     let [enableSelection, setEnableSelection] = useState(false);
+    let [pendingView, setPendingView] = useState(false);
 
     const dragRef = useRef(null);
     const { lastMessage } = useContext(WebSocketContext);
@@ -547,7 +548,7 @@ const OrderIndex = forwardRef((props, ref) => {
     const [orderList, setOrderList] = useState([]);
 
     //pagination
-    const [pageSize, setPageSize] = useState(20);
+    let [pageSize, setPageSize] = useState(20);
     let [page, setPage] = useState(1);
     const [totalPages, setTotalPages] = useState(0);
     const [totalItems, setTotalItems] = useState(1);
@@ -652,6 +653,12 @@ const OrderIndex = forwardRef((props, ref) => {
             setEnableSelection(false);
         }
 
+        if (props.pendingView) {
+            setPendingView(props.pendingView);
+        } else {
+            setPendingView(false);
+        }
+
         if (props.selectedCustomers?.length > 0) {
             searchByMultipleValuesField("customer_id", props.selectedCustomers, true);
         }
@@ -660,7 +667,7 @@ const OrderIndex = forwardRef((props, ref) => {
             searchByMultipleValuesField("payment_status", props.selectedPaymentStatusList, true);
         }
 
-        list();
+        //list();
         if (localStorage.getItem("store_id")) {
             getStore(localStorage.getItem("store_id"));
         }
@@ -998,6 +1005,7 @@ const OrderIndex = forwardRef((props, ref) => {
                     return Promise.reject(error);
                 }
 
+
                 setIsListLoading(false);
                 setIsRefreshInProcess(false);
                 setOrderList(data.result);
@@ -1080,18 +1088,32 @@ const OrderIndex = forwardRef((props, ref) => {
         list();
     }
 
+    /*
     useEffect(() => {
         const timer = setTimeout(() => {
-            list();
+            // list();
         }, 300);
 
         // Cleanup to avoid memory leaks
         return () => clearTimeout(timer);
     }, [pageSize, list]);
+    */
 
+    // Add this effect:
+    useEffect(() => {
+        list();
+    }, [pageSize, list]);
 
     function changePageSize(size) {
+        // pageSize = parseInt(size);
         setPageSize(parseInt(size));
+
+        /*
+                if (timerRef.current) clearTimeout(timerRef.current);
+        
+                timerRef.current = setTimeout(() => {
+                    list();
+                }, 100);*/
     }
 
     function changePage(newPage) {
@@ -1131,20 +1153,36 @@ const OrderIndex = forwardRef((props, ref) => {
     }
 
 
+    let [showOrderView, setShowOrderView] = useState(false);
+
     const DetailsViewRef = useRef();
     function openDetailsView(id) {
-        DetailsViewRef.current.open(id);
+        showOrderView = true;
+        setShowOrderView(true);
+        if (timerRef.current) clearTimeout(timerRef.current);
+
+        timerRef.current = setTimeout(() => {
+            DetailsViewRef.current?.open(id);
+        }, 50);
     }
 
 
 
+    let [showOrderCreateForm, setShowOrderCreateForm] = useState(false);
     const CreateFormRef = useRef();
     function openCreateForm() {
-        CreateFormRef.current.open();
+        showOrderCreateForm = true;
+        setShowOrderCreateForm(true);
+
+        if (timerRef.current) clearTimeout(timerRef.current);
+
+        timerRef.current = setTimeout(() => {
+            CreateFormRef.current?.open();
+        }, 50);
     }
 
     function openUpdateForm(id) {
-        CreateFormRef.current.open(id);
+        CreateFormRef.current?.open(id);
     }
 
 
@@ -1159,9 +1197,17 @@ const OrderIndex = forwardRef((props, ref) => {
 
 
     //Sales Return
+    let [showSalesReturnCreateForm, setShowSalesReturnCreateForm] = useState(false);
     const SalesReturnCreateRef = useRef();
     function openSalesReturnCreateForm(id) {
-        SalesReturnCreateRef.current.open(undefined, id);
+        showSalesReturnCreateForm = true;
+        setShowSalesReturnCreateForm(true);
+
+        if (timerRef.current) clearTimeout(timerRef.current);
+
+        timerRef.current = setTimeout(() => {
+            SalesReturnCreateRef.current?.open(undefined, id);
+        }, 100);
     }
 
     let [reportingInProgress, setReportingInProgress] = useState(false);
@@ -1284,19 +1330,37 @@ const OrderIndex = forwardRef((props, ref) => {
 
     const PrintRef = useRef();
 
+    let [showPrint, setShowPrint] = useState(false);
+
     const openPrint = useCallback(() => {
         // document.removeEventListener('keydown', handleEnterKey);
         setShowPrintTypeSelection(false);
 
-        PrintRef.current?.open(selectedOrder, "sales");
+
+        setShowPrint(true);
+
+
+        if (timerRef.current) clearTimeout(timerRef.current);
+        timerRef.current = setTimeout(() => {
+            PrintRef.current?.open(selectedOrder, "sales");
+        }, 100);
+
+
     }, [selectedOrder]);
 
 
 
 
+    let [showReportPreview, setShowReportPreview] = useState(false);
     const ReportPreviewRef = useRef();
     function openReportPreview() {
-        ReportPreviewRef.current.open("sales_report");
+        showReportPreview = true;
+        setShowReportPreview(true);
+
+        if (timerRef.current) clearTimeout(timerRef.current);
+        timerRef.current = setTimeout(() => {
+            ReportPreviewRef.current?.open("sales_report");
+        }, 100);
     }
 
     function sendWhatsAppMessage(model) {
@@ -1348,6 +1412,8 @@ const OrderIndex = forwardRef((props, ref) => {
         let saved = "";
         if (enableSelection === true) {
             saved = localStorage.getItem("select_sales_table_settings");
+        } else if (pendingView === true) {
+            saved = localStorage.getItem("pending_sales_table_settings");
         } else {
             saved = localStorage.getItem("sales_table_settings");
         }
@@ -1382,6 +1448,8 @@ const OrderIndex = forwardRef((props, ref) => {
         if (missingOrUpdated) {
             if (enableSelection === true) {
                 localStorage.setItem("select_sales_table_settings", JSON.stringify(defaultColumns));
+            } else if (pendingView === true) {
+                localStorage.setItem("pending_sales_table_settings", JSON.stringify(defaultColumns));
             } else {
                 localStorage.setItem("sales_table_settings", JSON.stringify(defaultColumns));
             }
@@ -1391,13 +1459,15 @@ const OrderIndex = forwardRef((props, ref) => {
 
         //2nd
 
-    }, [defaultColumns, enableSelection]);
+    }, [defaultColumns, enableSelection, pendingView]);
 
     function RestoreDefaultSettings() {
         const clonedDefaults = defaultColumns.map(col => ({ ...col }));
 
         if (enableSelection === true) {
             localStorage.setItem("select_sales_table_settings", JSON.stringify(clonedDefaults));
+        } else if (pendingView === true) {
+            localStorage.setItem("pending_sales_table_settings", JSON.stringify(clonedDefaults));
         } else {
             localStorage.setItem("sales_table_settings", JSON.stringify(clonedDefaults));
         }
@@ -1412,10 +1482,12 @@ const OrderIndex = forwardRef((props, ref) => {
     useEffect(() => {
         if (enableSelection === true) {
             localStorage.setItem("select_sales_table_settings", JSON.stringify(columns));
+        } else if (pendingView === true) {
+            localStorage.setItem("pending_sales_table_settings", JSON.stringify(columns));
         } else {
             localStorage.setItem("sales_table_settings", JSON.stringify(columns));
         }
-    }, [columns, enableSelection]);
+    }, [columns, enableSelection, pendingView]);
 
     const handleToggleColumn = (index) => {
         const updated = [...columns];
@@ -1432,17 +1504,32 @@ const OrderIndex = forwardRef((props, ref) => {
     };
 
     const CustomerUpdateFormRef = useRef();
+    let [showCustomerUpdateForm, setShowCustomerUpdateForm] = useState(false);
     function openCustomerUpdateForm(id) {
-        CustomerUpdateFormRef.current.open(id);
+        showCustomerUpdateForm = true;
+        setShowCustomerUpdateForm(showCustomerUpdateForm);
+
+        if (timerRef.current) clearTimeout(timerRef.current);
+
+        timerRef.current = setTimeout(() => {
+            CustomerUpdateFormRef.current?.open(id);
+        }, 100);
     }
 
     const handleSelected = (selected) => {
         props.onSelectSale(selected); // Send to parent
     };
 
+    const handleUpdated = () => {
+        if (props.handleUpdated) {
+            props.handleUpdated();
+        }
+    };
+
+
     return (
         <>
-            <CustomerCreate ref={CustomerUpdateFormRef} />
+            {showCustomerUpdateForm && <CustomerCreate ref={CustomerUpdateFormRef} />}
             {/* ⚙️ Settings Modal */}
             <Modal
                 show={showSettings}
@@ -1531,7 +1618,7 @@ const OrderIndex = forwardRef((props, ref) => {
                 </Modal.Footer>
             </Modal>
 
-            <OrderPrint ref={PrintRef} />
+            {showPrint && <OrderPrint ref={PrintRef} />}
             {showOrderPreview && <OrderPreview ref={PreviewRef} />}
             <Modal show={showPrintTypeSelection} onHide={() => {
                 showPrintTypeSelection = false;
@@ -1573,11 +1660,11 @@ const OrderIndex = forwardRef((props, ref) => {
                 </Modal.Body>
             </Modal>
 
-            <ReportPreview ref={ReportPreviewRef} searchParams={searchParams} sortOrder={sortOrder} sortField={sortField} />
+            {showReportPreview && <ReportPreview ref={ReportPreviewRef} searchParams={searchParams} sortOrder={sortOrder} sortField={sortField} />}
 
-            <OrderCreate ref={CreateFormRef} refreshList={list} showToastMessage={props.showToastMessage} openCreateForm={openCreateForm} />
-            <OrderView ref={DetailsViewRef} openCreateForm={openCreateForm} />
-            <SalesReturnCreate ref={SalesReturnCreateRef} showToastMessage={props.showToastMessage} refreshSalesList={list} />
+            {showOrderCreateForm && <OrderCreate ref={CreateFormRef} handleUpdated={handleUpdated} refreshList={list} showToastMessage={props.showToastMessage} openCreateForm={openCreateForm} />}
+            {showOrderView && <OrderView ref={DetailsViewRef} openCreateForm={openCreateForm} />}
+            {showSalesReturnCreateForm && <SalesReturnCreate ref={SalesReturnCreateRef} showToastMessage={props.showToastMessage} refreshSalesList={list} />}
 
             {/* Error Modal */}
             <Modal show={showErrors} onHide={() => setShowErrors(false)} centered>
@@ -2414,7 +2501,7 @@ const OrderIndex = forwardRef((props, ref) => {
                     </div>
                 </Modal.Header>
                 <Modal.Body>
-                    <SalesPaymentIndex ref={SalesPaymentListRef} showToastMessage={props.showToastMessage} order={selectedOrder} refreshSalesList={list} />
+                    {showOrderPaymentHistory && <SalesPaymentIndex ref={SalesPaymentListRef} showToastMessage={props.showToastMessage} order={selectedOrder} refreshSalesList={list} />}
                 </Modal.Body>
             </Modal>
 
@@ -2458,7 +2545,7 @@ const OrderIndex = forwardRef((props, ref) => {
                     </div>
                 </Modal.Header>
                 <Modal.Body>
-                    <SalesReturnIndex ref={SalesReturnListRef} showToastMessage={props.showToastMessage} order={selectedOrder} refreshSalesList={list} />
+                    {showOrderReturns && <SalesReturnIndex ref={SalesReturnListRef} showToastMessage={props.showToastMessage} order={selectedOrder} refreshSalesList={list} />}
                 </Modal.Body>
             </Modal>
 

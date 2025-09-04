@@ -31,9 +31,16 @@ const ExcelSheet = ReactExport.ExcelFile.ExcelSheet;
 
 
 function QuotationSalesReturnIndex(props) {
+
+    let [showReportPreview, setShowReportPreview] = useState(false);
     const ReportPreviewRef = useRef();
     function openReportPreview() {
-        ReportPreviewRef.current.open("quotation_sales_return_report");
+        setShowReportPreview(true);
+
+        if (timerRef.current) clearTimeout(timerRef.current);
+        timerRef.current = setTimeout(() => {
+            ReportPreviewRef.current.open("quotation_sales_return_report");
+        }, 50);
     }
 
     const { lastMessage } = useContext(WebSocketContext);
@@ -94,9 +101,13 @@ function QuotationSalesReturnIndex(props) {
     const [selectedCreatedByUsers, setSelectedCreatedByUsers] = useState([]);
 
     let [enableSelection, setEnableSelection] = useState(true);
+    let [pendingView, setPendingView] = useState(false);
+
     useEffect(() => {
         if (props.enableSelection) {
             setEnableSelection(props.enableSelection);
+        } else if (props.pendingView) {
+            setPendingView(props.pendingView);
         } else {
             setEnableSelection(false);
         }
@@ -110,7 +121,7 @@ function QuotationSalesReturnIndex(props) {
             searchByMultipleValuesField("payment_status", props.selectedPaymentStatusList, true);
         }
 
-        list();
+        //list();
         if (localStorage.getItem("store_id")) {
             getStore(localStorage.getItem("store_id"));
         }
@@ -888,6 +899,8 @@ function QuotationSalesReturnIndex(props) {
                     return Promise.reject(error);
                 }
 
+
+
                 setIsListLoading(false);
                 setIsRefreshInProcess(false);
                 setQuotationSalesReturnList(data.result);
@@ -980,24 +993,41 @@ function QuotationSalesReturnIndex(props) {
     }
 
 
+    let [showQuotationSalesReturnView, setShowQuotationSalesReturnView] = useState(false);
     const DetailsViewRef = useRef();
     function openDetailsView(id) {
-        DetailsViewRef.current.open(id);
+        setShowQuotationSalesReturnView(true);
+        if (timerRef.current) clearTimeout(timerRef.current);
+        timerRef.current = setTimeout(() => {
+            DetailsViewRef.current.open(id);
+        }, 50);
     }
 
 
 
     //QuotationSales Return Payments
-    const QuotationSalesReturnPaymentCreateRef = useRef();
 
 
+    let [showQuotationSalesReturnPaymentDetailsView, setShowQuotationSalesReturnPaymentDetailsView] = useState(false);
     const QuotationSalesReturnPaymentDetailsViewRef = useRef();
     function openQuotationSalesReturnPaymentDetailsView(id) {
-        QuotationSalesReturnPaymentDetailsViewRef.current.open(id);
+        setShowQuotationSalesReturnPaymentDetailsView(true);
+        if (timerRef.current) clearTimeout(timerRef.current);
+        timerRef.current = setTimeout(() => {
+            QuotationSalesReturnPaymentDetailsViewRef.current.open(id);
+        }, 50);
     }
 
+
+    let [showQuotationSalesReturnPaymentCreate, setShowQuotationSalesReturnPaymentCreate] = useState(false);
+    const QuotationSalesReturnPaymentCreateRef = useRef();
+
     function openQuotationSalesReturnPaymentUpdateForm(id) {
-        QuotationSalesReturnPaymentCreateRef.current.open(id);
+        setShowQuotationSalesReturnPaymentCreate(true);
+        if (timerRef.current) clearTimeout(timerRef.current);
+        timerRef.current = setTimeout(() => {
+            QuotationSalesReturnPaymentCreateRef.current.open(id);
+        }, 50);
     }
 
     let [netProfit, setNetProfit] = useState(0.00);
@@ -1071,9 +1101,14 @@ function QuotationSalesReturnIndex(props) {
         //list();
     }
 
+    let [showQuotationSalesReturnCreate, setShowQuotationSalesReturnCreate] = useState(false);
     const CreateFormRef = useRef();
     function openUpdateForm(id, orderID) {
-        CreateFormRef.current.open(id, orderID);
+        setShowQuotationSalesReturnCreate(true);
+        if (timerRef.current) clearTimeout(timerRef.current);
+        timerRef.current = setTimeout(() => {
+            CreateFormRef.current.open(id, orderID);
+        }, 50);
     }
 
     function openCreateForm(sale) {
@@ -1092,9 +1127,15 @@ function QuotationSalesReturnIndex(props) {
         setStatsOpen(statsOpen);
     };
 
+
+    let [showQuotations, setShowQuotations] = useState(false);
     const QuotationsRef = useRef();
     function openQuotationSales() {
-        QuotationsRef.current.open(true, [], "invoice");
+        setShowQuotations(true);
+        if (timerRef.current) clearTimeout(timerRef.current);
+        timerRef.current = setTimeout(() => {
+            QuotationsRef.current.open(true, [], "invoice");
+        }, 50);
     }
 
     const handleSelectedQuotationSale = (selected) => {
@@ -1168,11 +1209,17 @@ function QuotationSalesReturnIndex(props) {
 
 
 
+
+    let [showOrderPrint, setShowOrderPrint] = useState(false);
+
     const PrintRef = useRef();
     const openPrint = useCallback((quotation) => {
-        // document.removeEventListener('keydown', handleEnterKey);
+        setShowOrderPrint(true);        // document.removeEventListener('keydown', handleEnterKey);
         setShowPrintTypeSelection(false);
-        PrintRef.current?.open(quotation, "quotation_sales_return");
+        if (timerRef.current) clearTimeout(timerRef.current);
+        timerRef.current = setTimeout(() => {
+            PrintRef.current?.open(quotation, "quotation_sales_return");
+        }, 50);
     }, []);
 
 
@@ -1210,6 +1257,8 @@ function QuotationSalesReturnIndex(props) {
         let saved = "";
         if (enableSelection === true) {
             saved = localStorage.getItem("select_quotation_sales_return_table_settings");
+        } else if (pendingView === true) {
+            saved = localStorage.getItem("pending_quotation_sales_return_table_settings");
         } else {
             saved = localStorage.getItem("quotation_sales_return_table_settings");
         }
@@ -1243,6 +1292,8 @@ function QuotationSalesReturnIndex(props) {
         if (missingOrUpdated) {
             if (enableSelection === true) {
                 localStorage.setItem("select_quotation_sales_return_table_settings", JSON.stringify(defaultColumns));
+            } else if (pendingView === true) {
+                localStorage.setItem("pending_quotation_sales_return_table_settings", JSON.stringify(defaultColumns));
             } else {
                 localStorage.setItem("quotation_sales_return_table_settings", JSON.stringify(defaultColumns));
             }
@@ -1251,11 +1302,13 @@ function QuotationSalesReturnIndex(props) {
 
         //2nd
 
-    }, [defaultColumns, enableSelection]);
+    }, [defaultColumns, enableSelection, pendingView]);
 
     function RestoreDefaultSettings() {
         if (enableSelection === true) {
             localStorage.setItem("select_quotation_sales_return_table_settings", JSON.stringify(defaultColumns));
+        } else if (pendingView === true) {
+            localStorage.setItem("pending_quotation_sales_return_table_settings", JSON.stringify(defaultColumns));
         } else {
             localStorage.setItem("quotation_sales_return_table_settings", JSON.stringify(defaultColumns));
         }
@@ -1284,15 +1337,29 @@ function QuotationSalesReturnIndex(props) {
         setColumns(reordered);
     };
 
+    let [showCustomerCreate, setShowCustomerCreate] = useState(false);
+
     const CustomerUpdateFormRef = useRef();
     function openCustomerUpdateForm(id) {
-        CustomerUpdateFormRef.current.open(id);
+        setShowCustomerCreate(true);
+
+        if (timerRef.current) clearTimeout(timerRef.current);
+        timerRef.current = setTimeout(() => {
+            CustomerUpdateFormRef.current?.open(id);
+        }, 50);
     }
+
+
+    const handleUpdated = () => {
+        if (props.handleUpdated) {
+            props.handleUpdated();
+        }
+    };
 
 
     return (
         <>
-            <CustomerCreate ref={CustomerUpdateFormRef} />
+            {showCustomerCreate && <CustomerCreate ref={CustomerUpdateFormRef} />}
             {/* ⚙️ Settings Modal */}
             <Modal
                 show={showSettings}
@@ -1397,7 +1464,7 @@ function QuotationSalesReturnIndex(props) {
                 </Modal.Footer>
             </Modal>
 
-            <OrderPrint ref={PrintRef} />
+            {showOrderPrint && <OrderPrint ref={PrintRef} />}
             <Modal show={showPrintTypeSelection} onHide={() => {
                 showPrintTypeSelection = false;
                 setShowPrintTypeSelection(showPrintTypeSelection);
@@ -1437,14 +1504,14 @@ function QuotationSalesReturnIndex(props) {
                     </Button>
                 </Modal.Body>
             </Modal>
-            <ReportPreview ref={ReportPreviewRef} searchParams={searchParams} sortOrder={sortOrder} sortField={sortField} />
+            {showReportPreview && <ReportPreview ref={ReportPreviewRef} searchParams={searchParams} sortOrder={sortOrder} sortField={sortField} />}
             {showOrderPreview && <OrderPreview ref={PreviewRef} />}
-            <Quotations ref={QuotationsRef} onSelectQuotation={handleSelectedQuotationSale} showToastMessage={props.showToastMessage} />
-            <QuotationSalesReturnCreate ref={CreateFormRef} refreshList={list} refreshQuotationSalesList={props.refreshQuotationSalesList} showToastMessage={props.showToastMessage} />
-            <QuotationSalesReturnView ref={DetailsViewRef} />
+            {showQuotations && <Quotations ref={QuotationsRef} onSelectQuotation={handleSelectedQuotationSale} showToastMessage={props.showToastMessage} />}
+            {showQuotationSalesReturnCreate && <QuotationSalesReturnCreate handleUpdated={handleUpdated} ref={CreateFormRef} refreshList={list} refreshQuotationSalesList={props.refreshQuotationSalesList} showToastMessage={props.showToastMessage} />}
+            {showQuotationSalesReturnView && <QuotationSalesReturnView ref={DetailsViewRef} />}
 
-            <QuotationSalesReturnPaymentCreate ref={QuotationSalesReturnPaymentCreateRef} showToastMessage={props.showToastMessage} openDetailsView={openQuotationSalesReturnPaymentDetailsView} />
-            <QuotationSalesReturnPaymentDetailsView ref={QuotationSalesReturnPaymentDetailsViewRef} openUpdateForm={openQuotationSalesReturnPaymentUpdateForm} showToastMessage={props.showToastMessage} />
+            {showQuotationSalesReturnPaymentCreate && <QuotationSalesReturnPaymentCreate ref={QuotationSalesReturnPaymentCreateRef} showToastMessage={props.showToastMessage} openDetailsView={openQuotationSalesReturnPaymentDetailsView} />}
+            {showQuotationSalesReturnPaymentDetailsView && <QuotationSalesReturnPaymentDetailsView ref={QuotationSalesReturnPaymentDetailsViewRef} openUpdateForm={openQuotationSalesReturnPaymentUpdateForm} showToastMessage={props.showToastMessage} />}
 
             <div className="container-fluid p-0">
                 <div className="row">
@@ -2840,7 +2907,7 @@ function QuotationSalesReturnIndex(props) {
                     </div>
                 </Modal.Header>
                 <Modal.Body>
-                    <QuotationSalesReturnPaymentIndex ref={QuotationSalesReturnPaymentListRef} showToastMessage={props.showToastMessage} quotationsalesReturn={selectedQuotationSalesReturn} refreshQuotationSalesReturnList={list} />
+                    {showQuotationSalesReturnPaymentHistory && <QuotationSalesReturnPaymentIndex ref={QuotationSalesReturnPaymentListRef} showToastMessage={props.showToastMessage} quotationsalesReturn={selectedQuotationSalesReturn} refreshQuotationSalesReturnList={list} />}
                 </Modal.Body>
             </Modal>
         </>

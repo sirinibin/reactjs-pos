@@ -47,12 +47,18 @@ const TimeAgo = ({ date }) => {
 
 function QuotationIndex(props) {
   let [enableSelection, setEnableSelection] = useState(false);
+  let [pendingView, setPendingView] = useState(false);
 
   const { lastMessage } = useContext(WebSocketContext);
 
+  let [showReportPreview, setShowReportPreview] = useState(false);
   const ReportPreviewRef = useRef();
   function openReportPreview(modelName) {
-    ReportPreviewRef.current.open(modelName);
+    setShowReportPreview(true);
+    if (timerRef.current) clearTimeout(timerRef.current);
+    timerRef.current = setTimeout(() => {
+      ReportPreviewRef.current?.open(modelName);
+    }, 50);
   }
 
 
@@ -138,6 +144,8 @@ function QuotationIndex(props) {
   useEffect(() => {
     if (props.enableSelection) {
       setEnableSelection(props.enableSelection);
+    } else if (props.pendingView) {
+      setPendingView(props.pendingView);
     } else {
       setEnableSelection(false);
     }
@@ -158,7 +166,7 @@ function QuotationIndex(props) {
       searchByMultipleValuesField("payment_status", props.selectedPaymentStatusList, true);
     }
 
-    list();
+    //list();
     getStore(localStorage.getItem("store_id"));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -484,6 +492,7 @@ function QuotationIndex(props) {
           return Promise.reject(error);
         }
 
+
         setIsListLoading(false);
         setIsRefreshInProcess(false);
         setQuotationList(data.result);
@@ -586,17 +595,33 @@ function QuotationIndex(props) {
   }
 
   function openUpdateForm(id) {
-    CreateFormRef.current.open(id);
+    setShowQuotationCreate(true);
+    if (timerRef.current) clearTimeout(timerRef.current);
+    timerRef.current = setTimeout(() => {
+      CreateFormRef.current?.open(id);
+    }, 50);
   }
 
+  let [showQuotationView, setShowQuotationView] = useState(false);
   const DetailsViewRef = useRef();
   function openDetailsView(id) {
-    DetailsViewRef.current.open(id);
+    setShowQuotationView(true);
+    if (timerRef.current) clearTimeout(timerRef.current);
+    timerRef.current = setTimeout(() => {
+      DetailsViewRef.current?.open(id);
+    }, 50);
   }
+
+  let [showQuotationCreate, setShowQuotationCreate] = useState(false);
 
   const CreateFormRef = useRef();
   function openCreateForm() {
-    CreateFormRef.current.open();
+    setShowQuotationCreate(true);
+
+    if (timerRef.current) clearTimeout(timerRef.current);
+    timerRef.current = setTimeout(() => {
+      CreateFormRef.current?.open();
+    }, 50);
   }
 
 
@@ -607,7 +632,7 @@ function QuotationIndex(props) {
     if (timerRef.current) clearTimeout(timerRef.current);
 
     timerRef.current = setTimeout(() => {
-      PreviewRef.current.open(model, "whatsapp", "whatsapp_quotation");
+      PreviewRef.current?.open(model, "whatsapp", "whatsapp_quotation");
     }, 100);
   }
 
@@ -669,11 +694,16 @@ function QuotationIndex(props) {
   const timerRef = useRef(null);
 
 
+  let [showOrderCreate, setShowOrderCreate] = useState(false);
   const SalesUpdateFormRef = useRef();
   function openSalesUpdateForm(id) {
-    SalesUpdateFormRef.current.open(id);
-  }
+    setShowOrderCreate(true);
 
+    if (timerRef.current) clearTimeout(timerRef.current);
+    timerRef.current = setTimeout(() => {
+      SalesUpdateFormRef.current?.open(id);
+    }, 50);
+  }
 
   //Printing
   const [selectedQuotation, setSelectedQuotation] = useState({});
@@ -715,11 +745,17 @@ function QuotationIndex(props) {
 
 
 
+  let [showOrderPrint, setShowOrderPrint] = useState(false);
   const PrintRef = useRef();
   const openPrint = useCallback((quotation) => {
-    // document.removeEventListener('keydown', handleEnterKey);
+    setShowOrderPrint(true);
     setShowPrintTypeSelection(false);
-    PrintRef.current?.open(quotation, "quotation");
+
+    if (timerRef.current) clearTimeout(timerRef.current);
+    timerRef.current = setTimeout(() => {
+      PrintRef.current?.open(quotation, "quotation");
+    }, 50);
+
   }, []);
 
 
@@ -762,6 +798,8 @@ function QuotationIndex(props) {
     let saved = "";
     if (enableSelection === true) {
       saved = localStorage.getItem("select_quotation_table_settings");
+    } else if (pendingView === true) {
+      saved = localStorage.getItem("pending_quotation_table_settings");
     } else {
       saved = localStorage.getItem("quotation_table_settings");
     }
@@ -796,6 +834,8 @@ function QuotationIndex(props) {
     if (missingOrUpdated) {
       if (enableSelection === true) {
         localStorage.setItem("select_quotation_table_settings", JSON.stringify(defaultColumns));
+      } else if (pendingView === true) {
+        localStorage.setItem("pending_quotation_table_settings", JSON.stringify(defaultColumns));
       } else {
         localStorage.setItem("quotation_table_settings", JSON.stringify(defaultColumns));
       }
@@ -805,11 +845,13 @@ function QuotationIndex(props) {
 
     //2nd
 
-  }, [defaultColumns, enableSelection]);
+  }, [defaultColumns, enableSelection, pendingView]);
 
   function RestoreDefaultSettings() {
     if (enableSelection === true) {
       localStorage.setItem("select_quotation_table_settings", JSON.stringify(defaultColumns));
+    } else if (pendingView === true) {
+      localStorage.setItem("pending_quotation_table_settings", JSON.stringify(defaultColumns));
     } else {
       localStorage.setItem("quotation_table_settings", JSON.stringify(defaultColumns));
     }
@@ -824,11 +866,13 @@ function QuotationIndex(props) {
   useEffect(() => {
     if (enableSelection === true) {
       localStorage.setItem("select_quotation_table_settings", JSON.stringify(columns));
+    } else if (pendingView === true) {
+      localStorage.setItem("pending_quotation_table_settings", JSON.stringify(columns));
     } else {
       localStorage.setItem("quotation_table_settings", JSON.stringify(columns));
     }
 
-  }, [columns, enableSelection]);
+  }, [columns, enableSelection, pendingView]);
 
   const handleToggleColumn = (index) => {
     const updated = [...columns];
@@ -846,9 +890,14 @@ function QuotationIndex(props) {
 
 
   //Quotation Sales Return
+  let [showQuotationSalesReturnCreate, setShowQuotationSalesReturnCreate] = useState(false);
   const QuotationSalesReturnCreateRef = useRef();
   function openQuotationSalesReturnCreateForm(id) {
-    QuotationSalesReturnCreateRef.current.open(undefined, id);
+    setShowQuotationSalesReturnCreate(true);
+    if (timerRef.current) clearTimeout(timerRef.current);
+    timerRef.current = setTimeout(() => {
+      QuotationSalesReturnCreateRef.current?.open(undefined, id);
+    }, 50);
   }
 
   let [showQuotationSalesReturns, setShowQuotationSalesReturns] = useState(false);
@@ -865,19 +914,31 @@ function QuotationIndex(props) {
 
   const QuotationSalesReturnListRef = useRef();
 
+  let [showCustomerCreate, setShowCustomerCreate] = useState(false);
   const CustomerUpdateFormRef = useRef();
   function openCustomerUpdateForm(id) {
-    CustomerUpdateFormRef.current.open(id);
+    setShowCustomerCreate(true);
+    if (timerRef.current) clearTimeout(timerRef.current);
+    timerRef.current = setTimeout(() => {
+      CustomerUpdateFormRef.current?.open(id);
+    }, 50);
   }
 
   const handleSelected = (selected) => {
     props.onSelectQuotation(selected); // Send to parent
   };
 
+  const handleUpdated = () => {
+    if (props.handleUpdated) {
+      props.handleUpdated();
+    }
+  };
+
+
 
   return (
     <>
-      <CustomerCreate ref={CustomerUpdateFormRef} />
+      {showCustomerCreate && <CustomerCreate ref={CustomerUpdateFormRef} />}
       <Modal show={showQuotationSalesReturns} size="lg" onHide={handleQuotationSalesReturnsClose} animation={false} scrollable={true}>
         <Modal.Header>
           <Modal.Title>Qtn. Sales Returns of Qtn. Sale Order #{selectedQuotation?.code}</Modal.Title>
@@ -893,11 +954,11 @@ function QuotationIndex(props) {
           </div>
         </Modal.Header>
         <Modal.Body>
-          <QuotationSalesReturnIndex ref={QuotationSalesReturnListRef} showToastMessage={props.showToastMessage} order={selectedQuotation} refreshSalesList={list} />
+          {showQuotationSalesReturns && <QuotationSalesReturnIndex ref={QuotationSalesReturnListRef} showToastMessage={props.showToastMessage} order={selectedQuotation} refreshSalesList={list} />}
         </Modal.Body>
       </Modal>
 
-      <QuotationSalesReturnCreate ref={QuotationSalesReturnCreateRef} showToastMessage={props.showToastMessage} refreshList={list} refreshSalesList={list} />
+      {showQuotationSalesReturnCreate && <QuotationSalesReturnCreate ref={QuotationSalesReturnCreateRef} showToastMessage={props.showToastMessage} refreshList={list} refreshSalesList={list} />}
 
       {/* ⚙️ Settings Modal */}
       <Modal
@@ -1003,7 +1064,7 @@ function QuotationIndex(props) {
         </Modal.Footer>
       </Modal>
 
-      <OrderPrint ref={PrintRef} />
+      {showOrderPrint && <OrderPrint ref={PrintRef} />}
       {showOrderPreview && <OrderPreview ref={PreviewRef} />}
       <Modal show={showPrintTypeSelection} onHide={() => {
         showPrintTypeSelection = false;
@@ -1044,10 +1105,10 @@ function QuotationIndex(props) {
           </Button>
         </Modal.Body>
       </Modal>
-      <OrderCreate ref={SalesUpdateFormRef} />
-      <ReportPreview ref={ReportPreviewRef} searchParams={searchParams} sortOrder={sortOrder} sortField={sortField} />
-      <QuotationCreate ref={CreateFormRef} refreshList={list} showToastMessage={props.showToastMessage} openDetailsView={openDetailsView} />
-      <QuotationView ref={DetailsViewRef} openUpdateForm={openUpdateForm} openCreateForm={openCreateForm} />
+      {showOrderCreate && <OrderCreate ref={SalesUpdateFormRef} />}
+      {showReportPreview && <ReportPreview ref={ReportPreviewRef} searchParams={searchParams} sortOrder={sortOrder} sortField={sortField} />}
+      {showQuotationCreate && <QuotationCreate ref={CreateFormRef} handleUpdated={handleUpdated} refreshList={list} showToastMessage={props.showToastMessage} openDetailsView={openDetailsView} />}
+      {showQuotationView && <QuotationView ref={DetailsViewRef} openUpdateForm={openUpdateForm} openCreateForm={openCreateForm} />}
       <div className="container-fluid p-0">
         <div className="row">
 

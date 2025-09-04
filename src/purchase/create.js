@@ -72,7 +72,7 @@ const PurchaseCreate = forwardRef((props, ref) => {
     }
 
     useImperativeHandle(ref, () => ({
-        open(id) {
+        open(id, selectedVendorsValue) {
             errors = {};
             setErrors({ ...errors });
             selectedProducts = [];
@@ -80,6 +80,7 @@ const PurchaseCreate = forwardRef((props, ref) => {
 
             selectedVendors = [];
             setSelectedVendors([]);
+
 
             selectedOrderPlacedByUsers = [];
             setSelectedOrderPlacedByUsers([]);
@@ -103,6 +104,15 @@ const PurchaseCreate = forwardRef((props, ref) => {
                 payment_status: "paid",
 
             };
+
+
+            if (selectedVendorsValue?.length > 0) {
+                setSelectedVendors([...selectedVendorsValue]);
+                formData.vendor_id = selectedVendorsValue[0].id;
+                if (selectedVendorsValue[0].use_remarks_in_purchases && selectedVendorsValue[0].remarks) {
+                    formData.remarks = selectedVendorsValue[0].remarks;
+                }
+            }
 
             ResetForm();
 
@@ -131,6 +141,8 @@ const PurchaseCreate = forwardRef((props, ref) => {
                 setFormData({ ...formData });
                 setSelectedOrderPlacedByUsers([...selectedOrderPlacedByUsers]);
             }
+
+
 
             setFormData({ ...formData });
 
@@ -796,6 +808,10 @@ const PurchaseCreate = forwardRef((props, ref) => {
                     const error = data && data.errors;
                     //const error = data.errors
                     return Promise.reject(error);
+                }
+
+                if (props.handleUpdated) {
+                    props.handleUpdated();
                 }
 
                 setErrors({});

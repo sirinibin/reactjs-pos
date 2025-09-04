@@ -241,6 +241,8 @@ const CustomerCreate = forwardRef((props, ref) => {
             haveErrors = true;
         }
 
+        formData.vat_no = formData.vat_no?.trim();
+
         if (formData.country_code === "" || formData.country_code === "SA") {
             if (formData.vat_no && !isValidNDigitNumber(formData.vat_no, 15)) {
                 errors["vat_no"] = "VAT No. should be 15 digits";

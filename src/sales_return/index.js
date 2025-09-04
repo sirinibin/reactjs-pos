@@ -53,10 +53,17 @@ const TimeAgo = ({ date }) => {
 
 function SalesReturnIndex(props) {
     let [enableSelection, setEnableSelection] = useState(false);
+    let [pendingView, setPendingView] = useState(false);
 
+    let [showReportPreview, setShowReportPreview] = useState(false);
     const ReportPreviewRef = useRef();
     function openReportPreview() {
-        ReportPreviewRef.current.open("sales_return_report");
+        showReportPreview = true;
+        setShowReportPreview(true);
+        if (timerRef.current) clearTimeout(timerRef.current);
+        timerRef.current = setTimeout(() => {
+            ReportPreviewRef.current?.open("sales_return_report");
+        }, 50);
     }
 
     const { lastMessage } = useContext(WebSocketContext);
@@ -120,6 +127,8 @@ function SalesReturnIndex(props) {
     useEffect(() => {
         if (props.enableSelection) {
             setEnableSelection(props.enableSelection);
+        } if (props.pendingView) {
+            setPendingView(props.pendingView);
         } else {
             setEnableSelection(false);
         }
@@ -132,7 +141,7 @@ function SalesReturnIndex(props) {
             searchByMultipleValuesField("payment_status", props.selectedPaymentStatusList, true);
         }
 
-        list();
+        // list();
         if (localStorage.getItem("store_id")) {
             getStore(localStorage.getItem("store_id"));
         }
@@ -991,6 +1000,8 @@ function SalesReturnIndex(props) {
                     return Promise.reject(error);
                 }
 
+
+
                 setIsListLoading(false);
                 setIsRefreshInProcess(false);
                 setSalesReturnList(data.result);
@@ -1083,24 +1094,41 @@ function SalesReturnIndex(props) {
     }
 
 
+    let [showSalesReturnDetailsView, setShowSalesReturnDetailsView] = useState(false);
     const DetailsViewRef = useRef();
     function openDetailsView(id) {
-        DetailsViewRef.current.open(id);
+        setShowSalesReturnDetailsView(true);
+        if (timerRef.current) clearTimeout(timerRef.current);
+        timerRef.current = setTimeout(() => {
+            DetailsViewRef.current?.open(id);
+        }, 50);
     }
 
 
 
     //Sales Return Payments
-    const SalesReturnPaymentCreateRef = useRef();
 
 
+    let [showSalesReturnPaymentDetailsView, setShowSalesReturnPaymentDetailsView] = useState(false);
     const SalesReturnPaymentDetailsViewRef = useRef();
     function openSalesReturnPaymentDetailsView(id) {
-        SalesReturnPaymentDetailsViewRef.current.open(id);
+        setShowSalesReturnPaymentDetailsView(true);
+
+        if (timerRef.current) clearTimeout(timerRef.current);
+        timerRef.current = setTimeout(() => {
+            SalesReturnPaymentDetailsViewRef.current?.open(id);
+        }, 50);
     }
 
+
+    let [showSalesReturnPaymentCreate, setShowSalesReturnPaymentCreate] = useState(false);
+    const SalesReturnPaymentCreateRef = useRef();
     function openSalesReturnPaymentUpdateForm(id) {
-        SalesReturnPaymentCreateRef.current.open(id);
+        setShowSalesReturnPaymentCreate(true);
+        if (timerRef.current) clearTimeout(timerRef.current);
+        timerRef.current = setTimeout(() => {
+            SalesReturnPaymentCreateRef.current?.open(id);
+        }, 50);
     }
 
     let [netProfit, setNetProfit] = useState(0.00);
@@ -1174,16 +1202,21 @@ function SalesReturnIndex(props) {
         //list();
     }
 
+    let [showSalesReturnCreateForm, setShowSalesReturnCreateForm] = useState(false);
     const CreateFormRef = useRef();
     function openUpdateForm(id, orderID) {
-        CreateFormRef.current.open(id, orderID);
+        setShowSalesReturnCreateForm(true);
+        if (timerRef.current) clearTimeout(timerRef.current);
+        timerRef.current = setTimeout(() => {
+            CreateFormRef.current?.open(id, orderID);
+        }, 50);
     }
 
     function openCreateForm(sale) {
         if (sale) {
-            CreateFormRef.current.open(undefined, sale.id);
+            CreateFormRef.current?.open(undefined, sale.id);
         } else {
-            CreateFormRef.current.open(undefined, props.order.id);
+            CreateFormRef.current?.open(undefined, props.order.id);
         }
     }
 
@@ -1195,9 +1228,15 @@ function SalesReturnIndex(props) {
         setStatsOpen(statsOpen);
     };
 
+
+    let [showSales, setShowSales] = useState(false);
     const SalesRef = useRef();
     function openSales() {
-        SalesRef.current.open(true);
+        setShowSales(true);
+        if (timerRef.current) clearTimeout(timerRef.current);
+        timerRef.current = setTimeout(() => {
+            SalesRef.current?.open(true);
+        }, 50);
     }
 
     const handleSelectedSale = (selected) => {
@@ -1230,7 +1269,7 @@ function SalesReturnIndex(props) {
         if (timerRef.current) clearTimeout(timerRef.current);
 
         timerRef.current = setTimeout(() => {
-            PreviewRef.current.open(model, "whatsapp", "whatsapp_sales_return");
+            PreviewRef.current?.open(model, "whatsapp", "whatsapp_sales_return");
         }, 100);
     }
 
@@ -1267,10 +1306,18 @@ function SalesReturnIndex(props) {
         }
     }, [openPreview, store]);
 
+    let [showOrderPrint, setShowOrderPrint] = useState(false);
+
     const PrintRef = useRef();
     const openPrint = useCallback((salesReturn) => {
         setShowPrintTypeSelection(false);
-        PrintRef.current?.open(salesReturn, "sales_return");
+        setShowOrderPrint(true);
+
+        if (timerRef.current) clearTimeout(timerRef.current);
+        timerRef.current = setTimeout(() => {
+            PrintRef.current?.open(salesReturn, "sales_return");
+        }, 50);
+
     }, []);
 
 
@@ -1305,6 +1352,8 @@ function SalesReturnIndex(props) {
         let saved = "";
         if (enableSelection === true) {
             saved = localStorage.getItem("select_sales_return_table_settings");
+        } else if (pendingView === true) {
+            saved = localStorage.getItem("pending_sales_return_table_settings");
         } else {
             saved = localStorage.getItem("sales_return_table_settings");
         }
@@ -1339,6 +1388,8 @@ function SalesReturnIndex(props) {
         if (missingOrUpdated) {
             if (enableSelection === true) {
                 localStorage.setItem("select_sales_return_table_settings", JSON.stringify(defaultColumns));
+            } else if (pendingView === true) {
+                localStorage.setItem("pending_sales_return_table_settings", JSON.stringify(defaultColumns));
             } else {
                 localStorage.setItem("sales_return_table_settings", JSON.stringify(defaultColumns));
             }
@@ -1347,11 +1398,13 @@ function SalesReturnIndex(props) {
 
         //2nd
 
-    }, [defaultColumns, enableSelection]);
+    }, [defaultColumns, enableSelection, pendingView]);
 
     function RestoreDefaultSettings() {
         if (enableSelection === true) {
             localStorage.setItem("select_sales_return_table_settings", JSON.stringify(defaultColumns));
+        } else if (pendingView === true) {
+            localStorage.setItem("pending_sales_return_table_settings", JSON.stringify(defaultColumns));
         } else {
             localStorage.setItem("sales_return_table_settings", JSON.stringify(defaultColumns));
         }
@@ -1380,9 +1433,16 @@ function SalesReturnIndex(props) {
         setColumns(reordered);
     };
 
+    let [showCustomerUpdateForm, setShowCustomerUpdateForm] = useState(false);
     const CustomerUpdateFormRef = useRef();
     function openCustomerUpdateForm(id) {
-        CustomerUpdateFormRef.current.open(id);
+        showCustomerUpdateForm = true;
+        setShowCustomerUpdateForm(true);
+
+        if (timerRef.current) clearTimeout(timerRef.current);
+        timerRef.current = setTimeout(() => {
+            CustomerUpdateFormRef.current?.open(id);
+        }, 50);
     }
 
 
@@ -1390,9 +1450,16 @@ function SalesReturnIndex(props) {
         props.onSelectSalesReturn(selected); // Send to parent
     };
 
+    const handleUpdated = () => {
+        if (props.handleUpdated) {
+            props.handleUpdated();
+        }
+    };
+
+
     return (
         <>
-            <CustomerCreate ref={CustomerUpdateFormRef} />
+            {showCustomerUpdateForm && <CustomerCreate ref={CustomerUpdateFormRef} />}
             {/* ⚙️ Settings Modal */}
             <Modal
                 show={showSettings}
@@ -1519,15 +1586,14 @@ function SalesReturnIndex(props) {
                     </Button>
                 </Modal.Body>
             </Modal>
-            <OrderPrint ref={PrintRef} />
-            <ReportPreview ref={ReportPreviewRef} searchParams={searchParams} sortOrder={sortOrder} sortField={sortField} />
+            {showOrderPrint && <OrderPrint ref={PrintRef} />}
+            {showReportPreview && <ReportPreview ref={ReportPreviewRef} searchParams={searchParams} sortOrder={sortOrder} sortField={sortField} />}
             {showOrderPreview && <OrderPreview ref={PreviewRef} />}
-            <Sales ref={SalesRef} onSelectSale={handleSelectedSale} showToastMessage={props.showToastMessage} />
-            <SalesReturnCreate ref={CreateFormRef} refreshList={list} refreshSalesList={props.refreshSalesList} showToastMessage={props.showToastMessage} />
-            <SalesReturnView ref={DetailsViewRef} />
-
-            <SalesReturnPaymentCreate ref={SalesReturnPaymentCreateRef} showToastMessage={props.showToastMessage} openDetailsView={openSalesReturnPaymentDetailsView} />
-            <SalesReturnPaymentDetailsView ref={SalesReturnPaymentDetailsViewRef} openUpdateForm={openSalesReturnPaymentUpdateForm} showToastMessage={props.showToastMessage} />
+            {showSales && <Sales ref={SalesRef} onSelectSale={handleSelectedSale} showToastMessage={props.showToastMessage} />}
+            {showSalesReturnCreateForm && <SalesReturnCreate handleUpdated={handleUpdated} ref={CreateFormRef} refreshList={list} refreshSalesList={props.refreshSalesList} showToastMessage={props.showToastMessage} />}
+            {showSalesReturnDetailsView && <SalesReturnView ref={DetailsViewRef} />}
+            {showSalesReturnPaymentCreate && <SalesReturnPaymentCreate ref={SalesReturnPaymentCreateRef} showToastMessage={props.showToastMessage} openDetailsView={openSalesReturnPaymentDetailsView} />}
+            {showSalesReturnPaymentDetailsView && <SalesReturnPaymentDetailsView ref={SalesReturnPaymentDetailsViewRef} openUpdateForm={openSalesReturnPaymentUpdateForm} showToastMessage={props.showToastMessage} />}
 
             {/* Error Modal */}
             <Modal show={showErrors} onHide={() => setShowErrors(false)} centered>
@@ -3116,7 +3182,7 @@ function SalesReturnIndex(props) {
                     </div>
                 </Modal.Header>
                 <Modal.Body>
-                    <SalesReturnPaymentIndex ref={SalesReturnPaymentListRef} showToastMessage={props.showToastMessage} salesReturn={selectedSalesReturn} refreshSalesReturnList={list} />
+                    {showSalesReturnPaymentHistory && <SalesReturnPaymentIndex ref={SalesReturnPaymentListRef} showToastMessage={props.showToastMessage} salesReturn={selectedSalesReturn} refreshSalesReturnList={list} />}
                 </Modal.Body>
             </Modal>
         </>

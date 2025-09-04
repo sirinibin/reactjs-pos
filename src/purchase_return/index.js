@@ -31,10 +31,16 @@ const ExcelSheet = ReactExport.ExcelFile.ExcelSheet;
 
 function PurchaseReturnIndex(props) {
     let [enableSelection, setEnableSelection] = useState(true);
+    let [pendingView, setPendingView] = useState(false);
 
+    let [showReportPreview, setReportPreview] = useState(false);
     const ReportPreviewRef = useRef();
     function openReportPreview() {
-        ReportPreviewRef.current.open("purchase_return_report");
+        setReportPreview(true);
+        if (timerRef.current) clearTimeout(timerRef.current);
+        timerRef.current = setTimeout(() => {
+            ReportPreviewRef.current?.open("purchase_return_report");
+        }, 50);
     }
 
     const { lastMessage } = useContext(WebSocketContext);
@@ -92,6 +98,8 @@ function PurchaseReturnIndex(props) {
     useEffect(() => {
         if (props.enableSelection) {
             setEnableSelection(props.enableSelection);
+        } else if (props.pendingView) {
+            setPendingView(props.pendingView);
         } else {
             setEnableSelection(false);
         }
@@ -105,7 +113,7 @@ function PurchaseReturnIndex(props) {
         }
 
 
-        list();
+        //list();
         getStore(localStorage.getItem("store_id"));
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
@@ -686,6 +694,10 @@ function PurchaseReturnIndex(props) {
                     return Promise.reject(error);
                 }
 
+                if (props.handleRefreshed) {
+                    props.handleRefreshed();
+                }
+
                 setIsListLoading(false);
                 setIsRefreshInProcess(false);
                 setPurchaseReturnList(data.result);
@@ -713,7 +725,7 @@ function PurchaseReturnIndex(props) {
                 setIsRefreshInProcess(false);
                 console.log(error);
             });
-    }, [sortOrder, sortField, page, pageSize, statsOpen, searchParams, props.purchase]);
+    }, [sortOrder, sortField, page, pageSize, statsOpen, searchParams, props]);
 
 
     const handleSummaryToggle = (isOpen) => {
@@ -782,32 +794,56 @@ function PurchaseReturnIndex(props) {
     }
 
 
+    let [showPurchaseReturnView, setShowPurchaseReturnView] = useState(false);
     const DetailsViewRef = useRef();
     function openDetailsView(id) {
-        DetailsViewRef.current.open(id);
+        setShowPurchaseReturnView(true);
+        if (timerRef.current) clearTimeout(timerRef.current);
+        timerRef.current = setTimeout(() => {
+            DetailsViewRef.current?.open(id);
+        }, 50);
     }
 
+    let [showPurchaseReturnCreate, setShowPurchaseReturnCreate] = useState(false)
     const CreateFormRef = useRef();
     function openUpdateForm(id) {
-        CreateFormRef.current.open(id);
+        setShowPurchaseReturnCreate(true);
+
+        if (timerRef.current) clearTimeout(timerRef.current);
+        timerRef.current = setTimeout(() => {
+            CreateFormRef.current?.open(id);
+        }, 50);
     }
 
 
     //Purchase Return Payments
-    const PurchaseReturnPaymentCreateRef = useRef();
+
     /*
         function openPurchaseReturnPaymentCreateForm(purchaseReturn) {
             PurchaseReturnPaymentCreateRef.current.open(undefined, purchaseReturn);
         }
             */
 
+    let [showPurchaseReturnPaymentDetailsView, setShowPurchaseReturnPaymentDetailsView] = useState(false);
     const PurchaseReturnPaymentDetailsViewRef = useRef();
     function openPurchaseReturnPaymentDetailsView(id) {
-        PurchaseReturnPaymentDetailsViewRef.current.open(id);
+        setShowPurchaseReturnPaymentDetailsView(true);
+
+        if (timerRef.current) clearTimeout(timerRef.current);
+        timerRef.current = setTimeout(() => {
+            PurchaseReturnPaymentDetailsViewRef.current?.open(id);
+        }, 50);
     }
 
+    let [showPurchaseReturnPaymentCreate, setShowPurchaseReturnPaymentCreate] = useState(false);
+    const PurchaseReturnPaymentCreateRef = useRef();
     function openPurchaseReturnPaymentUpdateForm(id) {
-        PurchaseReturnPaymentCreateRef.current.open(id);
+        setShowPurchaseReturnPaymentCreate(true);
+
+        if (timerRef.current) clearTimeout(timerRef.current);
+        timerRef.current = setTimeout(() => {
+            PurchaseReturnPaymentCreateRef.current?.open(id);
+        }, 50);
     }
 
     const [selectedPurchaseReturn, setSelectedPurchaseReturn] = useState({});
@@ -883,15 +919,20 @@ function PurchaseReturnIndex(props) {
 
     function openCreateForm(purchase) {
         if (purchase) {
-            CreateFormRef.current.open(undefined, purchase.id);
+            CreateFormRef.current?.open(undefined, purchase.id);
         } else {
-            CreateFormRef.current.open(undefined, props.purchase.id);
+            CreateFormRef.current?.open(undefined, props.purchase.id);
         }
     }
 
+    let [showPurchases, setShowPurchases] = useState(false);
     const PurchasesRef = useRef();
     function openPurchases() {
-        PurchasesRef.current.open(true);
+        setShowPurchases(true);
+        if (timerRef.current) clearTimeout(timerRef.current);
+        timerRef.current = setTimeout(() => {
+            PurchasesRef.current?.open(true);
+        }, 50);
     }
 
     const handleSelectedPurchase = (selected) => {
@@ -949,6 +990,8 @@ function PurchaseReturnIndex(props) {
         let saved = "";
         if (enableSelection === true) {
             saved = localStorage.getItem("select_purchase_return_table_settings");
+        } else if (pendingView === true) {
+            saved = localStorage.getItem("pending_purchase_return_table_settings");
         } else {
             saved = localStorage.getItem("purchase_return_table_settings");
         }
@@ -983,6 +1026,8 @@ function PurchaseReturnIndex(props) {
         if (missingOrUpdated) {
             if (enableSelection === true) {
                 localStorage.setItem("select_purchase_return_table_settings", JSON.stringify(defaultColumns));
+            } else if (pendingView === true) {
+                localStorage.setItem("pending_purchase_return_table_settings", JSON.stringify(defaultColumns));
             } else {
                 localStorage.setItem("purchase_return_table_settings", JSON.stringify(defaultColumns));
             }
@@ -991,11 +1036,13 @@ function PurchaseReturnIndex(props) {
 
         //2nd
 
-    }, [defaultColumns, enableSelection]);
+    }, [defaultColumns, enableSelection, pendingView]);
 
     function RestoreDefaultSettings() {
         if (enableSelection === true) {
             localStorage.setItem("select_purchase_return_table_settings", JSON.stringify(defaultColumns));
+        } else if (pendingView === true) {
+            localStorage.setItem("pending_purchase_return_table_settings", JSON.stringify(defaultColumns));
         } else {
             localStorage.setItem("purchase_return_table_settings", JSON.stringify(defaultColumns));
         }
@@ -1009,10 +1056,12 @@ function PurchaseReturnIndex(props) {
     useEffect(() => {
         if (enableSelection === true) {
             localStorage.setItem("select_purchase_return_table_settings", JSON.stringify(columns));
+        } else if (pendingView === true) {
+            localStorage.setItem("pending_purchase_return_table_settings", JSON.stringify(columns));
         } else {
             localStorage.setItem("purchase_return_table_settings", JSON.stringify(columns));
         }
-    }, [columns, enableSelection]);
+    }, [columns, enableSelection, pendingView]);
 
     const handleToggleColumn = (index) => {
         const updated = [...columns];
@@ -1030,13 +1079,17 @@ function PurchaseReturnIndex(props) {
 
     //Print
 
+    let [showOrderPrint, setShowOrderPrint] = useState(false);
     const PrintRef = useRef();
-
     const openPrint = useCallback(() => {
         // document.removeEventListener('keydown', handleEnterKey);
         setShowPrintTypeSelection(false);
+        setShowOrderPrint(true);
 
-        PrintRef.current?.open(selectedPurchaseReturn, "purchase_return");
+        if (timerRef.current) clearTimeout(timerRef.current);
+        timerRef.current = setTimeout(() => {
+            PrintRef.current?.open(selectedPurchaseReturn, "purchase_return");
+        }, 50);
     }, [selectedPurchaseReturn]);
 
 
@@ -1078,16 +1131,28 @@ function PurchaseReturnIndex(props) {
         }
     }, [openPreview, store]);
 
+    let [showVendorCreate, setShowVendorCreate] = useState(false);
     const VendorUpdateFormRef = useRef();
     function openVendorUpdateForm(id) {
-        VendorUpdateFormRef.current.open(id);
+        setShowVendorCreate(true);
+        if (timerRef.current) clearTimeout(timerRef.current);
+        timerRef.current = setTimeout(() => {
+            VendorUpdateFormRef.current?.open(id);
+        }, 50);
     }
+
+
+    const handleUpdated = () => {
+        if (props.handleUpdated) {
+            props.handleUpdated();
+        }
+    };
 
 
     return (
         <>
-            <VendorCreate ref={VendorUpdateFormRef} />
-            <OrderPrint ref={PrintRef} />
+            {showVendorCreate && <VendorCreate ref={VendorUpdateFormRef} />}
+            {showOrderPrint && <OrderPrint ref={PrintRef} />}
             {showPurchaseReturnPreview && <OrderPreview ref={PreviewRef} />}
             <Modal show={showPrintTypeSelection} onHide={() => {
                 showPrintTypeSelection = false;
@@ -1232,13 +1297,13 @@ function PurchaseReturnIndex(props) {
                 </Modal.Footer>
             </Modal>
 
-            <ReportPreview ref={ReportPreviewRef} searchParams={searchParams} sortOrder={sortOrder} sortField={sortField} />
-            <Purchases ref={PurchasesRef} onSelectPurchase={handleSelectedPurchase} showToastMessage={props.showToastMessage} />
-            <PurchaseReturnCreate ref={CreateFormRef} refreshList={list} refreshPurchaseList={props.refreshPurchaseList} showToastMessage={props.showToastMessage} />
-            <PurchaseReturnView ref={DetailsViewRef} />
+            {showReportPreview && <ReportPreview ref={ReportPreviewRef} searchParams={searchParams} sortOrder={sortOrder} sortField={sortField} />}
+            {showPurchases && <Purchases ref={PurchasesRef} onSelectPurchase={handleSelectedPurchase} showToastMessage={props.showToastMessage} />}
+            {showPurchaseReturnCreate && <PurchaseReturnCreate ref={CreateFormRef} handleUpdated={handleUpdated} refreshList={list} refreshPurchaseList={props.refreshPurchaseList} showToastMessage={props.showToastMessage} />}
+            {showPurchaseReturnView && <PurchaseReturnView ref={DetailsViewRef} />}
 
-            <PurchaseReturnPaymentCreate ref={PurchaseReturnPaymentCreateRef} showToastMessage={props.showToastMessage} openDetailsView={openPurchaseReturnPaymentDetailsView} />
-            <PurchaseReturnPaymentDetailsView ref={PurchaseReturnPaymentDetailsViewRef} openUpdateForm={openPurchaseReturnPaymentUpdateForm} showToastMessage={props.showToastMessage} />
+            {showPurchaseReturnPaymentCreate && <PurchaseReturnPaymentCreate ref={PurchaseReturnPaymentCreateRef} showToastMessage={props.showToastMessage} openDetailsView={openPurchaseReturnPaymentDetailsView} />}
+            {showPurchaseReturnPaymentDetailsView && <PurchaseReturnPaymentDetailsView ref={PurchaseReturnPaymentDetailsViewRef} openUpdateForm={openPurchaseReturnPaymentUpdateForm} showToastMessage={props.showToastMessage} />}
 
             <div className="container-fluid p-0">
                 <div className="row">
@@ -1305,7 +1370,9 @@ function PurchaseReturnIndex(props) {
                             hide={true}
                             variant="primary"
                             className="btn btn-primary mb-3"
-                            onClick={openPurchases}
+                            onClick={() => {
+                                openPurchases();
+                            }}
                         >
                             <i className="bi bi-plus-lg"></i> Create
                         </Button>
@@ -2597,7 +2664,7 @@ function PurchaseReturnIndex(props) {
                     </div>
                 </Modal.Header>
                 <Modal.Body>
-                    <PurchaseReturnPaymentIndex ref={PurchaseReturnPaymentListRef} showToastMessage={props.showToastMessage} purchaseReturn={selectedPurchaseReturn} refreshPurchaseReturnList={list} />
+                    {showPurchaseReturnPaymentHistory && <PurchaseReturnPaymentIndex ref={PurchaseReturnPaymentListRef} showToastMessage={props.showToastMessage} purchaseReturn={selectedPurchaseReturn} refreshPurchaseReturnList={list} />}
                 </Modal.Body>
             </Modal>
         </>

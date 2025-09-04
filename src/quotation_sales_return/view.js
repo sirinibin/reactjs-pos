@@ -99,7 +99,7 @@ const QuotationSalesReturnView = forwardRef((props, ref) => {
         }
 
         fetch(
-            "/v1/quotations-ales-return-payment?" +
+            "/v1/quotations-sales-return-payment?" +
             Select +
             queryParams,
             requestOptions
