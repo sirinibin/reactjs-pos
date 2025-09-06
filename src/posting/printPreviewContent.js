@@ -392,7 +392,7 @@ const BalanceSheetPrintPreviewContent = forwardRef((props, ref) => {
                                                 <li>Date</li>
                                             </ul>
                                         </th>
-                                        <th className="per10 text-center" style={{ padding: "0px", width: "20%", borderBottom: tableBorderThickness, borderRight: tableBorderThickness, }}>
+                                        <th className="per10 text-center" style={{ padding: "0px", width: "22%", borderBottom: tableBorderThickness, borderRight: tableBorderThickness, }}>
                                             <ul
                                                 className="list-unstyled"
                                                 style={{
@@ -403,7 +403,7 @@ const BalanceSheetPrintPreviewContent = forwardRef((props, ref) => {
                                                 <li>ID</li>
                                             </ul>
                                         </th>
-                                        <th className="per3 text-center" colSpan={2} style={{ padding: "0px", width: "29%", borderRight: tableBorderThickness, borderBottom: tableBorderThickness }}>
+                                        <th className="per3 text-center" colSpan={2} style={{ padding: "0px", width: "28%", borderRight: tableBorderThickness, borderBottom: tableBorderThickness }}>
                                             <ul
                                                 className="list-unstyled"
                                                 style={{
@@ -415,7 +415,7 @@ const BalanceSheetPrintPreviewContent = forwardRef((props, ref) => {
                                                 <li>Debit</li>
                                             </ul>
                                         </th>
-                                        <th className="per68 text-center" colSpan={2} style={{ padding: "0px", width: "29%", borderRight: tableBorderThickness, borderBottom: tableBorderThickness }}>
+                                        <th className="per68 text-center" colSpan={2} style={{ padding: "0px", width: "28%", borderRight: tableBorderThickness, borderBottom: tableBorderThickness }}>
                                             <ul
                                                 className="list-unstyled"
                                                 style={{
