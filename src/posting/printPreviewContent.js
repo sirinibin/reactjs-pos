@@ -490,7 +490,7 @@ const BalanceSheetPrintPreviewContent = forwardRef((props, ref) => {
                                         <tr style={{ borderBottom: tableBorderThickness, }} key={index}   >
                                             <td style={{ width: "auto", padding: "3px", whiteSpace: "nowrap", borderRight: tableBorderThickness, }} >{post.no}</td>
                                             <td style={{ width: "auto", padding: "3px", whiteSpace: "nowrap", borderRight: tableBorderThickness, }} >{post.date ? format(new Date(post.date), "MMM dd yyyy h:mma") : ""}</td>
-                                            <td style={{ padding: "3px", borderRight: tableBorderThickness, }} className="break-text">{post.reference_code} {post.reference_code2 ? " / " + post.reference_code2 : ""}</td>
+                                            <td style={{ padding: "3px", borderRight: tableBorderThickness, }} className="break-text">{post.reference_code} {/*post.reference_code2 ? " / " + post.reference_code2 : ""*/}</td>
                                             <th className="text-start" style={{ width: "auto", padding: "3px", whiteSpace: "nowrap", alignContent: "start", borderRightWidth: "0px" }}>
                                                 {post.debit_account_name && <span>
                                                     To <span style={{
