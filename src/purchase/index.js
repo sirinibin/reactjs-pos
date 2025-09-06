@@ -914,7 +914,12 @@ function PurchaseIndex(props) {
 
     const CreateFormRef = useRef();
     function openCreateForm() {
-        CreateFormRef.current?.open(undefined, selectedVendors);
+        setShowPurchaseCreate(true);
+        if (timerRef.current) clearTimeout(timerRef.current);
+
+        timerRef.current = setTimeout(() => {
+            CreateFormRef.current?.open(undefined, selectedVendors);
+        }, 100);
     }
 
     let [showPurchaseReturnCreate, setShowPurchaseReturnCreate] = useState(true);
