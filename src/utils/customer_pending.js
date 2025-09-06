@@ -291,8 +291,8 @@ const CustomerPending = forwardRef((props, ref) => {
                             </Tab>
                             <Tab eventKey="quotation_sales" title={
                                 <>
-                                    Qtn. Sales <Badge bg={customer?.stores ? customer?.stores[localStorage.getItem("store_id")]?.["quotation_sales_balance_amount"] > 0 ? "danger" : "secondary" : "secondary"}>
-                                        <Amount amount={customer?.stores ? trimTo2Decimals(customer?.stores[localStorage.getItem("store_id")]?.["quotation_sales_balance_amount"]) : 0} />
+                                    Qtn. Sales <Badge bg={customer?.stores ? customer?.stores[localStorage.getItem("store_id")]?.["quotation_invoice_balance_amount"] > 0 ? "danger" : "secondary" : "secondary"}>
+                                        <Amount amount={customer?.stores ? trimTo2Decimals(customer?.stores[localStorage.getItem("store_id")]?.["quotation_invoice_balance_amount"]) : 0} />
                                     </Badge>
                                 </>
                             }>
