@@ -918,11 +918,16 @@ function PurchaseReturnIndex(props) {
 
 
     function openCreateForm(purchase) {
-        if (purchase) {
-            CreateFormRef.current?.open(undefined, purchase.id);
-        } else {
-            CreateFormRef.current?.open(undefined, props.purchase.id);
-        }
+        setShowPurchaseReturnCreate(true);
+
+        if (timerRef.current) clearTimeout(timerRef.current);
+        timerRef.current = setTimeout(() => {
+            if (purchase) {
+                CreateFormRef.current?.open(undefined, purchase.id);
+            } else {
+                CreateFormRef.current?.open(undefined, props.purchase.id);
+            }
+        }, 50);
     }
 
     let [showPurchases, setShowPurchases] = useState(false);
