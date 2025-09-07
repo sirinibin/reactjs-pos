@@ -1112,11 +1112,15 @@ function QuotationSalesReturnIndex(props) {
     }
 
     function openCreateForm(sale) {
-        if (sale) {
-            CreateFormRef.current.open(undefined, sale.id);
-        } else {
-            CreateFormRef.current.open(undefined, props.order.id);
-        }
+        setShowQuotationSalesReturnCreate(true);
+        if (timerRef.current) clearTimeout(timerRef.current);
+        timerRef.current = setTimeout(() => {
+            if (sale) {
+                CreateFormRef.current.open(undefined, sale.id);
+            } else {
+                CreateFormRef.current.open(undefined, props.order.id);
+            }
+        }, 50);
     }
 
     const QuotationSalesReturnPaymentListRef = useRef();
