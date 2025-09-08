@@ -48,6 +48,7 @@ import PurchaseCreate from "../purchase/create.js";
 import CustomerDepositCreate from "../customer_deposit/create.js";
 import SalesReturnCreate from "../sales_return/create.js";
 import CustomerPending from "./../utils/customer_pending.js";
+import Badge from 'react-bootstrap/Badge';
 
 
 const columnStyle = {
@@ -3624,6 +3625,14 @@ const OrderCreate = forwardRef((props, ref) => {
                             />
                             <Button hide={true.toString()} onClick={openCustomerCreateForm} className="btn btn-outline-secondary btn-primary btn-sm" type="button" id="button-addon1"> <i className="bi bi-plus-lg"></i> New</Button>
 
+                            {selectedCustomers.length > 0 && <Button style={{ marginLeft: "8px" }} variant="btn btn-sm btn-primary" onClick={() => {
+                                openCustomerPending(formData.customer);
+                            }} >
+                                Pendings
+                                <Badge bg="danger" style={{ marginLeft: "2px" }}>
+                                    <Amount amount={trimTo2Decimals(formData.customer?.credit_balance)} />
+                                </Badge>
+                            </Button>}
 
                             {errors.customer_id && (
                                 <div style={{ color: "red" }}>
@@ -3642,6 +3651,8 @@ const OrderCreate = forwardRef((props, ref) => {
                             <Button className="btn btn-primary" style={{ marginTop: "30px" }} onClick={openCustomers}>
                                 <i class="bi bi-list"></i>
                             </Button>
+
+
                         </div>
 
                         <div className="col-md-2">
