@@ -47,6 +47,7 @@ import { DragDropContext, Droppable, Draggable } from "react-beautiful-dnd";
 import PurchaseCreate from "../purchase/create.js";
 import CustomerDepositCreate from "../customer_deposit/create.js";
 import SalesReturnCreate from "../sales_return/create.js";
+import CustomerPending from "./../utils/customer_pending.js";
 
 
 const columnStyle = {
@@ -3132,8 +3133,16 @@ const OrderCreate = forwardRef((props, ref) => {
     };
 
 
+
+    const CustomerPendingRef = useRef();
+    function openCustomerPending(customer) {
+        CustomerPendingRef.current.open(false, customer);
+    }
+
+
     return (
         <>
+            <CustomerPending ref={CustomerPendingRef} />
             {showReferenceUpdateForm && <>
                 <CustomerDepositCreate ref={CustomerDepositUpdateFormRef} onUpdated={handleReferenceUpdated} />
                 <SalesReturnCreate ref={SalesReturnUpdateFormRef} onUpdated={handleReferenceUpdated} />
@@ -3588,9 +3597,17 @@ const OrderCreate = forwardRef((props, ref) => {
                                                                 {highlightWords(option.vat_no, searchWords, isActive)}
                                                             </div>
                                                             <div style={{ ...columnStyle, width: '10%' }}>
-                                                                {option.credit_balance && (
+                                                                <div
+                                                                    className={isActive ? "btn btn-outline-light btn-sm" : "btn btn-outline-primary btn-sm"}
+                                                                    onClick={(e) => {
+                                                                        e.preventDefault();
+                                                                        e.stopPropagation();
+
+                                                                        // openBalanceSheetDialogue(customer.account);
+                                                                        openCustomerPending(option);
+                                                                    }}>
                                                                     <Amount amount={trimTo2Decimals(option.credit_balance)} />
-                                                                )}
+                                                                </div>
                                                             </div>
                                                             <div style={{ ...columnStyle, width: '10%' }}>
                                                                 {option.credit_limit && (

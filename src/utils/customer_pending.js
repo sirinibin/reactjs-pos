@@ -11,8 +11,10 @@ import PurchaseReturnIndex from "../purchase_return/index.js";
 import Tab from 'react-bootstrap/Tab';
 import Tabs from 'react-bootstrap/Tabs';
 import Badge from 'react-bootstrap/Badge';
+import Button from 'react-bootstrap/Button';
 import { trimTo2Decimals } from "../utils/numberUtils";
 import Amount from "../utils/amount.js";
+import PostingIndex from "./../posting/index.js";
 //import { set } from "date-fns";
 
 const CustomerPending = forwardRef((props, ref) => {
@@ -204,9 +206,25 @@ const CustomerPending = forwardRef((props, ref) => {
     }
 
 
+
+
+
+    let [showBalanceSheet, setShowAccountBalanceSheet] = useState(false);
+    const timerRef = useRef(null);
+    const AccountBalanceSheetRef = useRef();
+    function openBalanceSheetDialogue(account) {
+        setShowAccountBalanceSheet(true);
+
+        if (timerRef.current) clearTimeout(timerRef.current);
+        timerRef.current = setTimeout(() => {
+            AccountBalanceSheetRef.current?.open(account);
+        }, 100);
+    }
+
     return (
         <>
-            <Modal show={show} size="xl" onHide={handleClose} animation={false} scrollable={true}
+            {showBalanceSheet && <PostingIndex ref={AccountBalanceSheetRef} />}
+            <Modal show={show} fullscreen onHide={handleClose} animation={false} scrollable={true}
                 backdrop={false}                // ✅ Allow editing background
                 keyboard={false}
                 centered={false}                // ❌ disable auto-centering
@@ -215,16 +233,16 @@ const CustomerPending = forwardRef((props, ref) => {
                     <Draggable handle=".modal-header" nodeRef={dragRef}>
                         <div
                             ref={dragRef}
-                            className="modal-dialog modal-xl"    // ✅ preserve Bootstrap xl class
+                            className="modal-dialog modal-fullscreen"    // ✅ preserve Bootstrap xl class
                             {...props}
                             style={{
                                 position: "absolute",
-                                top: "10%",
-                                left: "20%",
+                                top: "0%",
+                                left: "0%",
                                 transform: "translate(-50%, -50%)",
                                 margin: "0",
                                 zIndex: 1055,
-                                width: "65%",           // Full width inside container
+                                width: "100%",           // Full width inside container
                             }}
                         >
                             <div className="modal-content">{children}</div>
@@ -233,13 +251,20 @@ const CustomerPending = forwardRef((props, ref) => {
                 )}
             >
                 <Modal.Header>
-                    <Modal.Title>{enableSelection ? "Select Sale" : "Customer Pendings "}
-
-                        <Badge bg="danger">
-                            <Amount amount={trimTo2Decimals(customer.credit_balance)} />
-                        </Badge>
+                    <Modal.Title>{enableSelection ? "Select Sale" : customer.code + "/" + customer?.name + "'s Pendings "}
                     </Modal.Title>
+
+
                     <div className="col align-self-end text-end">
+                        <Button variant="primary" onClick={() => {
+                            openBalanceSheetDialogue(customer.account)
+                        }} >
+                            Balance Sheet
+                            <Badge bg="danger" style={{ marginLeft: "2px" }}>
+                                <Amount amount={trimTo2Decimals(customer.credit_balance)} />
+                            </Badge>
+                        </Button>
+
                         <button
                             type="button"
                             className="btn-close"
@@ -363,7 +388,7 @@ const CustomerPending = forwardRef((props, ref) => {
 
                     </>
                 </Modal.Body>
-            </Modal>
+            </Modal >
         </>);
 
 
