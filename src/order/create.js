@@ -1088,6 +1088,9 @@ const OrderCreate = forwardRef((props, ref) => {
 
         console.log("searchTerm:" + searchTerm);
         if (!searchTerm) {
+            setTimeout(() => {
+                setOpenCustomerSearchResult(false);
+            }, 100);
             return;
         }
 
@@ -1120,6 +1123,15 @@ const OrderCreate = forwardRef((props, ref) => {
         );
         let data = await result.json();
 
+        if (!data.result || data.result.length === 0) {
+            setOpenCustomerSearchResult(false);
+            return;
+        }
+
+        setOpenCustomerSearchResult(true);
+
+
+
         const filtered = data.result.filter((opt) => customCustomerFilter(opt, searchTerm));
 
         setCustomerOptions(filtered);
@@ -1129,6 +1141,7 @@ const OrderCreate = forwardRef((props, ref) => {
 
 
     let [openProductSearchResult, setOpenProductSearchResult] = useState(false);
+    let [openCustomerSearchResult, setOpenCustomerSearchResult] = useState(false);
 
 
 
@@ -3502,6 +3515,9 @@ const OrderCreate = forwardRef((props, ref) => {
                                 filterBy={() => true}
                                 labelKey="search_label"
                                 isLoading={false}
+                                emptyLabel=""
+                                clearButton={false}
+                                open={openCustomerSearchResult}
                                 onChange={(selectedItems) => {
                                     delete errors.customer_id;
                                     setErrors(errors);
@@ -3513,6 +3529,7 @@ const OrderCreate = forwardRef((props, ref) => {
                                         formData.customerName = "";
                                         setFormData({ ...formData });
                                         setSelectedCustomers([]);
+                                        setOpenCustomerSearchResult(false);
                                         return;
                                     }
 
@@ -3543,6 +3560,7 @@ const OrderCreate = forwardRef((props, ref) => {
                                         setFormData({ ...formData });
                                         setSelectedCustomers([]);
                                         setCustomerOptions([]);
+                                        setOpenCustomerSearchResult(false);
                                         customerSearchRef.current?.clear();
                                     }
                                 }}
@@ -3606,7 +3624,9 @@ const OrderCreate = forwardRef((props, ref) => {
                                                             </div>
                                                             <div style={{ ...columnStyle, width: '10%' }}>
                                                                 <div
+                                                                    tabIndex={-1}
                                                                     className={isActive ? "btn btn-outline-light btn-sm" : "btn btn-outline-primary btn-sm"}
+                                                                    onMouseDown={e => e.preventDefault()} // <-- This prevents menu from closing
                                                                     onClick={(e) => {
                                                                         e.preventDefault();
                                                                         e.stopPropagation();
