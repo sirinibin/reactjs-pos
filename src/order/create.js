@@ -3544,6 +3544,7 @@ const OrderCreate = forwardRef((props, ref) => {
 
                                     setFormData({ ...formData });
                                     setSelectedCustomers(selectedItems);
+                                    setOpenCustomerSearchResult(false);
                                 }}
                                 options={customerOptions}
                                 placeholder="Customer Name / Mob / VAT # / ID"
