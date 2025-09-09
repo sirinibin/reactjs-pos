@@ -32,6 +32,8 @@ const CustomerPending = forwardRef((props, ref) => {
             customer = customerValue
             setCustomer(customer);
 
+            getCustomer(customerValue.id)
+
 
 
             enableSelection = enableSelectionValue;
@@ -260,13 +262,14 @@ const CustomerPending = forwardRef((props, ref) => {
 
 
                     <div className="col align-self-end text-end">
-                        <Button variant="primary" onClick={() => {
+                        <Button variant="primary" disabled={!customer.account} onClick={() => {
                             openBalanceSheetDialogue(customer.account)
                         }} >
                             Balance Sheet
                             <Badge bg="danger" style={{ marginLeft: "2px" }}>
                                 <Amount amount={trimTo2Decimals(customer.credit_balance)} />
                             </Badge>
+
                         </Button>
 
                         <button
