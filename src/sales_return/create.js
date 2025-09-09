@@ -1795,7 +1795,6 @@ const SalesReturnCreate = forwardRef((props, ref) => {
     };
 
 
-
     return (
         <>
             {showReferenceUpdateForm && <>
@@ -1828,7 +1827,12 @@ const SalesReturnCreate = forwardRef((props, ref) => {
             <Modal show={show} size="xl" fullscreen onHide={handleClose} animation={false} backdrop="static" scrollable={true}>
                 <Modal.Header>
                     <Modal.Title>
-                        {formData.id ? "Update Sales Return #" + formData.code + " for sale #" + formData.order_code : "Create Sales Return for sale #" + formData.order_code}
+                        {formData.id ? "Update Sales Return  #" + formData.code + " for sales #" : "Create Sales Return for sale #"}
+                        {formData.order_code && <span style={{ cursor: "pointer", color: "blue" }} onClick={() => {
+                            openReferenceUpdateForm(formData.order_id, "sales");
+                        }}>
+                            {formData.order_code}
+                        </span>}
                     </Modal.Title>
                     {store.zatca?.phase === "2" && !formData.id && < div style={{ marginLeft: "20px" }}>
                         <input type="checkbox" id="sales_return_report_to_zatca" name="sales_return_report_to_zatca" checked={formData.enable_report_to_zatca} onChange={(e) => {

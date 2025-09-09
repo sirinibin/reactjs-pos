@@ -27,6 +27,7 @@ import ReportPreview from "./../order/report.js";
 import OrderPrint from './../order/print.js';
 import { DragDropContext, Droppable, Draggable } from "react-beautiful-dnd";
 import CustomerCreate from "./../customer/create.js";
+import OrderCreate from "./../order/create.js";
 
 
 const ExcelFile = ReactExport.ExcelFile;
@@ -1330,7 +1331,8 @@ function SalesReturnIndex(props) {
     const defaultColumns = useMemo(() => [
         { key: "actions", label: "Actions", fieldName: "actions", visible: true },
         { key: "select", label: "Select", fieldName: "select", visible: true },
-        { key: "id", label: "ID", fieldName: "code", visible: true },
+        { key: "id", label: "Return ID", fieldName: "code", visible: true },
+        { key: "order_code", label: "Sales ID", fieldName: "order_code", visible: true },
         { key: "date", label: "Date", fieldName: "date", visible: true },
         { key: "customer", label: "Customer", fieldName: "customer_name", visible: true },
         { key: "net_total", label: "Net Total", fieldName: "net_total", visible: true },
@@ -1461,8 +1463,21 @@ function SalesReturnIndex(props) {
     };
 
 
+    let [showSalesUpdateForm, setShowSalesUpdateForm] = useState(false);
+    const SalesUpdateFormRef = useRef();
+    function openSalesUpdateForm(id) {
+        setShowSalesUpdateForm(true);
+        if (timerRef.current) clearTimeout(timerRef.current);
+
+        timerRef.current = setTimeout(() => {
+            SalesUpdateFormRef.current?.open(id);
+        }, 50);
+    }
+
+
     return (
         <>
+            {showSalesUpdateForm && <OrderCreate ref={SalesUpdateFormRef} />}
             {showCustomerUpdateForm && <CustomerCreate ref={CustomerUpdateFormRef} />}
             {/* ⚙️ Settings Modal */}
             <Modal
@@ -2896,6 +2911,15 @@ function SalesReturnIndex(props) {
                                                                 </td>}
                                                                 {(col.fieldName === "code") && <td style={{ width: "auto", whiteSpace: "nowrap" }}>
                                                                     {salesReturn.code}
+                                                                </td>}
+                                                                {(col.fieldName === "order_code") && <td style={{ width: "auto", whiteSpace: "nowrap" }}>
+
+                                                                    {salesReturn.order_code && <span style={{ cursor: "pointer", color: "blue" }} onClick={() => {
+                                                                        openSalesUpdateForm(salesReturn.order_id);
+                                                                    }}>
+                                                                        {salesReturn.order_code}
+                                                                    </span>}
+
                                                                 </td>}
                                                                 {(col.fieldName === "date" || col.fieldName === "created_at") && <td style={{ width: "auto", whiteSpace: "nowrap" }}>
                                                                     {format(new Date(salesReturn[col.key]), "MMM dd yyyy h:mma")}
