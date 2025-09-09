@@ -1187,7 +1187,8 @@ const CustomerDepositCreate = forwardRef((props, ref) => {
 
                                                     {/* Rows */}
                                                     {results.map((option, index) => {
-                                                        const isActive = state.activeIndex === index;
+                                                        const onlyOneResult = results.length === 1;
+                                                        const isActive = state.activeIndex === index || onlyOneResult;
                                                         return (
                                                             <MenuItem option={option} position={index} key={index}>
                                                                 <div style={{ display: 'flex', padding: '4px 8px' }}>
@@ -1330,7 +1331,8 @@ const CustomerDepositCreate = forwardRef((props, ref) => {
 
                                                     {/* Rows */}
                                                     {results.map((option, index) => {
-                                                        const isActive = state.activeIndex === index;
+                                                        const onlyOneResult = results.length === 1;
+                                                        const isActive = state.activeIndex === index || onlyOneResult;
                                                         return (
                                                             <MenuItem option={option} position={index} key={index}>
                                                                 <div style={{ display: 'flex', padding: '4px 8px' }}>

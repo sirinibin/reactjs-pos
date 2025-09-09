@@ -1814,7 +1814,8 @@ function ProductIndex(props) {
 
                                                         {/* Rows */}
                                                         {results.map((option, index) => {
-                                                            const isActive = state.activeIndex === index;
+                                                            const onlyOneResult = results.length === 1;
+                                                            const isActive = state.activeIndex === index || onlyOneResult;
                                                             let checked = isProductAdded(option.id);
                                                             return (
                                                                 <MenuItem option={option} position={index} key={index} style={{ padding: "0px" }}>

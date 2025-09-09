@@ -2696,7 +2696,8 @@ const ProductCreate = forwardRef((props, ref) => {
 
                       {/* Rows */}
                       {results.map((option, index) => {
-                        const isActive = state.activeIndex === index;
+                        const onlyOneResult = results.length === 1;
+                        const isActive = state.activeIndex === index || onlyOneResult;
                         let checked = IsProductExistsInSet(option.id);
                         return (
                           <MenuItem option={option} position={index} key={index} style={{ padding: "0px" }}>
@@ -3463,7 +3464,8 @@ const ProductCreate = forwardRef((props, ref) => {
 
                       {/* Rows */}
                       {results.map((option, index) => {
-                        const isActive = state.activeIndex === index;
+                        const onlyOneResult = results.length === 1;
+                        const isActive = state.activeIndex === index || onlyOneResult;
                         let checked = IsProductExistsInLinkedProducts(option.id);
                         return (
                           <MenuItem option={option} position={index} key={index} style={{ padding: "0px" }}>
