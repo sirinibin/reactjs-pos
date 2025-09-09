@@ -32,6 +32,8 @@ const CustomerPending = forwardRef((props, ref) => {
             customer = customerValue
             setCustomer(customer);
 
+
+
             enableSelection = enableSelectionValue;
             setEnableSelection(enableSelection);
 
@@ -44,6 +46,8 @@ const CustomerPending = forwardRef((props, ref) => {
                     search_label: customer.search_label,
                 }
             ];
+
+
 
             setSelectedCustomers([...selectedCustomers]);
 

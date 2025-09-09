@@ -3134,16 +3134,22 @@ const OrderCreate = forwardRef((props, ref) => {
     };
 
 
+    let [showCustomerPending, setShowCustomerPending] = useState(false);
 
     const CustomerPendingRef = useRef();
     function openCustomerPending(customer) {
-        CustomerPendingRef.current.open(false, customer);
+        setShowCustomerPending(true);
+
+        if (timerRef.current) clearTimeout(timerRef.current);
+        timerRef.current = setTimeout(() => {
+            CustomerPendingRef.current?.open(false, customer);
+        }, 50);
     }
 
 
     return (
         <>
-            <CustomerPending ref={CustomerPendingRef} />
+            {showCustomerPending && <CustomerPending ref={CustomerPendingRef} />}
             {showReferenceUpdateForm && <>
                 <CustomerDepositCreate ref={CustomerDepositUpdateFormRef} onUpdated={handleReferenceUpdated} />
                 <SalesReturnCreate ref={SalesReturnUpdateFormRef} onUpdated={handleReferenceUpdated} />
@@ -3626,8 +3632,8 @@ const OrderCreate = forwardRef((props, ref) => {
                             />
                             <Button hide={true.toString()} onClick={openCustomerCreateForm} className="btn btn-outline-secondary btn-primary btn-sm" type="button" id="button-addon1"> <i className="bi bi-plus-lg"></i> New</Button>
 
-                            {selectedCustomers.length > 0 && <Button style={{ marginLeft: "8px" }} variant="btn btn-sm btn-primary" onClick={() => {
-                                openCustomerPending(formData.customer);
+                            {selectedCustomers.length > 0 && formData.customer_id && <Button style={{ marginLeft: "8px" }} variant="btn btn-sm btn-primary" onClick={() => {
+                                openCustomerPending(selectedCustomers[0]);
                             }} >
                                 Pendings
                                 <Badge bg="danger" style={{ marginLeft: "2px" }}>
