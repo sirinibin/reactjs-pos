@@ -3658,7 +3658,7 @@ const OrderCreate = forwardRef((props, ref) => {
                             }} >
                                 Pendings
                                 <Badge bg="danger" style={{ marginLeft: "2px" }}>
-                                    <Amount amount={trimTo2Decimals(formData.customer?.credit_balance)} />
+                                    <Amount amount={trimTo2Decimals(selectedCustomers[0]?.credit_balance)} />
                                 </Badge>
                             </Button>}
 
