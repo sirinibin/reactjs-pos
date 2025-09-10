@@ -820,16 +820,6 @@ function QuotationIndex(props) {
       }
     }
 
-    /*
-    for (let i = 0; i < saved.length; i++) {
-        const savedCol = defaultColumns.find(col => col.fieldName === saved[i].fieldName);
- 
-        missingOrUpdated = !savedCol || savedCol.label !== saved[i].label || savedCol.key !== saved[i].key;
- 
-        if (missingOrUpdated) {
-            break
-        }
-    }*/
 
     if (missingOrUpdated) {
       if (enableSelection === true) {
@@ -848,19 +838,22 @@ function QuotationIndex(props) {
   }, [defaultColumns, enableSelection, pendingView]);
 
   function RestoreDefaultSettings() {
+    const clonedDefaults = defaultColumns.map(col => ({ ...col }));
+
     if (enableSelection === true) {
-      localStorage.setItem("select_quotation_table_settings", JSON.stringify(defaultColumns));
+      localStorage.setItem("select_quotation_table_settings", JSON.stringify(clonedDefaults));
     } else if (pendingView === true) {
-      localStorage.setItem("pending_quotation_table_settings", JSON.stringify(defaultColumns));
+      localStorage.setItem("pending_quotation_table_settings", JSON.stringify(clonedDefaults));
     } else {
-      localStorage.setItem("quotation_table_settings", JSON.stringify(defaultColumns));
+      localStorage.setItem("quotation_table_settings", JSON.stringify(clonedDefaults));
     }
 
-    setColumns(defaultColumns);
+    setColumns(clonedDefaults);
 
     setShowSuccess(true);
     setSuccessMessage("Successfully restored to default settings!")
   }
+
 
   // Save column settings to localStorage
   useEffect(() => {
