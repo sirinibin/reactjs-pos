@@ -827,8 +827,12 @@ function QuotationIndex(props) {
       } else if (pendingView === true) {
         localStorage.setItem("pending_quotation_table_settings", JSON.stringify(defaultColumns));
       } else {
-        localStorage.setItem("quotation_table_settings", JSON.stringify(defaultColumns));
+        if (!localStorage.getItem("quotation_table_settings")) {
+          localStorage.setItem("quotation_table_settings", JSON.stringify(defaultColumns));
+        }
       }
+
+      alert("Setting default columns")
 
       setColumns(defaultColumns);
     }
@@ -856,21 +860,31 @@ function QuotationIndex(props) {
 
 
   // Save column settings to localStorage
-  useEffect(() => {
-    if (enableSelection === true) {
-      localStorage.setItem("select_quotation_table_settings", JSON.stringify(columns));
-    } else if (pendingView === true) {
-      localStorage.setItem("pending_quotation_table_settings", JSON.stringify(columns));
-    } else {
-      localStorage.setItem("quotation_table_settings", JSON.stringify(columns));
-    }
+  // useEffect(() => {
+  /*
+  if (enableSelection === true) {
+    localStorage.setItem("select_quotation_table_settings", JSON.stringify(columns));
+  } else if (pendingView === true) {
+    localStorage.setItem("pending_quotation_table_settings", JSON.stringify(columns));
+  } else {
+    localStorage.setItem("quotation_table_settings", JSON.stringify(columns));
+  }*/
 
-  }, [columns, enableSelection, pendingView]);
+  //}, [columns, enableSelection, pendingView]);
 
   const handleToggleColumn = (index) => {
     const updated = [...columns];
     updated[index].visible = !updated[index].visible;
     setColumns(updated);
+
+    if (enableSelection === true) {
+      localStorage.setItem("select_quotation_table_settings", JSON.stringify(updated));
+    } else if (pendingView === true) {
+      localStorage.setItem("pending_quotation_table_settings", JSON.stringify(updated));
+    } else {
+      localStorage.setItem("quotation_table_settings", JSON.stringify(updated));
+    }
+
   };
 
   const onDragEnd = (result) => {
@@ -879,6 +893,15 @@ function QuotationIndex(props) {
     const [moved] = reordered.splice(result.source.index, 1);
     reordered.splice(result.destination.index, 0, moved);
     setColumns(reordered);
+
+    if (enableSelection === true) {
+      localStorage.setItem("select_quotation_table_settings", JSON.stringify(reordered));
+    } else if (pendingView === true) {
+      localStorage.setItem("pending_quotation_table_settings", JSON.stringify(reordered));
+    } else {
+      localStorage.setItem("quotation_table_settings", JSON.stringify(reordered));
+    }
+
   };
 
 

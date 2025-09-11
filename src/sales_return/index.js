@@ -1421,14 +1421,22 @@ function SalesReturnIndex(props) {
     }
 
     // Save column settings to localStorage
+    /*
     useEffect(() => {
         localStorage.setItem("sales_return_table_settings", JSON.stringify(columns));
-    }, [columns]);
+    }, [columns]);*/
 
     const handleToggleColumn = (index) => {
         const updated = [...columns];
         updated[index].visible = !updated[index].visible;
         setColumns(updated);
+        if (enableSelection === true) {
+            localStorage.setItem("select_sales_return_table_settings", JSON.stringify(updated));
+        } else if (pendingView === true) {
+            localStorage.setItem("pending_sales_return_table_settings", JSON.stringify(updated));
+        } else {
+            localStorage.setItem("sales_return_table_settings", JSON.stringify(updated));
+        }
     };
 
     const onDragEnd = (result) => {
@@ -1437,6 +1445,13 @@ function SalesReturnIndex(props) {
         const [moved] = reordered.splice(result.source.index, 1);
         reordered.splice(result.destination.index, 0, moved);
         setColumns(reordered);
+        if (enableSelection === true) {
+            localStorage.setItem("select_sales_return_table_settings", JSON.stringify(reordered));
+        } else if (pendingView === true) {
+            localStorage.setItem("pending_sales_return_table_settings", JSON.stringify(reordered));
+        } else {
+            localStorage.setItem("sales_return_table_settings", JSON.stringify(reordered));
+        }
     };
 
     let [showCustomerUpdateForm, setShowCustomerUpdateForm] = useState(false);

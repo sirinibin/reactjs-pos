@@ -552,18 +552,24 @@ function DeliveryNoteIndex(props) {
   }
 
   // Save column settings to localStorage
+  /*
   useEffect(() => {
     if (enableSelection === true) {
       localStorage.setItem("select_delivery_note_table_settings", JSON.stringify(columns));
     } else {
       localStorage.setItem("delivery_note_table_settings", JSON.stringify(columns));
     }
-  }, [columns, enableSelection]);
+  }, [columns, enableSelection]);*/
 
   const handleToggleColumn = (index) => {
     const updated = [...columns];
     updated[index].visible = !updated[index].visible;
     setColumns(updated);
+    if (enableSelection === true) {
+      localStorage.setItem("select_delivery_note_table_settings", JSON.stringify(updated));
+    } else {
+      localStorage.setItem("delivery_note_table_settings", JSON.stringify(updated));
+    }
   };
 
   const onDragEnd = (result) => {
@@ -572,6 +578,11 @@ function DeliveryNoteIndex(props) {
     const [moved] = reordered.splice(result.source.index, 1);
     reordered.splice(result.destination.index, 0, moved);
     setColumns(reordered);
+    if (enableSelection === true) {
+      localStorage.setItem("select_delivery_note_table_settings", JSON.stringify(reordered));
+    } else {
+      localStorage.setItem("delivery_note_table_settings", JSON.stringify(reordered));
+    }
   };
 
   const handleSelected = (selected) => {

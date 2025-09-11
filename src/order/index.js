@@ -1485,6 +1485,7 @@ const OrderIndex = forwardRef((props, ref) => {
     }
 
     // Save column settings to localStorage
+    /*
     useEffect(() => {
         if (enableSelection === true) {
             localStorage.setItem("select_sales_table_settings", JSON.stringify(columns));
@@ -1493,12 +1494,19 @@ const OrderIndex = forwardRef((props, ref) => {
         } else {
             localStorage.setItem("sales_table_settings", JSON.stringify(columns));
         }
-    }, [columns, enableSelection, pendingView]);
+    }, [columns, enableSelection, pendingView]);*/
 
     const handleToggleColumn = (index) => {
         const updated = [...columns];
         updated[index].visible = !updated[index].visible;
         setColumns(updated);
+        if (enableSelection === true) {
+            localStorage.setItem("select_sales_table_settings", JSON.stringify(updated));
+        } else if (pendingView === true) {
+            localStorage.setItem("pending_sales_table_settings", JSON.stringify(updated));
+        } else {
+            localStorage.setItem("sales_table_settings", JSON.stringify(updated));
+        }
     };
 
     const onDragEnd = (result) => {
@@ -1507,6 +1515,14 @@ const OrderIndex = forwardRef((props, ref) => {
         const [moved] = reordered.splice(result.source.index, 1);
         reordered.splice(result.destination.index, 0, moved);
         setColumns(reordered);
+
+        if (enableSelection === true) {
+            localStorage.setItem("select_sales_table_settings", JSON.stringify(reordered));
+        } else if (pendingView === true) {
+            localStorage.setItem("pending_sales_table_settings", JSON.stringify(reordered));
+        } else {
+            localStorage.setItem("sales_table_settings", JSON.stringify(reordered));
+        }
     };
 
     const CustomerUpdateFormRef = useRef();
