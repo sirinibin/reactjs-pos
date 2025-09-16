@@ -527,13 +527,19 @@ const PreviewContent = forwardRef((props, ref) => {
                                                 <th dir="ltr" style={{
                                                     unicodeBidi: 'isolate',
                                                     borderRight: tableBorderThickness,
+                                                    width: "31%",
+                                                    maxWidth: "31%",
                                                     /*  wordBreak: "break-word",*/
                                                     /*  overflowWrap: "break-word",*/
                                                     whiteSpace: "normal"
                                                 }}>
                                                     {!props.model?.store?.settings?.one_line_product_name_in_invoice && <span dir="ltr" style={{ unicodeBidi: 'isolate' }}>
                                                         <span style={{ //one_line_product_name_in_invoice
-                                                            verticalAlign: 'bottom'
+                                                            verticalAlign: 'bottom',
+                                                            whiteSpace: "pre-wrap",
+                                                            wordBreak: "break-word",
+                                                            maxWidth: "100%", // or your desired width
+                                                            overflowWrap: "break-word",
                                                         }}>{product.name}</span>
                                                         {product.name_in_arabic && <>|<span dir="rtl" style={{
                                                             verticalAlign: 'bottom'
