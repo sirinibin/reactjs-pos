@@ -3056,6 +3056,7 @@ const OrderCreate = forwardRef((props, ref) => {
         const updated = [...searchProductsColumns];
         updated[index].visible = !updated[index].visible;
         setSearchProductsColumns(updated);
+        localStorage.setItem("sales_product_search_settings", JSON.stringify(updated));
     };
 
     const onDragEnd = (result) => {
@@ -3064,6 +3065,7 @@ const OrderCreate = forwardRef((props, ref) => {
         const [moved] = reordered.splice(result.source.index, 1);
         reordered.splice(result.destination.index, 0, moved);
         setSearchProductsColumns(reordered);
+        localStorage.setItem("sales_product_search_settings", JSON.stringify(reordered));
     };
 
 
@@ -3107,6 +3109,7 @@ const OrderCreate = forwardRef((props, ref) => {
 
 
     // Skip the first run so we don't overwrite saved settings during initial hydration
+    /*
     const isFirstRun = useRef(true);
     useEffect(() => {
         if (isFirstRun.current) {
@@ -3114,7 +3117,7 @@ const OrderCreate = forwardRef((props, ref) => {
             return;
         }
         localStorage.setItem("sales_product_search_settings", JSON.stringify(searchProductsColumns));
-    }, [searchProductsColumns]);
+    }, [searchProductsColumns]);*/
 
     const [showSuccess, setShowSuccess] = useState(false);
     const [successMessage, setSuccessMessage] = useState(false);

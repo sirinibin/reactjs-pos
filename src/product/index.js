@@ -1237,6 +1237,11 @@ function ProductIndex(props) {
         const updated = [...searchProductsColumns];
         updated[index].visible = !updated[index].visible;
         setSearchProductsColumns(updated);
+        if (enableSelection === true) {
+            localStorage.setItem("select_product_search_settings", JSON.stringify(updated));
+        } else {
+            localStorage.setItem("product_search_settings", JSON.stringify(updated));
+        }
     };
 
     const onDragEndSearch = (result) => {
@@ -1245,6 +1250,11 @@ function ProductIndex(props) {
         const [moved] = reordered.splice(result.source.index, 1);
         reordered.splice(result.destination.index, 0, moved);
         setSearchProductsColumns(reordered);
+        if (enableSelection === true) {
+            localStorage.setItem("select_product_search_settings", JSON.stringify(reordered));
+        } else {
+            localStorage.setItem("product_search_settings", JSON.stringify(reordered));
+        }
     };
 
 
@@ -1302,6 +1312,7 @@ function ProductIndex(props) {
 
 
     // Skip the first run so we don't overwrite saved settings during initial hydration
+    /*
     const isFirstRun = useRef(true);
     useEffect(() => {
         if (isFirstRun.current) {
@@ -1314,7 +1325,7 @@ function ProductIndex(props) {
         } else {
             localStorage.setItem("product_search_settings", JSON.stringify(searchProductsColumns));
         }
-    }, [searchProductsColumns, enableSelection]);
+    }, [searchProductsColumns, enableSelection]);*/
 
     //Select products
 
