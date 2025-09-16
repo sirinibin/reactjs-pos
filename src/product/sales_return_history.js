@@ -499,15 +499,11 @@ const SalesReturnHistory = forwardRef((props, ref) => {
         setSuccessMessage("Successfully restored to default settings!")
     }
 
-    // Save column settings to localStorage
-    useEffect(() => {
-        localStorage.setItem("sales_return_history_table_settings", JSON.stringify(columns));
-    }, [columns]);
-
     const handleToggleColumn = (index) => {
         const updated = [...columns];
         updated[index].visible = !updated[index].visible;
         setColumns(updated);
+        localStorage.setItem("sales_return_history_table_settings", JSON.stringify(updated));
     };
 
     const onDragEnd = (result) => {
@@ -516,6 +512,7 @@ const SalesReturnHistory = forwardRef((props, ref) => {
         const [moved] = reordered.splice(result.source.index, 1);
         reordered.splice(result.destination.index, 0, moved);
         setColumns(reordered);
+        localStorage.setItem("sales_return_history_table_settings", JSON.stringify(reordered));
     };
 
 

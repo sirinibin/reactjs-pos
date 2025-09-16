@@ -485,15 +485,11 @@ const QuotationSalesReturnHistory = forwardRef((props, ref) => {
         setSuccessMessage("Successfully restored to default settings!")
     }
 
-    // Save column settings to localStorage
-    useEffect(() => {
-        localStorage.setItem("quotation_sales_return_history_table_settings", JSON.stringify(columns));
-    }, [columns]);
-
     const handleToggleColumn = (index) => {
         const updated = [...columns];
         updated[index].visible = !updated[index].visible;
         setColumns(updated);
+        localStorage.setItem("quotation_sales_return_history_table_settings", JSON.stringify(updated));
     };
 
     const onDragEnd = (result) => {
@@ -502,6 +498,7 @@ const QuotationSalesReturnHistory = forwardRef((props, ref) => {
         const [moved] = reordered.splice(result.source.index, 1);
         reordered.splice(result.destination.index, 0, moved);
         setColumns(reordered);
+        localStorage.setItem("quotation_sales_return_history_table_settings", JSON.stringify(reordered));
     };
 
     const [statsOpen, setStatsOpen] = useState(false);
