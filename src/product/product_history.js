@@ -679,6 +679,7 @@ const ProductHistory = forwardRef((props, ref) => {
         const saved = localStorage.getItem("product_history_table_settings");
         if (saved) setColumns(JSON.parse(saved));
 
+        /*
         let missingOrUpdated = false;
         for (let i = 0; i < defaultColumns.length; i++) {
             if (!saved)
@@ -693,25 +694,15 @@ const ProductHistory = forwardRef((props, ref) => {
             }
         }
 
-        /*
-        for (let i = 0; i < saved.length; i++) {
-            const savedCol = defaultColumns.find(col => col.fieldName === saved[i].fieldName);
- 
-            missingOrUpdated = !savedCol || savedCol.label !== saved[i].label || savedCol.key !== saved[i].key;
- 
-            if (missingOrUpdated) {
-                break
-            }
-        }*/
 
         if (missingOrUpdated) {
             localStorage.setItem("product_history_table_settings", JSON.stringify(defaultColumns));
             setColumns(defaultColumns);
-        }
+        }*/
 
         //2nd
 
-    }, [defaultColumns]);
+    }, []);
 
     function RestoreDefaultSettings() {
         localStorage.setItem("product_history_table_settings", JSON.stringify(defaultColumns));
