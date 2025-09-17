@@ -678,7 +678,6 @@ const ProductHistory = forwardRef((props, ref) => {
     useEffect(() => {
         const saved = localStorage.getItem("product_history_table_settings");
         if (saved) setColumns(JSON.parse(saved));
-
         /*
         let missingOrUpdated = false;
         for (let i = 0; i < defaultColumns.length; i++) {
