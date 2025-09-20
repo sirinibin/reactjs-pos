@@ -603,7 +603,7 @@ function ProductIndex(props) {
 
         let partNoLabel = "";
         if (option.prefix_part_number) {
-            partNoLabel = option.prefix_part_number + " - " + option.part_number;
+            partNoLabel = option.prefix_part_number + "-" + option.part_number;
         }
 
         const fields = [
@@ -1908,7 +1908,7 @@ function ProductIndex(props) {
                                                                                     <div style={{ ...columnStyle, width: getColumnWidth(col) }}>
                                                                                         {highlightWords(
                                                                                             option.prefix_part_number
-                                                                                                ? `${option.prefix_part_number} - ${option.part_number}`
+                                                                                                ? `${option.prefix_part_number}-${option.part_number}`
                                                                                                 : option.part_number,
                                                                                             searchWords,
                                                                                             isActive
@@ -4055,7 +4055,7 @@ function ProductIndex(props) {
                                                                         </Dropdown>
                                                                     </span>
                                                                 </td>}
-                                                                {(col.key === "part_number") && <td style={{ width: "auto", whiteSpace: "nowrap" }} className="bold-stronger" >{product.prefix_part_number ? product.prefix_part_number + " - " : ""}{product.part_number}</td>}
+                                                                {(col.key === "part_number") && <td style={{ width: "auto", whiteSpace: "nowrap" }} className="bold-stronger" >{product.prefix_part_number ? product.prefix_part_number + "-" : ""}{product.part_number}</td>}
                                                                 {(col.key === "name") && <td style={{ width: "auto", whiteSpace: "nowrap" }} className="text-start">
                                                                     <OverflowTooltip value={product.name + (product.name_in_arabic ? " | " + product.name_in_arabic : "")} maxWidth={300} />
                                                                 </td>}

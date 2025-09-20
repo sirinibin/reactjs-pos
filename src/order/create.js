@@ -1154,7 +1154,7 @@ const OrderCreate = forwardRef((props, ref) => {
 
         let partNoLabel = "";
         if (option.prefix_part_number) {
-            partNoLabel = option.prefix_part_number + " - " + option.part_number;
+            partNoLabel = option.prefix_part_number + "-" + option.part_number;
         }
 
         const fields = [
@@ -4026,7 +4026,7 @@ const OrderCreate = forwardRef((props, ref) => {
                                                                         <div style={{ ...columnStyle, width: getColumnWidth(col) }}>
                                                                             {highlightWords(
                                                                                 option.prefix_part_number
-                                                                                    ? `${option.prefix_part_number} - ${option.part_number}`
+                                                                                    ? `${option.prefix_part_number}-${option.part_number}`
                                                                                     : option.part_number,
                                                                                 searchWords,
                                                                                 isActive
