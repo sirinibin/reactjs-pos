@@ -685,7 +685,7 @@ function ProductIndex(props) {
 
 
         let result = await fetch(
-            "/v1/product?" + Select + queryString + "&limit=100&sort=-country_name",
+            "/v1/product?" + Select + queryString + "&limit=200&sort=-country_name",
             requestOptions
         )
         let data = await result.json();
