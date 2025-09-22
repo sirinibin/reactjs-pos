@@ -553,8 +553,40 @@ const PurchaseCreate = forwardRef((props, ref) => {
     }, []);
 
 
+    // Helper to calculate percentage of occurrence of search words
+    const percentOccurrence = (words, product) => {
+        let partNoLabel = product.prefix_part_number ? product.prefix_part_number + "-" + product.part_number : "";
+        const fields = [
+            partNoLabel,
+            product.prefix_part_number,
+            product.part_number,
+            product.name,
+            product.name_in_arabic,
+            product.country_name,
+            product.brand_name,
+            ...(Array.isArray(product.additional_keywords) ? product.additional_keywords : []),
+        ];
+        const searchable = fields.join(" ").toLowerCase();
+        const searchableWords = searchable.split(/\s+/).filter(Boolean);
+        let totalMatches = 0;
+        words.forEach(word => {
+            if (word) {
+                const regex = new RegExp(`\\b${word.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\b`, 'gi');
+                const matches = searchable.match(regex);
+                totalMatches += matches ? matches.length : 0;
+            }
+        });
+        // Percentage: matches / total words in searchable fields
+        return searchableWords.length > 0 ? (totalMatches / searchableWords.length) : 0;
+    };
+
+
+    const latestRequestRef = useRef(0);
 
     async function suggestProducts(searchTerm) {
+        const requestId = Date.now();
+        latestRequestRef.current = requestId;
+
         console.log("Inside handle suggestProducts");
         setProductOptions([]);
 
@@ -600,6 +632,10 @@ const PurchaseCreate = forwardRef((props, ref) => {
         );
         let data = await result.json();
 
+        // Only update if this is the latest request
+        if (latestRequestRef.current !== requestId) return;
+
+
         let products = data.result;
         if (!products || products.length === 0) {
             openProductSearchResult = false;
@@ -616,6 +652,16 @@ const PurchaseCreate = forwardRef((props, ref) => {
         const filtered = products.filter((opt) => customFilter(opt, searchTerm));
 
         const sorted = filtered.sort((a, b) => {
+            // Split searchTerm into words
+            const words = searchTerm.toLowerCase().split(" ").filter(Boolean);
+
+            const aPercent = percentOccurrence(words, a);
+            const bPercent = percentOccurrence(words, b);
+
+            if (aPercent !== bPercent) {
+                return bPercent - aPercent; // Descending order
+            }
+
             const aHasCountry = a.country_name && a.country_name.trim() !== "";
             const bHasCountry = b.country_name && b.country_name.trim() !== "";
 
