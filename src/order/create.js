@@ -1208,14 +1208,9 @@ const OrderCreate = forwardRef((props, ref) => {
         const requestId = Date.now();
         latestRequestRef.current = requestId;
 
-
-        console.log("Inside handle suggestProducts");
         setProductOptions([]);
 
-        console.log("searchTerm:" + searchTerm);
         if (!searchTerm) {
-            // openProductSearchResult = false;
-
             setTimeout(() => {
                 setOpenProductSearchResult(false);
             }, 100);
@@ -1229,7 +1224,6 @@ const OrderCreate = forwardRef((props, ref) => {
         if (localStorage.getItem("store_id")) {
             params.store_id = localStorage.getItem("store_id");
         }
-
 
         var queryString = ObjectToSearchQueryParams(params);
         if (queryString !== "") {
@@ -1245,28 +1239,36 @@ const OrderCreate = forwardRef((props, ref) => {
         };
 
         let Select = `select=id,rack,allow_duplicates,additional_keywords,search_label,set.name,item_code,prefix_part_number,country_name,brand_name,part_number,name,unit,name_in_arabic,product_stores.${localStorage.getItem('store_id')}.purchase_unit_price,product_stores.${localStorage.getItem('store_id')}.purchase_unit_price_with_vat,product_stores.${localStorage.getItem('store_id')}.retail_unit_price,product_stores.${localStorage.getItem('store_id')}.retail_unit_price_with_vat,product_stores.${localStorage.getItem('store_id')}.stock`;
-        // setIsProductsLoading(true);
-        let result = await fetch(
-            "/v1/product?" + Select + queryString + "&limit=200&sort=country_name",
-            requestOptions
-        );
-        let data = await result.json();
+
+        // Fetch page 1 and page 2 in parallel
+        const urls = [
+            "/v1/product?" + Select + queryString + "&limit=200&page=1&sort=country_name",
+            "/v1/product?" + Select + queryString + "&limit=200&page=2&sort=country_name"
+        ];
+
+        const [result1, result2] = await Promise.all([
+            fetch(urls[0], requestOptions),
+            fetch(urls[1], requestOptions)
+        ]);
+
+        const data1 = await result1.json();
+        const data2 = await result2.json();
 
         // Only update if this is the latest request
         if (latestRequestRef.current !== requestId) return;
 
+        // Combine results from both pages
+        let products = [
+            ...(data1.result || []),
+            ...(data2.result || [])
+        ];
 
-        let products = data.result;
         if (!products || products.length === 0) {
-            // openProductSearchResult = false;
             setOpenProductSearchResult(false);
-            //  setIsProductsLoading(false);
             return;
         }
 
-        // openProductSearchResult = true;
         setOpenProductSearchResult(true);
-
 
         const filtered = products.filter((opt) => customFilter(opt, searchTerm));
 
@@ -1274,33 +1276,23 @@ const OrderCreate = forwardRef((props, ref) => {
             const aHasCountry = a.country_name && a.country_name.trim() !== "";
             const bHasCountry = b.country_name && b.country_name.trim() !== "";
 
-            // If both have country, sort by country_name ascending
             if (aHasCountry && bHasCountry) {
                 return a.country_name.localeCompare(b.country_name);
             }
-
-            // If only a has country, it comes before b
             if (aHasCountry && !bHasCountry) {
                 return -1;
             }
-
-            // If only b has country, it comes before a
             if (!aHasCountry && bHasCountry) {
                 return 1;
             }
 
-
-            // Split searchTerm into words
             const words = searchTerm.toLowerCase().split(" ").filter(Boolean);
-
             const aPercent = percentOccurrence(words, a);
             const bPercent = percentOccurrence(words, b);
 
             if (aPercent !== bPercent) {
-                return bPercent - aPercent; // Descending order
+                return bPercent - aPercent;
             }
-
-            // Both have no country, keep original order or sort as needed
             return 0;
         });
 
