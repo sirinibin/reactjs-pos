@@ -2797,7 +2797,7 @@ const PurchaseCreate = forwardRef((props, ref) => {
                                     if (timerRef.current) clearTimeout(timerRef.current);
                                     timerRef.current = setTimeout(() => {
                                         suggestProducts(searchTerm);
-                                    }, 100);
+                                    }, 400);
                                 }}
                                 renderMenu={(results, menuProps, state) => {
                                     const searchWords = state.text.toLowerCase().split(" ").filter(Boolean);

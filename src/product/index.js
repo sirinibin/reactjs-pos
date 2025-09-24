@@ -1788,7 +1788,7 @@ function ProductIndex(props) {
                                                 if (timerRef.current) clearTimeout(timerRef.current);
                                                 timerRef.current = setTimeout(() => {
                                                     suggestProducts(searchTerm, "all")
-                                                }, 100);
+                                                }, 400);
                                             }}
                                             ignoreDiacritics={true}
                                             multiple
