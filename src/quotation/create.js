@@ -2842,10 +2842,15 @@ const QuotationCreate = forwardRef((props, ref) => {
                   placeholder="Part No. | Name | Name in Arabic | Brand | Country"
                   highlightOnlyResult={true}
                   onInputChange={(searchTerm, e) => {
+                    const requestId = Date.now();
+                    latestRequestRef.current = requestId;
+
                     if (timerRef.current) clearTimeout(timerRef.current);
                     timerRef.current = setTimeout(() => {
+                      if (latestRequestRef.current !== requestId) return;
+
                       suggestProducts(searchTerm);
-                    }, 400);
+                    }, 500);
                   }}
                   onKeyDown={(e) => {
                     if (e.key === "Escape") {

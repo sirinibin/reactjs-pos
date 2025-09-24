@@ -1785,10 +1785,15 @@ function ProductIndex(props) {
                                             placeholder="Part No. | Name | Name in Arabic | Brand | Country"
                                             highlightOnlyResult={true}
                                             onInputChange={(searchTerm, e) => {
+                                                const requestId = Date.now();
+                                                latestRequestRef.current = requestId;
+
                                                 if (timerRef.current) clearTimeout(timerRef.current);
                                                 timerRef.current = setTimeout(() => {
+                                                    if (latestRequestRef.current !== requestId) return;
+
                                                     suggestProducts(searchTerm, "all")
-                                                }, 400);
+                                                }, 500);
                                             }}
                                             ignoreDiacritics={true}
                                             multiple
@@ -3000,7 +3005,7 @@ function ProductIndex(props) {
                                                                     if (timerRef.current) clearTimeout(timerRef.current);
                                                                     timerRef.current = setTimeout(() => {
                                                                         suggestProducts(searchTerm, "name")
-                                                                    }, 100);
+                                                                    }, 400);
                                                                 }}
                                                                 ignoreDiacritics={true}
 
