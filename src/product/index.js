@@ -714,17 +714,6 @@ function ProductIndex(props) {
         const filtered = products.filter((opt) => customFilter(opt, searchTerm));
 
         const sorted = filtered.sort((a, b) => {
-            // Split searchTerm into words
-            const words = searchTerm.toLowerCase().split(" ").filter(Boolean);
-
-            const aPercent = percentOccurrence(words, a);
-            const bPercent = percentOccurrence(words, b);
-
-            if (aPercent !== bPercent) {
-                return bPercent - aPercent; // Descending order
-            }
-
-
             const aHasCountry = a.country_name && a.country_name.trim() !== "";
             const bHasCountry = b.country_name && b.country_name.trim() !== "";
 
@@ -741,6 +730,16 @@ function ProductIndex(props) {
             // If only b has country, it comes before a
             if (!aHasCountry && bHasCountry) {
                 return 1;
+            }
+
+            // Split searchTerm into words
+            const words = searchTerm.toLowerCase().split(" ").filter(Boolean);
+
+            const aPercent = percentOccurrence(words, a);
+            const bPercent = percentOccurrence(words, b);
+
+            if (aPercent !== bPercent) {
+                return bPercent - aPercent; // Descending order
             }
 
             // Both have no country, keep original order or sort as needed
