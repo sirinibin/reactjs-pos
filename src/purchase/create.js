@@ -2802,7 +2802,7 @@ const PurchaseCreate = forwardRef((props, ref) => {
                                         if (latestRequestRef.current !== requestId) return;
 
                                         suggestProducts(searchTerm);
-                                    }, 500);
+                                    }, 350);
                                 }}
                                 renderMenu={(results, menuProps, state) => {
                                     const searchWords = state.text.toLowerCase().split(" ").filter(Boolean);

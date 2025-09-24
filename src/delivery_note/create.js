@@ -1913,7 +1913,7 @@ const DeliveryNoteCreate = forwardRef((props, ref) => {
                     if (latestRequestRef.current !== requestId) return;
 
                     suggestProducts(searchTerm);
-                  }, 500);
+                  }, 350);
                 }}
                 onKeyDown={(e) => {
                   if (e.key === "Escape") {

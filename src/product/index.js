@@ -1793,7 +1793,7 @@ function ProductIndex(props) {
                                                     if (latestRequestRef.current !== requestId) return;
 
                                                     suggestProducts(searchTerm, "all")
-                                                }, 500);
+                                                }, 350);
                                             }}
                                             ignoreDiacritics={true}
                                             multiple
