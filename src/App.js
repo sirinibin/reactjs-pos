@@ -76,6 +76,11 @@ function App() {
             <Dashboard />
           </Route>
 
+
+          <Route path="/dashboard/stats">
+            <Dashboard />
+          </Route>
+
           <Route path="/dashboard/vendors">
             <Dashboard />
           </Route>

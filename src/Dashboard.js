@@ -50,6 +50,7 @@ import Toast from 'react-bootstrap/Toast'
 import ToastContainer from 'react-bootstrap/ToastContainer'
 import './dashboard.css'
 import Analytics from './analytics/index.js';
+import StatsIndex from './stats/index.js';
 
 function Dashboard() {
 
@@ -316,6 +317,19 @@ function Dashboard() {
                         <Topbar parentCallback={handleToggle} />
                         <main className="content">
                             <QuotationSalesReturnIndex showToastMessage={showToastMessage} />
+                        </main>
+                        <Footer />
+                    </div>
+                </div>
+            </Route>
+
+            <Route path="/dashboard/stats">
+                <div className="wrapper">
+                    <Sidebar isSidebarOpen={isSidebarOpen} parentCallback={handleToggle} />
+                    <div className="main">
+                        <Topbar parentCallback={handleToggle} />
+                        <main className="content">
+                            <StatsIndex showToastMessage={showToastMessage} />
                         </main>
                         <Footer />
                     </div>

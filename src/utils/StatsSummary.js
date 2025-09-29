@@ -174,24 +174,34 @@ const StatsSummary = ({ title, stats = {}, defaultOpen = false, onToggle }) => {
 
     return (
         <div className="mb-3">
-            {!defaultOpen && (
+            {(
                 <button className="btn btn-outline-primary mb-2" onClick={handleToggle}>
                     {isOpen ? `Hide ${title} Summary` : `Show ${title} Summary`}
                 </button>
             )}
 
-            {(isOpen || defaultOpen) && (
+            {(isOpen) && (
                 <>
                     {/* Settings icon above stats box, aligned right */}
-                    <div className="d-flex justify-content-end mb-2">
-                        <Button
-                            variant="outline-secondary"
-                            size="sm"
-                            onClick={() => setShowSettings(true)}
-                        >
-                            <i className="bi bi-gear"></i>
-                        </Button>
+                    <div className="row">
+                        <div className="col">
+                            <div className="d-flex justify-content-start mb-2">
+                                <h4>{` ${title} Stats`}</h4>
+                            </div>
+                        </div>
+                        <div className="col">
+                            <div className="d-flex justify-content-end mb-2">
+                                <Button
+                                    variant="outline-secondary"
+                                    size="sm"
+                                    onClick={() => setShowSettings(true)}
+                                >
+                                    <i className="bi bi-gear"></i>
+                                </Button>
+                            </div>
+                        </div>
                     </div>
+
 
                     <div className="border pt-4 px-3 pb-3 rounded bg-light position-relative">
                         <div className="row">
