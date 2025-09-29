@@ -186,7 +186,7 @@ const StatsSummary = ({ title, stats = {}, defaultOpen = false, onToggle }) => {
                     <div className="row">
                         <div className="col">
                             <div className="d-flex justify-content-start mb-2">
-                                <h4>{` ${title} Stats`}</h4>
+                                <h4>{` ${title}`}</h4>
                             </div>
                         </div>
                         <div className="col">

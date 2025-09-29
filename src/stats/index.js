@@ -721,7 +721,7 @@ const StatsIndex = forwardRef((props, ref) => {
                     <div className="col">
                         <span className="text-end">
                             <StatsSummary
-                                title="Sales"
+                                title="Sales Stats"
                                 stats={{
                                     "Sales": totalSales,
                                     "Cash Sales": totalCashSales,
@@ -753,7 +753,7 @@ const StatsIndex = forwardRef((props, ref) => {
                     <div className="col">
                         <span className="text-end">
                             <StatsSummary
-                                title="Sales Return"
+                                title="Sales Return Stats"
                                 stats={{
                                     "Sales Return": totalSalesReturn,
                                     "Cash Sales Return": totalCashSalesReturn,
@@ -782,7 +782,7 @@ const StatsIndex = forwardRef((props, ref) => {
                     <div className="col">
                         <span className="text-end">
                             <StatsSummary
-                                title="Purchase"
+                                title="Purchase Stats"
                                 stats={{
                                     "Cash purchase": totalCashPurchase,
                                     "Credit purchase": totalUnPaidPurchase,
@@ -813,7 +813,7 @@ const StatsIndex = forwardRef((props, ref) => {
 
                         <span className="text-end">
                             <StatsSummary
-                                title="Purchase Return"
+                                title="Purchase Return Stats"
                                 stats={{
                                     "Cash Purchase Return": totalCashPurchaseReturn,
                                     "Credit Purchase Return": totalUnPaidPurchaseReturn,
