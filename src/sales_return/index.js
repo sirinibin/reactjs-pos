@@ -82,6 +82,10 @@ function SalesReturnIndex(props) {
     let [totalBankAccountSalesReturn, setTotalBankAccountSalesReturn] = useState(0.00);
     let [totalSalesSalesReturn, setTotalSalesSalesReturn] = useState(0.00);
 
+    const [commission, setCommission] = useState(0.00);
+    const [commissionPaidByCash, setCommissionPaidByCash] = useState(0.00);
+    const [commissionPaidByBank, setCommissionPaidByBank] = useState(0.00);
+
     //list
     const [salesreturnList, setSalesReturnList] = useState([]);
 
@@ -922,6 +926,8 @@ function SalesReturnIndex(props) {
             setSelectedPaymentStatusList(values);
         } else if (field === "payment_methods") {
             setSelectedPaymentMethodList(values);
+        } else if (field === "commission_payment_method") {
+            setSelectedCommissionPaymentMethodList(values);
         }
 
         searchParams[field] = Object.values(values)
@@ -949,7 +955,7 @@ function SalesReturnIndex(props) {
             },
         };
         let Select =
-            "select=zatca.compliance_check_last_failed_at,zatca.reporting_passed,zatca.compliance_passed,zatca.reporting_passed_at,zatca.compliane_check_passed_at,zatca.reporting_last_failed_at,zatca.reporting_failed_count,zatca.compliance_check_failed_count,id,code,date,net_total,created_by_name,customer_id,customer_name,customer_name_arabic,status,created_at,net_profit,net_loss,cash_discount,discount,order_code,order_id,total_payment_paid,payments_count,payment_methods,payment_status,balance_amount,store_id";
+            "select=commission,commission_payment_method,zatca.compliance_check_last_failed_at,zatca.reporting_passed,zatca.compliance_passed,zatca.reporting_passed_at,zatca.compliane_check_passed_at,zatca.reporting_last_failed_at,zatca.reporting_failed_count,zatca.compliance_check_failed_count,id,code,date,net_total,created_by_name,customer_id,customer_name,customer_name_arabic,status,created_at,net_profit,net_loss,cash_discount,discount,order_code,order_id,total_payment_paid,payments_count,payment_methods,payment_status,balance_amount,store_id";
         if (localStorage.getItem("store_id")) {
             searchParams.store_id = localStorage.getItem("store_id");
         }
@@ -1020,6 +1026,9 @@ function SalesReturnIndex(props) {
                 setTotalShippingHandlingFees(data.meta.shipping_handling_fees);
                 setTotalDiscount(data.meta.discount);
                 setTotalCashDiscount(data.meta.cash_discount);
+                setCommission(data.meta.commission);
+                setCommissionPaidByCash(data.meta.commission_paid_by_cash);
+                setCommissionPaidByBank(data.meta.commission_paid_by_bank);
                 setTotalPaidSalesReturn(data.meta.paid_sales_return);
                 setTotalUnPaidSalesReturn(data.meta.unpaid_sales_return);
                 setTotalCashSalesReturn(data.meta.cash_sales_return);
@@ -1188,6 +1197,34 @@ function SalesReturnIndex(props) {
     const [selectedPaymentMethodList, setSelectedPaymentMethodList] = useState([]);
     const [selectedPaymentStatusList, setSelectedPaymentStatusList] = useState([]);
 
+    const commissionPaymentMethodOptions = [
+        {
+            id: "cash",
+            name: "Cash",
+        },
+        {
+            id: "debit_card",
+            name: "Debit Card",
+        },
+        {
+            id: "credit_card",
+            name: "Credit Card",
+        },
+        {
+            id: "bank_card",
+            name: "Bank Card",
+        },
+        {
+            id: "bank_transfer",
+            name: "Bank Transfer",
+        },
+        {
+            id: "bank_cheque",
+            name: "Bank Cheque",
+        },
+    ];
+    const [selectedCommissionPaymentMethodList, setSelectedCommissionPaymentMethodList] = useState([]);
+
     const [selectedSalesReturn, setSelectedSalesReturn] = useState({});
     let [showSalesReturnPaymentHistory, setShowSalesReturnPaymentHistory] = useState(false);
 
@@ -1342,6 +1379,8 @@ function SalesReturnIndex(props) {
         { key: "payment_status", label: "Payment Status", fieldName: "payment_status", visible: true },
         { key: "payment_methods", label: "Payment Methods", fieldName: "payment_methods", visible: true },
         { key: "cash_discount", label: "Cash Discount", fieldName: "cash_discount", visible: true },
+        { key: "commission", label: "Commission", fieldName: "commission", visible: true },
+        { key: "commission_payment_method", label: "Commission Payment Method", fieldName: "commission_payment_method", visible: true },
         { key: "discount", label: "Discount", fieldName: "discount", visible: true },
         { key: "net_profit", label: "Net Profit", fieldName: "net_profit", visible: true },
         { key: "net_loss", label: "Net Loss", fieldName: "net_loss", visible: true },
@@ -1699,6 +1738,9 @@ function SalesReturnIndex(props) {
                                     "Shipping/Handling fees Return": totalShippingHandlingFees,
                                     "Net Profit Return": netProfit,
                                     "Net Loss Return": loss,
+                                    "Commission": commission,
+                                    "Commission Paid By Cash": commissionPaidByCash,
+                                    "Commission Paid By Bank": commissionPaidByBank,
                                 }}
                                 onToggle={handleSummaryToggle}
                             />
@@ -2257,6 +2299,7 @@ function SalesReturnIndex(props) {
                                                             col.key !== "zatca.reporting_passed" &&
                                                             col.key !== "payment_status" &&
                                                             col.key !== "payment_methods" &&
+                                                            col.key !== "commission_payment_method" &&
                                                             col.key !== "created_by" &&
                                                             col.key !== "created_at" &&
                                                             col.key !== "actions_end" &&
@@ -2288,6 +2331,24 @@ function SalesReturnIndex(props) {
                                                                 multiple
                                                             />
 
+                                                        </th>}
+                                                        {col.key === "commission_payment_method" && <th>
+                                                            <Typeahead
+                                                                id="commission_payment_method"
+
+                                                                labelKey="name"
+                                                                onChange={(selectedItems) => {
+                                                                    searchByMultipleValuesField(
+                                                                        "commission_payment_method",
+                                                                        selectedItems
+                                                                    );
+                                                                }}
+                                                                options={commissionPaymentMethodOptions}
+                                                                placeholder="Select payment methods"
+                                                                selected={selectedCommissionPaymentMethodList}
+                                                                highlightOnlyResult={true}
+                                                                multiple
+                                                            />
                                                         </th>}
                                                         {col.key === "created_by" && <th>
                                                             <Typeahead
@@ -3017,6 +3078,12 @@ function SalesReturnIndex(props) {
                                                                 </td>}
                                                                 {(col.fieldName === "cash_discount") && <td style={{ width: "auto", whiteSpace: "nowrap" }}>
                                                                     <Amount amount={trimTo2Decimals(salesReturn.cash_discount)} />
+                                                                </td>}
+                                                                {(col.fieldName === "commission") && <td style={{ width: "auto", whiteSpace: "nowrap" }}>
+                                                                    {salesReturn.commission && <Amount amount={trimTo2Decimals(salesReturn.commission)} />}
+                                                                </td>}
+                                                                {(col.fieldName === "commission_payment_method") && <td style={{ width: "auto", whiteSpace: "nowrap" }}>
+                                                                    {salesReturn.commission_payment_method && <span className="badge bg-info">{salesReturn.commission_payment_method}</span>}
                                                                 </td>}
                                                                 {(col.fieldName === "discount") && <td style={{ width: "auto", whiteSpace: "nowrap" }}>
                                                                     {trimTo2Decimals(salesReturn.discount)}

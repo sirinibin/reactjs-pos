@@ -644,7 +644,35 @@ const OrderIndex = forwardRef((props, ref) => {
             name: "Customer account",
         },
     ];
+
+    const commissionPaymentMethodOptions = [
+        {
+            id: "cash",
+            name: "Cash",
+        },
+        {
+            id: "debit_card",
+            name: "Debit Card",
+        },
+        {
+            id: "credit_card",
+            name: "Credit Card",
+        },
+        {
+            id: "bank_card",
+            name: "Bank Card",
+        },
+        {
+            id: "bank_transfer",
+            name: "Bank Transfer",
+        },
+        {
+            id: "bank_cheque",
+            name: "Bank Cheque",
+        },
+    ];
     const [selectedPaymentMethodList, setSelectedPaymentMethodList] = useState([]);
+    const [selectedCommissionPaymentMethodList, setSelectedCommissionPaymentMethodList] = useState([]);
 
 
     useEffect(() => {
@@ -695,6 +723,11 @@ const OrderIndex = forwardRef((props, ref) => {
     const [totalSalesReturnSales, setTotalSalesReturnSales] = useState(0.00);
     const [totalPurchaseSales, setTotalPurchaseSales] = useState(0.00);
     const [loss, setLoss] = useState(0.00);
+
+
+    const [commission, setCommission] = useState(0.00);
+    const [commissionPaidByCash, setCommissionPaidByCash] = useState(0.00);
+    const [commissionPaidByBank, setCommissionPaidByBank] = useState(0.00);
     //const [returnCount, setReturnCount] = useState(0.00);
     //const [returnPaidAmount, setReturnPaidAmount] = useState(0.00);
 
@@ -925,6 +958,8 @@ const OrderIndex = forwardRef((props, ref) => {
             setSelectedPaymentStatusList(values);
         } else if (field === "payment_methods") {
             setSelectedPaymentMethodList(values);
+        } else if (field === "commission_payment_method") {
+            setSelectedCommissionPaymentMethodList(values);
         }
 
         searchParams[field] = Object.values(values)
@@ -955,7 +990,7 @@ const OrderIndex = forwardRef((props, ref) => {
             },
         };
         let Select =
-            "select=phone,zatca.compliance_check_last_failed_at,zatca.reporting_passed,zatca.compliance_passed,zatca.reporting_passed_at,zatca.compliane_check_passed_at,zatca.reporting_last_failed_at,zatca.reporting_failed_count,zatca.compliance_check_failed_count,id,code,date,net_total,return_count,return_amount,cash_discount,total_payment_received,payments_count,payment_methods,balance_amount,discount_percent,discount,created_by_name,customer_name,customer_name_arabic,status,payment_status,payment_method,created_at,loss,net_loss,net_profit,store_id,total,customer_id";
+            "select=phone,zatca.compliance_check_last_failed_at,commission,commission_payment_method,zatca.reporting_passed,zatca.compliance_passed,zatca.reporting_passed_at,zatca.compliane_check_passed_at,zatca.reporting_last_failed_at,zatca.reporting_failed_count,zatca.compliance_check_failed_count,id,code,date,net_total,return_count,return_amount,cash_discount,total_payment_received,payments_count,payment_methods,balance_amount,discount_percent,discount,created_by_name,customer_name,customer_name_arabic,status,payment_status,payment_method,created_at,loss,net_loss,net_profit,store_id,total,customer_id";
 
         if (localStorage.getItem("store_id")) {
             searchParams.store_id = localStorage.getItem("store_id");
@@ -1025,6 +1060,9 @@ const OrderIndex = forwardRef((props, ref) => {
                 setTotalShippingHandlingFees(data.meta.shipping_handling_fees);
                 setTotalDiscount(data.meta.discount);
                 setTotalCashDiscount(data.meta.cash_discount);
+                setCommission(data.meta.commission);
+                setCommissionPaidByCash(data.meta.commission_paid_by_cash);
+                setCommissionPaidByBank(data.meta.commission_paid_by_bank);
                 setTotalPaidSales(data.meta.paid_sales);
                 setTotalUnPaidSales(data.meta.unpaid_sales);
                 setTotalCashSales(data.meta.cash_sales);
@@ -1400,6 +1438,8 @@ const OrderIndex = forwardRef((props, ref) => {
         { key: "payment_status", label: "Payment Status", fieldName: "payment_status", visible: true },
         { key: "payment_methods", label: "Payment Methods", fieldName: "payment_methods", visible: true },
         { key: "cash_discount", label: "Cash Discount", fieldName: "cash_discount", visible: true },
+        { key: "commission", label: "Commission", fieldName: "commission", visible: true },
+        { key: "commission_payment_method", label: "Commission Payment Method", fieldName: "commission_payment_method", visible: true },
         { key: "sales_discount", label: "Sales Discount", fieldName: "discount", visible: true },
         { key: "net_profit", label: "Net Profit", fieldName: "net_profit", visible: true },
         { key: "net_loss", label: "Net Loss", fieldName: "net_loss", visible: true },
@@ -1756,6 +1796,9 @@ const OrderIndex = forwardRef((props, ref) => {
                                     "Shipping/Handling fees": totalShippingHandlingFees,
                                     "Net Profit": netProfit,
                                     "Net Loss": loss,
+                                    "Commission": commission,
+                                    "Commission Paid By Cash": commissionPaidByCash,
+                                    "Commission Paid By Bank": commissionPaidByBank,
                                     //"Return Count": returnCount,
                                     //"Return Paid Amount": returnPaidAmount,
                                 }}
@@ -2003,6 +2046,7 @@ const OrderIndex = forwardRef((props, ref) => {
                                                             col.key !== "reported_to_zatca" &&
                                                             col.key !== "payment_status" &&
                                                             col.key !== "payment_methods" &&
+                                                            col.key !== "commission_payment_method" &&
                                                             col.key !== "created_by" &&
                                                             col.key !== "created_at" &&
                                                             col.key !== "actions_end" &&
@@ -2030,6 +2074,24 @@ const OrderIndex = forwardRef((props, ref) => {
                                                                 options={paymentMethodOptions}
                                                                 placeholder="Select payment methods"
                                                                 selected={selectedPaymentMethodList}
+                                                                highlightOnlyResult={true}
+                                                                multiple
+                                                            />
+                                                        </th>}
+                                                        {col.key === "commission_payment_method" && <th>
+                                                            <Typeahead
+                                                                id="commission_payment_method"
+
+                                                                labelKey="name"
+                                                                onChange={(selectedItems) => {
+                                                                    searchByMultipleValuesField(
+                                                                        "commission_payment_method",
+                                                                        selectedItems
+                                                                    );
+                                                                }}
+                                                                options={commissionPaymentMethodOptions}
+                                                                placeholder="Select payment methods"
+                                                                selected={selectedCommissionPaymentMethodList}
                                                                 highlightOnlyResult={true}
                                                                 multiple
                                                             />
@@ -2421,6 +2483,12 @@ const OrderIndex = forwardRef((props, ref) => {
                                                                 </td>}
                                                                 {(col.fieldName === "cash_discount") && <td style={{ width: "auto", whiteSpace: "nowrap" }}>
                                                                     <Amount amount={trimTo2Decimals(order.cash_discount)} />
+                                                                </td>}
+                                                                {(col.fieldName === "commission") && <td style={{ width: "auto", whiteSpace: "nowrap" }}>
+                                                                    {order.commission && <Amount amount={trimTo2Decimals(order.commission)} />}
+                                                                </td>}
+                                                                {(col.fieldName === "commission_payment_method") && <td style={{ width: "auto", whiteSpace: "nowrap" }}>
+                                                                    {order.commission_payment_method && <span className="badge bg-info">{order.commission_payment_method}</span>}
                                                                 </td>}
                                                                 {(col.fieldName === "discount") && <td style={{ width: "auto", whiteSpace: "nowrap" }}>
                                                                     {trimTo2Decimals(order.discount)}
