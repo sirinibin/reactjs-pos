@@ -1,4 +1,4 @@
-import { React, forwardRef, useEffect, useState } from "react";
+import { React, forwardRef } from "react";
 import { format } from "date-fns";
 import n2words from 'n2words'
 import { QRCodeCanvas } from "qrcode.react";
@@ -50,29 +50,6 @@ const PreviewContent = forwardRef((props, ref) => {
     let detailsBorderColor = "black";//#dee2e6
     let tableBorderThickness = "0.5px solid black";
 
-
-    const [xmlBlobUrl, setXmlBlobUrl] = useState(null);
-
-    useEffect(() => {
-        let url = null;
-        async function fetchXml() {
-            if (props.model.code && props.model.store?.zatca?.phase === "2" && props.model.zatca?.reporting_passed) {
-                try {
-                    const response = await fetch(`/zatca/xml/${props.model.code}.xml`);
-                    if (!response.ok) throw new Error("Failed to fetch XML");
-                    const blob = await response.blob();
-                    url = window.URL.createObjectURL(blob);
-                    setXmlBlobUrl(url);
-                } catch (e) {
-                    setXmlBlobUrl(null);
-                }
-            }
-        }
-        fetchXml();
-        return () => {
-            if (url) window.URL.revokeObjectURL(url);
-        };
-    }, [props.model.code, props.model.store, props.model.zatca]);
 
     return (<>
         <span ref={ref}>
@@ -171,13 +148,14 @@ const PreviewContent = forwardRef((props, ref) => {
                             <div className="no-print" style={{ marginTop: 0, border: "none", height: "32px" }}>
 
                                 <a
-                                    href={xmlBlobUrl || "#"}
-                                    download={props.model.code ? `${props.model.code}.xml` : undefined}
+                                    href={`/zatca/xml/${props.model.code}.xml`}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
                                     className="no-print"
-                                    style={{ height: "18px", lineHeight: "14px", border: "none", fontSize: "0.75rem", cursor: xmlBlobUrl ? "pointer" : "not-allowed", opacity: xmlBlobUrl ? 1 : 0.5 }}
-                                    onClick={e => { if (!xmlBlobUrl) e.preventDefault(); }}
+                                    style={{ height: "18px", lineHeight: "14px", border: "none", fontSize: "0.75rem", cursor: "pointer", opacity: 1 }}
+
                                 >
-                                    Download Zatca Signed XML
+                                    Zatca Signed XML
                                 </a>
                                 {/*<a
                                     href={`/zatca/xml/${props.model.code}.xml`}
