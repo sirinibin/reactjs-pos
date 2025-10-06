@@ -982,6 +982,8 @@ const Preview = forwardRef((props, ref) => {
 
 
     const handleDownload = async () => {
+        model.printing = false;
+        setModel({ ...model });
         const element = printAreaRef.current;
         if (!element) return;
 
@@ -1063,9 +1065,11 @@ const Preview = forwardRef((props, ref) => {
 
 
 
+
     const handlePrint = useCallback(() => {
 
         //  alert(getFileName());
+
 
         setIsProcessing(true);
         const element = printAreaRef.current;
@@ -1735,9 +1739,13 @@ const Preview = forwardRef((props, ref) => {
                 //handlePrint()
 
                 if (whatsAppShare) {
+                    model.printing = false;
+                    setModel({ ...model });
                     openWhatsAppShare();
                     //handleClose();
                 } else {
+                    model.printing = true;
+                    setModel({ ...model });
                     handlePrint();
                     // handleClose();
                 }
@@ -1750,7 +1758,7 @@ const Preview = forwardRef((props, ref) => {
         return () => {
             document.removeEventListener('keydown', handleEnterKey);
         };
-    }, [handlePrint, openWhatsAppShare, whatsAppShare, show]); // no dependencies
+    }, [handlePrint, openWhatsAppShare, whatsAppShare, show, model]); // no dependencies
 
 
     return (<>
@@ -1903,8 +1911,12 @@ const Preview = forwardRef((props, ref) => {
                                 e.preventDefault();
 
                                 if (whatsAppShare) {
+                                    model.printing = false;
+                                    setModel({ ...model });
                                     openWhatsAppShare();
                                 } else {
+                                    model.printing = true;
+                                    setModel({ ...model });
                                     handlePrint();
                                 }
 

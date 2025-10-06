@@ -166,7 +166,7 @@ const PreviewContent = forwardRef((props, ref) => {
 
                     </div>
 
-                    {props.model.code && props.model.store?.zatca?.phase === "2" && props.model.zatca?.reporting_passed && (<div className="row no-print" style={{ height: "18px", lineHeight: "14px", border: "none", fontSize: "0.95rem" }} >
+                    {!props.model.printing && props.model.code && props.model.store?.zatca?.phase === "2" && props.model.zatca?.reporting_passed && (<div className="row no-print" style={{ height: "18px", lineHeight: "14px", border: "none", fontSize: "0.95rem" }} >
                         <div className="col text-end">
                             <div className="no-print" style={{ marginTop: 0, border: "none", height: "32px" }}>
 
