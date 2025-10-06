@@ -11,6 +11,9 @@ import WhatsAppModal from './../utils/WhatsAppModal';
 import MBDIInvoiceBackground from './../INVOICE.jpg';
 import LGKInvoiceBackground from './../LGK_WHATSAPP.png';
 //import jsPDF from "jspdf";
+import { PDFDocument } from 'pdf-lib';
+//import "jspdf-attachfiles";
+//import jsPDF from "jspdf";
 //import html2canvas from "html2canvas";
 
 
@@ -930,26 +933,86 @@ const Preview = forwardRef((props, ref) => {
         return filename;
     }, [model, modelName])
 
-    const handleDownload = () => {
+    // ...other code...
+
+    const handleDownload = async () => {
         const element = printAreaRef.current;
         if (!element) return;
 
-        const fileName = getFileName(); // Get filename in advance
+        const fileName = getFileName();
+        const xmlUrl = `/zatca/xml/${model.code}.xml`;
 
-        html2pdf()
+        // 1. Only download and attach XML if ZATCA Phase 2 and reporting passed
+        let xmlBytes = null;
+        const shouldAttachXml =
+            model.store?.zatca?.phase === "2" &&
+            model.zatca?.qr_code &&
+            model.zatca?.reporting_passed;
+
+        if (shouldAttachXml) {
+            try {
+                const xmlResponse = await fetch(xmlUrl);
+                if (!xmlResponse.ok) throw new Error("Failed to fetch XML");
+                xmlBytes = new Uint8Array(await xmlResponse.arrayBuffer());
+            } catch (err) {
+                console.error("Failed to download XML:", err);
+                alert("Failed to download ZATCA XML. PDF will be generated without XML attachment.");
+                xmlBytes = null;
+            }
+        }
+
+        // 2. Generate PDF as ArrayBuffer
+        const pdfArrayBuffer = await html2pdf()
             .set({
                 margin: 0,
-                filename: `${fileName}.pdf`, // Force download with this name
+                filename: `${fileName}.pdf`,
                 image: { type: 'jpeg', quality: 0.98 },
                 html2canvas: { scale: 2, useCORS: true },
                 jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
             })
             .from(element)
-            .save()
-            .catch((err) => {
-                console.error("PDF download failed:", err);
+            .outputPdf('arraybuffer');
+
+        // 3. Load PDF with pdf-lib
+        const pdfDoc = await PDFDocument.load(pdfArrayBuffer);
+
+        // 4. Attach XML if available and required
+        if (xmlBytes) {
+            await pdfDoc.attach(xmlBytes, "invoice.xml", {
+                mimeType: "text/xml",
+                description: "ZATCA E-Invoice XML"
             });
+        }
+
+        // 5. Save the PDF
+        const pdfBytes = await pdfDoc.save();
+        const blob = new Blob([pdfBytes], { type: "application/pdf" });
+        const link = document.createElement("a");
+        link.href = URL.createObjectURL(blob);
+        link.download = `${fileName}.pdf`;
+        link.click();
     };
+    /*
+        const handleDownload = () => {
+            const element = printAreaRef.current;
+            if (!element) return;
+    
+            const fileName = getFileName(); // Get filename in advance
+    
+            html2pdf()
+                .set({
+                    margin: 0,
+                    filename: `${fileName}.pdf`, // Force download with this name
+                    image: { type: 'jpeg', quality: 0.98 },
+                    html2canvas: { scale: 2, useCORS: true },
+                    jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+                })
+                .from(element)
+                .save()
+                .catch((err) => {
+                    console.error("PDF download failed:", err);
+                });
+        };*/
 
 
 
@@ -1082,6 +1145,104 @@ const Preview = forwardRef((props, ref) => {
         const element = printAreaRef.current;
         if (!element) return;
 
+        const fileName = getFileName();
+        const xmlUrl = `/zatca/xml/${model.code}.xml`;
+
+        // 1. Only download and attach XML if ZATCA Phase 2 and reporting passed
+        let xmlBytes = null;
+        const shouldAttachXml =
+            model.store?.zatca?.phase === "2" &&
+            model.zatca?.qr_code &&
+            model.zatca?.reporting_passed;
+
+        if (shouldAttachXml) {
+            try {
+                const xmlResponse = await fetch(xmlUrl);
+                if (!xmlResponse.ok) throw new Error("Failed to fetch XML");
+                xmlBytes = new Uint8Array(await xmlResponse.arrayBuffer());
+            } catch (err) {
+                console.error("Failed to download XML:", err);
+                alert("Failed to download ZATCA XML. PDF will be generated without XML attachment.");
+                xmlBytes = null;
+            }
+        }
+
+        // 2. Generate PDF as ArrayBuffer
+        const opt = {
+            margin: 0,
+            filename: `${fileName}.pdf`,
+            image: { type: 'jpeg', quality: 0.98 },
+            html2canvas: { scale: 2, useCORS: true, logging: true },
+            jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+        };
+
+        const pdfArrayBuffer = await html2pdf().from(element).set(opt).outputPdf('arraybuffer');
+
+        // 3. Load PDF with pdf-lib
+        const pdfDoc = await PDFDocument.load(pdfArrayBuffer);
+
+        // 4. Attach XML if available and required
+        if (xmlBytes) {
+            await pdfDoc.attach(xmlBytes, "invoice.xml", {
+                mimeType: "text/xml",
+                description: "ZATCA E-Invoice XML"
+            });
+        }
+
+        // 5. Save the PDF as a Blob for upload
+        const pdfBytes = await pdfDoc.save();
+        const pdfBlob = new Blob([pdfBytes], { type: "application/pdf" });
+
+        // 6. Upload to your server
+        const formData = new FormData();
+        formData.append("file", pdfBlob, `${fileName}.pdf`);
+        await fetch("/v1/upload-pdf", { method: "POST", body: formData });
+
+        // ...rest of your WhatsApp sharing logic...
+        // (No changes needed below this line)
+        let whatsAppNo = "";
+
+        if (phone) {
+            whatsAppNo = phone;
+        } else if (model.customer?.phone) {
+            whatsAppNo = model.customer?.phone
+        } else if (model.vendor?.phone) {
+            whatsAppNo = model.vendor?.phone
+        }
+
+        let message = "";
+        if ((modelName === "quotation" || modelName === "whatsapp_quotation") && model?.type === "invoice") {
+            message = `Hello, here is your Invoice:\n${window.location.origin}/pdfs/${fileName}.pdf`;
+        } if ((modelName === "quotation" || modelName === "whatsapp_quotation") && model?.type === "quotation") {
+            message = `Hello, here is your Quotation:\n${window.location.origin}/pdfs/${fileName}.pdf`;
+        } else if (modelName === "delivery_note" || modelName === "whatsapp_delivery_note") {
+            message = `Hello, here is your Delivery Note:\n${window.location.origin}/pdfs/${fileName}.pdf`;
+        } else if (modelName === "sales_return" || modelName === "whatsapp_sales_return") {
+            message = `Hello, here is your Return Invoice:\n${window.location.origin}/pdfs/${fileName}.pdf`;
+        } else if (modelName === "quotation_sales_return" || modelName === "whatsapp_quotation_sales_return") {
+            message = `Hello, here is your Return Invoice:\n${window.location.origin}/pdfs/${fileName}.pdf`;
+        } else {
+            message = `Hello, here is your Invoice:\n${window.location.origin}/pdfs/${fileName}.pdf`;
+        }
+
+        if (timerRef.current) clearTimeout(timerRef.current);
+
+        timerRef.current = setTimeout(() => {
+            setIsProcessing(false);
+            whatsAppNo = formatPhoneForWhatsApp(whatsAppNo);
+            setDefaultMessage(message);
+            setDefaultNumber(whatsAppNo);
+            setShowWhatsAppMessageModal(true);
+        }, 100);
+
+    }, [getFileName, model, phone, modelName, formatPhoneForWhatsApp]);
+
+    /*
+    const openWhatsAppShare = useCallback(async () => {
+        setIsProcessing(true);
+        const element = printAreaRef.current;
+        if (!element) return;
+
         const opt = {
             margin: 0,
             filename: `${getFileName()}.pdf`,
@@ -1147,7 +1308,7 @@ const Preview = forwardRef((props, ref) => {
             setShowWhatsAppMessageModal(true);
         }, 100);
 
-    }, [getFileName, model, phone, modelName, formatPhoneForWhatsApp]);
+    }, [getFileName, model, phone, modelName, formatPhoneForWhatsApp]);*/
 
     const [showWhatsAppMessageModal, setShowWhatsAppMessageModal] = useState(false);
     const handleChoice = ({ type, number, message }) => {
