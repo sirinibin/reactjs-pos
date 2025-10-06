@@ -935,6 +935,52 @@ const Preview = forwardRef((props, ref) => {
 
     // ...other code...
 
+    /*
+    const handleDownload = async () => {
+        const element = printAreaRef.current;
+        if (!element) return;
+
+        const fileName = getFileName();
+
+        // 1. Generate PDF as Blob
+        const pdfBlob = await html2pdf()
+            .set({
+                margin: 0,
+                filename: `${fileName}.pdf`,
+                image: { type: 'jpeg', quality: 0.98 },
+                html2canvas: { scale: 2, useCORS: true },
+                jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+            })
+            .from(element)
+            .outputPdf('blob');
+
+        // 2. Prepare FormData for backend
+        const formData = new FormData();
+        formData.append("pdf", pdfBlob, `${fileName}.pdf`);
+        formData.append("id", model.id); // order id
+        formData.append("store_id", model.store_id); // order id
+
+        // 3. Call Go API to convert to PDF/A-3 and attach XML if needed
+        //    (Go API will check model.zatca.reporting_passed and attach XML if true)
+        const response = await fetch("/v1/pdfa3", {
+            method: "POST",
+            body: formData,
+        });
+
+        if (!response.ok) {
+            alert("Failed to generate PDF/A-3. Please try again.");
+            return;
+        }
+
+        // 4. Download the returned PDF/A-3
+        const pdfa3Blob = await response.blob();
+        const link = document.createElement("a");
+        link.href = URL.createObjectURL(pdfa3Blob);
+        link.download = `${fileName}_pdfa3.pdf`;
+        link.click();
+    };*/
+
+
     const handleDownload = async () => {
         const element = printAreaRef.current;
         if (!element) return;
@@ -992,6 +1038,7 @@ const Preview = forwardRef((props, ref) => {
         link.download = `${fileName}.pdf`;
         link.click();
     };
+
     /*
         const handleDownload = () => {
             const element = printAreaRef.current;
