@@ -1267,19 +1267,22 @@ const Preview = forwardRef((props, ref) => {
             whatsAppNo = model.vendor?.phone
         }
 
+
         let message = "";
+        // ...existing code...
+        let cacheBuster = `?v=${Date.now()}`;
         if ((modelName === "quotation" || modelName === "whatsapp_quotation") && model?.type === "invoice") {
-            message = `Hello, here is your Invoice:\n${window.location.origin}/pdfs/${fileName}.pdf`;
-        } if ((modelName === "quotation" || modelName === "whatsapp_quotation") && model?.type === "quotation") {
-            message = `Hello, here is your Quotation:\n${window.location.origin}/pdfs/${fileName}.pdf`;
+            message = `Hello, here is your Invoice:\n${window.location.origin}/pdfs/${fileName}.pdf${cacheBuster}`;
+        } else if ((modelName === "quotation" || modelName === "whatsapp_quotation") && model?.type === "quotation") {
+            message = `Hello, here is your Quotation:\n${window.location.origin}/pdfs/${fileName}.pdf${cacheBuster}`;
         } else if (modelName === "delivery_note" || modelName === "whatsapp_delivery_note") {
-            message = `Hello, here is your Delivery Note:\n${window.location.origin}/pdfs/${fileName}.pdf`;
+            message = `Hello, here is your Delivery Note:\n${window.location.origin}/pdfs/${fileName}.pdf${cacheBuster}`;
         } else if (modelName === "sales_return" || modelName === "whatsapp_sales_return") {
-            message = `Hello, here is your Return Invoice:\n${window.location.origin}/pdfs/${fileName}.pdf`;
+            message = `Hello, here is your Return Invoice:\n${window.location.origin}/pdfs/${fileName}.pdf${cacheBuster}`;
         } else if (modelName === "quotation_sales_return" || modelName === "whatsapp_quotation_sales_return") {
-            message = `Hello, here is your Return Invoice:\n${window.location.origin}/pdfs/${fileName}.pdf`;
+            message = `Hello, here is your Return Invoice:\n${window.location.origin}/pdfs/${fileName}.pdf${cacheBuster}`;
         } else {
-            message = `Hello, here is your Invoice:\n${window.location.origin}/pdfs/${fileName}.pdf`;
+            message = `Hello, here is your Invoice:\n${window.location.origin}/pdfs/${fileName}.pdf${cacheBuster}`;
         }
 
         if (timerRef.current) clearTimeout(timerRef.current);
