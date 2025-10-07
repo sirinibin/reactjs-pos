@@ -982,6 +982,12 @@ const Preview = forwardRef((props, ref) => {
 
 
     const handleDownload = async () => {
+        if (model.store.code === "MBDI") {
+            InvoiceBackground = MBDIInvoiceBackground;
+        } else if (model.store.code === "LGK-SIMULATION" || model.store.code === "LGK" || model.store.code === "PH2") {
+            InvoiceBackground = LGKInvoiceBackground;
+        }
+
         model.printing = false;
         setModel({ ...model });
         const element = printAreaRef.current;
@@ -1016,7 +1022,7 @@ const Preview = forwardRef((props, ref) => {
                 filename: `${fileName}.pdf`,
                 image: { type: 'jpeg', quality: 0.98 },
                 html2canvas: { scale: 2, useCORS: true },
-                jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+                jsPDF: { unit: 'mm', format: 'a3', orientation: 'portrait' }
             })
             .from(element)
             .outputPdf('arraybuffer');
