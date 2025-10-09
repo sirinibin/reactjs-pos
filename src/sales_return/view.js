@@ -535,6 +535,7 @@ const SalesReturnView = forwardRef((props, ref) => {
                                 <td className="text-end">0.00 </td>
                                 <td className="text-end">0.00 </td>
                             </tr>
+
                             <tr>
                                 <th colSpan="7" className="text-end">Net Total</th>
                                 <th className="text-end">
@@ -558,6 +559,23 @@ const SalesReturnView = forwardRef((props, ref) => {
                                 </td>
                                 <td className="text-end">0.00</td>
                             </tr>
+                            <tr>
+                                <td colSpan="8"></td>
+                                <th colSpan="2" className="text-end">Commission</th>
+                                <th className="text-end">
+                                    <NumberFormat
+                                        value={trimTo2Decimals(model.commission)}
+                                        displayType={"text"}
+                                        suffix={" "}
+                                        thousandSeparator={true}
+                                        renderText={(value, props) => value}
+                                    />
+                                </th>
+                                <th className="text-end">
+                                    0.00
+                                </th>
+                            </tr>
+
                             <tr>
                                 <td colSpan="8"></td>
                                 <th colSpan="2" className="text-end">Net Profit / Loss</th>

@@ -694,6 +694,22 @@ const OrderView = forwardRef((props, ref) => {
                             </tr>
                             <tr>
                                 <td colSpan="8"></td>
+                                <th colSpan="3" className="text-end">Commission</th>
+                                <th className="text-end">
+                                    <NumberFormat
+                                        value={trimTo2Decimals(model.commission)}
+                                        displayType={"text"}
+                                        suffix={""}
+                                        thousandSeparator={true}
+                                        renderText={(value, props) => value}
+                                    />
+                                </th>
+                                <th className="text-end">
+                                    0.00
+                                </th>
+                            </tr>
+                            <tr>
+                                <td colSpan="8"></td>
                                 <th colSpan="3" className="text-end">Net Profit / Loss</th>
                                 <th className="text-end">
                                     <NumberFormat
