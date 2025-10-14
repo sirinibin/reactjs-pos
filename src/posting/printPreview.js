@@ -496,26 +496,6 @@ const BalanceSheetPrintPreview = forwardRef((props, ref) => {
         if (!element) return;
 
         const fileName = getFileName();
-        const xmlUrl = `/zatca/xml/${model.code}.xml`;
-
-        // 1. Only download and attach XML if ZATCA Phase 2 and reporting passed
-        let xmlBytes = null;
-        const shouldAttachXml =
-            model.store?.zatca?.phase === "2" &&
-            model.zatca?.qr_code &&
-            model.zatca?.reporting_passed;
-
-        if (shouldAttachXml) {
-            try {
-                const xmlResponse = await fetch(xmlUrl);
-                if (!xmlResponse.ok) throw new Error("Failed to fetch XML");
-                xmlBytes = new Uint8Array(await xmlResponse.arrayBuffer());
-            } catch (err) {
-                console.error("Failed to download XML:", err);
-                alert("Failed to download ZATCA XML. PDF will be generated without XML attachment.");
-                xmlBytes = null;
-            }
-        }
 
         // 2. Generate PDF as ArrayBuffer
         const pdfArrayBuffer = await html2pdf()
@@ -531,14 +511,6 @@ const BalanceSheetPrintPreview = forwardRef((props, ref) => {
 
         // 3. Load PDF with pdf-lib
         const pdfDoc = await PDFDocument.load(pdfArrayBuffer);
-
-        // 4. Attach XML if available and required
-        if (xmlBytes) {
-            await pdfDoc.attach(xmlBytes, "invoice.xml", {
-                mimeType: "text/xml",
-                description: "ZATCA E-Invoice XML"
-            });
-        }
 
         // 5. Save the PDF
         const pdfBytes = await pdfDoc.save();
