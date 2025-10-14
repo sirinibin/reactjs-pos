@@ -6,6 +6,7 @@ import html2pdf from 'html2pdf.js';
 import WhatsAppModal from './../utils/WhatsAppModal';
 import MBDIInvoiceBackground from './../INVOICE.jpg';
 import LGKInvoiceBackground from './../LGK_WHATSAPP.png';
+import { PDFDocument } from 'pdf-lib';
 
 const BalanceSheetPrintPreview = forwardRef((props, ref) => {
 
@@ -453,6 +454,9 @@ const BalanceSheetPrintPreview = forwardRef((props, ref) => {
 
 
     const handlePrint = useCallback(() => {
+        model.download = false;
+        setModel({ ...model });
+
         setIsProcessing(true);
         const element = printAreaRef.current;
         if (!element) return;
@@ -475,7 +479,75 @@ const BalanceSheetPrintPreview = forwardRef((props, ref) => {
                 iframe.contentWindow?.print();
             };
         });
-    }, [getFileName]);
+    }, [getFileName, model]);
+
+
+
+    const handleDownload = async () => {
+        if (model.store.code === "MBDI") {
+            InvoiceBackground = MBDIInvoiceBackground;
+        } else if (model.store.code === "LGK-SIMULATION" || model.store.code === "LGK" || model.store.code === "PH2") {
+            InvoiceBackground = LGKInvoiceBackground;
+        }
+
+        model.download = true;
+        setModel({ ...model });
+        const element = printAreaRef.current;
+        if (!element) return;
+
+        const fileName = getFileName();
+        const xmlUrl = `/zatca/xml/${model.code}.xml`;
+
+        // 1. Only download and attach XML if ZATCA Phase 2 and reporting passed
+        let xmlBytes = null;
+        const shouldAttachXml =
+            model.store?.zatca?.phase === "2" &&
+            model.zatca?.qr_code &&
+            model.zatca?.reporting_passed;
+
+        if (shouldAttachXml) {
+            try {
+                const xmlResponse = await fetch(xmlUrl);
+                if (!xmlResponse.ok) throw new Error("Failed to fetch XML");
+                xmlBytes = new Uint8Array(await xmlResponse.arrayBuffer());
+            } catch (err) {
+                console.error("Failed to download XML:", err);
+                alert("Failed to download ZATCA XML. PDF will be generated without XML attachment.");
+                xmlBytes = null;
+            }
+        }
+
+        // 2. Generate PDF as ArrayBuffer
+        const pdfArrayBuffer = await html2pdf()
+            .set({
+                margin: 0,
+                filename: `${fileName}.pdf`,
+                image: { type: 'jpeg', quality: 0.98 },
+                html2canvas: { scale: 2, useCORS: true },
+                jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+            })
+            .from(element)
+            .outputPdf('arraybuffer');
+
+        // 3. Load PDF with pdf-lib
+        const pdfDoc = await PDFDocument.load(pdfArrayBuffer);
+
+        // 4. Attach XML if available and required
+        if (xmlBytes) {
+            await pdfDoc.attach(xmlBytes, "invoice.xml", {
+                mimeType: "text/xml",
+                description: "ZATCA E-Invoice XML"
+            });
+        }
+
+        // 5. Save the PDF
+        const pdfBytes = await pdfDoc.save();
+        const blob = new Blob([pdfBytes], { type: "application/pdf" });
+        const link = document.createElement("a");
+        link.href = URL.createObjectURL(blob);
+        link.download = `${fileName}.pdf`;
+        link.click();
+    };
     /*
 const handlePrint = useCallback(async () => {
     const element = printAreaRef.current;
@@ -542,6 +614,9 @@ const handlePrint = useCallback(async () => {
     };
 
     const openWhatsAppShare = useCallback(async () => {
+        model.download = false;
+        setModel({ ...model });
+
         setIsProcessing(true);
         console.log("Inside openWhatsAppShare")
         const element = printAreaRef.current;
@@ -1035,8 +1110,18 @@ const handlePrint = useCallback(async () => {
                         </select>
                     </>
 
-                    <div className="col align-self-end text-end">
-                        <Button variant="primary" className={`btn ${whatsAppShare ? "btn-success" : "btn-primary"}`} onClick={whatsAppShare ? openWhatsAppShare : handlePrint}>
+                    <div className="col  text-end">
+                        <Button variant="primary" className="d-flex align-items-center gap-2" onClick={(e) => {
+                            e.preventDefault();
+                            handleDownload()
+                        }}>
+                            <i className="bi bi-file-earmark-arrow-down"></i>PDF
+                        </Button>
+                    </div>
+
+
+                    <div className="col  text-end">
+                        <Button variant="primary" className={`d-flex align-items-center gap-2 btn ${whatsAppShare ? "btn-success" : "btn-primary"}`} onClick={whatsAppShare ? openWhatsAppShare : handlePrint}>
                             {isProcessing ?
                                 <Spinner
                                     as="span"
@@ -1056,13 +1141,16 @@ const handlePrint = useCallback(async () => {
                             </>}
                         </Button>
 
+
+
+                    </div>
+                    <div className="col  text-end">
                         <button
                             type="button"
                             className="btn-close"
                             onClick={handleClose}
                             aria-label="Close"
                         ></button>
-
                     </div>
                 </div>
 

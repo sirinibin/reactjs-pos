@@ -94,7 +94,7 @@ const BalanceSheetPrintPreviewContent = forwardRef((props, ref) => {
                     marginTop: "9px",
                     height: "1113px",
                     width: `${props.whatsAppShare ? "750px" : "750px"}`,
-                    backgroundImage: `url(${props.whatsAppShare ? props.invoiceBackground : ""})`,
+                    backgroundImage: `url(${props.whatsAppShare || props.model?.download ? props.invoiceBackground : ""})`,
                     backgroundSize: 'cover',
                     backgroundPosition: 'center',
                 }}
