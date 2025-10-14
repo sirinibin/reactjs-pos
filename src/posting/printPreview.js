@@ -483,7 +483,10 @@ const BalanceSheetPrintPreview = forwardRef((props, ref) => {
 
 
 
+
     const handleDownload = async () => {
+        setIsDownloadProcessing(true);
+
         if (model.store.code === "MBDI") {
             InvoiceBackground = MBDIInvoiceBackground;
         } else if (model.store.code === "LGK-SIMULATION" || model.store.code === "LGK" || model.store.code === "PH2") {
@@ -519,6 +522,7 @@ const BalanceSheetPrintPreview = forwardRef((props, ref) => {
         link.href = URL.createObjectURL(blob);
         link.download = `${fileName}.pdf`;
         link.click();
+        setIsDownloadProcessing(false);
     };
     /*
 const handlePrint = useCallback(async () => {
@@ -569,6 +573,7 @@ const handlePrint = useCallback(async () => {
     const [defaultNumber, setDefaultNumber] = useState("");
     const [defaultMessage, setDefaultMessage] = useState("");
     let [isProcessing, setIsProcessing] = useState(false);
+    let [isDownloadProcessing, setIsDownloadProcessing] = useState(false);
     const [showWhatsAppMessageModal, setShowWhatsAppMessageModal] = useState(false);
     const handleChoice = ({ type, number, message }) => {
         let whatsappUrl = "";
@@ -1087,7 +1092,20 @@ const handlePrint = useCallback(async () => {
                             e.preventDefault();
                             handleDownload()
                         }}>
-                            <i className="bi bi-file-earmark-arrow-down"></i>PDF
+                            {isDownloadProcessing ?
+                                <Spinner
+                                    as="span"
+                                    animation="border"
+                                    size="sm"
+                                    role="status"
+                                    aria-hidden={true}
+                                />
+
+                                : ""
+                            }
+                            {!isDownloadProcessing && <>
+                                <i className="bi bi-file-earmark-arrow-down"></i>PDF
+                            </>}
                         </Button>
                     </div>
 
