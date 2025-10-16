@@ -2,7 +2,7 @@ import { React, useState, useRef, forwardRef, useImperativeHandle, useMemo, useC
 import { Modal, Button } from 'react-bootstrap';
 import OrderPrintContent from './printContent.js';
 import OrderPrintContent2 from './printContent2.js';
-//import OrderPrintContent3 from './printContent3.js';
+import OrderPrintContent3 from './printContent3.js';
 
 import { useReactToPrint } from 'react-to-print';
 import { Invoice } from '@axenda/zatca';
@@ -1133,6 +1133,9 @@ const OrderPrint = forwardRef((props, ref) => {
                     {(model.store?.code === "PH2" || model.store?.code === "LGK-SIMULATION" || model.store?.code === "LGK") && <OrderPrintContent2
                         model={model}
 
+                    />}
+                    {(model.store?.code === "YNB-SIMULATION" || model.store?.code === "YNB") && <OrderPrintContent3
+                        model={model}
                     />}
                 </div>
             </Modal.Body>
