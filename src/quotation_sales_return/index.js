@@ -106,10 +106,14 @@ function QuotationSalesReturnIndex(props) {
     useEffect(() => {
         if (props.enableSelection) {
             setEnableSelection(props.enableSelection);
-        } else if (props.pendingView) {
-            setPendingView(props.pendingView);
         } else {
             setEnableSelection(false);
+        }
+
+        if (props.pendingView) {
+            setPendingView(props.pendingView);
+        } else {
+            setPendingView(false);
         }
 
 

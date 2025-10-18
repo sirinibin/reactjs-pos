@@ -132,10 +132,14 @@ function SalesReturnIndex(props) {
     useEffect(() => {
         if (props.enableSelection) {
             setEnableSelection(props.enableSelection);
-        } if (props.pendingView) {
-            setPendingView(props.pendingView);
         } else {
             setEnableSelection(false);
+        }
+
+        if (props.pendingView) {
+            setPendingView(props.pendingView);
+        } else {
+            setPendingView(false);
         }
 
         if (props.selectedCustomers?.length > 0) {
