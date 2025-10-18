@@ -1155,10 +1155,21 @@ const OrderIndex = forwardRef((props, ref) => {
                 }, 100);*/
     }
 
+    useEffect(() => {
+        list();
+    }, [page, list]);
+
     function changePage(newPage) {
         page = parseInt(newPage);
         setPage(page);
-        list();
+        /*
+        if (timerRef.current) clearTimeout(timerRef.current);
+
+        timerRef.current = setTimeout(() => {
+            list();
+        }, 100);*/
+
+        // list();
     }
 
     let [showOrderPaymentHistory, setShowOrderPaymentHistory] = useState(false);
