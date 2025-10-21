@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, forwardRef, useImperativeHandle } from "react";
+import React, { useState, useEffect, useRef, forwardRef, useImperativeHandle, useContext } from "react";
 
 import { Typeahead } from "react-bootstrap-typeahead";
 import { format } from "date-fns";
@@ -20,6 +20,8 @@ import ExpenseCreate from "../expense/create.js";
 import CapitalCreate from "../capital/create.js";
 import DividentCreate from "../divident/create.js";
 import QuotationCreate from "../quotation/create.js";
+import { WebSocketContext } from "./../utils/WebSocketContext.js";
+import eventEmitter from "./../utils/eventEmitter";
 
 
 
@@ -426,6 +428,52 @@ const PostingIndex = forwardRef((props, ref) => {
 
         return posting;
     }
+
+    const { lastMessage } = useContext(WebSocketContext);
+    useEffect(() => {
+        if (lastMessage) {
+            const jsonMessage = JSON.parse(lastMessage.data);
+            // console.log("Received Message in User list:", jsonMessage);
+            if (jsonMessage.event === "sales_updated" ||
+                jsonMessage.event === "sales_return_updated" ||
+                jsonMessage.event === "purchase_updated" ||
+                jsonMessage.event === "purchase_return_updated" ||
+                jsonMessage.event === "quotation_updated" ||
+                jsonMessage.event === "quotationsales_return_updated" ||
+                jsonMessage.event === "expense_updated" ||
+                jsonMessage.event === "receivable_updated" ||
+                jsonMessage.event === "payable_updated"
+            ) {
+                setLoadList(true);
+            }
+        }
+
+    }, [lastMessage]);
+
+
+    useEffect(() => {
+        const handleSocketOpen = () => {
+            //console.log("WebSocket Opened in sales list");
+            //  list();
+        };
+
+        eventEmitter.on("socket_connection_open", handleSocketOpen);
+
+        return () => {
+            eventEmitter.off("socket_connection_open", handleSocketOpen); // Cleanup
+        };
+    }, []); // Runs only once when component mounts
+
+
+    let [loadList, setLoadList] = useState(false);
+
+    useEffect(() => {
+        if (loadList) {
+            list();
+            setLoadList(false);
+        }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [loadList]);
 
     function list() {
         const requestOptions = {
