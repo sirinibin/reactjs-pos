@@ -708,8 +708,32 @@ const StatsIndex = forwardRef((props, ref) => {
                             <StatsSummary
                                 title="Overall"
                                 stats={{
+                                    "SALES": (totalSales - totalSalesReturn),
+                                    "PURCHASE": (totalPurchase - totalPurchaseReturn),
+                                    "DIFFERENCE": ((totalSales - totalSalesReturn) - (totalPurchase - totalPurchaseReturn)),
                                     "VAT": ((vatPrice - salesReturnVatPrice) - (purchaseVatPrice - purchaseReturnVatPrice)),
                                 }}
+                                statsWithInfo={[{
+                                    "label": "SALES",
+                                    "value": (totalSales - totalSalesReturn),
+                                    "info": "SALES - SALES RETURN"
+                                }, {
+                                    "label": "PURCHASE",
+                                    "value": (totalPurchase - totalPurchaseReturn),
+                                    "info": "PURCHASE - PURCHASE RETURN"
+                                },
+                                {
+                                    "label": "DIFFERENCE",
+                                    "value": ((totalSales - totalSalesReturn) - (totalPurchase - totalPurchaseReturn)),
+                                    "info": "OVERALL SALES - OVERALL PURCHASE"
+                                },
+                                {
+                                    "label": "VAT",
+                                    "value": ((vatPrice - salesReturnVatPrice) - (purchaseVatPrice - purchaseReturnVatPrice)),
+                                    "info": "(SALES VAT - SALES RETURN VAT) - (PURCHASE VAT - PURCHASE RETURN VAT)"
+                                }
+                                ]}
+
                                 defaultOpen={true}
 
                                 onToggle={handleOverallSummaryToggle}

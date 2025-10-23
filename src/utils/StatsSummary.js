@@ -1,10 +1,11 @@
-import { useEffect, useState, useCallback, useMemo } from "react";
+// ...existing code...
+import React, { useEffect, useState, useCallback, useMemo } from "react";
 import Amount from "./amount.js";
-import { trimTo2Decimals } from "../utils/numberUtils";
-import { Modal, Button } from "react-bootstrap";
+import { trimTo2Decimals } from "./numberUtils";
+import { Modal, Button, OverlayTrigger, Tooltip } from "react-bootstrap";
 import { DragDropContext, Droppable, Draggable } from "react-beautiful-dnd";
 
-const StatsSummary = ({ title, stats = {}, defaultOpen = false, onToggle }) => {
+const StatsSummary = ({ title, stats = {}, statsWithInfo = {}, defaultOpen = false, onToggle }) => {
     const [isOpen, setIsOpen] = useState(defaultOpen);
     const [showSettings, setShowSettings] = useState(false);
     const [leftFields, setLeftFields] = useState([]);
@@ -18,12 +19,51 @@ const StatsSummary = ({ title, stats = {}, defaultOpen = false, onToggle }) => {
         return [statsArr.slice(0, mid), statsArr.slice(mid)];
     }, []);
 
+    const normalizeStatsWithInfo = useCallback(() => {
+        // Accepts:
+        // - array: [{ label, value?, info? }, ...]
+        // - object: { label: "info string" } or { label: { info, value? } }
+        if (!statsWithInfo) return null;
+
+        if (Array.isArray(statsWithInfo) && statsWithInfo.length > 0) {
+            return statsWithInfo.map((it) => ({
+                label: it.label,
+                info: it.info,
+                value: (typeof it.value !== "undefined" ? it.value : (stats[it.label] ?? 0)),
+                visible: true
+            }));
+        }
+
+        if (typeof statsWithInfo === "object" && Object.keys(statsWithInfo).length > 0) {
+            return Object.keys(statsWithInfo).map((label) => {
+                const val = statsWithInfo[label];
+                if (typeof val === "string") {
+                    return { label, info: val, value: (stats[label] ?? 0), visible: true };
+                } else if (val && typeof val === "object") {
+                    return {
+                        label,
+                        info: val.info,
+                        value: (typeof val.value !== "undefined" ? val.value : (stats[label] ?? 0)),
+                        visible: true
+                    };
+                } else {
+                    return { label, value: (stats[label] ?? 0), visible: true };
+                }
+            });
+        }
+
+        return null;
+    }, [statsWithInfo, stats]);
+
     const initializeFields = useCallback(() => {
-        const defaults = Object.entries(stats).map(([label, value]) => ({
-            label,
-            value,
-            visible: true
-        }));
+        const normalized = normalizeStatsWithInfo();
+        const defaults = (normalized && normalized.length > 0)
+            ? normalized
+            : Object.entries(stats).map(([label, value]) => ({
+                label,
+                value,
+                visible: true
+            }));
 
         const saved = localStorage.getItem(LOCAL_KEY);
         if (saved) {
@@ -45,7 +85,7 @@ const StatsSummary = ({ title, stats = {}, defaultOpen = false, onToggle }) => {
         }
 
         setInitialized(true);
-    }, [LOCAL_KEY, stats, splitStats]);
+    }, [LOCAL_KEY, stats, normalizeStatsWithInfo, splitStats]);
 
     useEffect(() => {
         if (!initialized) {
@@ -64,17 +104,34 @@ const StatsSummary = ({ title, stats = {}, defaultOpen = false, onToggle }) => {
         if (onToggle) onToggle(!isOpen);
     };
 
+    const renderInfoTooltip = (info) => (props) => (
+        <Tooltip id="label-tooltip" {...props}>
+            {info}
+        </Tooltip>
+    );
+
     const renderStats = (fields) =>
-        fields.filter(f => f.visible).map((f, index) => (
-            <div className="mb-2" key={index}>
-                <div className="d-flex justify-content-between align-items-center">
-                    <span>{f.label}:</span>
-                    <span className="badge bg-secondary">
-                        <Amount amount={trimTo2Decimals(stats[f.label] ?? 0)} />
-                    </span>
+        fields.filter(f => f.visible).map((f, index) => {
+            const amount = trimTo2Decimals((typeof stats[f.label] !== "undefined") ? stats[f.label] : (typeof f.value !== "undefined" ? f.value : 0));
+            return (
+                <div className="mb-2" key={index}>
+                    <div className="d-flex justify-content-between align-items-center">
+                        <span>
+                            {f.label}
+                            {f.info ? (
+                                <OverlayTrigger placement="right" overlay={renderInfoTooltip(f.info)}>
+                                    <span style={{ textDecoration: 'underline dotted', cursor: 'pointer', marginLeft: '6px' }}>ℹ️</span>
+                                </OverlayTrigger>
+                            ) : null}
+                            :
+                        </span>
+                        <span className="badge bg-secondary">
+                            <Amount amount={amount} />
+                        </span>
+                    </div>
                 </div>
-            </div>
-        ));
+            );
+        });
 
     const handleDragEnd = (result) => {
         if (!result.destination) return;
@@ -102,11 +159,14 @@ const StatsSummary = ({ title, stats = {}, defaultOpen = false, onToggle }) => {
     };
 
     const restoreDefaults = () => {
-        const defaults = Object.entries(stats).map(([label, value]) => ({
-            label,
-            value,
-            visible: true
-        }));
+        const normalized = normalizeStatsWithInfo();
+        const defaults = (normalized && normalized.length > 0)
+            ? normalized
+            : Object.entries(stats).map(([label, value]) => ({
+                label,
+                value,
+                visible: true
+            }));
         const [left, right] = splitStats(defaults);
         setLeftFields(left);
         setRightFields(right);
@@ -174,15 +234,12 @@ const StatsSummary = ({ title, stats = {}, defaultOpen = false, onToggle }) => {
 
     return (
         <div className="mb-3">
-            {(
-                <button className="btn btn-outline-primary mb-2" onClick={handleToggle}>
-                    {isOpen ? `Hide ${title} Summary` : `Show ${title} Summary`}
-                </button>
-            )}
+            <button className="btn btn-outline-primary mb-2" onClick={handleToggle}>
+                {isOpen ? `Hide ${title} Summary` : `Show ${title} Summary`}
+            </button>
 
             {(isOpen) && (
                 <>
-                    {/* Settings icon above stats box, aligned right */}
                     <div className="row">
                         <div className="col">
                             <div className="d-flex justify-content-start mb-2">
@@ -202,7 +259,6 @@ const StatsSummary = ({ title, stats = {}, defaultOpen = false, onToggle }) => {
                         </div>
                     </div>
 
-
                     <div className="border pt-4 px-3 pb-3 rounded bg-light position-relative">
                         <div className="row">
                             <div className="col-md-6">{renderStats(leftFields)}</div>
@@ -218,3 +274,4 @@ const StatsSummary = ({ title, stats = {}, defaultOpen = false, onToggle }) => {
 };
 
 export default StatsSummary;
+// ...existing code...
