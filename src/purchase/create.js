@@ -1772,32 +1772,166 @@ const PurchaseCreate = forwardRef((props, ref) => {
     const vendorSearchRef = useRef();
 
 
-    function RunKeyActions(event, product) {
-        const isMac = navigator.userAgentData
-            ? navigator.userAgentData.platform === 'macOS'
-            : /Mac/i.test(navigator.userAgent);
 
+    function openQuotationSalesHistory(model) {
+        QuotationHistoryRef.current.open(model, undefined, "invoice");
+    }
+
+    const QuotationSalesReturnHistoryRef = useRef();
+    function openQuotationSalesReturnHistory(model) {
+        QuotationSalesReturnHistoryRef.current.open(model, undefined);
+    }
+
+    const SHORTCUTS = {
+        DEFAULT: {
+            linkedProducts: "Ctrl + Shift + 1",
+            productHistory: "Ctrl + Shift + 2",
+            salesHistory: "Ctrl + Shift + 3",
+            salesReturnHistory: "Ctrl + Shift + 4",
+            purchaseHistory: "Ctrl + Shift + 5",
+            purchaseReturnHistory: "Ctrl + Shift + 6",
+            deliveryNoteHistory: "Ctrl + Shift + 7",
+            quotationHistory: "Ctrl + Shift + 8",
+            quotationSalesHistory: "Ctrl + Shift + 9",
+            quotationSalesReturnHistory: "Ctrl + Shift + Z",
+            images: "Ctrl + Shift + F",
+        },
+        LGK: {
+            linkedProducts: "F10",
+            productHistory: "Ctrl + Shift + B",
+            salesHistory: "F4",
+            salesReturnHistory: "F9",
+            purchaseHistory: "F6",
+            purchaseReturnHistory: "F8",
+            deliveryNoteHistory: "F3",
+            quotationHistory: "F2",
+            quotationSalesHistory: "Ctrl + Shift + P",
+            quotationSalesReturnHistory: "Ctrl + Shift + Z",
+            images: "Ctrl + Shift + F",
+        },
+    };
+
+    function getShortcut(key) {
+        const code = (store && store.code) ? store.code : "DEFAULT";
+        return (SHORTCUTS[code] && SHORTCUTS[code][key]) || SHORTCUTS.DEFAULT[key] || "";
+    }
+    // ...existing code...
+    function RunKeyActions(event, product) {
+        // detect mac
+        const isMac = (typeof navigator !== "undefined") && (
+            (navigator.userAgentData && navigator.userAgentData.platform === "macOS") ||
+            (navigator.platform && /mac/i.test(navigator.platform)) ||
+            /Mac/i.test(navigator.userAgent)
+        );
         const isCmdOrCtrl = isMac ? event.metaKey : event.ctrlKey;
 
-        if (event.key === "F10") {
-            openLinkedProducts(product);
-        } else if (isCmdOrCtrl && event.shiftKey && event.key.toLowerCase() === 'b') {
-            openProductHistory(product);
-        } else if (event.key === "F4") {
-            openSalesHistory(product);
-        } else if (event.key === "F9") {
-            openSalesReturnHistory(product);
-        } else if (event.key === "F6") {
-            openPurchaseHistory(product);
-        } else if (event.key === "F8") {
-            openPurchaseReturnHistory(product);
-        } else if (event.key === "F3") {
-            openDeliveryNoteHistory(product);
-        } else if (event.key === "F2") {
-            openQuotationHistory(product);
-        } else if (isCmdOrCtrl && event.shiftKey && event.key.toLowerCase() === 'f') {
-            openProductImages(product.product_id);
+        // LGK store uses original simple mapping
+        if (store?.code === "LGK") {
+            if (event.key === "F10") {
+                openLinkedProducts(product);
+            } else if (isCmdOrCtrl && event.shiftKey && event.key.toLowerCase() === 'b') {
+                openProductHistory(product);
+            } else if (event.key === "F4") {
+                openSalesHistory(product);
+            } else if (event.key === "F9") {
+                openSalesReturnHistory(product);
+            } else if (event.key === "F6") {
+                openPurchaseHistory(product);
+            } else if (event.key === "F8") {
+                openPurchaseReturnHistory(product);
+            } else if (event.key === "F3") {
+                openDeliveryNoteHistory(product);
+            } else if (event.key === "F2") {
+                openQuotationHistory(product);
+            } else if (isCmdOrCtrl && event.shiftKey && event.key.toLowerCase() === 'p') {
+                openQuotationSalesHistory(product);
+            } else if (isCmdOrCtrl && event.shiftKey && event.key.toLowerCase() === 'z') {
+                openQuotationSalesReturnHistory(product);
+            } else if (isCmdOrCtrl && event.shiftKey && event.key.toLowerCase() === 'f') {
+                openProductImages(product.product_id);
+            }
+            return;
         }
+
+        // Default: require Ctrl/Cmd + Shift for letter shortcuts and numeric mapping
+        if (!isCmdOrCtrl || !event.shiftKey) return;
+
+        const rawKey = event.key || "";
+        const key = rawKey.toString().toLowerCase();
+        const code = event.code || "";
+        const keyCode = event.which || event.keyCode || 0;
+        const location = event.location || 0; // 3 === Numpad
+
+        // handle letter shortcuts first (Ctrl/Cmd + Shift + <letter>)
+        if (key === "b") {
+            try { event.preventDefault(); } catch (e) { }
+            openProductHistory(product);
+            return;
+        }
+        if (key === "p") {
+            try { event.preventDefault(); } catch (e) { }
+            openQuotationSalesHistory(product);
+            return;
+        }
+        if (key === "z") {
+            try { event.preventDefault(); } catch (e) { }
+            openQuotationSalesReturnHistory(product);
+            return;
+        }
+        if (key === "f") {
+            try { event.preventDefault(); } catch (e) { }
+            openProductImages(product.product_id);
+            return;
+        }
+
+        // numeric mapping (supports top-row, numpad, shifted symbols and keyCode fallbacks)
+        const codeToDigit = {
+            Digit1: "1", Digit2: "2", Digit3: "3", Digit4: "4", Digit5: "5",
+            Digit6: "6", Digit7: "7", Digit8: "8", Digit9: "9", Digit0: "0",
+            Numpad1: "1", Numpad2: "2", Numpad3: "3", Numpad4: "4", Numpad5: "5",
+            Numpad6: "6", Numpad7: "7", Numpad8: "8", Numpad9: "9", Numpad0: "0"
+        };
+
+        const symbolToDigit = {
+            "!": "1", "@": "2", "#": "3", "$": "4", "%": "5",
+            "^": "6", "&": "7", "*": "8", "(": "9", ")": "0"
+        };
+
+        let digit = null;
+
+        if (code && codeToDigit[code]) {
+            digit = codeToDigit[code];
+        } else if (rawKey && symbolToDigit[rawKey]) {
+            digit = symbolToDigit[rawKey];
+        } else if (/^[0-9]$/.test(key)) {
+            digit = key;
+        } else if (keyCode >= 48 && keyCode <= 57) {
+            digit = String(keyCode - 48);
+        } else if (keyCode >= 96 && keyCode <= 105) {
+            digit = String(keyCode - 96);
+        } else if (location === 3 && /^[0-9]$/.test(key)) {
+            digit = key;
+        }
+
+        if (digit) {
+            try { event.preventDefault(); } catch (e) { /* ignore */ }
+
+            switch (digit) {
+                case "1": openLinkedProducts(product); return;
+                case "2": openProductHistory(product); return;
+                case "3": openSalesHistory(product); return;
+                case "4": openSalesReturnHistory(product); return;
+                case "5": openPurchaseHistory(product); return;
+                case "6": openPurchaseReturnHistory(product); return;
+                case "7": openDeliveryNoteHistory(product); return;
+                case "8": openQuotationHistory(product); return;
+                case "9": openQuotationSalesHistory(product); return;
+                case "0": openQuotationSalesReturnHistory(product); return;
+                default: break;
+            }
+        }
+
+        return;
     }
 
     const imageViewerRef = useRef();
@@ -3168,71 +3302,60 @@ const PurchaseCreate = forwardRef((props, ref) => {
                                                         </Dropdown.Toggle>
 
                                                         <Dropdown.Menu style={{ zIndex: 9999, position: "absolute" }} popperConfig={{ modifiers: [{ name: 'preventOverflow', options: { boundary: 'viewport' } }] }}>
-                                                            <Dropdown.Item onClick={() => {
-                                                                openLinkedProducts(product);
-                                                            }}>
-                                                                <i className="bi bi-link"></i>
-                                                                &nbsp;
-                                                                Linked Products (F10)
-                                                            </Dropdown.Item>
-                                                            <Dropdown.Item onClick={() => {
-                                                                openProductHistory(product);
-                                                            }}>
-                                                                <i className="bi bi-clock-history"></i>
-                                                                &nbsp;
-                                                                History (CTR + SHIFT + B)
+                                                            <Dropdown.Item onClick={() => openLinkedProducts(product)}>
+                                                                <i className="bi bi-link"></i>&nbsp;
+                                                                Linked Products ({getShortcut('linkedProducts')})
                                                             </Dropdown.Item>
 
-                                                            <Dropdown.Item onClick={() => {
-                                                                openSalesHistory(product);
-                                                            }}>
-                                                                <i className="bi bi-clock-history"></i>
-                                                                &nbsp;
-                                                                Sales History (F4)
-                                                            </Dropdown.Item>
-                                                            <Dropdown.Item onClick={() => {
-                                                                openSalesReturnHistory(product);
-                                                            }}>
-                                                                <i className="bi bi-clock-history"></i>
-                                                                &nbsp;
-                                                                Sales Return History (F9)
-                                                            </Dropdown.Item>
-                                                            <Dropdown.Item onClick={() => {
-                                                                openPurchaseHistory(product);
-                                                            }}>
-                                                                <i className="bi bi-clock-history"></i>
-                                                                &nbsp;
-                                                                Purchase History (F6)
-                                                            </Dropdown.Item>
-                                                            <Dropdown.Item onClick={() => {
-                                                                openPurchaseReturnHistory(product);
-                                                            }}>
-                                                                <i className="bi bi-clock-history"></i>
-                                                                &nbsp;
-                                                                Purchase Return History (F8)
-                                                            </Dropdown.Item>
-                                                            <Dropdown.Item onClick={() => {
-                                                                openDeliveryNoteHistory(product);
-                                                            }}>
-                                                                <i className="bi bi-clock-history"></i>
-                                                                &nbsp;
-                                                                Delivery Note History (F3)
-                                                            </Dropdown.Item>
-                                                            <Dropdown.Item onClick={() => {
-                                                                openQuotationHistory(product);
-                                                            }}>
-                                                                <i className="bi bi-clock-history"></i>
-                                                                &nbsp;
-                                                                Quotation History  (F2)
-                                                            </Dropdown.Item>
-                                                            <Dropdown.Item onClick={() => {
-                                                                openProductImages(product.product_id);
-                                                            }}>
-                                                                <i className="bi bi-clock-history"></i>
-                                                                &nbsp;
-                                                                Images  (CTR + SHIFT + F)
+                                                            <Dropdown.Item onClick={() => openProductHistory(product)}>
+                                                                <i className="bi bi-clock-history"></i>&nbsp;
+                                                                History ({getShortcut('productHistory')})
                                                             </Dropdown.Item>
 
+                                                            <Dropdown.Item onClick={() => openSalesHistory(product)}>
+                                                                <i className="bi bi-clock-history"></i>&nbsp;
+                                                                Sales History ({getShortcut('salesHistory')})
+                                                            </Dropdown.Item>
+
+                                                            <Dropdown.Item onClick={() => openSalesReturnHistory(product)}>
+                                                                <i className="bi bi-clock-history"></i>&nbsp;
+                                                                Sales Return History ({getShortcut('salesReturnHistory')})
+                                                            </Dropdown.Item>
+
+                                                            <Dropdown.Item onClick={() => openPurchaseHistory(product)}>
+                                                                <i className="bi bi-clock-history"></i>&nbsp;
+                                                                Purchase History ({getShortcut('purchaseHistory')})
+                                                            </Dropdown.Item>
+
+                                                            <Dropdown.Item onClick={() => openPurchaseReturnHistory(product)}>
+                                                                <i className="bi bi-clock-history"></i>&nbsp;
+                                                                Purchase Return History ({getShortcut('purchaseReturnHistory')})
+                                                            </Dropdown.Item>
+
+                                                            <Dropdown.Item onClick={() => openDeliveryNoteHistory(product)}>
+                                                                <i className="bi bi-clock-history"></i>&nbsp;
+                                                                Delivery Note History ({getShortcut('deliveryNoteHistory')})
+                                                            </Dropdown.Item>
+
+                                                            <Dropdown.Item onClick={() => openQuotationHistory(product)}>
+                                                                <i className="bi bi-clock-history"></i>&nbsp;
+                                                                Quotation History ({getShortcut('quotationHistory')})
+                                                            </Dropdown.Item>
+
+                                                            <Dropdown.Item onClick={() => openQuotationSalesHistory(product)}>
+                                                                <i className="bi bi-clock-history"></i>&nbsp;
+                                                                Qtn. Sales History ({getShortcut('quotationSalesHistory')})
+                                                            </Dropdown.Item>
+
+                                                            <Dropdown.Item onClick={() => openQuotationSalesReturnHistory(product)}>
+                                                                <i className="bi bi-clock-history"></i>&nbsp;
+                                                                Qtn. Sales Return History ({getShortcut('quotationSalesReturnHistory')})
+                                                            </Dropdown.Item>
+
+                                                            <Dropdown.Item onClick={() => openProductImages(product.product_id)}>
+                                                                <i className="bi bi-clock-history"></i>&nbsp;
+                                                                Images ({getShortcut('images')})
+                                                            </Dropdown.Item>
                                                         </Dropdown.Menu>
                                                     </Dropdown>
                                                 </div>
