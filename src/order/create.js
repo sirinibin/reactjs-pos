@@ -1285,8 +1285,8 @@ const OrderCreate = forwardRef((props, ref) => {
 
         // Fetch page 1 and page 2 in parallel
         const urls = [
-            "/v1/product?" + Select + queryString + "&limit=150&page=1&sort=country_name",
-            "/v1/product?" + Select + queryString + "&limit=150&page=2&sort=country_name"
+            "/v1/product?" + Select + queryString + "&limit=200&page=1&sort=country_name",
+            "/v1/product?" + Select + queryString + "&limit=200&page=2&sort=country_name"
         ];
 
         const [result1, result2] = await Promise.all([
