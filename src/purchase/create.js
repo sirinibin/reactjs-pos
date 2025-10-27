@@ -807,6 +807,7 @@ const PurchaseCreate = forwardRef((props, ref) => {
         if (localStorage.getItem('store_id')) {
             formData.store_id = localStorage.getItem('store_id');
         }
+
         formData.balance_amount = parseFloat(balanceAmount);
 
 
@@ -1809,6 +1810,19 @@ const PurchaseCreate = forwardRef((props, ref) => {
             quotationSalesReturnHistory: "Ctrl + Shift + Z",
             images: "Ctrl + Shift + F",
         },
+        MBDI: {
+            linkedProducts: "F10",
+            productHistory: "Ctrl + Shift + 6",
+            salesHistory: "F4",
+            salesReturnHistory: "F9",
+            purchaseHistory: "F6",
+            purchaseReturnHistory: "F8",
+            deliveryNoteHistory: "F3",
+            quotationHistory: "F2",
+            quotationSalesHistory: "Ctrl + Shift + 7",
+            quotationSalesReturnHistory: "Ctrl + Shift + 8",
+            images: "Ctrl + Shift + 9",
+        },
     };
 
     function getShortcut(key) {
@@ -1848,6 +1862,31 @@ const PurchaseCreate = forwardRef((props, ref) => {
             } else if (isCmdOrCtrl && event.shiftKey && event.key.toLowerCase() === 'z') {
                 openQuotationSalesReturnHistory(product);
             } else if (isCmdOrCtrl && event.shiftKey && event.key.toLowerCase() === 'f') {
+                openProductImages(product.product_id);
+            }
+            return;
+        } else if (store?.code === "MBDI") {
+            if (event.key === "F10") {
+                openLinkedProducts(product);
+            } else if (isCmdOrCtrl && event.shiftKey && event.key.toLowerCase() === '6') {
+                openProductHistory(product);
+            } else if (event.key === "F4") {
+                openSalesHistory(product);
+            } else if (event.key === "F9") {
+                openSalesReturnHistory(product);
+            } else if (event.key === "F6") {
+                openPurchaseHistory(product);
+            } else if (event.key === "F8") {
+                openPurchaseReturnHistory(product);
+            } else if (event.key === "F3") {
+                openDeliveryNoteHistory(product);
+            } else if (event.key === "F2") {
+                openQuotationHistory(product);
+            } else if (isCmdOrCtrl && event.shiftKey && event.key.toLowerCase() === '7') {
+                openQuotationSalesHistory(product);
+            } else if (isCmdOrCtrl && event.shiftKey && event.key.toLowerCase() === '8') {
+                openQuotationSalesReturnHistory(product);
+            } else if (isCmdOrCtrl && event.shiftKey && event.key.toLowerCase() === '9') {
                 openProductImages(product.product_id);
             }
             return;
@@ -2712,7 +2751,6 @@ const PurchaseCreate = forwardRef((props, ref) => {
                                 />
                                 {errors.vendor_invoice_no && (
                                     <div style={{ color: "red" }}>
-                                        <i className="bi bi-x-lg"> </i>
                                         {errors.vendor_invoice_no}
                                     </div>
                                 )}

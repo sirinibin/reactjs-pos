@@ -1,14 +1,24 @@
-import React, { useState, useEffect, useRef, forwardRef, useImperativeHandle } from "react";
+import React, { useState, useEffect, useRef, forwardRef, useImperativeHandle, useCallback } from "react";
 import { Modal, Button } from "react-bootstrap";
 
 import { Spinner } from "react-bootstrap";
-import { Typeahead } from "react-bootstrap-typeahead";
+import { Typeahead, Menu, MenuItem } from "react-bootstrap-typeahead";
 import ExpenseCategoryCreate from "../expense_category/create.js";
 import ExpenseCategoryView from "../expense_category/view.js";
 import Resizer from "react-image-file-resizer";
 import DatePicker from "react-datepicker";
 import { format } from "date-fns";
+import { highlightWords } from "../utils/search.js";
+import Amount from "../utils/amount.js";
+import { trimTo2Decimals } from "../utils/numberUtils";
 
+const columnStyle = {
+    width: '20%',
+    overflow: 'hidden',
+    whiteSpace: 'nowrap',
+    textOverflow: 'ellipsis',
+    paddingRight: '8px',
+};
 
 const ExpenseCreate = forwardRef((props, ref) => {
 
@@ -186,6 +196,19 @@ const ExpenseCreate = forwardRef((props, ref) => {
                 formData.date_str = formData.date;
 
                 formData.images_content = [];
+
+                setSelectedVendors([]);
+                if (formData.vendor_id && formData.vendor_name) {
+                    let selectedVendors = [
+                        {
+                            id: formData.vendor_id,
+                            name: formData.vendor_name,
+                            search_label: formData.vendor.search_label,
+                        }
+                    ];
+                    setSelectedVendors([...selectedVendors]);
+                }
+
                 setFormData({ ...formData });
             })
             .catch(error => {
@@ -384,6 +407,109 @@ const ExpenseCreate = forwardRef((props, ref) => {
 
     const categorySearchRef = useRef();
 
+    //Vendor
+    const VendorCreateFormRef = useRef();
+    function openVendorCreateForm() {
+        VendorCreateFormRef.current.open();
+    }
+
+    const VendorsRef = useRef();
+    function openVendors(model) {
+        VendorsRef.current.open();
+    }
+
+    const timerRef = useRef(null);
+    const vendorSearchRef = useRef();
+    const customVendorFilter = useCallback((option, query) => {
+        const normalize = (str) => str?.toLowerCase().replace(/\s+/g, " ").trim() || "";
+
+        const q = normalize(query);
+        const qWords = q.split(" ");
+
+        const fields = [
+            option.code,
+            option.vat_no,
+            option.name,
+            option.name_in_arabic,
+            option.phone,
+            option.search_label,
+            option.phone_in_arabic,
+            ...(Array.isArray(option.additional_keywords) ? option.additional_keywords : []),
+        ];
+
+        const searchable = normalize(fields.join(" "));
+
+        return qWords.every((word) => searchable.includes(word));
+    }, []);
+
+    let [openVendorSearchResult, setOpenVendorSearchResult] = useState(false);
+    const [vendorOptions, setVendorOptions] = useState([]);
+    let [selectedVendors, setSelectedVendors] = useState([]);
+
+    async function suggestVendors(searchTerm) {
+        console.log("Inside handle suggestVendors");
+        setVendorOptions([]);
+
+        console.log("searchTerm:" + searchTerm);
+        if (!searchTerm) {
+            setTimeout(() => {
+                setOpenVendorSearchResult(false);
+            }, 100);
+
+            return;
+        }
+
+        var params = {
+            query: searchTerm,
+        };
+
+        if (localStorage.getItem("store_id")) {
+            params.store_id = localStorage.getItem("store_id");
+        }
+
+
+        var queryString = ObjectToSearchQueryParams(params);
+        if (queryString !== "") {
+            queryString = "&" + queryString;
+        }
+
+        const requestOptions = {
+            method: "GET",
+            headers: {
+                "Content-Type": "application/json",
+                Authorization: localStorage.getItem("access_token"),
+            },
+        };
+
+        let Select = "select=id,credit_balance,credit_limit,additional_keywords,code,use_remarks_in_purchases,remarks,vat_no,name,phone,name_in_arabic,phone_in_arabic,search_label";
+        // setIsVendorsLoading(true);
+        let result = await fetch(
+            "/v1/vendor?" + Select + queryString,
+            requestOptions
+        );
+        let data = await result.json();
+        if (!data.result || data.result.length === 0) {
+            openVendorSearchResult = false;
+            setOpenVendorSearchResult(false);
+            return;
+        }
+
+        openVendorSearchResult = true;
+        setOpenVendorSearchResult(true);
+
+
+
+
+        if (data.result) {
+            const filtered = data.result.filter((opt) => customVendorFilter(opt, searchTerm));
+            setVendorOptions(filtered);
+        } else {
+            setVendorOptions([]);
+        }
+        // setIsVendorsLoading(false);
+    }
+
+
     return (
         <>
             {/*
@@ -435,6 +561,189 @@ const ExpenseCreate = forwardRef((props, ref) => {
                 </Modal.Header>
                 <Modal.Body>
                     <form className="row g-3 needs-validation" onSubmit={handleCreate}>
+                        <div className="col-md-10">
+                            <label className="form-label">Vendor</label>
+                            <Typeahead
+                                id="vendor_search"
+                                filterBy={() => true}
+                                labelKey="search_label"
+                                open={openVendorSearchResult}
+                                isLoading={false}
+                                onChange={(selectedItems) => {
+                                    delete errors.vendor_id;
+                                    setErrors(errors);
+                                    if (selectedItems.length === 0) {
+                                        delete errors.vendor_id;
+                                        //setErrors(errors);
+                                        formData.vendor_id = "";
+                                        setFormData({ ...formData });
+                                        setSelectedVendors([]);
+                                        return;
+                                    }
+                                    formData.vendor_id = selectedItems[0].id;
+                                    if (selectedItems[0].use_remarks_in_purchases && selectedItems[0].remarks) {
+                                        formData.remarks = selectedItems[0].remarks;
+                                    }
+
+                                    setOpenVendorSearchResult(false);
+                                    setFormData({ ...formData });
+                                    setSelectedVendors(selectedItems);
+                                }}
+                                options={vendorOptions}
+                                placeholder="Vendor Name / Mob / VAT # / ID"
+                                selected={selectedVendors}
+                                highlightOnlyResult={true}
+                                ref={vendorSearchRef}
+                                onKeyDown={(e) => {
+                                    if (e.key === "Escape") {
+                                        delete errors.vendor_id;
+                                        setOpenVendorSearchResult(false);
+                                        //setErrors(errors);
+                                        formData.vendor_id = "";
+                                        formData.vendor_name = "";
+
+                                        setFormData({ ...formData });
+                                        setSelectedVendors([]);
+                                        setVendorOptions([]);
+                                        vendorSearchRef.current?.clear();
+                                    }
+                                }}
+                                onInputChange={(searchTerm, e) => {
+                                    if (searchTerm) {
+                                        formData.vendor_name = searchTerm;
+                                    }
+                                    setFormData({ ...formData });
+                                    if (timerRef.current) clearTimeout(timerRef.current);
+                                    timerRef.current = setTimeout(() => {
+                                        suggestVendors(searchTerm);
+                                    }, 100);
+                                }}
+
+                                renderMenu={(results, menuProps, state) => {
+                                    const searchWords = state.text.toLowerCase().split(" ").filter(Boolean);
+
+                                    return (
+                                        <Menu {...menuProps}>
+                                            {/* Header */}
+                                            <MenuItem disabled>
+                                                <div style={{ display: 'flex', fontWeight: 'bold', padding: '4px 8px', borderBottom: '1px solid #ddd' }}>
+                                                    <div style={{ width: '10%' }}>ID</div>
+                                                    <div style={{ width: '47%' }}>Name</div>
+                                                    <div style={{ width: '10%' }}>Phone</div>
+                                                    <div style={{ width: '13%' }}>VAT</div>
+                                                    <div style={{ width: '10%' }}>Credit Balance</div>
+                                                    <div style={{ width: '10%' }}>Credit Limit</div>
+                                                </div>
+                                            </MenuItem>
+
+                                            {/* Rows */}
+                                            {results.map((option, index) => {
+                                                const onlyOneResult = results.length === 1;
+                                                const isActive = state.activeIndex === index || onlyOneResult;
+                                                return (
+                                                    <MenuItem option={option} position={index} key={index}>
+                                                        <div style={{ display: 'flex', padding: '4px 8px' }}>
+                                                            <div style={{ ...columnStyle, width: '10%' }}>
+                                                                {highlightWords(
+                                                                    option.code,
+                                                                    searchWords,
+                                                                    isActive
+                                                                )}
+                                                            </div>
+                                                            <div style={{ ...columnStyle, width: '47%' }}>
+                                                                {highlightWords(
+                                                                    option.name_in_arabic
+                                                                        ? `${option.name} - ${option.name_in_arabic}`
+                                                                        : option.name,
+                                                                    searchWords,
+                                                                    isActive
+                                                                )}
+                                                            </div>
+                                                            <div style={{ ...columnStyle, width: '10%' }}>
+                                                                {highlightWords(option.phone, searchWords, isActive)}
+                                                            </div>
+                                                            <div style={{ ...columnStyle, width: '13%' }}>
+                                                                {highlightWords(option.vat_no, searchWords, isActive)}
+                                                            </div>
+                                                            <div style={{ ...columnStyle, width: '10%' }}>
+                                                                {option.credit_balance && (
+                                                                    <Amount amount={trimTo2Decimals(option.credit_balance)} />
+                                                                )}
+                                                            </div>
+                                                            <div style={{ ...columnStyle, width: '10%' }}>
+                                                                {option.credit_limit && (
+                                                                    <Amount amount={trimTo2Decimals(option.credit_limit)} />
+                                                                )}
+                                                            </div>
+                                                        </div>
+                                                    </MenuItem>
+                                                );
+                                            })}
+                                        </Menu>
+                                    );
+                                }}
+                            />
+                            <Button hide={true.toString()} onClick={openVendorCreateForm} className="btn btn-outline-secondary btn-primary btn-sm" type="button" id="button-addon1"> <i className="bi bi-plus-lg"></i> New</Button>
+                            {errors.vendor_id && (
+                                <div style={{ color: "red" }}>
+                                    {errors.vendor_id}
+                                </div>
+                            )}
+                        </div>
+                        <div className="col-md-1">
+                            <Button className="btn btn-primary" style={{ marginTop: "30px" }} onClick={openVendors}>
+                                <i class="bi bi-list"></i>
+                            </Button>
+                        </div>
+                        {/*
+                                                <div className="col-md-3">
+                                                    <label className="form-label">Product Barcode Scan</label>
+                        
+                                                    <div className="input-group mb-3">
+                                                        <DebounceInput
+                                                            minLength={12}
+                                                            debounceTimeout={500}
+                                                            placeholder="Scan Barcode"
+                                                            className="form-control barcode"
+                                                            value={formData.barcode}
+                                                            onChange={event => getProductByBarCode(event.target.value)} />
+                                                        {errors.bar_code && (
+                                                            <div style={{ color: "red" }}>
+                                                                <i className="bi bi-x-lg"> </i>
+                                                                {errors.bar_code}
+                                                            </div>
+                                                        )}
+                                                    
+                                                    </div>
+                                                </div>
+                                                        */}
+
+                        <div className="col-md-2">
+                            <label className="form-label">Vendor Invoice No. (Optional)</label>
+
+                            <div className="input-group mb-3">
+                                <input id="purchase_vendor_invoice_no" name="purchase_vendor_invoice_no"
+                                    value={formData.vendor_invoice_no ? formData.vendor_invoice_no : ""}
+                                    type='string'
+                                    onChange={(e) => {
+                                        delete errors["vendor_invoice_no"];
+                                        setErrors({ ...errors });
+                                        formData.vendor_invoice_no = e.target.value;
+                                        setFormData({ ...formData });
+                                        console.log(formData);
+                                    }}
+                                    className="form-control"
+                                    placeholder="Vendor Invoice No."
+                                />
+                                {errors.vendor_invoice_no && (
+                                    <div style={{ color: "red" }}>
+                                        {errors.vendor_invoice_no}
+                                    </div>
+                                )}
+
+                            </div>
+                        </div>
+
                         <div className="col-md-6">
                             <label className="form-label">Amount*</label>
 
