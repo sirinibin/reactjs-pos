@@ -5,14 +5,14 @@ import { Typeahead } from "react-bootstrap-typeahead";
 import { format } from "date-fns";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
-import { Button, Spinner, Badge, Modal, Alert } from "react-bootstrap";
+import { Button, Spinner, Modal, Alert } from "react-bootstrap";
 import ReactPaginate from "react-paginate";
-import NumberFormat from "react-number-format";
 import OverflowTooltip from "../utils/OverflowTooltip.js";
 import { DragDropContext, Droppable, Draggable } from "react-beautiful-dnd";
 import Amount from "../utils/amount.js";
 import { trimTo2Decimals } from "../utils/numberUtils";
 import VendorCreate from "./../vendor/create.js";
+import StatsSummary from "../utils/StatsSummary.js";
 
 function ExpenseIndex(props) {
     //Date filter
@@ -272,6 +272,9 @@ function ExpenseIndex(props) {
     }
 
     let [totalExpenses, setTotalExpenses] = useState(0.00);
+    let [totalCashExpenses, setTotalCashExpenses] = useState(0.00);
+    let [totalBankExpenses, setTotalBankExpenses] = useState(0.00);
+    let [totalVat, setTotalVat] = useState(0.00);
 
     function list() {
         const requestOptions = {
@@ -291,7 +294,11 @@ function ExpenseIndex(props) {
         const d = new Date();
         let diff = d.getTimezoneOffset();
         searchParams["timezone_offset"] = parseFloat(diff / 60);
-        searchParams["stats"] = "1";
+        if (statsOpen) {
+            searchParams["stats"] = "1";
+        } else {
+            searchParams["stats"] = "0";
+        }
 
         setSearchParams(searchParams);
         let queryParams = ObjectToSearchQueryParams(searchParams);
@@ -341,6 +348,15 @@ function ExpenseIndex(props) {
 
                 totalExpenses = data.meta.total;
                 setTotalExpenses(totalExpenses);
+
+                totalCashExpenses = data.meta.cash;
+                setTotalCashExpenses(totalCashExpenses);
+
+                totalBankExpenses = data.meta.bank;
+                setTotalBankExpenses(totalBankExpenses);
+
+                totalVat = data.meta.vat;
+                setTotalVat(totalVat);
 
             })
             .catch((error) => {
@@ -647,6 +663,18 @@ function ExpenseIndex(props) {
         list();
     }
 
+    //Stats
+    const [statsOpen, setStatsOpen] = useState(false);
+    const handleSummaryToggle = (isOpen) => {
+        setStatsOpen(isOpen);
+    };
+
+    useEffect(() => {
+        list();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [statsOpen]);
+
+
     return (
         <>
             {showVendorUpdateForm && <VendorCreate ref={VendorUpdateFormRef} handleUpdated={handleVendorUpdated} />}
@@ -758,7 +786,7 @@ function ExpenseIndex(props) {
 
 
 
-            <div className="container-fluid p-0">
+            {/*<div className="container-fluid p-0">
                 <div className="row">
 
                     <div className="col">
@@ -776,9 +804,27 @@ function ExpenseIndex(props) {
                     </div>
 
                 </div>
-            </div>
+            </div>*/}
 
             <div className="container-fluid p-0">
+
+                <div className="row">
+                    <div className="col">
+                        <span className="text-end">
+                            <StatsSummary
+                                title="Expenses"
+                                stats={{
+                                    "Total Expenses": totalExpenses,
+                                    "Cash Expenses": totalCashExpenses,
+                                    "Bank Expenses": totalBankExpenses,
+                                    "VAT Paid": totalVat,
+                                }}
+                                onToggle={handleSummaryToggle}
+                            />
+                        </span>
+                    </div>
+                </div>
+
                 <div className="row">
                     <div className="col">
                         <h1 className="h3">Expenses</h1>
