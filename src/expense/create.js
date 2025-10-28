@@ -5,12 +5,14 @@ import { Spinner } from "react-bootstrap";
 import { Typeahead, Menu, MenuItem } from "react-bootstrap-typeahead";
 import ExpenseCategoryCreate from "../expense_category/create.js";
 import ExpenseCategoryView from "../expense_category/view.js";
-import Resizer from "react-image-file-resizer";
+//import Resizer from "react-image-file-resizer";
 import DatePicker from "react-datepicker";
 import { format } from "date-fns";
 import { highlightWords } from "../utils/search.js";
 import Amount from "../utils/amount.js";
 import { trimTo2Decimals } from "../utils/numberUtils";
+import VendorCreate from "./../vendor/create.js";
+import Vendors from "./../utils/vendors.js";
 
 const columnStyle = {
     width: '20%',
@@ -107,22 +109,22 @@ const ExpenseCreate = forwardRef((props, ref) => {
     }, []);
 
 
-    function resizeFIle(file, w, h, cb) {
-        Resizer.imageFileResizer(
-            file,
-            w,
-            h,
-            "JPEG",
-            100,
-            0,
-            (uri) => {
-                cb(uri);
-            },
-            "base64"
-        );
-    }
-
-    let [selectedImage, setSelectedImage] = useState("");
+    /* function resizeFIle(file, w, h, cb) {
+         Resizer.imageFileResizer(
+             file,
+             w,
+             h,
+             "JPEG",
+             100,
+             0,
+             (uri) => {
+                 cb(uri);
+             },
+             "base64"
+         );
+     }
+ 
+     let [selectedImage, setSelectedImage] = useState("");*/
 
 
     let [selectedCategories, setSelectedCategories] = useState([]);
@@ -371,6 +373,7 @@ const ExpenseCreate = forwardRef((props, ref) => {
 
 
 
+    /*
     function getTargetDimension(originaleWidth, originalHeight, targetWidth, targetHeight) {
 
         let ratio = parseFloat(originaleWidth / originalHeight);
@@ -379,7 +382,7 @@ const ExpenseCreate = forwardRef((props, ref) => {
         targetHeight = parseInt(targetWidth * ratio);
 
         return { targetWidth: targetWidth, targetHeight: targetHeight };
-    }
+    }*/
 
     /*
     const DetailsViewRef = useRef();
@@ -409,14 +412,39 @@ const ExpenseCreate = forwardRef((props, ref) => {
 
     //Vendor
     const VendorCreateFormRef = useRef();
-    function openVendorCreateForm() {
-        VendorCreateFormRef.current.open();
+    const [openVendorCreateForm, setOpenVendorCreateForm] = useState(false);
+    useEffect(() => {
+        if (openVendorCreateForm) {
+            VendorCreateFormRef.current.open();
+        }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [openVendorCreateForm]);
+
+    function handleVendorCreateFormClose() {
+        setOpenVendorCreateForm(false);
     }
 
+
     const VendorsRef = useRef();
-    function openVendors(model) {
-        VendorsRef.current.open();
+    const [openVendors, setOpenVendors] = useState(false);
+    useEffect(() => {
+        if (openVendors) {
+            VendorsRef.current.open();
+        }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [openVendors]);
+
+    function handleVendorsClose() {
+        setOpenVendors(false);
     }
+
+
+    const handleSelectedVendor = (selectedVendor) => {
+        console.log("selectedVendor:", selectedVendor);
+        setSelectedVendors([selectedVendor])
+        formData.vendor_id = selectedVendor.id;
+        setFormData({ ...formData });
+    };
 
     const timerRef = useRef(null);
     const vendorSearchRef = useRef();
@@ -512,6 +540,8 @@ const ExpenseCreate = forwardRef((props, ref) => {
 
     return (
         <>
+            {openVendors && <Vendors ref={VendorsRef} onSelectVendor={handleSelectedVendor} handleVendorsClose={handleVendorsClose} />}
+            {openVendorCreateForm && <VendorCreate ref={VendorCreateFormRef} handleVendorCreateFormClose={handleVendorCreateFormClose} />}
             {/*
             <ExpenseView ref={DetailsViewRef} />
             */}
@@ -683,7 +713,9 @@ const ExpenseCreate = forwardRef((props, ref) => {
                                     );
                                 }}
                             />
-                            <Button hide={true.toString()} onClick={openVendorCreateForm} className="btn btn-outline-secondary btn-primary btn-sm" type="button" id="button-addon1"> <i className="bi bi-plus-lg"></i> New</Button>
+                            <Button hide={true.toString()} onClick={() => {
+                                setOpenVendorCreateForm(true);
+                            }} className="btn btn-outline-secondary btn-primary btn-sm" type="button" id="button-addon1"> <i className="bi bi-plus-lg"></i> New</Button>
                             {errors.vendor_id && (
                                 <div style={{ color: "red" }}>
                                     {errors.vendor_id}
@@ -691,7 +723,9 @@ const ExpenseCreate = forwardRef((props, ref) => {
                             )}
                         </div>
                         <div className="col-md-1">
-                            <Button className="btn btn-primary" style={{ marginTop: "30px" }} onClick={openVendors}>
+                            <Button className="btn btn-primary" style={{ marginTop: "30px" }} onClick={() => {
+                                setOpenVendors(true);
+                            }}>
                                 <i class="bi bi-list"></i>
                             </Button>
                         </div>
@@ -718,33 +752,9 @@ const ExpenseCreate = forwardRef((props, ref) => {
                                                 </div>
                                                         */}
 
+
+
                         <div className="col-md-2">
-                            <label className="form-label">Vendor Invoice No. (Optional)</label>
-
-                            <div className="input-group mb-3">
-                                <input id="purchase_vendor_invoice_no" name="purchase_vendor_invoice_no"
-                                    value={formData.vendor_invoice_no ? formData.vendor_invoice_no : ""}
-                                    type='string'
-                                    onChange={(e) => {
-                                        delete errors["vendor_invoice_no"];
-                                        setErrors({ ...errors });
-                                        formData.vendor_invoice_no = e.target.value;
-                                        setFormData({ ...formData });
-                                        console.log(formData);
-                                    }}
-                                    className="form-control"
-                                    placeholder="Vendor Invoice No."
-                                />
-                                {errors.vendor_invoice_no && (
-                                    <div style={{ color: "red" }}>
-                                        {errors.vendor_invoice_no}
-                                    </div>
-                                )}
-
-                            </div>
-                        </div>
-
-                        <div className="col-md-6">
                             <label className="form-label">Amount*</label>
 
                             <div className="input-group mb-3">
@@ -819,8 +829,34 @@ const ExpenseCreate = forwardRef((props, ref) => {
                             </div>
                         </div>
 
+                        <div className="col-md-2">
+                            <label className="form-label">Vendor Invoice No.</label>
 
-                        <div className="col-md-6">
+                            <div className="input-group mb-3">
+                                <input id="purchase_vendor_invoice_no" name="purchase_vendor_invoice_no"
+                                    value={formData.vendor_invoice_no ? formData.vendor_invoice_no : ""}
+                                    type='string'
+                                    onChange={(e) => {
+                                        delete errors["vendor_invoice_no"];
+                                        setErrors({ ...errors });
+                                        formData.vendor_invoice_no = e.target.value;
+                                        setFormData({ ...formData });
+                                        console.log(formData);
+                                    }}
+                                    className="form-control"
+                                    placeholder="Vendor Invoice No."
+                                />
+                                {errors.vendor_invoice_no && (
+                                    <div style={{ color: "red" }}>
+                                        {errors.vendor_invoice_no}
+                                    </div>
+                                )}
+
+                            </div>
+                        </div>
+
+
+                        <div className="col-md-3">
                             <label className="form-label">Description*</label>
                             <div className="input-group mb-3">
                                 <textarea
@@ -847,7 +883,7 @@ const ExpenseCreate = forwardRef((props, ref) => {
                             </div>
                         </div>
 
-                        <div className="col-md-6">
+                        <div className="col-md-3">
                             <label className="form-label">Categories*</label>
 
                             <div className="input-group mb-3">
@@ -939,7 +975,7 @@ const ExpenseCreate = forwardRef((props, ref) => {
                             </div>
                         </div>
 
-                        <div className="col-md-6">
+                        {/*<div className="col-md-6">
                             <label className="form-label">Image(Optional)</label>
 
                             <div className="input-group mb-3">
@@ -988,17 +1024,7 @@ const ExpenseCreate = forwardRef((props, ref) => {
                                         img.src = url;
 
 
-                                        /*
-                                        resizeFIle(file, (result) => {
-                                            if (!formData.images_content) {
-                                                formData.images_content = [];
-                                            }
-                                            formData.images_content[0] = result;
-                                            setFormData({ ...formData });
-    
-                                            console.log("formData.images_content[0]:", formData.images_content[0]);
-                                        });
-                                        */
+                                      
                                     }}
                                     className="form-control"
                                     id="image"
@@ -1011,7 +1037,7 @@ const ExpenseCreate = forwardRef((props, ref) => {
                                 )}
 
                             </div>
-                        </div>
+                        </div>*/}
 
 
 

@@ -74,6 +74,9 @@ const VendorCreate = forwardRef((props, ref) => {
 
     function handleClose() {
         setShow(false);
+        if (props.handleVendorCreateFormClose) {
+            props.handleVendorCreateFormClose();
+        }
     }
 
     useEffect(() => {

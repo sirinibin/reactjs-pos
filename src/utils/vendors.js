@@ -19,6 +19,9 @@ const Vendors = forwardRef((props, ref) => {
 
     function handleClose() {
         SetShow(false);
+        if (props.handleVendorsClose) {
+            props.handleVendorsClose();
+        }
     };
 
     function ResetSearchParams() {
