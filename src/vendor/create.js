@@ -278,6 +278,10 @@ const VendorCreate = forwardRef((props, ref) => {
                     if (props.openDetailsView)
                         props.openDetailsView(data.result.id);
 
+                    if (props.handleUpdated) {
+                        props.handleUpdated();
+                    }
+
                 }, 300);
 
 

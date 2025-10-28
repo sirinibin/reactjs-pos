@@ -538,6 +538,20 @@ const ExpenseCreate = forwardRef((props, ref) => {
     }
 
 
+    useEffect(() => {
+        const handleKeyDown = (e) => {
+            if (e.key === "Escape") {
+                e.preventDefault();
+                e.stopPropagation();
+            }
+        };
+
+        document.addEventListener("keydown", handleKeyDown);
+        return () => document.removeEventListener("keydown", handleKeyDown);
+    }, []);
+
+
+
     return (
         <>
             {openVendors && <Vendors ref={VendorsRef} onSelectVendor={handleSelectedVendor} handleVendorsClose={handleVendorsClose} />}
