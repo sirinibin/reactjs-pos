@@ -13,6 +13,9 @@ import Amount from "../utils/amount.js";
 import { trimTo2Decimals } from "../utils/numberUtils";
 import VendorCreate from "./../vendor/create.js";
 import StatsSummary from "../utils/StatsSummary.js";
+import ReactExport from 'react-data-export';
+const ExcelFile = ReactExport.ExcelFile;
+const ExcelSheet = ReactExport.ExcelFile.ExcelSheet;
 
 function ExpenseIndex(props) {
     //Date filter
@@ -674,6 +677,245 @@ function ExpenseIndex(props) {
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [statsOpen]);
 
+    //Excel Export
+
+    let [allExpenses, setAllExpenses] = useState([]);
+    let [excelData, setExcelData] = useState([]);
+    let [expenseReportFileName, setExpenseReportFileName] = useState("Expense Report");
+    let [fettingAllRecordsInProgress, setFettingAllRecordsInProgress] = useState(false);
+
+    function prepareExcelData() {
+        console.log("Inside prepareExcelData()");
+        var groupedByDate = [];
+        for (var i = 0; i < allExpenses.length; i++) {
+            let date = format(
+                new Date(allExpenses[i].date),
+                "dd-MMM-yyyy"
+            );
+            if (!groupedByDate[date]) {
+                groupedByDate[date] = [];
+            }
+
+            groupedByDate[date].push(allExpenses[i]);
+
+        }
+
+        console.log("groupedByDate:", groupedByDate);
+
+        excelData = [{
+            columns: [
+                { title: "الرقم التسلسلي - S/L No.", width: { wch: 18 }, style: { fill: { patternType: "solid", fgColor: { rgb: "FFCCEEFF" } }, font: { vertAlign: true, bold: true }, alignment: { horizontal: "center", vertical: "center" } } },//pixels width 
+                { title: "تاريخ الفاتورة - Date of Invoice", width: { wch: 25 }, style: { fill: { patternType: "solid", fgColor: { rgb: "FFCCEEFF" } }, font: { vertAlign: true, bold: true }, alignment: { horizontal: "center", vertical: "center" } } },//pixels width
+                { title: "رقم الفاتورة - Invoice Number", width: { wch: 25 }, style: { fill: { patternType: "solid", fgColor: { rgb: "FFCCEEFF" } }, font: { vertAlign: true, bold: true }, alignment: { horizontal: "center", vertical: "center" } } },//pixels width
+                { title: "اسم المورد بالعربية - Supplier Name", width: { wch: 30 }, style: { fill: { patternType: "solid", fgColor: { rgb: "FFCCEEFF" } }, font: { vertAlign: true, bold: true }, alignment: { horizontal: "center", vertical: "center" } } },//pixels width
+                { title: "الرقمالضريبيللمورد - Supplier VAT No", width: { wch: 30 }, style: { fill: { patternType: "solid", fgColor: { rgb: "FFCCEEFF" } }, font: { vertAlign: true, bold: true }, alignment: { horizontal: "center", vertical: "center" } } },//pixels width
+                { title: "المبلغ قبل الضريبة - Amount Before VAT", width: { wch: 30 }, style: { fill: { patternType: "solid", fgColor: { rgb: "FFCCEEFF" } }, font: { vertAlign: true, bold: true }, alignment: { horizontal: "center", vertical: "center" } } },//pixels width
+                { title: "تخفيض - Discount", width: { wch: 15 }, style: { fill: { patternType: "solid", fgColor: { rgb: "FFCCEEFF" } }, font: { vertAlign: true, bold: true }, alignment: { horizontal: "center", vertical: "center" } } },//pixels width
+                { title: "المبلغ بعد الخصم - Amount After Discount", width: { wch: 30 }, style: { fill: { patternType: "solid", fgColor: { rgb: "FFCCEEFF" } }, font: { vertAlign: true, bold: true }, alignment: { horizontal: "center", vertical: "center" } } },//pixels width
+                { title: "قيمة الضريبة -  VAT Amount", width: { wch: 20 }, style: { fill: { patternType: "solid", fgColor: { rgb: "FFCCEEFF" } }, font: { vertAlign: true, bold: true }, alignment: { horizontal: "center", vertical: "center" } } },//pixels width
+                { title: "الإجمالي شامل الضريبة - Total Amount after VAT", width: { wch: 35 }, style: { fill: { patternType: "solid", fgColor: { rgb: "FFCCEEFF" } }, font: { vertAlign: true, bold: true }, alignment: { horizontal: "center", vertical: "center" } } },//pixels width
+            ],
+            data: [],
+        }];
+
+
+        var totalAmountBeforeVAT = 0.00;
+        var totalAmountAfterVAT = 0.00;
+        var totalAmountAfterDiscount = 0.00;
+        var totalVAT = 0.00;
+        var totalDiscount = 0.00;
+
+        let invoiceCount = 0;
+        for (let expenseDate in groupedByDate) {
+
+            console.log("expenseDate:", expenseDate);
+            // excelData[0].data.push([{ value: "Inv Date: " + expenseDate }]);
+
+
+            for (var i2 = 0; i2 < groupedByDate[expenseDate].length; i2++) {
+                invoiceCount++;
+                let expense = groupedByDate[expenseDate][i2];
+                let invoiceNo = expense.vendor_invoice_no ? expense.vendor_invoice_no + " / " + expense.code : expense.code;
+                let supplierVatNo = "N/A";
+                if (expense.vendor && expense.vendor.vat_no) {
+                    supplierVatNo = expense.vendor.vat_no;
+                }
+
+                let amountBeforeVAT = (expense.amount - expense.vat_price);
+                let amountAfterDiscount = (expense.amount);
+                let amountAfterVAT = (expense.amount);
+
+                totalAmountBeforeVAT += amountBeforeVAT;
+                totalDiscount += 0;
+                totalAmountAfterDiscount += amountAfterDiscount;
+                totalVAT += expense.vat_price ? expense.vat_price : 0.00;
+                totalAmountAfterVAT += amountAfterVAT;
+
+                excelData[0].data.push([
+                    { value: invoiceCount, style: { alignment: { horizontal: "center" } } },
+                    { value: expenseDate, style: { alignment: { horizontal: "center" } } },
+                    { value: invoiceNo, style: { alignment: { horizontal: "center" } } },
+                    { value: expense.vendor_name ? expense.vendor_name : "" },
+                    { value: supplierVatNo ? supplierVatNo : "", style: { alignment: { horizontal: "center" } } },
+                    { value: amountBeforeVAT.toFixed(2), style: { alignment: { horizontal: "right" } } },
+                    { value: expense.discount ? expense.discount?.toFixed(2) : 0.00, style: { alignment: { horizontal: "right" } } },
+                    { value: amountAfterDiscount.toFixed(2), style: { alignment: { horizontal: "right" } } },
+                    { value: expense.vat_price ? expense.vat_price.toFixed(2) : 0.00, style: { alignment: { horizontal: "right" } } },
+                    { value: amountAfterVAT.toFixed(2), style: { alignment: { horizontal: "right" } } },
+                ]);
+            }
+        }
+        excelData[0].data.push([
+            { value: "", },
+            { value: "", },
+            { value: "", },
+            { value: "", },
+            { value: "", },
+            { value: "", },
+            { value: "", },
+            { value: "", },
+            { value: "", },
+            { value: "", },
+        ]);
+
+        excelData[0].data.push([
+            { value: "", },
+            { value: "", },
+            { value: "", },
+            { value: "", },
+            { value: "TOTAL", style: { font: { vertAlign: true, bold: true }, alignment: { horizontal: "right" } } },
+            { value: totalAmountBeforeVAT.toFixed(2), style: { font: { vertAlign: true, bold: true }, alignment: { horizontal: "right" } } },
+            { value: totalDiscount.toFixed(2), style: { font: { vertAlign: true, bold: true }, alignment: { horizontal: "right" } } },
+            { value: totalAmountAfterDiscount.toFixed(2), style: { font: { vertAlign: true, bold: true }, alignment: { horizontal: "right" } } },
+            { value: totalVAT.toFixed(2), style: { font: { vertAlign: true, bold: true }, alignment: { horizontal: "right" } } },
+            { value: totalAmountAfterVAT.toFixed(2), style: { font: { vertAlign: true, bold: true }, alignment: { horizontal: "right" } } },
+        ]);
+
+        setExcelData(excelData);
+        // alert(JSON.stringify(excelData));
+
+        console.log("excelData:", excelData);
+    }
+
+    function makeExpenseReportFilename() {
+        expenseReportFileName = "Expense Report";
+        if (searchParams["from_date"] && searchParams["to_date"]) {
+            expenseReportFileName += " - From " + searchParams["from_date"] + " to " + searchParams["to_date"];
+        } else if (searchParams["from_date"]) {
+            expenseReportFileName += " - From " + searchParams["from_date"] + " to " + format(
+                new Date(),
+                "dd-MMM-yyyy"
+            );
+        } else if (searchParams["to_date"]) {
+            expenseReportFileName += " - Upto " + searchParams["to_date"];
+        } else if (searchParams["date_str"]) {
+            expenseReportFileName += " of " + searchParams["date_str"];
+        }
+
+        setExpenseReportFileName(expenseReportFileName);
+    }
+    async function getAllExpenses() {
+        const requestOptions = {
+            method: "GET",
+            headers: {
+                "Content-Type": "application/json",
+                Authorization: localStorage.getItem("access_token"),
+            },
+        };
+
+        let Select =
+            "select=id,code,date,amount,vendor_id,vendor_name,vendor_name_arabic,vendor_invoice_no,description,payment_method,vat_price,category_name,created_by_name,created_at";
+
+        if (localStorage.getItem("store_id")) {
+            searchParams.store_id = localStorage.getItem("store_id");
+        }
+
+        const d = new Date();
+        let diff = d.getTimezoneOffset();
+        console.log("Timezone:", parseFloat(diff / 60));
+        searchParams["timezone_offset"] = parseFloat(diff / 60);
+
+        if (statsOpen) {
+            searchParams["stats"] = "1";
+        } else {
+            searchParams["stats"] = "0";
+        }
+
+        setSearchParams(searchParams);
+        let queryParams = ObjectToSearchQueryParams(searchParams);
+        if (queryParams !== "") {
+            queryParams = "&" + queryParams;
+        }
+
+        let size = 500;
+
+        let expenses = [];
+        var pageNo = 1;
+
+        makeExpenseReportFilename();
+
+        for (; true;) {
+
+            fettingAllRecordsInProgress = true;
+            setFettingAllRecordsInProgress(true);
+            let res = await fetch(
+                "/v1/expense?" +
+                Select +
+                queryParams +
+                "&sort=" +
+                sortExpense +
+                sortField +
+                "&page=" +
+                pageNo +
+                "&limit=" +
+                size,
+                requestOptions
+            )
+                .then(async (response) => {
+                    const isJson = response.headers
+                        .get("content-type")
+                        ?.includes("application/json");
+                    const data = isJson && (await response.json());
+
+                    // check for error response
+                    if (!response.ok) {
+                        const error = data && data.errors;
+                        return Promise.reject(error);
+                    }
+
+                    setIsListLoading(false);
+                    if (!data.result || data.result.length === 0) {
+                        return [];
+                    }
+
+
+                    // console.log("Orders:", orders);
+
+                    return data.result;
+
+
+                })
+                .catch((error) => {
+                    console.log(error);
+                    return [];
+                    //break;
+
+                });
+            if (res.length === 0) {
+                break;
+            }
+            expenses = expenses.concat(res);
+            pageNo++;
+        }
+
+        allExpenses = expenses;
+        setAllExpenses(expenses);
+
+        console.log("allExpenses:", allExpenses);
+        prepareExcelData();
+        fettingAllRecordsInProgress = false;
+        setFettingAllRecordsInProgress(false);
+    }
 
     return (
         <>
@@ -833,6 +1075,14 @@ function ExpenseIndex(props) {
 
 
                     <div className="col text-end">
+
+                        <ExcelFile filename={expenseReportFileName} element={excelData.length > 0 ? <Button variant="success" className="btn btn-primary mb-3 success" >Download Expense Report</Button> : ""}>
+                            <ExcelSheet dataSet={excelData} name={expenseReportFileName} />
+                        </ExcelFile>
+
+                        {excelData.length === 0 ? <Button variant="primary" className="btn btn-primary mb-3" onClick={getAllExpenses} >{fettingAllRecordsInProgress ? "Preparing.." : "Expense Report"}</Button> : ""}
+                        &nbsp;&nbsp;
+
                         <Button
                             hide={true.toString()}
                             variant="primary"
