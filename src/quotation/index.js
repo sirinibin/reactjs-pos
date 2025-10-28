@@ -1373,7 +1373,28 @@ function QuotationIndex(props) {
                                 ) : null}
                               </b>
                             </th>}
-                            {col.key !== "actions" && col.key !== "select" && col.key !== "zatca.reporting_passed" && <th>
+
+                            {store.zatca?.phase === "2" && col.key === "reported_to_zatca" && <th>
+                              <b
+                                style={{
+                                  textDecoration: "underline",
+                                  cursor: "pointer",
+                                }}
+                                onClick={() => {
+                                  sort(col.fieldName);
+                                }}
+                              >
+                                {col.label}
+                                {sortField === col.fieldName && sortOrder === "-" ? (
+                                  <i className="bi bi-sort-alpha-up-alt"></i>
+                                ) : null}
+                                {sortField === col.fieldName && sortOrder === "" ? (
+                                  <i className="bi bi-sort-alpha-up"></i>
+                                ) : null}
+                              </b>
+                            </th>}
+
+                            {col.key !== "actions" && col.key !== "select" && col.key !== "zatca.reporting_passed" && col.key !== "reported_to_zatca" && <th>
                               <b
                                 style={{
                                   textDecoration: "underline",
