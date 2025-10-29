@@ -318,7 +318,7 @@ function PurchaseIndex(props) {
                     { value: invoiceCount, style: { alignment: { horizontal: "center" } } },
                     { value: purchaseDate, style: { alignment: { horizontal: "center" } } },
                     { value: invoiceNo, style: { alignment: { horizontal: "center" } } },
-                    { value: purchase.vendor_name },
+                    { value: purchase.vendor_name ? (purchase.vendor_name + (purchase.vendor_name_arabic ? " | " + purchase.vendor_name_arabic : "")) : "" },
                     { value: supplierVatNo, style: { alignment: { horizontal: "center" } } },
                     { value: amountBeforeVAT.toFixed(2), style: { alignment: { horizontal: "right" } } },
                     { value: purchase.discount?.toFixed(2), style: { alignment: { horizontal: "right" } } },
@@ -385,7 +385,7 @@ function PurchaseIndex(props) {
             },
         };
         let Select =
-            "select=id,code,vendor_id,vendor.id,vendor.vat_no,vendor_invoice_no,date,total,net_total,shipping_handling_fees,discount_percent,discount,products,vendor_name,created_at,updated_at,vat_price";
+            "select=id,code,vendor_id,vendor.id,vendor.vat_no,vendor_invoice_no,date,total,net_total,shipping_handling_fees,discount_percent,discount,products,vendor_name,vendor_name_arabic,created_at,updated_at,vat_price";
 
         if (localStorage.getItem("store_id")) {
             searchParams.store_id = localStorage.getItem("store_id");

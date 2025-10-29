@@ -755,7 +755,7 @@ function ExpenseIndex(props) {
                     { value: invoiceCount, style: { alignment: { horizontal: "center" } } },
                     { value: expenseDate, style: { alignment: { horizontal: "center" } } },
                     { value: invoiceNo, style: { alignment: { horizontal: "center" } } },
-                    { value: expense.vendor_name ? expense.vendor_name : "" },
+                    { value: expense.vendor_name ? (expense.vendor_name + (expense.vendor_name_arabic ? " | " + expense.vendor_name_arabic : "")) : "" },
                     { value: supplierVatNo ? supplierVatNo : "", style: { alignment: { horizontal: "center" } } },
                     { value: amountBeforeVAT.toFixed(2), style: { alignment: { horizontal: "right" } } },
                     { value: expense.discount ? expense.discount?.toFixed(2) : 0.00, style: { alignment: { horizontal: "right" } } },
