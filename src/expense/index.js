@@ -824,7 +824,7 @@ function ExpenseIndex(props) {
         };
 
         let Select =
-            "select=id,code,date,amount,vendor_id,vendor_name,vendor_name_arabic,vendor_invoice_no,description,payment_method,vat_price,category_name,created_by_name,created_at";
+            "select=id,code,date,amount,vendor.id,vendor.vat_no,vendor_id,vendor_name,vendor_name_arabic,vendor_invoice_no,description,payment_method,vat_price,category_name,created_by_name,created_at";
 
         if (localStorage.getItem("store_id")) {
             searchParams.store_id = localStorage.getItem("store_id");
