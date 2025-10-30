@@ -699,10 +699,11 @@ const OrderPrint = forwardRef((props, ref) => {
                 //alert(model.date)
                 // console.log("d2:", d2);
                 // alert(d2)
+                alert(toLocalIsoNoOffset(model.date))
                 const invoice = new Invoice({
                     sellerName: model.store_name,
                     vatRegistrationNumber: model.store.vat_no,
-                    invoiceTimestamp: model.date,
+                    invoiceTimestamp: toLocalIsoNoOffset(model.date),
                     invoiceTotal: model.net_total.toString(),
                     invoiceVatTotal: model.vat_price.toString(),
                     //uuid: model.uuid,
@@ -726,6 +727,23 @@ const OrderPrint = forwardRef((props, ref) => {
                 return `search[${key}]=${object[key]}`;
             })
             .join("&");
+    }
+
+
+    function toLocalIsoNoOffset(dateInput) {
+        const d = dateInput ? new Date(dateInput) : new Date();
+        if (isNaN(d.getTime())) return "";
+
+        const pad = (n, l = 2) => String(n).padStart(l, "0");
+
+        const yyyy = d.getFullYear();
+        const MM = pad(d.getMonth() + 1);
+        const dd = pad(d.getDate());
+        const hh = pad(d.getHours());
+        const mm = pad(d.getMinutes());
+        const ss = pad(d.getSeconds());
+
+        return `${yyyy}-${MM}-${dd}T${hh}:${mm}:${ss}`;
     }
 
 
