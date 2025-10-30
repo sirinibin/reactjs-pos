@@ -47,6 +47,8 @@ const OrderPrint = forwardRef((props, ref) => {
 
                 if (model.store?.code === "PH2" || model.store?.code === "LGK-SIMULATION" || model.store?.code === "LGK") {
                     preparePages();
+                } else if (model.store?.code === "YNB" || model.store?.code === "YNB-SIMULATION") {
+                    preparePages();
                 } else {
                     //  preparePages();
 
