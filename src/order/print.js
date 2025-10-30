@@ -699,7 +699,7 @@ const OrderPrint = forwardRef((props, ref) => {
                 //alert(model.date)
                 // console.log("d2:", d2);
                 // alert(d2)
-                alert(toLocalIsoNoOffset(model.date))
+                //alert(toLocalIsoNoOffset(model.date))
                 const invoice = new Invoice({
                     sellerName: model.store_name,
                     vatRegistrationNumber: model.store.vat_no,
