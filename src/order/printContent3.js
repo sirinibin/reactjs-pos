@@ -45,7 +45,7 @@ const OrderPrintContent3 = forwardRef((props, ref) => {
                     </h4>
 
 
-                    <h4 className="print-value text-center" style={{ fontSize: "3.5mm", maxWidth: "450px", minWidth: "450px", position: "absolute", left: "175px", top: (150 + page.top) + "px", border: "solid " + border + "px", }}>
+                    <h4 className="print-value" style={{ fontSize: "3.5mm", maxWidth: "450px", minWidth: "450px", position: "absolute", left: "175px", top: (150 + page.top) + "px", border: "solid " + border + "px", }}>
                         {props.model.customer && props.model.customer.name ? props.model.customer.name : ""}
                     </h4>
 
@@ -272,7 +272,7 @@ const OrderPrintContent3 = forwardRef((props, ref) => {
                     </h4> : ""}*/}
 
 
-                    {page.lastPage && props.model?.modelName !== "delivery_note" ? <h4 className="print-value" style={{ fontSize: "3.5mm", position: "absolute", left: "15px", top: (920 + page.top) + "px" }}>
+                    {page.lastPage && props.model?.modelName !== "delivery_note" ? <h4 className="print-value" style={{ fontSize: "3.5mm", position: "absolute", left: "15px", top: (905 + page.top) + "px" }}>
                         {n2words(props.model.net_total, { lang: 'en' }) + " saudi riyals"}
                     </h4> : ""}
 

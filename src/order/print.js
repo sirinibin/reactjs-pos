@@ -6,7 +6,7 @@ import OrderPrintContent3 from './printContent3.js';
 
 import { useReactToPrint } from 'react-to-print';
 import { Invoice } from '@axenda/zatca';
-import { format } from "date-fns";
+//import { format } from "date-fns";
 
 const OrderPrint = forwardRef((props, ref) => {
     // let [InvoiceBackground, setInvoiceBackground] = useState("");
@@ -687,23 +687,26 @@ const OrderPrint = forwardRef((props, ref) => {
                 let storeData = data.result;
                 model.store = storeData;
 
-                var d = new Date(model.date);
-                console.log("d:", d);
+                //var d = new Date(model.date);
+                //console.log("d:", d);
 
 
-                let d2 = format(
+                /*let d2 = format(
                     new Date(d),
                     "yyyy-MM-dd h:m:mma"
-                );
-                console.log("d2:", d2);
+                );*/
+                // alert(d);
+                //alert(model.date)
+                // console.log("d2:", d2);
+                // alert(d2)
                 const invoice = new Invoice({
                     sellerName: model.store_name,
                     vatRegistrationNumber: model.store.vat_no,
-                    invoiceTimestamp: d2,
-                    invoiceTotal: model.net_total,
-                    invoiceVatTotal: model.vat_price,
-                    uuid: model.uuid,
-                    hash: model.hash ? model.hash : "",
+                    invoiceTimestamp: model.date,
+                    invoiceTotal: model.net_total.toString(),
+                    invoiceVatTotal: model.vat_price.toString(),
+                    //uuid: model.uuid,
+                    // hash: model.hash ? model.hash : "",
                 });
 
                 model.QRImageData = await invoice.render();
