@@ -50,7 +50,7 @@ const OrderPrint = forwardRef((props, ref) => {
                     preparePages();
                 } else if (model.store?.code === "YNB" || model.store?.code === "YNB-SIMULATION") {
                     preparePages();
-                } else if (model.store?.code === "GUOJ" || model.store?.code === "UMLJ") {
+                } else if (model.store?.code === "GUOJ" || model.store?.code === "UMLJ" || model.store?.code === "JDA-SIMULATION" || model.store?.code === "JDA") {
                     preparePages();
                 } else {
                     //  preparePages();
@@ -1163,7 +1163,7 @@ const OrderPrint = forwardRef((props, ref) => {
                     {(model.store?.code === "YNB-SIMULATION" || model.store?.code === "YNB") && <OrderPrintContent3
                         model={model}
                     />}
-                    {(model.store?.code === "GUOJ" || model.store?.code === "UMLJ") && <OrderPrintContent4
+                    {(model.store?.code === "GUOJ" || model.store?.code === "UMLJ" || model.store?.code === "JDA-SIMULATION" || model.store?.code === "JDA") && <OrderPrintContent4
                         model={model}
                     />}
                 </div>
