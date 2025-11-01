@@ -3,6 +3,7 @@ import { Modal, Button } from 'react-bootstrap';
 import OrderPrintContent from './printContent.js';
 import OrderPrintContent2 from './printContent2.js';
 import OrderPrintContent3 from './printContent3.js';
+import OrderPrintContent4 from './printContent4.js';
 
 import { useReactToPrint } from 'react-to-print';
 import { Invoice } from '@axenda/zatca';
@@ -48,6 +49,8 @@ const OrderPrint = forwardRef((props, ref) => {
                 if (model.store?.code === "PH2" || model.store?.code === "LGK-SIMULATION" || model.store?.code === "LGK") {
                     preparePages();
                 } else if (model.store?.code === "YNB" || model.store?.code === "YNB-SIMULATION") {
+                    preparePages();
+                } else if (model.store?.code === "GUOJ" || model.store?.code === "UMLJ") {
                     preparePages();
                 } else {
                     //  preparePages();
@@ -1150,7 +1153,7 @@ const OrderPrint = forwardRef((props, ref) => {
             </Modal.Header>
             <Modal.Body>
                 <div ref={printAreaRef} >
-                    {(model.store?.code === "GUOJ" || model.store?.code === "UMLJ") && <OrderPrintContent
+                    {(model.store?.code === "GUOJ-T" || model.store?.code === "UMLJ-T") && <OrderPrintContent
                         model={model}
                     />}
                     {(model.store?.code === "PH2" || model.store?.code === "LGK-SIMULATION" || model.store?.code === "LGK") && <OrderPrintContent2
@@ -1158,6 +1161,9 @@ const OrderPrint = forwardRef((props, ref) => {
 
                     />}
                     {(model.store?.code === "YNB-SIMULATION" || model.store?.code === "YNB") && <OrderPrintContent3
+                        model={model}
+                    />}
+                    {(model.store?.code === "GUOJ" || model.store?.code === "UMLJ") && <OrderPrintContent4
                         model={model}
                     />}
                 </div>
