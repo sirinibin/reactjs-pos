@@ -138,7 +138,7 @@
 
   .print-value {
     /*font-size: 14px; */            /* Moderate size for clarity */
-    font-weight: 600;            /* Slightly bold for emphasis */
+    font-weight: 500;            /* Slightly bold for emphasis */
     /*font-family: "Arial", sans-serif;*/ /* Clean, common font for printing */
     color: #000;                 /* Ensure it's black when printing */
     /*letter-spacing: 0.5px; */      /* Slight spacing for readability */

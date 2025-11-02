@@ -4,7 +4,7 @@ import { format } from "date-fns";
 import n2words from 'n2words'
 import { QRCodeCanvas } from "qrcode.react";
 import { trimTo2Decimals } from "../utils/numberUtils";
-import "./print3.css";
+import "./print4.css";
 
 const OrderPrintContent4 = forwardRef((props, ref) => {
     //Non-A4
@@ -112,12 +112,12 @@ const OrderPrintContent4 = forwardRef((props, ref) => {
                                                 verticalAlign: 'bottom'
                                             }}
                                         >
-                                            <h4 className="print-value-new" style={{ fontSize: "3mm", maxWidth: "86px", height: "auto", }}>
+                                            <h4 className="print-value" style={{ fontSize: "3mm", maxWidth: "86px", height: "auto", }}>
                                                 {product.prefix_part_number ? product.prefix_part_number + " - " : ""}{product.part_number ? product.part_number : ""}
                                             </h4>
                                         </div>}
                                         {!props.model?.store?.settings?.one_line_product_name_in_print_invoice && <div>
-                                            <h4 className="print-value-new" style={{ fontSize: "3mm", maxWidth: "86px", height: "auto", }}>
+                                            <h4 className="print-value" style={{ fontSize: "3mm", maxWidth: "86px", height: "auto", }}>
                                                 {product.prefix_part_number ? product.prefix_part_number + " - " : ""}{product.part_number ? product.part_number : ""}
                                             </h4>
                                         </div>}
@@ -133,11 +133,11 @@ const OrderPrintContent4 = forwardRef((props, ref) => {
                                                 verticalAlign: 'bottom'
                                             }}
                                         >
-                                            {product.name && product.name_in_arabic ? <h4 className="print-value-new" style={{ fontSize: "3mm", position: "relative", top: "-11px" }}>
+                                            {product.name && product.name_in_arabic ? <h4 className="print-value" style={{ fontSize: "3mm", position: "relative", top: "-11px" }}>
                                                 {product.name + " | "}
                                                 <span dir="rtl">{product.name_in_arabic}</span>
                                             </h4> : ""}
-                                            {product.name && !product.name_in_arabic ? <h4 className="print-value-new" style={{ fontSize: "3mm", position: "relative", top: "2px", border: "solid 0px" }}>
+                                            {product.name && !product.name_in_arabic ? <h4 className="print-value" style={{ fontSize: "3mm", position: "relative", top: "2px", border: "solid 0px" }}>
                                                 {product.name}
                                             </h4> : ""}
                                             {/*product.name_in_arabic ? <h4 className="print-value" dir="rtl" style={{ fontSize: "3mm", position: "relative", top: "-2px" }}>
@@ -145,11 +145,11 @@ const OrderPrintContent4 = forwardRef((props, ref) => {
                                             </h4> : ""*/}
                                         </div>}
                                         {!props.model?.store?.settings?.one_line_product_name_in_print_invoice && <div>
-                                            {product.name && product.name_in_arabic ? <h4 className="print-value-new" style={{ fontSize: "3mm", position: "relative", top: "2px" }}>
+                                            {product.name && product.name_in_arabic ? <h4 className="print-value" style={{ fontSize: "3mm", position: "relative", top: "2px" }}>
                                                 {product.name + " | "}
                                                 <span dir="rtl">{product.name_in_arabic}</span>
                                             </h4> : ""}
-                                            {product.name && !product.name_in_arabic ? <h4 className="print-value-new" style={{ fontSize: "3mm", position: "relative", top: "2px", border: "solid 0px" }}>
+                                            {product.name && !product.name_in_arabic ? <h4 className="print-value" style={{ fontSize: "3mm", position: "relative", top: "2px", border: "solid 0px" }}>
                                                 {product.name}
                                             </h4> : ""}
                                             {/*product.name_in_arabic ? <h4 className="print-value" dir="rtl" style={{ fontSize: "3mm", position: "relative", top: "-2px" }}>
@@ -216,7 +216,7 @@ const OrderPrintContent4 = forwardRef((props, ref) => {
                                 <td style={{ paddingRight: "5px", paddingTop: "13px" }}>
                                     <h4 className="print-value" style={{ fontSize: "3mm", height: "9px", }}>
                                         <NumberFormat
-                                            value={trimTo2Decimals(props.model.discount)}
+                                            value={trimTo2Decimals(props.model.vat_price)}
                                             displayType={"text"}
                                             thousandSeparator={true}
                                             suffix={""}
@@ -230,7 +230,7 @@ const OrderPrintContent4 = forwardRef((props, ref) => {
                                 <td style={{ paddingRight: "5px", paddingTop: "13px" }}>
                                     <h4 className="print-value" style={{ fontSize: "3mm", height: "9px", }}>
                                         <NumberFormat
-                                            value={trimTo2Decimals(props.model.vat_price)}
+                                            value={trimTo2Decimals(props.model.discount)}
                                             displayType={"text"}
                                             thousandSeparator={true}
                                             suffix={""}
@@ -239,6 +239,8 @@ const OrderPrintContent4 = forwardRef((props, ref) => {
                                     </h4>
                                 </td>
                             </tr>
+
+
 
                             <tr className="text-end" style={{ verticalAlign: "center", border: "solid 0px", }}>
                                 <td style={{ paddingRight: "5px", paddingTop: "13px" }}>
