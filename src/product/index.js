@@ -368,6 +368,11 @@ function ProductIndex(props) {
     let [wholesaleStockValue, setWholesaleStockValue] = useState(0.00);
     let [purchaseStockValue, setPurchaseStockValue] = useState(0.00);
 
+    let [sales, setSales] = useState(0.00);
+    let [salesReturn, setSalesReturn] = useState(0.00);
+    let [salesProfit, setSalesProfit] = useState(0.00);
+    let [salesReturnProfit, setSalesReturnProfit] = useState(0.00);
+
     function list() {
         const requestOptions = {
             method: "GET",
@@ -471,6 +476,19 @@ function ProductIndex(props) {
                 purchaseStockValue = data.meta.purchase_stock_value;
                 setPurchaseStockValue(purchaseStockValue);
                 console.log("stats loaded");
+
+                sales = data.meta.sales;
+                setSales(sales);
+
+                salesProfit = data.meta.sales_profit;
+                setSalesProfit(salesProfit);
+
+                salesReturn = data.meta.sales_return;
+                setSalesReturn(salesReturn);
+
+                salesReturnProfit = data.meta.sales_return_profit;
+                setSalesReturnProfit(salesReturnProfit);
+
             })
             .catch((error) => {
                 setIsListLoading(false);
@@ -1770,6 +1788,10 @@ function ProductIndex(props) {
                                     "Retail stock value": retailStockValue,
                                     "Wholesale stock value": wholesaleStockValue,
                                     "Purchase stock value": purchaseStockValue,
+                                    "Sales": sales,
+                                    "Sales Return": salesReturn,
+                                    "Sales Profit": salesProfit,
+                                    "Sales Return Profit": salesReturnProfit,
                                 }}
                                 onToggle={handleSummaryToggle}
                             />
