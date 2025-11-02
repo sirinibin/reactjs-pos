@@ -260,7 +260,7 @@ const OrderPrintContent4 = forwardRef((props, ref) => {
                     </table> : ""}
 
                     <h4 className="print-value-umluj" style={{ fontSize: "2.7mm", position: "absolute", left: "85px", top: (696 + page.top) + "px" }} >
-                        {!props.model.customer?.national_address?.building_no && !props.model.customer?.national_address?.unit_no && props.model.customer?.national_address?.street_name && props.model.customer?.national_address?.district_name && props.model.customer?.national_address?.city_name && <>Cust. Address:</>}
+                        {props.model.customer?.national_address?.building_no && props.model.customer?.national_address?.unit_no && props.model.customer?.national_address?.street_name && props.model.customer?.national_address?.district_name && props.model.customer?.national_address?.city_name && <>Cust. Address:</>}
                     </h4>
 
                     <div dir="ltr" className="print-value-umluj" style={{ fontSize: "2.4mm", position: "absolute", left: "172px", maxWidth: "300px", top: (693 + page.top) + "px" }} >
