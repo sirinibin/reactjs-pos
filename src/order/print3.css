@@ -146,6 +146,7 @@
     word-break: break-word;      /* Prevents overflow */
     white-space: pre-wrap;       /* Preserves formatting and wraps text */
   }
+  
 
   .print-label {
     /*font-size: 14px; */            /* Moderate size for clarity */
