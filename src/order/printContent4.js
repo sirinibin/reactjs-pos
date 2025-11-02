@@ -2,9 +2,10 @@ import { React, forwardRef } from "react";
 import NumberFormat from "react-number-format";
 import { format } from "date-fns";
 import n2words from 'n2words'
-import { QRCodeCanvas } from "qrcode.react";
+//import { QRCodeCanvas } from "qrcode.react";
 import { trimTo2Decimals } from "../utils/numberUtils";
 import "./print4.css";
+import { QRCodeSVG } from "qrcode.react";
 
 const OrderPrintContent4 = forwardRef((props, ref) => {
     //Non-A4
@@ -51,11 +52,11 @@ const OrderPrintContent4 = forwardRef((props, ref) => {
                     </h4>
 
                     <h4 className="print-value" style={{ fontSize: "3mm", position: "absolute", left: "115px", top: (204.5 + page.top) + "px", border: "solid " + border + "px", }}>
-                        {props.model.customer && props.model.customer.vat_no ? props.model.customer.vat_no : "N/A"}
+                        {props.model.customer && props.model.customer.vat_no ? props.model.customer.vat_no : ""}
                     </h4>
 
                     <h4 className="print-value" style={{ fontSize: "3.7mm", position: "absolute", left: "115px", top: (221 + page.top) + "px", border: "solid " + border + "px", }}>
-                        {props.model.customer && props.model.customer.vat_no_in_arabic ? props.model.customer.vat_no_in_arabic : "N/A"}
+                        {props.model.customer && props.model.customer.vat_no_in_arabic ? props.model.customer.vat_no_in_arabic : ""}
                     </h4>
 
                     <h4 className="print-value" style={{ fontSize: "3.5mm", position: "absolute", left: "580px", top: (168.5 + page.top) + "px", border: "solid " + border + "px", }}>
@@ -92,7 +93,7 @@ const OrderPrintContent4 = forwardRef((props, ref) => {
                         {props.model.total_pages ? "Page " + (pageIndex + 1) + " of " + props.model.total_pages : ""}
                     </h4>*/}
 
-                    < table className="print-value" style={{ fontSize: "3mm", position: "absolute", left: "33px", top: (276.6 + page.top) + "px", border: "solid 0px", }}>
+                    < table className="print-value" style={{ fontSize: "3mm", position: "absolute", left: "33px", top: (277.6 + page.top) + "px", border: "solid 0px", }}>
                         <tbody>
                             {page.products && page.products.map((product, index) => (
                                 <tr key={product.item_code} style={{ paddingTop: "1px", height: "6px", borderBottom: "solid 1px" }}>
@@ -258,7 +259,9 @@ const OrderPrintContent4 = forwardRef((props, ref) => {
                         </tbody>
                     </table> : ""}
 
-                    <h4 className="print-value" style={{ fontSize: "2.7mm", position: "absolute", left: "85px", top: (696 + page.top) + "px" }} >Cust. Address:</h4>
+                    <h4 className="print-value" style={{ fontSize: "2.7mm", position: "absolute", left: "85px", top: (696 + page.top) + "px" }} >
+                        {!props.model.customer?.national_address?.building_no && !props.model.customer?.national_address?.unit_no && props.model.customer?.national_address?.street_name && props.model.customer?.national_address?.district_name && props.model.customer?.national_address?.city_name && <>Cust. Address:</>}
+                    </h4>
 
                     <div dir="ltr" className="print-value" style={{ fontSize: "2.4mm", position: "absolute", left: "172px", maxWidth: "300px", top: (693 + page.top) + "px" }} >
                         {props.model.address && !props.model.customer ? props.model.address : ""}
@@ -326,16 +329,41 @@ const OrderPrintContent4 = forwardRef((props, ref) => {
                         {/*!props.model.zatca?.qr_code && props.model.QRImageData ? <img className="text-start" src={props.model.QRImageData} style={{ width: "102px", height: "94px" }} alt="Invoice QR Code" /> : ""*/}
                         {/*props.model.zatca?.qr_code ? <QRCodeCanvas value={props.model.zatca?.qr_code} style={{ width: "102px", height: "94px" }} size={100} / > : ""*/}
                         {props.model.store?.zatca?.phase === "1" && props.model.QRImageData ? <img src={props.model.QRImageData} style={{ width: "100px", height: "100px", border: "solid 0px", background: '#fff' }} alt="Invoice QR Code" /> : ""}
-                        {props.model.store?.zatca?.phase === "2" && props.model.zatca?.qr_code && props.model.zatca?.reporting_passed ? <QRCodeCanvas
-                            value={props.model.zatca?.qr_code}
-                            style={{ width: "150px", height: "150px" }}
-                            renderAs="canvas"
-                            level="H"
-
-                            size={140}
-                        /> : ""}
                         {props.model.store?.zatca?.phase === "2" && !props.model.zatca?.qr_code ? <img src={props.model.QRImageData} style={{ width: "150px", height: "150px", border: "solid 0px" }} alt="Invoice QR Code" /> : ""}
 
+                    </div> : ""}
+                    {page.lastPage && props.model?.modelName !== "quotation" && props.model?.modelName !== "quotation_sales_return" && props.model?.modelName !== "delivery_note" ? <div className="print-value" style={{ position: "absolute", left: "605px", top: (828 + page.top) + "px" }} >
+
+                        {/*props.model.store?.zatca?.phase === "2" && props.model.zatca?.qr_code && props.model.zatca?.reporting_passed ? <QRCodeCanvas
+                            value={props.model.zatca?.qr_code}
+                            style={{ width: "130px", height: "130px" }}
+                            renderAs="canvas"
+                            level="H"
+                            size={130}
+                        /> : ""*/}
+
+                        {/*props.model.store?.zatca?.phase === "2" && props.model.zatca?.qr_code && props.model.zatca?.reporting_passed ? <QRCodeSVG
+                            value={props.model.zatca?.qr_code}
+                            fgColor="#000000"
+                            bgColor="#ffffff"
+                            level="H"
+                            size={520} 
+                            className="qr-print"
+                            style={{ width: "150px", height: "150px", display: "block" }}
+                        /> : ""*/}
+                        {props.model.store?.zatca?.phase === "2" && props.model.zatca?.qr_code && props.model.zatca?.reporting_passed ? <QRCodeSVG
+                            value={props.model.zatca?.qr_code}
+                            fgColor="#000000"
+                            bgColor="#ffffff"
+                            level="H"
+                            size={520} /* high internal resolution */
+                            className="qr-print"
+                            preserveAspectRatio="xMidYMid meet"
+                            shapeRendering="crispEdges"
+                            role="img"
+                            aria-hidden={false}
+                            style={{ width: "147px", height: "147px", display: "block", background: "#fff" }}
+                        /> : ""}
                     </div> : ""}
 
                     {/*<h4 className="print-value" style={{ fontSize: "2.8mm", position: "absolute", left: "85px", top: (963 + page.top) + "px", border: "solid " + border + "px", }}>

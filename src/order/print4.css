@@ -5,9 +5,32 @@
   }
 
 
+  .qr-print {
+  display: block;
+  background: #fff;
+  -webkit-print-color-adjust: exact;
+  print-color-adjust: exact;
+  color-adjust: exact;
+}
+
+.qr-print svg {
+  shape-rendering: crispEdges;
+  image-rendering: -webkit-optimize-contrast;
+  image-rendering: pixelated;
+  width: 130px !important;
+  height: 130px !important;
+  background: #fff;
+  fill: #000000;
+}
+
   @media print {
     .no-print {
       display: none !important;
+    }
+
+    .qr-print {
+     -webkit-print-color-adjust: exact;
+      print-color-adjust: exact;
     }
   }
 
