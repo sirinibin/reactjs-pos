@@ -277,6 +277,7 @@ function ExpenseIndex(props) {
     let [totalExpenses, setTotalExpenses] = useState(0.00);
     let [totalCashExpenses, setTotalCashExpenses] = useState(0.00);
     let [totalBankExpenses, setTotalBankExpenses] = useState(0.00);
+    let [totalPurchaseFundExpenses, setTotalPurchaseFundExpenses] = useState(0.00);
     let [totalVat, setTotalVat] = useState(0.00);
 
     function list() {
@@ -360,6 +361,9 @@ function ExpenseIndex(props) {
 
                 totalVat = data.meta.vat;
                 setTotalVat(totalVat);
+
+                totalPurchaseFundExpenses = data.meta.purchase_fund;
+                setTotalPurchaseFundExpenses(totalPurchaseFundExpenses);
 
             })
             .catch((error) => {
@@ -1063,6 +1067,7 @@ function ExpenseIndex(props) {
                                     "Total Expenses": totalExpenses,
                                     "Cash Expenses": totalCashExpenses,
                                     "Bank Expenses": totalBankExpenses,
+                                    "Purchase Fund Expenses": totalPurchaseFundExpenses,
                                     "VAT Paid": totalVat,
                                 }}
                                 onToggle={handleSummaryToggle}
