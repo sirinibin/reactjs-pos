@@ -677,7 +677,16 @@ const PreviewContent = forwardRef((props, ref) => {
                                                 {props.model.store?.settings?.zatca_qr_on_left_bottom && props.modelName !== "quotation" && props.modelName !== "whatsapp_quotation" && props.modelName !== "quotation_sales_return" && props.modelName !== "whatsapp_quotation_sales_return" && props.modelName !== "delivery_note" && <th rowSpan={8} style={{ width: "20%", padding: "3px", borderRight: tableBorderThickness }}>
                                                     <div
                                                         className="col-md-1 text-center"
-                                                        style={{ width: "100%", height: "100%" }}
+                                                        style={{
+                                                            width: "100%",
+                                                            height: "100%",
+                                                            top: 0,
+                                                            left: 0,
+                                                            right: 0,
+                                                            bottom: 0,
+                                                            background: "#fff",
+                                                            zIndex: 1,
+                                                        }}
                                                         onClick={(e) => {
                                                             e.preventDefault();
                                                             e.stopPropagation();
@@ -685,27 +694,31 @@ const PreviewContent = forwardRef((props, ref) => {
                                                             props.selectQRCode();
                                                         }}
                                                     >
-                                                        {props.model.store?.zatca?.phase === "1" && props.model.QRImageData ? <img src={props.model.QRImageData} style={{ width: props.fontSizes[props.modelName + "_qrCode"]["width"]?.size, height: props.fontSizes[props.modelName + "_qrCode"]["height"]?.size, border: "solid 0px" }} alt="Invoice QR Code" /> : ""}
-                                                        {/*props.model.store?.zatca?.phase === "2" && props.model.zatca?.qr_code && props.model.zatca?.reporting_passed ? <QRCodeCanvas value={props.model.zatca?.qr_code} style={{ width: props.fontSizes[props.modelName + "_qrCode"]["width"]?.size, height: props.fontSizes[props.modelName + "_qrCode"]["height"]?.size }} size={props.fontSizes[props.modelName + "_qrCode"]["width"]?.value} /> : ""*/}
-                                                        {props.model.store?.zatca?.phase === "2" && props.model.zatca?.qr_code && props.model.zatca?.reporting_passed ? <QRCodeSVG
-                                                            value={props.model.zatca?.qr_code}
-                                                            fgColor="#000000"
-                                                            bgColor="#ffffff"
-                                                            level="H"
-                                                            size={520} /* high internal resolution */
-                                                            className="qr-print"
-                                                            preserveAspectRatio="xMidYMid meet"
-                                                            shapeRendering="crispEdges"
-                                                            role="img"
-                                                            aria-hidden={false}
-                                                            style={{
-                                                                width: props.fontSizes[props.modelName + "_qrCode"]["width"]?.size,
-                                                                height: props.fontSizes[props.modelName + "_qrCode"]["height"]?.size,
-                                                                display: "block",
-                                                                background: "#fff"
-                                                            }}
-                                                        /> : ""}
-                                                        {props.model.store?.zatca?.phase === "2" && !props.model.zatca?.qr_code ? <img src={props.model.QRImageData} style={{ width: props.fontSizes[props.modelName + "_qrCode"]["width"]?.size, height: props.fontSizes[props.modelName + "_qrCode"]["height"]?.size, border: "solid 0px" }} alt="Invoice QR Code" /> : ""}
+                                                        <div style={{ position: "relative", zIndex: 2 }}>
+                                                            {props.model.store?.zatca?.phase === "1" && props.model.QRImageData ? <img src={props.model.QRImageData} style={{ width: props.fontSizes[props.modelName + "_qrCode"]["width"]?.size, height: props.fontSizes[props.modelName + "_qrCode"]["height"]?.size, border: "solid 0px" }} alt="Invoice QR Code" /> : ""}
+                                                            {/*props.model.store?.zatca?.phase === "2" && props.model.zatca?.qr_code && props.model.zatca?.reporting_passed ? <QRCodeCanvas value={props.model.zatca?.qr_code} style={{ width: props.fontSizes[props.modelName + "_qrCode"]["width"]?.size, height: props.fontSizes[props.modelName + "_qrCode"]["height"]?.size }} size={props.fontSizes[props.modelName + "_qrCode"]["width"]?.value} /> : ""*/}
+
+                                                            {props.model.store?.zatca?.phase === "2" && props.model.zatca?.qr_code && props.model.zatca?.reporting_passed ? <QRCodeSVG
+                                                                value={props.model.zatca?.qr_code}
+                                                                fgColor="#000000"
+                                                                bgColor="#ffffff"
+                                                                level="H"
+                                                                size={520} /* high internal resolution */
+                                                                className="qr-print"
+                                                                preserveAspectRatio="xMidYMid meet"
+                                                                shapeRendering="crispEdges"
+                                                                role="img"
+                                                                aria-hidden={false}
+                                                                style={{
+                                                                    width: props.fontSizes[props.modelName + "_qrCode"]["width"]?.size,
+                                                                    height: props.fontSizes[props.modelName + "_qrCode"]["height"]?.size,
+                                                                    display: "block",
+                                                                    background: "#fff"
+                                                                }}
+                                                            /> : ""}
+
+                                                            {props.model.store?.zatca?.phase === "2" && !props.model.zatca?.qr_code ? <img src={props.model.QRImageData} style={{ width: props.fontSizes[props.modelName + "_qrCode"]["width"]?.size, height: props.fontSizes[props.modelName + "_qrCode"]["height"]?.size, border: "solid 0px" }} alt="Invoice QR Code" /> : ""}
+                                                        </div>
                                                     </div>
                                                 </th>}
                                             </tr>
