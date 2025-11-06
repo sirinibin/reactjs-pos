@@ -6,13 +6,14 @@ import { Typeahead } from "react-bootstrap-typeahead";
 import { format } from "date-fns";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
-import { Button, Spinner, Badge } from "react-bootstrap";
+import { Button, Spinner } from "react-bootstrap";
 import ReactPaginate from "react-paginate";
-import NumberFormat from "react-number-format";
+//import NumberFormat from "react-number-format";
 import OverflowTooltip from "../utils/OverflowTooltip.js";
 import CustomerDepositPreview from './../customer_deposit/preview.js';
 import { trimTo2Decimals } from "../utils/numberUtils";
 import Amount from "../utils/amount.js";
+import StatsSummary from "../utils/StatsSummary.js";
 
 function CustomerWithdrawalIndex(props) {
 
@@ -376,8 +377,21 @@ function CustomerWithdrawalIndex(props) {
         return qWords.every((word) => searchable.includes(word));
     }, []);
 
+    const [statsOpen, setStatsOpen] = useState(false);
+    const handleSummaryToggle = (isOpen) => {
+        setStatsOpen(isOpen);
+    };
 
-    let [totalCustomerWithdrawals, setTotalCustomerWithdrawals] = useState(0.00);
+    useEffect(() => {
+        list();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [statsOpen]);
+
+
+    let [totalPayables, setTotalPayables] = useState(0.00);
+    let [totalCashPayables, setTotalCashPayables] = useState(0.00);
+    let [totalBankPayables, setTotalBankPayables] = useState(0.00);
+
 
     let sortOrder = "-";
 
@@ -405,6 +419,13 @@ function CustomerWithdrawalIndex(props) {
         if (queryParams !== "") {
             queryParams = "&" + queryParams;
         }
+
+        if (statsOpen) {
+            searchParams["stats"] = "1";
+        } else {
+            searchParams["stats"] = "0";
+        }
+
 
         // console.log("queryParams:", queryParams);
         //queryParams = encodeURIComponent(queryParams);
@@ -446,8 +467,14 @@ function CustomerWithdrawalIndex(props) {
                 setOffset((page - 1) * pageSize);
                 setCurrentPageItemsCount(data.result.length);
 
-                totalCustomerWithdrawals = data.meta.total;
-                setTotalCustomerWithdrawals(totalCustomerWithdrawals);
+                totalPayables = data.meta.total;
+                setTotalPayables(totalPayables);
+
+                totalCashPayables = data.meta.cash;
+                setTotalCashPayables(totalCashPayables);
+
+                totalBankPayables = data.meta.bank;
+                setTotalBankPayables(totalBankPayables);
 
             })
             .catch((error) => {
@@ -547,7 +574,7 @@ function CustomerWithdrawalIndex(props) {
             <CustomerWithdrawalCreate ref={CreateFormRef} refreshList={list} openDetailsView={openDetailsView} showToastMessage={props.showToastMessage} />
             <CustomerWithdrawalView ref={DetailsViewRef} openUpdateForm={openUpdateForm} openCreateForm={openCreateForm} showToastMessage={props.showToastMessage} />
 
-            <div className="container-fluid p-0">
+            {/*<div className="container-fluid p-0">
                 <div className="row">
 
                     <div className="col">
@@ -564,6 +591,22 @@ function CustomerWithdrawalIndex(props) {
                         </h1>
                     </div>
 
+                </div>
+            </div>*/}
+
+            <div className="row">
+                <div className="col">
+                    <span className="text-end">
+                        <StatsSummary
+                            title="Payables"
+                            stats={{
+                                "Total": totalPayables,
+                                "Cash": totalCashPayables,
+                                "Bank": totalBankPayables,
+                            }}
+                            onToggle={handleSummaryToggle}
+                        />
+                    </span>
                 </div>
             </div>
 

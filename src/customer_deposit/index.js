@@ -6,18 +6,16 @@ import { Typeahead } from "react-bootstrap-typeahead";
 import { format } from "date-fns";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
-import { Button, Spinner, Badge } from "react-bootstrap";
+import { Button, Spinner } from "react-bootstrap";
 import ReactPaginate from "react-paginate";
-import NumberFormat from "react-number-format";
+//import NumberFormat from "react-number-format";
 import OverflowTooltip from "../utils/OverflowTooltip.js";
 import CustomerDepositPreview from './../customer_deposit/preview.js';
 import { trimTo2Decimals } from "../utils/numberUtils";
 import Amount from "../utils/amount.js";
+import StatsSummary from "../utils/StatsSummary.js";
 
 function CustomerDepositIndex(props) {
-
-
-
     //Date filter
     const [showDateRange, setShowDateRange] = useState(false);
     let [selectedDate, setSelectedDate] = useState(new Date());
@@ -376,8 +374,21 @@ function CustomerDepositIndex(props) {
         return qWords.every((word) => searchable.includes(word));
     }, []);
 
+    const [statsOpen, setStatsOpen] = useState(false);
+    const handleSummaryToggle = (isOpen) => {
+        setStatsOpen(isOpen);
+    };
 
-    let [totalCustomerDeposits, setTotalCustomerDeposits] = useState(0.00);
+    useEffect(() => {
+        list();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [statsOpen]);
+
+
+    let [totalReceivables, setTotalReceivables] = useState(0.00);
+    let [totalCashReceivables, setTotalCashReceivables] = useState(0.00);
+    let [totalBankReceivables, setTotalBankReceivables] = useState(0.00);
+    let [totalPurchaseFundReceivables, setTotalPurchaseFundReceivables] = useState(0.00);
 
     let sortOrder = "-";
 
@@ -394,6 +405,12 @@ function CustomerDepositIndex(props) {
 
         if (localStorage.getItem("store_id")) {
             searchParams.store_id = localStorage.getItem("store_id");
+        }
+
+        if (statsOpen) {
+            searchParams["stats"] = "1";
+        } else {
+            searchParams["stats"] = "0";
         }
 
         const d = new Date();
@@ -446,8 +463,17 @@ function CustomerDepositIndex(props) {
                 setOffset((page - 1) * pageSize);
                 setCurrentPageItemsCount(data.result.length);
 
-                totalCustomerDeposits = data.meta.total;
-                setTotalCustomerDeposits(totalCustomerDeposits);
+                totalReceivables = data.meta.total;
+                setTotalReceivables(totalReceivables);
+
+                totalCashReceivables = data.meta.cash;
+                setTotalCashReceivables(totalCashReceivables);
+
+                totalBankReceivables = data.meta.bank;
+                setTotalBankReceivables(totalBankReceivables);
+
+                totalPurchaseFundReceivables = data.meta.purchase_fund;
+                setTotalPurchaseFundReceivables(totalPurchaseFundReceivables);
 
             })
             .catch((error) => {
@@ -551,7 +577,7 @@ function CustomerDepositIndex(props) {
             <CustomerDepositCreate ref={CreateFormRef} refreshList={list} openDetailsView={openDetailsView} showToastMessage={props.showToastMessage} />
             <CustomerDepositView ref={DetailsViewRef} openUpdateForm={openUpdateForm} openCreateForm={openCreateForm} showToastMessage={props.showToastMessage} />
 
-            <div className="container-fluid p-0">
+            {/*<div className="container-fluid p-0">
                 <div className="row">
 
                     <div className="col">
@@ -569,16 +595,30 @@ function CustomerDepositIndex(props) {
                     </div>
 
                 </div>
-            </div>
+            </div>*/}
 
             <div className="container-fluid p-0">
                 <div className="row">
                     <div className="col">
+                        <span className="text-end">
+                            <StatsSummary
+                                title="Receivables"
+                                stats={{
+                                    "Total": totalReceivables,
+                                    "Cash": totalCashReceivables,
+                                    "Bank": totalBankReceivables,
+                                    "Purchase Fund": totalPurchaseFundReceivables,
+                                }}
+                                onToggle={handleSummaryToggle}
+                            />
+                        </span>
+                    </div>
+                </div>
+
+                <div className="row">
+                    <div className="col">
                         <h1 className="h3"> Receivables</h1>
                     </div>
-
-
-
                     <div className="col text-end">
                         <Button
                             hide={true.toString()}
