@@ -1662,6 +1662,7 @@ const CustomerDepositCreate = forwardRef((props, ref) => {
                                                             <option value="bank_card">Bank Card</option>
                                                             <option value="bank_transfer">Bank Transfer</option>
                                                             <option value="bank_cheque">Bank Cheque</option>
+                                                            <option value="purchase_fund">Purchase Fund A/c</option>
                                                         </select>
                                                         {errors["customer_receivable_payment_method_" + key] && (
                                                             <div style={{ color: "red" }}>

@@ -502,6 +502,10 @@ function CustomerDepositIndex(props) {
             id: "bank_cheque",
             name: "Bank Cheque",
         },
+        {
+            id: "purchase_fund",
+            name: "Purchase Fund",
+        },
     ];
 
     const [selectedPaymentMethodList, setSelectedPaymentMethodList] = useState([]);
