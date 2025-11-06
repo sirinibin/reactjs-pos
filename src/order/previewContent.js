@@ -845,7 +845,7 @@ const PreviewContent = forwardRef((props, ref) => {
                                                     {props.model.remarks ? props.model.remarks : ""}
                                                 </td>
                                             </tr>
-                                            {props.modelName === "quotation" && props.model.type === "quotation" && <>
+                                            {(props.modelName === "quotation" || props.modelName === "whatsapp_quotation") && (props.model.type === "quotation" || props.model.type === "whatsapp_quotation") && <>
                                                 <tr>
                                                     <th colSpan="2" className="text-end print-label" style={{ padding: "5px", borderRight: tableBorderThickness }}>
                                                         Validity صحة:

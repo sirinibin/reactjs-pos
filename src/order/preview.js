@@ -28,6 +28,7 @@ const Preview = forwardRef((props, ref) => {
             if (whatsapp) {
                 whatsAppShare = true;
                 setWhatsAppShare(whatsAppShare)
+
             } else {
                 whatsAppShare = false;
                 setWhatsAppShare(whatsAppShare)
@@ -733,6 +734,7 @@ const Preview = forwardRef((props, ref) => {
 
                 model.QRImageData = await invoice.render();
                 console.log("model.QRImageData:", model.QRImageData);
+
 
                 setModel({ ...model });
             })
