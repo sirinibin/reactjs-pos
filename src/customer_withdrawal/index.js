@@ -413,6 +413,12 @@ function CustomerWithdrawalIndex(props) {
         const d = new Date();
         let diff = d.getTimezoneOffset();
         searchParams["timezone_offset"] = parseFloat(diff / 60);
+        if (statsOpen) {
+            searchParams["stats"] = "1";
+        } else {
+            searchParams["stats"] = "0";
+        }
+
 
         setSearchParams(searchParams);
         let queryParams = ObjectToSearchQueryParams(searchParams);
@@ -420,11 +426,6 @@ function CustomerWithdrawalIndex(props) {
             queryParams = "&" + queryParams;
         }
 
-        if (statsOpen) {
-            searchParams["stats"] = "1";
-        } else {
-            searchParams["stats"] = "0";
-        }
 
 
         // console.log("queryParams:", queryParams);
