@@ -1064,10 +1064,10 @@ function ExpenseIndex(props) {
                             <StatsSummary
                                 title="Expenses"
                                 stats={{
-                                    "Total Expenses": totalExpenses,
-                                    "Cash Expenses": totalCashExpenses,
-                                    "Bank Expenses": totalBankExpenses,
-                                    "Purchase Fund Expenses": totalPurchaseFundExpenses,
+                                    "Total": totalExpenses,
+                                    "Cash": totalCashExpenses,
+                                    "Bank": totalBankExpenses,
+                                    "Purchase Fund": totalPurchaseFundExpenses,
                                     "VAT Paid": totalVat,
                                 }}
                                 onToggle={handleSummaryToggle}
