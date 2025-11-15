@@ -71,9 +71,10 @@ const PreviewContent = forwardRef((props, ref) => {
                         marginTop: page.top + "px",
                         height: "1118px",
                         width: `${props.whatsAppShare ? "750px" : "750px"}`,
-                        backgroundImage: `url(${props.whatsAppShare ? props.invoiceBackground : ""})`,
-                        backgroundSize: 'cover',
-                        backgroundPosition: 'center',
+                        //  backgroundImage: `url(${props.whatsAppShare ? props.invoiceBackground : ""})`,
+                        // backgroundSize: 'cover',
+                        // backgroundPosition: 'center',
+                        position: "relative",
                     }}
 
                 >
@@ -84,9 +85,9 @@ const PreviewContent = forwardRef((props, ref) => {
                             left: "50%",
                             transform: "translateX(-50%)",
                             top: 0,
-                            width: "800px",
-                            height: "100%",
-                            maxWidth: "100%",
+                            width: "105%",
+                            height: "1118px",
+                            maxWidth: "105%",
                             objectFit: "cover",
                             objectPosition: "top center",
                             zIndex: 0,
