@@ -58,8 +58,13 @@ const Preview = forwardRef((props, ref) => {
                     await getQuotation(model.quotation_id);
                 }
 
+                InvoiceBackground = ""
+                setInvoiceBackground(InvoiceBackground);
+
                 if (model.store_id) {
                     await getStore(model.store_id);
+
+
 
 
                     if (whatsAppShare) {
