@@ -64,13 +64,14 @@ const PreviewContentWithSellerInfo = forwardRef((props, ref) => {
                         marginTop: page.top + "px",
                         height: "1118px",
                         width: `${props.whatsAppShare ? "750px" : "750px"}`,
-                        backgroundImage: `url(${props.whatsAppShare ? props.invoiceBackground : ""})`,
-                        backgroundSize: 'cover',
-                        backgroundPosition: 'center',
+                        //backgroundImage: `url(${props.whatsAppShare ? props.invoiceBackground : ""})`,
+                        // backgroundSize: 'cover',
+                        // backgroundPosition: 'center',
+                        position: "relative",
                     }}
 
                 >
-                    {props.invoiceBackground ? (<img
+                    {props.invoiceBackground && props.fontSizes[props.modelName + "_storeHeader"]?.visible ? (<img
                         src={props.invoiceBackground}
                         style={{
                             position: "absolute",
@@ -88,7 +89,7 @@ const PreviewContentWithSellerInfo = forwardRef((props, ref) => {
                         }}
                         alt="Invoice Background" />) : null}
                     <div style={{ position: "relative", zIndex: 1 }}>
-                        {props.fontSizes[props.modelName + "_storeHeader"]?.visible ? < div className="row">
+                        {props.fontSizes[props.modelName + "_storeHeader"]?.visible && !props.invoiceBackground ? < div className="row">
                             <div className="col">
                                 <ul className="list-unstyled text-left">
                                     <li>
@@ -143,7 +144,7 @@ const PreviewContentWithSellerInfo = forwardRef((props, ref) => {
                         </div> : ""}
 
 
-                        <div className="row" style={{ marginTop: props.fontSizes[props.modelName + "_storeHeader"]?.visible ? "0px" : props.fontSizes[props.modelName + "_marginTop"]?.size }}>
+                        <div className="row" style={{ marginTop: props.fontSizes[props.modelName + "_storeHeader"]?.visible && props.invoiceBackground ? props.fontSizes[props.modelName + "_marginTop"]?.size : props.fontSizes[props.modelName + "_marginTop"]?.size }}>
                             <div className="col">
                                 <u><h1 className="text-center clickable-text fw-bold" onClick={() => {
                                     props.selectText("invoiceTitle");

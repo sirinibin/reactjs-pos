@@ -64,20 +64,18 @@ const Preview = forwardRef((props, ref) => {
                 if (model.store_id) {
                     await getStore(model.store_id);
 
+                    if (model.store.code === "MBDI") {
+                        InvoiceBackground = MBDIInvoiceBackground;
+                    } else if (model.store.code === "LGK-SIMULATION" || model.store.code === "LGK" || model.store.code === "PH2") {
+                        InvoiceBackground = LGKInvoiceBackground;
+                    }
 
 
-
-                    if (whatsAppShare) {
-                        if (model.store.code === "MBDI") {
-                            InvoiceBackground = MBDIInvoiceBackground;
-                        } else if (model.store.code === "LGK-SIMULATION" || model.store.code === "LGK" || model.store.code === "PH2") {
-                            InvoiceBackground = LGKInvoiceBackground;
-                        }
-
+                    if (InvoiceBackground) {
                         setInvoiceBackground(InvoiceBackground);
-                        fontSizes[modelName + "_storeHeader"] = {
-                            "visible": false,
-                        }
+                        /* fontSizes[modelName + "_storeHeader"] = {
+                             "visible": false,
+                         }*/
                         if (fontSizes[modelName + "_marginTop"].value === 0) {
                             fontSizes[modelName + "_marginTop"] = {
                                 "value": 153,
