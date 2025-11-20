@@ -23,6 +23,7 @@ import PurchaseIndex from './purchase/index.js';
 import PurchaseReturnIndex from './purchase_return/index.js';
 import VendorIndex from './vendor/index.js';
 import StoreIndex from './store/index.js';
+import WarehouseIndex from './warehouse/index.js';
 import CustomerIndex from './customer/index.js';
 import ProductIndex from './product/index.js';
 import ProductCategoryIndex from './product_category/index.js';
@@ -361,6 +362,20 @@ function Dashboard() {
                     </div>
                 </div>
             </Route>
+
+            <Route path="/dashboard/warehouses">
+                <div className="wrapper">
+                    <Sidebar isSidebarOpen={isSidebarOpen} parentCallback={handleToggle} />
+                    <div className="main">
+                        <Topbar parentCallback={handleToggle} />
+                        <main className="content">
+                            <WarehouseIndex showToastMessage={showToastMessage} />
+                        </main>
+                        <Footer />
+                    </div>
+                </div>
+            </Route>
+
             <Route path="/dashboard/customers">
                 <div className="wrapper">
                     <Sidebar isSidebarOpen={isSidebarOpen} parentCallback={handleToggle} />

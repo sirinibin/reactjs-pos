@@ -89,6 +89,10 @@ function App() {
             <Dashboard />
           </Route>
 
+          <Route path="/dashboard/warehouses">
+            <Dashboard />
+          </Route>
+
           <Route path="/dashboard/customers">
             <Dashboard />
           </Route>
