@@ -424,6 +424,7 @@ const QuotationSalesReturnHistory = forwardRef((props, ref) => {
         { key: "quotation_code", label: "Qtn Sales ID", fieldName: "quotation_code", visible: true },
         { key: "customer_name", label: "Customer", fieldName: "customer_name", visible: true },
         { key: "quantity", label: "Qty", fieldName: "quantity", visible: true },
+        { key: "warehouse_code", label: "Stock Added To", fieldName: "warehouse_code", visible: true },
         { key: "unit_price", label: "Unit Price(without VAT)", fieldName: "unit_price", visible: true },
         { key: "unit_price_with_vat", label: "Unit Price(with VAT)", fieldName: "unit_price_with_vat", visible: true },
         { key: "discount", label: "Discount(without VAT)", fieldName: "discount", visible: true },
@@ -1169,7 +1170,8 @@ const QuotationSalesReturnHistory = forwardRef((props, ref) => {
                                                                     col.key === "vat_price" ||
                                                                     col.key === "net_price" ||
                                                                     col.key === "profit" ||
-                                                                    col.key === "loss"
+                                                                    col.key === "loss" ||
+                                                                    col.key === "warehouse_code"
                                                                 ) &&
                                                                     <th>
                                                                         <input
@@ -1553,7 +1555,8 @@ const QuotationSalesReturnHistory = forwardRef((props, ref) => {
                                                                             col.key === "vat_price" ||
                                                                             col.key === "net_price" ||
                                                                             col.key === "profit" ||
-                                                                            col.key === "loss"
+                                                                            col.key === "loss" ||
+                                                                            col.key === "warehouse_code"
 
                                                                         ) &&
                                                                             <td style={{ width: "auto", whiteSpace: "nowrap" }} >

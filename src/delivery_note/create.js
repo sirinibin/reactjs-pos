@@ -881,7 +881,7 @@ const DeliveryNoteCreate = forwardRef((props, ref) => {
       },
     };
 
-    let Select = `select=id,rack,allow_duplicates,additional_keywords,search_label,set.name,item_code,prefix_part_number,country_name,brand_name,part_number,name,unit,name_in_arabic,product_stores.${localStorage.getItem('store_id')}.purchase_unit_price,product_stores.${localStorage.getItem('store_id')}.purchase_unit_price_with_vat,product_stores.${localStorage.getItem('store_id')}.retail_unit_price,product_stores.${localStorage.getItem('store_id')}.retail_unit_price_with_vat,product_stores.${localStorage.getItem('store_id')}.stock`;
+    let Select = `select=id,rack,allow_duplicates,additional_keywords,search_label,set.name,item_code,prefix_part_number,country_name,brand_name,part_number,name,unit,name_in_arabic,product_stores.${localStorage.getItem('store_id')}.purchase_unit_price,product_stores.${localStorage.getItem('store_id')}.purchase_unit_price_with_vat,product_stores.${localStorage.getItem('store_id')}.retail_unit_price,product_stores.${localStorage.getItem('store_id')}.retail_unit_price_with_vat,product_stores.${localStorage.getItem('store_id')}.stock,product_stores.${localStorage.getItem('store_id')}.warehouse_stocks`;
 
     // Fetch page 1 and page 2 in parallel
     const urls = [
@@ -1503,12 +1503,12 @@ const DeliveryNoteCreate = forwardRef((props, ref) => {
     { key: "select", label: "Select", fieldName: "select", width: 3, visible: true },
     { key: "part_number", label: "Part Number", fieldName: "part_number", width: 12, visible: true },
     { key: "name", label: "Name", fieldName: "name", width: 26, visible: true },
-    { key: "unit_price", label: "S.Unit Price", fieldName: "unit_price", width: 12, visible: true },
-    { key: "stock", label: "Stock", fieldName: "stock", width: 5, visible: true },
+    { key: "unit_price", label: "S.Unit Price", fieldName: "unit_price", width: 10, visible: true },
+    { key: "stock", label: "Stock", fieldName: "stock", width: 13, visible: true },
     { key: "photos", label: "Photos", fieldName: "photos", width: 5, visible: true },
-    { key: "brand", label: "Brand", fieldName: "brand", width: 10, visible: true },
-    { key: "purchase_price", label: "P.Unit Price", fieldName: "purchase_price", width: 12, visible: true },
-    { key: "country", label: "Country", fieldName: "country", width: 10, visible: true },
+    { key: "brand", label: "Brand", fieldName: "brand", width: 8, visible: true },
+    { key: "purchase_price", label: "P.Unit Price", fieldName: "purchase_price", width: 10, visible: true },
+    { key: "country", label: "Country", fieldName: "country", width: 8, visible: true },
     { key: "rack", label: "Rack", fieldName: "rack", width: 5, visible: true },
   ], []);
 
@@ -2244,7 +2244,29 @@ const DeliveryNoteCreate = forwardRef((props, ref) => {
                                   }
                                   {col.key === "stock" &&
                                     <div style={{ ...columnStyle, width: getColumnWidth(col) }}>
-                                      {option.product_stores?.[localStorage.getItem("store_id")]?.stock ?? ''}
+                                      {(() => {
+                                        const storeId = localStorage.getItem("store_id");
+                                        const productStore = option.product_stores?.[storeId];
+                                        const totalStock = productStore?.stock ?? 0;
+                                        const warehouseStocks = productStore?.warehouse_stocks ?? {};
+
+                                        // Build warehouse stock details string
+                                        const warehouseDetails = Object.entries(warehouseStocks)
+                                          .map(([key, value]) => {
+                                            // Format warehouse name (capitalize and replace underscores)
+                                            let name = key === "main_store" ? "MS" : key.replace(/^w/, "W").toUpperCase();
+                                            return `${name}:${value}`;
+                                          })
+                                          .join(", ");
+
+                                        // Final display string
+                                        return (
+                                          <span>
+                                            {totalStock}
+                                            {warehouseDetails ? ` (${warehouseDetails})` : ""}
+                                          </span>
+                                        );
+                                      })()}
                                     </div>
                                   }
                                   {col.key === "photos" &&

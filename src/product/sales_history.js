@@ -1,4 +1,4 @@
-import React, { useState, useRef, forwardRef, useImperativeHandle, useEffect, useMemo } from "react";
+import React, { useState, useRef, forwardRef, useImperativeHandle, useEffect, useMemo, useCallback } from "react";
 
 import { format } from "date-fns";
 import DatePicker from "react-datepicker";
@@ -23,10 +23,8 @@ const SalesHistory = forwardRef((props, ref) => {
             product = model;
             setProduct({ ...product });
             if (selectedCustomers?.length > 0) {
-                setSelectedCustomers(selectedCustomers)
+                // setSelectedCustomers(selectedCustomers)
                 searchByMultipleValuesField("customer_id", selectedCustomers);
-            } else {
-                list();
             }
 
             getStore(localStorage.getItem("store_id"));
@@ -34,6 +32,8 @@ const SalesHistory = forwardRef((props, ref) => {
         },
 
     }));
+
+    let [page, setPage] = useState(1);
 
 
     let [store, setStore] = useState({});
@@ -86,7 +86,7 @@ const SalesHistory = forwardRef((props, ref) => {
 
     //pagination
     let [pageSize, setPageSize] = useState(5);
-    let [page, setPage] = useState(1);
+
     const [totalPages, setTotalPages] = useState(0);
     const [totalItems, setTotalItems] = useState(1);
     const [currentPageItemsCount, setCurrentPageItemsCount] = useState(0);
@@ -113,12 +113,33 @@ const SalesHistory = forwardRef((props, ref) => {
             .join("&");
     }
 
+    // Add this state near line 101 (after other useState declarations)
+    const [inputValues, setInputValues] = useState({});
+
     function searchByFieldValue(field, value) {
+        // ✅ Update input value immediately in separate state (lightweight)
+        setInputValues(prev => ({
+            ...prev,
+            [field]: value
+        }));
+
         searchParams[field] = value;
 
         page = 1;
         setPage(page);
         list();
+
+        // ✅ Clear existing timer
+        if (timerRef.current) {
+            clearTimeout(timerRef.current);
+        }
+
+        // ✅ Debounce the list() call
+        timerRef.current = setTimeout(() => {
+            page = 1;
+            setPage(page);
+            list();
+        }, 800); // Wait 800ms after user stops typing
     }
 
 
@@ -140,8 +161,6 @@ const SalesHistory = forwardRef((props, ref) => {
         } else {
             value = "";
         }
-
-
 
         if (field === "date_str") {
             setDateValue(value);
@@ -166,8 +185,6 @@ const SalesHistory = forwardRef((props, ref) => {
             searchParams[field] = value;
         }
         if (field === "created_at_from") {
-
-
             searchParams["created_at"] = "";
             searchParams[field] = value;
         } else if (field === "created_at_to") {
@@ -183,8 +200,9 @@ const SalesHistory = forwardRef((props, ref) => {
         list();
     }
 
+    const [statsOpen, setStatsOpen] = useState(false);
 
-    function list() {
+    const list = useCallback(() => {
         const requestOptions = {
             method: "GET",
             headers: {
@@ -263,17 +281,16 @@ const SalesHistory = forwardRef((props, ref) => {
                 setOffset((page - 1) * pageSize);
                 setCurrentPageItemsCount(data.result.length);
 
-                totalSales = data.meta.total_sales;
-                setTotalSales(totalSales);
+                //totalSales = data.meta.total_sales;
+                setTotalSales(data.meta.total_sales);
 
-                totalProfit = data.meta.total_profit;
-                setTotalProfit(totalProfit);
+                //totalProfit = data.meta.total_profit;
+                setTotalProfit(data.meta.total_profit);
+                //totalLoss = data.meta.total_loss;
+                setTotalLoss(data.meta.total_loss);
 
-                totalLoss = data.meta.total_loss;
-                setTotalLoss(totalLoss);
-
-                totalVat = data.meta.total_vat;
-                setTotalVat(totalVat);
+                //totalVat = data.meta.total_vat;
+                setTotalVat(data.meta.total_vat);
 
             })
             .catch((error) => {
@@ -281,7 +298,14 @@ const SalesHistory = forwardRef((props, ref) => {
                 setIsRefreshInProcess(false);
                 console.log(error);
             });
-    }
+    }, [page, pageSize, product, sortField, sortProduct, searchParams, statsOpen]);
+
+
+    useEffect(() => {
+        if (page) {
+            list();
+        }
+    }, [page, list, product]);
 
     function sort(field) {
         sortField = field;
@@ -345,18 +369,24 @@ const SalesHistory = forwardRef((props, ref) => {
             })
             .join(",");
 
-        page = 1;
-        setPage(page);
+        //page = 1;
+        //setPage(page);
 
-        list();
+        // list();
     }
+
+    const [selectedCustomers, setSelectedCustomers] = useState([]);
+
+    useEffect(() => {
+        setPage(1);
+    }, [searchParams]);
 
     const handleUpdated = () => {
         list();
     };
 
     const [customerOptions, setCustomerOptions] = useState([]);
-    const [selectedCustomers, setSelectedCustomers] = useState([]);
+
 
     async function suggestCustomers(searchTerm) {
         console.log("Inside handle suggestCustomers");
@@ -389,7 +419,6 @@ const SalesHistory = forwardRef((props, ref) => {
             requestOptions
         );
         let data = await result.json();
-
         setCustomerOptions(data.result);
     }
 
@@ -420,6 +449,7 @@ const SalesHistory = forwardRef((props, ref) => {
         { key: "order_code", label: "Sales ID", fieldName: "order_code", visible: true },
         { key: "customer_name", label: "Customer", fieldName: "customer_name", visible: true },
         { key: "quantity", label: "Qty", fieldName: "quantity", visible: true },
+        { key: "warehouse_code", label: "Stock Removed From", fieldName: "warehouse_code", visible: true },
         { key: "unit_price", label: "Unit Price(without VAT)", fieldName: "unit_price", visible: true },
         { key: "unit_price_with_vat", label: "Unit Price(with VAT)", fieldName: "unit_price_with_vat", visible: true },
         { key: "discount", label: "Discount(without VAT)", fieldName: "discount", visible: true },
@@ -453,23 +483,11 @@ const SalesHistory = forwardRef((props, ref) => {
             }
         }
 
-        /*
-        for (let i = 0; i < saved.length; i++) {
-            const savedCol = defaultColumns.find(col => col.fieldName === saved[i].fieldName);
- 
-            missingOrUpdated = !savedCol || savedCol.label !== saved[i].label || savedCol.key !== saved[i].key;
- 
-            if (missingOrUpdated) {
-                break
-            }
-        }*/
 
         if (missingOrUpdated) {
             localStorage.setItem("sales_history_table_settings", JSON.stringify(defaultColumns));
             setColumns(defaultColumns);
         }
-
-        //2nd
 
     }, [defaultColumns]);
 
@@ -481,12 +499,20 @@ const SalesHistory = forwardRef((props, ref) => {
         setSuccessMessage("Successfully restored to default settings!")
     }
 
+
     const handleToggleColumn = (index) => {
         const updated = [...columns];
         updated[index].visible = !updated[index].visible;
         setColumns(updated);
         localStorage.setItem("sales_history_table_settings", JSON.stringify(updated));
     };
+    /*
+    const handleToggleColumn = useCallback((index) => {
+        const updated = [...columns];
+        updated[index].visible = !updated[index].visible;
+        setColumns(updated);
+        localStorage.setItem("sales_history_table_settings", JSON.stringify(updated));
+    }, [columns]);*/
 
     const onDragEnd = (result) => {
         if (!result.destination) return;
@@ -497,7 +523,7 @@ const SalesHistory = forwardRef((props, ref) => {
         localStorage.setItem("sales_history_table_settings", JSON.stringify(reordered));
     };
 
-    const [statsOpen, setStatsOpen] = useState(false);
+
 
     const handleSummaryToggle = (isOpen) => {
         setStatsOpen(isOpen);
@@ -1172,6 +1198,7 @@ const SalesHistory = forwardRef((props, ref) => {
                                                                             }
                                                                         }}
                                                                         onInputChange={(searchTerm, e) => {
+
                                                                             if (timerRef.current) clearTimeout(timerRef.current);
                                                                             timerRef.current = setTimeout(() => {
                                                                                 suggestCustomers(searchTerm);
@@ -1190,13 +1217,15 @@ const SalesHistory = forwardRef((props, ref) => {
                                                                     col.key === "vat_price" ||
                                                                     col.key === "net_price" ||
                                                                     col.key === "profit" ||
-                                                                    col.key === "loss"
+                                                                    col.key === "loss" ||
+                                                                    col.key === "warehouse_code"
                                                                 ) &&
                                                                     <th>
                                                                         <input
                                                                             type="text"
                                                                             id={`sales_history_search_by_${col.key}`}
                                                                             name={`sales_history_search_by_${col.key}`}
+                                                                            value={inputValues[col.key] || ""} // ✅ ADD THIS LINE - makes input controlled
                                                                             onChange={(e) => {
                                                                                 const value = e.target.value;
                                                                                 if (typeof value === "number") {
@@ -1544,13 +1573,17 @@ const SalesHistory = forwardRef((props, ref) => {
                                                                             col.key === "vat_price" ||
                                                                             col.key === "net_price" ||
                                                                             col.key === "profit" ||
-                                                                            col.key === "loss"
+                                                                            col.key === "loss" ||
+                                                                            col.key === "warehouse_code"
 
                                                                         ) &&
                                                                             <td style={{ width: "auto", whiteSpace: "nowrap" }} >
-                                                                                {history[col.key] && typeof history[col.key] === "number" ?
-                                                                                    <Amount amount={trimTo2Decimals(history[col.key])} /> : history[col.key]
-                                                                                }
+                                                                                {col.key === "warehouse_code" ? (
+                                                                                    history[col.key] || "Main Store"
+                                                                                ) : (
+                                                                                    history[col.key] && typeof history[col.key] === "number" ?
+                                                                                        <Amount amount={trimTo2Decimals(history[col.key])} /> : history[col.key]
+                                                                                )}
                                                                             </td>}
                                                                         {col.key === "date" && <td style={{ width: "auto", whiteSpace: "nowrap" }}>
                                                                             {format(

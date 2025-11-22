@@ -429,6 +429,7 @@ const QuotationHistory = forwardRef((props, ref) => {
         { key: "customer_name", label: "Customer", fieldName: "customer_name", visible: true },
         { key: "type", label: "Type", fieldName: "type", visible: true },
         { key: "quantity", label: "Qty", fieldName: "quantity", visible: true },
+        { key: "warehouse_code", label: "Stock Removed From", fieldName: "warehouse_code", visible: true },
         { key: "unit_price", label: "Unit Price(without VAT)", fieldName: "unit_price", visible: true },
         { key: "unit_price_with_vat", label: "Unit Price(with VAT)", fieldName: "unit_price_with_vat", visible: true },
         { key: "discount", label: "Discount(without VAT)", fieldName: "discount", visible: true },
@@ -808,7 +809,6 @@ const QuotationHistory = forwardRef((props, ref) => {
                                                         className="bi bi-gear-fill"
                                                         style={{ fontSize: "1.2rem" }}
                                                         title="Table Settings"
-
                                                     />
                                                 </button>
                                             </div>
@@ -836,7 +836,7 @@ const QuotationHistory = forwardRef((props, ref) => {
                                             <table className="table table-striped table-sm table-bordered">
                                                 <thead>
                                                     <tr className="text-center">
-                                                        {columns.filter(c => c.visible).map((col) => {
+                                                        {columns.filter(c => c.visible && (c.key !== "warehouse_code" || selectedType === "invoice")).map((col) => {
                                                             return (<>
                                                                 {col.key && <th>
                                                                     <b
@@ -1175,7 +1175,7 @@ const QuotationHistory = forwardRef((props, ref) => {
 
                                                 <thead>
                                                     <tr className="text-center">
-                                                        {columns.filter(c => c.visible).map((col) => {
+                                                        {columns.filter(c => c.visible && (c.key !== "warehouse_code" || selectedType === "invoice")).map((col) => {
                                                             return (<>
                                                                 {(col.key === "customer_name") && <th>
                                                                     <Typeahead
@@ -1233,7 +1233,8 @@ const QuotationHistory = forwardRef((props, ref) => {
                                                                     col.key === "vat_price" ||
                                                                     col.key === "net_price" ||
                                                                     col.key === "profit" ||
-                                                                    col.key === "loss"
+                                                                    col.key === "loss" ||
+                                                                    col.key === "warehouse_code"
                                                                 ) &&
                                                                     <th>
                                                                         <input
@@ -1591,7 +1592,7 @@ const QuotationHistory = forwardRef((props, ref) => {
                                                     {historyList &&
                                                         historyList.map((history) => (
                                                             <tr key={history.id}>
-                                                                {columns.filter(c => c.visible).map((col) => {
+                                                                {columns.filter(c => c.visible && (c.key !== "warehouse_code" || selectedType === "invoice")).map((col) => {
                                                                     return (<>
                                                                         {(col.key === "customer_name") && <td style={{ width: "auto", whiteSpace: "nowrap" }} className="text-start" >
                                                                             {history.customer_name && <span style={{ cursor: "pointer", color: "blue" }} onClick={() => {
@@ -1617,12 +1618,17 @@ const QuotationHistory = forwardRef((props, ref) => {
                                                                             col.key === "vat_price" ||
                                                                             col.key === "net_price" ||
                                                                             col.key === "profit" ||
-                                                                            col.key === "loss"
+                                                                            col.key === "loss" ||
+                                                                            col.key === "warehouse_code"
 
                                                                         ) &&
                                                                             <td style={{ width: "auto", whiteSpace: "nowrap" }} >
-                                                                                {history[col.key] && typeof history[col.key] === "number" ?
-                                                                                    <Amount amount={trimTo2Decimals(history[col.key])} /> : history[col.key]
+                                                                                {col.key === "warehouse_code" ? (
+                                                                                    history[col.key] || "Main Store"
+                                                                                ) : (
+                                                                                    history[col.key] && typeof history[col.key] === "number" ?
+                                                                                        <Amount amount={trimTo2Decimals(history[col.key])} /> : history[col.key]
+                                                                                )
                                                                                 }
                                                                             </td>}
                                                                         {col.key === "date" && <td style={{ width: "auto", whiteSpace: "nowrap" }}>

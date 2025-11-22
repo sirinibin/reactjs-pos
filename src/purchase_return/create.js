@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, forwardRef, useImperativeHandle } from "react";
+import React, { useState, useEffect, useRef, forwardRef, useImperativeHandle, useCallback } from "react";
 import { Modal, Button } from "react-bootstrap";
 import StoreCreate from "../store/create.js";
 import VendorCreate from "../vendor/create.js";
@@ -686,6 +686,8 @@ const PurchaseReturnedCreate = forwardRef((props, ref) => {
                 unit_discount_percent: selectedProducts[i].unit_discount_percent ? parseFloat(selectedProducts[i].unit_discount_percent) : 0,
                 unit_discount_with_vat: selectedProducts[i].unit_discount ? parseFloat(selectedProducts[i].unit_discount_with_vat) : 0,
                 unit_discount_percent_with_vat: selectedProducts[i].unit_discount_percent ? parseFloat(selectedProducts[i].unit_discount_percent_with_vat) : 0,
+                warehouse_id: selectedProducts[i].warehouse_id ? selectedProducts[i].warehouse_id : null,
+                warehouse_code: selectedProducts[i].warehouse_code ? selectedProducts[i].warehouse_code : null,
             });
         }
 
@@ -1846,6 +1848,68 @@ async function reCalculate(productIndex) {
     };
 
 
+    const [warehouseList, setWarehouseList] = useState([]);
+    const [searchParams, setSearchParams] = useState({});
+
+    const loadWarehouses = useCallback(() => {
+        const requestOptions = {
+            method: "GET",
+            headers: {
+                "Content-Type": "application/json",
+                Authorization: localStorage.getItem("access_token"),
+            },
+        };
+        let Select =
+            "select=id,name,code,created_by_name,created_at";
+
+        const d = new Date();
+        let diff = d.getTimezoneOffset();
+        searchParams["timezone_offset"] = parseFloat(diff / 60);
+
+        if (localStorage.getItem("store_id")) {
+            searchParams.store_id = localStorage.getItem("store_id");
+        }
+
+        setSearchParams(searchParams);
+        let queryParams = ObjectToSearchQueryParams(searchParams);
+        if (queryParams !== "") {
+            queryParams = "&" + queryParams;
+        }
+
+        fetch(
+            "/v1/warehouse?" +
+            Select +
+            queryParams +
+            "&sort=name" +
+            "&page=1" +
+            "&limit=100",
+            requestOptions
+        )
+            .then(async (response) => {
+                const isJson = response.headers
+                    .get("content-type")
+                    ?.includes("application/json");
+                const data = isJson && (await response.json());
+
+                // check for error response
+                if (!response.ok) {
+                    const error = data && data.errors;
+                    return Promise.reject(error);
+                }
+
+
+                setWarehouseList(data.result);
+            })
+            .catch((error) => {
+                console.log(error);
+            });
+    }, [searchParams]);
+
+    useEffect(() => {
+        loadWarehouses();
+    }, [loadWarehouses]);
+
+
     return (
         <>
             {showReferenceUpdateForm && <>
@@ -2161,6 +2225,7 @@ async function reCalculate(productIndex) {
                                         <th style={{ minWidth: "300px" }} >Name</th>
                                         <th>Info</th>
                                         <th>Qty</th>
+                                        <th>Remove Stock From</th>
                                         <th>Unit Price(without VAT)</th>
                                         <th>Unit Price(with VAT)</th>
                                         <th >Unit Disc.(without VAT)</th>
@@ -2459,6 +2524,48 @@ async function reCalculate(productIndex) {
                                                         ></i>
                                                     )}
                                                 </div>
+                                            </td>
+                                            <td style={{
+                                                verticalAlign: 'middle',
+                                                padding: '0.25rem',
+                                                whiteSpace: 'nowrap',
+                                                width: 'auto',
+                                                position: 'relative',
+                                            }} >
+                                                <select
+                                                    id={`sales_product_warehouse_${index}`}
+                                                    name={`sales_product_warehouse_${index}`}
+                                                    className="form-control"
+                                                    value={selectedProducts[index].warehouse_id || "main_store"}
+                                                    onChange={(e) => {
+                                                        const selectedValue = e.target.value;
+
+                                                        if (selectedValue === "main_store") {
+                                                            selectedProducts[index].warehouse_id = null;
+                                                            selectedProducts[index].warehouse_code = "";
+                                                        } else {
+                                                            const selectedWarehouse = warehouseList.find(w => w.id === selectedValue);
+                                                            if (selectedWarehouse) {
+                                                                selectedProducts[index].warehouse_id = selectedWarehouse.id;
+                                                                selectedProducts[index].warehouse_code = selectedWarehouse.code;
+                                                            }
+                                                        }
+
+                                                        setSelectedProducts([...selectedProducts]);
+                                                    }}
+                                                >
+                                                    <option value="main_store">Main Store</option>
+                                                    {warehouseList.map((warehouse) => (
+                                                        <option key={warehouse.id} value={warehouse.id}>
+                                                            {warehouse.name} ({warehouse.code})
+                                                        </option>
+                                                    ))}
+                                                </select>
+                                                {errors[`warehouse_${index}`] && (
+                                                    <div style={{ color: "red" }}>
+                                                        {errors[`warehouse_${index}`]}
+                                                    </div>
+                                                )}
                                             </td>
                                             <td style={{ verticalAlign: 'middle', padding: '0.25rem' }}>
                                                 <div className="d-flex align-items-center" style={{ minWidth: 0 }}>
