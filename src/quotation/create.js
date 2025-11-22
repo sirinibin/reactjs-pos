@@ -2160,6 +2160,8 @@ const QuotationCreate = forwardRef((props, ref) => {
     if (product.product_stores && product.product_stores[localStorage.getItem("store_id")]?.stock) {
       stock = product.product_stores[localStorage.getItem("store_id")].stock;
       selectedProducts[i].stock = stock;
+      selectedProducts[i].warehouse_stocks = product.product_stores[localStorage.getItem("store_id")]?.warehouse_stocks ? product.product_stores[localStorage.getItem("store_id")]?.warehouse_stocks : {};
+
       setSelectedProducts([...selectedProducts]);
     }
 
@@ -2169,10 +2171,29 @@ const QuotationCreate = forwardRef((props, ref) => {
         if (formData.id) {
           oldQty = oldProducts[j].quantity;
           // alert(oldQty)
+
+          /*
+          if (!selectedProducts[i].warehouse_stocks) {
+            selectedProducts[i].warehouse_stocks = {};
+          }
+
+          if (oldProducts[j].warehouse_code) {
+            if (!selectedProducts[i].warehouse_stocks[oldProducts[j].warehouse_code]) {
+              selectedProducts[i].warehouse_stocks[oldProducts[j].warehouse_code] = 0;
+            }
+
+            selectedProducts[i].warehouse_stocks[oldProducts[j].warehouse_code] += oldQty;
+          } else {
+            selectedProducts[i].warehouse_stocks["main_store"] = selectedProducts[i].stock;
+          }*/
+
+
         }
         break;
       }
     }
+
+
 
 
 
@@ -3683,14 +3704,45 @@ const QuotationCreate = forwardRef((props, ref) => {
                             )}
                           </div>
                         </td>
-                        <td style={{
-                          verticalAlign: 'middle',
-                          padding: '0.25rem',
-                          whiteSpace: 'nowrap',
-                          width: 'auto',
-                          position: 'relative',
-                        }} >
-                          {selectedProducts[index].stock}
+                        <td
+                          style={{
+                            verticalAlign: 'middle',
+                            padding: '0.25rem',
+                            whiteSpace: 'nowrap',
+                            width: 'auto',
+                            position: 'relative',
+                          }}
+                        >
+                          <OverlayTrigger
+                            placement="top"
+                            overlay={
+                              <Tooltip id={`stock-tooltip-${index}`}>
+                                {(() => {
+                                  const warehouseStocks = selectedProducts[index].warehouse_stocks || {};
+                                  const orderedEntries = [];
+                                  if (warehouseStocks.hasOwnProperty("main_store")) {
+                                    orderedEntries.push(["main_store", warehouseStocks["main_store"]]);
+                                  }
+                                  Object.entries(warehouseStocks).forEach(([key, value]) => {
+                                    if (key !== "main_store") {
+                                      orderedEntries.push([key, value]);
+                                    }
+                                  });
+                                  const details = orderedEntries
+                                    .map(([key, value]) => {
+                                      let name = key === "main_store" ? "Main Store" : key.replace(/^wh/, "WH").toUpperCase();
+                                      return `${name}: ${value}`;
+                                    })
+                                    .join(", ");
+                                  return details ? `(${details})` : "(Main Store: " + selectedProducts[index].stock + ")";
+                                })()}
+                              </Tooltip>
+                            }
+                          >
+                            <span style={{ cursor: "pointer", textDecoration: "underline dotted" }}>
+                              {selectedProducts[index].stock}
+                            </span>
+                          </OverlayTrigger>
                         </td>
 
                         {formData.type === "invoice" && <td style={{

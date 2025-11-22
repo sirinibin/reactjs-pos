@@ -659,6 +659,7 @@ const ProductHistory = forwardRef((props, ref) => {
         { key: "customer_name", label: "Customer", fieldName: "customer_name", visible: true },
         { key: "vendor_name", label: "Vendor", fieldName: "vendor_name", visible: true },
         { key: "stock", label: "Stock", fieldName: "stock", visible: true },
+        { key: "warehouse_code", label: "Main Store/Warehouse", fieldName: "warehouse_code", visible: true },
         { key: "quantity", label: "Qty", fieldName: "quantity", visible: true },
         { key: "unit_price", label: "Unit Price(without VAT)", fieldName: "unit_price", visible: true },
         { key: "unit_price_with_vat", label: "Unit Price(with VAT)", fieldName: "unit_price_with_vat", visible: true },
@@ -1538,7 +1539,8 @@ const ProductHistory = forwardRef((props, ref) => {
                                                                     col.key === "vat_price" ||
                                                                     col.key === "net_price" ||
                                                                     col.key === "profit" ||
-                                                                    col.key === "loss"
+                                                                    col.key === "loss" ||
+                                                                    col.key === "warehouse_code"
                                                                 ) &&
                                                                     <th>
                                                                         <input
@@ -1913,6 +1915,30 @@ const ProductHistory = forwardRef((props, ref) => {
                                                                                     <Amount amount={trimTo2Decimals(history[col.key])} /> : history[col.key]
                                                                                 }
                                                                             </td>}
+                                                                        {col.key === "warehouse_code" &&
+                                                                            <td style={{ width: "auto", whiteSpace: "nowrap" }}>
+                                                                                {(() => {
+                                                                                    const type = history.reference_type;
+                                                                                    const warehouse = history["warehouse_code"] || "Main Store";
+                                                                                    if (
+                                                                                        type === "sales" ||
+                                                                                        type === "purchase_return" ||
+                                                                                        type === "quotation_sales"
+                                                                                    ) {
+                                                                                        return `Stock Removed from ${warehouse}`;
+                                                                                    }
+                                                                                    if (
+                                                                                        type === "sales_return" ||
+                                                                                        type === "purchase" ||
+                                                                                        type === "quotation_sales_return"
+                                                                                    ) {
+                                                                                        return `Stock Added to ${warehouse}`;
+                                                                                    }
+                                                                                    // For any other type, display nothing
+                                                                                    return "";
+                                                                                })()}
+                                                                            </td>
+                                                                        }
                                                                         {col.key === "date" && <td style={{ width: "auto", whiteSpace: "nowrap" }}>
                                                                             {format(
                                                                                 new Date(history.date),
