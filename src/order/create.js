@@ -2919,11 +2919,17 @@ const OrderCreate = forwardRef((props, ref) => {
 
 
 
-    const handleSelectedProducts = (selected, selectedCustomers, modelName, modelID, modelCode, remarks, model) => {
+    const handleSelectedProducts = async (selected, selectedCustomers, modelName, modelID, modelCode, remarks, model) => {
         console.log("Selected Products:", selected);
         let addedCount = 0;
         for (var i = 0; i < selected.length; i++) {
-            if (addProductFromQuotation(selected[i])) {
+            if (modelName === "delivery_note") {
+                // alert("ok")
+                let p = await getProduct(selected[i].product_id);
+                addProduct(p);
+                addedCount++;
+
+            } else if (addProductFromQuotation(selected[i])) {
                 addedCount++;
             }
         }

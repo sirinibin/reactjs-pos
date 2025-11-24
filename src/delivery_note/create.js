@@ -1414,7 +1414,7 @@ const DeliveryNoteCreate = forwardRef((props, ref) => {
   const handleSendSelected = () => {
     const newlySelectedProducts = selectedProducts.filter((p) => selectedIds.includes(p.product_id));
     if (props.onSelectProducts) {
-      props.onSelectProducts(newlySelectedProducts, selectedCustomers); // Send to parent
+      props.onSelectProducts(newlySelectedProducts, selectedCustomers, "delivery_note"); // Send to parent
     }
 
     handleClose();
