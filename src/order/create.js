@@ -1979,6 +1979,12 @@ const OrderCreate = forwardRef((props, ref) => {
             product.id = product.product_id
         }
 
+        let qty = 1;
+
+        if (product.quantity) {
+            qty = product.quantity;
+        }
+
         console.log(product);
         let alreadyAdded = isProductAdded(product.id);
         let index = getProductIndex(product.id);
@@ -1990,7 +1996,7 @@ const OrderCreate = forwardRef((props, ref) => {
                 prefix_part_number: product.prefix_part_number,
                 part_number: product.part_number,
                 name: product.name,
-                quantity: 1,
+                quantity: qty,
                 product_stores: product.product_stores,
                 unit_price: product.product_stores[localStorage.getItem("store_id")]?.retail_unit_price ? product.product_stores[formData.store_id]?.retail_unit_price : 0,
                 unit_price_with_vat: product.product_stores[localStorage.getItem("store_id")]?.retail_unit_price_with_vat ? product.product_stores[formData.store_id]?.retail_unit_price_with_vat : 0,
@@ -2926,6 +2932,7 @@ const OrderCreate = forwardRef((props, ref) => {
             if (modelName === "delivery_note") {
                 // alert("ok")
                 let p = await getProduct(selected[i].product_id);
+                p.quantity = selected[i].quantity;
                 addProduct(p);
                 addedCount++;
 
