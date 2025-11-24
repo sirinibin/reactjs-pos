@@ -1376,21 +1376,50 @@ const Preview = forwardRef((props, ref) => {
     }, [getFileName, model, phone, modelName, formatPhoneForWhatsApp]);*/
 
     const [showWhatsAppMessageModal, setShowWhatsAppMessageModal] = useState(false);
+    /* const handleChoice = ({ type, number, message }) => {
+         let whatsappUrl = "";
+         if (type === "number" && number) {
+             whatsappUrl = `https://wa.me/${number}?text=${encodeURIComponent(message)}`;
+         } else if (type === "contacts") {
+             whatsappUrl = `https://wa.me?text=${encodeURIComponent(message)}`;
+         }
+ 
+         if (timerRef.current) clearTimeout(timerRef.current);
+         timerRef.current = setTimeout(() => {
+             handleClose();
+             window.open(whatsappUrl, "_blank");
+         }, 100);
+ 
+     };*/
+
     const handleChoice = ({ type, number, message }) => {
         let whatsappUrl = "";
+
         if (type === "number" && number) {
-            whatsappUrl = `https://wa.me/${number}?text=${encodeURIComponent(message)}`;
+
+            // Detect if Windows desktop (browser)
+            const isWindows = navigator.userAgent.toLowerCase().includes("windows");
+
+            if (isWindows) {
+                // FIX: Use direct WhatsApp Web URL for Windows
+                whatsappUrl = `https://web.whatsapp.com/send?phone=${number}&text=${encodeURIComponent(message)}`;
+            } else {
+                // For macOS, iOS, Android
+                whatsappUrl = `https://wa.me/${number}?text=${encodeURIComponent(message)}`;
+            }
+
         } else if (type === "contacts") {
             whatsappUrl = `https://wa.me?text=${encodeURIComponent(message)}`;
         }
 
         if (timerRef.current) clearTimeout(timerRef.current);
+
         timerRef.current = setTimeout(() => {
             handleClose();
             window.open(whatsappUrl, "_blank");
         }, 100);
-
     };
+
 
 
     const [showSlider, setShowSlider] = useState(false);
