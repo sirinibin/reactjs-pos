@@ -1923,14 +1923,16 @@ const ProductHistory = forwardRef((props, ref) => {
                                                                                     if (
                                                                                         type === "sales" ||
                                                                                         type === "purchase_return" ||
-                                                                                        type === "quotation_sales"
+                                                                                        type === "quotation_sales" ||
+                                                                                        type === "stock_adjustment_by_removing"
                                                                                     ) {
                                                                                         return `Stock Removed from ${warehouse}`;
                                                                                     }
                                                                                     if (
                                                                                         type === "sales_return" ||
                                                                                         type === "purchase" ||
-                                                                                        type === "quotation_sales_return"
+                                                                                        type === "quotation_sales_return" ||
+                                                                                        type === "stock_adjustment_by_adding"
                                                                                     ) {
                                                                                         return `Stock Added to ${warehouse}`;
                                                                                     }

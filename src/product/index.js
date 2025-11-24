@@ -31,6 +31,7 @@ import { highlightWords } from "../utils/search.js";
 import ImageViewerModal from './../utils/ImageViewerModal';
 import Products from "../utils/products.js";
 import { DragDropContext, Droppable, Draggable } from "react-beautiful-dnd";
+import { OverlayTrigger, Tooltip } from "react-bootstrap";
 
 const columnStyle = {
     width: '20%',
@@ -4265,7 +4266,6 @@ function ProductIndex(props) {
                                                                 {(col.key === "purchase_unit_price" ||
                                                                     col.key === "wholesale_unit_price" ||
                                                                     col.key === "retail_unit_price" ||
-                                                                    col.key === "stock" ||
                                                                     col.key === "sales_count" ||
                                                                     col.key === "sales" ||
                                                                     col.key === "sales_quantity" ||
@@ -4299,7 +4299,67 @@ function ProductIndex(props) {
                                                                             {product.product_stores[localStorage.getItem("store_id")][col.key]?.toFixed(2)}
                                                                         </b>
                                                                     </td>}
+                                                                {col.key === "stock" &&
+                                                                    <td style={{ width: "auto", whiteSpace: "nowrap" }}>
+                                                                        {(() => {
+                                                                            const storeId = localStorage.getItem("store_id");
+                                                                            const productStore = product.product_stores?.[storeId];
+                                                                            const totalStock = productStore?.stock ?? 0;
+                                                                            const warehouseStocks = productStore?.warehouse_stocks;
 
+                                                                            if (!warehouseStocks || Object.keys(warehouseStocks).length === 0) {
+                                                                                // No warehouse stocks, show tooltip with Main Store stock
+                                                                                return (
+                                                                                    <OverlayTrigger
+                                                                                        placement="top"
+                                                                                        overlay={
+                                                                                            <Tooltip id={`stock-tooltip-main-${product.id}`}>
+                                                                                                (Main Store: {totalStock})
+                                                                                            </Tooltip>
+                                                                                        }
+                                                                                    >
+                                                                                        <span style={{ cursor: "pointer", textDecoration: "underline dotted" }}>
+                                                                                            <b>{totalStock}</b>
+                                                                                        </span>
+                                                                                    </OverlayTrigger>
+                                                                                );
+                                                                            }
+
+                                                                            // Always show Main Store first, then others
+                                                                            const orderedEntries = [];
+                                                                            if (warehouseStocks.hasOwnProperty("main_store")) {
+                                                                                orderedEntries.push(["main_store", warehouseStocks["main_store"]]);
+                                                                            }
+                                                                            Object.entries(warehouseStocks).forEach(([key, value]) => {
+                                                                                if (key !== "main_store") {
+                                                                                    orderedEntries.push([key, value]);
+                                                                                }
+                                                                            });
+
+                                                                            const details = orderedEntries
+                                                                                .map(([key, value]) => {
+                                                                                    let name = key === "main_store" ? "Main Store" : key.replace(/^wh/, "WH").toUpperCase();
+                                                                                    return `${name}: ${value}`;
+                                                                                })
+                                                                                .join(", ");
+
+                                                                            return (
+                                                                                <OverlayTrigger
+                                                                                    placement="top"
+                                                                                    overlay={
+                                                                                        <Tooltip id={`stock-tooltip-${product.id}`}>
+                                                                                            ({details})
+                                                                                        </Tooltip>
+                                                                                    }
+                                                                                >
+                                                                                    <span style={{ cursor: "pointer", textDecoration: "underline dotted" }}>
+                                                                                        <b>{totalStock}</b>
+                                                                                    </span>
+                                                                                </OverlayTrigger>
+                                                                            );
+                                                                        })()}
+                                                                    </td>
+                                                                }
                                                                 {(col.fieldName === "is_set") && <td style={{ width: "auto", whiteSpace: "nowrap" }} >
                                                                     {product.is_set ? "YES" : "NO"}
                                                                 </td>}
