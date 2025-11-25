@@ -2225,7 +2225,7 @@ async function reCalculate(productIndex) {
                                         <th style={{ minWidth: "300px" }} >Name</th>
                                         <th>Info</th>
                                         <th>Qty</th>
-                                        <th>Remove Stock From</th>
+                                        {store.settings?.enable_warehouse_module && <th>Remove Stock From</th>}
                                         <th>Unit Price(without VAT)</th>
                                         <th>Unit Price(with VAT)</th>
                                         <th >Unit Disc.(without VAT)</th>
@@ -2525,7 +2525,7 @@ async function reCalculate(productIndex) {
                                                     )}
                                                 </div>
                                             </td>
-                                            <td style={{
+                                            {store.settings?.enable_warehouse_module && <td style={{
                                                 verticalAlign: 'middle',
                                                 padding: '0.25rem',
                                                 whiteSpace: 'nowrap',
@@ -2566,7 +2566,7 @@ async function reCalculate(productIndex) {
                                                         {errors[`warehouse_${index}`]}
                                                     </div>
                                                 )}
-                                            </td>
+                                            </td>}
                                             <td style={{ verticalAlign: 'middle', padding: '0.25rem' }}>
                                                 <div className="d-flex align-items-center" style={{ minWidth: 0 }}>
                                                     <div className="input-group flex-nowrap" style={{ flex: '1 1 auto', minWidth: 0 }}>

@@ -3404,7 +3404,7 @@ const QuotationCreate = forwardRef((props, ref) => {
                     <th >Info</th>
                     <th >Purchase Unit Price(without VAT)</th>
                     <th>Stock</th>
-                    {formData.type === "invoice" && <th>Remove Stock From</th>}
+                    {store.settings?.enable_warehouse_module && formData.type === "invoice" && <th>Remove Stock From</th>}
                     <th>Qty</th>
                     <th>Unit Price(without VAT)</th>
                     <th>Unit Price(with VAT)</th>
@@ -3745,7 +3745,7 @@ const QuotationCreate = forwardRef((props, ref) => {
                           </OverlayTrigger>
                         </td>
 
-                        {formData.type === "invoice" && <td style={{
+                        {store.settings?.enable_warehouse_module && formData.type === "invoice" && <td style={{
                           verticalAlign: 'middle',
                           padding: '0.25rem',
                           whiteSpace: 'nowrap',

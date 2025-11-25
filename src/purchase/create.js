@@ -3290,7 +3290,7 @@ const PurchaseCreate = forwardRef((props, ref) => {
                                         </th>
                                         <th >Info</th>
                                         <th >Qty</th>
-                                        <th>Add Stock To</th>
+                                        {store.settings?.enable_warehouse_module && <th>Add Stock To</th>}
                                         <th >Unit Price(without VAT)</th>
                                         <th >Unit Price(with VAT)</th>
                                         <th >Unit Disc.(without VAT)</th>
@@ -3588,7 +3588,7 @@ const PurchaseCreate = forwardRef((props, ref) => {
                                                     )}
                                                 </div>
                                             </td>
-                                            <td style={{
+                                            {store.settings?.enable_warehouse_module && <td style={{
                                                 verticalAlign: 'middle',
                                                 padding: '0.25rem',
                                                 whiteSpace: 'nowrap',
@@ -3629,7 +3629,7 @@ const PurchaseCreate = forwardRef((props, ref) => {
                                                         {errors[`warehouse_${index}`]}
                                                     </div>
                                                 )}
-                                            </td>
+                                            </td>}
                                             <td style={{ verticalAlign: 'middle', padding: '0.25rem' }}>
                                                 <div className="d-flex align-items-center" style={{ minWidth: 0 }}>
                                                     <div className="input-group flex-nowrap" style={{ flex: '1 1 auto', minWidth: 0 }}>
