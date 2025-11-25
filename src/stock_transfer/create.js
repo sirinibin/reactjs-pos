@@ -2640,9 +2640,10 @@ selectedProducts[i].warehouse_stocks = { [fromStoreCode]: 0 };
             if (timerRef.current) clearTimeout(timerRef.current);
             timerRef.current = setTimeout(() => {
                 if (!isSubmitting) {
+                    //  alert("opening preview")
                     openPreview();
                 }
-            }, 100);
+            }, 300);
         }
     }, [openPreview, store, isSubmitting]);
 
