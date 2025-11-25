@@ -472,6 +472,7 @@ const StockTransferCreate = forwardRef((props, ref) => {
 
         checkWarnings();
         checkErrors();
+        //  openPrintTypeSelection();
     }
 
 
@@ -1441,7 +1442,8 @@ const StockTransferCreate = forwardRef((props, ref) => {
                 //formData.code = data.result?.code;
                 // alert(formData.code + "|" + formData.date);
                 setFormData({ ...formData });
-                openPrintTypeSelection();
+                // setFormData(data.result);
+                openPrintTypeSelection(formData);
 
                 if (props.onUpdated) {
                     props.onUpdated();
@@ -2606,15 +2608,19 @@ selectedProducts[i].warehouse_stocks = { [fromStoreCode]: 0 };
     let [showStockTransferPreview, setShowStockTransferPreview] = useState(false);
     let [showPrintTypeSelection, setShowPrintTypeSelection] = useState(false);
 
-    const openPreview = useCallback(() => {
+    const openPreview = useCallback((formData) => {
         setShowStockTransferPreview(true);
         setShowPrintTypeSelection(false);
+        // alert("inside open preview")
 
         if (timerRef.current) clearTimeout(timerRef.current);
 
         timerRef.current = setTimeout(() => {
             //if (model.id === stocktransferID) {
+            // alert("opening preview1," + formData.id)
+
             if (!isSubmitting && formData.id && formData.code && formData.date) {
+                // alert("opening preview2")
                 PreviewRef.current?.open(formData, undefined, "stock_transfer");
             }
             //  handleClose();
@@ -2622,9 +2628,9 @@ selectedProducts[i].warehouse_stocks = { [fromStoreCode]: 0 };
 
         }, 100);
 
-    }, [formData, isSubmitting]);
+    }, [isSubmitting]);
 
-    const openPrintTypeSelection = useCallback(() => {
+    const openPrintTypeSelection = useCallback((formData) => {
         if (store.settings?.enable_invoice_print_type_selection) {
             // showPrintTypeSelection = true;
             setShowStockTransferPreview(true);
@@ -2641,9 +2647,9 @@ selectedProducts[i].warehouse_stocks = { [fromStoreCode]: 0 };
             timerRef.current = setTimeout(() => {
                 if (!isSubmitting) {
                     //  alert("opening preview")
-                    openPreview();
+                    openPreview(formData);
                 }
-            }, 300);
+            }, 200);
         }
     }, [openPreview, store, isSubmitting]);
 
