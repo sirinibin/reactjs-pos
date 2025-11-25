@@ -1856,11 +1856,11 @@ const OrderCreate = forwardRef((props, ref) => {
 
     async function checkWarning(i, selectedProduct) {
         let product = null;
-        if (selectedProduct) {
-            product = selectedProduct;
-        } else {
-            product = await getProduct(selectedProducts[i].product_id, `id,product_stores.${localStorage.getItem("store_id")}.stock,product_stores.${localStorage.getItem("store_id")}.warehouse_stocks,store_id`);
-        }
+        // if (selectedProduct) {
+        // product = selectedProduct;
+        //} else {
+        product = await getProduct(selectedProducts[i].product_id, `id,product_stores.${localStorage.getItem("store_id")}.stock,product_stores.${localStorage.getItem("store_id")}.warehouse_stocks,store_id`);
+        //}
 
 
         let stock = 0;
