@@ -28,6 +28,10 @@ function App() {
             <Dashboard />
           </Route>
 
+          <Route path="/dashboard/stock-transfers">
+            <Dashboard />
+          </Route>
+
           <Route path="/dashboard/sales-cash-discounts">
             <Dashboard />
           </Route>

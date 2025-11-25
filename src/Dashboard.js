@@ -9,6 +9,7 @@ import QuotationIndex from './quotation/index.js';
 import QuotationSalesReturnIndex from './quotation_sales_return/index.js';
 import DeliveryNoteIndex from './delivery_note/index.js';
 import OrderIndex from './order/index.js';
+import StockTransferIndex from './stock_transfer/index.js';
 import SalesCashDiscountIndex from './sales_cash_discount/index.js';
 import PurchaseCashDiscountIndex from './purchase_cash_discount/index.js';
 
@@ -174,6 +175,20 @@ function Dashboard() {
                     </div>
                 </div>
             </Route>
+
+            <Route path="/dashboard/stock-transfers">
+                <div className="wrapper">
+                    <Sidebar isSidebarOpen={isSidebarOpen} parentCallback={handleToggle} />
+                    <div className="main">
+                        <Topbar parentCallback={handleToggle} />
+                        <main className="content">
+                            <StockTransferIndex showToastMessage={showToastMessage} />
+                        </main>
+                        <Footer />
+                    </div>
+                </div>
+            </Route>
+
             <Route path="/dashboard/sales-cash-discounts">
                 <div className="wrapper">
                     <Sidebar isSidebarOpen={isSidebarOpen} parentCallback={handleToggle} />

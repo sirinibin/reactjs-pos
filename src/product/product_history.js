@@ -6,6 +6,7 @@ import "react-datepicker/dist/react-datepicker.css";
 import { Button, Spinner, Modal, Alert } from "react-bootstrap";
 import ReactPaginate from "react-paginate";
 import OrderCreate from "../order/create.js";
+import StockTransferCreate from "../stock_transfer/create.js";
 import SalesReturnCreate from "../sales_return/create.js";
 import PurchaseCreate from "../purchase/create.js";
 import PurchaseReturnCreate from "../purchase_return/create.js";
@@ -480,6 +481,7 @@ const ProductHistory = forwardRef((props, ref) => {
     let [showQuotationForm, setShowQuotationForm] = useState(false);
     let [showQuotationSalesReturnForm, setShowQuotationSalesReturnForm] = useState(false);
     let [showDeliveryNoteForm, setShowDeliveryNoteForm] = useState(false);
+    let [showStockTransferForm, setShowStockTransferForm] = useState(false);
 
     const OrderUpdateFormRef = useRef();
     const SalesReturnUpdateFormRef = useRef();
@@ -488,6 +490,7 @@ const ProductHistory = forwardRef((props, ref) => {
     const QuotationUpdateFormRef = useRef();
     const QuotationSalesReturnUpdateFormRef = useRef();
     const DeliveryNoteUpdateFormRef = useRef();
+    const StockTransferUpdateFormRef = useRef();
 
     async function openReferenceUpdateForm(history) {
         if (history.reference_type === "sales") {
@@ -553,6 +556,14 @@ const ProductHistory = forwardRef((props, ref) => {
 
             timerRef.current = setTimeout(() => {
                 DeliveryNoteUpdateFormRef.current?.open(history.reference_id);
+            }, 100);
+        } else if (history.reference_type === "stock_transfer") {
+            showStockTransferForm = true;
+            setShowStockTransferForm(showStockTransferForm);
+            if (timerRef.current) clearTimeout(timerRef.current);
+
+            timerRef.current = setTimeout(() => {
+                StockTransferUpdateFormRef.current?.open(history.reference_id);
             }, 100);
         }
 
@@ -755,6 +766,8 @@ const ProductHistory = forwardRef((props, ref) => {
             return "Stock Adjustment By Adding";
         } else if (type === "stock_adjustment_by_removing") {
             return "Stock Adjustment By Removing";
+        } if (type === "stock_transfer") {
+            return "Stock Transfer";
         }
     }
 
@@ -869,6 +882,7 @@ const ProductHistory = forwardRef((props, ref) => {
             {showQuotationForm && <QuotationCreate ref={QuotationUpdateFormRef} onUpdated={handleUpdated} />}
             {showQuotationSalesReturnForm && <QuotationSalesReturnCreate ref={QuotationSalesReturnUpdateFormRef} onUpdated={handleUpdated} />}
             {showDeliveryNoteForm && <DeliveryNoteCreate ref={DeliveryNoteUpdateFormRef} onUpdated={handleUpdated} />}
+            {showStockTransferForm && <StockTransferCreate ref={StockTransferUpdateFormRef} onUpdated={handleUpdated} />}
 
             <CustomerCreate ref={CustomerUpdateFormRef} />
             <VendorCreate ref={VendorUpdateFormRef} />
@@ -1525,7 +1539,7 @@ const ProductHistory = forwardRef((props, ref) => {
                                                                         <option value="delivery_note">Delivery Note</option>
                                                                         <option value="stock_adjustment_by_adding">Stock Adjustment By Adding</option>
                                                                         <option value="stock_adjustment_by_removing">Stock Adjustment By Removing</option>
-
+                                                                        <option value="stock_transfer" >Stock Transfer</option>
                                                                     </select>
                                                                 </th>}
                                                                 {(col.key === "reference_code" ||
@@ -1920,6 +1934,9 @@ const ProductHistory = forwardRef((props, ref) => {
                                                                                 {(() => {
                                                                                     const type = history.reference_type;
                                                                                     const warehouse = history["warehouse_code"] || "Main Store";
+                                                                                    const from_warehouse_code = history["from_warehouse_code"] || "Main Store";
+                                                                                    const to_warehouse_code = history["to_warehouse_code"] || "Main Store";
+
                                                                                     if (
                                                                                         type === "sales" ||
                                                                                         type === "purchase_return" ||
@@ -1935,6 +1952,18 @@ const ProductHistory = forwardRef((props, ref) => {
                                                                                         type === "stock_adjustment_by_adding"
                                                                                     ) {
                                                                                         return `Stock Added to ${warehouse}`;
+                                                                                    }
+
+                                                                                    if (
+                                                                                        type === "sales_return" ||
+                                                                                        type === "purchase" ||
+                                                                                        type === "quotation_sales_return" ||
+                                                                                        type === "stock_adjustment_by_adding"
+                                                                                    ) {
+                                                                                        return `Stock Added to ${warehouse}`;
+                                                                                    }
+                                                                                    if (type === "stock_transfer") {
+                                                                                        return `Stock Transferred from ${from_warehouse_code} to ${to_warehouse_code}`;
                                                                                     }
                                                                                     // For any other type, display nothing
                                                                                     return "";

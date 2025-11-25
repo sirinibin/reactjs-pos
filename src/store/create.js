@@ -30,6 +30,11 @@ const StoreCreate = forwardRef((props, ref) => {
                 branch_name: "",
                 code: "",
                 vat_percent: 15.00,
+                stock_transfer_serial_number: {
+                    prefix: "ST-TR",
+                    start_from_count: 1,
+                    padding_count: 3
+                },
                 sales_serial_number: {
                     prefix: "S-INV",
                     start_from_count: 1,
@@ -274,6 +279,11 @@ const StoreCreate = forwardRef((props, ref) => {
         branch_name: "",
         vat_percent: 15.00,
         business_category: "Supply Activities",
+        stock_transfer_serial_number: {
+            prefix: "ST-TR",
+            start_from_count: 1,
+            padding_count: 3
+        },
         sales_serial_number: {
             prefix: "S-INV",
             start_from_count: 1,
@@ -1047,36 +1057,11 @@ const StoreCreate = forwardRef((props, ref) => {
                                         if (!formData.id) {
                                             if (formData.code) {
                                                 formData.sales_serial_number.prefix = formData.sales_serial_number.prefix.replace("-" + formData.code.toUpperCase(), "");
-                                                // formData.sales_serial_number.prefix = formData.sales_serial_number.prefix.replace(formData.code.toUpperCase(), "-");
 
-                                                // formData.sales_return_serial_number.prefix = formData.sales_return_serial_number.prefix.replace("-" + formData.code.toUpperCase(), "");
-
-
-                                                //formData.sales_return_serial_number.prefix = formData.sales_return_serial_number.prefix.replace(formData.code.toUpperCase(), "-");
-
-                                                //formData.purchase_serial_number.prefix = formData.purchase_serial_number.prefix.replace("-" + formData.code.toUpperCase(), "");
-                                                //  formData.purchase_serial_number.prefix = formData.purchase_serial_number.prefix.replace(formData.code.toUpperCase(), "-");
-
-                                                //formData.purchase_return_serial_number.prefix = formData.purchase_return_serial_number.prefix.replace("-" + formData.code.toUpperCase(), "");
-                                                // formData.purchase_return_serial_number.prefix = formData.purchase_return_serial_number.prefix.replace(formData.code.toUpperCase(), "-");
-
-                                                // formData.quotation_serial_number.prefix = formData.quotation_serial_number.prefix.replace("-" + formData.code.toUpperCase(), "");
-
-                                                // formData.customer_serial_number.prefix = formData.customer_serial_number.prefix.replace("-" + formData.code.toUpperCase(), "");
-                                                // formData.vendor_serial_number.prefix = formData.vendor_serial_number.prefix.replace("-" + formData.code.toUpperCase(), "");
-                                                // formData.quotation_serial_number.prefix = formData.quotation_serial_number.prefix.replace(formData.code.toUpperCase(), "-");
                                             }
 
                                             if (e.target.value) {
-                                                /*
-                                                formData.sales_serial_number.prefix = formData.sales_serial_number.prefix + "-" + e.target.value.toUpperCase();
-                                                formData.sales_return_serial_number.prefix = formData.sales_return_serial_number.prefix + "-" + e.target.value.toUpperCase();
-                                                formData.purchase_serial_number.prefix = formData.purchase_serial_number.prefix + "-" + e.target.value.toUpperCase();
-                                                formData.purchase_return_serial_number.prefix = formData.purchase_return_serial_number.prefix + "-" + e.target.value.toUpperCase();
-                                                formData.quotation_serial_number.prefix = formData.quotation_serial_number.prefix + "-" + e.target.value.toUpperCase();
-                                                formData.customer_serial_number.prefix = formData.customer_serial_number.prefix + "-" + e.target.value.toUpperCase();
-                                                formData.vendor_serial_number.prefix = formData.vendor_serial_number.prefix + "-" + e.target.value.toUpperCase();
-                                                */
+
                                             }
                                         }
 
@@ -3001,6 +2986,88 @@ const StoreCreate = forwardRef((props, ref) => {
 
 
                         <h6><b>Serial Numbers</b></h6>
+                        <h6><b>Stock Transfer ID's:</b> {formData.stock_transfer_serial_number?.prefix.toUpperCase()}-{String(formData.stock_transfer_serial_number?.start_from_count).padStart(formData.stock_transfer_serial_number?.padding_count, '0')}, {formData.stock_transfer_serial_number?.prefix.toUpperCase()}-{String((formData.stock_transfer_serial_number?.start_from_count + 1)).padStart(formData.stock_transfer_serial_number?.padding_count, '0')}...</h6>
+                        <div className="col-md-2">
+                            <label className="form-label">Prefix*</label>
+                            <div className="input-group mb-3">
+                                <input
+                                    value={formData.stock_transfer_serial_number?.prefix}
+                                    type='string'
+                                    onChange={(e) => {
+
+                                        errors["formData.stock_transfer_serial_number.prefix"] = "";
+                                        formData.stock_transfer_serial_number.prefix = e.target.value;
+                                        setFormData({ ...formData });
+                                        console.log(formData);
+                                    }}
+                                    className="form-control"
+                                    id="formData.stock_transfer_serial_number.prefix"
+                                    placeholder="S-INV-UMLJ"
+                                />
+
+
+                            </div>
+                            {errors.stock_transfer_serial_number_prefix && (
+                                <div style={{ color: "red" }}>
+
+                                    {errors.stock_transfer_serial_number_prefix}
+                                </div>
+                            )}
+                        </div>
+
+                        <div className="col-md-2">
+                            <label className="form-label">Padding count*</label>
+                            <div className="input-group mb-3">
+                                <input
+                                    value={formData.stock_transfer_serial_number?.padding_count}
+                                    type='number'
+                                    onChange={(e) => {
+
+                                        errors["formData.stock_transfer_serial_number.padding_count"] = "";
+                                        formData.stock_transfer_serial_number.padding_count = parseInt(e.target.value);
+                                        setFormData({ ...formData });
+                                        console.log(formData);
+                                    }}
+                                    className="form-control"
+                                    id="formData.stock_transfer_serial_number.padding_count"
+                                    placeholder="4 will make counter value: 0001"
+                                />
+
+
+                            </div>
+                            {errors.formData?.stock_transfer_serial_number?.padding_count && (
+                                <div style={{ color: "red" }}>
+
+                                    {errors.stock_transfer_serial_number_padding_count}
+                                </div>
+                            )}
+                        </div>
+
+                        <div className="col-md-2">
+                            <label className="form-label">Counting start from*</label>
+                            <div className="input-group mb-3">
+                                <input
+                                    value={formData.stock_transfer_serial_number?.start_from_count ? formData.stock_transfer_serial_number.start_from_count : ""}
+                                    type='number'
+                                    onChange={(e) => {
+                                        errors["formData.stock_transfer_serial_number.start_from_count"] = "";
+                                        formData.stock_transfer_serial_number.start_from_count = parseInt(e.target.value);
+                                        setFormData({ ...formData });
+                                        console.log(formData);
+                                    }}
+                                    className="form-control"
+                                    id="formData.stock_transfer_serial_number.start_from_count"
+                                    placeholder="eg: Start counting from 1000"
+                                />
+                            </div>
+                            {errors.stock_transfer_serial_number_start_from_count && (
+                                <div style={{ color: "red" }}>
+
+                                    {errors.stock_transfer_serial_number_start_from_count}
+                                </div>
+                            )}
+                        </div>
+
                         <h6><b>Sales ID's:</b> {formData.sales_serial_number.prefix.toUpperCase()}-{String(formData.sales_serial_number.start_from_count).padStart(formData.sales_serial_number.padding_count, '0')}, {formData.sales_serial_number.prefix.toUpperCase()}-{String((formData.sales_serial_number.start_from_count + 1)).padStart(formData.sales_serial_number.padding_count, '0')}...</h6>
                         <div className="col-md-2">
                             <label className="form-label">Prefix*</label>
