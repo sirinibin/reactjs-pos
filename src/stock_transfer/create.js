@@ -2615,7 +2615,7 @@ selectedProducts[i].warehouse_stocks = { [fromStoreCode]: 0 };
         timerRef.current = setTimeout(() => {
             //if (model.id === stocktransferID) {
             if (!isSubmitting && formData.id && formData.code && formData.date) {
-                PreviewRef.current?.open(formData, undefined, "stocktransfer");
+                PreviewRef.current?.open(formData, undefined, "stock_transfer");
             }
             //  handleClose();
             //}
