@@ -2148,64 +2148,156 @@ const QuotationCreate = forwardRef((props, ref) => {
   }
 
 
+  async function checkWarning(i, selectedProduct) {
+    let product = null;
+    if (selectedProduct) {
+      product = selectedProduct;
+    } else {
+      product = await getProduct(selectedProducts[i].product_id, `id,product_stores.${localStorage.getItem("store_id")}.stock,product_stores.${localStorage.getItem("store_id")}.warehouse_stocks,store_id`);
+    }
 
-  async function checkWarning(i) {
-    let product = await getProduct(selectedProducts[i].product_id);
+
     let stock = 0;
 
     if (!product) {
       return;
     }
 
-    if (product.product_stores && product.product_stores[localStorage.getItem("store_id")]?.stock) {
+    if (product.product_stores) {
       stock = product.product_stores[localStorage.getItem("store_id")].stock;
-      selectedProducts[i].stock = stock;
-      selectedProducts[i].warehouse_stocks = product.product_stores[localStorage.getItem("store_id")]?.warehouse_stocks ? product.product_stores[localStorage.getItem("store_id")]?.warehouse_stocks : {};
+      selectedProducts[i].warehouse_stocks = product.product_stores[localStorage.getItem("store_id")]?.warehouse_stocks ? product.product_stores[localStorage.getItem("store_id")]?.warehouse_stocks : null;
 
+      if (!selectedProducts[i].warehouse_stocks) {
+        selectedProducts[i].warehouse_stocks["main_store"] = stock;
+
+        for (var j = 0; j < warehouseList.length; j++) {
+          selectedProducts[i].warehouse_stocks[warehouseList[j].code] = 0;
+        }
+      }
+
+      let selectedWarehouseCode = selectedProducts[i].warehouse_code ? selectedProducts[i].warehouse_code : "main_store";
+      if (!selectedWarehouseCode) {
+        selectedWarehouseCode = "main_store";
+      }
+
+
+      selectedProducts[i].stock = selectedProducts[i].warehouse_stocks[selectedWarehouseCode] ? selectedProducts[i].warehouse_stocks[selectedWarehouseCode] : 0;
       setSelectedProducts([...selectedProducts]);
     }
 
-    let oldQty = 0;
-    for (let j = 0; j < oldProducts?.length; j++) {
-      if (oldProducts[j].product_id === selectedProducts[i].product_id) {
-        if (formData.id) {
-          oldQty = oldProducts[j].quantity;
-          // alert(oldQty)
-
-          /*
-          if (!selectedProducts[i].warehouse_stocks) {
-            selectedProducts[i].warehouse_stocks = {};
-          }
-
-          if (oldProducts[j].warehouse_code) {
-            if (!selectedProducts[i].warehouse_stocks[oldProducts[j].warehouse_code]) {
-              selectedProducts[i].warehouse_stocks[oldProducts[j].warehouse_code] = 0;
-            }
-
-            selectedProducts[i].warehouse_stocks[oldProducts[j].warehouse_code] += oldQty;
-          } else {
-            selectedProducts[i].warehouse_stocks["main_store"] = selectedProducts[i].stock;
-          }*/
-
-
-        }
-        break;
-      }
-    }
-
-
-
-
-
-    if (product.product_stores && (stock + oldQty) < selectedProducts[i].quantity) {
-      if (!formData.id) {
-        warnings["quantity_" + i] = "Warning: Available stock is " + (stock);
-      }
+    if (!formData.id && selectedProducts[i].quantity > selectedProducts[i].stock) {
+      warnings["quantity_" + i] = "Warning: Available stock is " + (selectedProducts[i].stock);
     } else {
       delete warnings["quantity_" + i];
     }
+
     setWarnings({ ...warnings });
+
+    /*
+    if (product.product_stores && product.product_stores[localStorage.getItem("store_id")]?.stock) {
+        stock = product.product_stores[localStorage.getItem("store_id")].stock;
+        selectedProducts[i].stock = stock;
+        selectedProducts[i].warehouse_stocks = product.product_stores[localStorage.getItem("store_id")]?.warehouse_stocks ? product.product_stores[localStorage.getItem("store_id")]?.warehouse_stocks : {};
+
+        setSelectedProducts([...selectedProducts]);
+    }
+
+
+    let oldQty = 0;
+    for (let j = 0; j < oldProducts?.length; j++) {
+        if (oldProducts[j]?.product_id === selectedProducts[i]?.product_id) {
+            if (formData.id) {
+                oldQty = oldProducts[j].quantity;
+                if (!selectedProducts[i].stock) {
+                    selectedProducts[i].stock = 0;
+                }
+                selectedProducts[i].stock += oldQty;
+
+
+                if (!selectedProducts[i].warehouse_stocks) {
+                    selectedProducts[i].warehouse_stocks = {};
+                }
+
+                if (oldProducts[j].warehouse_code) {
+                    if (!selectedProducts[i].warehouse_stocks[oldProducts[j].warehouse_code]) {
+                        selectedProducts[i].warehouse_stocks[oldProducts[j].warehouse_code] = 0;
+                    }
+
+                    selectedProducts[i].warehouse_stocks[oldProducts[j].warehouse_code] += oldQty;
+                } else {
+                    selectedProducts[i].warehouse_stocks["main_store"] = selectedProducts[i].stock;
+                }
+
+
+
+                setSelectedProducts([...selectedProducts]);
+            }
+            break;
+        }
+    }
+
+
+    
+
+    if (product.product_stores && (stock + oldQty) < selectedProducts[i].quantity) {
+        if (formData.id) {
+            warnings["quantity_" + i] = "Warning: Available stock is " + (stock + oldQty);
+        } else {
+            warnings["quantity_" + i] = "Warning: Available stock is " + (stock);
+        }
+    } else {
+        delete warnings["quantity_" + i];
+    }
+    */
+
   }
+
+  /*
+async function checkWarning(i) {
+  let product = await getProduct(selectedProducts[i].product_id);
+  let stock = 0;
+
+  if (!product) {
+    return;
+  }
+
+  if (product.product_stores && product.product_stores[localStorage.getItem("store_id")]?.stock) {
+    stock = product.product_stores[localStorage.getItem("store_id")].stock;
+    selectedProducts[i].stock = stock;
+    selectedProducts[i].warehouse_stocks = product.product_stores[localStorage.getItem("store_id")]?.warehouse_stocks ? product.product_stores[localStorage.getItem("store_id")]?.warehouse_stocks : {};
+
+    setSelectedProducts([...selectedProducts]);
+  }
+
+  let oldQty = 0;
+  for (let j = 0; j < oldProducts?.length; j++) {
+    if (oldProducts[j].product_id === selectedProducts[i].product_id) {
+      if (formData.id) {
+        oldQty = oldProducts[j].quantity;
+        // alert(oldQty)
+
+       
+
+
+      }
+      break;
+    }
+  }
+
+
+
+
+
+  if (product.product_stores && (stock + oldQty) < selectedProducts[i].quantity) {
+    if (!formData.id) {
+      warnings["quantity_" + i] = "Warning: Available stock is " + (stock);
+    }
+  } else {
+    delete warnings["quantity_" + i];
+  }
+  setWarnings({ ...warnings });
+}
+  */
 
   function openUpdateProductForm(id) {
     ProductCreateFormRef.current.open(id);
@@ -3772,6 +3864,7 @@ const QuotationCreate = forwardRef((props, ref) => {
                               }
 
                               setSelectedProducts([...selectedProducts]);
+                              checkWarning(index, selectedProducts[index]);
                             }}
                           >
                             <option value="main_store">Main Store</option>
@@ -3822,7 +3915,8 @@ const QuotationCreate = forwardRef((props, ref) => {
                                     selectedProducts[index].quantity = "";
                                     setSelectedProducts([...selectedProducts]);
                                     timerRef.current = setTimeout(() => {
-                                      checkWarnings(index);
+                                      //checkWarnings(index);
+                                      checkWarning(index, selectedProducts[index]);
                                       checkErrors(index);
                                       CalCulateLineTotals(index);
                                       reCalculate(index);
@@ -3841,7 +3935,8 @@ const QuotationCreate = forwardRef((props, ref) => {
                                     selectedProducts[index].quantity = e.target.value;
                                     setSelectedProducts([...selectedProducts]);
                                     timerRef.current = setTimeout(() => {
-                                      checkWarnings(index);
+                                      // checkWarnings(index);
+                                      checkWarning(index, selectedProducts[index]);
                                       checkErrors(index);
                                       CalCulateLineTotals(index);
                                       reCalculate(index);
@@ -3855,7 +3950,8 @@ const QuotationCreate = forwardRef((props, ref) => {
                                     setSelectedProducts([...selectedProducts]);
                                     timerRef.current = setTimeout(() => {
                                       checkErrors(index);
-                                      checkWarnings(index);
+                                      //  checkWarnings(index);
+                                      checkWarning(index, selectedProducts[index]);
                                       CalCulateLineTotals(index);
                                       reCalculate(index);
                                     }, 100);
@@ -3867,7 +3963,8 @@ const QuotationCreate = forwardRef((props, ref) => {
                                   selectedProducts[index].quantity = parseFloat(e.target.value);
                                   timerRef.current = setTimeout(() => {
                                     checkErrors(index);
-                                    checkWarnings(index);
+                                    //checkWarnings(index);
+                                    checkWarning(index, selectedProducts[index]);
                                     CalCulateLineTotals(index);
                                     reCalculate(index);
                                   }, 100);

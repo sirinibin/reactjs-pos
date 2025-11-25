@@ -1854,14 +1854,52 @@ const OrderCreate = forwardRef((props, ref) => {
     }
 
 
-    async function checkWarning(i) {
-        let product = await getProduct(selectedProducts[i].product_id, `id,product_stores.${localStorage.getItem("store_id")}.stock,product_stores.${localStorage.getItem("store_id")}.warehouse_stocks,store_id`);
+    async function checkWarning(i, selectedProduct) {
+        let product = null;
+        if (selectedProduct) {
+            product = selectedProduct;
+        } else {
+            product = await getProduct(selectedProducts[i].product_id, `id,product_stores.${localStorage.getItem("store_id")}.stock,product_stores.${localStorage.getItem("store_id")}.warehouse_stocks,store_id`);
+        }
+
+
         let stock = 0;
 
         if (!product) {
             return;
         }
 
+        if (product.product_stores) {
+            stock = product.product_stores[localStorage.getItem("store_id")].stock;
+            selectedProducts[i].warehouse_stocks = product.product_stores[localStorage.getItem("store_id")]?.warehouse_stocks ? product.product_stores[localStorage.getItem("store_id")]?.warehouse_stocks : null;
+
+            if (!selectedProducts[i].warehouse_stocks) {
+                selectedProducts[i].warehouse_stocks["main_store"] = stock;
+
+                for (var j = 0; j < warehouseList.length; j++) {
+                    selectedProducts[i].warehouse_stocks[warehouseList[j].code] = 0;
+                }
+            }
+
+            let selectedWarehouseCode = selectedProducts[i].warehouse_code ? selectedProducts[i].warehouse_code : "main_store";
+            if (!selectedWarehouseCode) {
+                selectedWarehouseCode = "main_store";
+            }
+
+
+            selectedProducts[i].stock = selectedProducts[i].warehouse_stocks[selectedWarehouseCode] ? selectedProducts[i].warehouse_stocks[selectedWarehouseCode] : 0;
+            setSelectedProducts([...selectedProducts]);
+        }
+
+        if (!formData.id && selectedProducts[i].quantity > selectedProducts[i].stock) {
+            warnings["quantity_" + i] = "Warning: Available stock is " + (selectedProducts[i].stock);
+        } else {
+            delete warnings["quantity_" + i];
+        }
+
+        setWarnings({ ...warnings });
+
+        /*
         if (product.product_stores && product.product_stores[localStorage.getItem("store_id")]?.stock) {
             stock = product.product_stores[localStorage.getItem("store_id")].stock;
             selectedProducts[i].stock = stock;
@@ -1905,6 +1943,7 @@ const OrderCreate = forwardRef((props, ref) => {
         }
 
 
+        
 
         if (product.product_stores && (stock + oldQty) < selectedProducts[i].quantity) {
             if (formData.id) {
@@ -1915,7 +1954,8 @@ const OrderCreate = forwardRef((props, ref) => {
         } else {
             delete warnings["quantity_" + i];
         }
-        setWarnings({ ...warnings });
+        */
+
     }
 
 
@@ -4942,7 +4982,10 @@ const OrderCreate = forwardRef((props, ref) => {
                                                             }
                                                         }
 
+
+
                                                         setSelectedProducts([...selectedProducts]);
+                                                        checkWarning(index, selectedProducts[index]);
                                                     }}
                                                 >
                                                     <option value="main_store">Main Store</option>
@@ -4994,7 +5037,7 @@ const OrderCreate = forwardRef((props, ref) => {
                                                                     setSelectedProducts([...selectedProducts]);
                                                                     timerRef.current = setTimeout(() => {
                                                                         CalCulateLineTotals(index);
-                                                                        checkWarnings(index);
+                                                                        checkWarning(index, selectedProducts[index]);
                                                                         checkErrors(index);
                                                                         reCalculate(index);
                                                                     }, 100);
@@ -5012,7 +5055,7 @@ const OrderCreate = forwardRef((props, ref) => {
                                                                     setSelectedProducts([...selectedProducts]);
                                                                     timerRef.current = setTimeout(() => {
                                                                         CalCulateLineTotals(index);
-                                                                        checkWarnings(index);
+                                                                        checkWarning(index, selectedProducts[index]);
                                                                         checkErrors(index);
                                                                         reCalculate(index);
                                                                     }, 100);
@@ -5026,7 +5069,7 @@ const OrderCreate = forwardRef((props, ref) => {
                                                                     timerRef.current = setTimeout(() => {
                                                                         CalCulateLineTotals(index);
                                                                         checkErrors(index);
-                                                                        checkWarnings(index);
+                                                                        checkWarning(index, selectedProducts[index]);
                                                                         reCalculate(index);
                                                                     }, 100);
                                                                     return;
@@ -5038,7 +5081,7 @@ const OrderCreate = forwardRef((props, ref) => {
                                                                 timerRef.current = setTimeout(() => {
                                                                     CalCulateLineTotals(index);
                                                                     checkErrors(index);
-                                                                    checkWarnings(index);
+                                                                    checkWarning(index, selectedProducts[index]);
                                                                     reCalculate(index);
                                                                 }, 100);
                                                             }} />

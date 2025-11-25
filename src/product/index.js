@@ -1260,6 +1260,7 @@ function ProductIndex(props) {
         { key: "wholesale_unit_price", label: "Wholesale Unit Price", fieldName: "stores.wholesale_unit_price", visible: true },
         { key: "retail_unit_price", label: "Retail Unit Price", fieldName: "stores.retail_unit_price", visible: true },
         { key: "stock", label: "Stock", fieldName: "stores.stock", visible: true },
+        // { key: "warehouse_code", label: "Store/Warehouse", fieldName: "warehouse_code", visible: true },
         { key: "set", label: "Set", fieldName: "is_set", visible: true },
         { key: "categories", label: "Categories", fieldName: "category_name", visible: true },
         { key: "brand", label: "Brands", fieldName: "brand_name", visible: true },
