@@ -13,9 +13,9 @@ import Amount from "../utils/amount.js";
 import StatsSummary from "../utils/StatsSummary.js";
 import { WebSocketContext } from "../utils/WebSocketContext.js";
 import eventEmitter from "../utils/eventEmitter.js";
-import StockTransferPreview from "./preview.js";
+import StockTransferPreview from "./../order/preview.js";
 //import ReportPreview from "./report.js";
-import StockTransferPrint from './print.js';
+import StockTransferPrint from './../order/print.js';
 import { DragDropContext, Droppable, Draggable } from "react-beautiful-dnd";
 
 import "./../utils/stickyHeader.css";
@@ -490,7 +490,7 @@ const StockTransferIndex = forwardRef((props, ref) => {
 
         if (timerRef.current) clearTimeout(timerRef.current);
         timerRef.current = setTimeout(() => {
-            PreviewRef.current?.open(stocktransfer, undefined, "stocktransfer");
+            PreviewRef.current?.open(stocktransfer, undefined, "stock_transfer");
         }, 100);
     }, []);
 
@@ -530,7 +530,7 @@ const StockTransferIndex = forwardRef((props, ref) => {
 
         if (timerRef.current) clearTimeout(timerRef.current);
         timerRef.current = setTimeout(() => {
-            PrintRef.current?.open(selectedStockTransfer, "stocktransfer");
+            PrintRef.current?.open(selectedStockTransfer, "stock_transfer");
         }, 100);
 
 
@@ -556,7 +556,7 @@ const StockTransferIndex = forwardRef((props, ref) => {
         if (timerRef.current) clearTimeout(timerRef.current);
 
         timerRef.current = setTimeout(() => {
-            PreviewRef.current?.open(model, "whatsapp", "whatsapp_stocktransfer");
+            PreviewRef.current?.open(model, "whatsapp", "whatsapp_stock_transfer");
         }, 100);
     }
 

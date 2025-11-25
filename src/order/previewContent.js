@@ -207,7 +207,7 @@ const PreviewContent = forwardRef((props, ref) => {
                                         ) : "<DATETIME>"} {props.model.date ? " | " + getArabicDate(props.model.date) : ""}</div>
                                     </div>
                                 </>}
-                                {(props.modelName !== "quotation" || props.model.type === "invoice") && <>
+                                {((props.modelName !== "quotation" && props.modelName !== "stock_transfer" && props.modelName !== "whatsapp_stock_transfer") || props.model.type === "invoice") && <>
                                     <div className="row" dir="ltr" style={{ borderBottom: detailsBorderThickness }} >
                                         <div className="col-md-4 print-label" dir="ltr" style={{ borderRight: detailsBorderThickness, borderColor: detailsBorderColor, width: detailsLabelsColumnWidthPercent, padding: "3px" }} >Invoice No. | رقم الفاتورة:</div>
                                         <div className="col-md-8 print-value" dir="ltr" style={{ borderColor: detailsBorderColor, width: detailsValuesColumnWidthPercent, padding: "3px" }} >{props.model.code ? props.model.code : ""}</div>
@@ -219,6 +219,86 @@ const PreviewContent = forwardRef((props, ref) => {
                                             "yyyy-MM-dd h:mma"
                                         ) : "<DATETIME>"} {" | " + getArabicDate(props.model.date)}</div>
                                     </div>
+                                </>}
+                                {(props.modelName === "stock_transfer" || props.modelName === "whatsapp_stock_transfer") && <>
+                                    <div className="row" dir="ltr" style={{ borderBottom: detailsBorderThickness }} >
+                                        <div className="col-md-4 print-label" dir="ltr" style={{ borderRight: detailsBorderThickness, borderColor: detailsBorderColor, width: detailsLabelsColumnWidthPercent, padding: "3px" }} >Transfer No. | رقم التحويل:</div>
+                                        <div className="col-md-8 print-value" dir="ltr" style={{ borderColor: detailsBorderColor, width: detailsValuesColumnWidthPercent, padding: "3px" }} >{props.model.code ? props.model.code : ""}</div>
+                                    </div>
+                                    <div className="row" dir="ltr" style={{ borderBottom: detailsBorderThickness }} >
+                                        <div className="col-md-4 print-label" dir="ltr" style={{ borderRight: detailsBorderThickness, borderColor: detailsBorderColor, width: detailsLabelsColumnWidthPercent, padding: "3px" }} ><b>Transfer Date | تاريخ النقل:</b></div>
+                                        <div className="col-md-8 print-value" dir="ltr" style={{ borderColor: detailsBorderColor, width: detailsValuesColumnWidthPercent, padding: "3px" }} >{props.model.date ? format(
+                                            new Date(props.model.date),
+                                            "yyyy-MM-dd h:mma"
+                                        ) : "<DATETIME>"} {" | " + getArabicDate(props.model.date)}</div>
+                                    </div>
+                                    <div className="row" dir="ltr" style={{ borderBottom: detailsBorderThickness }} >
+                                        <div className="col-md-4 print-label" dir="ltr" style={{ borderRight: detailsBorderThickness, borderColor: detailsBorderColor, width: detailsLabelsColumnWidthPercent, padding: "3px" }} >From Store | من المتجر:</div>
+                                        <div className="col-md-8 print-value" dir="ltr" style={{ borderColor: detailsBorderColor, width: detailsValuesColumnWidthPercent, padding: "3px" }} >{props.model.from_warehouse_code ? props.model.from_warehouse.name + (props.model.from_warehouse.name_in_arabic ? " | " + props.model.from_warehouse.name_in_arabic : "") + " (" + props.model.from_warehouse_code + ")" : "Main Store | المتجر الرئيسي"}</div>
+                                    </div>
+                                    <div className="row" dir="ltr" style={{ borderBottom: detailsBorderThickness }} >
+                                        <div className="col-md-4 print-label" dir="ltr" style={{ borderRight: detailsBorderThickness, borderColor: detailsBorderColor, width: detailsLabelsColumnWidthPercent, padding: "3px" }} ><b>From Store Address | من عنوان المتجر:</b></div>
+                                        <div className="col-md-8 print-value" dir="ltr" style={{ borderColor: detailsBorderColor, width: detailsValuesColumnWidthPercent, padding: "3px" }} >
+                                            <span dir="ltr">
+                                                {props.model.from_warehouse?.national_address?.building_no ? `${props.model.from_warehouse.national_address.building_no}` : ""}
+                                                {props.model.from_warehouse?.national_address?.street_name ? ` ${props.model.from_warehouse.national_address.street_name}` : ""}
+                                                {props.model.from_warehouse?.national_address?.district_name ? ` - ${props.model.from_warehouse.national_address.district_name}` : ""}
+                                                {props.model.from_warehouse?.national_address?.unit_no ? `, Unit #${props.model.from_warehouse.national_address.unit_no}` : ""}
+                                                {props.model.from_warehouse?.national_address?.city_name ? `, ${props.model.from_warehouse.national_address.city_name}` : ""}
+                                                {props.model.from_warehouse?.national_address?.zipcode ? ` - ${props.model.from_warehouse.national_address.zipcode}` : ""}
+                                                {props.model.from_warehouse?.national_address?.additional_no ? ` - ${props.model.from_warehouse.national_address.additional_no}` : ""}
+                                                {/*props.model.from_warehouse?.country_name ? `, ${props.model.from_warehouse.country_name}` : ""*/}
+                                            </span>
+
+
+                                            {props.model.from_warehouse?.national_address?.building_no_arabic && props.model.from_warehouse?.national_address?.street_name_arabic && props.model.from_warehouse?.national_address?.district_name_arabic && props.model.from_warehouse?.national_address?.city_name_arabic && props.model.from_warehouse?.national_address?.zipcode_arabic && <span dir="rtl">
+                                                <br />
+                                                {props.model.from_warehouse?.national_address?.building_no_arabic ? `${props.model.from_warehouse.national_address.building_no_arabic}  ` : ""}
+                                                {props.model.from_warehouse?.national_address?.street_name_arabic ? ` ${props.model.from_warehouse.national_address.street_name_arabic}` : ""}
+                                                {props.model.from_warehouse?.national_address?.district_name_arabic ? ` - ${props.model.from_warehouse.national_address.district_name_arabic}` : ""}
+                                                {props.model.from_warehouse?.national_address?.unit_no_arabic ? `,رقم الوحدة ${props.model.from_warehouse.national_address.unit_no_arabic}` : ""}
+                                                {props.model.from_warehouse?.national_address?.city_name_arabic ? `, ${props.model.from_warehouse.national_address.city_name_arabic}` : ""}
+                                                {props.model.from_warehouse?.national_address?.zipcode_arabic ? ` - ${props.model.from_warehouse.national_address.zipcode_arabic} ` : ""}
+                                                {props.model.from_warehouse?.national_address?.additional_no_arabic ? `- ${props.model.from_warehouse.national_address.additional_no_arabic} ` : ""}
+                                                {/*props.model.from_warehouse?.country_name === "Saudi Arabia" ? `المملكة العربية السعودية , ` : ""*/}
+                                            </span>}
+                                        </div>
+                                    </div>
+
+                                    <div className="row" dir="ltr" style={{ borderBottom: detailsBorderThickness }} >
+                                        <div className="col-md-4 print-label" dir="ltr" style={{ borderRight: detailsBorderThickness, borderColor: detailsBorderColor, width: detailsLabelsColumnWidthPercent, padding: "3px" }} >To Store | للتخزين:</div>
+                                        <div className="col-md-8 print-value" dir="ltr" style={{ borderColor: detailsBorderColor, width: detailsValuesColumnWidthPercent, padding: "3px" }} >{props.model.to_warehouse_code ? props.model.to_warehouse_code : "Main Store | المتجر الرئيسي"}</div>
+                                    </div>
+
+                                    <div className="row" dir="ltr" style={{}} >
+                                        <div className="col-md-4 print-label" dir="ltr" style={{ borderRight: detailsBorderThickness, borderColor: detailsBorderColor, width: detailsLabelsColumnWidthPercent, padding: "3px" }} ><b>To Store Address | لتخزين العنوان:</b></div>
+                                        <div className="col-md-8 print-value" dir="ltr" style={{ borderColor: detailsBorderColor, width: detailsValuesColumnWidthPercent, padding: "3px" }} >
+                                            <span dir="ltr">
+                                                {props.model.to_warehouse?.national_address?.building_no ? `${props.model.to_warehouse.national_address.building_no}` : ""}
+                                                {props.model.to_warehouse?.national_address?.street_name ? ` ${props.model.to_warehouse.national_address.street_name}` : ""}
+                                                {props.model.to_warehouse?.national_address?.district_name ? ` - ${props.model.to_warehouse.national_address.district_name}` : ""}
+                                                {props.model.to_warehouse?.national_address?.unit_no ? `, Unit #${props.model.to_warehouse.national_address.unit_no}` : ""}
+                                                {props.model.to_warehouse?.national_address?.city_name ? `, ${props.model.to_warehouse.national_address.city_name}` : ""}
+                                                {props.model.to_warehouse?.national_address?.zipcode ? ` - ${props.model.to_warehouse.national_address.zipcode}` : ""}
+                                                {props.model.to_warehouse?.national_address?.additional_no ? ` - ${props.model.to_warehouse.national_address.additional_no}` : ""}
+                                                {/*props.model.to_warehouse?.country_name ? `, ${props.model.to_warehouse.country_name}` : ""*/}
+                                            </span>
+
+
+                                            {props.model.to_warehouse?.national_address?.building_no_arabic && props.model.to_warehouse?.national_address?.street_name_arabic && props.model.to_warehouse?.national_address?.district_name_arabic && props.model.to_warehouse?.national_address?.city_name_arabic && props.model.to_warehouse?.national_address?.zipcode_arabic && <span dir="rtl">
+                                                <br />
+                                                {props.model.to_warehouse?.national_address?.building_no_arabic ? `${props.model.to_warehouse.national_address.building_no_arabic}  ` : ""}
+                                                {props.model.to_warehouse?.national_address?.street_name_arabic ? ` ${props.model.to_warehouse.national_address.street_name_arabic}` : ""}
+                                                {props.model.to_warehouse?.national_address?.district_name_arabic ? ` - ${props.model.to_warehouse.national_address.district_name_arabic}` : ""}
+                                                {props.model.to_warehouse?.national_address?.unit_no_arabic ? `,رقم الوحدة ${props.model.to_warehouse.national_address.unit_no_arabic}` : ""}
+                                                {props.model.to_warehouse?.national_address?.city_name_arabic ? `, ${props.model.to_warehouse.national_address.city_name_arabic}` : ""}
+                                                {props.model.to_warehouse?.national_address?.zipcode_arabic ? ` - ${props.model.to_warehouse.national_address.zipcode_arabic} ` : ""}
+                                                {props.model.to_warehouse?.national_address?.additional_no_arabic ? `- ${props.model.to_warehouse.national_address.additional_no_arabic} ` : ""}
+                                                {/*props.model.to_warehouse?.country_name === "Saudi Arabia" ? `المملكة العربية السعودية , ` : ""*/}
+                                            </span>}
+                                        </div>
+                                    </div>
+
                                 </>}
                                 {props.model && props.model.order_code && (props.modelName === "sales_return" || props.modelName === "whatsapp_sales_return") && <div className="row" dir="ltr" style={{ borderBottom: detailsBorderThickness }} >
                                     <div className="col-md-4 print-label" dir="ltr" style={{ borderRight: detailsBorderThickness, borderColor: detailsBorderColor, width: detailsLabelsColumnWidthPercent, padding: "3px" }} ><b>Original Invoice No. | رقم الفاتورة الأصلية:</b></div>
@@ -390,7 +470,7 @@ const PreviewContent = forwardRef((props, ref) => {
                                     </div>
                                 </> : ""}
                             </div>
-                            {!props.model.store?.settings?.zatca_qr_on_left_bottom && props.modelName !== "delivery_note" && props.modelName !== "whatsapp_delivery_note" && props.modelName !== "quotation" && props.modelName !== "quotation_sales_return" && props.modelName !== "whatsapp_quotation" && props.modelName !== "whatsapp_quotation_sales_return" && <div
+                            {!props.model.store?.settings?.zatca_qr_on_left_bottom && props.modelName !== "delivery_note" && props.modelName !== "whatsapp_delivery_note" && props.modelName !== "quotation" && props.modelName !== "quotation_sales_return" && props.modelName !== "whatsapp_quotation" && props.modelName !== "whatsapp_stock_transfer" && props.modelName !== "stock_transfer" && props.modelName !== "whatsapp_quotation_sales_return" && <div
                                 className="col-md-2"
                                 style={{ border: "solid 0px", width: "26%" }}
                                 onClick={(e) => {
@@ -667,6 +747,19 @@ const PreviewContent = forwardRef((props, ref) => {
                                                     </>}
                                                 </tr>
                                             ))}
+                                            {pageIndex === props.model.pages.length - 1 &&
+                                                (props.modelName === "stock_transfer" || props.modelName === "whatsapp_stock_transfer") && (
+                                                    <tr>
+                                                        <td></td>
+                                                        <td></td>
+                                                        <td style={{ borderLeft: tableBorderThickness, textAlign: "right" }}>Total Quantity | <span dir="rtl">الكمية الإجمالية</span>:</td>
+                                                        <td style={{ borderRight: tableBorderThickness, borderLeft: tableBorderThickness, fontWeight: "bold", background: "#f6f6f6", textAlign: "center" }}>
+                                                            {props.model.total_quantity}
+                                                        </td>
+                                                        {/* If you have more columns, add <td></td> for each, or adjust as needed */}
+                                                    </tr>
+                                                )
+                                            }
                                         </tbody>
                                     </table>
                                     <table className="table-responsive"
@@ -675,7 +768,7 @@ const PreviewContent = forwardRef((props, ref) => {
                                             props.selectText("tableFooter");
                                         }} className="clickable-text">
                                             <tr style={{ borderBottom: tableBorderThickness }}>
-                                                {props.model.store?.settings?.zatca_qr_on_left_bottom && props.modelName !== "quotation" && props.modelName !== "whatsapp_quotation" && props.modelName !== "quotation_sales_return" && props.modelName !== "whatsapp_quotation_sales_return" && props.modelName !== "delivery_note" && <th rowSpan={8} style={{ width: "20%", padding: "3px", borderRight: tableBorderThickness }}>
+                                                {props.model.store?.settings?.zatca_qr_on_left_bottom && props.modelName !== "quotation" && props.modelName !== "stock_transfer" && props.modelName !== "whatsapp_stock_transfer" && props.modelName !== "whatsapp_quotation" && props.modelName !== "quotation_sales_return" && props.modelName !== "whatsapp_quotation_sales_return" && props.modelName !== "delivery_note" && <th rowSpan={8} style={{ width: "20%", padding: "3px", borderRight: tableBorderThickness }}>
                                                     <div
                                                         className="col-md-1 text-center"
                                                         style={{
@@ -737,7 +830,7 @@ const PreviewContent = forwardRef((props, ref) => {
                                                     <Amount amount={trimTo2Decimals(props.model.total)} />
                                                 </td>
                                             </tr>
-                                            <tr style={{ borderBottom: tableBorderThickness }}>
+                                            {props.modelName !== "whatsapp_stock_transfer" && props.modelName !== "stock_transfer" && <> <tr style={{ borderBottom: tableBorderThickness }}>
                                                 <th className="text-end print-label" style={{ padding: "2px", borderRight: tableBorderThickness }}>
                                                     Shipping / Handling Fees   رسوم الشحن / المناولة :
                                                 </th>
@@ -745,14 +838,14 @@ const PreviewContent = forwardRef((props, ref) => {
                                                     <Amount amount={trimTo2Decimals(props.model.shipping_handling_fees)} />
                                                 </td>
                                             </tr>
-                                            <tr style={{ borderBottom: tableBorderThickness }}>
-                                                <th className="text-end print-label" style={{ padding: "2px", borderRight: tableBorderThickness }}>
-                                                    Total Discount الخصم الإجمالي :
-                                                </th>
-                                                <td className="text-end print-table-value" colSpan="1" style={{ paddingRight: "3px" }}>
-                                                    <Amount amount={trimTo2Decimals(props.model.discount)} />
-                                                </td>
-                                            </tr>
+                                                <tr style={{ borderBottom: tableBorderThickness }}>
+                                                    <th className="text-end print-label" style={{ padding: "2px", borderRight: tableBorderThickness }}>
+                                                        Total Discount الخصم الإجمالي :
+                                                    </th>
+                                                    <td className="text-end print-table-value" colSpan="1" style={{ paddingRight: "3px" }}>
+                                                        <Amount amount={trimTo2Decimals(props.model.discount)} />
+                                                    </td>
+                                                </tr></>}
                                             {!props.model.hideVAT && <>
                                                 <tr style={{ borderBottom: tableBorderThickness }}>
                                                     <th className="text-end print-label" style={{ padding: "2px", borderRight: tableBorderThickness }}>

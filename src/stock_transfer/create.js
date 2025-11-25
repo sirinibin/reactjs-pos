@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, forwardRef, useImperativeHandle, useCallback, useMemo } from "react";
-import StockTransferPreview from "./preview.js";
+import StockTransferPreview from "./../order/preview.js";
 import { Modal, Button, Alert } from "react-bootstrap";
 import ProductHistory from "../product/product_history.js";
 import ProductCreate from "../product/create.js";
@@ -9,7 +9,7 @@ import NumberFormat from "react-number-format";
 import DatePicker from "react-datepicker";
 import { format } from "date-fns";
 import StockTransferView from "./view.js";
-import "./style.css";
+import "./../order/style.css";
 //import BarcodeScannerComponent from "react-qr-barcode-scanner";
 //import Quagga from 'quagga';
 import ProductView from "../product/view.js";
@@ -37,7 +37,7 @@ import ImageViewerModal from '../utils/ImageViewerModal.js';
 import * as bootstrap from 'bootstrap';
 //import OverflowTooltip from "../utils/OverflowTooltip.js";
 import { highlightWords } from "../utils/search.js";
-import StockTransferPrint from './print.js';
+import StockTransferPrint from './../order/print.js';
 import { DragDropContext, Droppable, Draggable } from "react-beautiful-dnd";
 import { DebounceInput } from 'react-debounce-input';
 

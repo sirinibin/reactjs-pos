@@ -58,6 +58,15 @@ const Preview = forwardRef((props, ref) => {
                     await getQuotation(model.quotation_id);
                 }
 
+                if (model.from_warehouse_id) {
+                    await getWarehouse(model.from_warehouse_id);
+                }
+
+                if (model.to_warehouse_id) {
+                    await getWarehouse(model.to_warehouse_id);
+                }
+
+
                 InvoiceBackground = ""
                 setInvoiceBackground(InvoiceBackground);
 
@@ -429,6 +438,9 @@ const Preview = forwardRef((props, ref) => {
         } else if (model.modelName === "delivery_note" || model.modelName === "whatsapp_delivery_note") {
             // model.invoiceTitle = "DELIVERY NOTE / مذكرة تسليم";
             model.invoiceTitle = model.store.settings?.invoice?.delivery_note_title;
+        } else if (model.modelName === "stock_transfer" || model.modelName === "whatsapp_stock_transfer") {
+            // model.invoiceTitle = "DELIVERY NOTE / مذكرة تسليم";
+            model.invoiceTitle = model.store.settings?.invoice?.stock_transfer_title;
         }
 
         setModel({ ...model });
@@ -550,6 +562,8 @@ const Preview = forwardRef((props, ref) => {
             apiPath = "quotation-sales-return"
         } else if (modelName && (modelName === "delivery_note" || modelName === "whatsapp_delivery_note")) {
             apiPath = "delivery-note"
+        } else if (modelName && (modelName === "stock_transfer" || modelName === "whatsapp_stock_transfer")) {
+            apiPath = "stock-transfer";
         }
 
         await fetch('/v1/' + apiPath + '/' + id + "?" + queryParams, requestOptions)
@@ -660,6 +674,58 @@ const Preview = forwardRef((props, ref) => {
     }
 
 
+    async function getWarehouse(id) {
+        console.log("inside get Quotation");
+        const requestOptions = {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': localStorage.getItem('access_token'),
+            },
+        };
+
+        let searchParams = {};
+        if (localStorage.getItem("store_id")) {
+            searchParams.store_id = localStorage.getItem("store_id");
+        }
+        let queryParams = ObjectToSearchQueryParams(searchParams);
+
+
+
+        await fetch('/v1/warehouse/' + id + "?" + queryParams, requestOptions)
+            .then(async response => {
+                const isJson = response.headers.get('content-type')?.includes('application/json');
+                const data = isJson && await response.json();
+
+                // check for error response
+                if (!response.ok) {
+                    const error = (data && data.errors);
+                    return Promise.reject(error);
+                }
+
+                console.log("Response:");
+                console.log(data);
+
+                //model.quotation = data.result;
+
+                if (model.from_warehouse_id === data.result.id) {
+                    model.from_warehouse = data.result;
+                }
+
+                if (model.to_warehouse_id === data.result.id) {
+                    model.to_warehouse = data.result;
+                }
+
+                setModel({ ...model });
+
+                return model;
+            })
+            .catch(error => {
+
+            });
+    }
+
+
 
     let [model, setModel] = useState({});
 
@@ -737,6 +803,15 @@ const Preview = forwardRef((props, ref) => {
 
                 model.QRImageData = await invoice.render();
                 console.log("model.QRImageData:", model.QRImageData);
+
+
+                if (!model.from_warehouse_id) {
+                    model.from_warehouse = model.store;
+                }
+
+                if (!model.to_warehouse_id) {
+                    model.to_warehouse = model.store;
+                }
 
 
                 setModel({ ...model });
@@ -929,6 +1004,8 @@ const Preview = forwardRef((props, ref) => {
             filename += "Qtn_Sales_Return";
         } else if (modelName === "delivery_note" || modelName === "whatsapp_delivery_note") {
             filename += "Delivery_Note";
+        } else if (modelName === "stock_transfer" || modelName === "whatsapp_stock_transfer") {
+            filename += "Stock_Transfer";
         }
 
         if (model.code) {
@@ -1286,6 +1363,8 @@ const Preview = forwardRef((props, ref) => {
             message = `Hello, here is your Return Invoice:\n${window.location.origin}/pdfs/${fileName}.pdf${cacheBuster}`;
         } else if (modelName === "quotation_sales_return" || modelName === "whatsapp_quotation_sales_return") {
             message = `Hello, here is your Return Invoice:\n${window.location.origin}/pdfs/${fileName}.pdf${cacheBuster}`;
+        } else if (modelName === "stock_transfer" || modelName === "whatsapp_stock_transfer") {
+            message = `Hello, here is your Stock Transfer:\n${window.location.origin}/pdfs/${fileName}.pdf${cacheBuster}`;
         } else {
             message = `Hello, here is your Invoice:\n${window.location.origin}/pdfs/${fileName}.pdf${cacheBuster}`;
         }
@@ -1621,7 +1700,9 @@ const Preview = forwardRef((props, ref) => {
             "customer_withdrawal",
             "whatsapp_customer_withdrawal",
             "balance_sheet",
-            "whatsapp_balance_sheet"
+            "whatsapp_balance_sheet",
+            "stock_transfer",
+            "whatsapp_stock_transfer",
         ];
         for (let key1 in modelNames) {
             for (let key2 in defaultFontSizes) {

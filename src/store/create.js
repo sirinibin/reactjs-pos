@@ -160,6 +160,7 @@ const StoreCreate = forwardRef((props, ref) => {
         },
         quotation_title: "QUOTATION | اقتباس",
         delivery_note_title: "DELIVERY NOTE | مذكرة التسليم",
+        stock_transfer_title: "STOCK TRANSFER | نقل الأسهم",
         payable_title: "PAYMENT RECEIPT (PAYABLE / REFUND) | إيصال الدفع (مستحق الدفع / مسترد)",
         receivable_title: "PAYMENT RECEIPT (RECEIVABLE) | إيصال الدفع (مستحق القبض)",
         phase1: {
@@ -2784,6 +2785,30 @@ const StoreCreate = forwardRef((props, ref) => {
                                 )}
                             </div>
                             <div className="col-md-4">
+                                <label className="form-label">Stock Transfer*</label>
+                                <div className="input-group mb-3">
+                                    <input
+                                        value={formData.settings?.invoice?.stock_transfer_title}
+                                        type='string'
+                                        onChange={(e) => {
+
+                                            errors["settings_invoice_stock_transfer"] = "";
+                                            formData.settings.invoice.stock_transfer_title = e.target.value;
+                                            setFormData({ ...formData });
+                                            console.log(formData);
+                                        }}
+                                        className="form-control"
+                                        id="settings.invoice.stock_transfer_title"
+                                        placeholder="Invoice title"
+                                    />
+                                </div>
+                                {errors.settings?.invoice?.stock_transfer_title && (
+                                    <div style={{ color: "red" }}>
+                                        {errors.settings.invoice.stock_transfer_title}
+                                    </div>
+                                )}
+                            </div>
+                            <div className="col-md-4">
                                 <label className="form-label">Payable*</label>
                                 <div className="input-group mb-3">
                                     <input
@@ -4426,6 +4451,31 @@ const StoreCreate = forwardRef((props, ref) => {
                                 </div>
                             )}
                         </div>
+
+                        <div className="col-md-2">
+                            <div className="input-group mb-3">
+                                <input type="checkbox"
+                                    value={formData.settings.enable_warehouse_module}
+                                    checked={formData.settings.enable_warehouse_module}
+                                    onChange={(e) => {
+                                        errors["enable_warehouse_module"] = "";
+                                        formData.settings.enable_warehouse_module = !formData.settings.enable_warehouse_module;
+                                        setFormData({ ...formData });
+                                        console.log(formData);
+                                    }}
+                                    className=""
+                                    id="enable_warehouse_module"
+
+                                /> &nbsp;Enable Warehouse Module
+                            </div>
+                            <label className="form-label"></label>
+                            {errors.enable_warehouse_module && (
+                                <div style={{ color: "red" }}>
+                                    {errors.enable_warehouse_module}
+                                </div>
+                            )}
+                        </div>
+
                         <div className="col-md-2">
                             <div className="input-group mb-3">
                                 <input type="checkbox"

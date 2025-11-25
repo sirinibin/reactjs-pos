@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import {
     Link
 } from "react-router-dom";
@@ -37,6 +37,53 @@ function Sidebar(props) {
         ],
     });
 
+
+
+
+
+    /* const [loadStore, setLoadStore] = useState(false);
+     useEffect(() => {
+         if (loadStore) {
+             getStore(localStorage.getItem("store_id"));
+         }
+     }, [loadStore, getStore])*/
+
+    let [store, setStore] = useState({});
+    const getStore = useCallback(async (id) => {
+        console.log("inside get Store");
+        const requestOptions = {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': localStorage.getItem('access_token'),
+            },
+        };
+
+        await fetch('/v1/store/' + id, requestOptions)
+            .then(async response => {
+                const isJson = response.headers.get('content-type')?.includes('application/json');
+                const data = isJson && await response.json();
+
+                // check for error response
+                if (!response.ok) {
+                    const error = (data && data.errors);
+                    return Promise.reject(error);
+                }
+
+                //store = data.result;
+                setStore(data.result);
+
+            })
+            .catch(error => {
+
+            });
+    }, [])
+
+
+    useEffect(() => {
+        // setLoadStore(true);
+        getStore(localStorage.getItem("store_id"));
+    }, [getStore])
 
 
     function toggleActive(tabName) {
@@ -150,24 +197,26 @@ function Sidebar(props) {
                         <span className="align-middle">Stores</span>
                     </Link>
                 </li>
-                <li onClick={() => {
-                    toggleActive(appState.tabs[10]);
-                }} className={toggleActiveStyles(appState.tabs[10])}>
-                    <Link to="/dashboard/warehouses" className="sidebar-link">
-                        <i className="bi bi-shop" />
-                        <span className="align-middle">Warehouses</span>
-                    </Link>
-                </li>
+                {store.settings?.enable_warehouse_module && <>
+                    <li onClick={() => {
+                        toggleActive(appState.tabs[10]);
+                    }} className={toggleActiveStyles(appState.tabs[10])}>
+                        <Link to="/dashboard/warehouses" className="sidebar-link">
+                            <i className="bi bi-shop" />
+                            <span className="align-middle">Warehouses</span>
+                        </Link>
+                    </li>
 
 
-                <li onClick={() => {
-                    toggleActive(appState.tabs[11]);
-                }} className={toggleActiveStyles(appState.tabs[11])}>
-                    <Link to="/dashboard/stock-transfers" className="sidebar-link">
-                        <i className="bi bi-shop" />
-                        <span className="align-middle">Stock Transfers</span>
-                    </Link>
-                </li>
+                    <li onClick={() => {
+                        toggleActive(appState.tabs[11]);
+                    }} className={toggleActiveStyles(appState.tabs[11])}>
+                        <Link to="/dashboard/stock-transfers" className="sidebar-link">
+                            <i className="bi bi-shop" />
+                            <span className="align-middle">Stock Transfers</span>
+                        </Link>
+                    </li>
+                </>}
 
 
                 <li onClick={() => {

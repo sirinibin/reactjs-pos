@@ -2,8 +2,8 @@ import React, { useState, useRef, forwardRef, useImperativeHandle, useEffect, us
 import { Modal, Button, Table } from 'react-bootstrap';
 
 import NumberFormat from "react-number-format";
-import StockTransferPreview from './preview.js';
-import StockTransferPrint from './print.js';
+import StockTransferPreview from './../order/preview.js';
+import StockTransferPrint from './../order/print.js';
 import { format } from "date-fns";
 import { trimTo2Decimals } from "../utils/numberUtils.js";
 
