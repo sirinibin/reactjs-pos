@@ -3202,7 +3202,7 @@ const PurchaseCreate = forwardRef((props, ref) => {
                                                                                 return (
                                                                                     <span>
                                                                                         {totalStock}
-                                                                                        {warehouseDetails ? ` (${warehouseDetails})` : ""}
+                                                                                        {warehouseDetails && store.settings.enable_warehouse_module ? ` (${warehouseDetails})` : ""}
                                                                                     </span>
                                                                                 );
                                                                             })()}

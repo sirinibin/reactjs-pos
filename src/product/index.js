@@ -683,7 +683,7 @@ function ProductIndex(props) {
             },
         };
 
-        let Select = `select=id,rack,additional_keywords,search_label,set.name,item_code,prefix_part_number,country_name,brand_name,part_number,name,unit,name_in_arabic,product_stores.${localStorage.getItem('store_id')}.purchase_unit_price,product_stores.${localStorage.getItem('store_id')}.purchase_unit_price_with_vat,product_stores.${localStorage.getItem('store_id')}.retail_unit_price,product_stores.${localStorage.getItem('store_id')}.retail_unit_price_with_vat,product_stores.${localStorage.getItem('store_id')}.stock`;
+        let Select = `select=id,rack,additional_keywords,search_label,set.name,item_code,prefix_part_number,country_name,brand_name,part_number,name,unit,name_in_arabic,product_stores.${localStorage.getItem('store_id')}.purchase_unit_price,product_stores.${localStorage.getItem('store_id')}.purchase_unit_price_with_vat,product_stores.${localStorage.getItem('store_id')}.retail_unit_price,product_stores.${localStorage.getItem('store_id')}.retail_unit_price_with_vat,product_stores.${localStorage.getItem('store_id')}.stock,product_stores.${localStorage.getItem('store_id')}.warehouse_stocks`;
 
         // Fetch page 1 and page 2 in parallel
         const urls = [
@@ -2165,7 +2165,7 @@ function ProductIndex(props) {
                                                                                             return (
                                                                                                 <span>
                                                                                                     {totalStock}
-                                                                                                    {warehouseDetails ? ` (${warehouseDetails})` : ""}
+                                                                                                    {warehouseDetails && store.settings.enable_warehouse_module ? ` (${warehouseDetails})` : ""}
                                                                                                 </span>
                                                                                             );
                                                                                         })()}

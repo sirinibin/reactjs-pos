@@ -3372,7 +3372,7 @@ async function checkWarning(i) {
                                           return (
                                             <span>
                                               {totalStock}
-                                              {warehouseDetails ? ` (${warehouseDetails})` : ""}
+                                              {warehouseDetails && store.settings.enable_warehouse_module ? ` (${warehouseDetails})` : ""}
                                             </span>
                                           );
                                         })()}
