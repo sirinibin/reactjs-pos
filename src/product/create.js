@@ -1413,13 +1413,14 @@ const ProductCreate = forwardRef((props, ref) => {
 
     findStocksAdded();
     findStocksRemoved();
-    findProductStock();
+    //findProductStock();
 
     //formData.payments_input[key]["deleted"] = true;
     //setFormData({ ...formData });
 
   }
 
+  /*
   function findProductStock() {
     if (!productStores[localStorage.getItem('store_id')]?.stock) {
       productStores[localStorage.getItem('store_id')].stock = 0;
@@ -1465,7 +1466,7 @@ const ProductCreate = forwardRef((props, ref) => {
 
     setProductStores({ ...productStores });
 
-  }
+  }*/
 
   function findStocksAdded() {
     let stocksAdded = 0;
