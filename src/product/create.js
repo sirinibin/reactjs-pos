@@ -1398,7 +1398,7 @@ const ProductCreate = forwardRef((props, ref) => {
     setFormData({ ...formData });
     findStocksAdded();
     findStocksRemoved();
-    findProductStock();
+    //findProductStock();
     //validatePaymentAmounts();
     //validatePaymentAmounts((formData.payments_input.filter(payment => !payment.deleted).length - 1));
   }
