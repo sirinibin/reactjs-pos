@@ -1769,6 +1769,7 @@ selectedProducts[i].warehouse_stocks = { [fromStoreCode]: 0 };
         return true;
     }
 
+    const timerRef2 = useRef({});
     function addProduct(product) {
         if (!product.id && product.product_id) {
             product.id = product.product_id
@@ -1807,9 +1808,11 @@ selectedProducts[i].warehouse_stocks = { [fromStoreCode]: 0 };
             });
         }
         setSelectedProducts([...selectedProducts]);
-        if (timerRef.current) clearTimeout(timerRef.current);
+        if (timerRef2.current[index]) clearTimeout(timerRef2.current[index]);
 
-        timerRef.current = setTimeout(() => {
+        if (!timerRef2.current[index]) timerRef2.current[index] = {};
+
+        timerRef2.current[index] = setTimeout(() => {
             index = getProductIndex(product.id);
             if (alreadyAdded && product.allow_duplicates) {
                 index = selectedProducts?.length - 1;
@@ -1981,6 +1984,8 @@ selectedProducts[i].warehouse_stocks = { [fromStoreCode]: 0 };
     }
     */
 
+    // const timerRef2 = useRef({});
+
     function CalCulateLineTotals(index, skipTotal, skipTotalWithVAT) {
 
         if (!skipTotal) {
@@ -1992,6 +1997,40 @@ selectedProducts[i].warehouse_stocks = { [fromStoreCode]: 0 };
         }
 
         setSelectedProducts([...selectedProducts]);
+
+        /*
+        selectedProducts.forEach((product, i) => {
+            if (i !== index) {
+                return;
+            }
+            selectedProducts[index].line_total = parseFloat(trimTo2Decimals((product?.unit_price) * product?.quantity));
+            selectedProducts[index].line_total_with_vat = parseFloat(trimTo2Decimals((product?.unit_price_with_vat) * product?.quantity));
+        });
+        setSelectedProducts([...selectedProducts]);*/
+
+        /*
+    if (timerRef2.current[index]) clearTimeout(timerRef2.current[index]);
+
+    timerRef2.current[index] = setTimeout(() => {
+        selectedProducts.forEach((product, index) => {
+            product.line_total = parseFloat(trimTo2Decimals((product?.unit_price) * product?.quantity));
+            product.line_total_with_vat = parseFloat(trimTo2Decimals((product?.unit_price_with_vat) * product?.quantity));
+        });
+
+        //selectedProducts[index].line_total = parseFloat(trimTo2Decimals((selectedProducts[index]?.unit_price) * selectedProducts[index]?.quantity));
+        //selectedProducts[index].line_total_with_vat = parseFloat(trimTo2Decimals((selectedProducts[index]?.unit_price_with_vat) * selectedProducts[index]?.quantity));
+        setSelectedProducts([...selectedProducts]);
+    }, 300);*/
+
+        // if (!skipTotal) {
+        //  selectedProducts[index].line_total = parseFloat(trimTo2Decimals((selectedProducts[index]?.unit_price) * selectedProducts[index]?.quantity));
+        //}
+
+        //if (!skipTotalWithVAT) {
+        // selectedProducts[index].line_total_with_vat = parseFloat(trimTo2Decimals((selectedProducts[index]?.unit_price_with_vat) * selectedProducts[index]?.quantity));
+        //}
+
+
     }
 
     let [cashDiscount, setCashDiscount] = useState("");
