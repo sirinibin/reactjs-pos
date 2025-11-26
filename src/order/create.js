@@ -1874,6 +1874,7 @@ const OrderCreate = forwardRef((props, ref) => {
             selectedProducts[i].warehouse_stocks = product.product_stores[localStorage.getItem("store_id")]?.warehouse_stocks ? product.product_stores[localStorage.getItem("store_id")]?.warehouse_stocks : null;
 
             if (!selectedProducts[i].warehouse_stocks) {
+                selectedProducts[i].warehouse_stocks = {};
                 selectedProducts[i].warehouse_stocks["main_store"] = stock;
 
                 for (var j = 0; j < warehouseList.length; j++) {
@@ -1995,6 +1996,7 @@ const OrderCreate = forwardRef((props, ref) => {
         }
     }
 
+    const timerRef2 = useRef({});
     function addProductFromQuotation(product) {
         let alreadyAdded = isProductAdded(product.product_id);
 
@@ -2019,9 +2021,18 @@ const OrderCreate = forwardRef((props, ref) => {
 
         setSelectedProducts([...selectedProducts]);
         // if (timerRef.current) clearTimeout(timerRef.current);
+        let index = getProductIndex(product.product_id);
 
-        timerRef.current = setTimeout(() => {
-            let index = getProductIndex(product.product_id);
+
+
+        if (timerRef2.current[index]) clearTimeout(timerRef.current[index]);
+
+        if (!timerRef2.current[index]) {
+            timerRef2.current[index] = {};
+        }
+
+        timerRef2.current[index] = setTimeout(() => {
+
 
             if (alreadyAdded) {
                 index = selectedProducts?.length - 1;
@@ -2075,10 +2086,16 @@ const OrderCreate = forwardRef((props, ref) => {
             });
         }
         setSelectedProducts([...selectedProducts]);
-        if (timerRef.current) clearTimeout(timerRef.current);
+        index = getProductIndex(product.id);
 
-        timerRef.current = setTimeout(() => {
-            index = getProductIndex(product.id);
+        if (timerRef2.current[index]) clearTimeout(timerRef2.current[index]);
+
+        if (!timerRef2.current[index]) {
+            timerRef2.current[index] = {};
+        }
+
+        timerRef2.current[index] = setTimeout(() => {
+
             if (alreadyAdded && product.allow_duplicates) {
                 index = selectedProducts?.length - 1;
             }

@@ -1750,10 +1750,14 @@ selectedProducts[i].warehouse_stocks = { [fromStoreCode]: 0 };
         });
 
         setSelectedProducts([...selectedProducts]);
-        // if (timerRef.current) clearTimeout(timerRef.current);
+        let index = getProductIndex(product.product_id);
 
-        timerRef.current = setTimeout(() => {
-            let index = getProductIndex(product.product_id);
+        // if (timerRef.current) clearTimeout(timerRef.current);
+        if (timerRef2.current[index]) clearTimeout(timerRef2.current[index]);
+
+        if (!timerRef2.current[index]) timerRef2.current[index] = {};
+
+        timerRef2.current[index] = setTimeout(() => {
 
             if (alreadyAdded) {
                 index = selectedProducts?.length - 1;

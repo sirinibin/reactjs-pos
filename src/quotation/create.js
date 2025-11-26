@@ -2168,6 +2168,7 @@ const QuotationCreate = forwardRef((props, ref) => {
       selectedProducts[i].warehouse_stocks = product.product_stores[localStorage.getItem("store_id")]?.warehouse_stocks ? product.product_stores[localStorage.getItem("store_id")]?.warehouse_stocks : null;
 
       if (!selectedProducts[i].warehouse_stocks) {
+        selectedProducts[i].warehouse_stocks = {};
         selectedProducts[i].warehouse_stocks["main_store"] = stock;
 
         for (var j = 0; j < warehouseList.length; j++) {
