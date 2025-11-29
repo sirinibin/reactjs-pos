@@ -1878,7 +1878,8 @@ function ProductIndex(props) {
             <ProductView ref={DetailsViewRef} openUpdateForm={openUpdateForm} openCreateForm={openCreateForm} showToastMessage={props.showToastMessage} />
             <ProductJson ref={ProductJsonDialogRef} />
             <div className="container-fluid p-0">
-                <div className="row align-items-center" style={{
+
+                {store?.settings?.enable_warehouse_module && <div className="row align-items-center" style={{
                     marginTop: "-8px",
                     flexWrap: "nowrap",
                     gap: "4px",
@@ -1957,7 +1958,7 @@ function ProductIndex(props) {
                             ))}
                         </select>
                     </div>
-                </div>
+                </div>}
 
                 <div className="row">
                     <div className="col">
