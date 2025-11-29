@@ -393,19 +393,21 @@ function ProductIndex(props) {
             Select =
                 "select=id,is_set,deleted,deleted_at,prefix_part_number,brand_name,country_name,item_code,ean_12,bar_code,part_number,name,name_in_arabic,category_name,category_id,created_by_name,created_at,rack,product_stores";
 
-        } else {
-            Select =
-                "select=id,is_set,deleted,deleted_at,prefix_part_number,brand_name,country_name,item_code,ean_12,bar_code,part_number,name,name_in_arabic,category_name,category_id,created_by_name,created_at,rack,product_stores";
-
-
-            //Select =
-            //   "select=id,item_code,ean_12,bar_code,part_number,name,name_in_arabic,category_name,product_stores";
         }
 
 
         if (localStorage.getItem("store_id")) {
             searchParams.store_id = localStorage.getItem("store_id");
         }
+
+        if (selectedWarehouse.warehouse_code) {
+            searchParams.warehouse_code = selectedWarehouse.warehouse_code;
+        } else {
+            searchParams.warehouse_code = "";
+        }
+
+
+
 
         const d = new Date();
         let diff = d.getTimezoneOffset();
@@ -499,6 +501,45 @@ function ProductIndex(props) {
     }
 
     function sort(field) {
+        if (selectedWarehouse.warehouse_code) {
+            if (field === "stores.stock") {
+                field = "stores.warehouse_stocks." + selectedWarehouse.warehouse_code;
+            } else if (field === "stores.sales_count") {
+                field = "stores.product_warehouses." + selectedWarehouse.warehouse_code + ".sales_count";
+            } else if (field === "stores.sales_quantity") {
+                field = "stores.product_warehouses." + selectedWarehouse.warehouse_code + ".sales_quantity";
+            } else if (field === "stores.sales") {
+                field = "stores.product_warehouses." + selectedWarehouse.warehouse_code + ".sales";
+            } else if (field === "stores.sales_profit") {
+                field = "stores.product_warehouses." + selectedWarehouse.warehouse_code + ".sales_profit";
+            } else if (field === "stores.sales_loss") {
+                field = "stores.product_warehouses." + selectedWarehouse.warehouse_code + ".sales_loss";
+            } else if (field === "stores.sales_return_count") {
+                field = "stores.product_warehouses." + selectedWarehouse.warehouse_code + ".sales_return_count";
+            } else if (field === "stores.sales_return_quantity") {
+                field = "stores.product_warehouses." + selectedWarehouse.warehouse_code + ".sales_return_quantity";
+            } else if (field === "stores.sales_return") {
+                field = "stores.product_warehouses." + selectedWarehouse.warehouse_code + ".sales_return";
+            } else if (field === "stores.sales_return_profit") {
+                field = "stores.product_warehouses." + selectedWarehouse.warehouse_code + ".sales_return_profit";
+            } else if (field === "stores.sales_return_loss") {
+                field = "stores.product_warehouses." + selectedWarehouse.warehouse_code + ".sales_return_loss";
+            } else if (field === "stores.purchase_return_count") {
+                field = "stores.product_warehouses." + selectedWarehouse.warehouse_code + ".purchase_return_count";
+            } else if (field === "stores.purchase_return_quantity") {
+                field = "stores.product_warehouses." + selectedWarehouse.warehouse_code + ".purchase_return_quantity";
+            } else if (field === "stores.purchase_return") {
+                field = "stores.product_warehouses." + selectedWarehouse.warehouse_code + ".purchase_return";
+            } else if (field === "stores.purchase_count") {
+                field = "stores.product_warehouses." + selectedWarehouse.warehouse_code + ".purchase_count";
+            } else if (field === "stores.purchase_quantity") {
+                field = "stores.product_warehouses." + selectedWarehouse.warehouse_code + ".purchase_quantity";
+            } else if (field === "stores.purchase") {
+                field = "stores.product_warehouses." + selectedWarehouse.warehouse_code + ".purchase";
+            }
+        }
+
+
         sortField = field;
         setSortField(sortField);
         sortProduct = sortProduct === "-" ? "" : "-";
@@ -1562,6 +1603,67 @@ function ProductIndex(props) {
         // handleClose();
     };
 
+    const [warehouseList, setWarehouseList] = useState([]);
+
+    const loadWarehouses = useCallback(() => {
+        const requestOptions = {
+            method: "GET",
+            headers: {
+                "Content-Type": "application/json",
+                Authorization: localStorage.getItem("access_token"),
+            },
+        };
+        let Select =
+            "select=id,name,code,created_by_name,created_at";
+
+        const d = new Date();
+        let diff = d.getTimezoneOffset();
+        searchParams["timezone_offset"] = parseFloat(diff / 60);
+
+        if (localStorage.getItem("store_id")) {
+            searchParams.store_id = localStorage.getItem("store_id");
+        }
+
+        setSearchParams(searchParams);
+        let queryParams = ObjectToSearchQueryParams(searchParams);
+        if (queryParams !== "") {
+            queryParams = "&" + queryParams;
+        }
+
+        fetch(
+            "/v1/warehouse?" +
+            Select +
+            queryParams +
+            "&sort=name" +
+            "&page=1" +
+            "&limit=100",
+            requestOptions
+        )
+            .then(async (response) => {
+                const isJson = response.headers
+                    .get("content-type")
+                    ?.includes("application/json");
+                const data = isJson && (await response.json());
+
+                // check for error response
+                if (!response.ok) {
+                    const error = data && data.errors;
+                    return Promise.reject(error);
+                }
+
+
+                setWarehouseList(data.result);
+            })
+            .catch((error) => {
+                console.log(error);
+            });
+    }, [searchParams]);
+
+    useEffect(() => {
+        loadWarehouses();
+    }, [loadWarehouses]);
+
+    let [selectedWarehouse, setSelectedWarehouse] = useState({});
 
     return (
         <>
@@ -1739,8 +1841,6 @@ function ProductIndex(props) {
                     </Button>
                 </Modal.Footer>
             </Modal>
-
-
             <Modal show={showSuccess} onHide={() => setShowSuccess(false)} centered>
                 <Modal.Header closeButton>
                     <Modal.Title>Success</Modal.Title>
@@ -1777,12 +1877,127 @@ function ProductIndex(props) {
             <ProductCreate ref={CreateFormRef} refreshList={list} openDetailsView={openDetailsView} showToastMessage={props.showToastMessage} />
             <ProductView ref={DetailsViewRef} openUpdateForm={openUpdateForm} openCreateForm={openCreateForm} showToastMessage={props.showToastMessage} />
             <ProductJson ref={ProductJsonDialogRef} />
-
             <div className="container-fluid p-0">
+                <div className="row align-items-center" style={{
+                    marginTop: "-8px",
+                    flexWrap: "nowrap",
+                    gap: "4px",
+                    alignItems: "center",
+                }}>
+                    <div className="col-auto" style={{
+                        paddingRight: "4px",
+                        marginBottom: "0px",
+                        minWidth: "120px",
+                        fontSize: "1rem",
+                        display: "flex",
+                        alignItems: "center",
+                    }}>
+                        <label htmlFor="warehouse_id" style={{
+                            fontWeight: "bold",
+                            marginRight: "4px",
+                            marginBottom: "0px",
+                            whiteSpace: "nowrap",
+                        }}>
+                            Store/Warehouse:
+                        </label>
+                    </div>
+                    <div className="col-auto" style={{
+                        paddingLeft: "0px",
+                        minWidth: "120px",
+                    }}>
+                        <select
+                            id="warehouse_id"
+                            name="warehouse_id"
+                            className="form-control"
+                            style={{
+                                marginBottom: "0px",
+                                paddingTop: "2px",
+                                paddingBottom: "2px",
+                                fontSize: "1rem",
+                                minWidth: "120px",
+                            }}
+                            value={
+                                selectedWarehouse.warehouse_id
+                                    ? selectedWarehouse.warehouse_id
+                                    : selectedWarehouse.warehouse_code === "main_store"
+                                        ? "main_store"
+                                        : ""
+                            }
+                            onChange={(e) => {
+                                const selectedValue = e.target.value;
+                                if (selectedValue === "") {
+                                    selectedWarehouse.warehouse_id = null;
+                                    selectedWarehouse.warehouse_code = "";
+                                } else if (selectedValue === "main_store") {
+                                    selectedWarehouse.warehouse_id = null;
+                                    selectedWarehouse.warehouse_code = "main_store";
+                                } else {
+                                    const wh = warehouseList.find(w => w.id === selectedValue);
+                                    if (wh) {
+                                        selectedWarehouse.warehouse_id = wh.id;
+                                        selectedWarehouse.warehouse_code = wh.code;
+                                    }
+                                }
+
+                                //  alert(selectedWarehouse.warehouse_code)
+
+                                // setSelectedWarehouse(selectedWarehouse);
+
+                                setSelectedWarehouse({ ...selectedWarehouse });
+                                list();
+
+                            }}
+                        >
+                            <option value="">All</option>
+                            <option value="main_store">Main Store</option>
+                            {warehouseList.map((warehouse) => (
+                                <option key={warehouse.id} value={warehouse.id}>
+                                    {warehouse.name} ({warehouse.code})
+                                </option>
+                            ))}
+                        </select>
+                    </div>
+                </div>
 
                 <div className="row">
                     <div className="col">
                         <span className="text-end">
+                            {/* Warehouse/Store
+                            <div className="">
+                                <select
+                                    id={`from_warehouse_id`}
+                                    name={`from_warehouse_id`}
+                                    className="form-control"
+                                    value={selectedWarehouse.warehouse_id || "main_store"}
+                                    onChange={(e) => {
+                                        const selectedValue = e.target.value;
+
+                                        if (selectedValue === "main_store") {
+                                            selectedWarehouse.warehouse_id = null;
+                                            selectedWarehouse.warehouse_code = "";
+                                        } else {
+                                            const selectedWarehouse = warehouseList.find(w => w.id === selectedValue);
+                                            if (selectedWarehouse) {
+                                                selectedWarehouse.warehouse_id = selectedWarehouse.id;
+                                                selectedWarehouse.warehouse_code = selectedWarehouse.code;
+                                            }
+                                        }
+
+                                        setSelectedWarehouse({ ...selectedWarehouse });
+                                        //setFormData({ ...formData });
+                                        //checkWarnings();
+                                    }}
+                                >
+                                    <option value="main_store">Main Store</option>
+                                    {warehouseList.map((warehouse) => (
+                                        <option key={warehouse.id} value={warehouse.id}>
+                                            {warehouse.name} ({warehouse.code})
+                                        </option>
+                                    ))}
+                                </select>
+
+                            </div>*/}
+
                             <StatsSummary
                                 title="Products"
                                 stats={{
@@ -1799,13 +2014,12 @@ function ProductIndex(props) {
                             />
                         </span>
                     </div>
-                </div>
+                </div >
 
                 <div className="row">
                     <div className="col">
                         <h1 className="h3">Products</h1>
                     </div>
-
 
 
                     <div className="col text-end">
@@ -1849,7 +2063,7 @@ function ProductIndex(props) {
                                 <div className="row">
                                     {totalItems === 0 && (
                                         <div className="col">
-                                            <p className="text-start">No Product Categories to display</p>
+                                            <p className="text-start">No Producs to display</p>
                                         </div>
                                     )}
                                 </div>
@@ -4262,13 +4476,77 @@ function ProductIndex(props) {
                                                                 {(col.key === "barcode" || col.key === "rack") && <td style={{ width: "auto", whiteSpace: "nowrap" }} >
                                                                     {product[col.fieldName]}
                                                                 </td>}
-
-
                                                                 {(col.key === "purchase_unit_price" ||
                                                                     col.key === "wholesale_unit_price" ||
                                                                     col.key === "retail_unit_price" ||
+                                                                    col.key === "delivery_note_count" ||
+                                                                    col.key === "delivery_note_quantity"
+                                                                ) &&
+                                                                    <td>
+                                                                        <b>
+                                                                            {product.product_stores[localStorage.getItem("store_id")] ? product.product_stores[localStorage.getItem("store_id")][col.key]?.toFixed(2) : ""}
+                                                                        </b>
+                                                                    </td>}
+                                                                {col.key === "stock" &&
+                                                                    <td style={{ width: "auto", whiteSpace: "nowrap" }}>
+                                                                        {(() => {
+                                                                            const storeId = localStorage.getItem("store_id");
+                                                                            const productStore = product.product_stores?.[storeId];
+
+                                                                            //selectedWarehouse.warehouse_code
+                                                                            const totalStock = productStore?.stock ?? 0;
+                                                                            let warehouseStocks = productStore?.warehouse_stocks;
+                                                                            if (!warehouseStocks) {
+                                                                                warehouseStocks = { "main_store": totalStock };
+                                                                            }
+
+                                                                            for (const wh of warehouseList) {
+                                                                                if (!warehouseStocks.hasOwnProperty(wh.code)) {
+                                                                                    warehouseStocks[wh.code] = 0;
+                                                                                }
+                                                                            }
+
+                                                                            // Always show Main Store first, then others
+                                                                            const orderedEntries = [];
+                                                                            if (warehouseStocks?.hasOwnProperty("main_store")) {
+                                                                                orderedEntries.push(["main_store", warehouseStocks["main_store"]]);
+                                                                            }
+
+                                                                            if (warehouseStocks)
+                                                                                Object.entries(warehouseStocks).forEach(([key, value]) => {
+                                                                                    if (key !== "main_store") {
+                                                                                        orderedEntries.push([key, value]);
+                                                                                    }
+                                                                                });
+
+                                                                            const details = orderedEntries
+                                                                                .map(([key, value]) => {
+                                                                                    let name = key === "main_store" ? "Main Store" : key.replace(/^wh/, "WH").toUpperCase();
+                                                                                    return `${name}: ${value}`;
+                                                                                })
+                                                                                .join(", ");
+
+                                                                            return (
+                                                                                <OverlayTrigger
+                                                                                    placement="top"
+                                                                                    overlay={
+                                                                                        <Tooltip id={`stock-tooltip-${product.id}`}>
+                                                                                            ({details})
+
+                                                                                        </Tooltip>
+                                                                                    }
+                                                                                >
+                                                                                    <span style={{ cursor: "pointer", textDecoration: "underline dotted" }}>
+                                                                                        <b>{selectedWarehouse.warehouse_code ? warehouseStocks[selectedWarehouse.warehouse_code] : ""}</b>
+                                                                                        <b>{!selectedWarehouse.warehouse_code ? totalStock : ""}</b>
+                                                                                    </span>
+                                                                                </OverlayTrigger>
+                                                                            );
+                                                                        })()}
+                                                                    </td>
+                                                                }
+                                                                {(col.key === "sales" ||
                                                                     col.key === "sales_count" ||
-                                                                    col.key === "sales" ||
                                                                     col.key === "sales_quantity" ||
                                                                     col.key === "sales_profit" ||
                                                                     col.key === "sales_loss" ||
@@ -4291,56 +4569,52 @@ function ProductIndex(props) {
                                                                     col.key === "quotation_sales_quantity" ||
                                                                     col.key === "quotation_sales_return_count" ||
                                                                     col.key === "quotation_sales_return" ||
-                                                                    col.key === "quotation_sales_return_quantity" ||
-                                                                    col.key === "delivery_note_count" ||
-                                                                    col.key === "delivery_note_quantity"
+                                                                    col.key === "quotation_sales_return_quantity"
                                                                 ) &&
-                                                                    <td>
-                                                                        <b>
-                                                                            {product.product_stores[localStorage.getItem("store_id")][col.key]?.toFixed(2)}
-                                                                        </b>
-                                                                    </td>}
-                                                                {col.key === "stock" &&
                                                                     <td style={{ width: "auto", whiteSpace: "nowrap" }}>
                                                                         {(() => {
                                                                             const storeId = localStorage.getItem("store_id");
-                                                                            const productStore = product.product_stores?.[storeId];
-                                                                            const totalStock = productStore?.stock ?? 0;
-                                                                            const warehouseStocks = productStore?.warehouse_stocks;
+                                                                            const productStore = product.product_stores?.[storeId] ? product.product_stores?.[storeId] : {};
 
-                                                                            if (!warehouseStocks || Object.keys(warehouseStocks).length === 0) {
-                                                                                // No warehouse stocks, show tooltip with Main Store stock
-                                                                                return (
-                                                                                    <OverlayTrigger
-                                                                                        placement="top"
-                                                                                        overlay={
-                                                                                            <Tooltip id={`stock-tooltip-main-${product.id}`}>
-                                                                                                (Main Store: {totalStock})
-                                                                                            </Tooltip>
-                                                                                        }
-                                                                                    >
-                                                                                        <span style={{ cursor: "pointer", textDecoration: "underline dotted" }}>
-                                                                                            <b>{totalStock}</b>
-                                                                                        </span>
-                                                                                    </OverlayTrigger>
-                                                                                );
+                                                                            //selectedWarehouse.warehouse_code
+                                                                            const totalValue = productStore[col.key] ? productStore[col.key] : 0;
+                                                                            let productWarehouses = productStore?.product_warehouses;
+                                                                            if (!productWarehouses) {
+                                                                                productWarehouses = { "main_store": totalValue };
+                                                                            }
+
+                                                                            for (const wh of warehouseList) {
+                                                                                if (!wh.code)
+                                                                                    continue;
+
+                                                                                if (!productWarehouses.hasOwnProperty(wh.code)) {
+                                                                                    if (!productWarehouses[wh.code]) {
+                                                                                        productWarehouses[wh.code] = { [col.key]: 0 };
+                                                                                    } else {
+                                                                                        productWarehouses[wh.code][col.key] = 0;
+                                                                                    }
+                                                                                }
                                                                             }
 
                                                                             // Always show Main Store first, then others
                                                                             const orderedEntries = [];
-                                                                            if (warehouseStocks.hasOwnProperty("main_store")) {
-                                                                                orderedEntries.push(["main_store", warehouseStocks["main_store"]]);
+                                                                            if (productWarehouses?.hasOwnProperty("main_store")) {
+                                                                                orderedEntries.push(["main_store", productWarehouses["main_store"][col.key] ? productWarehouses["main_store"][col.key] : 0]);
                                                                             }
-                                                                            Object.entries(warehouseStocks).forEach(([key, value]) => {
-                                                                                if (key !== "main_store") {
-                                                                                    orderedEntries.push([key, value]);
-                                                                                }
-                                                                            });
+
+                                                                            if (productWarehouses)
+                                                                                Object.entries(productWarehouses).forEach(([key, value]) => {
+                                                                                    if (key !== "main_store" && key && value) {
+                                                                                        //  console.log("key:" + key + ", field:" + col.key + ", V:" + value[col.key] + ",P.no:" + product.part_number);
+                                                                                        orderedEntries.push([key, value[col.key] ? value[col.key] : 0]);
+                                                                                    }
+                                                                                });
 
                                                                             const details = orderedEntries
                                                                                 .map(([key, value]) => {
                                                                                     let name = key === "main_store" ? "Main Store" : key.replace(/^wh/, "WH").toUpperCase();
-                                                                                    return `${name}: ${value}`;
+
+                                                                                    return `${name}: ${value ? value : 0}`;
                                                                                 })
                                                                                 .join(", ");
 
@@ -4350,11 +4624,13 @@ function ProductIndex(props) {
                                                                                     overlay={
                                                                                         <Tooltip id={`stock-tooltip-${product.id}`}>
                                                                                             ({details})
+
                                                                                         </Tooltip>
                                                                                     }
                                                                                 >
                                                                                     <span style={{ cursor: "pointer", textDecoration: "underline dotted" }}>
-                                                                                        <b>{totalStock}</b>
+                                                                                        <b>{selectedWarehouse.warehouse_code ? productWarehouses[selectedWarehouse.warehouse_code][col.key] : ""}</b>
+                                                                                        <b>{!selectedWarehouse.warehouse_code ? totalValue : ""}</b>
                                                                                     </span>
                                                                                 </OverlayTrigger>
                                                                             );
@@ -4904,7 +5180,7 @@ function ProductIndex(props) {
                         </div>
                     </div>
                 </div>
-            </div>
+            </div >
         </>
     );
 }

@@ -73,9 +73,9 @@ const Preview = forwardRef((props, ref) => {
                 if (model.store_id) {
                     await getStore(model.store_id);
 
-                    if (model.store.code === "MBDI") {
+                    if (model.store?.code === "MBDI") {
                         InvoiceBackground = MBDIInvoiceBackground;
-                    } else if (model.store.code === "LGK-SIMULATION" || model.store.code === "LGK" || model.store.code === "PH2") {
+                    } else if (model.store?.code === "LGK-SIMULATION" || model.store?.code === "LGK" || model.store?.code === "PH2") {
                         InvoiceBackground = LGKInvoiceBackground;
                     }
 
