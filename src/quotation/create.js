@@ -3510,8 +3510,13 @@ async function checkWarning(i) {
                   </tr>
                 </thead>
                 <tbody>
-                  {selectedProducts
-                    .map((product, index) => (
+                  {selectedProducts.map((product, index) => {
+                    // Find all indexes with the same product_id
+                    const duplicateIndexes = selectedProducts
+                      .map((p, i) => p.product_id === product.product_id ? i : -1)
+                      .filter(i => i !== -1);
+                    const duplicateCount = duplicateIndexes.length;
+                    return (
                       <tr className="text-center fixed-row " key={index}>
                         <td style={{ verticalAlign: 'middle', padding: '0.25rem' }} >
                           <div
@@ -3575,7 +3580,7 @@ async function checkWarning(i) {
                         </ResizableTableCell>
                         <ResizableTableCell style={{ verticalAlign: 'middle', padding: '0.25rem' }}
                         >
-                          <div className="input-group">
+                          <div className="input-group" style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
                             <input type="text" id={`${"quotation_product_name" + index}`}
                               name={`${"quotation_product_name" + index}`}
                               onWheel={(e) => e.target.blur()}
@@ -3589,36 +3594,68 @@ async function checkWarning(i) {
                                 setErrors({ ...errors });
 
                                 if (!e.target.value) {
-                                  //errors["purchase_unit_price_" + index] = "Invalid purchase unit price";
                                   selectedProducts[index].name = "";
                                   setSelectedProducts([...selectedProducts]);
-                                  //setErrors({ ...errors });
                                   console.log("errors:", errors);
                                   return;
                                 }
-
 
                                 selectedProducts[index].name = e.target.value;
                                 setSelectedProducts([...selectedProducts]);
                               }} />
 
+                            <div style={{ display: 'flex', alignItems: 'center', marginLeft: '8px', position: 'relative' }}>
+                              <div
+                                style={{ color: "blue", cursor: "pointer", marginLeft: "2px" }}
+                                onClick={() => {
+                                  openUpdateProductForm(product.product_id);
+                                }}
+                              >
+                                <i className="bi bi-pencil"> </i>
+                              </div>
 
-                            <div
-                              style={{ color: "blue", cursor: "pointer", marginLeft: "10px" }}
-                              onClick={() => {
-                                openUpdateProductForm(product.product_id);
-                              }}
-                            >
-                              <i className="bi bi-pencil"> </i>
-                            </div>
+                              <div
+                                style={{ color: "blue", cursor: "pointer", marginLeft: "8px" }}
+                                onClick={() => {
+                                  openProductDetails(product.product_id);
+                                }}
+                              >
+                                <i className="bi bi-eye"> </i>
+                              </div>
 
-                            <div
-                              style={{ color: "blue", cursor: "pointer", marginLeft: "10px" }}
-                              onClick={() => {
-                                openProductDetails(product.product_id);
-                              }}
-                            >
-                              <i className="bi bi-eye"> </i>
+                              {duplicateCount > 1 && (
+                                <OverlayTrigger
+                                  placement="top"
+                                  overlay={
+                                    <Tooltip id={`duplicate-tooltip-input-${index}`}>
+                                      {`${duplicateCount - 1} Duplicate${(duplicateCount - 1) > 1 ? 's' : ''}`}
+                                    </Tooltip>
+                                  }
+                                >
+                                  <span style={{
+                                    position: 'absolute',
+                                    top: '50%',
+                                    right: '48px',
+                                    transform: 'translateY(-50%)',
+                                    display: 'inline-flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    width: '22px',
+                                    height: '22px',
+                                    borderRadius: '50%',
+                                    background: '#ffc107',
+                                    color: '#212529',
+                                    fontWeight: 'bold',
+                                    fontSize: '0.7rem',
+                                    boxShadow: '0 1px 4px rgba(0,0,0,0.08)',
+                                    cursor: 'pointer',
+                                    border: '2px solid #fff',
+                                    zIndex: 2
+                                  }}>
+                                    {duplicateCount - 1}
+                                  </span>
+                                </OverlayTrigger>
+                              )}
                             </div>
                           </div>
                           {(errors[`name_${index}`] || warnings[`name_${index}`]) && (
@@ -4882,9 +4919,8 @@ async function checkWarning(i) {
                             )}
                           </div>
                         </td>
-                      </tr>
-                    ))
-                    .reverse()}
+                      </tr>);
+                  }).reverse()}
                 </tbody>
               </table>
             </div>
@@ -6007,7 +6043,7 @@ async function checkWarning(i) {
             </Modal.Footer>
           </form>
         </Modal.Body>
-      </Modal>
+      </Modal >
     </>
   );
 });
