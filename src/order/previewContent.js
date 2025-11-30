@@ -752,7 +752,7 @@ const PreviewContent = forwardRef((props, ref) => {
                                                     <tr>
                                                         <td></td>
                                                         <td></td>
-                                                        <td style={{ borderLeft: tableBorderThickness, textAlign: "right" }}>Total Quantity | <span dir="rtl">الكمية الإجمالية</span>:</td>
+                                                        <th style={{ borderLeft: tableBorderThickness, textAlign: "right" }}>Total Quantity | <span dir="rtl">الكمية الإجمالية</span>:</th>
                                                         <td style={{ borderRight: tableBorderThickness, borderLeft: tableBorderThickness, fontWeight: "bold", background: "#f6f6f6", textAlign: "center" }}>
                                                             {props.model.total_quantity}
                                                         </td>
