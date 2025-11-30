@@ -348,8 +348,10 @@ const QuotationCreate = forwardRef((props, ref) => {
 
         let quotation = data.result;
 
+
         oldProducts = quotation.products.map(obj => ({ ...obj }));
         setOldProducts([...oldProducts]);
+
 
         if (data.result?.cash_discount) {
           cashDiscount = data.result.cash_discount;
@@ -428,6 +430,8 @@ const QuotationCreate = forwardRef((props, ref) => {
         }
 
 
+
+
         if (formData.is_discount_percent) {
           formData.discountValue = formData.discount_percent;
         } else {
@@ -437,9 +441,19 @@ const QuotationCreate = forwardRef((props, ref) => {
         selectedProducts = quotation.products;
         setSelectedProducts([...selectedProducts]);
 
-        selectedProducts.forEach((product, index) => {
+        /*selectedProducts.forEach((product, index) => {
           CalCulateLineTotals(index);
+        });*/
+        const updatedProducts = selectedProducts.map((product, index) => {
+          // Calculate line totals without calling setSelectedProducts inside the loop
+          const updatedProduct = { ...product };
+          updatedProduct.line_total = parseFloat(trimTo2Decimals((updatedProduct.unit_price - updatedProduct.unit_discount) * updatedProduct.quantity));
+          updatedProduct.line_total_with_vat = parseFloat(trimTo2Decimals((updatedProduct.unit_price_with_vat - updatedProduct.unit_discount_with_vat) * updatedProduct.quantity));
+          return updatedProduct;
         });
+        setSelectedProducts(updatedProducts);
+
+        // alert("Quotation loaded successfully1");
 
 
         if (quotation.customer_id && quotation.customer?.name) {
@@ -466,10 +480,11 @@ const QuotationCreate = forwardRef((props, ref) => {
 
 
         setFormData({ ...formData });
-
-        checkWarnings();
-        checkErrors();
+        //alert("Quotation loaded successfully");
         reCalculate();
+        checkWarnings();
+        //checkErrors();
+
       })
       .catch((error) => {
         setProcessing(false);
@@ -1285,23 +1300,7 @@ const QuotationCreate = forwardRef((props, ref) => {
 
 
       let unitPriceWithVAT = parseFloat(selectedProducts[i].unit_price_with_vat);
-      /*
-      if (unitPrice && /^\d*\.?\d{0,2}$/.test(unitPrice) === false) {
-          errors["unit_price_" + i] = "Max decimal points allowed is 2 - WIITHOUT VAT";
-          setErrors({ ...errors });
-          return;
- 
-      }
- 
-    
- 
- 
-      if (unitPriceWithVAT && /^\d*\.?\d{0,2}$/.test(unitPriceWithVAT) === false) {
-          errors["unit_price_with_vat" + i] = "Max decimal points allowed is 2 - WITH VAT";
-          setErrors({ ...errors });
-          return;
- 
-      }*/
+
 
 
 
@@ -1309,24 +1308,12 @@ const QuotationCreate = forwardRef((props, ref) => {
 
       if (selectedProducts[i].unit_discount) {
         unitDiscount = parseFloat(selectedProducts[i].unit_discount)
-        /*
-        if (/^\d*\.?\d{0,2}$/.test(unitDiscount) === false) {
-            errors["unit_discount_" + i] = "Max decimal points allowed is 2";
-            setErrors({ ...errors });
-            return;
-        }*/
       }
 
       let unitDiscountWithVAT = 0.00;
 
       if (selectedProducts[i].unit_discount_with_vat) {
         unitDiscountWithVAT = parseFloat(selectedProducts[i].unit_discount_with_vat)
-        /*
-        if (/^\d*\.?\d{0,2}$/.test(unitDiscount) === false) {
-            errors["unit_discount_" + i] = "Max decimal points allowed is 2";
-            setErrors({ ...errors });
-            return;
-        }*/
       }
 
 
@@ -1510,47 +1497,47 @@ const QuotationCreate = forwardRef((props, ref) => {
     if (!formData.code) {
       formData.code = Math.floor(10000 + Math.random() * 90000).toString();;
     }
-    PreviewRef.current.open(model, undefined, "quotation");
+    PreviewRef?.current.open(model, undefined, "quotation");
   }
 
 
   const ProductsRef = useRef();
   function openLinkedProducts(model) {
-    ProductsRef.current.open(true, "linked_products", model);
+    ProductsRef?.current?.open(true, "linked_products", model);
   }
 
 
   const SalesHistoryRef = useRef();
   function openSalesHistory(model) {
-    SalesHistoryRef.current.open(model, selectedCustomers);
+    SalesHistoryRef?.current?.open(model, selectedCustomers);
   }
 
   const SalesReturnHistoryRef = useRef();
   function openSalesReturnHistory(model) {
-    SalesReturnHistoryRef.current.open(model, selectedCustomers);
+    SalesReturnHistoryRef?.current?.open(model, selectedCustomers);
   }
 
 
   const PurchaseHistoryRef = useRef();
   function openPurchaseHistory(model) {
-    PurchaseHistoryRef.current.open(model);
+    PurchaseHistoryRef?.current?.open(model);
   }
 
   const PurchaseReturnHistoryRef = useRef();
   function openPurchaseReturnHistory(model) {
-    PurchaseReturnHistoryRef.current.open(model);
+    PurchaseReturnHistoryRef?.current?.open(model);
   }
 
 
   const DeliveryNoteHistoryRef = useRef();
   function openDeliveryNoteHistory(model) {
-    DeliveryNoteHistoryRef.current.open(model, selectedCustomers);
+    DeliveryNoteHistoryRef?.current?.open(model, selectedCustomers);
   }
 
 
   const QuotationHistoryRef = useRef();
   function openQuotationHistory(model) {
-    QuotationHistoryRef.current.open(model, selectedCustomers);
+    QuotationHistoryRef?.current?.open(model, selectedCustomers);
   }
 
   /*
@@ -2045,7 +2032,7 @@ const QuotationCreate = forwardRef((props, ref) => {
 
   const SalesRef = useRef();
   function openSales() {
-    SalesRef.current.open(false, selectedCustomers);
+    SalesRef?.current?.open(false, selectedCustomers);
   }
 
   const handleSelectedSale = (selectedSale) => {
@@ -2141,7 +2128,8 @@ const QuotationCreate = forwardRef((props, ref) => {
     if (index) {
       checkWarning(index);
     } else {
-      for (let i = 0; i < selectedProducts.length; i++) {
+      //for (let i = 0; i < selectedProducts.length; i++) {
+      for (let i = (selectedProducts.length - 1); i >= 0; i--) {
         checkWarning(i);
       }
     }
@@ -2653,7 +2641,6 @@ async function checkWarning(i) {
       <PurchaseReturnHistory ref={PurchaseReturnHistoryRef} showToastMessage={props.showToastMessage} />
       <QuotationHistory ref={QuotationHistoryRef} showToastMessage={props.showToastMessage} />
       <DeliveryNoteHistory ref={DeliveryNoteHistoryRef} showToastMessage={props.showToastMessage} />
-
       <div
         className="toast-container position-fixed top-0 end-0 p-3"
         style={{ zIndex: 9999 }}

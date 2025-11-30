@@ -301,11 +301,14 @@ const SalesHistory = forwardRef((props, ref) => {
     }, [page, pageSize, product, sortField, sortProduct, searchParams, statsOpen]);
 
 
+
+    const [show, SetShow] = useState(false);
+
     useEffect(() => {
-        if (page) {
+        if (page & show) {
             list();
         }
-    }, [page, list, product]);
+    }, [page, list, show]);
 
     function sort(field) {
         sortField = field;
@@ -326,8 +329,6 @@ const SalesHistory = forwardRef((props, ref) => {
         setPage(page);
         list();
     }
-
-    const [show, SetShow] = useState(false);
 
     function handleClose() {
         SetShow(false);
