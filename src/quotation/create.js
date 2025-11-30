@@ -3357,24 +3357,29 @@ async function checkWarning(i) {
                                         {(() => {
                                           const storeId = localStorage.getItem("store_id");
                                           const productStore = option.product_stores?.[storeId];
-                                          const warehouseStocks = productStore?.warehouse_stocks || {};
-                                          const mainStock = warehouseStocks["main_store"] ?? 0;
-                                          let warehouseDetail = "";
-                                          if (store.settings?.enable_warehouse_module) {
-                                            const whEntries = Object.entries(warehouseStocks)
-                                              .filter(([key]) => key !== "main_store")
-                                              .map(([key, value]) => {
-                                                let name = key.toUpperCase();
-                                                return `${name}: ${value}`;
-                                              });
-                                            if (whEntries.length > 0) {
-                                              warehouseDetail = ` (${whEntries.join(", ")})`;
+                                          const totalStock = productStore?.stock ?? 0;
+                                          const warehouseStocks = productStore?.warehouse_stocks ?? {};
+
+                                          // Build warehouse stock details string
+                                          const warehouseDetails = (() => {
+                                            // Always show MS first
+                                            let details = [];
+                                            if (warehouseStocks["main_store"] !== undefined) {
+                                              details.push(`MS: ${warehouseStocks["main_store"]}`);
                                             }
-                                          }
+                                            Object.entries(warehouseStocks)
+                                              .filter(([key]) => key !== "main_store")
+                                              .forEach(([key, value]) => {
+                                                details.push(`${key.replace(/^w/, "WH").toUpperCase()}: ${value}`);
+                                              });
+                                            return details.join(", ");
+                                          })();
+
+                                          // Final display string
                                           return (
                                             <span>
-                                              {mainStock}
-                                              {warehouseDetail}
+                                              {totalStock}
+                                              {warehouseDetails && store.settings.enable_warehouse_module ? ` (${warehouseDetails})` : ""}
                                             </span>
                                           );
                                         })()}

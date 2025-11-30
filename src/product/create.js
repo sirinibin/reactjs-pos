@@ -3829,7 +3829,35 @@ const ProductCreate = forwardRef((props, ref) => {
                                 )}
                               </div>
                               <div style={{ ...columnStyle, width: '5%' }}>
-                                {option.product_stores?.[localStorage.getItem("store_id")]?.stock ?? ''}
+                                {(() => {
+                                  const storeId = localStorage.getItem("store_id");
+                                  const productStore = option.product_stores?.[storeId];
+                                  const totalStock = productStore?.stock ?? 0;
+                                  const warehouseStocks = productStore?.warehouse_stocks ?? {};
+
+                                  // Build warehouse stock details string
+                                  const warehouseDetails = (() => {
+                                    // Always show MS first
+                                    let details = [];
+                                    if (warehouseStocks["main_store"] !== undefined) {
+                                      details.push(`MS: ${warehouseStocks["main_store"]}`);
+                                    }
+                                    Object.entries(warehouseStocks)
+                                      .filter(([key]) => key !== "main_store")
+                                      .forEach(([key, value]) => {
+                                        details.push(`${key.replace(/^w/, "WH").toUpperCase()}: ${value}`);
+                                      });
+                                    return details.join(", ");
+                                  })();
+
+                                  // Final display string
+                                  return (
+                                    <span>
+                                      {totalStock}
+                                      {warehouseDetails && store.settings.enable_warehouse_module ? ` (${warehouseDetails})` : ""}
+                                    </span>
+                                  );
+                                })()}
                               </div>
                               <div style={{ ...columnStyle, width: '5%' }}>
                                 <button
