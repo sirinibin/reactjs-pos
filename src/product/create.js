@@ -2968,12 +2968,12 @@ const ProductCreate = forwardRef((props, ref) => {
                           <div style={{ width: '3%', border: "solid 0px", }}></div>
                           <div style={{ width: '14%', border: "solid 0px", }}>Part Number</div>
                           <div style={{ width: '29%', border: "solid 0px", }}>Name</div>
-                          <div style={{ width: '12%', border: "solid 0px", }}>S.Unit Price</div>
-                          <div style={{ width: '5%', border: "solid 0px", }}>Stock</div>
+                          <div style={{ width: '10%', border: "solid 0px", }}>S.Unit Price</div>
+                          <div style={{ width: '13%', border: "solid 0px", }}>Stock</div>
                           <div style={{ width: '5%', border: "solid 0px", }}>Photos</div>
-                          <div style={{ width: '10%', border: "solid 0px", }}>Brand</div>
-                          <div style={{ width: '12%' }}>P.Unit Price</div>
-                          <div style={{ width: '10%', border: "solid 0px", }}>Country</div>
+                          <div style={{ width: '8%', border: "solid 0px", }}>Brand</div>
+                          <div style={{ width: '10%' }}>P.Unit Price</div>
+                          <div style={{ width: '8%', border: "solid 0px", }}>Country</div>
                         </div>
                       </MenuItem>
 
@@ -3046,7 +3046,7 @@ const ProductCreate = forwardRef((props, ref) => {
                                   isActive
                                 )}
                               </div>
-                              <div style={{ ...columnStyle, width: '12%' }}>
+                              <div style={{ ...columnStyle, width: '10%' }}>
                                 {option.product_stores?.[localStorage.getItem("store_id")]?.retail_unit_price && (
                                   <>
                                     <Amount amount={trimTo2Decimals(option.product_stores?.[localStorage.getItem("store_id")]?.retail_unit_price)} />+
@@ -3058,8 +3058,31 @@ const ProductCreate = forwardRef((props, ref) => {
                                   </>
                                 )}
                               </div>
-                              <div style={{ ...columnStyle, width: '5%' }}>
-                                {option.product_stores?.[localStorage.getItem("store_id")]?.stock ?? ''}
+                              <div style={{ ...columnStyle, width: '13%' }}>
+                                {(() => {
+                                  const storeId = localStorage.getItem("store_id");
+                                  const productStore = option.product_stores?.[storeId];
+                                  const warehouseStocks = productStore?.warehouse_stocks || {};
+                                  const mainStock = warehouseStocks["main_store"] ?? 0;
+                                  let warehouseDetail = "";
+                                  if (store.settings?.enable_warehouse_module) {
+                                    const whEntries = Object.entries(warehouseStocks)
+                                      .filter(([key]) => key !== "main_store")
+                                      .map(([key, value]) => {
+                                        let name = key.toUpperCase();
+                                        return `${name}: ${value}`;
+                                      });
+                                    if (whEntries.length > 0) {
+                                      warehouseDetail = ` (${whEntries.join(", ")})`;
+                                    }
+                                  }
+                                  return (
+                                    <span>
+                                      {mainStock}
+                                      {warehouseDetail}
+                                    </span>
+                                  );
+                                })()}
                               </div>
                               <div style={{ ...columnStyle, width: '5%' }}>
                                 <button
@@ -3074,10 +3097,10 @@ const ProductCreate = forwardRef((props, ref) => {
                                   <i className="bi bi-images" aria-hidden="true" />
                                 </button>
                               </div>
-                              <div style={{ ...columnStyle, width: '10%' }}>
+                              <div style={{ ...columnStyle, width: '8%' }}>
                                 {highlightWords(option.brand_name, searchWords, isActive)}
                               </div>
-                              <div style={{ ...columnStyle, width: '12%' }}>
+                              <div style={{ ...columnStyle, width: '10%' }}>
                                 {option.product_stores?.[localStorage.getItem("store_id")]?.purchase_unit_price && (
                                   <>
                                     <Amount amount={trimTo2Decimals(option.product_stores?.[localStorage.getItem("store_id")]?.purchase_unit_price)} />+
@@ -3089,7 +3112,7 @@ const ProductCreate = forwardRef((props, ref) => {
                                   </>
                                 )}
                               </div>
-                              <div style={{ ...columnStyle, width: '10%' }}>
+                              <div style={{ ...columnStyle, width: '8%' }}>
                                 {highlightWords(option.country_name, searchWords, isActive)}
                               </div>
                             </div>

@@ -4481,23 +4481,24 @@ const OrderCreate = forwardRef((props, ref) => {
                                                                             {(() => {
                                                                                 const storeId = localStorage.getItem("store_id");
                                                                                 const productStore = option.product_stores?.[storeId];
-                                                                                const totalStock = productStore?.stock ?? 0;
-                                                                                const warehouseStocks = productStore?.warehouse_stocks ?? {};
-
-                                                                                // Build warehouse stock details string
-                                                                                const warehouseDetails = Object.entries(warehouseStocks)
-                                                                                    .map(([key, value]) => {
-                                                                                        // Format warehouse name (capitalize and replace underscores)
-                                                                                        let name = key === "main_store" ? "MS" : key.replace(/^w/, "W").toUpperCase();
-                                                                                        return `${name}:${value}`;
-                                                                                    })
-                                                                                    .join(", ");
-
-                                                                                // Final display string
+                                                                                const warehouseStocks = productStore?.warehouse_stocks || {};
+                                                                                const mainStock = warehouseStocks["main_store"] ?? 0;
+                                                                                let warehouseDetail = "";
+                                                                                if (store.settings?.enable_warehouse_module) {
+                                                                                    const whEntries = Object.entries(warehouseStocks)
+                                                                                        .filter(([key]) => key !== "main_store")
+                                                                                        .map(([key, value]) => {
+                                                                                            let name = key.toUpperCase();
+                                                                                            return `${name}: ${value}`;
+                                                                                        });
+                                                                                    if (whEntries.length > 0) {
+                                                                                        warehouseDetail = ` (${whEntries.join(", ")})`;
+                                                                                    }
+                                                                                }
                                                                                 return (
                                                                                     <span>
-                                                                                        {totalStock}
-                                                                                        {warehouseDetails && store.settings.enable_warehouse_module ? ` (${warehouseDetails})` : ""}
+                                                                                        {mainStock}
+                                                                                        {warehouseDetail}
                                                                                     </span>
                                                                                 );
                                                                             })()}
