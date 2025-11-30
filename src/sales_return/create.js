@@ -321,31 +321,22 @@ const SalesReturnCreate = forwardRef((props, ref) => {
                 }
 
 
-
-
-                setFormData({ ...formData });
-
-                console.log("formData1.status:", formData.status);
-
-
-                console.log("purchaseReturn.products:", salesReturn.products);
-
-                let selectedProductsTemp = salesReturn.products;
-
-                selectedProducts = [];
-                for (let i = 0; i < selectedProductsTemp.length; i++) {
-                    selectedProducts.push(selectedProductsTemp[i]);
-
-                    //selectedProductsTemp[i].purchase_unit_price = selectedProductsTemp[i].purchasereturn_unit_price;
-                }
-                console.log("selectedProducts:", selectedProducts);
-
-                console.log("selectedProducts: ", selectedProducts.length);
-
-                setSelectedProducts([...selectedProducts]);
+                /*setSelectedProducts([...selectedProducts]);
                 selectedProducts.forEach((product, index) => {
                     CalCulateLineTotals(index);
+                });*/
+
+                selectedProducts = salesReturn.products;
+                setSelectedProducts([...selectedProducts]);
+
+                const updatedProducts = selectedProducts.map((product, index) => {
+                    // Calculate line totals without calling setSelectedProducts inside the loop
+                    const updatedProduct = { ...product };
+                    updatedProduct.line_total = parseFloat(trimTo2Decimals((updatedProduct.unit_price - updatedProduct.unit_discount) * updatedProduct.quantity));
+                    updatedProduct.line_total_with_vat = parseFloat(trimTo2Decimals((updatedProduct.unit_price_with_vat - updatedProduct.unit_discount_with_vat) * updatedProduct.quantity));
+                    return updatedProduct;
                 });
+                setSelectedProducts(updatedProducts);
 
 
                 setFormData({ ...formData });
@@ -442,12 +433,24 @@ const SalesReturnCreate = forwardRef((props, ref) => {
 
                     // selectedProducts = selectedProductsTemp
 
-                    console.log("selectedProducts:", selectedProducts);
+                    /* console.log("selectedProducts:", selectedProducts);
+                     setSelectedProducts([...selectedProducts]);
+ 
+                     selectedProducts.forEach((product, index) => {
+                         CalCulateLineTotals(index);
+                     });*/
+
+                    selectedProducts = order.products;
                     setSelectedProducts([...selectedProducts]);
 
-                    selectedProducts.forEach((product, index) => {
-                        CalCulateLineTotals(index);
+                    const updatedProducts = order.products.map((product, index) => {
+                        // Calculate line totals without calling setSelectedProducts inside the loop
+                        const updatedProduct = { ...product };
+                        updatedProduct.line_total = parseFloat(trimTo2Decimals((updatedProduct.unit_price - updatedProduct.unit_discount) * updatedProduct.quantity));
+                        updatedProduct.line_total_with_vat = parseFloat(trimTo2Decimals((updatedProduct.unit_price_with_vat - updatedProduct.unit_discount_with_vat) * updatedProduct.quantity));
+                        return updatedProduct;
                     });
+                    setSelectedProducts(updatedProducts);
 
                     //formData = order;
                     console.log("order.id:", order.id);
@@ -535,25 +538,8 @@ const SalesReturnCreate = forwardRef((props, ref) => {
                     setCommission(commission);
 
                     formData.commission_payment_method = order.commission_payment_method;
-                    // formData.discount = (order.discount - order.return_discount);
-
-                    // formData.discount_percent = order.discount_percent;
 
 
-
-                    // setFormData({ ...formData });
-                    console.log("formData:", formData);
-
-
-                    selectedStores = [
-                        {
-                            id: order.store_id,
-                            name: order.store_name,
-                        }
-                    ];
-
-                    setSelectedStores(selectedStores);
-                    console.log("selectedStores:", selectedStores);
                     setFormData({ ...formData });
                     reCalculate();
                     setFormData({ ...formData });
@@ -647,10 +633,6 @@ const SalesReturnCreate = forwardRef((props, ref) => {
         payment_method: "",
         price_type: "retail",
     });
-
-    let [selectedStores, setSelectedStores] = useState([]);
-
-
 
 
     //Product Auto Suggestion

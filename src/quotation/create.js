@@ -438,13 +438,15 @@ const QuotationCreate = forwardRef((props, ref) => {
           formData.discountValue = formData.discount;
         }
 
-        selectedProducts = quotation.products;
-        setSelectedProducts([...selectedProducts]);
+
 
         /*selectedProducts.forEach((product, index) => {
           CalCulateLineTotals(index);
         });*/
-        const updatedProducts = selectedProducts.map((product, index) => {
+        selectedProducts = quotation.products;
+        setSelectedProducts([...selectedProducts]);
+
+        const updatedProducts = quotation.products.map((product, index) => {
           // Calculate line totals without calling setSelectedProducts inside the loop
           const updatedProduct = { ...product };
           updatedProduct.line_total = parseFloat(trimTo2Decimals((updatedProduct.unit_price - updatedProduct.unit_discount) * updatedProduct.quantity));

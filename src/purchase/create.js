@@ -149,7 +149,7 @@ const PurchaseCreate = forwardRef((props, ref) => {
             if (id) {
                 getPurchase(id);
             }
-            reCalculate();
+            //reCalculate();
             getStore(localStorage.getItem("store_id"));
             setShow(true);
         },
@@ -279,7 +279,7 @@ const PurchaseCreate = forwardRef((props, ref) => {
     });
 
 
-    function getPurchase(id) {
+    async function getPurchase(id) {
         console.log("inside get Purchase");
         const requestOptions = {
             method: 'GET',
@@ -394,15 +394,27 @@ const PurchaseCreate = forwardRef((props, ref) => {
                 }
 
 
+                /* selectedProducts = purchase.products;
+                 setSelectedProducts([...selectedProducts]);
+                 selectedProducts.forEach((product, index) => {
+                     CalCulateLineTotals(index);
+                 });*/
+
                 selectedProducts = purchase.products;
                 setSelectedProducts([...selectedProducts]);
-                selectedProducts.forEach((product, index) => {
-                    CalCulateLineTotals(index);
-                });
 
+
+                const updatedProducts = selectedProducts.map((product, index) => {
+                    // Calculate line totals without calling setSelectedProducts inside the loop
+                    const updatedProduct = { ...product };
+                    updatedProduct.line_total = parseFloat(trimTo2Decimals((updatedProduct.purchase_unit_price - updatedProduct.unit_discount) * updatedProduct.quantity));
+                    updatedProduct.line_total_with_vat = parseFloat(trimTo2Decimals((updatedProduct.purchase_unit_price_with_vat - updatedProduct.unit_discount_with_vat) * updatedProduct.quantity));
+                    return updatedProduct;
+                });
+                setSelectedProducts(updatedProducts);
 
                 setSelectedVendors([]);
-                if (purchase.vendor_id && purchase.vendor_name) {
+                if (purchase.vendor_id && purchase.vendor_name && purchase.vendor.search_label) {
                     let selectedVendors = [
                         {
                             id: purchase.vendor_id,
@@ -413,11 +425,9 @@ const PurchaseCreate = forwardRef((props, ref) => {
                     setSelectedVendors([...selectedVendors]);
                 }
 
-
-
                 reCalculate();
                 setFormData({ ...formData });
-                checkWarnings();
+                //checkWarnings();
             })
             .catch(error => {
                 setProcessing(false);

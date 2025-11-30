@@ -430,9 +430,18 @@ const OrderCreate = forwardRef((props, ref) => {
                 setSelectedProducts([...selectedProducts]);
 
 
-                selectedProducts.forEach((product, index) => {
+                /*selectedProducts.forEach((product, index) => {
                     CalCulateLineTotals(index);
+                });*/
+
+                const updatedProducts = selectedProducts.map((product, index) => {
+                    // Calculate line totals without calling setSelectedProducts inside the loop
+                    const updatedProduct = { ...product };
+                    updatedProduct.line_total = parseFloat(trimTo2Decimals((updatedProduct.unit_price - updatedProduct.unit_discount) * updatedProduct.quantity));
+                    updatedProduct.line_total_with_vat = parseFloat(trimTo2Decimals((updatedProduct.unit_price_with_vat - updatedProduct.unit_discount_with_vat) * updatedProduct.quantity));
+                    return updatedProduct;
                 });
+                setSelectedProducts(updatedProducts);
 
 
                 if (formData.customer_name && formData.customer_id) {

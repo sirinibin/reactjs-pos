@@ -382,29 +382,33 @@ const PurchaseReturnedCreate = forwardRef((props, ref) => {
 
                 selectedProducts = [];
                 for (let i = 0; i < selectedProductsTemp.length; i++) {
-                    /*
-                    if (selectedProductsTemp[i].quantity > 0) {
-                        selectedProductsTemp[i].selected = true;
-                    } else {
-                        selectedProductsTemp[i].selected = false;
-                    }
-                    */
-
-
                     selectedProductsTemp[i].purchase_unit_price = selectedProductsTemp[i].purchasereturn_unit_price;
                     selectedProductsTemp[i].purchase_unit_price_with_vat = selectedProductsTemp[i].purchasereturn_unit_price_with_vat;
                     selectedProducts.push(selectedProductsTemp[i]);
                 }
 
 
+
+                /* setSelectedProducts([...selectedProducts]);
+                 selectedProducts.forEach((product, index) => {
+                     CalCulateLineTotals(index);
+                 });*/
+
+                // selectedProducts = purchase.products;
                 setSelectedProducts([...selectedProducts]);
-                selectedProducts.forEach((product, index) => {
-                    CalCulateLineTotals(index);
+
+                const updatedProducts = selectedProducts.products.map((product, index) => {
+                    // Calculate line totals without calling setSelectedProducts inside the loop
+                    const updatedProduct = { ...product };
+                    updatedProduct.line_total = parseFloat(trimTo2Decimals((updatedProduct.purchase_unit_price - updatedProduct.unit_discount) * updatedProduct.quantity));
+                    updatedProduct.line_total_with_vat = parseFloat(trimTo2Decimals((updatedProduct.purchase_unit_price_with_vat - updatedProduct.unit_discount_with_vat) * updatedProduct.quantity));
+                    return updatedProduct;
                 });
+                setSelectedProducts(updatedProducts);
 
                 setFormData({ ...formData });
                 reCalculate();
-                checkWarnings();
+                // checkWarnings();
             })
             .catch(error => {
                 setProcessing(false);
@@ -586,18 +590,27 @@ const PurchaseReturnedCreate = forwardRef((props, ref) => {
                     setShipping(shipping);
                 }
 
-
-
+                /*
                 setSelectedProducts([...selectedProducts]);
                 selectedProducts.forEach((product, index) => {
                     CalCulateLineTotals(index);
-                });
+                });*/
 
-                setFormData({ ...formData });
+                // selectedProducts = purchase.products;
+                setSelectedProducts([...selectedProducts]);
+                const updatedProducts = selectedProducts.products.map((product, index) => {
+                    // Calculate line totals without calling setSelectedProducts inside the loop
+                    const updatedProduct = { ...product };
+                    updatedProduct.line_total = parseFloat(trimTo2Decimals((updatedProduct.purchase_unit_price - updatedProduct.unit_discount) * updatedProduct.quantity));
+                    updatedProduct.line_total_with_vat = parseFloat(trimTo2Decimals((updatedProduct.purchase_unit_price_with_vat - updatedProduct.unit_discount_with_vat) * updatedProduct.quantity));
+                    return updatedProduct;
+                });
+                setSelectedProducts(updatedProducts);
+
+
+
                 reCalculate();
                 setFormData({ ...formData });
-
-
             })
             .catch(error => {
                 setProcessing(false);

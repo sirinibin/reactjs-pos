@@ -311,39 +311,36 @@ const QuotationSalesReturnCreate = forwardRef((props, ref) => {
                     setSelectedCustomers([...selectedCustomers]);
                 }
 
+                /* let selectedProductsTemp = quotationsalesReturn.products;
+ 
+                 selectedProducts = [];
+                 for (let i = 0; i < selectedProductsTemp.length; i++) {
+                     selectedProducts.push(selectedProductsTemp[i]);
+ 
+                     //selectedProductsTemp[i].purchase_unit_price = selectedProductsTemp[i].purchasereturn_unit_price;
+                 }*/
 
-
-
-                setFormData({ ...formData });
-
-                console.log("formData1.status:", formData.status);
-
-
-                console.log("purchaseReturn.products:", quotationsalesReturn.products);
-
-                let selectedProductsTemp = quotationsalesReturn.products;
-
-                selectedProducts = [];
-                for (let i = 0; i < selectedProductsTemp.length; i++) {
-                    selectedProducts.push(selectedProductsTemp[i]);
-
-                    //selectedProductsTemp[i].purchase_unit_price = selectedProductsTemp[i].purchasereturn_unit_price;
-                }
-                console.log("selectedProducts:", selectedProducts);
-
-                console.log("selectedProducts: ", selectedProducts.length);
-
+                selectedProducts = quotationsalesReturn.products;
                 setSelectedProducts([...selectedProducts]);
 
 
-                selectedProducts.forEach((product, index) => {
-                    CalCulateLineTotals(index);
+                /* selectedProducts.forEach((product, index) => {
+                     CalCulateLineTotals(index);
+                 });*/
+
+                const updatedProducts = selectedProducts.map((product, index) => {
+                    // Calculate line totals without calling setSelectedProducts inside the loop
+                    const updatedProduct = { ...product };
+                    updatedProduct.line_total = parseFloat(trimTo2Decimals((updatedProduct.unit_price - updatedProduct.unit_discount) * updatedProduct.quantity));
+                    updatedProduct.line_total_with_vat = parseFloat(trimTo2Decimals((updatedProduct.unit_price_with_vat - updatedProduct.unit_discount_with_vat) * updatedProduct.quantity));
+                    return updatedProduct;
                 });
+                setSelectedProducts(updatedProducts);
 
                 setFormData({ ...formData });
                 reCalculate();
-                checkWarnings();
-                checkErrors();
+                //checkWarnings();
+                //checkErrors();
             })
             .catch(error => {
                 setProcessing(false);
@@ -442,9 +439,18 @@ const QuotationSalesReturnCreate = forwardRef((props, ref) => {
                     console.log("selectedProducts:", selectedProducts);
                     setSelectedProducts([...selectedProducts]);
 
-                    selectedProducts.forEach((product, index) => {
-                        CalCulateLineTotals(index);
+                    /* selectedProducts.forEach((product, index) => {
+                         CalCulateLineTotals(index);
+                     });*/
+
+                    const updatedProducts = selectedProducts.map((product, index) => {
+                        // Calculate line totals without calling setSelectedProducts inside the loop
+                        const updatedProduct = { ...product };
+                        updatedProduct.line_total = parseFloat(trimTo2Decimals((updatedProduct.unit_price - updatedProduct.unit_discount) * updatedProduct.quantity));
+                        updatedProduct.line_total_with_vat = parseFloat(trimTo2Decimals((updatedProduct.unit_price_with_vat - updatedProduct.unit_discount_with_vat) * updatedProduct.quantity));
+                        return updatedProduct;
                     });
+                    setSelectedProducts(updatedProducts);
 
                     //formData = order;
                     console.log("quotation.id:", quotation.id);
@@ -527,22 +533,6 @@ const QuotationSalesReturnCreate = forwardRef((props, ref) => {
                     // formData.discount = (quotation.discount - quotation.return_discount);
 
                     // formData.discount_percent = quotation.discount_percent;
-
-
-
-                    // setFormData({ ...formData });
-                    console.log("formData:", formData);
-
-
-                    selectedStores = [
-                        {
-                            id: quotation.store_id,
-                            name: quotation.store_name,
-                        }
-                    ];
-
-                    setSelectedStores(selectedStores);
-                    console.log("selectedStores:", selectedStores);
                     setFormData({ ...formData });
                     reCalculate();
                     setFormData({ ...formData });
@@ -636,11 +626,6 @@ const QuotationSalesReturnCreate = forwardRef((props, ref) => {
         payment_method: "",
         price_type: "retail",
     });
-
-    let [selectedStores, setSelectedStores] = useState([]);
-
-
-
 
     //Product Auto Suggestion
     let [selectedProducts, setSelectedProducts] = useState(null);
