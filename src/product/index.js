@@ -1300,7 +1300,7 @@ function ProductIndex(props) {
         { key: "purchase_unit_price", label: "Purchase Unit Price", fieldName: "stores.purchase_unit_price", visible: true },
         { key: "wholesale_unit_price", label: "Wholesale Unit Price", fieldName: "stores.wholesale_unit_price", visible: true },
         { key: "retail_unit_price", label: "Retail Unit Price", fieldName: "stores.retail_unit_price", visible: true },
-        { key: "stock", label: "Stock", fieldName: "stores.stock", visible: true },
+        { key: "stock", label: "Total Stock", fieldName: "stores.stock", visible: true },
         // { key: "warehouse_code", label: "Store/Warehouse", fieldName: "warehouse_code", visible: true },
         { key: "set", label: "Set", fieldName: "is_set", visible: true },
         { key: "categories", label: "Categories", fieldName: "category_name", visible: true },

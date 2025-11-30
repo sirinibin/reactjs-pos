@@ -1495,44 +1495,26 @@ const QuotationSalesReturnCreate = forwardRef((props, ref) => {
                 setFormData({ ...formData });
             }
 
-
-            /*
-            if (!formData.id) {
-                let method = "";
-                if (formData.payments_input && formData.payments_input[0]) {
-                    method = formData.payments_input[0].method;
-                }
-    
-                formData.payments_input = [{
-                    "date_str": formData.date_str,
-                    "amount": 0.00,
-                    "method": method,
-                    "deleted": false,
-                }];
-    
-                if (formData.net_total > 0) {
-                    formData.payments_input[0].amount = parseFloat(trimTo2Decimals(formData.net_total));
-                    if (cashDiscount) {
-                        formData.payments_input[0].amount = formData.payments_input[0].amount - parseFloat(trimTo2Decimals(cashDiscount));
-                    }
-                    formData.payments_input[0].amount = parseFloat(trimTo2Decimals(formData.payments_input[0].amount));
-                }
-            }*/
             if ((!formData.id || formData.payments_input?.length === 1) && quotation && quotation.payment_status !== "not_paid") {
                 let method = "";
                 let reference_code = "";
                 let reference_type = "";
                 let reference_id = "";
+                let amount = 0.00;
+                let payment_id = "";
                 if (formData.payments_input && formData.payments_input[0]) {
+                    payment_id = formData.payments_input[0].id ? formData.payments_input[0].id : "";
                     method = formData.payments_input[0].method;
                     reference_code = formData.payments_input[0].reference_code;
                     reference_type = formData.payments_input[0].reference_type;
                     reference_id = formData.payments_input[0].reference_id;
+                    amount = formData.payments_input[0].amount ? formData.payments_input[0].amount : 0.00;
                 }
 
                 formData.payments_input = [{
+                    "id": payment_id,
                     "date_str": formData.date_str,
-                    "amount": 0.00,
+                    "amount": amount,
                     "method": method,
                     "deleted": false,
                     "reference_code": reference_code,
@@ -1542,7 +1524,11 @@ const QuotationSalesReturnCreate = forwardRef((props, ref) => {
 
 
                 if (formData.net_total > 0) {
-                    formData.payments_input[0].amount = parseFloat(trimTo2Decimals(formData.net_total));
+                    //alert(formData.payments_input[0].amount)
+                    if (!formData.id) {
+                        formData.payments_input[0].amount = parseFloat(trimTo2Decimals(formData.net_total));
+                    }
+
                     if (cashDiscount) {
                         formData.payments_input[0].amount = formData.payments_input[0].amount - parseFloat(trimTo2Decimals(cashDiscount));
                     }
