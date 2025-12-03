@@ -2098,7 +2098,7 @@ const Preview = forwardRef((props, ref) => {
 
             <Modal.Body>
                 <div ref={printAreaRef} className="print-area" id="print-area">
-                    {!model.store?.settings?.show_seller_info_in_invoice && <PreviewContent
+                    {(!model.store?.settings?.show_seller_info_in_invoice || modelName === "stock_transfer") && <PreviewContent
                         model={model}
                         invoiceBackground={InvoiceBackground}
                         whatsAppShare={whatsAppShare}
@@ -2106,7 +2106,7 @@ const Preview = forwardRef((props, ref) => {
                         selectText={selectText}
                         selectQRCode={selectQRCode}
                         fontSizes={fontSizes} />}
-                    {model.store?.settings?.show_seller_info_in_invoice && <PreviewContentWithSellerInfo
+                    {model.store?.settings?.show_seller_info_in_invoice && modelName !== "stock_transfer" && <PreviewContentWithSellerInfo
                         model={model}
                         invoiceBackground={InvoiceBackground}
                         whatsAppShare={whatsAppShare}

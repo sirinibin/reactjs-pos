@@ -197,7 +197,7 @@ function Sidebar(props) {
                         <span className="align-middle">Stores</span>
                     </Link>
                 </li>
-                {store.settings?.enable_warehouse_module && <>
+                {store?.settings?.enable_warehouse_module && <>
                     <li onClick={() => {
                         toggleActive(appState.tabs[10]);
                     }} className={toggleActiveStyles(appState.tabs[10])}>
