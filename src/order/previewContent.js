@@ -343,7 +343,7 @@ const PreviewContent = forwardRef((props, ref) => {
                                             {props.model.customer ? props.model.customer.name : ""}
                                             {!props.model.customer && props.model.customerName ? props.model.customerName : ""}
                                             {!props.model.customerName && !props.model.customer ? "N/A" : ""}
-                                            {props.model.customer?.name_in_arabic ? " | " + props.model.customer.name_in_arabic : ""}
+                                            {props.model.customer?.name_in_arabic ? "  " + props.model.customer.name_in_arabic : ""}
                                         </div>
                                     </div>
                                     <div className="row" dir="ltr" style={{ borderBottom: detailsBorderThickness }} >
