@@ -391,7 +391,7 @@ const StockTransferCreate = forwardRef((props, ref) => {
                 setFormData({ ...formData });
 
 
-                //checkWarnings();
+                checkWarnings();
                 //checkErrors();
             })
             .catch(error => {
@@ -1587,19 +1587,21 @@ const StockTransferCreate = forwardRef((props, ref) => {
         if (!product) {
             return;
         }
+        // alert("ok1")
 
         if (product.product_stores && product.product_stores[localStorage.getItem("store_id")]?.stock) {
             stock = product.product_stores[localStorage.getItem("store_id")].stock;
             selectedProducts[i].stock = stock;
+            //   alert("stock:" + selectedProducts[i].stock);
             selectedProducts[i].warehouse_stocks = product.product_stores[localStorage.getItem("store_id")]?.warehouse_stocks ? product.product_stores[localStorage.getItem("store_id")]?.warehouse_stocks : { "main_store": stock };
-
             setSelectedProducts([...selectedProducts]);
         }
 
-
-
         let fromWarehouseCode = formData.from_warehouse_code ? formData.from_warehouse_code : "main_store";
         let toWarehouseCode = formData.to_warehouse_code ? formData.to_warehouse_code : "main_store";
+
+
+        selectedProducts[i].stock = selectedProducts[i].warehouse_stocks && selectedProducts[i].warehouse_stocks[fromWarehouseCode] ? selectedProducts[i].warehouse_stocks[fromWarehouseCode] : 0;
 
         if (!selectedProducts[i].warehouse_stocks) {
             selectedProducts[i].warehouse_stocks = { [fromWarehouseCode]: 0, [toWarehouseCode]: 0 };
@@ -1610,93 +1612,11 @@ const StockTransferCreate = forwardRef((props, ref) => {
         }
         if (!formData.id && selectedProducts[i].warehouse_stocks[fromWarehouseCode] < selectedProducts[i].quantity) {
             warnings["quantity_" + i] = "Warning: Available stock in " + fromWarehouseCode + " is " + (selectedProducts[i].warehouse_stocks[fromWarehouseCode]);
-            /*
-           if (formData.id) {
-               warnings["quantity_" + i] = "Warning: Available stock is " + (stock + oldQty);
-           } else {
-               warnings["quantity_" + i] = "Warning: Available stock is " + (stock);
-           }*/
         } else {
             delete warnings["quantity_" + i];
         }
 
 
-        /*
-        let oldQty = 0;
-        for (let j = 0; j < oldProducts?.length; j++) {
-            if (oldProducts[j]?.product_id === selectedProducts[i]?.product_id) {
-                if (formData.id) {
-                    oldQty = oldProducts[j].quantity;
-                    //  alert("ok")
-
-                    if (!selectedProducts[i].stock) {
-                        selectedProducts[i].stock = 0;
-                    }
-                    // selectedProducts[i].stock += oldQty;
-                    selectedProducts[i].oldQty = oldQty;
-
-                    let fromStoreCode = formData.from_warehouse_code ? formData.from_warehouse_code : "main_store";
-                    let toStoreCode = formData.to_warehouse_code ? formData.to_warehouse_code : "main_store";
-
-                    if (!selectedProducts[i].warehouse_stocks) {
-                        selectedProducts[i].warehouse_stocks = { [fromStoreCode]: 0, [toStoreCode]: 0 };
-                    }
-
-                    //selectedProducts[i].warehouse_stocks[fromStoreCode] += oldQty;
-                    // selectedProducts[i].warehouse_stocks[fromStoreCode]["oldQty"] = oldQty;
-                    //selectedProducts[i].warehouse_stocks[toStoreCode]["oldQty"] = oldQty;
-                    // selectedProducts[i].warehouse_stocks[toStoreCode] -= oldQty;
-
-
-                    /*
-                    if (!selectedProducts[i].warehouse_stocks) {
-                        selectedProducts[i].warehouse_stocks = {};
-                    }
-
-                    if (oldProducts[j].warehouse_code) {
-                        if (!selectedProducts[i].warehouse_stocks[oldProducts[j].warehouse_code]) {
-                            selectedProducts[i].warehouse_stocks[oldProducts[j].warehouse_code] = 0;
-                        }
-
-                        selectedProducts[i].warehouse_stocks[oldProducts[j].warehouse_code] += oldQty;
-                    } else {
-                        selectedProducts[i].warehouse_stocks["main_store"] = selectedProducts[i].stock;
-                    }
-                        */
-
-        /*
-        
-                            setSelectedProducts([...selectedProducts]);
-                        }
-                        break;
-                    }
-                }*/
-
-        /*
-if (!selectedProducts[i].warehouse_stocks) {
-let fromStoreCode = formData.from_warehouse_code ? formData.from_warehouse_code : "main_store";
-selectedProducts[i].warehouse_stocks = { [fromStoreCode]: 0 };
-}
-*/
-
-        /*
-        
-                if ((selectedProducts[i].warehouse_stocks[formData.from_warehouse_code] + selectedProducts[i].warehouse_stocks[formData.from_warehouse_code]["oldQty"]) < selectedProducts[i].quantity) {
-                    warnings["quantity_" + i] = "Warning: Available stock in " + (formData.from_warehouse_code ? formData.from_warehouse_code : "Main Store") + " is " + (selectedProducts[i].warehouse_stocks[formData.from_warehouse_code]);
-                } else {
-                    delete warnings["quantity_" + i];
-                }*/
-
-        /*
-        if (product.product_stores && (stock + oldQty) < selectedProducts[i].quantity) {
-            if (formData.id) {
-                warnings["quantity_" + i] = "Warning: Available stock is " + (stock + oldQty);
-            } else {
-                warnings["quantity_" + i] = "Warning: Available stock is " + (stock);
-            }
-        } else {
-            delete warnings["quantity_" + i];
-        }*/
         setWarnings({ ...warnings });
     }
 
@@ -3992,6 +3912,7 @@ selectedProducts[i].warehouse_stocks = { [fromStoreCode]: 0 };
                                                 >
                                                     <span style={{ cursor: "pointer", textDecoration: "underline dotted" }}>
                                                         {selectedProducts[index].stock}
+                                                        {/*selectedProducts[index].warehouse_stocks && selectedProducts[index].warehouse_stocks[formData.from_warehouse_code] ? selectedProducts[index].warehouse_stocks[formData.from_warehouse_code] : 0*/}
                                                     </span>
                                                 </OverlayTrigger>
                                             </td>
