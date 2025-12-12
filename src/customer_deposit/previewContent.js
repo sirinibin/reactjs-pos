@@ -457,9 +457,7 @@ const CustomerDepositPreviewContent = forwardRef((props, ref) => {
                                                 Total المجموع:
                                             </th>
                                             <th className="text-end" colSpan="1" style={{ padding: "2px" }}>
-                                                <span className="icon-saudi_riyal">
-                                                    <Amount amount={trimTo2Decimals(props.model.total)} />
-                                                </span>
+                                                <Amount amount={trimTo2Decimals(props.model.total)} />
                                             </th>
                                         </tr>
 
@@ -471,9 +469,7 @@ const CustomerDepositPreviewContent = forwardRef((props, ref) => {
                                                 Total Discount إجمالي الخصم:
                                             </th>
                                             <th className="text-end" colSpan="1" style={{ padding: "2px" }}>
-                                                <span className="icon-saudi_riyal">
-                                                    <Amount amount={trimTo2Decimals(props.model.total_discount)} />
-                                                </span>
+                                                <Amount amount={trimTo2Decimals(props.model.total_discount)} />
                                             </th>
                                         </tr>
 
