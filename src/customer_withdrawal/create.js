@@ -595,19 +595,30 @@ const CustomerWithdrawalCreate = forwardRef((props, ref) => {
         return true;
     }
 
+
     let [totalPaymentAmount, setTotalPaymentAmount] = useState(0.00);
+    let [totalDiscountAmount, setTotalDiscountAmount] = useState(0.00);
+    let [netTotalPaymentAmount, setNetTotalPaymentAmount] = useState(0.00);
 
     function findTotalPayments() {
         console.log("Inisde findTotalPayments")
         let totalPayment = 0.00;
+        let totalDiscountAmount = 0.00;
         for (var i = 0; i < formData.payments?.length; i++) {
             if (formData.payments[i].amount && !formData.payments[i].deleted) {
-                totalPayment += (formData.payments[i].amount - formData.payments[i].discount);
+                // totalPayment += (formData.payments[i].amount - formData.payments[i].discount);
+                totalPayment += (formData.payments[i].amount);
+                totalDiscountAmount += formData.payments[i].discount;
             }
         }
 
         totalPaymentAmount = parseFloat(trimTo2Decimals(totalPayment));
+        netTotalPaymentAmount = totalPaymentAmount - parseFloat(trimTo2Decimals(totalDiscountAmount));
+        netTotalPaymentAmount = parseFloat(trimTo2Decimals(netTotalPaymentAmount));
+
         setTotalPaymentAmount(totalPaymentAmount);
+        setTotalDiscountAmount(totalDiscountAmount);
+        setNetTotalPaymentAmount(netTotalPaymentAmount);
         return totalPayment;
     }
 
@@ -1795,8 +1806,9 @@ const CustomerWithdrawalCreate = forwardRef((props, ref) => {
                                             ))}
                                         <tr>
                                             <td className="text-end">
-                                                <b>Net Total</b>
+                                                <b>Total</b>
                                             </td>
+
                                             <td><b style={{ marginLeft: "14px" }}>{trimTo2Decimals(totalPaymentAmount)}</b>
                                                 {errors["total_payment"] && (
                                                     <div style={{ color: "red" }}>
@@ -1804,7 +1816,39 @@ const CustomerWithdrawalCreate = forwardRef((props, ref) => {
                                                     </div>
                                                 )}
                                             </td>
-                                            <td colSpan={5}>
+                                            <td colSpan={6}>
+
+                                            </td>
+
+                                        </tr>
+                                        <tr>
+                                            <td className="text-end">
+                                                <b>Total Discount</b>
+                                            </td>
+
+                                            <td><b style={{ marginLeft: "14px" }}>{trimTo2Decimals(totalDiscountAmount)}</b>
+                                                {errors["total_discount"] && (
+                                                    <div style={{ color: "red" }}>
+                                                        {errors["total_discount"]}
+                                                    </div>
+                                                )}
+                                            </td>
+                                            <td colSpan={6}>
+                                            </td>
+
+                                        </tr>
+                                        <tr>
+                                            <td className="text-end">
+                                                <b>Net Total</b>
+                                            </td>
+                                            <td><b style={{ marginLeft: "14px" }}>{trimTo2Decimals(netTotalPaymentAmount)}</b>
+                                                {errors["net_total_payment"] && (
+                                                    <div style={{ color: "red" }}>
+                                                        {errors["net_total_payment"]}
+                                                    </div>
+                                                )}
+                                            </td>
+                                            <td colSpan={6}>
 
                                             </td>
 
