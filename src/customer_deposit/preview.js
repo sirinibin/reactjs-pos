@@ -1,8 +1,6 @@
 import { React, useState, useRef, forwardRef, useImperativeHandle, useCallback, useMemo, useEffect } from "react";
 import { Modal, Button, Spinner } from 'react-bootstrap';
 import CustomerDepositPreviewContent from './previewContent.js';
-
-import { Invoice } from '@axenda/zatca';
 import html2pdf from 'html2pdf.js';
 import WhatsAppModal from './../utils/WhatsAppModal';
 import MBDIInvoiceBackground from './../INVOICE.jpg';
@@ -130,20 +128,6 @@ const CustomerDepositPreview = forwardRef((props, ref) => {
                 console.log(data);
                 let storeData = data.result;
                 model.store = storeData;
-
-                const invoice = new Invoice({
-                    sellerName: model.store_name,
-                    vatRegistrationNumber: model.store.vat_no,
-                    invoiceTimestamp: model.date,
-                    invoiceTotal: model.net_total,
-                    invoiceVatTotal: model.vat_price,
-                    // uuid: model.uuid,
-                    invoiceHash: model.hash ? model.hash : "",
-                });
-
-                model.QRImageData = await invoice.render();
-                console.log("model.QRImageData:", model.QRImageData);
-
                 setModel({ ...model });
             })
             .catch(error => {

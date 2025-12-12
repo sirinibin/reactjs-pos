@@ -404,7 +404,7 @@ function CustomerWithdrawalIndex(props) {
             },
         };
         let Select =
-            "select=id,code,date,type,net_total,payment_methods,payments,bank_reference_no,description,remarks,customer_id,customer_name,customer_name_arabic,vendor_id,vendor_name,vendor_name_arabic,created_by_name,created_at";
+            "select=id,code,date,type,net_total,total,total_discount,payment_methods,payments,bank_reference_no,description,remarks,customer_id,customer_name,customer_name_arabic,vendor_id,vendor_name,vendor_name_arabic,created_by_name,created_at";
 
         if (localStorage.getItem("store_id")) {
             searchParams.store_id = localStorage.getItem("store_id");

@@ -419,8 +419,8 @@ const CustomerDepositPreviewContent = forwardRef((props, ref) => {
                                                         height: "20px"
                                                     }}
                                                 >
-                                                    <li>المجموع</li>
-                                                    <li>Total</li>
+                                                    <li>المجموع الفرعي</li>
+                                                    <li>Sub Total</li>
                                                 </ul>
                                             </th>
                                         </tr>
@@ -430,8 +430,9 @@ const CustomerDepositPreviewContent = forwardRef((props, ref) => {
                                                 <td style={{ padding: "1px", borderRight: tableBorderThickness }}>
                                                     {props.model.modelName === "customer_deposit" || props.model.modelName === "whatsapp_customer_deposit" ? "Payment Received" : ""}
                                                     {props.model.modelName === "customer_withdrawal" || props.model.modelName === "whatsapp_customer_withdrawal" ? "Paid" : ""}
-                                                    {props.model.customer?.name && (props.model.modelName === "customer_deposit" || props.model.modelName === "whatsapp_customer_deposit") ? " from " + props.model.customer.name : ""}
-                                                    {props.model.customer?.name && (props.model.modelName === "customer_withdrawal" || props.model.modelName === "whatsapp_customer_withdrawal") ? " to " + props.model.customer.name : ""}
+                                                    {payment.invoice_code ? " for Invoice: " + payment.invoice_code : ""}
+                                                    {/*props.model.customer?.name && (props.model.modelName === "customer_deposit" || props.model.modelName === "whatsapp_customer_deposit") ? " from " + props.model.customer.name : ""*/}
+                                                    {/*props.model.customer?.name && (props.model.modelName === "customer_withdrawal" || props.model.modelName === "whatsapp_customer_withdrawal") ? " to " + props.model.customer.name : ""*/}
                                                     {payment.description ? " | " + payment.description : ""}
                                                 </td>
                                                 <td style={{ padding: "1px", borderRight: tableBorderThickness }} className="text-center">{payment.method ? GetPaymentMode(payment.method) : ""} </td>
@@ -448,6 +449,34 @@ const CustomerDepositPreviewContent = forwardRef((props, ref) => {
                                             props.selectText("tableFooter");
                                         }}
                                     >
+                                        <tr
+                                            style={{}}>
+                                            <th colSpan="6" className="text-end print-label"
+                                                style={{ padding: "2px", borderRight: tableBorderThickness }}
+                                            >
+                                                Total المجموع:
+                                            </th>
+                                            <th className="text-end" colSpan="1" style={{ padding: "2px" }}>
+                                                <span className="icon-saudi_riyal">
+                                                    <Amount amount={trimTo2Decimals(props.model.total)} />
+                                                </span>
+                                            </th>
+                                        </tr>
+
+                                        <tr
+                                            style={{}}>
+                                            <th colSpan="6" className="text-end print-label"
+                                                style={{ padding: "2px", borderRight: tableBorderThickness }}
+                                            >
+                                                Total Discount إجمالي الخصم:
+                                            </th>
+                                            <th className="text-end" colSpan="1" style={{ padding: "2px" }}>
+                                                <span className="icon-saudi_riyal">
+                                                    <Amount amount={trimTo2Decimals(props.model.total_discount)} />
+                                                </span>
+                                            </th>
+                                        </tr>
+
                                         <tr
                                             style={{}}>
                                             <th colSpan="6" className="text-end print-label"
