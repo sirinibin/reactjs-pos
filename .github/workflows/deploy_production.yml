@@ -27,6 +27,7 @@ jobs:
           export NODE_OPTIONS=--openssl-legacy-provider
           export DANGEROUSLY_DISABLE_HOST_CHECK=true
           export REACT_APP_API_URL=https://startpos-api.startuptech.uk
+          export GENERATE_SOURCEMAP=false
           npm run build
 
       # Step 4: Deploy to AWS
@@ -38,7 +39,9 @@ jobs:
           AWS_PORT: ${{ secrets.AWS_PORT }}
           AWS_DEST_PATH: ${{ secrets.AWS_DEST_PATH_PROD }}
         run: |
+          set -e
           echo "$SSH_PRIVATE_KEY" > private_key.pem
           chmod 600 private_key.pem
-          scp -o StrictHostKeyChecking=no -i private_key.pem -P $AWS_PORT -r build/* $AWS_USER@$AWS_HOST:$AWS_DEST_PATH
-          rm private_key.pem
+          ssh -o StrictHostKeyChecking=no -i private_key.pem -p $AWS_PORT $AWS_USER@$AWS_HOST "mkdir -p $AWS_DEST_PATH"
+          rsync -avz --delete -e "ssh -o StrictHostKeyChecking=no -i private_key.pem -p $AWS_PORT" build/ $AWS_USER@$AWS_HOST:$AWS_DEST_PATH/
+          rm -f private_key.pem
