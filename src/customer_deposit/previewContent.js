@@ -481,7 +481,7 @@ const CustomerDepositPreviewContent = forwardRef((props, ref) => {
                                                 Net Total  صافي المجموع:
                                             </th>
                                             <th className="text-end" colSpan="1" style={{ padding: "2px" }}>
-                                                <span className="icon-saudi_riyal">
+                                                <span className={props.model.store.settings.show_currency_symbol ? "icon-saudi_riyal" : ""} >
                                                     <Amount amount={trimTo2Decimals(props.model.net_total)} />
                                                 </span>
                                             </th>

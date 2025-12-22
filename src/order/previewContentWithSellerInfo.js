@@ -1061,7 +1061,7 @@ const PreviewContentWithSellerInfo = forwardRef((props, ref) => {
 
                                                 </th>
                                                 <td className="text-end" colSpan="1" style={{ width: "10%", paddingRight: "3px" }}>
-                                                    <span className="icon-saudi_riyal print-table-value">
+                                                    <span className={props.model.store.settings.show_currency_symbol ? "icon-saudi_riyal print-table-value" : "print-table-value"} >
                                                         <Amount amount={trimTo2Decimals(props.model.net_total)} />
                                                     </span>
                                                 </td>
