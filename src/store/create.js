@@ -4427,6 +4427,29 @@ const StoreCreate = forwardRef((props, ref) => {
                         <h6><b>Settings</b></h6>
 
 
+                        <div className="col-md-2">
+                            <div className="input-group mb-3">
+                                <input type="checkbox"
+                                    value={formData.settings.show_currency_symbol}
+                                    checked={formData.settings.show_currency_symbol}
+                                    onChange={(e) => {
+                                        errors["show_currency_symbol"] = "";
+                                        formData.settings.show_currency_symbol = !formData.settings.show_currency_symbol;
+                                        setFormData({ ...formData });
+                                        console.log(formData);
+                                    }}
+                                    className=""
+                                    id="show_currency_symbol"
+
+                                /> &nbsp;Show Currency Symbol
+                            </div>
+                            <label className="form-label"></label>
+                            {errors.show_currency_symbol && (
+                                <div style={{ color: "red" }}>
+                                    {errors.show_currency_symbol}
+                                </div>
+                            )}
+                        </div>
 
                         <div className="col-md-2">
                             <div className="input-group mb-3">
