@@ -329,7 +329,7 @@ const SalesReturnCreate = forwardRef((props, ref) => {
                 selectedProducts = salesReturn.products;
                 setSelectedProducts([...selectedProducts]);
 
-                const updatedProducts = selectedProducts.map((product, index) => {
+                const updatedProducts = salesReturn.products.map((product, index) => {
                     // Calculate line totals without calling setSelectedProducts inside the loop
                     const updatedProduct = { ...product };
                     updatedProduct.line_total = parseFloat(trimTo2Decimals((updatedProduct.unit_price - updatedProduct.unit_discount) * updatedProduct.quantity));
@@ -542,6 +542,7 @@ const SalesReturnCreate = forwardRef((props, ref) => {
 
                     setFormData({ ...formData });
                     reCalculate();
+                    checkWarnings();
                     setFormData({ ...formData });
                 }
             })
@@ -1856,9 +1857,54 @@ const SalesReturnCreate = forwardRef((props, ref) => {
     }
 
 
-    async function checkWarning(i) {
+    async function checkWarning(i, selectedProduct) {
+        let product = null;
+        // if (selectedProduct) {
+        // product = selectedProduct;
+        //} else {
+        product = await getProduct(selectedProducts[i].product_id, `id,product_stores.${localStorage.getItem("store_id")}.stock,product_stores.${localStorage.getItem("store_id")}.warehouse_stocks,store_id`);
+        //}
+
+
+        let stock = 0;
+
+        if (!product) {
+            return;
+        }
+
+        if (product.product_stores) {
+            stock = product.product_stores[localStorage.getItem("store_id")].stock;
+            selectedProducts[i].warehouse_stocks = product.product_stores[localStorage.getItem("store_id")]?.warehouse_stocks ? product.product_stores[localStorage.getItem("store_id")]?.warehouse_stocks : null;
+
+            if (!selectedProducts[i].warehouse_stocks) {
+                selectedProducts[i].warehouse_stocks = {};
+                selectedProducts[i].warehouse_stocks["main_store"] = stock;
+
+                for (var j = 0; j < warehouseList.length; j++) {
+                    selectedProducts[i].warehouse_stocks[warehouseList[j].code] = 0;
+                }
+            }
+
+            let selectedWarehouseCode = selectedProducts[i].warehouse_code ? selectedProducts[i].warehouse_code : "main_store";
+            if (!selectedWarehouseCode) {
+                selectedWarehouseCode = "main_store";
+            }
+
+
+            selectedProducts[i].stock = selectedProducts[i].warehouse_stocks[selectedWarehouseCode] ? selectedProducts[i].warehouse_stocks[selectedWarehouseCode] : 0;
+            setSelectedProducts([...selectedProducts]);
+        }
+
+        /*
+        if (!formData.id && selectedProducts[i].quantity > selectedProducts[i].stock) {
+            warnings["quantity_" + i] = "Warning: Available stock is " + (selectedProducts[i].stock);
+        } else {
+            delete warnings["quantity_" + i];
+        }*/
+
         setWarnings({ ...warnings });
     }
+
 
     let [warnings, setWarnings] = useState({});
 
@@ -2324,6 +2370,7 @@ const SalesReturnCreate = forwardRef((props, ref) => {
                                         <th style={{ minWidth: "250px" }}>Name</th>
                                         <th>Info</th>
                                         <th>Purchase Unit Price(without VAT)</th>
+                                        <th>Stock</th>
                                         <th>Qty</th>
                                         {store.settings?.enable_warehouse_module && <th>Add Stock To</th>}
                                         <th>Unit Price(without VAT)</th>
@@ -2655,6 +2702,46 @@ const SalesReturnCreate = forwardRef((props, ref) => {
                                                         )}
                                                     </div>
                                                 </td>
+                                                <td
+                                                    style={{
+                                                        verticalAlign: 'middle',
+                                                        padding: '0.25rem',
+                                                        whiteSpace: 'nowrap',
+                                                        width: 'auto',
+                                                        position: 'relative',
+                                                    }}
+                                                >
+                                                    <OverlayTrigger
+                                                        placement="top"
+                                                        overlay={
+                                                            <Tooltip id={`stock-tooltip-${index}`}>
+                                                                {(() => {
+                                                                    const warehouseStocks = selectedProducts[index].warehouse_stocks || {};
+                                                                    const orderedEntries = [];
+                                                                    if (warehouseStocks.hasOwnProperty("main_store")) {
+                                                                        orderedEntries.push(["main_store", warehouseStocks["main_store"]]);
+                                                                    }
+                                                                    Object.entries(warehouseStocks).forEach(([key, value]) => {
+                                                                        if (key !== "main_store") {
+                                                                            orderedEntries.push([key, value]);
+                                                                        }
+                                                                    });
+                                                                    const details = orderedEntries
+                                                                        .map(([key, value]) => {
+                                                                            let name = key === "main_store" ? "Main Store" : key.replace(/^wh/, "WH").toUpperCase();
+                                                                            return `${name}: ${value}`;
+                                                                        })
+                                                                        .join(", ");
+                                                                    return details ? `(${details})` : "(Main Store: " + selectedProducts[index].stock + ")";
+                                                                })()}
+                                                            </Tooltip>
+                                                        }
+                                                    >
+                                                        <span style={{ cursor: "pointer", textDecoration: "underline dotted" }}>
+                                                            {selectedProducts[index].stock}
+                                                        </span>
+                                                    </OverlayTrigger>
+                                                </td>
                                                 <td style={{
                                                     verticalAlign: 'middle',
                                                     padding: '0.25rem',
@@ -2787,6 +2874,7 @@ const SalesReturnCreate = forwardRef((props, ref) => {
                                                             }
 
                                                             setSelectedProducts([...selectedProducts]);
+                                                            checkWarning(index, selectedProducts[index]);
                                                         }}
                                                     >
                                                         <option value="main_store">Main Store</option>
