@@ -1,4 +1,4 @@
-import React, { useState, useRef, forwardRef, useImperativeHandle, useEffect, useMemo } from "react";
+import React, { useState, useRef, forwardRef, useImperativeHandle, useEffect, useMemo, useCallback } from "react";
 
 import { format } from "date-fns";
 import DatePicker from "react-datepicker";
@@ -16,6 +16,7 @@ import CustomerCreate from "./../customer/create.js";
 import Draggable2 from "react-draggable";
 
 const QuotationHistory = forwardRef((props, ref) => {
+    const [statsOpen, setStatsOpen] = useState(false);
     const dragRef = useRef(null);
 
     useImperativeHandle(ref, () => ({
@@ -33,7 +34,7 @@ const QuotationHistory = forwardRef((props, ref) => {
                 setSelectedType(type);
             }
 
-            list();
+            // list();
 
             getStore(localStorage.getItem("store_id"));
             SetShow(true);
@@ -249,7 +250,7 @@ const QuotationHistory = forwardRef((props, ref) => {
         list();
     }
 
-    function list() {
+    const list = useCallback(() => {
         const requestOptions = {
             method: "GET",
             headers: {
@@ -330,17 +331,17 @@ const QuotationHistory = forwardRef((props, ref) => {
                 setOffset((page - 1) * pageSize);
                 setCurrentPageItemsCount(data.result.length);
 
-                totalQuotation = data.meta.total_quotation;
-                setTotalQuotation(totalQuotation);
+                // totalQuotation = data.meta.total_quotation;
+                setTotalQuotation(data.meta.total_quotation);
 
-                totalProfit = data.meta.total_profit;
-                setTotalProfit(totalProfit);
+                // totalProfit = data.meta.total_profit;
+                setTotalProfit(data.meta.total_profit);
 
-                totalLoss = data.meta.total_loss;
-                setTotalLoss(totalLoss);
+                //totalLoss = data.meta.total_loss;
+                setTotalLoss(data.meta.total_loss);
 
-                totalVat = data.meta.total_vat;
-                setTotalVat(totalVat);
+                // totalVat = data.meta.total_vat;
+                setTotalVat(data.meta.total_vat);
 
             })
             .catch((error) => {
@@ -348,7 +349,8 @@ const QuotationHistory = forwardRef((props, ref) => {
                 setIsRefreshInProcess(false);
                 console.log(error);
             });
-    }
+    }, [page, pageSize, product, sortField, sortProduct, searchParams, statsOpen]);
+
 
     function sort(field) {
         sortField = field;
@@ -367,10 +369,15 @@ const QuotationHistory = forwardRef((props, ref) => {
     function changePage(newPage) {
         page = parseInt(newPage);
         setPage(page);
-        list();
+        // list();
     }
 
     const [show, SetShow] = useState(false);
+    useEffect(() => {
+        if (show) {
+            list();
+        }
+    }, [list, show]);
 
     function handleClose() {
         SetShow(false);
@@ -507,7 +514,7 @@ const QuotationHistory = forwardRef((props, ref) => {
         localStorage.setItem("quotation_" + selectedType + "_history_table_settings", JSON.stringify(reordered));
     };
 
-    const [statsOpen, setStatsOpen] = useState(false);
+
 
     const handleSummaryToggle = (isOpen) => {
         setStatsOpen(isOpen);

@@ -1,4 +1,4 @@
-import React, { useState, useRef, forwardRef, useImperativeHandle, useEffect, useMemo } from "react";
+import React, { useState, useRef, forwardRef, useImperativeHandle, useEffect, useMemo, useCallback } from "react";
 import { format } from "date-fns";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
@@ -16,6 +16,7 @@ import StatsSummary from "../utils/StatsSummary.js";
 import Draggable2 from "react-draggable";
 
 const SalesReturnHistory = forwardRef((props, ref) => {
+    const [statsOpen, setStatsOpen] = useState(false);
     const dragRef = useRef(null);
 
     useImperativeHandle(ref, () => ({
@@ -245,7 +246,7 @@ const SalesReturnHistory = forwardRef((props, ref) => {
     }
 
 
-    function list() {
+    const list = useCallback(() => {
         const requestOptions = {
             method: "GET",
             headers: {
@@ -326,17 +327,17 @@ const SalesReturnHistory = forwardRef((props, ref) => {
                 setOffset((page - 1) * pageSize);
                 setCurrentPageItemsCount(data.result.length);
 
-                totalSalesReturn = data.meta.total_sales_return;
-                setTotalSalesReturn(totalSalesReturn);
+                //totalSalesReturn = data.meta.total_sales_return;
+                setTotalSalesReturn(data.meta.total_sales_return);
 
-                totalProfit = data.meta.total_profit;
-                setTotalProfit(totalProfit);
+                //totalProfit = data.meta.total_profit;
+                setTotalProfit(data.meta.total_profit);
 
-                totalLoss = data.meta.total_loss;
-                setTotalLoss(totalLoss);
+                //totalLoss = data.meta.total_loss;
+                setTotalLoss(data.meta.total_loss);
 
-                totalVatReturn = data.meta.total_vat_return;
-                setTotalVatReturn(totalVatReturn);
+                // totalVatReturn = data.meta.total_vat_return;
+                setTotalVatReturn(data.meta.total_vat_return);
 
             })
             .catch((error) => {
@@ -344,7 +345,7 @@ const SalesReturnHistory = forwardRef((props, ref) => {
                 setIsRefreshInProcess(false);
                 console.log(error);
             });
-    }
+    }, [page, pageSize, product, sortField, sortProduct, searchParams, statsOpen]);
 
     function sort(field) {
         sortField = field;
@@ -367,6 +368,11 @@ const SalesReturnHistory = forwardRef((props, ref) => {
     }
 
     const [show, SetShow] = useState(false);
+    useEffect(() => {
+        if (show) {
+            list();
+        }
+    }, [show, list]);
 
     function handleClose() {
         SetShow(false);
@@ -531,7 +537,7 @@ const SalesReturnHistory = forwardRef((props, ref) => {
 
 
 
-    const [statsOpen, setStatsOpen] = useState(false);
+
 
     const handleSummaryToggle = (isOpen) => {
         setStatsOpen(isOpen);

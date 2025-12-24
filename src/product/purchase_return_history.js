@@ -1,4 +1,4 @@
-import React, { useState, useRef, forwardRef, useImperativeHandle, useEffect, useMemo } from "react";
+import React, { useState, useRef, forwardRef, useImperativeHandle, useEffect, useMemo, useCallback } from "react";
 
 import { format } from "date-fns";
 import DatePicker from "react-datepicker";
@@ -17,6 +17,8 @@ import { trimTo2Decimals } from "../utils/numberUtils";
 import Draggable2 from "react-draggable";
 
 const PurchaseReturnHistory = forwardRef((props, ref) => {
+    const [statsOpen, setStatsOpen] = useState(false);
+    const [show, SetShow] = useState(false);
     const dragRef = useRef(null);
     useImperativeHandle(ref, () => ({
         open(model, selectedVendors) {
@@ -252,8 +254,7 @@ const PurchaseReturnHistory = forwardRef((props, ref) => {
         list();
     }
 
-
-    function list() {
+    const list = useCallback(() => {
         const requestOptions = {
             method: "GET",
             headers: {
@@ -334,11 +335,11 @@ const PurchaseReturnHistory = forwardRef((props, ref) => {
                 setOffset((page - 1) * pageSize);
                 setCurrentPageItemsCount(data.result.length);
 
-                totalPurchaseReturn = data.meta.total_purchase_return;
-                setTotalPurchaseReturn(totalPurchaseReturn);
+                // totalPurchaseReturn = data.meta.total_purchase_return;
+                setTotalPurchaseReturn(data.meta.total_purchase_return);
 
-                totalVatReturn = data.meta.total_vat_return;
-                setTotalVatReturn(totalVatReturn);
+                //totalVatReturn = data.meta.total_vat_return;
+                setTotalVatReturn(data.meta.total_vat_return);
 
             })
             .catch((error) => {
@@ -346,7 +347,7 @@ const PurchaseReturnHistory = forwardRef((props, ref) => {
                 setIsRefreshInProcess(false);
                 console.log(error);
             });
-    }
+    }, [page, pageSize, product, sortField, sortProduct, searchParams, statsOpen]);
 
     function sort(field) {
         sortField = field;
@@ -365,10 +366,15 @@ const PurchaseReturnHistory = forwardRef((props, ref) => {
     function changePage(newPage) {
         page = parseInt(newPage);
         setPage(page);
-        list();
+        // list();
     }
 
-    const [show, SetShow] = useState(false);
+
+    useEffect(() => {
+        if (show) {
+            list();
+        }
+    }, [list, show]);
 
     function handleClose() {
         SetShow(false);
@@ -499,7 +505,6 @@ const PurchaseReturnHistory = forwardRef((props, ref) => {
         localStorage.setItem("purchase_return_history_table_settings", JSON.stringify(reordered));
     };
 
-    const [statsOpen, setStatsOpen] = useState(false);
 
     const handleSummaryToggle = (isOpen) => {
         setStatsOpen(isOpen);

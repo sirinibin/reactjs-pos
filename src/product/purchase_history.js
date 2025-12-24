@@ -1,4 +1,4 @@
-import React, { useState, useRef, forwardRef, useImperativeHandle, useEffect, useMemo } from "react";
+import React, { useState, useRef, forwardRef, useImperativeHandle, useEffect, useMemo, useCallback } from "react";
 
 import { format } from "date-fns";
 import DatePicker from "react-datepicker";
@@ -16,6 +16,7 @@ import VendorCreate from "./../vendor/create.js";
 import Draggable2 from "react-draggable";
 
 const PurchaseHistory = forwardRef((props, ref) => {
+    const [statsOpen, setStatsOpen] = useState(false);
     const dragRef = useRef(null);
     useImperativeHandle(ref, () => ({
         open(model, selectedVendors) {
@@ -255,7 +256,7 @@ const PurchaseHistory = forwardRef((props, ref) => {
     }
 
 
-    function list() {
+    const list = useCallback(() => {
         const requestOptions = {
             method: "GET",
             headers: {
@@ -334,23 +335,23 @@ const PurchaseHistory = forwardRef((props, ref) => {
                 setOffset((page - 1) * pageSize);
                 setCurrentPageItemsCount(data.result.length);
 
-                totalPurchase = data.meta.total_purchase;
-                setTotalPurchase(totalPurchase);
+                // totalPurchase = data.meta.total_purchase;
+                setTotalPurchase(data.meta.total_purchase);
 
-                totalRetailProfit = data.meta.total_retail_profit;
-                setTotalRetailProfit(totalRetailProfit);
+                //totalRetailProfit = data.meta.total_retail_profit;
+                // setTotalRetailProfit(data.meta.total_retail_profit);
 
-                totalWholesaleProfit = data.meta.total_wholesale_profit;
-                setTotalWholesaleProfit(totalWholesaleProfit);
+                //totalWholesaleProfit = data.meta.total_wholesale_profit;
+                // setTotalWholesaleProfit(data.meta.total_wholesale_profit);
 
-                totalRetailLoss = data.meta.total_retail_loss;
-                setTotalRetailLoss(totalRetailLoss);
+                // totalRetailLoss = data.meta.total_retail_loss;
+                // setTotalRetailLoss(data.meta.total_retail_loss);
 
-                totalWholesaleLoss = data.meta.total_wholesale_loss;
-                setTotalWholesaleLoss(totalWholesaleLoss);
+                // totalWholesaleLoss = data.meta.total_wholesale_loss;
+                // setTotalWholesaleLoss(data.meta.total_wholesale_loss);
 
-                totalVat = data.meta.total_vat;
-                setTotalVat(totalVat);
+                // totalVat = data.meta.total_vat;
+                setTotalVat(data.meta.total_vat);
 
             })
             .catch((error) => {
@@ -358,7 +359,7 @@ const PurchaseHistory = forwardRef((props, ref) => {
                 setIsRefreshInProcess(false);
                 console.log(error);
             });
-    }
+    }, [page, pageSize, product, sortField, sortProduct, searchParams, statsOpen]);
 
     function sort(field) {
         sortField = field;
@@ -377,21 +378,25 @@ const PurchaseHistory = forwardRef((props, ref) => {
     function changePage(newPage) {
         page = parseInt(newPage);
         setPage(page);
-        list();
     }
 
     const [show, SetShow] = useState(false);
+    useEffect(() => {
+        if (show) {
+            list();
+        }
+    }, [show, list]);
 
     function handleClose() {
         SetShow(false);
     };
 
     let [totalPurchase, setTotalPurchase] = useState(0.00);
-    let [totalRetailProfit, setTotalRetailProfit] = useState(0.00);
-    let [totalWholesaleProfit, setTotalWholesaleProfit] = useState(0.00);
+    // let [totalRetailProfit, setTotalRetailProfit] = useState(0.00);
+    // let [totalWholesaleProfit, setTotalWholesaleProfit] = useState(0.00);
     let [totalVat, setTotalVat] = useState(0.00);
-    let [totalRetailLoss, setTotalRetailLoss] = useState(0.00);
-    let [totalWholesaleLoss, setTotalWholesaleLoss] = useState(0.00);
+    // let [totalRetailLoss, setTotalRetailLoss] = useState(0.00);
+    //let [totalWholesaleLoss, setTotalWholesaleLoss] = useState(0.00);
 
     let [showPurchaseForm, setShowPurchaseForm] = useState(false);
 
@@ -500,7 +505,7 @@ const PurchaseHistory = forwardRef((props, ref) => {
         localStorage.setItem("purchase_history_table_settings", JSON.stringify(reordered));
     };
 
-    const [statsOpen, setStatsOpen] = useState(false);
+
 
     const handleSummaryToggle = (isOpen) => {
         setStatsOpen(isOpen);

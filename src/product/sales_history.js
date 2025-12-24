@@ -28,7 +28,7 @@ const SalesHistory = forwardRef((props, ref) => {
             }
 
             getStore(localStorage.getItem("store_id"));
-            SetShow(true);
+            setShow(true);
         },
 
     }));
@@ -302,13 +302,18 @@ const SalesHistory = forwardRef((props, ref) => {
 
 
 
-    const [show, SetShow] = useState(false);
-
+    let [show, setShow] = useState(false);
     useEffect(() => {
-        if (page & show) {
+        if (show) {
             list();
         }
-    }, [page, list, show]);
+    }, [list, show]);
+
+
+    function changePage(newPage) {
+        page = parseInt(newPage);
+        setPage(page);
+    }
 
     function sort(field) {
         sortField = field;
@@ -324,14 +329,11 @@ const SalesHistory = forwardRef((props, ref) => {
         list();
     }
 
-    function changePage(newPage) {
-        page = parseInt(newPage);
-        setPage(page);
-        list();
-    }
+
+
 
     function handleClose() {
-        SetShow(false);
+        setShow(false);
     };
 
     let [totalSales, setTotalSales] = useState(0.00);
@@ -432,7 +434,7 @@ const SalesHistory = forwardRef((props, ref) => {
             if (e.key === "Escape") {
                 e.preventDefault();
                 e.stopPropagation();
-                SetShow(false);
+                setShow(false);
             }
         };
 

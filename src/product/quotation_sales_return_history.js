@@ -1,4 +1,4 @@
-import React, { useState, useRef, forwardRef, useImperativeHandle, useEffect, useMemo } from "react";
+import React, { useState, useRef, forwardRef, useImperativeHandle, useEffect, useMemo, useCallback } from "react";
 import { format } from "date-fns";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
@@ -16,6 +16,8 @@ import { trimTo2Decimals } from "../utils/numberUtils";
 import Draggable2 from "react-draggable";
 
 const QuotationSalesReturnHistory = forwardRef((props, ref) => {
+    const [statsOpen, setStatsOpen] = useState(false);
+    const [show, SetShow] = useState(false);
     const dragRef = useRef(null);
 
     useImperativeHandle(ref, () => ({
@@ -25,9 +27,9 @@ const QuotationSalesReturnHistory = forwardRef((props, ref) => {
             if (selectedCustomers?.length > 0) {
                 setSelectedCustomers(selectedCustomers)
                 searchByMultipleValuesField("customer_id", selectedCustomers);
-            } else {
+            } /*else {
                 list();
-            }
+            }*/
 
             getStore(localStorage.getItem("store_id"));
 
@@ -245,7 +247,7 @@ const QuotationSalesReturnHistory = forwardRef((props, ref) => {
     }
 
 
-    function list() {
+    const list = useCallback(() => {
         const requestOptions = {
             method: "GET",
             headers: {
@@ -325,17 +327,16 @@ const QuotationSalesReturnHistory = forwardRef((props, ref) => {
                 setOffset((page - 1) * pageSize);
                 setCurrentPageItemsCount(data.result.length);
 
-                totalQuotationSalesReturn = data.meta.total_quotation_sales_return;
-                setTotalQuotationSalesReturn(totalQuotationSalesReturn);
+                // totalQuotationSalesReturn = data.meta.total_quotation_sales_return;
+                setTotalQuotationSalesReturn(data.meta.total_quotation_sales_return);
 
-                totalProfit = data.meta.total_profit;
-                setTotalProfit(totalProfit);
+                // totalProfit = data.meta.total_profit;
+                setTotalProfit(data.meta.total_profit);
 
-                totalLoss = data.meta.total_loss;
-                setTotalLoss(totalLoss);
-
-                totalVatReturn = data.meta.total_vat_return;
-                setTotalVatReturn(totalVatReturn);
+                //totalLoss = data.meta.total_loss;
+                setTotalLoss(data.meta.total_loss);
+                //totalVatReturn = data.meta.total_vat_return;
+                setTotalVatReturn(data.meta.total_vat_return);
 
             })
             .catch((error) => {
@@ -343,7 +344,7 @@ const QuotationSalesReturnHistory = forwardRef((props, ref) => {
                 setIsRefreshInProcess(false);
                 console.log(error);
             });
-    }
+    }, [page, pageSize, product, sortField, sortProduct, searchParams, statsOpen]);
 
     function sort(field) {
         sortField = field;
@@ -362,10 +363,16 @@ const QuotationSalesReturnHistory = forwardRef((props, ref) => {
     function changePage(newPage) {
         page = parseInt(newPage);
         setPage(page);
-        list();
+        // list();
     }
 
-    const [show, SetShow] = useState(false);
+    useEffect(() => {
+        if (show) {
+            list();
+        }
+    }, [list, show]);
+
+
 
     function handleClose() {
         SetShow(false);
@@ -502,7 +509,7 @@ const QuotationSalesReturnHistory = forwardRef((props, ref) => {
         localStorage.setItem("quotation_sales_return_history_table_settings", JSON.stringify(reordered));
     };
 
-    const [statsOpen, setStatsOpen] = useState(false);
+
 
     const handleSummaryToggle = (isOpen) => {
         setStatsOpen(isOpen);
