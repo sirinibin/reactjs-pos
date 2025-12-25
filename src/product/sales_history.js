@@ -372,10 +372,10 @@ const SalesHistory = forwardRef((props, ref) => {
             })
             .join(",");
 
-        //page = 1;
-        //setPage(page);
+        page = 1;
+        setPage(page);
 
-        // list();
+        list();
     }
 
     const [selectedCustomers, setSelectedCustomers] = useState([]);
