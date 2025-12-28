@@ -42,9 +42,14 @@ const ImageGallery = forwardRef((props, ref) => {
 
         const compressedFiles = await Promise.all(files.map(async (file) => {
             const compressedFile = await imageCompression(file, {
-                maxSizeMB: 0.3,
-                maxWidthOrHeight: 1024,
-                useWebWorker: true
+                /* maxSizeMB: 0.3,
+                 maxWidthOrHeight: 1024,
+                 useWebWorker: true*/
+                maxSizeMB: 1.0,               // allow larger target to keep quality
+                maxWidthOrHeight: 2048,      // preserve higher resolution
+                useWebWorker: true,
+                initialQuality: 0.9,         // start with high quality
+                fileType: file.type,
             });
 
             const preview = URL.createObjectURL(compressedFile);
