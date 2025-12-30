@@ -6,18 +6,24 @@ export function highlightWords(text, words, isActive = false) {
     if (!text) return null;
     if (!words || words.length === 0) return text;
 
-    const safeWords = words.map(escapeRegExp);
+    // FIX: Ensure words is always an array of strings
+    let wordArr = Array.isArray(words)
+        ? words
+        : String(words).split(/\s+/).filter(Boolean);
+
+    if (wordArr.length === 0) return text;
+
+    const safeWords = wordArr.map(escapeRegExp);
     const regex = new RegExp(`(${safeWords.join("|")})`, "gi");
-    // const regex = new RegExp(`(${words.join("|")})`, "gi");
-    const parts = text.split(regex);
+    const parts = String(text).split(regex);
 
     return parts.map((part, index) =>
-        words.some(word => word?.toLowerCase() === part?.toLowerCase()) ? (
+        wordArr.some(word => word?.toLowerCase() === part?.toLowerCase()) ? (
             <strong
                 key={index}
                 style={{
                     backgroundColor: "yellow",
-                    color: isActive ? "#000" : undefined,  // force readable text on blue bg
+                    color: isActive ? "#000" : undefined,
                     padding: "0 2px"
                 }}
             >

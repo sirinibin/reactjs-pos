@@ -14,6 +14,9 @@ import { trimTo2Decimals } from "../utils/numberUtils";
 import PostingIndex from "./../posting/index.js";
 import { confirm } from 'react-bootstrap-confirmation';
 import CustomerPending from "./../utils/customer_pending.js";
+import { Menu, MenuItem } from "react-bootstrap-typeahead";
+import { highlightWords } from "../utils/search.js";
+
 
 function CustomerIndex(props) {
 
@@ -1938,6 +1941,34 @@ function CustomerIndex(props) {
                                                                     }, 100);
                                                                 }}
                                                                 multiple
+
+                                                                renderMenu={(results, menuProps, state) => (
+                                                                    <Menu {...menuProps}>
+                                                                        {results.map((option, idx) => (
+                                                                            <MenuItem option={option} position={idx} key={option.id}>
+                                                                                <div>
+                                                                                    {highlightWords(option.search_label, state.text)}
+                                                                                    {option.name_in_arabic && (
+                                                                                        <span style={{ color: "#888", marginLeft: 8 }}>
+                                                                                            {highlightWords(option.name_in_arabic, state.text)}
+                                                                                        </span>
+                                                                                    )}
+                                                                                    {option.phone && (
+                                                                                        <span style={{ color: "#888", marginLeft: 8 }}>
+                                                                                            {highlightWords(option.phone, state.text)}
+                                                                                        </span>
+                                                                                    )}
+                                                                                    {option.vat_no && (
+                                                                                        <span style={{ color: "#888", marginLeft: 8 }}>
+                                                                                            {highlightWords(option.vat_no, state.text)}
+                                                                                        </span>
+                                                                                    )}
+                                                                                </div>
+                                                                            </MenuItem>
+                                                                        ))}
+                                                                    </Menu>
+                                                                )}
+
                                                             />
                                                         </th>}
                                                         {(col.key === "code" ||
