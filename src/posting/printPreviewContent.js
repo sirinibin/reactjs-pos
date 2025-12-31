@@ -91,36 +91,35 @@ const BalanceSheetPrintPreviewContent = forwardRef((props, ref) => {
                     paddingRight: "0px",
                     paddingTop: "10px",
                     paddingBottom: "4px",
-                    marginTop: "9px",
-                    height: "1113px",
+                    marginTop: page.top + "px",
+                    height: "1118px",
                     width: `${props.whatsAppShare ? "750px" : "750px"}`,
-                    backgroundImage: `url(${props.whatsAppShare || props.model?.download ? props.invoiceBackground : ""})`,
-                    backgroundSize: 'cover',
-                    backgroundPosition: 'center',
+                    //  backgroundImage: `url(${props.whatsAppShare ? props.invoiceBackground : ""})`,
+                    // backgroundSize: 'cover',
+                    // backgroundPosition: 'center',
+                    position: "relative",
                 }}
 
             >
-                {props.invoiceBackground ? (<img
+                {props.invoiceBackground && props.fontSizes[props.modelName + "_storeHeader"]?.visible ? (<img
                     src={props.invoiceBackground}
                     style={{
                         position: "absolute",
                         left: "50%",
                         transform: "translateX(-50%)",
                         top: 0,
-                        width: "800px",
-                        height: "100%",
-                        maxWidth: "100%",
+                        width: "105%",
+                        height: "1118px",
+                        maxWidth: "105%",
                         objectFit: "cover",
                         objectPosition: "top center",
                         zIndex: 0,
                         pointerEvents: "none",
-                        backgroundColor: "transparent",
-                        backgroundImage: `url(${props.whatsAppShare ? props.invoiceBackground : ""})`,
+                        backgroundColor: "transparent"
                     }}
                     alt="Invoice Background" />) : null}
                 <div style={{ position: "relative", zIndex: 1 }}>
-
-                    {props.fontSizes[props.modelName + "_storeHeader"]?.visible ? < div className="row">
+                    {props.fontSizes[props.modelName + "_storeHeader"]?.visible && !props.invoiceBackground ? < div className="row">
                         <div className="col">
                             <ul className="list-unstyled text-left">
                                 <li>
@@ -174,7 +173,7 @@ const BalanceSheetPrintPreviewContent = forwardRef((props, ref) => {
                         </div>
                     </div> : ""}
 
-                    <div className="row" style={{ marginTop: props.fontSizes[props.modelName + "_storeHeader"]?.visible ? "0px" : props.fontSizes[props.modelName + "_marginTop"]?.size }}>
+                    <div className="row" style={{ marginTop: props.fontSizes[props.modelName + "_storeHeader"]?.visible && !props.invoiceBackground ? "0px" : props.fontSizes[props.modelName + "_marginTop"]?.size }}>
                         <div className="col">
                             <u><h1 className="text-center clickable-text fw-bold" onClick={() => {
                                 props.selectText("invoiceTitle");
@@ -700,7 +699,7 @@ const BalanceSheetPrintPreviewContent = forwardRef((props, ref) => {
                         </div> : ""
                     }
                 </div >
-            </div>
+            </div >
         ))}
     </>);
 
