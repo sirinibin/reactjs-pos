@@ -1158,6 +1158,9 @@ const PurchaseCreate = forwardRef((props, ref) => {
 
 
     async function reCalculate(productIndex) {
+        const requestId = Date.now();
+        latestRequestRef.current = requestId;
+
         console.log("inside reCalculate");
         if (!cashDiscount) {
             formData.cash_discount = 0;
@@ -1296,6 +1299,8 @@ const PurchaseCreate = forwardRef((props, ref) => {
             if (!result.ok) {
                 return;
             }
+
+            if (latestRequestRef.current !== requestId) return;
 
 
             let res = await result.json();

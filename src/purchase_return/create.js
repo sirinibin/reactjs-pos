@@ -850,8 +850,13 @@ const PurchaseReturnedCreate = forwardRef((props, ref) => {
     let [discountWithVAT, setDiscountWithVAT] = useState(0.00);
     let [discountPercentWithVAT, setDiscountPercentWithVAT] = useState(0.00);
 
+    const latestRequestRef = useRef(0);
+
 
     async function reCalculate(productIndex) {
+        const requestId = Date.now();
+        latestRequestRef.current = requestId;
+
         //alert("inside calc")
         console.log("inside reCalculate");
         if (!cashDiscount) {
@@ -990,6 +995,8 @@ const PurchaseReturnedCreate = forwardRef((props, ref) => {
             if (!result.ok) {
                 return;
             }
+
+            if (latestRequestRef.current !== requestId) return;
 
 
             let res = await result.json();

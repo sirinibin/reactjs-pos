@@ -1237,7 +1237,12 @@ const QuotationSalesReturnCreate = forwardRef((props, ref) => {
     let [discountPercentWithVAT, setDiscountPercentWithVAT] = useState(0.00);
 
 
+    const latestRequestRef = useRef(0);
+
     async function reCalculate(productIndex) {
+        const requestId = Date.now();
+        latestRequestRef.current = requestId;
+
         console.log("inside reCalculate");
 
         if (!cashDiscount) {
@@ -1378,6 +1383,7 @@ const QuotationSalesReturnCreate = forwardRef((props, ref) => {
                 return;
             }
 
+            if (latestRequestRef.current !== requestId) return;
 
             let res = await result.json();
             if (res.result) {

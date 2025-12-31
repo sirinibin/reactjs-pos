@@ -1256,8 +1256,12 @@ const SalesReturnCreate = forwardRef((props, ref) => {
     let [discountWithVAT, setDiscountWithVAT] = useState(0.00);
     let [discountPercentWithVAT, setDiscountPercentWithVAT] = useState(0.00);
 
+    const latestRequestRef = useRef(0);
 
     async function reCalculate(productIndex) {
+        const requestId = Date.now();
+        latestRequestRef.current = requestId;
+
         console.log("inside reCalculate");
         if (!cashDiscount) {
             formData.cash_discount = 0;
