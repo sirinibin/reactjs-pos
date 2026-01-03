@@ -20,8 +20,12 @@ const SalesHistory = forwardRef((props, ref) => {
 
     useImperativeHandle(ref, () => ({
         open(model, selectedCustomers) {
+            setSelectedCustomers([]);
+            searchParams["customer_id"] = "";
+
             product = model;
             setProduct({ ...product });
+
             if (selectedCustomers?.length > 0) {
                 // setSelectedCustomers(selectedCustomers)
                 searchByMultipleValuesField("customer_id", selectedCustomers);

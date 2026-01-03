@@ -26,6 +26,12 @@ import Draggable2 from "react-draggable";
 const ProductHistory = forwardRef((props, ref) => {
     useImperativeHandle(ref, () => ({
         open(model, selectedCustomers, selectedVendors) {
+            setSelectedCustomers([]);
+            searchParams["customer_id"] = "";
+
+            setSelectedVendors([]);
+            searchParams["vendor_id"] = "";
+
             product = model;
             setProduct({ ...product });
             if (selectedCustomers?.length > 0) {
