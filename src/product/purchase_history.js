@@ -20,6 +20,7 @@ const PurchaseHistory = forwardRef((props, ref) => {
     const dragRef = useRef(null);
     useImperativeHandle(ref, () => ({
         open(model, selectedVendors) {
+            setHistoryList([]);
             setSelectedVendors([]);
             searchParams["vendor_id"] = "";
 

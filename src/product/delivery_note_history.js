@@ -18,6 +18,10 @@ const DeliveryNoteHistory = forwardRef((props, ref) => {
 
     useImperativeHandle(ref, () => ({
         open(model, selectedCustomers) {
+            setHistoryList([]);
+            setSelectedCustomers([]);
+            searchParams["customer_id"] = "";
+
             product = model;
             setProduct({ ...product });
             if (selectedCustomers?.length > 0) {

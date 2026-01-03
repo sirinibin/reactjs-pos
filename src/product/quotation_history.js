@@ -21,6 +21,7 @@ const QuotationHistory = forwardRef((props, ref) => {
 
     useImperativeHandle(ref, () => ({
         open(model, selectedCustomers, type) {
+            setHistoryList([]);
             setSelectedCustomers([]);
             searchParams["customer_id"] = "";
 
