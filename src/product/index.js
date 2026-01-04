@@ -779,12 +779,14 @@ function ProductIndex(props) {
             //
             const searchPhrase = searchTerm.toLowerCase().replace(/\s+/g, " ").trim();
 
+            //const searchPhrase = searchTerm.toLowerCase().trim();
+
             const getSearchable = (item) => {
                 let partNoLabel = item.prefix_part_number ? item.prefix_part_number + "-" + item.part_number : "";
                 const fields = [
                     partNoLabel,
-                    item.prefix_part_number,
-                    item.part_number,
+                    //item.prefix_part_number,
+                    //item.part_number,
                     item.name,
                     item.name_in_arabic,
                     item.country_name,
