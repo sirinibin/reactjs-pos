@@ -807,7 +807,9 @@ function ProductIndex(props) {
 
             // If both contain the phrase, sort by earliest occurrence
             if (aIndex !== -1 && bIndex !== -1) {
-                if (aIndex !== bIndex) return aIndex - bIndex;
+                //if (aIndex !== bIndex) return aIndex - bIndex;
+                if (aIndex < bIndex) return -1;
+                if (bIndex < aIndex) return 1;
                 //return aIndex - bIndex;
             } else if (aIndex !== -1) {
                 return -1; // a contains phrase, b does not
