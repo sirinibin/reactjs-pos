@@ -745,6 +745,9 @@ const QuotationCreate = forwardRef((props, ref) => {
       const aIndex = aSearchable.indexOf(searchPhrase);
       const bIndex = bSearchable.indexOf(searchPhrase);
 
+      if (aIndex === 0 && bIndex !== 0) return -1;
+      if (bIndex === 0 && aIndex !== 0) return 1;
+
       // If both contain the phrase, sort by earliest occurrence
       if (aIndex !== -1 && bIndex !== -1) {
         if (aIndex !== bIndex) return aIndex - bIndex;
