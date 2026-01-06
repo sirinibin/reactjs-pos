@@ -30,9 +30,12 @@ const SalesReturnHistory = forwardRef((props, ref) => {
             if (selectedCustomers?.length > 0) {
                 setSelectedCustomers(selectedCustomers)
                 searchByMultipleValuesField("customer_id", selectedCustomers);
-            } else {
-                list();
-            }
+            } /*else {
+                if (timerRef.current) clearTimeout(timerRef.current);
+                timerRef.current = setTimeout(() => {
+                    list();
+                }, 200);
+            }*/
 
             getStore(localStorage.getItem("store_id"));
 

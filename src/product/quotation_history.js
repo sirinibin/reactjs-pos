@@ -96,7 +96,10 @@ const QuotationHistory = forwardRef((props, ref) => {
         setPage(page);
 
         if (!noList) {
-            list();
+            if (timerRef.current) clearTimeout(timerRef.current);
+            timerRef.current = setTimeout(() => {
+                list();
+            }, 200);
         }
     }
 

@@ -41,9 +41,13 @@ const ProductHistory = forwardRef((props, ref) => {
             } else if (selectedVendors?.length > 0) {
                 setSelectedVendors(selectedVendors)
                 searchByMultipleValuesField("vendor_id", selectedVendors);
-            } else {
-                list();
-            }
+            } /*else {
+
+                if (timerRef.current) clearTimeout(timerRef.current);
+                timerRef.current = setTimeout(() => {
+                    list();
+                }, 200);
+            }*/
 
             getStore(localStorage.getItem("store_id"));
             SetShow(true);
@@ -603,7 +607,10 @@ const ProductHistory = forwardRef((props, ref) => {
         page = 1;
         setPage(page);
 
-        list();
+        if (timerRef.current) clearTimeout(timerRef.current);
+        timerRef.current = setTimeout(() => {
+            list();
+        }, 200);
     }
 
     const handleUpdated = () => {

@@ -380,7 +380,11 @@ const SalesHistory = forwardRef((props, ref) => {
         page = 1;
         setPage(page);
 
-        list();
+        if (timerRef.current) clearTimeout(timerRef.current);
+        timerRef.current = setTimeout(() => {
+            list();
+        }, 200);
+
     }
 
     const [selectedCustomers, setSelectedCustomers] = useState([]);
