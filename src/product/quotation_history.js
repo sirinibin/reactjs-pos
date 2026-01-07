@@ -707,6 +707,7 @@ const QuotationHistory = forwardRef((props, ref) => {
                                             "Net Profit": totalProfit,
                                             "Total Loss": totalLoss,
                                             "VAT Collected": totalVat,
+                                            "Total Quantity": totalQuantity,
                                         }}
                                         onToggle={handleSummaryToggle}
                                     />}
