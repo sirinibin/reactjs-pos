@@ -30,16 +30,11 @@ const SalesReturnHistory = forwardRef((props, ref) => {
             if (selectedCustomers?.length > 0) {
                 setSelectedCustomers(selectedCustomers)
                 searchByMultipleValuesField("customer_id", selectedCustomers);
-            } /*else {
-                if (timerRef.current) clearTimeout(timerRef.current);
-                timerRef.current = setTimeout(() => {
-                    list();
-                }, 200);
-            }*/
+            } else {
+                setShow(true);
+            }
 
             getStore(localStorage.getItem("store_id"));
-
-            SetShow(true);
         },
 
     }));
@@ -49,7 +44,7 @@ const SalesReturnHistory = forwardRef((props, ref) => {
             if (e.key === "Escape") {
                 e.preventDefault();
                 e.stopPropagation();
-                SetShow(false);
+                setShow(false);
             }
         };
 
@@ -103,7 +98,14 @@ const SalesReturnHistory = forwardRef((props, ref) => {
         page = 1;
         setPage(page);
 
-        list();
+        if (show === false) {
+            setShow(true);
+        } else {
+            if (timerRef.current) clearTimeout(timerRef.current);
+            timerRef.current = setTimeout(() => {
+                list();
+            }, 200);
+        }
     }
 
     const [customerOptions, setCustomerOptions] = useState([]);
@@ -346,6 +348,8 @@ const SalesReturnHistory = forwardRef((props, ref) => {
                 // totalVatReturn = data.meta.total_vat_return;
                 setTotalVatReturn(data.meta.total_vat_return);
 
+                setTotalQuantity(data.meta.total_quantity);
+
             })
             .catch((error) => {
                 setIsListLoading(false);
@@ -374,19 +378,25 @@ const SalesReturnHistory = forwardRef((props, ref) => {
         list();
     }
 
-    const [show, SetShow] = useState(false);
+    const [show, setShow] = useState(false);
     useEffect(() => {
         if (show) {
             list();
+        } else {
+            setHistoryList([]);
+            setSelectedCustomers([]);
         }
     }, [show, list]);
 
     function handleClose() {
-        SetShow(false);
+        setHistoryList([]);
+        setSelectedCustomers([]);
+        setShow(false);
     };
 
     let [totalSalesReturn, setTotalSalesReturn] = useState(0.00);
     let [totalVatReturn, setTotalVatReturn] = useState(0.00);
+    let [totalQuantity, setTotalQuantity] = useState(0.00);
 
     const OrderUpdateFormRef = useRef();
     function openOrderUpdateForm(id) {
@@ -432,7 +442,7 @@ const SalesReturnHistory = forwardRef((props, ref) => {
             if (e.key === "Escape") {
                 e.preventDefault();
                 e.stopPropagation();
-                SetShow(false);
+                setShow(false);
             }
         };
 
@@ -712,6 +722,7 @@ const SalesReturnHistory = forwardRef((props, ref) => {
                                             "Net Profit": totalProfit,
                                             "Total Loss": totalLoss,
                                             "VAT Returned": totalVatReturn,
+                                            "Total Quantity": totalQuantity,
                                         }}
                                         onToggle={handleSummaryToggle}
                                     />

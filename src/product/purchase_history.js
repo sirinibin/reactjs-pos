@@ -39,7 +39,7 @@ const PurchaseHistory = forwardRef((props, ref) => {
 
             getStore(localStorage.getItem("store_id"));
 
-            SetShow(true);
+            setShow(true);
         },
 
     }));
@@ -49,7 +49,7 @@ const PurchaseHistory = forwardRef((props, ref) => {
             if (e.key === "Escape") {
                 e.preventDefault();
                 e.stopPropagation();
-                SetShow(false);
+                setShow(false);
             }
         };
 
@@ -364,6 +364,8 @@ const PurchaseHistory = forwardRef((props, ref) => {
                 // totalVat = data.meta.total_vat;
                 setTotalVat(data.meta.total_vat);
 
+                setTotalQuantity(data.meta.total_quantity);
+
             })
             .catch((error) => {
                 setIsListLoading(false);
@@ -391,21 +393,25 @@ const PurchaseHistory = forwardRef((props, ref) => {
         setPage(page);
     }
 
-    const [show, SetShow] = useState(false);
+    const [show, setShow] = useState(false);
     useEffect(() => {
         if (show) {
             list();
+        } else {
+            setHistoryList([]);
+            setSelectedVendors([]);
         }
     }, [show, list]);
 
     function handleClose() {
-        SetShow(false);
+        setShow(false);
     };
 
     let [totalPurchase, setTotalPurchase] = useState(0.00);
     // let [totalRetailProfit, setTotalRetailProfit] = useState(0.00);
     // let [totalWholesaleProfit, setTotalWholesaleProfit] = useState(0.00);
     let [totalVat, setTotalVat] = useState(0.00);
+    let [totalQuantity, setTotalQuantity] = useState(0.00);
     // let [totalRetailLoss, setTotalRetailLoss] = useState(0.00);
     //let [totalWholesaleLoss, setTotalWholesaleLoss] = useState(0.00);
 
@@ -683,6 +689,7 @@ const PurchaseHistory = forwardRef((props, ref) => {
                                         stats={{
                                             "Purchase": totalPurchase,
                                             "VAT Collected": totalVat,
+                                            "Total Quantity": totalQuantity,
                                         }}
                                         onToggle={handleSummaryToggle}
                                     />

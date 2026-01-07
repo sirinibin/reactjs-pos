@@ -1,4 +1,4 @@
-import React, { useState, useRef, forwardRef, useImperativeHandle, useEffect, useMemo } from "react";
+import React, { useState, useRef, forwardRef, useImperativeHandle, useEffect, useMemo, useCallback } from "react";
 
 import { format } from "date-fns";
 import DatePicker from "react-datepicker";
@@ -24,6 +24,8 @@ import StatsSummary from "../utils/StatsSummary.js";
 import Draggable2 from "react-draggable";
 
 const ProductHistory = forwardRef((props, ref) => {
+    const [statsOpen, setStatsOpen] = useState(false);
+
     useImperativeHandle(ref, () => ({
         open(model, selectedCustomers, selectedVendors) {
             setHistoryList([]);
@@ -41,16 +43,11 @@ const ProductHistory = forwardRef((props, ref) => {
             } else if (selectedVendors?.length > 0) {
                 setSelectedVendors(selectedVendors)
                 searchByMultipleValuesField("vendor_id", selectedVendors);
-            } /*else {
-
-                if (timerRef.current) clearTimeout(timerRef.current);
-                timerRef.current = setTimeout(() => {
-                    list();
-                }, 200);
-            }*/
+            } else {
+                setShow(true);
+            }
 
             getStore(localStorage.getItem("store_id"));
-            SetShow(true);
         },
 
     }));
@@ -246,7 +243,7 @@ const ProductHistory = forwardRef((props, ref) => {
     }
 
 
-    function list() {
+    const list = useCallback(() => {
         const requestOptions = {
             method: "GET",
             headers: {
@@ -326,88 +323,88 @@ const ProductHistory = forwardRef((props, ref) => {
                 setCurrentPageItemsCount(data.result.length);
 
                 //sales 
-                totalSales = data.meta.total_sales;
-                setTotalSales(totalSales);
+                //totalSales = data.meta.total_sales;
+                setTotalSales(data.meta.total_sales);
 
-                totalSalesProfit = data.meta.total_sales_profit;
-                setTotalSalesProfit(totalSalesProfit);
+                //totalSalesProfit = data.meta.total_sales_profit;
+                setTotalSalesProfit(data.meta.total_sales_profit);
 
-                totalSalesLoss = data.meta.total_sales_loss;
-                setTotalSalesLoss(totalSalesLoss);
+                //totalSalesLoss = data.meta.total_sales_loss;
+                setTotalSalesLoss(data.meta.total_sales_loss);
 
-                totalSalesVat = data.meta.total_sales_vat;
-                setTotalSalesVat(totalSalesVat);
+                //totalSalesVat = data.meta.total_sales_vat;
+                setTotalSalesVat(data.meta.total_sales_vat);
 
                 //sales return
-                totalSalesReturn = data.meta.total_sales_return;
-                setTotalSalesReturn(totalSalesReturn);
+                // totalSalesReturn = data.meta.total_sales_return;
+                setTotalSalesReturn(data.meta.total_sales_return);
 
-                totalSalesReturnProfit = data.meta.total_sales_return_profit;
-                setTotalSalesReturnProfit(totalSalesReturnProfit);
+                //totalSalesReturnProfit = data.meta.total_sales_return_profit;
+                setTotalSalesReturnProfit(data.meta.total_sales_return_profit);
 
-                totalSalesReturnLoss = data.meta.total_sales_return_loss;
-                setTotalSalesReturnLoss(totalSalesReturnLoss);
+                //totalSalesReturnLoss = data.meta.total_sales_return_loss;
+                setTotalSalesReturnLoss(data.meta.total_sales_return_loss);
 
-                totalSalesReturnVat = data.meta.total_sales_return_vat;
-                setTotalSalesReturnVat(totalSalesReturnVat);
+                //totalSalesReturnVat = data.meta.total_sales_return_vat;
+                setTotalSalesReturnVat(data.meta.total_sales_return_vat);
 
                 //purchase
-                totalPurchase = data.meta.total_purchase;
-                setTotalPurchase(totalPurchase);
+                // totalPurchase = data.meta.total_purchase;
+                setTotalPurchase(data.meta.total_purchase);
 
-                totalPurchaseVat = data.meta.total_purchase_vat;
-                setTotalPurchaseVat(totalPurchaseVat);
+                //totalPurchaseVat = data.meta.total_purchase_vat;
+                setTotalPurchaseVat(data.meta.total_purchase_vat);
 
                 //purchase return
-                totalPurchaseReturn = data.meta.total_purchase_return;
-                setTotalPurchaseReturn(totalPurchaseReturn);
+                //totalPurchaseReturn = data.meta.total_purchase_return;
+                setTotalPurchaseReturn(data.meta.total_purchase_return);
 
-                totalPurchaseReturnVat = data.meta.total_purchase_return_vat;
-                setTotalPurchaseReturnVat(totalPurchaseReturnVat);
+                //totalPurchaseReturnVat = data.meta.total_purchase_return_vat;
+                setTotalPurchaseReturnVat(data.meta.total_purchase_return_vat);
 
                 //quotation
-                totalQuotation = data.meta.total_quotation;
-                setTotalQuotation(totalQuotation);
+                // totalQuotation = data.meta.total_quotation;
+                setTotalQuotation(data.meta.total_quotation);
 
-                totalQuotationProfit = data.meta.total_quotation_profit;
-                setTotalQuotationProfit(totalQuotationProfit);
+                //totalQuotationProfit = data.meta.total_quotation_profit;
+                setTotalQuotationProfit(data.meta.total_quotation_profit);
 
-                totalQuotationLoss = data.meta.total_quotation_loss;
-                setTotalQuotationLoss(totalQuotationLoss);
+                // totalQuotationLoss = data.meta.total_quotation_loss;
+                setTotalQuotationLoss(data.meta.total_quotation_loss);
 
-                totalQuotationVat = data.meta.total_quotation_vat;
-                setTotalQuotationVat(totalQuotationVat);
+                //totalQuotationVat = data.meta.total_quotation_vat;
+                setTotalQuotationVat(data.meta.total_quotation_vat);
 
 
                 //quotation sales
-                totalQuotationSales = data.meta.total_quotation_sales;
-                setTotalQuotationSales(totalQuotationSales);
+                //totalQuotationSales = data.meta.total_quotation_sales;
+                setTotalQuotationSales(data.meta.total_quotation_sales);
 
-                totalQuotationSalesProfit = data.meta.total_quotation_sales_profit;
-                setTotalQuotationSalesProfit(totalQuotationSalesProfit);
+                // totalQuotationSalesProfit = data.meta.total_quotation_sales_profit;
+                setTotalQuotationSalesProfit(data.meta.total_quotation_sales_profit);
 
-                totalQuotationSalesLoss = data.meta.total_quotation_sales_loss;
-                setTotalQuotationSalesLoss(totalQuotationSalesLoss);
+                // totalQuotationSalesLoss = data.meta.total_quotation_sales_loss;
+                setTotalQuotationSalesLoss(data.meta.total_quotation_sales_loss);
 
-                totalQuotationSalesVat = data.meta.total_quotation_sales_vat;
-                setTotalQuotationSalesVat(totalQuotationSalesVat);
+                //totalQuotationSalesVat = data.meta.total_quotation_sales_vat;
+                setTotalQuotationSalesVat(data.meta.total_quotation_sales_vat);
 
                 //quotation sales return
-                totalQuotationSalesReturn = data.meta.total_quotation_sales_return;
-                setTotalQuotationSalesReturn(totalQuotationSalesReturn);
+                // totalQuotationSalesReturn = data.meta.total_quotation_sales_return;
+                setTotalQuotationSalesReturn(data.meta.total_quotation_sales_return);
 
-                totalQuotationSalesReturnProfit = data.meta.total_quotation_sales_return_profit;
-                setTotalQuotationSalesReturnProfit(totalQuotationSalesReturnProfit);
+                //totalQuotationSalesReturnProfit = data.meta.total_quotation_sales_return_profit;
+                setTotalQuotationSalesReturnProfit(data.meta.total_quotation_sales_return_profit);
 
-                totalQuotationSalesReturnLoss = data.meta.total_quotation_sales_return_loss;
-                setTotalQuotationSalesReturnLoss(totalQuotationSalesReturnLoss);
+                // totalQuotationSalesReturnLoss = data.meta.total_quotation_sales_return_loss;
+                setTotalQuotationSalesReturnLoss(data.meta.total_quotation_sales_return_loss);
 
-                totalQuotationSalesReturnVat = data.meta.total_quotation_sales_return_vat;
-                setTotalQuotationSalesReturnVat(totalQuotationSalesReturnVat);
+                //totalQuotationSalesReturnVat = data.meta.total_quotation_sales_return_vat;
+                setTotalQuotationSalesReturnVat(data.meta.total_quotation_sales_return_vat);
 
                 //delivery note 
-                totalDeliveryNoteQuantity = data.meta.total_delivery_note_quantity;
-                setTotalDeliveryNoteQuantity(totalDeliveryNoteQuantity);
+                // totalDeliveryNoteQuantity = data.meta.total_delivery_note_quantity;
+                setTotalDeliveryNoteQuantity(data.meta.total_delivery_note_quantity);
 
             })
             .catch((error) => {
@@ -415,7 +412,7 @@ const ProductHistory = forwardRef((props, ref) => {
                 setIsRefreshInProcess(false);
                 console.log(error);
             });
-    }
+    }, [page, pageSize, product, sortField, sortProduct, searchParams, statsOpen]);
 
     function sort(field) {
         sortField = field;
@@ -437,10 +434,19 @@ const ProductHistory = forwardRef((props, ref) => {
         list();
     }
 
-    const [show, SetShow] = useState(false);
+    const [show, setShow] = useState(false);
+
+    useEffect(() => {
+        if (show) {
+            list();
+        } else {
+            setHistoryList([]);
+            setSelectedCustomers([]);
+        }
+    }, [list, show]);
 
     function handleClose() {
-        SetShow(false);
+        setShow(false);
     };
 
     //sales
@@ -607,10 +613,14 @@ const ProductHistory = forwardRef((props, ref) => {
         page = 1;
         setPage(page);
 
-        if (timerRef.current) clearTimeout(timerRef.current);
-        timerRef.current = setTimeout(() => {
-            list();
-        }, 200);
+        if (show === false) {
+            setShow(true);
+        } else {
+            if (timerRef.current) clearTimeout(timerRef.current);
+            timerRef.current = setTimeout(() => {
+                list();
+            }, 200);
+        }
     }
 
     const handleUpdated = () => {
@@ -664,7 +674,7 @@ const ProductHistory = forwardRef((props, ref) => {
             if (e.key === "Escape") {
                 e.preventDefault();
                 e.stopPropagation();
-                SetShow(false);
+                setShow(false);
             }
         };
 
@@ -709,17 +719,17 @@ const ProductHistory = forwardRef((props, ref) => {
         for (let i = 0; i < defaultColumns.length; i++) {
             if (!saved)
                 break;
-
+    
             const savedCol = JSON.parse(saved)?.find(col => col.fieldName === defaultColumns[i].fieldName);
-
+    
             missingOrUpdated = !savedCol || savedCol.label !== defaultColumns[i].label || savedCol.key !== defaultColumns[i].key;
-
+    
             if (missingOrUpdated) {
                 break
             }
         }
-
-
+    
+    
         if (missingOrUpdated) {
             localStorage.setItem("product_history_table_settings", JSON.stringify(defaultColumns));
             setColumns(defaultColumns);
@@ -753,7 +763,7 @@ const ProductHistory = forwardRef((props, ref) => {
         localStorage.setItem("product_history_table_settings", JSON.stringify(reordered));
     };
 
-    const [statsOpen, setStatsOpen] = useState(false);
+
 
     const handleSummaryToggle = (isOpen) => {
         setStatsOpen(isOpen);

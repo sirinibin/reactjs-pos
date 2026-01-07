@@ -18,7 +18,7 @@ import Draggable2 from "react-draggable";
 
 const PurchaseReturnHistory = forwardRef((props, ref) => {
     const [statsOpen, setStatsOpen] = useState(false);
-    const [show, SetShow] = useState(false);
+    const [show, setShow] = useState(false);
     const dragRef = useRef(null);
     useImperativeHandle(ref, () => ({
         open(model, selectedVendors) {
@@ -39,7 +39,7 @@ const PurchaseReturnHistory = forwardRef((props, ref) => {
             }*/
 
             getStore(localStorage.getItem("store_id"));
-            SetShow(true);
+            setShow(true);
         },
 
     }));
@@ -49,7 +49,7 @@ const PurchaseReturnHistory = forwardRef((props, ref) => {
             if (e.key === "Escape") {
                 e.preventDefault();
                 e.stopPropagation();
-                SetShow(false);
+                setShow(false);
             }
         };
 
@@ -351,6 +351,8 @@ const PurchaseReturnHistory = forwardRef((props, ref) => {
                 //totalVatReturn = data.meta.total_vat_return;
                 setTotalVatReturn(data.meta.total_vat_return);
 
+                setTotalQuantity(data.meta.total_quantity);
+
             })
             .catch((error) => {
                 setIsListLoading(false);
@@ -383,15 +385,19 @@ const PurchaseReturnHistory = forwardRef((props, ref) => {
     useEffect(() => {
         if (show) {
             list();
+        } else {
+            setHistoryList([]);
+            setSelectedVendors([]);
         }
     }, [list, show]);
 
     function handleClose() {
-        SetShow(false);
+        setShow(false);
     };
 
     let [totalPurchaseReturn, setTotalPurchaseReturn] = useState(0.00);
     let [totalVatReturn, setTotalVatReturn] = useState(0.00);
+    let [totalQuantity, setTotalQuantity] = useState(0.00);
 
     let [showPurchaseForm, setShowPurchaseForm] = useState(false);
     let [showPurchaseReturnForm, setShowPurchaseReturnForm] = useState(false);
@@ -681,6 +687,7 @@ const PurchaseReturnHistory = forwardRef((props, ref) => {
                                         stats={{
                                             "Purchase Return": totalPurchaseReturn,
                                             "VAT Returned": totalVatReturn,
+                                            "Total Quantity": totalQuantity,
                                         }}
                                         onToggle={handleSummaryToggle}
                                     />

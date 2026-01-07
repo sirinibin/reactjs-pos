@@ -17,7 +17,7 @@ import Draggable2 from "react-draggable";
 
 const QuotationSalesReturnHistory = forwardRef((props, ref) => {
     const [statsOpen, setStatsOpen] = useState(false);
-    const [show, SetShow] = useState(false);
+    const [show, setShow] = useState(false);
     const dragRef = useRef(null);
 
     useImperativeHandle(ref, () => ({
@@ -37,7 +37,7 @@ const QuotationSalesReturnHistory = forwardRef((props, ref) => {
 
             getStore(localStorage.getItem("store_id"));
 
-            SetShow(true);
+            setShow(true);
         },
 
     }));
@@ -47,7 +47,7 @@ const QuotationSalesReturnHistory = forwardRef((props, ref) => {
             if (e.key === "Escape") {
                 e.preventDefault();
                 e.stopPropagation();
-                SetShow(false);
+                setShow(false);
             }
         };
 
@@ -345,6 +345,8 @@ const QuotationSalesReturnHistory = forwardRef((props, ref) => {
                 //totalVatReturn = data.meta.total_vat_return;
                 setTotalVatReturn(data.meta.total_vat_return);
 
+                setTotalQuantity(data.meta.total_quantity);
+
             })
             .catch((error) => {
                 setIsListLoading(false);
@@ -376,17 +378,23 @@ const QuotationSalesReturnHistory = forwardRef((props, ref) => {
     useEffect(() => {
         if (show) {
             list();
+        } else {
+            setHistoryList([]);
+            setSelectedCustomers([]);
         }
     }, [list, show]);
 
 
 
     function handleClose() {
-        SetShow(false);
+        setHistoryList([]);
+        setSelectedCustomers([]);
+        setShow(false);
     };
 
     let [totalQuotationSalesReturn, setTotalQuotationSalesReturn] = useState(0.00);
     let [totalVatReturn, setTotalVatReturn] = useState(0.00);
+    let [totalQuantity, setTotalQuantity] = useState(0.00);
 
     const QuotationUpdateFormRef = useRef();
     function openQuotationUpdateForm(id) {
@@ -683,6 +691,7 @@ const QuotationSalesReturnHistory = forwardRef((props, ref) => {
                                             "Net Profit": totalProfit,
                                             "Total Loss": totalLoss,
                                             "VAT Returned": totalVatReturn,
+                                            "Total Quantity": totalQuantity,
                                         }}
                                         onToggle={handleSummaryToggle}
                                     />

@@ -41,7 +41,7 @@ const QuotationHistory = forwardRef((props, ref) => {
             // list();
 
             getStore(localStorage.getItem("store_id"));
-            SetShow(true);
+            setShow(true);
         },
 
     }));
@@ -350,6 +350,8 @@ const QuotationHistory = forwardRef((props, ref) => {
                 // totalVat = data.meta.total_vat;
                 setTotalVat(data.meta.total_vat);
 
+                setTotalQuantity(data.meta.total_quantity);
+
             })
             .catch((error) => {
                 setIsListLoading(false);
@@ -379,21 +381,27 @@ const QuotationHistory = forwardRef((props, ref) => {
         // list();
     }
 
-    const [show, SetShow] = useState(false);
+    const [show, setShow] = useState(false);
     useEffect(() => {
         if (show) {
             list();
+        } else {
+            setHistoryList([]);
+            setSelectedCustomers([]);
         }
     }, [list, show]);
 
     function handleClose() {
-        SetShow(false);
+        setHistoryList([]);
+        setSelectedCustomers([]);
+        setShow(false);
     };
 
     let [totalQuotation, setTotalQuotation] = useState(0.00);
     let [totalProfit, setTotalProfit] = useState(0.00);
     let [totalVat, setTotalVat] = useState(0.00);
     let [totalLoss, setTotalLoss] = useState(0.00);
+    let [totalQuantity, setTotalQuantity] = useState(0.00);
 
     const QuotationUpdateFormRef = useRef();
     async function openQuotationUpdateForm(id) {
@@ -416,7 +424,7 @@ const QuotationHistory = forwardRef((props, ref) => {
             if (e.key === "Escape") {
                 e.preventDefault();
                 e.stopPropagation();
-                SetShow(false);
+                setShow(false);
             }
         };
 
@@ -688,6 +696,7 @@ const QuotationHistory = forwardRef((props, ref) => {
                                             "Net Profit": totalProfit,
                                             "Total Loss": totalLoss,
                                             "VAT Collected": totalVat,
+                                            "Total Quantity": totalQuantity,
                                         }}
                                         onToggle={handleSummaryToggle}
                                     />}

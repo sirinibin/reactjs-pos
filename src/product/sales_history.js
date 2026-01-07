@@ -30,10 +30,12 @@ const SalesHistory = forwardRef((props, ref) => {
             if (selectedCustomers?.length > 0) {
                 // setSelectedCustomers(selectedCustomers)
                 searchByMultipleValuesField("customer_id", selectedCustomers);
+            } else {
+                setShow(true);
             }
 
             getStore(localStorage.getItem("store_id"));
-            setShow(true);
+
         },
 
     }));
@@ -208,6 +210,8 @@ const SalesHistory = forwardRef((props, ref) => {
     const [statsOpen, setStatsOpen] = useState(false);
 
     const list = useCallback(() => {
+        // alert("Fetching sales history...");
+
         const requestOptions = {
             method: "GET",
             headers: {
@@ -297,6 +301,8 @@ const SalesHistory = forwardRef((props, ref) => {
                 //totalVat = data.meta.total_vat;
                 setTotalVat(data.meta.total_vat);
 
+                setTotalQuantity(data.meta.total_quantity);
+
             })
             .catch((error) => {
                 setIsListLoading(false);
@@ -311,6 +317,9 @@ const SalesHistory = forwardRef((props, ref) => {
     useEffect(() => {
         if (show) {
             list();
+        } else {
+            setHistoryList([]);
+            setSelectedCustomers([]);
         }
     }, [list, show]);
 
@@ -345,6 +354,7 @@ const SalesHistory = forwardRef((props, ref) => {
     let [totalProfit, setTotalProfit] = useState(0.00);
     let [totalVat, setTotalVat] = useState(0.00);
     let [totalLoss, setTotalLoss] = useState(0.00);
+    let [totalQuantity, setTotalQuantity] = useState(0.00);
 
     let [showOrderForm, setShowOrderForm] = useState(false);
 
@@ -380,11 +390,14 @@ const SalesHistory = forwardRef((props, ref) => {
         page = 1;
         setPage(page);
 
-        if (timerRef.current) clearTimeout(timerRef.current);
-        timerRef.current = setTimeout(() => {
-            list();
-        }, 200);
-
+        if (show === false) {
+            setShow(true);
+        } else {
+            if (timerRef.current) clearTimeout(timerRef.current);
+            timerRef.current = setTimeout(() => {
+                list();
+            }, 200);
+        }
     }
 
     const [selectedCustomers, setSelectedCustomers] = useState([]);
@@ -699,6 +712,7 @@ const SalesHistory = forwardRef((props, ref) => {
                                             "Net Profit": totalProfit,
                                             "Total Loss": totalLoss,
                                             "VAT Collected": totalVat,
+                                            "Total Quantity": totalQuantity,
                                         }}
                                         onToggle={handleSummaryToggle}
                                     />

@@ -28,10 +28,9 @@ const DeliveryNoteHistory = forwardRef((props, ref) => {
                 setSelectedCustomers(selectedCustomers)
                 searchByMultipleValuesField("customer_id", selectedCustomers);
             } else {
-                list();
+                setShow(true);
             }
             getStore(localStorage.getItem("store_id"));
-            SetShow(true);
         },
 
     }));
@@ -42,7 +41,7 @@ const DeliveryNoteHistory = forwardRef((props, ref) => {
             if (e.key === "Escape") {
                 e.preventDefault();
                 e.stopPropagation();
-                SetShow(false);
+                setShow(false);
             }
         };
 
@@ -352,10 +351,10 @@ const DeliveryNoteHistory = forwardRef((props, ref) => {
         list();
     }
 
-    const [show, SetShow] = useState(false);
+    const [show, setShow] = useState(false);
 
     function handleClose() {
-        SetShow(false);
+        setShow(false);
     };
 
     let [totalDeliveryNoteQuantity, setTotalDeliveryNoteQuantity] = useState(0.00);
