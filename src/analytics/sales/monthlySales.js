@@ -14,6 +14,10 @@ const MonthlySales = forwardRef((props, ref) => {
 
     const yearOptions = [
         {
+            label: "2026",
+            value: 2026,
+        },
+        {
             label: "2025",
             value: 2025,
         },
@@ -38,7 +42,7 @@ const MonthlySales = forwardRef((props, ref) => {
             value: 2020,
         }
     ];
-   
+
     const monthOptions = [
         {
             label: "JAN",
@@ -169,7 +173,7 @@ const MonthlySales = forwardRef((props, ref) => {
             let paidSales = 0.00;
             let unpaidSales = 0.00;
             let loss = 0.00;
-            if (props.columns.sales || props.columns.salesProfit || props.columns.loss||props.columns.paidSales||props.columns.unpaidSales) {
+            if (props.columns.sales || props.columns.salesProfit || props.columns.loss || props.columns.paidSales || props.columns.unpaidSales) {
                 for (const sale of props.allOrders) {
                     // console.log("Sale Month:", new Date(sale.date).getMonth() + 1);
                     // console.log("Sale Year:", new Date(sale.date).getFullYear());
@@ -217,7 +221,7 @@ const MonthlySales = forwardRef((props, ref) => {
             let totalSalesReturn = 0.00;
             let totalSalesReturnProfit = 0.00;
             let totalSalesReturnLoss = 0.00;
-            if (props.columns.salesReturn||props.columns.salesReturnProfit||props.columns.salesReturnLoss) {
+            if (props.columns.salesReturn || props.columns.salesReturnProfit || props.columns.salesReturnLoss) {
                 for (const salesReturn of props.allSalesReturns) {
                     if ((new Date(salesReturn.date).getMonth() + 1) === month &&
                         new Date(salesReturn.date).getFullYear() === monthlySalesSelectedYear) {
@@ -296,7 +300,7 @@ const MonthlySales = forwardRef((props, ref) => {
     }
 
 
-    const options =  {
+    const options = {
         title: 'Sales',
         subtitle: '(SAR)',
         legend: { position: 'right' },
