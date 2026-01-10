@@ -389,6 +389,7 @@ const StockTransferCreate = forwardRef((props, ref) => {
 
                 reCalculate();
                 setFormData({ ...formData });
+                //  alert("id:" + formData.id);
 
 
                 checkWarnings();
@@ -2581,7 +2582,7 @@ const StockTransferCreate = forwardRef((props, ref) => {
     let [showStockTransferPreview, setShowStockTransferPreview] = useState(false);
     let [showPrintTypeSelection, setShowPrintTypeSelection] = useState(false);
 
-    const openPreview = useCallback((formData) => {
+    const openPreview = useCallback(() => {
         setShowStockTransferPreview(true);
         setShowPrintTypeSelection(false);
         // alert("inside open preview")
@@ -2590,9 +2591,9 @@ const StockTransferCreate = forwardRef((props, ref) => {
 
         timerRef.current = setTimeout(() => {
             //if (model.id === stocktransferID) {
-            // alert("opening preview1," + formData.id)
+            //  alert("opening preview1," + formData.id)
 
-            if (!isSubmitting && formData.id && formData.code && formData.date) {
+            if (!isSubmitting && formData?.id && formData.code && formData.date) {
                 // alert("opening preview2")
                 PreviewRef.current?.open(formData, undefined, "stock_transfer");
             }
@@ -2601,7 +2602,20 @@ const StockTransferCreate = forwardRef((props, ref) => {
 
         }, 100);
 
-    }, [isSubmitting]);
+    }, [isSubmitting, formData]);
+
+
+    /*
+      const openPreview = useCallback((stocktransfer) => {
+            setShowStockTransferPreview(true);
+            setShowPrintTypeSelection(false);
+    
+    
+            if (timerRef.current) clearTimeout(timerRef.current);
+            timerRef.current = setTimeout(() => {
+                PreviewRef.current?.open(stocktransfer, undefined, "stock_transfer");
+            }, 100);
+        }, []);*/
 
     const openPrintTypeSelection = useCallback((formData) => {
         if (store.settings?.enable_invoice_print_type_selection) {
