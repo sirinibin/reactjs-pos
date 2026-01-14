@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef, forwardRef, useMemo, useImperativeHandle, useCallback } from "react";
 import Preview from "./../order/preview.js";
-import { Modal, Button, Form, Alert } from "react-bootstrap";
+import { Modal, Button, Alert } from "react-bootstrap";
 import VendorCreate from "./../vendor/create.js";
 import ProductCreate from "./../product/create.js";
 import UserCreate from "./../user/create.js";
@@ -29,7 +29,7 @@ import ImageViewerModal from './../utils/ImageViewerModal';
 import * as bootstrap from 'bootstrap';
 import { highlightWords } from "../utils/search.js";
 import ProductHistory from "./../product/product_history.js";
-import Resizer from "react-image-file-resizer";
+//import Resizer from "react-image-file-resizer";
 import { DragDropContext, Droppable, Draggable } from "react-beautiful-dnd";
 import PurchaseReturnCreate from "../purchase_return/create.js";
 import VendorWithdrawalCreate from "../customer_withdrawal/create.js";
@@ -359,6 +359,7 @@ const PurchaseCreate = forwardRef((props, ref) => {
 
                 formData = {
                     id: purchase.id,
+                    enable_on_accounts: purchase.enable_on_accounts,
                     vendor_invoice_no: purchase.vendor_invoice_no,
                     auto_rounding_amount: purchase.auto_rounding_amount,
                     code: purchase.code,
@@ -2258,9 +2259,9 @@ const PurchaseCreate = forwardRef((props, ref) => {
     }
 
     //Image upload
-    const [selectedImage, setSelectedImage] = useState(null);
-    const [previewUrl, setPreviewUrl] = useState(null);
-    const [uploading, setUploading] = useState(false);
+    /* const [selectedImage, setSelectedImage] = useState(null);
+     const [previewUrl, setPreviewUrl] = useState(null);
+     const [uploading, setUploading] = useState(false);
 
     const resizeImage = (file) => {
         return new Promise((resolve) => {
@@ -2277,16 +2278,16 @@ const PurchaseCreate = forwardRef((props, ref) => {
                 "blob"
             );
         });
-    };
+    };*/
 
-    const handleFileChange = async (e) => {
-        const file = e.target.files[0];
-        if (!file) return;
-
-        const resizedImage = await resizeImage(file);
-        setSelectedImage(resizedImage);
-        setPreviewUrl(URL.createObjectURL(resizedImage));
-    };
+    /* const handleFileChange = async (e) => {
+         const file = e.target.files[0];
+         if (!file) return;
+ 
+         const resizedImage = await resizeImage(file);
+         setSelectedImage(resizedImage);
+         setPreviewUrl(URL.createObjectURL(resizedImage));
+     };
     const handleUpload = async () => {
         if (!selectedImage) return;
 
@@ -2333,7 +2334,7 @@ const PurchaseCreate = forwardRef((props, ref) => {
         } finally {
             setUploading(false);
         }
-    };
+    };*/
 
     //Search settings
     const [showProductSearchSettings, setShowProductSearchSettings] = useState(false);
@@ -5703,7 +5704,7 @@ const PurchaseCreate = forwardRef((props, ref) => {
 
                             </div>
                         </div>
-                        <div className="col-md-4">
+                        {/*<div className="col-md-4">
                             <label className="form-label">Import data from Image</label>
                             <Form.Group controlId="formFile" className="mb-3">
                                 <Form.Label>Upload Image</Form.Label>
@@ -5719,8 +5720,32 @@ const PurchaseCreate = forwardRef((props, ref) => {
                             <Button onClick={handleUpload} disabled={uploading}>
                                 {uploading ? "Uploading..." : "Upload"}
                             </Button>
-                        </div>
+                        </div>*/}
 
+
+                        {store.settings?.disable_purchases_on_accounts && <div className="col-md-2">
+                            <div className="input-group mb-3">
+                                <input type="checkbox"
+                                    value={formData.enable_on_accounts}
+                                    checked={formData.enable_on_accounts}
+                                    onChange={(e) => {
+                                        errors["enable_on_accounts"] = "";
+                                        formData.enable_on_accounts = !formData.enable_on_accounts;
+                                        setFormData({ ...formData });
+                                        console.log(formData);
+                                    }}
+                                    className=""
+                                    id="enable_on_accounts"
+
+                                /> &nbsp;Enable On Accounts
+                            </div>
+                            <label className="form-label"></label>
+                            {errors.enable_on_accounts && (
+                                <div style={{ color: "red" }}>
+                                    {errors.enable_on_accounts}
+                                </div>
+                            )}
+                        </div>}
 
 
                         <Modal.Footer>
