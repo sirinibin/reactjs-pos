@@ -708,30 +708,49 @@ const StatsIndex = forwardRef((props, ref) => {
                             <StatsSummary
                                 title="Overall"
                                 stats={{
-                                    "SALES": (totalSales - totalSalesReturn),
-                                    "PURCHASE": (totalPurchase - totalPurchaseReturn),
-                                    "DIFFERENCE": ((totalSales - totalSalesReturn) - (totalPurchase - totalPurchaseReturn)),
+                                    "SALES(with VAT)": (totalSales - totalSalesReturn),
+                                    "PURCHASE(with VAT)": (totalPurchase - totalPurchaseReturn),
+                                    "DIFFERENCE(with VAT)": ((totalSales - totalSalesReturn) - (totalPurchase - totalPurchaseReturn)),
+
+                                    "SALES(without VAT)": ((totalSales - vatPrice) - (totalSalesReturn - salesReturnVatPrice)),
+                                    "PURCHASE(without VAT)": ((totalPurchase - purchaseVatPrice) - (totalPurchaseReturn - purchaseReturnVatPrice)),
+                                    "DIFFERENCE(without VAT)": (((totalSales - vatPrice) - (totalSalesReturn - salesReturnVatPrice)) - ((totalPurchase - purchaseVatPrice) - (totalPurchaseReturn - purchaseReturnVatPrice))),
                                     "VAT": ((vatPrice - salesReturnVatPrice) - (purchaseVatPrice - purchaseReturnVatPrice)),
                                 }}
-                                statsWithInfo={[{
-                                    "label": "SALES",
-                                    "value": (totalSales - totalSalesReturn),
-                                    "info": "SALES - SALES RETURN"
-                                }, {
-                                    "label": "PURCHASE",
-                                    "value": (totalPurchase - totalPurchaseReturn),
-                                    "info": "PURCHASE - PURCHASE RETURN"
-                                },
-                                {
-                                    "label": "DIFFERENCE",
-                                    "value": ((totalSales - totalSalesReturn) - (totalPurchase - totalPurchaseReturn)),
-                                    "info": "OVERALL SALES - OVERALL PURCHASE"
-                                },
-                                {
-                                    "label": "VAT",
-                                    "value": ((vatPrice - salesReturnVatPrice) - (purchaseVatPrice - purchaseReturnVatPrice)),
-                                    "info": "(SALES VAT - SALES RETURN VAT) - (PURCHASE VAT - PURCHASE RETURN VAT)"
-                                }
+                                statsWithInfo={[
+                                    {
+                                        "label": "SALES(with VAT)",
+                                        "value": (totalSales - totalSalesReturn),
+                                        "info": "SALES(with VAT) - SALES RETURN(with VAT)"
+                                    }, {
+                                        "label": "PURCHASE(with VAT)",
+                                        "value": (totalPurchase - totalPurchaseReturn),
+                                        "info": "PURCHASE(with VAT) - PURCHASE RETURN(with VAT)"
+                                    },
+                                    {
+                                        "label": "DIFFERENCE(with VAT)",
+                                        "value": ((totalSales - totalSalesReturn) - (totalPurchase - totalPurchaseReturn)),
+                                        "info": "OVERALL SALES(with VAT) - OVERALL PURCHASE(with VAT)"
+                                    },
+                                    {
+                                        "label": "SALES(without VAT)",
+                                        "value": ((totalSales - vatPrice) - (totalSalesReturn - salesReturnVatPrice)),
+                                        "info": "SALES(without VAT) - SALES RETURN(without VAT)"
+                                    }, {
+                                        "label": "PURCHASE(without VAT)",
+                                        "value": ((totalPurchase - purchaseVatPrice) - (totalPurchaseReturn - purchaseReturnVatPrice)),
+                                        "info": "PURCHASE(without VAT) - PURCHASE RETURN(without VAT)"
+                                    },
+                                    {
+                                        "label": "DIFFERENCE(without VAT)",
+                                        "value": (((totalSales - vatPrice) - (totalSalesReturn - salesReturnVatPrice)) - ((totalPurchase - purchaseVatPrice) - (totalPurchaseReturn - purchaseReturnVatPrice))),
+                                        "info": "OVERALL SALES(without VAT) - OVERALL PURCHASE(without VAT)"
+                                    },
+                                    {
+                                        "label": "VAT",
+                                        "value": ((vatPrice - salesReturnVatPrice) - (purchaseVatPrice - purchaseReturnVatPrice)),
+                                        "info": "(SALES VAT - SALES RETURN VAT) - (PURCHASE VAT - PURCHASE RETURN VAT)"
+                                    }
                                 ]}
 
                                 defaultOpen={true}
