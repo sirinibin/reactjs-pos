@@ -936,6 +936,10 @@ function SalesReturnIndex(props) {
 
         searchParams[field] = Object.values(values)
             .map(function (model) {
+                if (model.name === "UNKNOWN CUSTOMER") {
+                    return "unknown_customer";
+                }
+
                 return model.id;
             })
             .join(",");

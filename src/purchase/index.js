@@ -716,6 +716,9 @@ function PurchaseIndex(props) {
 
         searchParams[field] = Object.values(values)
             .map(function (model) {
+                if (model.name === "UNKNOWN VENDOR") {
+                    return "unknown_vendor";
+                }
                 return model.id;
             })
             .join(",");
