@@ -964,6 +964,10 @@ const OrderIndex = forwardRef((props, ref) => {
 
         searchParams[field] = Object.values(values)
             .map(function (model) {
+                if (model.name === "UNKNOWN CUSTOMER") {
+                    return "unknown_customer";
+                }
+
                 return model.id;
             })
             .join(",");
