@@ -13,6 +13,7 @@ import PostingIndex from "./../posting/index.js";
 import Amount from "../utils/amount.js";
 import { trimTo2Decimals } from "../utils/numberUtils";
 import { confirm } from 'react-bootstrap-confirmation';
+import StatsSummary from "../utils/StatsSummary.js";
 
 function VendorIndex(props) {
     //list
@@ -193,6 +194,38 @@ function VendorIndex(props) {
         list();
     }
 
+    let [statsOpen, setStatsOpen] = useState(false);
+    const handleSummaryToggle = (isOpen) => {
+        statsOpen = isOpen
+        setStatsOpen(statsOpen)
+
+        if (isOpen) {
+            list(); // Fetch stats only if it's opened and not fetched before
+        }
+    };
+
+
+
+    let [creditBalance, setCreditBalance] = useState(0.00);
+    //Purchase Summary Stats
+    let [purchase, setPurchase] = useState(0.00);
+    let [purchasePaid, setPurchasePaid] = useState(0.00);
+    let [purchaseCreditBalance, setPurchaseCreditBalance] = useState(0.00);
+    let [purchaseCount, setPurchaseCount] = useState(0.00);
+    let [purchasePaidCount, setPurchasePaidCount] = useState(0.00);
+    let [purchasePaidPartiallyCount, setPurchasePaidPartiallyCount] = useState(0.00);
+    let [purchaseUnPaidCount, setPurchaseUnPaidCount] = useState(0.00);
+
+
+    //Purchase Return Summary Stats
+    let [purchaseReturn, setPurchaseReturn] = useState(0.00);
+    let [purchaseReturnPaid, setPurchaseReturnPaid] = useState(0.00);
+    let [purchaseReturnCreditBalance, setPurchaseReturnCreditBalance] = useState(0.00);
+    let [purchaseReturnCount, setPurchaseReturnCount] = useState(0.00);
+    let [purchaseReturnPaidCount, setPurchaseReturnPaidCount] = useState(0.00);
+    let [purchaseReturnPaidPartiallyCount, setPurchaseReturnPaidPartiallyCount] = useState(0.00);
+    let [purchaseReturnUnPaidCount, setPurchaseReturnUnPaidCount] = useState(0.00);
+
     function list() {
         const requestOptions = {
             method: "GET",
@@ -208,6 +241,11 @@ function VendorIndex(props) {
             searchParams.store_id = localStorage.getItem("store_id");
         }
 
+        if (statsOpen) {
+            searchParams["stats"] = "1";
+        } else {
+            searchParams["stats"] = "0";
+        }
 
         const d = new Date();
         let diff = d.getTimezoneOffset();
@@ -256,6 +294,55 @@ function VendorIndex(props) {
                 setTotalItems(data.total_count);
                 setOffset((page - 1) * pageSize);
                 setCurrentPageItemsCount(data.result.length);
+
+                creditBalance = data.meta.credit_balance;
+                setCreditBalance(creditBalance);
+
+                //Purchase
+                purchase = data.meta.purchase;
+                setPurchase(purchase);
+
+                purchasePaid = data.meta.purchase_paid;
+                setPurchasePaid(purchasePaid);
+
+                purchaseCreditBalance = data.meta.purchase_credit_balance;
+                setPurchaseCreditBalance(purchaseCreditBalance);
+
+                purchaseCount = data.meta.purchase_count;
+                setPurchaseCount(purchaseCount);
+
+                purchasePaidCount = data.meta.purchase_paid_count;
+                setPurchasePaidCount(purchasePaidCount);
+
+                purchasePaidPartiallyCount = data.meta.purchase_paid_partially_count;
+                setPurchasePaidPartiallyCount(purchasePaidPartiallyCount);
+
+                purchaseUnPaidCount = data.meta.purchase_unpaid_count;
+                setPurchaseUnPaidCount(purchaseUnPaidCount);
+
+
+                //Purchase Return
+                purchaseReturn = data.meta.purchase_return;
+                setPurchaseReturn(purchaseReturn);
+
+                purchaseReturnPaid = data.meta.purchase_return_paid;
+                setPurchaseReturnPaid(purchaseReturnPaid);
+
+                purchaseReturnCreditBalance = data.meta.purchase_return_credit_balance;
+                setPurchaseReturnCreditBalance(purchaseReturnCreditBalance);
+
+                purchaseReturnCount = data.meta.purchase_return_count;
+                setPurchaseReturnCount(purchaseReturnCount);
+
+                purchaseReturnPaidCount = data.meta.purchase_return_paid_count;
+                setPurchaseReturnPaidCount(purchaseReturnPaidCount);
+
+                purchaseReturnPaidPartiallyCount = data.meta.purchase_return_paid_partially_count;
+                setPurchaseReturnPaidPartiallyCount(purchaseReturnPaidPartiallyCount);
+
+                purchaseReturnUnPaidCount = data.meta.purchase_return_unpaid_count;
+                setPurchaseReturnUnPaidCount(purchaseReturnUnPaidCount);
+
             })
             .catch((error) => {
                 setIsListLoading(false);
@@ -662,6 +749,38 @@ function VendorIndex(props) {
 
 
             <div className="container-fluid p-0">
+
+                <div className="row">
+                    <div className="col">
+                        <span className="text-end">
+                            <StatsSummary
+                                title="Vendor Stats"
+                                stats={{
+                                    "Credit Balance": creditBalance,
+                                    //Purchase
+                                    "Purchase": purchase,
+                                    "Purchase Paid": purchasePaid,
+                                    "Purchase Credit Balance": purchaseCreditBalance,
+                                    "Purchase Count": purchaseCount,
+                                    "Purchase Paid Count": purchasePaidCount,
+                                    "Purchase Paid Partially Count": purchasePaidPartiallyCount,
+                                    "Purchase UnPaid Count": purchaseUnPaidCount,
+
+                                    //Purchase Return
+                                    "Purchase Return": purchaseReturn,
+                                    "Purchase Return Paid": purchaseReturnPaid,
+                                    "Purchase Return Credit Balance": purchaseReturnCreditBalance,
+                                    "Purchase Return Count": purchaseReturnCount,
+                                    "Purchase Return Paid Count": purchaseReturnPaidCount,
+                                    "Purchase Return Paid Partially Count": purchaseReturnPaidPartiallyCount,
+                                    "Purchase Return UnPaid Count": purchaseReturnUnPaidCount,
+                                }}
+                                onToggle={handleSummaryToggle}
+                            />
+                        </span>
+                    </div>
+                </div >
+
                 <div className="row">
                     <div className="col">
                         <h1 className="h3">Vendors</h1>
