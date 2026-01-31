@@ -16,6 +16,7 @@ import { confirm } from 'react-bootstrap-confirmation';
 import CustomerPending from "./../utils/customer_pending.js";
 import { Menu, MenuItem } from "react-bootstrap-typeahead";
 import { highlightWords } from "../utils/search.js";
+import StatsSummary from "../utils/StatsSummary.js";
 
 
 function CustomerIndex(props) {
@@ -201,6 +202,63 @@ function CustomerIndex(props) {
         list();
     }
 
+    let [creditBalance, setCreditBalance] = useState(0.00);
+    //Sales Summary Stats
+    let [sales, setSales] = useState(0.00);
+    let [salesPaid, setSalesPaid] = useState(0.00);
+    let [salesCreditBalance, setSalesCreditBalance] = useState(0.00);
+    let [salesCount, setSalesCount] = useState(0.00);
+    let [salesPaidCount, setSalesPaidCount] = useState(0.00);
+    let [salesPaidPartiallyCount, setSalesPaidPartiallyCount] = useState(0.00);
+    let [salesUnPaidCount, setSalesUnPaidCount] = useState(0.00);
+    let [salesProfit, setSalesProfit] = useState(0.00);
+    let [salesLoss, setSalesLoss] = useState(0.00);
+
+    //Sales Return Summary Stats
+    let [salesReturn, setSalesReturn] = useState(0.00);
+    let [salesReturnPaid, setSalesReturnPaid] = useState(0.00);
+    let [salesReturnCreditBalance, setSalesReturnCreditBalance] = useState(0.00);
+    let [salesReturnCount, setSalesReturnCount] = useState(0.00);
+    let [salesReturnPaidCount, setSalesReturnPaidCount] = useState(0.00);
+    let [salesReturnPaidPartiallyCount, setSalesReturnPaidPartiallyCount] = useState(0.00);
+    let [salesReturnUnPaidCount, setSalesReturnUnPaidCount] = useState(0.00);
+    let [salesReturnProfit, setSalesReturnProfit] = useState(0.00);
+    let [salesReturnLoss, setSalesReturnLoss] = useState(0.00);
+
+
+    //Quotation Summary Stats
+    let [quotation, setQuotation] = useState(0.00);
+    let [quotationCount, setQuotationCount] = useState(0.00);
+    let [quotationProfit, setQuotationProfit] = useState(0.00);
+    let [quotationLoss, setQuotationLoss] = useState(0.00);
+
+    //Quotation Sales Summary Stats
+    let [quotationSales, setQuotationSales] = useState(0.00);
+    let [quotationSalesPaid, setQuotationSalesPaid] = useState(0.00);
+    let [quotationSalesCreditBalance, setQuotationSalesCreditBalance] = useState(0.00);
+    let [quotationSalesCount, setQuotationSalesCount] = useState(0.00);
+    let [quotationSalesPaidCount, setQuotationSalesPaidCount] = useState(0.00);
+    let [quotationSalesPaidPartiallyCount, setQuotationSalesPaidPartiallyCount] = useState(0.00);
+    let [quotationSalesUnPaidCount, setQuotationSalesUnPaidCount] = useState(0.00);
+    let [quotationSalesProfit, setQuotationSalesProfit] = useState(0.00);
+    let [quotationSalesLoss, setQuotationSalesLoss] = useState(0.00);
+
+
+    //Quotation Sales Return Summary Stats
+    let [quotationSalesReturn, setQuotationSalesReturn] = useState(0.00);
+    let [quotationSalesReturnPaid, setQuotationSalesReturnPaid] = useState(0.00);
+    let [quotationSalesReturnCreditBalance, setQuotationSalesReturnCreditBalance] = useState(0.00);
+    let [quotationSalesReturnCount, setQuotationSalesReturnCount] = useState(0.00);
+    let [quotationSalesReturnPaidCount, setQuotationSalesReturnPaidCount] = useState(0.00);
+    let [quotationSalesReturnPaidPartiallyCount, setQuotationSalesReturnPaidPartiallyCount] = useState(0.00);
+    let [quotationSalesReturnUnPaidCount, setQuotationSalesReturnUnPaidCount] = useState(0.00);
+    let [quotationSalesReturnProfit, setQuotationSalesReturnProfit] = useState(0.00);
+    let [quotationSalesReturnLoss, setQuotationSalesReturnLoss] = useState(0.00);
+
+    //Delivery Notes Summary Stats
+    let [deliveryNoteCount, setDeliveryNoteCount] = useState(0.00);
+
+
     function list() {
         const requestOptions = {
             method: "GET",
@@ -214,6 +272,12 @@ function CustomerIndex(props) {
 
         if (localStorage.getItem("store_id")) {
             searchParams.store_id = localStorage.getItem("store_id");
+        }
+
+        if (statsOpen) {
+            searchParams["stats"] = "1";
+        } else {
+            searchParams["stats"] = "0";
         }
 
         const d = new Date();
@@ -261,6 +325,142 @@ function CustomerIndex(props) {
                 setTotalItems(data.total_count);
                 setOffset((page - 1) * pageSize);
                 setCurrentPageItemsCount(data.result.length);
+
+                creditBalance = data.meta.credit_balance;
+                setCreditBalance(creditBalance);
+
+                //Sales
+                sales = data.meta.sales;
+                setSales(sales);
+
+                salesPaid = data.meta.sales_paid;
+                setSalesPaid(salesPaid);
+
+                salesCreditBalance = data.meta.sales_credit_balance;
+                setSalesCreditBalance(salesCreditBalance);
+
+                salesCount = data.meta.sales_count;
+                setSalesCount(salesCount);
+
+                salesPaidCount = data.meta.sales_paid_count;
+                setSalesPaidCount(salesPaidCount);
+
+                salesPaidPartiallyCount = data.meta.sales_paid_partially_count;
+                setSalesPaidPartiallyCount(salesPaidPartiallyCount);
+
+                salesUnPaidCount = data.meta.sales_unpaid_count;
+                setSalesUnPaidCount(salesUnPaidCount);
+
+                salesProfit = data.meta.sales_profit;
+                setSalesProfit(salesProfit);
+
+                salesLoss = data.meta.sales_loss;
+                setSalesLoss(salesLoss);
+
+
+                //Sales Return
+                salesReturn = data.meta.sales_return;
+                setSalesReturn(salesReturn);
+
+                salesReturnPaid = data.meta.sales_return_paid;
+                setSalesReturnPaid(salesReturnPaid);
+
+                salesReturnCreditBalance = data.meta.sales_return_credit_balance;
+                setSalesReturnCreditBalance(salesReturnCreditBalance);
+
+                salesReturnCount = data.meta.sales_return_count;
+                setSalesReturnCount(salesReturnCount);
+
+                salesReturnPaidCount = data.meta.sales_return_paid_count;
+                setSalesReturnPaidCount(salesReturnPaidCount);
+
+                salesReturnPaidPartiallyCount = data.meta.sales_return_paid_partially_count;
+                setSalesReturnPaidPartiallyCount(salesReturnPaidPartiallyCount);
+
+                salesReturnUnPaidCount = data.meta.sales_return_unpaid_count;
+                setSalesReturnUnPaidCount(salesReturnUnPaidCount);
+
+                salesReturnProfit = data.meta.sales_return_profit;
+                setSalesReturnProfit(salesReturnProfit);
+
+                salesReturnLoss = data.meta.sales_return_loss;
+                setSalesReturnLoss(salesReturnLoss);
+
+                //Quotation
+                quotation = data.meta.quotation;
+                setQuotation(quotation);
+
+                quotationCount = data.meta.quotation_count;
+                setQuotationCount(quotationCount);
+
+                quotationProfit = data.meta.quotation_profit;
+                setQuotationProfit(quotationProfit);
+
+                quotationLoss = data.meta.quotation_loss;
+                setQuotationLoss(quotationLoss);
+
+
+                //Quotation Sales
+                quotationSales = data.meta.quotation_sales;
+                setQuotationSales(quotationSales);
+
+                quotationSalesPaid = data.meta.quotation_sales_paid;
+                setQuotationSalesPaid(quotationSalesPaid);
+
+                quotationSalesCreditBalance = data.meta.quotation_sales_credit_balance;
+                setQuotationSalesCreditBalance(quotationSalesCreditBalance);
+
+                quotationSalesCount = data.meta.quotation_sales_count;
+                setQuotationSalesCount(quotationSalesCount);
+
+                quotationSalesPaidCount = data.meta.quotation_sales_paid_count;
+                setQuotationSalesPaidCount(quotationSalesPaidCount);
+
+                quotationSalesPaidPartiallyCount = data.meta.quotation_sales_paid_partially_count;
+                setQuotationSalesPaidPartiallyCount(quotationSalesPaidPartiallyCount);
+
+                quotationSalesUnPaidCount = data.meta.quotation_sales_unpaid_count;
+                setQuotationSalesUnPaidCount(quotationSalesUnPaidCount);
+
+                quotationSalesProfit = data.meta.quotation_sales_profit;
+                setQuotationSalesProfit(quotationSalesProfit);
+
+                quotationSalesLoss = data.meta.quotation_sales_loss;
+                setQuotationSalesLoss(quotationSalesLoss);
+
+
+                //Quotation Sales Return
+                quotationSalesReturn = data.meta.quotation_sales_return;
+                setQuotationSalesReturn(quotationSalesReturn);
+
+                quotationSalesReturnPaid = data.meta.quotation_sales_return_paid;
+                setQuotationSalesReturnPaid(quotationSalesReturnPaid);
+
+                quotationSalesReturnCreditBalance = data.meta.quotation_sales_return_credit_balance;
+                setQuotationSalesReturnCreditBalance(quotationSalesReturnCreditBalance);
+
+                quotationSalesReturnCount = data.meta.quotation_sales_return_count;
+                setQuotationSalesReturnCount(quotationSalesReturnCount);
+
+                quotationSalesReturnPaidCount = data.meta.quotation_sales_return_paid_count;
+                setQuotationSalesReturnPaidCount(quotationSalesReturnPaidCount);
+
+                quotationSalesReturnPaidPartiallyCount = data.meta.quotation_sales_return_paid_partially_count;
+                setQuotationSalesReturnPaidPartiallyCount(quotationSalesReturnPaidPartiallyCount);
+
+                quotationSalesReturnUnPaidCount = data.meta.quotation_sales_return_unpaid_count;
+                setQuotationSalesReturnUnPaidCount(quotationSalesReturnUnPaidCount);
+
+                quotationSalesReturnProfit = data.meta.quotation_sales_return_profit;
+                setQuotationSalesReturnProfit(quotationSalesReturnProfit);
+
+                quotationSalesReturnLoss = data.meta.quotation_sales_return_loss;
+                setQuotationSalesReturnLoss(quotationSalesReturnLoss);
+
+                //Delivery Notes
+                deliveryNoteCount = data.meta.delivery_note_count;
+                setDeliveryNoteCount(deliveryNoteCount);
+
             })
             .catch((error) => {
                 setIsListLoading(false);
@@ -760,6 +960,16 @@ function CustomerIndex(props) {
         list();
     };
 
+    let [statsOpen, setStatsOpen] = useState(false);
+    const handleSummaryToggle = (isOpen) => {
+        statsOpen = isOpen
+        setStatsOpen(statsOpen)
+
+        if (isOpen) {
+            list(); // Fetch stats only if it's opened and not fetched before
+        }
+    };
+
     return (
         <>
             <CustomerPending ref={CustomerPendingRef} handleUpdated={handlePendingUpdated} />
@@ -867,6 +1077,75 @@ function CustomerIndex(props) {
             <CustomerView ref={DetailsViewRef} openUpdateForm={openUpdateForm} openCreateForm={openCreateForm} />
 
             <div className="container-fluid p-0">
+
+
+                <div className="row">
+                    <div className="col">
+                        <span className="text-end">
+                            <StatsSummary
+                                title="Customer Stats"
+                                stats={{
+                                    "Credit Balance": creditBalance,
+                                    //Sales
+                                    "Sales": sales,
+                                    "Sales Paid": salesPaid,
+                                    "Sales Credit Balance": salesCreditBalance,
+                                    "Sales Count": salesCount,
+                                    "Sales Paid Count": salesPaidCount,
+                                    "Sales Paid Partially Count": salesPaidPartiallyCount,
+                                    "Sales UnPaid Count": salesUnPaidCount,
+                                    "Sales Profit": salesProfit,
+                                    "Sales Loss": salesLoss,
+
+                                    //Sales Return
+                                    "Sales Return": salesReturn,
+                                    "Sales Return Paid": salesReturnPaid,
+                                    "Sales Return Credit Balance": salesReturnCreditBalance,
+                                    "Sales Return Count": salesReturnCount,
+                                    "Sales Return Paid Count": salesReturnPaidCount,
+                                    "Sales Return Paid Partially Count": salesReturnPaidPartiallyCount,
+                                    "Sales Return UnPaid Count": salesReturnUnPaidCount,
+                                    "Sales Return Profit": salesReturnProfit,
+                                    "Sales Return Loss": salesReturnLoss,
+
+                                    //Quotation
+                                    "Quotation": sales,
+                                    "Quotation Count": quotationCount,
+                                    "Quotation Profit": quotationProfit,
+                                    "Quotation Loss": quotationLoss,
+
+                                    //Quotation Sales
+                                    "Qtn. Sales": quotationSales,
+                                    "Qtn. Sales Paid": quotationSalesPaid,
+                                    "Qtn. Sales Credit Balance": quotationSalesCreditBalance,
+                                    "Qtn. Sales Count": quotationSalesCount,
+                                    "Qtn. Sales Paid Count": quotationSalesPaidCount,
+                                    "Qtn. Sales Paid Partially Count": quotationSalesPaidPartiallyCount,
+                                    "Qtn. Sales UnPaid Count": quotationSalesUnPaidCount,
+                                    "Qtn. Sales Profit": quotationSalesProfit,
+                                    "Qtn. Sales Loss": quotationSalesLoss,
+
+                                    //Quotation Sales Return
+                                    "Qtn. Sales Return": quotationSalesReturn,
+                                    "Qtn. Sales Return Paid": quotationSalesReturnPaid,
+                                    "Qtn. Sales Return Credit Balance": quotationSalesReturnCreditBalance,
+                                    "Qtn. Sales Return Count": quotationSalesReturnCount,
+                                    "Qtn. Sales Return Paid Count": quotationSalesReturnPaidCount,
+                                    "Qtn. Sales Return Paid Partially Count": quotationSalesReturnPaidPartiallyCount,
+                                    "Qtn. Sales Return UnPaid Count": quotationSalesReturnUnPaidCount,
+                                    "Qtn. Sales Return Profit": quotationSalesReturnProfit,
+                                    "Qtn. Sales Return Loss": quotationSalesReturnLoss,
+
+                                    //Delivery Notes
+                                    "Delivery Note Count": deliveryNoteCount,
+
+                                }}
+                                onToggle={handleSummaryToggle}
+                            />
+                        </span>
+                    </div>
+                </div >
+
                 <div className="row">
                     <div className="col">
                         <h1 className="h3">Customers</h1>
