@@ -14,12 +14,14 @@ import { trimTo2Decimals } from "../utils/numberUtils.js";
 import { trimTo8Decimals } from "../utils/numberUtils.js";
 import Preview from "../order/preview.js";
 import { Dropdown } from 'react-bootstrap';
-import QuotationSalesReturnHistory from "../product/quotation_sales_return_history.js";
+import QuotationSalesReturnHistory from "./../utils/product_quotation_sales_return_history.js";
 
-import PurchaseHistory from "../product/purchase_history.js";
-import PurchaseReturnHistory from "../product/purchase_return_history.js";
-import QuotationHistory from "../product/quotation_history.js";
-import DeliveryNoteHistory from "../product/delivery_note_history.js";
+import SalesHistory from "../utils/product_sales_history.js";
+import SalesReturnHistory from "../utils/product_sales_return_history.js";
+import PurchaseHistory from "./../utils/product_purchase_history.js";
+import PurchaseReturnHistory from "./../utils/product_purchase_return_history.js";
+import QuotationHistory from "./../utils/product_quotation_history.js";
+import DeliveryNoteHistory from "./../utils/product_delivery_note_history.js";
 import Products from "../utils/products.js";
 import ResizableTableCell from '../utils/ResizableTableCell.js';
 import { OverlayTrigger, Tooltip } from 'react-bootstrap';
@@ -30,8 +32,8 @@ import ProductView from "../product/view.js";
 import ImageViewerModal from '../utils/ImageViewerModal.js';
 import OverflowTooltip from "../utils/OverflowTooltip.js";
 import * as bootstrap from 'bootstrap';
-import ProductHistory from "./../product/product_history.js";
-
+//import ProductHistory from "./../product/product_history.js";
+import ProductHistory from "../utils/product_history.js";
 
 import CustomerWithdrawalUpdateForm from "../customer_withdrawal/create.js";
 import QuotationSalesUpdateForm from "../quotation/create.js";
@@ -662,9 +664,7 @@ const QuotationSalesReturnCreate = forwardRef((props, ref) => {
         SalesReturnHistoryRef.current.open(model, selectedCustomers);
     }
 
-    function openQuotationSalesHistory(model) {
-        QuotationHistoryRef.current.open(model, selectedCustomers, "invoice");
-    }
+
     const SHORTCUTS = {
         DEFAULT: {
             linkedProducts: "Ctrl + Shift + 1",
@@ -1722,7 +1722,11 @@ const QuotationSalesReturnCreate = forwardRef((props, ref) => {
 
     const QuotationHistoryRef = useRef();
     function openQuotationHistory(model) {
-        QuotationHistoryRef.current.open(model, selectedCustomers);
+        QuotationHistoryRef.current.open(model, selectedCustomers, "quotation");
+    }
+
+    function openQuotationSalesHistory(model) {
+        QuotationHistoryRef.current.open(model, selectedCustomers, "invoice");
     }
 
 
@@ -2083,6 +2087,8 @@ const QuotationSalesReturnCreate = forwardRef((props, ref) => {
             <PurchaseReturnHistory ref={PurchaseReturnHistoryRef} showToastMessage={props.showToastMessage} />
             <QuotationHistory ref={QuotationHistoryRef} showToastMessage={props.showToastMessage} />
             <DeliveryNoteHistory ref={DeliveryNoteHistoryRef} showToastMessage={props.showToastMessage} />
+            <SalesHistory ref={SalesHistoryRef} showToastMessage={props.showToastMessage} />
+            <SalesReturnHistory ref={SalesReturnHistoryRef} showToastMessage={props.showToastMessage} />
 
             <Preview ref={PreviewRef} />
             <QuotationSalesReturnView ref={DetailsViewRef} />

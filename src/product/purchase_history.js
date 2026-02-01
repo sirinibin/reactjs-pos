@@ -1,4 +1,4 @@
-import React, { useState, useRef, forwardRef, useImperativeHandle, useEffect, useMemo, useCallback } from "react";
+import React, { useState, useRef, forwardRef, useEffect, useMemo, useCallback } from "react";
 
 import { format } from "date-fns";
 import DatePicker from "react-datepicker";
@@ -13,11 +13,10 @@ import OverflowTooltip from "../utils/OverflowTooltip.js";
 import Amount from "../utils/amount.js";
 import { trimTo2Decimals } from "../utils/numberUtils";
 import VendorCreate from "./../vendor/create.js";
-import Draggable2 from "react-draggable";
 
 const PurchaseHistory = forwardRef((props, ref) => {
     const [statsOpen, setStatsOpen] = useState(false);
-    const dragRef = useRef(null);
+    /*
     useImperativeHandle(ref, () => ({
         open(model, selectedVendors) {
             setHistoryList([]);
@@ -29,20 +28,32 @@ const PurchaseHistory = forwardRef((props, ref) => {
             if (selectedVendors?.length > 0) {
                 setSelectedVendors(selectedVendors)
                 searchByMultipleValuesField("vendor_id", selectedVendors);
-            } /*else {
-
-                if (timerRef.current) clearTimeout(timerRef.current);
-                timerRef.current = setTimeout(() => {
-                    list();
-                }, 200);
-            }*/
+            }
 
             getStore(localStorage.getItem("store_id"));
 
             setShow(true);
         },
 
-    }));
+    }));*/
+
+    useEffect(() => {
+        setHistoryList([]);
+        setSelectedVendors([]);
+        searchParams["vendor_id"] = "";
+
+        setProduct({ ...props.product });
+        if (props.selectedVendors?.length > 0) {
+            setSelectedVendors(props.selectedVendors)
+            searchByMultipleValuesField("vendor_id", props.selectedVendors);
+        }
+
+        getStore(localStorage.getItem("store_id"));
+
+        setShow(true);
+
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
 
     useEffect(() => {
         const handleKeyDown = (e) => {
@@ -399,13 +410,10 @@ const PurchaseHistory = forwardRef((props, ref) => {
             list();
         } else {
             setHistoryList([]);
-            setSelectedVendors([]);
+            // setSelectedVendors([]);
         }
     }, [show, list]);
 
-    function handleClose() {
-        setShow(false);
-    };
 
     let [totalPurchase, setTotalPurchase] = useState(0.00);
     // let [totalRetailProfit, setTotalRetailProfit] = useState(0.00);
@@ -638,7 +646,7 @@ const PurchaseHistory = forwardRef((props, ref) => {
             </Modal>
 
             {showPurchaseForm && <PurchaseCreate ref={PurchaseUpdateFormRef} onUpdated={handleUpdated} />}
-            <Modal
+            {/*<Modal
                 show={show}
                 size="xl"
                 onHide={handleClose}
@@ -679,197 +687,197 @@ const PurchaseHistory = forwardRef((props, ref) => {
 
                     </div>
                 </Modal.Header>
-                <Modal.Body>
-                    <div className="container-fluid p-0">
-                        <div className="row">
-                            <div className="col">
-                                <span className="text-end">
-                                    <StatsSummary
-                                        title="Purchase History"
-                                        stats={{
-                                            "Purchase": totalPurchase,
-                                            "VAT Collected": totalVat,
-                                            "Total Quantity": totalQuantity,
-                                        }}
-                                        onToggle={handleSummaryToggle}
-                                    />
-                                </span>
-                            </div>
-                        </div>
+                <Modal.Body>*/}
+            <div className="container-fluid p-0">
+                <div className="row">
+                    <div className="col">
+                        <span className="text-end">
+                            <StatsSummary
+                                title="Purchase History"
+                                stats={{
+                                    "Purchase": totalPurchase,
+                                    "VAT Collected": totalVat,
+                                    "Total Quantity": totalQuantity,
+                                }}
+                                onToggle={handleSummaryToggle}
+                            />
+                        </span>
+                    </div>
+                </div>
 
-                        <div className="row">
-                            <div className="col-12">
-                                <div className="card">
-                                    {/*
+                <div className="row">
+                    <div className="col-12">
+                        <div className="card">
+                            {/*
   <div   className="card-header">
                         <h5   className="card-title mb-0"></h5>
                     </div>
                     */}
-                                    <div className="card-body">
-                                        <div className="row">
-                                            {totalItems === 0 && (
-                                                <div className="col">
-                                                    <p className="text-start">No Purchase History to display</p>
-                                                </div>
+                            <div className="card-body">
+                                <div className="row">
+                                    {totalItems === 0 && (
+                                        <div className="col">
+                                            <p className="text-start">No Purchase History to display</p>
+                                        </div>
+                                    )}
+                                </div>
+                                <div className="row" style={{ bproduct: "solid 0px" }}>
+                                    <div className="col text-start" style={{ border: "solid 0px" }}>
+                                        <Button
+                                            onClick={() => {
+                                                setIsRefreshInProcess(true);
+                                                list();
+                                            }}
+                                            variant="primary"
+                                            disabled={isRefreshInProcess}
+                                        >
+                                            {isRefreshInProcess ? (
+                                                <Spinner
+                                                    as="span"
+                                                    animation="bproduct"
+                                                    size="sm"
+                                                    role="status"
+                                                    aria-hidden={true}
+                                                />
+                                            ) : (
+                                                <i className="fa fa-refresh"></i>
                                             )}
-                                        </div>
-                                        <div className="row" style={{ bproduct: "solid 0px" }}>
-                                            <div className="col text-start" style={{ border: "solid 0px" }}>
-                                                <Button
-                                                    onClick={() => {
-                                                        setIsRefreshInProcess(true);
-                                                        list();
+                                            <span className="visually-hidden">Loading...</span>
+                                        </Button>
+                                    </div>
+                                    <div className="col text-center">
+                                        {isListLoading && (
+                                            <Spinner animation="grow" variant="primary" />
+                                        )}
+                                    </div>
+                                    <div className="col text-end">
+                                        {totalItems > 0 && (
+                                            <>
+                                                <label className="form-label">Size:&nbsp;</label>
+                                                <select
+                                                    value={pageSize}
+                                                    onChange={(e) => {
+                                                        changePageSize(e.target.value);
                                                     }}
-                                                    variant="primary"
-                                                    disabled={isRefreshInProcess}
-                                                >
-                                                    {isRefreshInProcess ? (
-                                                        <Spinner
-                                                            as="span"
-                                                            animation="bproduct"
-                                                            size="sm"
-                                                            role="status"
-                                                            aria-hidden={true}
-                                                        />
-                                                    ) : (
-                                                        <i className="fa fa-refresh"></i>
-                                                    )}
-                                                    <span className="visually-hidden">Loading...</span>
-                                                </Button>
-                                            </div>
-                                            <div className="col text-center">
-                                                {isListLoading && (
-                                                    <Spinner animation="grow" variant="primary" />
-                                                )}
-                                            </div>
-                                            <div className="col text-end">
-                                                {totalItems > 0 && (
-                                                    <>
-                                                        <label className="form-label">Size:&nbsp;</label>
-                                                        <select
-                                                            value={pageSize}
-                                                            onChange={(e) => {
-                                                                changePageSize(e.target.value);
-                                                            }}
-                                                            className="form-control pull-right"
-                                                            style={{
-                                                                bproduct: "solid 1px",
-                                                                bproductColor: "silver",
-                                                                width: "55px",
-                                                            }}
-                                                        >
-                                                            <option value="5">
-                                                                5
-                                                            </option>
-                                                            <option value="10" >
-                                                                10
-                                                            </option>
-                                                            <option value="20">20</option>
-                                                            <option value="40">40</option>
-                                                            <option value="50">50</option>
-                                                            <option value="100">100</option>
-                                                            <option value="200">200</option>
-                                                            <option value="300">300</option>
-                                                            <option value="500">500</option>
-                                                            <option value="1000">1000</option>
-                                                            <option value="1500">1500</option>
-                                                        </select>
-                                                    </>
-                                                )}
-                                            </div>
-                                        </div>
-
-                                        <br />
-                                        <div className="row">
-                                            <div className="col" style={{ bproduct: "solid 0px" }}>
-                                                {totalPages ? <ReactPaginate
-                                                    breakLabel="..."
-                                                    nextLabel="next >"
-                                                    onPageChange={(event) => {
-                                                        changePage(event.selected + 1);
-                                                    }}
-                                                    pageRangeDisplayed={5}
-                                                    pageCount={totalPages}
-                                                    previousLabel="< previous"
-                                                    renderOnZeroPageCount={null}
-                                                    className="pagination  flex-wrap"
-                                                    pageClassName="page-item"
-                                                    pageLinkClassName="page-link"
-                                                    activeClassName="active"
-                                                    previousClassName="page-item"
-                                                    nextClassName="page-item"
-                                                    previousLinkClassName="page-link"
-                                                    nextLinkClassName="page-link"
-                                                    forcePage={page - 1}
-                                                /> : ""}
-                                            </div>
-                                        </div>
-
-                                        <div className="row">
-                                            <div className="col text-end">
-                                                <button
-                                                    className="btn btn-sm btn-outline-secondary"
-                                                    onClick={() => {
-                                                        setShowSettings(!showSettings);
+                                                    className="form-control pull-right"
+                                                    style={{
+                                                        bproduct: "solid 1px",
+                                                        bproductColor: "silver",
+                                                        width: "55px",
                                                     }}
                                                 >
-                                                    <i
-                                                        className="bi bi-gear-fill"
-                                                        style={{ fontSize: "1.2rem" }}
-                                                        title="Table Settings"
+                                                    <option value="5">
+                                                        5
+                                                    </option>
+                                                    <option value="10" >
+                                                        10
+                                                    </option>
+                                                    <option value="20">20</option>
+                                                    <option value="40">40</option>
+                                                    <option value="50">50</option>
+                                                    <option value="100">100</option>
+                                                    <option value="200">200</option>
+                                                    <option value="300">300</option>
+                                                    <option value="500">500</option>
+                                                    <option value="1000">1000</option>
+                                                    <option value="1500">1500</option>
+                                                </select>
+                                            </>
+                                        )}
+                                    </div>
+                                </div>
 
-                                                    />
-                                                </button>
+                                <br />
+                                <div className="row">
+                                    <div className="col" style={{ bproduct: "solid 0px" }}>
+                                        {totalPages ? <ReactPaginate
+                                            breakLabel="..."
+                                            nextLabel="next >"
+                                            onPageChange={(event) => {
+                                                changePage(event.selected + 1);
+                                            }}
+                                            pageRangeDisplayed={5}
+                                            pageCount={totalPages}
+                                            previousLabel="< previous"
+                                            renderOnZeroPageCount={null}
+                                            className="pagination  flex-wrap"
+                                            pageClassName="page-item"
+                                            pageLinkClassName="page-link"
+                                            activeClassName="active"
+                                            previousClassName="page-item"
+                                            nextClassName="page-item"
+                                            previousLinkClassName="page-link"
+                                            nextLinkClassName="page-link"
+                                            forcePage={page - 1}
+                                        /> : ""}
+                                    </div>
+                                </div>
+
+                                <div className="row">
+                                    <div className="col text-end">
+                                        <button
+                                            className="btn btn-sm btn-outline-secondary"
+                                            onClick={() => {
+                                                setShowSettings(!showSettings);
+                                            }}
+                                        >
+                                            <i
+                                                className="bi bi-gear-fill"
+                                                style={{ fontSize: "1.2rem" }}
+                                                title="Table Settings"
+
+                                            />
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <div className="row">
+                                    {totalItems > 0 && (
+                                        <>
+                                            <div className="col text-start">
+                                                <p className="text-start">
+                                                    showing {offset + 1}-{offset + currentPageItemsCount} of{" "}
+                                                    {totalItems}
+                                                </p>
                                             </div>
-                                        </div>
 
-                                        <div className="row">
-                                            {totalItems > 0 && (
-                                                <>
-                                                    <div className="col text-start">
-                                                        <p className="text-start">
-                                                            showing {offset + 1}-{offset + currentPageItemsCount} of{" "}
-                                                            {totalItems}
-                                                        </p>
-                                                    </div>
+                                            <div className="col text-end">
+                                                <p className="text-end">
+                                                    page {page} of {totalPages}
+                                                </p>
+                                            </div>
+                                        </>
+                                    )}
+                                </div>
+                                <div className="table-responsive" style={{ overflowX: "auto" }}>
+                                    <table className="table table-striped table-sm table-bordered">
+                                        <thead>
+                                            <tr className="text-center">
+                                                {columns.filter(c => c.visible).map((col) => {
+                                                    return (<>
+                                                        {col.key && <th>
+                                                            <b
+                                                                style={{
+                                                                    textDecoration: "underline",
+                                                                    cursor: "pointer",
+                                                                }}
+                                                                onClick={() => {
+                                                                    sort(col.fieldName);
+                                                                }}
+                                                            >
+                                                                {col.label}
+                                                                {sortField === col.fieldName && sortProduct === "-" ? (
+                                                                    <i className="bi bi-sort-alpha-up-alt"></i>
+                                                                ) : null}
+                                                                {sortField === col.fieldName && sortProduct === "" ? (
+                                                                    <i className="bi bi-sort-alpha-up"></i>
+                                                                ) : null}
+                                                            </b>
+                                                        </th>}
+                                                    </>);
+                                                })}
 
-                                                    <div className="col text-end">
-                                                        <p className="text-end">
-                                                            page {page} of {totalPages}
-                                                        </p>
-                                                    </div>
-                                                </>
-                                            )}
-                                        </div>
-                                        <div className="table-responsive" style={{ overflowX: "auto" }}>
-                                            <table className="table table-striped table-sm table-bordered">
-                                                <thead>
-                                                    <tr className="text-center">
-                                                        {columns.filter(c => c.visible).map((col) => {
-                                                            return (<>
-                                                                {col.key && <th>
-                                                                    <b
-                                                                        style={{
-                                                                            textDecoration: "underline",
-                                                                            cursor: "pointer",
-                                                                        }}
-                                                                        onClick={() => {
-                                                                            sort(col.fieldName);
-                                                                        }}
-                                                                    >
-                                                                        {col.label}
-                                                                        {sortField === col.fieldName && sortProduct === "-" ? (
-                                                                            <i className="bi bi-sort-alpha-up-alt"></i>
-                                                                        ) : null}
-                                                                        {sortField === col.fieldName && sortProduct === "" ? (
-                                                                            <i className="bi bi-sort-alpha-up"></i>
-                                                                        ) : null}
-                                                                    </b>
-                                                                </th>}
-                                                            </>);
-                                                        })}
-
-                                                        {/*<th>
+                                                {/*<th>
                                                             <b
                                                                 style={{
                                                                     textDecoration: "underline",
@@ -1107,154 +1115,154 @@ const PurchaseHistory = forwardRef((props, ref) => {
                                                         </th>*/}
 
 
-                                                    </tr>
-                                                </thead>
+                                            </tr>
+                                        </thead>
 
-                                                <thead>
-                                                    <tr className="text-center">
-                                                        {columns.filter(c => c.visible).map((col) => {
-                                                            return (<>
-                                                                {(col.key === "vendor_name") && <th>
-                                                                    <Typeahead
-                                                                        id="vendor_id"
-                                                                        filterBy={['additional_keywords']}
-                                                                        labelKey="search_label"
-                                                                        onChange={(selectedItems) => {
-                                                                            searchByMultipleValuesField(
-                                                                                "vendor_id",
-                                                                                selectedItems
-                                                                            );
-                                                                        }}
-                                                                        options={vendorOptions}
-                                                                        placeholder="Vendor Name | Mob | VAT # | ID"
-                                                                        selected={selectedVendors}
-                                                                        highlightOnlyResult={true}
-                                                                        ref={vendorSearchRef}
-                                                                        onKeyDown={(e) => {
-                                                                            if (e.key === "Escape") {
-                                                                                setVendorOptions([]);
-                                                                                vendorSearchRef.current?.clear();
-                                                                            }
-                                                                        }}
-                                                                        onInputChange={(searchTerm, e) => {
-                                                                            if (timerRef.current) clearTimeout(timerRef.current);
-                                                                            timerRef.current = setTimeout(() => {
-                                                                                suggestVendors(searchTerm);
-                                                                            }, 100);
-                                                                        }}
-                                                                        multiple
-                                                                    />
+                                        <thead>
+                                            <tr className="text-center">
+                                                {columns.filter(c => c.visible).map((col) => {
+                                                    return (<>
+                                                        {(col.key === "vendor_name") && <th>
+                                                            <Typeahead
+                                                                id="vendor_id"
+                                                                filterBy={['additional_keywords']}
+                                                                labelKey="search_label"
+                                                                onChange={(selectedItems) => {
+                                                                    searchByMultipleValuesField(
+                                                                        "vendor_id",
+                                                                        selectedItems
+                                                                    );
+                                                                }}
+                                                                options={vendorOptions}
+                                                                placeholder="Vendor Name | Mob | VAT # | ID"
+                                                                selected={selectedVendors}
+                                                                highlightOnlyResult={true}
+                                                                ref={vendorSearchRef}
+                                                                onKeyDown={(e) => {
+                                                                    if (e.key === "Escape") {
+                                                                        setVendorOptions([]);
+                                                                        vendorSearchRef.current?.clear();
+                                                                    }
+                                                                }}
+                                                                onInputChange={(searchTerm, e) => {
+                                                                    if (timerRef.current) clearTimeout(timerRef.current);
+                                                                    timerRef.current = setTimeout(() => {
+                                                                        suggestVendors(searchTerm);
+                                                                    }, 100);
+                                                                }}
+                                                                multiple
+                                                            />
 
-                                                                </th>}
-                                                                {(col.key === "purchase_code" ||
-                                                                    col.key === "quantity" ||
-                                                                    col.key === "unit_price" ||
-                                                                    col.key === "unit_price_with_vat" ||
-                                                                    col.key === "discount" ||
-                                                                    col.key === "discount_percent" ||
-                                                                    col.key === "price" ||
-                                                                    col.key === "vat_price" ||
-                                                                    col.key === "net_price" ||
-                                                                    col.key === "warehouse_code"
-                                                                ) &&
-                                                                    <th>
-                                                                        <input
-                                                                            type="text"
-                                                                            id={`purchase_history_search_by_${col.key}`}
-                                                                            name={`purchase_history_search_by_${col.key}`}
-                                                                            onChange={(e) => {
-                                                                                const value = e.target.value;
-                                                                                if (typeof value === "number") {
-                                                                                    searchByFieldValue(col.key, parseFloat(e.target.value))
-                                                                                } else if (typeof value === "string") {
-                                                                                    searchByFieldValue(col.key, e.target.value)
-                                                                                }
-                                                                            }}
-                                                                            className="form-control"
-                                                                        />
-                                                                    </th>}
-                                                                {col.key === "date" && <th>
-                                                                    <div style={{ minWidth: "100px" }}>
+                                                        </th>}
+                                                        {(col.key === "purchase_code" ||
+                                                            col.key === "quantity" ||
+                                                            col.key === "unit_price" ||
+                                                            col.key === "unit_price_with_vat" ||
+                                                            col.key === "discount" ||
+                                                            col.key === "discount_percent" ||
+                                                            col.key === "price" ||
+                                                            col.key === "vat_price" ||
+                                                            col.key === "net_price" ||
+                                                            col.key === "warehouse_code"
+                                                        ) &&
+                                                            <th>
+                                                                <input
+                                                                    type="text"
+                                                                    id={`purchase_history_search_by_${col.key}`}
+                                                                    name={`purchase_history_search_by_${col.key}`}
+                                                                    onChange={(e) => {
+                                                                        const value = e.target.value;
+                                                                        if (typeof value === "number") {
+                                                                            searchByFieldValue(col.key, parseFloat(e.target.value))
+                                                                        } else if (typeof value === "string") {
+                                                                            searchByFieldValue(col.key, e.target.value)
+                                                                        }
+                                                                    }}
+                                                                    className="form-control"
+                                                                />
+                                                            </th>}
+                                                        {col.key === "date" && <th>
+                                                            <div style={{ minWidth: "100px" }}>
+                                                                <DatePicker
+                                                                    id="date"
+                                                                    value={dateValue}
+                                                                    selected={selectedDate}
+                                                                    className="form-control"
+                                                                    dateFormat="MMM dd yyyy"
+                                                                    isClearable={true}
+                                                                    onChange={(date) => {
+                                                                        if (!date) {
+                                                                            setDateValue("");
+                                                                            searchByDateField("date_str", "");
+                                                                            return;
+                                                                        }
+                                                                        searchByDateField("date_str", date);
+                                                                        selectedDate = date;
+                                                                        setSelectedDate(date);
+
+                                                                    }}
+                                                                />
+                                                                <small
+                                                                    style={{
+                                                                        color: "blue",
+                                                                        textDecoration: "underline",
+                                                                        cursor: "pointer",
+                                                                    }}
+                                                                    onClick={(e) =>
+                                                                        setShowDateRange(!showDateRange)
+                                                                    }
+                                                                >
+                                                                    {showDateRange ? "Less.." : "More.."}
+                                                                </small>
+                                                                <br />
+
+                                                                {showDateRange ? (
+                                                                    <span className="text-left">
+                                                                        From:{" "}
                                                                         <DatePicker
-                                                                            id="date"
-                                                                            value={dateValue}
-                                                                            selected={selectedDate}
+                                                                            id="date_from"
+                                                                            value={fromDateValue}
+                                                                            selected={selectedFromDate}
                                                                             className="form-control"
                                                                             dateFormat="MMM dd yyyy"
                                                                             isClearable={true}
                                                                             onChange={(date) => {
                                                                                 if (!date) {
-                                                                                    setDateValue("");
-                                                                                    searchByDateField("date_str", "");
+                                                                                    setFromDateValue("");
+                                                                                    searchByDateField("from_date", "");
                                                                                     return;
                                                                                 }
-                                                                                searchByDateField("date_str", date);
-                                                                                selectedDate = date;
-                                                                                setSelectedDate(date);
-
+                                                                                searchByDateField("from_date", date);
+                                                                                selectedFromDate = date;
+                                                                                setSelectedFromDate(date);
                                                                             }}
                                                                         />
-                                                                        <small
-                                                                            style={{
-                                                                                color: "blue",
-                                                                                textDecoration: "underline",
-                                                                                cursor: "pointer",
+                                                                        To:{" "}
+                                                                        <DatePicker
+                                                                            id="date_to"
+                                                                            value={toDateValue}
+                                                                            selected={selectedToDate}
+                                                                            isClearable={true}
+                                                                            className="form-control"
+                                                                            dateFormat="MMM dd yyyy"
+                                                                            onChange={(date) => {
+                                                                                if (!date) {
+                                                                                    setToDateValue("");
+                                                                                    searchByDateField("to_date", "");
+                                                                                    return;
+                                                                                }
+                                                                                searchByDateField("to_date", date);
+                                                                                selectedToDate = date;
+                                                                                setSelectedToDate(date);
                                                                             }}
-                                                                            onClick={(e) =>
-                                                                                setShowDateRange(!showDateRange)
-                                                                            }
-                                                                        >
-                                                                            {showDateRange ? "Less.." : "More.."}
-                                                                        </small>
-                                                                        <br />
-
-                                                                        {showDateRange ? (
-                                                                            <span className="text-left">
-                                                                                From:{" "}
-                                                                                <DatePicker
-                                                                                    id="date_from"
-                                                                                    value={fromDateValue}
-                                                                                    selected={selectedFromDate}
-                                                                                    className="form-control"
-                                                                                    dateFormat="MMM dd yyyy"
-                                                                                    isClearable={true}
-                                                                                    onChange={(date) => {
-                                                                                        if (!date) {
-                                                                                            setFromDateValue("");
-                                                                                            searchByDateField("from_date", "");
-                                                                                            return;
-                                                                                        }
-                                                                                        searchByDateField("from_date", date);
-                                                                                        selectedFromDate = date;
-                                                                                        setSelectedFromDate(date);
-                                                                                    }}
-                                                                                />
-                                                                                To:{" "}
-                                                                                <DatePicker
-                                                                                    id="date_to"
-                                                                                    value={toDateValue}
-                                                                                    selected={selectedToDate}
-                                                                                    isClearable={true}
-                                                                                    className="form-control"
-                                                                                    dateFormat="MMM dd yyyy"
-                                                                                    onChange={(date) => {
-                                                                                        if (!date) {
-                                                                                            setToDateValue("");
-                                                                                            searchByDateField("to_date", "");
-                                                                                            return;
-                                                                                        }
-                                                                                        searchByDateField("to_date", date);
-                                                                                        selectedToDate = date;
-                                                                                        setSelectedToDate(date);
-                                                                                    }}
-                                                                                />
-                                                                            </span>
-                                                                        ) : null}
-                                                                    </div>
-                                                                </th>}
-                                                            </>);
-                                                        })}
-                                                        {/*<th>
+                                                                        />
+                                                                    </span>
+                                                                ) : null}
+                                                            </div>
+                                                        </th>}
+                                                    </>);
+                                                })}
+                                                {/*<th>
                                                             <div style={{ minWidth: "100px" }}>
                                                                 <DatePicker
                                                                     id="date"
@@ -1465,59 +1473,59 @@ const PurchaseHistory = forwardRef((props, ref) => {
                                                                 className="form-control"
                                                             />
                                                         </th>*/}
-                                                    </tr>
-                                                </thead>
+                                            </tr>
+                                        </thead>
 
-                                                <tbody className="text-center">
-                                                    {historyList &&
-                                                        historyList.map((history) => (
-                                                            <tr key={history.id}>
-                                                                {columns.filter(c => c.visible).map((col) => {
-                                                                    return (<>
-                                                                        {(col.key === "vendor_name") && <td style={{ width: "auto", whiteSpace: "nowrap" }} className="text-start" >
-                                                                            {history.vendor_name && <span style={{ cursor: "pointer", color: "blue" }} onClick={() => {
-                                                                                openVendorUpdateForm(history.vendor_id);
-                                                                            }}><OverflowTooltip value={history.vendor_name + (history.vendor_name_arabic ? " | " + history.vendor_name_arabic : "")} />
-                                                                            </span>}
-                                                                        </td>}
-                                                                        {(col.key === "purchase_code") && <td style={{ width: "auto", whiteSpace: "nowrap" }} className="text-start" >
-                                                                            <span style={{ cursor: "pointer", color: "blue" }} onClick={() => {
-                                                                                openPurchaseUpdateForm(history.purchase_id);
-                                                                            }}> {history.purchase_code}
-                                                                            </span>
-                                                                        </td>}
-                                                                        {(
-                                                                            col.key === "quantity" ||
-                                                                            col.key === "unit_price" ||
-                                                                            col.key === "unit_price_with_vat" ||
-                                                                            col.key === "discount" ||
-                                                                            col.key === "discount_percent" ||
-                                                                            col.key === "price" ||
-                                                                            col.key === "vat_price" ||
-                                                                            col.key === "net_price" ||
-                                                                            col.key === "profit" ||
-                                                                            col.key === "loss" ||
-                                                                            col.key === "warehouse_code"
+                                        <tbody className="text-center">
+                                            {historyList &&
+                                                historyList.map((history) => (
+                                                    <tr key={history.id}>
+                                                        {columns.filter(c => c.visible).map((col) => {
+                                                            return (<>
+                                                                {(col.key === "vendor_name") && <td style={{ width: "auto", whiteSpace: "nowrap" }} className="text-start" >
+                                                                    {history.vendor_name && <span style={{ cursor: "pointer", color: "blue" }} onClick={() => {
+                                                                        openVendorUpdateForm(history.vendor_id);
+                                                                    }}><OverflowTooltip value={history.vendor_name + (history.vendor_name_arabic ? " | " + history.vendor_name_arabic : "")} />
+                                                                    </span>}
+                                                                </td>}
+                                                                {(col.key === "purchase_code") && <td style={{ width: "auto", whiteSpace: "nowrap" }} className="text-start" >
+                                                                    <span style={{ cursor: "pointer", color: "blue" }} onClick={() => {
+                                                                        openPurchaseUpdateForm(history.purchase_id);
+                                                                    }}> {history.purchase_code}
+                                                                    </span>
+                                                                </td>}
+                                                                {(
+                                                                    col.key === "quantity" ||
+                                                                    col.key === "unit_price" ||
+                                                                    col.key === "unit_price_with_vat" ||
+                                                                    col.key === "discount" ||
+                                                                    col.key === "discount_percent" ||
+                                                                    col.key === "price" ||
+                                                                    col.key === "vat_price" ||
+                                                                    col.key === "net_price" ||
+                                                                    col.key === "profit" ||
+                                                                    col.key === "loss" ||
+                                                                    col.key === "warehouse_code"
 
-                                                                        ) &&
-                                                                            <td style={{ width: "auto", whiteSpace: "nowrap" }} >
-                                                                                {col.key === "warehouse_code" ? (
-                                                                                    history[col.key] || "Main Store"
-                                                                                ) : (
-                                                                                    history[col.key] && typeof history[col.key] === "number" ?
-                                                                                        <Amount amount={trimTo2Decimals(history[col.key])} /> : history[col.key]
-                                                                                )}
-                                                                            </td>}
-                                                                        {col.key === "date" && <td style={{ width: "auto", whiteSpace: "nowrap" }}>
-                                                                            {format(
-                                                                                new Date(history.date),
-                                                                                "MMM dd yyyy h:mma"
-                                                                            )}
-                                                                        </td>}
-                                                                    </>);
-                                                                })}
+                                                                ) &&
+                                                                    <td style={{ width: "auto", whiteSpace: "nowrap" }} >
+                                                                        {col.key === "warehouse_code" ? (
+                                                                            history[col.key] || "Main Store"
+                                                                        ) : (
+                                                                            history[col.key] && typeof history[col.key] === "number" ?
+                                                                                <Amount amount={trimTo2Decimals(history[col.key])} /> : history[col.key]
+                                                                        )}
+                                                                    </td>}
+                                                                {col.key === "date" && <td style={{ width: "auto", whiteSpace: "nowrap" }}>
+                                                                    {format(
+                                                                        new Date(history.date),
+                                                                        "MMM dd yyyy h:mma"
+                                                                    )}
+                                                                </td>}
+                                                            </>);
+                                                        })}
 
-                                                                {/* <td>
+                                                        {/* <td>
                                                                     {history.date ? format(
                                                                         new Date(history.date),
                                                                         "MMM dd yyyy h:mma"
@@ -1550,39 +1558,39 @@ const PurchaseHistory = forwardRef((props, ref) => {
                                                                 <td>{history.price.toFixed(2) + " "}</td>
                                                                 <td>{history.vat_price.toFixed(2) + "   (" + history.vat_percent.toFixed(2) + "%)"}</td>
                                                                 <td>{history.net_price.toFixed(2) + " "}</td>*/}
-                                                            </tr>
-                                                        ))}
-                                                </tbody>
-                                            </table>
-                                        </div>
-
-                                        {totalPages ? <ReactPaginate
-                                            breakLabel="..."
-                                            nextLabel="next >"
-                                            onPageChange={(event) => {
-                                                changePage(event.selected + 1);
-                                            }}
-                                            pageRangeDisplayed={5}
-                                            pageCount={totalPages}
-                                            previousLabel="< previous"
-                                            renderOnZeroPageCount={null}
-                                            className="pagination  flex-wrap"
-                                            pageClassName="page-item"
-                                            pageLinkClassName="page-link"
-                                            activeClassName="active"
-                                            previousClassName="page-item"
-                                            nextClassName="page-item"
-                                            previousLinkClassName="page-link"
-                                            nextLinkClassName="page-link"
-                                            forcePage={page - 1}
-                                        /> : ""}
-                                    </div>
+                                                    </tr>
+                                                ))}
+                                        </tbody>
+                                    </table>
                                 </div>
+
+                                {totalPages ? <ReactPaginate
+                                    breakLabel="..."
+                                    nextLabel="next >"
+                                    onPageChange={(event) => {
+                                        changePage(event.selected + 1);
+                                    }}
+                                    pageRangeDisplayed={5}
+                                    pageCount={totalPages}
+                                    previousLabel="< previous"
+                                    renderOnZeroPageCount={null}
+                                    className="pagination  flex-wrap"
+                                    pageClassName="page-item"
+                                    pageLinkClassName="page-link"
+                                    activeClassName="active"
+                                    previousClassName="page-item"
+                                    nextClassName="page-item"
+                                    previousLinkClassName="page-link"
+                                    nextLinkClassName="page-link"
+                                    forcePage={page - 1}
+                                /> : ""}
                             </div>
                         </div>
                     </div>
-                </Modal.Body>
-            </Modal>
+                </div>
+            </div>
+            {/*</Modal.Body>
+            </Modal>*/}
         </>);
 
 

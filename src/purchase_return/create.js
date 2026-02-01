@@ -17,18 +17,19 @@ import { trimTo2Decimals, trimTo8Decimals } from "../utils/numberUtils";
 import Preview from "./../order/preview.js";
 
 import { Dropdown } from 'react-bootstrap';
-import SalesHistory from "./../product/sales_history.js";
-import SalesReturnHistory from "./../product/sales_return_history.js";
-import PurchaseHistory from "./../product/purchase_history.js";
-import PurchaseReturnHistory from "./../product/purchase_return_history.js";
-import QuotationHistory from "./../product/quotation_history.js";
-import DeliveryNoteHistory from "./../product/delivery_note_history.js";
+import SalesHistory from "../utils/product_sales_history.js";
+import SalesReturnHistory from "./../utils/product_sales_return_history.js";
+import PurchaseHistory from "./../utils/product_purchase_history.js";
+import PurchaseReturnHistory from "./../utils/product_purchase_return_history.js";
+import QuotationHistory from "./../utils/product_quotation_history.js";
+import DeliveryNoteHistory from "./../utils/product_delivery_note_history.js";
 import Products from "../utils/products.js";
 //import Amount from "../utils/amount.js";
 import { OverlayTrigger, Tooltip } from 'react-bootstrap';
 import ResizableTableCell from './../utils/ResizableTableCell';
 import ImageViewerModal from './../utils/ImageViewerModal';
-import ProductHistory from "./../product/product_history.js";
+//import ProductHistory from "./../product/product_history.js";
+import ProductHistory from "../utils/product_history.js";
 //import OverflowTooltip from "../utils/OverflowTooltip.js";
 import * as bootstrap from 'bootstrap';
 
@@ -406,6 +407,18 @@ const PurchaseReturnedCreate = forwardRef((props, ref) => {
                 });
                 setSelectedProducts(updatedProducts);
 
+                setSelectedVendors([]);
+                if (purchaseReturn.vendor_id && purchaseReturn.vendor_name && purchaseReturn.vendor.search_label) {
+                    let selectedVendors = [
+                        {
+                            id: purchaseReturn.vendor_id,
+                            name: purchaseReturn.vendor_name,
+                            search_label: purchaseReturn.vendor.search_label,
+                        }
+                    ];
+                    setSelectedVendors([...selectedVendors]);
+                }
+
                 setFormData({ ...formData });
                 reCalculate();
                 checkWarnings();
@@ -606,6 +619,18 @@ const PurchaseReturnedCreate = forwardRef((props, ref) => {
                     return updatedProduct;
                 });
                 setSelectedProducts(updatedProducts);
+
+                setSelectedVendors([]);
+                if (purchase.vendor_id && purchase.vendor_name && purchase.vendor.search_label) {
+                    let selectedVendors = [
+                        {
+                            id: purchase.vendor_id,
+                            name: purchase.vendor_name,
+                            search_label: purchase.vendor.search_label,
+                        }
+                    ];
+                    setSelectedVendors([...selectedVendors]);
+                }
 
 
                 reCalculate();
@@ -1415,12 +1440,14 @@ async function reCalculate(productIndex) {
 
     const PurchaseHistoryRef = useRef();
     function openPurchaseHistory(model) {
-        PurchaseHistoryRef.current.open(model);
+        PurchaseHistoryRef.current.open(model, selectedVendors);
     }
+
+    let [selectedVendors, setSelectedVendors] = useState([]);
 
     const PurchaseReturnHistoryRef = useRef();
     function openPurchaseReturnHistory(model) {
-        PurchaseReturnHistoryRef.current.open(model);
+        PurchaseReturnHistoryRef.current.open(model, selectedVendors);
     }
 
 

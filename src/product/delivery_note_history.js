@@ -1,21 +1,20 @@
-import React, { useState, useRef, forwardRef, useImperativeHandle, useEffect } from "react";
+import React, { useState, useRef, forwardRef, useEffect, useCallback } from "react";
 
 import { format } from "date-fns";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
-import { Button, Spinner, Modal, Badge } from "react-bootstrap";
+import { Button, Spinner, Badge } from "react-bootstrap";
 import ReactPaginate from "react-paginate";
 import NumberFormat from "react-number-format";
 import DeliveryNoteView from "../delivery_note/view.js";
 import CustomerView from "../customer/view.js";
 import { Typeahead } from "react-bootstrap-typeahead";
-import Draggable2 from "react-draggable";
 
 //function ProductIndex(props) {
 
 const DeliveryNoteHistory = forwardRef((props, ref) => {
-    const dragRef = useRef(null);
 
+    /*
     useImperativeHandle(ref, () => ({
         open(model, selectedCustomers) {
             setHistoryList([]);
@@ -34,6 +33,29 @@ const DeliveryNoteHistory = forwardRef((props, ref) => {
         },
 
     }));
+    */
+
+    useEffect(() => {
+        setHistoryList([]);
+        setSelectedCustomers([]);
+        searchParams["customer_id"] = "";
+
+        setProduct({ ...props.model });
+        if (props.selectedCustomers?.length > 0) {
+            setSelectedCustomers(props.selectedCustomers)
+            searchByMultipleValuesField("customer_id", props.selectedCustomers, true);
+        }
+
+
+
+        // list();
+
+        getStore(localStorage.getItem("store_id"));
+        setShow(true);
+
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
+
 
 
     useEffect(() => {
@@ -247,7 +269,7 @@ const DeliveryNoteHistory = forwardRef((props, ref) => {
 
 
 
-    function list() {
+    const list = useCallback(() => {
         const requestOptions = {
             method: "GET",
             headers: {
@@ -321,15 +343,15 @@ const DeliveryNoteHistory = forwardRef((props, ref) => {
                 setOffset((page - 1) * pageSize);
                 setCurrentPageItemsCount(data.result.length);
 
-                totalDeliveryNoteQuantity = data.meta.total_quantity;
-                setTotalDeliveryNoteQuantity(totalDeliveryNoteQuantity);
+                // totalDeliveryNoteQuantity = data.meta.total_quantity;
+                setTotalDeliveryNoteQuantity(data.meta.total_quantity);
             })
             .catch((error) => {
                 setIsListLoading(false);
                 setIsRefreshInProcess(false);
                 console.log(error);
             });
-    }
+    }, [page, pageSize, product, sortField, sortProduct, searchParams]);
 
     function sort(field) {
         sortField = field;
@@ -352,10 +374,15 @@ const DeliveryNoteHistory = forwardRef((props, ref) => {
     }
 
     const [show, setShow] = useState(false);
+    useEffect(() => {
+        if (show) {
+            list();
+        } else {
+            setHistoryList([]);
+            //  setSelectedCustomers([]);
+        }
+    }, [list, show]);
 
-    function handleClose() {
-        setShow(false);
-    };
 
     let [totalDeliveryNoteQuantity, setTotalDeliveryNoteQuantity] = useState(0.00);
 
@@ -378,7 +405,7 @@ const DeliveryNoteHistory = forwardRef((props, ref) => {
         <>
             <DeliveryNoteView ref={DeliveryNoteDetailsViewRef} />
             <CustomerView ref={CustomerDetailsViewRef} />
-            <Modal
+            {/*<Modal
                 show={show}
                 size="xl"
                 onHide={handleClose}
@@ -418,462 +445,111 @@ const DeliveryNoteHistory = forwardRef((props, ref) => {
 
                     </div>
                 </Modal.Header>
-                <Modal.Body>
-                    <div className="container-fluid p-0">
-                        <div className="row">
+                <Modal.Body>*/}
+            <div className="container-fluid p-0">
+                <div className="row">
 
-                            <div className="col">
-                                <h1 className="text-end">
-                                    Quantity: <Badge bg="secondary">
-                                        <NumberFormat
-                                            value={totalDeliveryNoteQuantity}
-                                            displayType={"text"}
-                                            thousandSeparator={true}
-                                            suffix={""}
-                                            renderText={(value, props) => value}
-                                        />
-                                    </Badge>
-                                </h1>
-                            </div>
+                    <div className="col">
+                        <h1 className="text-end">
+                            Quantity: <Badge bg="secondary">
+                                <NumberFormat
+                                    value={totalDeliveryNoteQuantity}
+                                    displayType={"text"}
+                                    thousandSeparator={true}
+                                    suffix={""}
+                                    renderText={(value, props) => value}
+                                />
+                            </Badge>
+                        </h1>
+                    </div>
 
-                        </div>
+                </div>
 
-                        <div className="row">
-                            <div className="col-12">
-                                <div className="card">
-                                    {/*
+                <div className="row">
+                    <div className="col-12">
+                        <div className="card">
+                            {/*
   <div   className="card-header">
                         <h5   className="card-title mb-0"></h5>
                     </div>
                     */}
-                                    <div className="card-body">
-                                        <div className="row">
-                                            {totalItems === 0 && (
-                                                <div className="col">
-                                                    <p className="text-start">No DeliveryNote History to display</p>
-                                                </div>
-                                            )}
+                            <div className="card-body">
+                                <div className="row">
+                                    {totalItems === 0 && (
+                                        <div className="col">
+                                            <p className="text-start">No DeliveryNote History to display</p>
                                         </div>
-                                        <div className="row" style={{ bproduct: "solid 0px" }}>
-                                            <div className="col text-start" style={{ border: "solid 0px" }}>
-                                                <Button
-                                                    onClick={() => {
-                                                        setIsRefreshInProcess(true);
-                                                        list();
+                                    )}
+                                </div>
+                                <div className="row" style={{ bproduct: "solid 0px" }}>
+                                    <div className="col text-start" style={{ border: "solid 0px" }}>
+                                        <Button
+                                            onClick={() => {
+                                                setIsRefreshInProcess(true);
+                                                list();
+                                            }}
+                                            variant="primary"
+                                            disabled={isRefreshInProcess}
+                                        >
+                                            {isRefreshInProcess ? (
+                                                <Spinner
+                                                    as="span"
+                                                    animation="bproduct"
+                                                    size="sm"
+                                                    role="status"
+                                                    aria-hidden={true}
+                                                />
+                                            ) : (
+                                                <i className="fa fa-refresh"></i>
+                                            )}
+                                            <span className="visually-hidden">Loading...</span>
+                                        </Button>
+                                    </div>
+                                    <div className="col text-center">
+                                        {isListLoading && (
+                                            <Spinner animation="grow" variant="primary" />
+                                        )}
+                                    </div>
+                                    <div className="col text-end">
+                                        {totalItems > 0 && (
+                                            <>
+                                                <label className="form-label">Size:&nbsp;</label>
+                                                <select
+                                                    value={pageSize}
+                                                    onChange={(e) => {
+                                                        changePageSize(e.target.value);
                                                     }}
-                                                    variant="primary"
-                                                    disabled={isRefreshInProcess}
+                                                    className="form-control pull-right"
+                                                    style={{
+                                                        bproduct: "solid 1px",
+                                                        bproductColor: "silver",
+                                                        width: "55px",
+                                                    }}
                                                 >
-                                                    {isRefreshInProcess ? (
-                                                        <Spinner
-                                                            as="span"
-                                                            animation="bproduct"
-                                                            size="sm"
-                                                            role="status"
-                                                            aria-hidden={true}
-                                                        />
-                                                    ) : (
-                                                        <i className="fa fa-refresh"></i>
-                                                    )}
-                                                    <span className="visually-hidden">Loading...</span>
-                                                </Button>
-                                            </div>
-                                            <div className="col text-center">
-                                                {isListLoading && (
-                                                    <Spinner animation="grow" variant="primary" />
-                                                )}
-                                            </div>
-                                            <div className="col text-end">
-                                                {totalItems > 0 && (
-                                                    <>
-                                                        <label className="form-label">Size:&nbsp;</label>
-                                                        <select
-                                                            value={pageSize}
-                                                            onChange={(e) => {
-                                                                changePageSize(e.target.value);
-                                                            }}
-                                                            className="form-control pull-right"
-                                                            style={{
-                                                                bproduct: "solid 1px",
-                                                                bproductColor: "silver",
-                                                                width: "55px",
-                                                            }}
-                                                        >
-                                                            <option value="5">
-                                                                5
-                                                            </option>
-                                                            <option value="10" >
-                                                                10
-                                                            </option>
-                                                            <option value="20">20</option>
-                                                            <option value="40">40</option>
-                                                            <option value="50">50</option>
-                                                            <option value="100">100</option>
-                                                            <option value="200">200</option>
-                                                            <option value="300">300</option>
-                                                            <option value="500">500</option>
-                                                            <option value="1000">1000</option>
-                                                            <option value="1500">1500</option>
-                                                        </select>
-                                                    </>
-                                                )}
-                                            </div>
-                                        </div>
+                                                    <option value="5">
+                                                        5
+                                                    </option>
+                                                    <option value="10" >
+                                                        10
+                                                    </option>
+                                                    <option value="20">20</option>
+                                                    <option value="40">40</option>
+                                                    <option value="50">50</option>
+                                                    <option value="100">100</option>
+                                                    <option value="200">200</option>
+                                                    <option value="300">300</option>
+                                                    <option value="500">500</option>
+                                                    <option value="1000">1000</option>
+                                                    <option value="1500">1500</option>
+                                                </select>
+                                            </>
+                                        )}
+                                    </div>
+                                </div>
 
-                                        <br />
-                                        <div className="row">
-                                            <div className="col" style={{ bproduct: "solid 0px" }}>
-                                                {totalPages ? <ReactPaginate
-                                                    breakLabel="..."
-                                                    nextLabel="next >"
-                                                    onPageChange={(event) => {
-                                                        changePage(event.selected + 1);
-                                                    }}
-                                                    pageRangeDisplayed={5}
-                                                    pageCount={totalPages}
-                                                    previousLabel="< previous"
-                                                    renderOnZeroPageCount={null}
-                                                    className="pagination  flex-wrap"
-                                                    pageClassName="page-item"
-                                                    pageLinkClassName="page-link"
-                                                    activeClassName="active"
-                                                    previousClassName="page-item"
-                                                    nextClassName="page-item"
-                                                    previousLinkClassName="page-link"
-                                                    nextLinkClassName="page-link"
-                                                    forcePage={page - 1}
-                                                /> : ""}
-                                            </div>
-                                        </div>
-                                        <div className="row">
-                                            {totalItems > 0 && (
-                                                <>
-                                                    <div className="col text-start">
-                                                        <p className="text-start">
-                                                            showing {offset + 1}-{offset + currentPageItemsCount} of{" "}
-                                                            {totalItems}
-                                                        </p>
-                                                    </div>
-
-                                                    <div className="col text-end">
-                                                        <p className="text-end">
-                                                            page {page} of {totalPages}
-                                                        </p>
-                                                    </div>
-                                                </>
-                                            )}
-                                        </div>
-                                        <div className="table-responsive" style={{ overflowX: "auto" }}>
-                                            <table className="table table-striped table-sm table-bordered">
-                                                <thead>
-                                                    <tr className="text-center">
-
-                                                        <th>
-                                                            <b
-                                                                style={{
-                                                                    textDecoration: "underline",
-                                                                    cursor: "pointer",
-                                                                }}
-                                                                onClick={() => {
-                                                                    sort("date");
-                                                                }}
-                                                            >
-                                                                Date
-                                                                {sortField === "date" && sortProduct === "-" ? (
-                                                                    <i className="bi bi-sort-down"></i>
-                                                                ) : null}
-                                                                {sortField === "date" && sortProduct === "" ? (
-                                                                    <i className="bi bi-sort-up"></i>
-                                                                ) : null}
-                                                            </b>
-                                                        </th>
-
-                                                        {!localStorage.getItem("store_id") ? <th>
-                                                            <b
-                                                                style={{
-                                                                    textDecoration: "underline",
-                                                                    cursor: "pointer",
-                                                                }}
-                                                                onClick={() => {
-                                                                    sort("store_name");
-                                                                }}
-                                                            >
-                                                                Store
-                                                                {sortField === "store_name" && sortProduct === "-" ? (
-                                                                    <i className="bi bi-sort-alpha-up-alt"></i>
-                                                                ) : null}
-                                                                {sortField === "store_name" && sortProduct === "" ? (
-                                                                    <i className="bi bi-sort-alpha-up"></i>
-                                                                ) : null}
-                                                            </b>
-                                                        </th> : ""}
-                                                        <th>
-                                                            <b
-                                                                style={{
-                                                                    textDecoration: "underline",
-                                                                    cursor: "pointer",
-                                                                }}
-                                                                onClick={() => {
-                                                                    sort("delivery_note_code");
-                                                                }}
-                                                            >
-                                                                DeliveryNote ID
-                                                                {sortField === "delivery_note_code" && sortProduct === "-" ? (
-                                                                    <i className="bi bi-sort-alpha-up-alt"></i>
-                                                                ) : null}
-                                                                {sortField === "delivery_note_code" && sortProduct === "" ? (
-                                                                    <i className="bi bi-sort-alpha-up"></i>
-                                                                ) : null}
-                                                            </b>
-                                                        </th>
-
-                                                        <th>
-                                                            <b
-                                                                style={{
-                                                                    textDecoration: "underline",
-                                                                    cursor: "pointer",
-                                                                }}
-                                                                onClick={() => {
-                                                                    sort("customer_name");
-                                                                }}
-                                                            >
-                                                                Customer
-                                                                {sortField === "customer_name" && sortProduct === "-" ? (
-                                                                    <i className="bi bi-sort-alpha-up-alt"></i>
-                                                                ) : null}
-                                                                {sortField === "customer_name" && sortProduct === "" ? (
-                                                                    <i className="bi bi-sort-alpha-up"></i>
-                                                                ) : null}
-                                                            </b>
-                                                        </th>
-
-                                                        <th>
-                                                            <b
-                                                                style={{
-                                                                    textDecoration: "underline",
-                                                                    cursor: "pointer",
-                                                                }}
-                                                                onClick={() => {
-                                                                    sort("quantity");
-                                                                }}
-                                                            >
-                                                                Quantity
-                                                                {sortField === "quantity" && sortProduct === "-" ? (
-                                                                    <i className="bi bi-sort-alpha-up-alt"></i>
-                                                                ) : null}
-                                                                {sortField === "quantity" && sortProduct === "" ? (
-                                                                    <i className="bi bi-sort-alpha-up"></i>
-                                                                ) : null}
-                                                            </b>
-                                                        </th>
-                                                    </tr>
-                                                </thead>
-
-                                                <thead>
-                                                    <tr className="text-center">
-                                                        <th>
-                                                            <div style={{ minWidth: "100px" }}>
-                                                                <DatePicker
-                                                                    id="date"
-                                                                    value={dateValue}
-                                                                    selected={selectedDate}
-                                                                    className="form-control"
-                                                                    dateFormat="MMM dd yyyy"
-                                                                    isClearable={true}
-                                                                    onChange={(date) => {
-                                                                        if (!date) {
-                                                                            setDateValue("");
-                                                                            searchByDateField("date_str", "");
-                                                                            return;
-                                                                        }
-                                                                        searchByDateField("date_str", date);
-                                                                        selectedDate = date;
-                                                                        setSelectedDate(date);
-
-                                                                    }}
-                                                                />
-                                                                <small
-                                                                    style={{
-                                                                        color: "blue",
-                                                                        textDecoration: "underline",
-                                                                        cursor: "pointer",
-                                                                    }}
-                                                                    onClick={(e) =>
-                                                                        setShowDateRange(!showDateRange)
-                                                                    }
-                                                                >
-                                                                    {showDateRange ? "Less.." : "More.."}
-                                                                </small>
-                                                                <br />
-
-                                                                {showDateRange ? (
-                                                                    <span className="text-left">
-                                                                        From:{" "}
-                                                                        <DatePicker
-                                                                            id="date_from"
-                                                                            value={fromDateValue}
-                                                                            selected={selectedFromDate}
-                                                                            className="form-control"
-                                                                            dateFormat="MMM dd yyyy"
-                                                                            isClearable={true}
-                                                                            onChange={(date) => {
-                                                                                if (!date) {
-                                                                                    setFromDateValue("");
-                                                                                    searchByDateField("from_date", "");
-                                                                                    return;
-                                                                                }
-                                                                                searchByDateField("from_date", date);
-                                                                                selectedFromDate = date;
-                                                                                setSelectedFromDate(date);
-                                                                            }}
-                                                                        />
-                                                                        To:{" "}
-                                                                        <DatePicker
-                                                                            id="date_to"
-                                                                            value={toDateValue}
-                                                                            selected={selectedToDate}
-                                                                            isClearable={true}
-                                                                            className="form-control"
-                                                                            dateFormat="MMM dd yyyy"
-                                                                            onChange={(date) => {
-                                                                                if (!date) {
-                                                                                    setToDateValue("");
-                                                                                    searchByDateField("to_date", "");
-                                                                                    return;
-                                                                                }
-                                                                                searchByDateField("to_date", date);
-                                                                                selectedToDate = date;
-                                                                                setSelectedToDate(date);
-                                                                            }}
-                                                                        />
-                                                                    </span>
-                                                                ) : null}
-                                                            </div>
-                                                        </th>
-                                                        {!localStorage.getItem("store_id") ? <th>
-                                                            <input
-                                                                id="delivery_note_search_by_store_name"
-                                                                name="delivery_note_search_by_store_name"
-                                                                type="text"
-
-                                                                onChange={(e) =>
-                                                                    searchByFieldValue("store_name", e.target.value)
-                                                                }
-                                                                className="form-control"
-                                                            />
-                                                        </th> : ""}
-                                                        <th>
-                                                            <input
-                                                                type="text"
-                                                                id="delivery_note_history_by_code"
-                                                                name="delivery_note_history_by_code"
-                                                                onChange={(e) =>
-                                                                    searchByFieldValue("delivery_note_code", e.target.value)
-                                                                }
-                                                                className="form-control"
-                                                            />
-                                                        </th>
-                                                        <th>
-                                                            <Typeahead
-                                                                id="customer_id"
-                                                                filterBy={['additional_keywords']}
-                                                                labelKey="search_label"
-                                                                onChange={(selectedItems) => {
-                                                                    searchByMultipleValuesField(
-                                                                        "customer_id",
-                                                                        selectedItems
-                                                                    );
-                                                                }}
-                                                                options={customerOptions}
-                                                                placeholder="Customer Name | Mob | VAT # | ID"
-                                                                selected={selectedCustomers}
-                                                                highlightOnlyResult={true}
-                                                                onInputChange={(searchTerm, e) => {
-                                                                    if (timerRef.current) clearTimeout(timerRef.current);
-                                                                    timerRef.current = setTimeout(() => {
-                                                                        suggestCustomers(searchTerm);
-                                                                    }, 100);
-                                                                }}
-                                                                ref={customerSearchRef}
-                                                                onKeyDown={(e) => {
-                                                                    if (e.key === "Escape") {
-                                                                        setCustomerOptions([]);
-                                                                        customerSearchRef.current?.clear();
-                                                                    }
-                                                                }}
-                                                                multiple
-                                                            />
-                                                        </th>
-
-                                                        <th>
-                                                            <input
-                                                                id="delivery_note_history_by_quantity"
-                                                                name="delivery_note_history_by_quantity"
-                                                                type="text"
-                                                                onChange={(e) =>
-                                                                    searchByFieldValue("quantity", e.target.value)
-                                                                }
-                                                                className="form-control"
-                                                            />
-                                                        </th>
-                                                    </tr>
-                                                </thead>
-
-                                                <tbody className="text-center">
-                                                    {historyList &&
-                                                        historyList.map((history) => (
-                                                            <tr key={history.id}>
-                                                                <td>
-                                                                    {history.date ? format(
-                                                                        new Date(history.date),
-                                                                        "MMM dd yyyy h:mma"
-                                                                    ) : "Not set"}
-                                                                </td>
-                                                                {!localStorage.getItem("store_id") ? <td>{history.store_name}</td> : ""}
-                                                                <td style={{
-                                                                    textDecoration: "underline",
-                                                                    color: "blue",
-                                                                    cursor: "pointer",
-                                                                }}
-                                                                    onClick={() => {
-                                                                        openDeliveryNoteDetailsView(history.delivery_note_id);
-                                                                    }}>{history.delivery_note_code}
-                                                                </td>
-                                                                <td style={{
-                                                                    textDecoration: "underline",
-                                                                    color: "blue",
-                                                                    cursor: "pointer",
-                                                                }}
-                                                                    onClick={() => {
-                                                                        openCustomerDetailsView(history.customer_id);
-                                                                    }}>{history.customer_name + (history.customer_name_arabic ? " | " + history.customer_name_arabic : "")}
-                                                                </td>
-                                                                <td>{history.quantity}{history.unit ? history.unit : ""}</td>
-
-                                                                {/* <td>   
-                                                        <button
-                                                            className="btn btn-outline-secondary dropdown-toggle"
-                                                            type="button"
-                                                            data-bs-toggle="dropdown"
-                                                            aria-expanded="false"
-                                                        ></button>
-                                                        <ul className="dropdown-menu">
-                                                            <li>
-                                                                <a href="/" className="dropdown-item">
-                                                                    <i className="bi bi-download"></i>
-                                                                    Download
-                                                                </a>
-                                                            </li>
-                                                        </ul>
-                                                      
-                                                                </td>
-                                                                 */}
-                                                            </tr>
-                                                        ))}
-                                                </tbody>
-                                            </table>
-                                        </div>
-
+                                <br />
+                                <div className="row">
+                                    <div className="col" style={{ bproduct: "solid 0px" }}>
                                         {totalPages ? <ReactPaginate
                                             breakLabel="..."
                                             nextLabel="next >"
@@ -896,11 +572,362 @@ const DeliveryNoteHistory = forwardRef((props, ref) => {
                                         /> : ""}
                                     </div>
                                 </div>
+                                <div className="row">
+                                    {totalItems > 0 && (
+                                        <>
+                                            <div className="col text-start">
+                                                <p className="text-start">
+                                                    showing {offset + 1}-{offset + currentPageItemsCount} of{" "}
+                                                    {totalItems}
+                                                </p>
+                                            </div>
+
+                                            <div className="col text-end">
+                                                <p className="text-end">
+                                                    page {page} of {totalPages}
+                                                </p>
+                                            </div>
+                                        </>
+                                    )}
+                                </div>
+                                <div className="table-responsive" style={{ overflowX: "auto" }}>
+                                    <table className="table table-striped table-sm table-bordered">
+                                        <thead>
+                                            <tr className="text-center">
+
+                                                <th>
+                                                    <b
+                                                        style={{
+                                                            textDecoration: "underline",
+                                                            cursor: "pointer",
+                                                        }}
+                                                        onClick={() => {
+                                                            sort("date");
+                                                        }}
+                                                    >
+                                                        Date
+                                                        {sortField === "date" && sortProduct === "-" ? (
+                                                            <i className="bi bi-sort-down"></i>
+                                                        ) : null}
+                                                        {sortField === "date" && sortProduct === "" ? (
+                                                            <i className="bi bi-sort-up"></i>
+                                                        ) : null}
+                                                    </b>
+                                                </th>
+
+                                                {!localStorage.getItem("store_id") ? <th>
+                                                    <b
+                                                        style={{
+                                                            textDecoration: "underline",
+                                                            cursor: "pointer",
+                                                        }}
+                                                        onClick={() => {
+                                                            sort("store_name");
+                                                        }}
+                                                    >
+                                                        Store
+                                                        {sortField === "store_name" && sortProduct === "-" ? (
+                                                            <i className="bi bi-sort-alpha-up-alt"></i>
+                                                        ) : null}
+                                                        {sortField === "store_name" && sortProduct === "" ? (
+                                                            <i className="bi bi-sort-alpha-up"></i>
+                                                        ) : null}
+                                                    </b>
+                                                </th> : ""}
+                                                <th>
+                                                    <b
+                                                        style={{
+                                                            textDecoration: "underline",
+                                                            cursor: "pointer",
+                                                        }}
+                                                        onClick={() => {
+                                                            sort("delivery_note_code");
+                                                        }}
+                                                    >
+                                                        DeliveryNote ID
+                                                        {sortField === "delivery_note_code" && sortProduct === "-" ? (
+                                                            <i className="bi bi-sort-alpha-up-alt"></i>
+                                                        ) : null}
+                                                        {sortField === "delivery_note_code" && sortProduct === "" ? (
+                                                            <i className="bi bi-sort-alpha-up"></i>
+                                                        ) : null}
+                                                    </b>
+                                                </th>
+
+                                                <th>
+                                                    <b
+                                                        style={{
+                                                            textDecoration: "underline",
+                                                            cursor: "pointer",
+                                                        }}
+                                                        onClick={() => {
+                                                            sort("customer_name");
+                                                        }}
+                                                    >
+                                                        Customer
+                                                        {sortField === "customer_name" && sortProduct === "-" ? (
+                                                            <i className="bi bi-sort-alpha-up-alt"></i>
+                                                        ) : null}
+                                                        {sortField === "customer_name" && sortProduct === "" ? (
+                                                            <i className="bi bi-sort-alpha-up"></i>
+                                                        ) : null}
+                                                    </b>
+                                                </th>
+
+                                                <th>
+                                                    <b
+                                                        style={{
+                                                            textDecoration: "underline",
+                                                            cursor: "pointer",
+                                                        }}
+                                                        onClick={() => {
+                                                            sort("quantity");
+                                                        }}
+                                                    >
+                                                        Quantity
+                                                        {sortField === "quantity" && sortProduct === "-" ? (
+                                                            <i className="bi bi-sort-alpha-up-alt"></i>
+                                                        ) : null}
+                                                        {sortField === "quantity" && sortProduct === "" ? (
+                                                            <i className="bi bi-sort-alpha-up"></i>
+                                                        ) : null}
+                                                    </b>
+                                                </th>
+                                            </tr>
+                                        </thead>
+
+                                        <thead>
+                                            <tr className="text-center">
+                                                <th>
+                                                    <div style={{ minWidth: "100px" }}>
+                                                        <DatePicker
+                                                            id="date"
+                                                            value={dateValue}
+                                                            selected={selectedDate}
+                                                            className="form-control"
+                                                            dateFormat="MMM dd yyyy"
+                                                            isClearable={true}
+                                                            onChange={(date) => {
+                                                                if (!date) {
+                                                                    setDateValue("");
+                                                                    searchByDateField("date_str", "");
+                                                                    return;
+                                                                }
+                                                                searchByDateField("date_str", date);
+                                                                selectedDate = date;
+                                                                setSelectedDate(date);
+
+                                                            }}
+                                                        />
+                                                        <small
+                                                            style={{
+                                                                color: "blue",
+                                                                textDecoration: "underline",
+                                                                cursor: "pointer",
+                                                            }}
+                                                            onClick={(e) =>
+                                                                setShowDateRange(!showDateRange)
+                                                            }
+                                                        >
+                                                            {showDateRange ? "Less.." : "More.."}
+                                                        </small>
+                                                        <br />
+
+                                                        {showDateRange ? (
+                                                            <span className="text-left">
+                                                                From:{" "}
+                                                                <DatePicker
+                                                                    id="date_from"
+                                                                    value={fromDateValue}
+                                                                    selected={selectedFromDate}
+                                                                    className="form-control"
+                                                                    dateFormat="MMM dd yyyy"
+                                                                    isClearable={true}
+                                                                    onChange={(date) => {
+                                                                        if (!date) {
+                                                                            setFromDateValue("");
+                                                                            searchByDateField("from_date", "");
+                                                                            return;
+                                                                        }
+                                                                        searchByDateField("from_date", date);
+                                                                        selectedFromDate = date;
+                                                                        setSelectedFromDate(date);
+                                                                    }}
+                                                                />
+                                                                To:{" "}
+                                                                <DatePicker
+                                                                    id="date_to"
+                                                                    value={toDateValue}
+                                                                    selected={selectedToDate}
+                                                                    isClearable={true}
+                                                                    className="form-control"
+                                                                    dateFormat="MMM dd yyyy"
+                                                                    onChange={(date) => {
+                                                                        if (!date) {
+                                                                            setToDateValue("");
+                                                                            searchByDateField("to_date", "");
+                                                                            return;
+                                                                        }
+                                                                        searchByDateField("to_date", date);
+                                                                        selectedToDate = date;
+                                                                        setSelectedToDate(date);
+                                                                    }}
+                                                                />
+                                                            </span>
+                                                        ) : null}
+                                                    </div>
+                                                </th>
+                                                {!localStorage.getItem("store_id") ? <th>
+                                                    <input
+                                                        id="delivery_note_search_by_store_name"
+                                                        name="delivery_note_search_by_store_name"
+                                                        type="text"
+
+                                                        onChange={(e) =>
+                                                            searchByFieldValue("store_name", e.target.value)
+                                                        }
+                                                        className="form-control"
+                                                    />
+                                                </th> : ""}
+                                                <th>
+                                                    <input
+                                                        type="text"
+                                                        id="delivery_note_history_by_code"
+                                                        name="delivery_note_history_by_code"
+                                                        onChange={(e) =>
+                                                            searchByFieldValue("delivery_note_code", e.target.value)
+                                                        }
+                                                        className="form-control"
+                                                    />
+                                                </th>
+                                                <th>
+                                                    <Typeahead
+                                                        id="customer_id"
+                                                        filterBy={['additional_keywords']}
+                                                        labelKey="search_label"
+                                                        onChange={(selectedItems) => {
+                                                            searchByMultipleValuesField(
+                                                                "customer_id",
+                                                                selectedItems
+                                                            );
+                                                        }}
+                                                        options={customerOptions}
+                                                        placeholder="Customer Name | Mob | VAT # | ID"
+                                                        selected={selectedCustomers}
+                                                        highlightOnlyResult={true}
+                                                        onInputChange={(searchTerm, e) => {
+                                                            if (timerRef.current) clearTimeout(timerRef.current);
+                                                            timerRef.current = setTimeout(() => {
+                                                                suggestCustomers(searchTerm);
+                                                            }, 100);
+                                                        }}
+                                                        ref={customerSearchRef}
+                                                        onKeyDown={(e) => {
+                                                            if (e.key === "Escape") {
+                                                                setCustomerOptions([]);
+                                                                customerSearchRef.current?.clear();
+                                                            }
+                                                        }}
+                                                        multiple
+                                                    />
+                                                </th>
+
+                                                <th>
+                                                    <input
+                                                        id="delivery_note_history_by_quantity"
+                                                        name="delivery_note_history_by_quantity"
+                                                        type="text"
+                                                        onChange={(e) =>
+                                                            searchByFieldValue("quantity", e.target.value)
+                                                        }
+                                                        className="form-control"
+                                                    />
+                                                </th>
+                                            </tr>
+                                        </thead>
+
+                                        <tbody className="text-center">
+                                            {historyList &&
+                                                historyList.map((history) => (
+                                                    <tr key={history.id}>
+                                                        <td>
+                                                            {history.date ? format(
+                                                                new Date(history.date),
+                                                                "MMM dd yyyy h:mma"
+                                                            ) : "Not set"}
+                                                        </td>
+                                                        {!localStorage.getItem("store_id") ? <td>{history.store_name}</td> : ""}
+                                                        <td style={{
+                                                            textDecoration: "underline",
+                                                            color: "blue",
+                                                            cursor: "pointer",
+                                                        }}
+                                                            onClick={() => {
+                                                                openDeliveryNoteDetailsView(history.delivery_note_id);
+                                                            }}>{history.delivery_note_code}
+                                                        </td>
+                                                        <td style={{
+                                                            textDecoration: "underline",
+                                                            color: "blue",
+                                                            cursor: "pointer",
+                                                        }}
+                                                            onClick={() => {
+                                                                openCustomerDetailsView(history.customer_id);
+                                                            }}>{history.customer_name + (history.customer_name_arabic ? " | " + history.customer_name_arabic : "")}
+                                                        </td>
+                                                        <td>{history.quantity}{history.unit ? history.unit : ""}</td>
+
+                                                        {/* <td>   
+                                                        <button
+                                                            className="btn btn-outline-secondary dropdown-toggle"
+                                                            type="button"
+                                                            data-bs-toggle="dropdown"
+                                                            aria-expanded="false"
+                                                        ></button>
+                                                        <ul className="dropdown-menu">
+                                                            <li>
+                                                                <a href="/" className="dropdown-item">
+                                                                    <i className="bi bi-download"></i>
+                                                                    Download
+                                                                </a>
+                                                            </li>
+                                                        </ul>
+                                                      
+                                                                </td>
+                                                                 */}
+                                                    </tr>
+                                                ))}
+                                        </tbody>
+                                    </table>
+                                </div>
+
+                                {totalPages ? <ReactPaginate
+                                    breakLabel="..."
+                                    nextLabel="next >"
+                                    onPageChange={(event) => {
+                                        changePage(event.selected + 1);
+                                    }}
+                                    pageRangeDisplayed={5}
+                                    pageCount={totalPages}
+                                    previousLabel="< previous"
+                                    renderOnZeroPageCount={null}
+                                    className="pagination  flex-wrap"
+                                    pageClassName="page-item"
+                                    pageLinkClassName="page-link"
+                                    activeClassName="active"
+                                    previousClassName="page-item"
+                                    nextClassName="page-item"
+                                    previousLinkClassName="page-link"
+                                    nextLinkClassName="page-link"
+                                    forcePage={page - 1}
+                                /> : ""}
                             </div>
                         </div>
                     </div>
-                </Modal.Body>
-            </Modal>
+                </div>
+            </div>
+            {/*</Modal.Body>
+            </Modal>*/}
         </>);
 
 

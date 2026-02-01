@@ -14,12 +14,12 @@ import { trimTo2Decimals } from "../utils/numberUtils";
 import { trimTo8Decimals } from "../utils/numberUtils";
 import Preview from "./../order/preview.js";
 import { Dropdown } from 'react-bootstrap';
-import SalesHistory from "./../product/sales_history.js";
-import SalesReturnHistory from "./../product/sales_return_history.js";
-import PurchaseHistory from "./../product/purchase_history.js";
-import PurchaseReturnHistory from "./../product/purchase_return_history.js";
-import QuotationHistory from "./../product/quotation_history.js";
-import DeliveryNoteHistory from "./../product/delivery_note_history.js";
+import SalesHistory from "../utils/product_sales_history.js";
+import SalesReturnHistory from "./../utils/product_sales_return_history.js";
+import PurchaseHistory from "./../utils/product_purchase_history.js";
+import PurchaseReturnHistory from "./../utils/product_purchase_return_history.js";
+import QuotationHistory from "./../utils/product_quotation_history.js";
+import DeliveryNoteHistory from "./../utils/product_delivery_note_history.js";
 import Products from "../utils/products.js";
 import ResizableTableCell from './../utils/ResizableTableCell';
 import { OverlayTrigger, Tooltip } from 'react-bootstrap';
@@ -28,7 +28,8 @@ import { OverlayTrigger, Tooltip } from 'react-bootstrap';
 import ProductCreate from "./../product/create.js";
 import ProductView from "./../product/view.js";
 import ImageViewerModal from './../utils/ImageViewerModal';
-import ProductHistory from "./../product/product_history.js";
+//import ProductHistory from "./../product/product_history.js";
+import ProductHistory from "../utils/product_history.js";
 //import OverflowTooltip from "../utils/OverflowTooltip.js";
 import * as bootstrap from 'bootstrap';
 
@@ -277,6 +278,7 @@ const SalesReturnCreate = forwardRef((props, ref) => {
                     order_id: salesReturn.order_id,
                     store_id: salesReturn.store_id,
                     customer_id: salesReturn.customer_id,
+                    customer_name: salesReturn.customer_name,
                     date_str: salesReturn.date,
                     payments_input: salesReturn.payments,
                     cash_discount: salesReturn.cash_discount,

@@ -11,16 +11,15 @@ import "react-datepicker/dist/react-datepicker.css";
 //import { Button, Spinner, Badge, Tooltip, OverlayTrigger } from "react-bootstrap";
 import { Button, Spinner, Modal, Alert } from "react-bootstrap";
 import ReactPaginate from "react-paginate";
-import SalesHistory from "./sales_history.js";
-import ProductHistory from "./product_history.js";
-import SalesReturnHistory from "./sales_return_history.js";
+import SalesHistory from "../utils/product_sales_history.js";
+import SalesReturnHistory from "./../utils/product_sales_return_history.js";
 
-import PurchaseHistory from "./purchase_history.js";
-import PurchaseReturnHistory from "./purchase_return_history.js";
+import PurchaseHistory from "./../utils/product_purchase_history.js";
+import PurchaseReturnHistory from "./../utils/product_purchase_return_history.js";
 
-import QuotationHistory from "./quotation_history.js";
-import QuotationSalesReturnHistory from "./quotation_sales_return_history.js";
-import DeliveryNoteHistory from "./delivery_note_history.js";
+import QuotationHistory from "./../utils/product_quotation_history.js";
+import QuotationSalesReturnHistory from "./../utils/product_quotation_sales_return_history.js";
+import DeliveryNoteHistory from "./../utils/product_delivery_note_history.js";
 import OverflowTooltip from "../utils/OverflowTooltip.js";
 import Dropdown from 'react-bootstrap/Dropdown';
 import StatsSummary from "../utils/StatsSummary.js";
@@ -32,6 +31,7 @@ import ImageViewerModal from './../utils/ImageViewerModal';
 import Products from "../utils/products.js";
 import { DragDropContext, Droppable, Draggable } from "react-beautiful-dnd";
 import { OverlayTrigger, Tooltip } from "react-bootstrap";
+import ProductHistory from "../utils/product_history.js";
 
 const columnStyle = {
     width: '20%',
@@ -890,6 +890,7 @@ function ProductIndex(props) {
     }
 
     const ProductHistoryRef = useRef();
+
     function openProductHistory(model) {
         ProductHistoryRef.current.open(model);
     }

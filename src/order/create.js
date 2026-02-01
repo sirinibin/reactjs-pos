@@ -1,7 +1,9 @@
 import React, { useState, useEffect, useRef, forwardRef, useImperativeHandle, useCallback, useMemo } from "react";
 import OrderPreview from "./preview.js";
 import { Modal, Button, Alert } from "react-bootstrap";
-import ProductHistory from "./../product/product_history.js";
+//import ProductHistory from "./../product/product_history.js";
+import ProductHistory from "../utils/product_history.js";
+import SalesHistory from "../utils/product_sales_history.js";
 import CustomerCreate from "./../customer/create.js";
 import ProductCreate from "./../product/create.js";
 import UserCreate from "./../user/create.js";
@@ -20,13 +22,13 @@ import { Spinner } from "react-bootstrap";
 //import debounce from 'lodash.debounce';
 import ResizableTableCell from './../utils/ResizableTableCell';
 import { Dropdown } from 'react-bootstrap';
-import SalesHistory from "./../product/sales_history.js";
-import SalesReturnHistory from "./../product/sales_return_history.js";
-import PurchaseHistory from "./../product/purchase_history.js";
-import PurchaseReturnHistory from "./../product/purchase_return_history.js";
-import QuotationHistory from "./../product/quotation_history.js";
-import QuotationSalesReturnHistory from "./../product/quotation_sales_return_history.js";
-import DeliveryNoteHistory from "./../product/delivery_note_history.js";
+
+import SalesReturnHistory from "./../utils/product_sales_return_history.js";
+import PurchaseHistory from "./../utils/product_purchase_history.js";
+import PurchaseReturnHistory from "./../utils/product_purchase_return_history.js";
+import QuotationHistory from "./../utils/product_quotation_history.js";
+import QuotationSalesReturnHistory from "./../utils/product_quotation_sales_return_history.js";
+import DeliveryNoteHistory from "./../utils/product_delivery_note_history.js";
 import Products from "../utils/products.js";
 import Quotations from "./../utils/quotations.js";
 import Quotation from "./../quotation/create.js";
@@ -2797,7 +2799,6 @@ const OrderCreate = forwardRef((props, ref) => {
     function openLinkedProducts(model) {
         ProductsRef.current.open(true, "linked_products", model);
     }
-
 
     const SalesHistoryRef = useRef();
     function openSalesHistory(model) {

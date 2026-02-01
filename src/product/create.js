@@ -17,17 +17,20 @@ import countryList from 'react-select-country-list';
 import ImageGallery from '../utils/ImageGallery.js';
 import { trimTo2Decimals, trimTo8Decimals, trimTo4Decimals } from "../utils/numberUtils";
 import Amount from "../utils/amount.js";
-import SalesHistory from "./../product/sales_history.js";
-import SalesReturnHistory from "./../product/sales_return_history.js";
-import PurchaseHistory from "./../product/purchase_history.js";
-import PurchaseReturnHistory from "./../product/purchase_return_history.js";
-import QuotationHistory from "./../product/quotation_history.js";
-import QuotationSalesReturnHistory from "./../product/quotation_sales_return_history.js";
-import DeliveryNoteHistory from "./../product/delivery_note_history.js";
+import SalesHistory from "../utils/product_sales_history.js";
+import SalesReturnHistory from "./../utils/product_sales_return_history.js";
+import PurchaseHistory from "./../utils/product_purchase_history.js";
+import PurchaseReturnHistory from "./../utils/product_purchase_return_history.js";
+import QuotationHistory from "./../utils/product_quotation_history.js";
+import QuotationSalesReturnHistory from "./../utils/product_quotation_sales_return_history.js";
+
+import DeliveryNoteHistory from "./../utils/product_delivery_note_history.js";
 import Products from "../utils/products.js";
 import ImageViewerModal from './../utils/ImageViewerModal';
 import { highlightWords } from "../utils/search.js";
-import ProductHistory from "./../product/product_history.js";
+//import ProductHistory from "./../product/product_history.js";
+import ProductHistory from "../utils/product_history.js";
+
 import DatePicker from "react-datepicker";
 import { format } from "date-fns";
 
