@@ -1997,8 +1997,11 @@ async function reCalculate(productIndex) {
     }, [searchParams]);
 
     useEffect(() => {
-        loadWarehouses();
-    }, [loadWarehouses]);
+        if (show) {
+            loadWarehouses();
+        }
+
+    }, [loadWarehouses, show]);
 
 
     return (

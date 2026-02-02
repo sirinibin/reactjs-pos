@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useContext, useCallback, useMemo } from "react";
+import React, { useState, useEffect, useRef, forwardRef, useContext, useCallback, useMemo } from "react";
 import SalesReturnCreate from "./create.js";
 import SalesReturnView from "./view.js";
 
@@ -52,7 +52,9 @@ const TimeAgo = ({ date }) => {
     return <span>{formatDistanceToNowStrict(new Date(date), { locale: shortLocale })} ago</span>;
 };
 
-function SalesReturnIndex(props) {
+//function SalesReturnIndex(props) {
+const SalesReturnIndex = forwardRef((props, ref) => {
+
     let [enableSelection, setEnableSelection] = useState(false);
     let [pendingView, setPendingView] = useState(false);
 
@@ -952,6 +954,13 @@ function SalesReturnIndex(props) {
         }
     }
 
+
+
+
+    /*function changePageSize(size) {
+        setPageSize(parseInt(size));
+    }*/
+
     const list = useCallback(() => {
         setExcelData([]);
 
@@ -1052,6 +1061,18 @@ function SalesReturnIndex(props) {
     }, [sortSalesReturn, sortField, page, pageSize, statsOpen, searchParams, props.order]);
 
     useEffect(() => {
+        list();
+        /*
+        const timer = setTimeout(() => {
+            list();
+        }, 300);
+
+        // Cleanup to avoid memory leaks
+        return () => clearTimeout(timer);
+        */
+    }, [pageSize, list]);
+
+    useEffect(() => {
         if (statsOpen) {
             list();  // Call list() whenever statsOpen changes to true
         }
@@ -1071,7 +1092,7 @@ function SalesReturnIndex(props) {
     useEffect(() => {
         const handleSocketOpen = () => {
             //console.log("WebSocket Opened in sales list");
-            list();
+            // list();
         };
 
         eventEmitter.on("socket_connection_open", handleSocketOpen);
@@ -1088,22 +1109,6 @@ function SalesReturnIndex(props) {
         setSortSalesReturn(sortSalesReturn);
         list();
     }
-
-    useEffect(() => {
-        const timer = setTimeout(() => {
-            list();
-        }, 300);
-
-        // Cleanup to avoid memory leaks
-        return () => clearTimeout(timer);
-    }, [pageSize, list]);
-
-
-    function changePageSize(size) {
-        setPageSize(parseInt(size));
-    }
-
-
 
     function changePage(newPage) {
         page = parseInt(newPage);
@@ -1848,34 +1853,34 @@ function SalesReturnIndex(props) {
                                         )}
                                     </div>
                                     <div className="col text-end">
-                                        {totalItems > 0 && (
-                                            <>
-                                                <label className="form-label">Size:&nbsp;</label>
-                                                <select
-                                                    value={pageSize}
-                                                    onChange={(e) => {
-                                                        changePageSize(e.target.value);
-                                                    }}
-                                                    className="form-control pull-right"
-                                                    style={{
-                                                        bsalesreturn: "solid 1px",
-                                                        bsalesreturnColor: "silver",
-                                                        width: "55px",
-                                                    }}
-                                                >
-                                                    <option value="5">
-                                                        5
-                                                    </option>
-                                                    <option value="10">
-                                                        10
-                                                    </option>
-                                                    <option value="20">20</option>
-                                                    <option value="40">40</option>
-                                                    <option value="50">50</option>
-                                                    <option value="100">100</option>
-                                                </select>
-                                            </>
-                                        )}
+                                        <>
+                                            <label className="form-label">Size:&nbsp;</label>
+                                            <select
+                                                value={pageSize}
+                                                onChange={(e) => {
+                                                    //changePageSize(e.target.value);
+                                                    setPageSize(parseInt(e.target.value));
+                                                }}
+                                                className="form-control pull-right"
+                                                style={{
+                                                    bsalesreturn: "solid 1px",
+                                                    bsalesreturnColor: "silver",
+                                                    width: "55px",
+                                                }}
+                                            >
+                                                <option value="5">
+                                                    5
+                                                </option>
+                                                <option value="10">
+                                                    10
+                                                </option>
+                                                <option value="20">20</option>
+                                                <option value="40">40</option>
+                                                <option value="50">50</option>
+                                                <option value="100">100</option>
+                                            </select>
+                                        </>
+
                                     </div>
                                 </div>
 
@@ -3305,6 +3310,6 @@ function SalesReturnIndex(props) {
             </Modal>
         </>
     );
-}
+});
 
 export default SalesReturnIndex;

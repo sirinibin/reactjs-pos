@@ -3631,10 +3631,10 @@ const OrderCreate = forwardRef((props, ref) => {
     }, [searchParams]);
 
     useEffect(() => {
-        loadWarehouses();
-    }, [loadWarehouses]);
-
-
+        if (show) {
+            loadWarehouses();
+        }
+    }, [loadWarehouses, show]);
 
     return (
         <>

@@ -521,7 +521,7 @@ function ExpenseIndex(props) {
 
 
         //list();
-        getStore(localStorage.getItem("store_id"));
+        //getStore(localStorage.getItem("store_id"));
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
@@ -680,8 +680,12 @@ function ExpenseIndex(props) {
         setStatsOpen(isOpen);
     };
 
+
+
     useEffect(() => {
-        list();
+        if (statsOpen) {
+            list();  // Call list() whenever statsOpen changes to true
+        }
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [statsOpen]);
 

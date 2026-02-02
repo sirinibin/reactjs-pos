@@ -222,17 +222,9 @@ const PurchaseCreate = forwardRef((props, ref) => {
     }, []);
 
 
-    useEffect(() => {
-        console.log("inside change on formData:", formData);
-        // localStorage
-
-    });
-
-
     //const history = useHistory();
     let [errors, setErrors] = useState({});
     const [isProcessing, setProcessing] = useState(false);
-
 
     //fields
     let [formData, setFormData] = useState({
@@ -2519,8 +2511,10 @@ const PurchaseCreate = forwardRef((props, ref) => {
     }, [searchParams]);
 
     useEffect(() => {
-        loadWarehouses();
-    }, [loadWarehouses]);
+        if (show) {
+            loadWarehouses();
+        }
+    }, [loadWarehouses, show]);
 
 
     return (

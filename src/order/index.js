@@ -60,19 +60,10 @@ const OrderIndex = forwardRef((props, ref) => {
     let [pendingView, setPendingView] = useState(false);
 
     const dragRef = useRef(null);
-    const { lastMessage } = useContext(WebSocketContext);
-
-
-
-
     let [allOrders, setAllOrders] = useState([]);
     let [excelData, setExcelData] = useState([]);
     let [salesReportFileName, setSalesReportFileName] = useState("Sales Report");
     let [fettingAllRecordsInProgress, setFettingAllRecordsInProgress] = useState(false);
-
-
-
-
 
     function prepareExcelData() {
         console.log("Inside prepareExcelData()");
@@ -1096,6 +1087,8 @@ const OrderIndex = forwardRef((props, ref) => {
     }, [statsOpen, list]);
 
 
+    const { lastMessage } = useContext(WebSocketContext);
+
     useEffect(() => {
         if (lastMessage) {
             const jsonMessage = JSON.parse(lastMessage.data);
@@ -1112,7 +1105,7 @@ const OrderIndex = forwardRef((props, ref) => {
     useEffect(() => {
         const handleSocketOpen = () => {
             //console.log("WebSocket Opened in sales list");
-            list();
+            //list();
         };
 
         eventEmitter.on("socket_connection_open", handleSocketOpen);
@@ -1143,21 +1136,29 @@ const OrderIndex = forwardRef((props, ref) => {
     */
 
     // Add this effect:
-    useEffect(() => {
-        list();
-    }, [pageSize, list]);
+    /* useEffect(() => {
+         list();
+     }, [pageSize, list]);*/
+    /* useEffect(() => {
+         const timer = setTimeout(() => {
+             list();
+         }, 300);
+ 
+         // Cleanup to avoid memory leaks
+         return () => clearTimeout(timer);
+     }, [pageSize, list]);*/
 
-    function changePageSize(size) {
-        // pageSize = parseInt(size);
-        setPageSize(parseInt(size));
-
-        /*
-                if (timerRef.current) clearTimeout(timerRef.current);
-        
-                timerRef.current = setTimeout(() => {
-                    list();
-                }, 100);*/
-    }
+    /* function changePageSize(size) {
+         // pageSize = parseInt(size);
+         setPageSize(parseInt(size));
+ 
+         /*
+                 if (timerRef.current) clearTimeout(timerRef.current);
+         
+                 timerRef.current = setTimeout(() => {
+                     list();
+                 }, 100);*/
+    // }
 
     useEffect(() => {
         list();
@@ -1411,6 +1412,7 @@ const OrderIndex = forwardRef((props, ref) => {
 
 
     let [showReportPreview, setShowReportPreview] = useState(false);
+
     const ReportPreviewRef = useRef();
     function openReportPreview() {
         showReportPreview = true;
@@ -1909,7 +1911,8 @@ const OrderIndex = forwardRef((props, ref) => {
                                                 <select
                                                     value={pageSize}
                                                     onChange={(e) => {
-                                                        changePageSize(e.target.value);
+                                                        //changePageSize(e.target.value);
+                                                        setPageSize(parseInt(e.target.value));
                                                     }}
                                                     className="form-control pull-right"
                                                     style={{

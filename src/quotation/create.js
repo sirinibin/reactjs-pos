@@ -2564,8 +2564,11 @@ async function checkWarning(i) {
   }, [searchParams]);
 
   useEffect(() => {
-    loadWarehouses();
-  }, [loadWarehouses]);
+    if (show) {
+      loadWarehouses();
+    }
+
+  }, [loadWarehouses, show]);
 
   return (
     <>

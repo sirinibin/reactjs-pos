@@ -402,9 +402,9 @@ const StockTransferIndex = forwardRef((props, ref) => {
     */
 
     // Add this effect:
-    useEffect(() => {
-        list();
-    }, [pageSize, list]);
+    /* useEffect(() => {
+         list();
+     }, [pageSize, list]);*/
 
     function changePageSize(size) {
         // pageSize = parseInt(size);
