@@ -14,6 +14,9 @@ const ProductQuotationSalesReturnHistory = forwardRef((props, ref) => {
             product = model;
             setProduct(product);
 
+            selectedCustomers = [];
+            setSelectedCustomers([]);
+
             if (selectedCustomersValue?.length > 0) {
                 selectedCustomers = selectedCustomersValue;
                 setSelectedCustomers([...selectedCustomersValue]);

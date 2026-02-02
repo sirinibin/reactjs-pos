@@ -21,6 +21,9 @@ const ProductQuotationHistory = forwardRef((props, ref) => {
                 setSelectedType(typeValue);
             }
 
+            selectedCustomers = [];
+            setSelectedCustomers([]);
+
             if (selectedCustomersValue?.length > 0) {
                 selectedCustomers = selectedCustomersValue;
                 setSelectedCustomers([...selectedCustomersValue]);

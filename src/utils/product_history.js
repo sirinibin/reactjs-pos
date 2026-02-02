@@ -15,6 +15,12 @@ const ProductHistory = forwardRef((props, ref) => {
             product = model;
             setProduct(product);
 
+            selectedCustomers = [];
+            setSelectedCustomers([]);
+
+            selectedVendors = [];
+            setSelectedVendors([]);
+
             if (selectedCustomersValue?.length > 0) {
                 selectedCustomers = selectedCustomersValue;
                 setSelectedCustomers([...selectedCustomers]);

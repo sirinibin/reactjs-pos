@@ -14,6 +14,9 @@ const ProductPurchaseHistory = forwardRef((props, ref) => {
             product = model;
             setProduct(product);
 
+            selectedVendors = [];
+            setSelectedVendors([]);
+
             if (selectedVendorsValue?.length > 0) {
                 selectedVendors = selectedVendorsValue;
                 setSelectedVendors([...selectedVendorsValue]);
