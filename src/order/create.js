@@ -2829,8 +2829,8 @@ const OrderCreate = forwardRef((props, ref) => {
 
 
     const QuotationHistoryRef = useRef();
-    function openQuotationHistory(model) {
-        QuotationHistoryRef.current.open(model, selectedCustomers, "quotation");
+    function openQuotationHistory(model, type) {
+        QuotationHistoryRef.current.open(model, selectedCustomers, type);
     }
 
     function openQuotationSalesHistory(model) {
@@ -2874,9 +2874,9 @@ const OrderCreate = forwardRef((props, ref) => {
             salesReturnHistory: "F9",
             purchaseHistory: "F6",
             purchaseReturnHistory: "F8",
-            deliveryNoteHistory: "F3",
+            deliveryNoteHistory: "Ctrl + Shift + P",
             quotationHistory: "F2",
-            quotationSalesHistory: "Ctrl + Shift + P",
+            quotationSalesHistory: "F3",
             quotationSalesReturnHistory: "Ctrl + Shift + Z",
             images: "Ctrl + Shift + F",
         },
@@ -2924,11 +2924,11 @@ const OrderCreate = forwardRef((props, ref) => {
             } else if (event.key === "F8") {
                 openPurchaseReturnHistory(product);
             } else if (event.key === "F3") {
-                openDeliveryNoteHistory(product);
+                openQuotationSalesHistory(product);
             } else if (event.key === "F2") {
                 openQuotationHistory(product);
             } else if (isCmdOrCtrl && event.shiftKey && event.key.toLowerCase() === 'p') {
-                openQuotationSalesHistory(product);
+                openDeliveryNoteHistory(product);
             } else if (isCmdOrCtrl && event.shiftKey && event.key.toLowerCase() === 'z') {
                 openQuotationSalesReturnHistory(product);
             } else if (isCmdOrCtrl && event.shiftKey && event.key.toLowerCase() === 'f') {
@@ -2951,7 +2951,7 @@ const OrderCreate = forwardRef((props, ref) => {
             } else if (event.key === "F3") {
                 openDeliveryNoteHistory(product);
             } else if (event.key === "F2") {
-                openQuotationHistory(product);
+                openQuotationHistory(product, "quotation");
             } else if (isCmdOrCtrl && event.shiftKey && event.key.toLowerCase() === '7') {
                 openQuotationSalesHistory(product);
             } else if (isCmdOrCtrl && event.shiftKey && event.key.toLowerCase() === '8') {
@@ -4920,7 +4920,7 @@ const OrderCreate = forwardRef((props, ref) => {
                                                                     Delivery Note History ({getShortcut('deliveryNoteHistory')})
                                                                 </Dropdown.Item>
 
-                                                                <Dropdown.Item onClick={() => openQuotationHistory(product)}>
+                                                                <Dropdown.Item onClick={() => openQuotationHistory(product, "quotation")}>
                                                                     <i className="bi bi-clock-history"></i>&nbsp;
                                                                     Quotation History ({getShortcut('quotationHistory')})
                                                                 </Dropdown.Item>
