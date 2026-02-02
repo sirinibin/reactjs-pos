@@ -45,7 +45,7 @@ const PurchaseReturnHistory = forwardRef((props, ref) => {
         setSelectedVendors([]);
         searchParams["vendor_id"] = "";
 
-        setProduct({ ...props.model });
+        setProduct(props.model);
         if (props.selectedVendors?.length > 0) {
             setSelectedVendors(props.selectedVendors)
             searchByMultipleValuesField("vendor_id", props.selectedVendors);

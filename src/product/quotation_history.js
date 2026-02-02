@@ -49,7 +49,7 @@ const QuotationHistory = forwardRef((props, ref) => {
         setSelectedCustomers([]);
         searchParams["customer_id"] = "";
 
-        setProduct({ ...props.model });
+        setProduct(props.model);
         if (props.selectedCustomers?.length > 0) {
             setSelectedCustomers(props.selectedCustomers)
             searchByMultipleValuesField("customer_id", props.selectedCustomers, true);

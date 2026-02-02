@@ -90,7 +90,11 @@ const ProductSalesReturnHistory = forwardRef((props, ref) => {
                 </Modal.Header>
                 <Modal.Body>
                     <>
-                        {show && <ProductSalesReturnHistoryTable ref={ProductSalesReturnHistoryTableRef} model={product} selectedCustomers={selectedCustomers} />}
+                        {show && <ProductSalesReturnHistoryTable
+                            ref={ProductSalesReturnHistoryTableRef}
+                            model={product}
+                            selectedCustomers={selectedCustomers}
+                        />}
                     </>
                 </Modal.Body>
             </Modal>

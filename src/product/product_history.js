@@ -63,7 +63,7 @@ const ProductHistory = forwardRef((props, ref) => {
         searchParams["vendor_id"] = "";
 
         // product = props.model;
-        setProduct({ ...props.model });
+        setProduct(props.model);
         if (props.selectedCustomers?.length > 0) {
             setSelectedCustomers(props.selectedCustomers)
             searchByMultipleValuesField("customer_id", props.selectedCustomers);

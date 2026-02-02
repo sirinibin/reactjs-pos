@@ -16,6 +16,8 @@ import VendorCreate from "./../vendor/create.js";
 
 const PurchaseHistory = forwardRef((props, ref) => {
     const [statsOpen, setStatsOpen] = useState(false);
+    let [product, setProduct] = useState({});
+
     /*
     useImperativeHandle(ref, () => ({
         open(model, selectedVendors) {
@@ -42,7 +44,11 @@ const PurchaseHistory = forwardRef((props, ref) => {
         setSelectedVendors([]);
         searchParams["vendor_id"] = "";
 
-        setProduct({ ...props.product });
+        // setProduct(props.product);
+        // product = props.product;
+        //setProduct({ ...props.product });
+
+        setProduct(props.model);
         if (props.selectedVendors?.length > 0) {
             setSelectedVendors(props.selectedVendors)
             searchByMultipleValuesField("vendor_id", props.selectedVendors);
@@ -53,7 +59,7 @@ const PurchaseHistory = forwardRef((props, ref) => {
         setShow(true);
 
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, []);
+    }, [product, props.product]);
 
     useEffect(() => {
         const handleKeyDown = (e) => {
@@ -163,7 +169,7 @@ const PurchaseHistory = forwardRef((props, ref) => {
         setVendorOptions(data.result);
     }
 
-    let [product, setProduct] = useState({});
+
 
 
 
