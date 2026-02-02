@@ -1991,6 +1991,7 @@ const ProductHistory = forwardRef((props, ref) => {
                                                                                 type === "sales" ||
                                                                                 type === "purchase_return" ||
                                                                                 type === "quotation_sales" ||
+                                                                                type === "quotation_invoice" ||
                                                                                 type === "stock_adjustment_by_removing"
                                                                             ) {
                                                                                 return `Stock Removed from ${warehouse}`;
