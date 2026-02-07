@@ -48,8 +48,6 @@ const VendorPending = forwardRef((props, ref) => {
                 }
             ];
 
-
-
             setSelectedVendors([...selectedVendors]);
 
             if (selectedVendors?.length > 0) {
@@ -69,8 +67,8 @@ const VendorPending = forwardRef((props, ref) => {
             ];
             setSelectedPaymentStatusList([...selectedPaymentStatusList]);
 
-            selectedVendors = [];
-            setSelectedVendors([...selectedVendors]);
+            selectedCustomers = [];
+            setSelectedCustomers([...selectedCustomers]);
 
             SetShow(true);
         },
