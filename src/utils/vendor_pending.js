@@ -1,0 +1,411 @@
+import React, { useState, useRef, forwardRef, useImperativeHandle } from "react";
+import { Modal } from "react-bootstrap";
+import "react-datepicker/dist/react-datepicker.css";
+import Draggable from "react-draggable";
+import OrderIndex from "../order/index.js";
+import SalesReturnIndex from "../sales_return/index.js";
+import QuotationIndex from "../quotation/index.js";
+import QuotationSalesReturnIndex from "../quotation_sales_return/index.js";
+import PurchaseIndex from "../purchase/index.js";
+import PurchaseReturnIndex from "../purchase_return/index.js";
+import Tab from 'react-bootstrap/Tab';
+import Tabs from 'react-bootstrap/Tabs';
+import Badge from 'react-bootstrap/Badge';
+import Button from 'react-bootstrap/Button';
+import { trimTo2Decimals } from "../utils/numberUtils";
+import Amount from "../utils/amount.js";
+import PostingIndex from "./../posting/index.js";
+//import { set } from "date-fns";
+
+const VendorPending = forwardRef((props, ref) => {
+    const dragRef = useRef(null);
+    let [selectedCustomers, setSelectedCustomers] = useState([]);
+    let [selectedVendors, setSelectedVendors] = useState([]);
+    let [selectedPaymentStatusList, setSelectedPaymentStatusList] = useState([]);
+    let [enableSelection, setEnableSelection] = useState(false);
+
+    let [customer, setCustomer] = useState({});
+    let [vendor, setVendor] = useState({});
+
+    useImperativeHandle(ref, () => ({
+        open(enableSelectionValue, vendorValue) {
+            vendor = vendorValue;
+            setVendor(vendor);
+
+            getVendor(vendorValue.id)
+
+
+            enableSelection = enableSelectionValue;
+            setEnableSelection(enableSelection);
+
+
+            selectedVendors = [
+                {
+                    id: vendor.id,
+                    name: vendor.name,
+                    vat_no: vendor.vat_no,
+                    search_label: vendor.search_label,
+                }
+            ];
+
+
+
+            setSelectedVendors([...selectedVendors]);
+
+            if (selectedVendors?.length > 0) {
+                getCustomer(selectedVendors[0].name, selectedVendors[0].vat_no);
+            }
+
+
+            selectedPaymentStatusList = [
+                {
+                    id: "not_paid",
+                    name: "Not Paid",
+                },
+                {
+                    id: "paid_partially",
+                    name: "Paid partially",
+                }
+            ];
+            setSelectedPaymentStatusList([...selectedPaymentStatusList]);
+
+            selectedVendors = [];
+            setSelectedVendors([...selectedVendors]);
+
+            SetShow(true);
+        },
+    }));
+
+
+    function ObjectToSearchQueryParams(object) {
+        return Object.keys(object)
+            .map(function (key) {
+                return `search[${key}]=${object[key]}`;
+            })
+            .join("&");
+    }
+
+    const [show, SetShow] = useState(false);
+
+    function handleClose() {
+        SetShow(false);
+    };
+
+    const handleSelected = (selected) => {
+        props.onSelectSale(selected); // Send to parent
+        handleClose();
+    };
+
+    const handleUpdated = () => {
+        getVendor(vendor?.id)
+        if (vendor?.vat_no) {
+            getCustomer(vendor?.name, vendor?.vat_no);
+        }
+
+        if (props.handleUpdated) {
+            props.handleUpdated();
+        }
+    };
+
+    // props.onSelectSale(selected); // Send to parent
+    //     handleClose();
+
+    /*
+    let [creditSales, setCreditSales] = useState(0);
+
+    const handleCreditSalesLoaded = (creditValue) => {
+        alert("okk" + creditValue);
+        setCreditSales(creditValue);
+        console.log("Credit value loaded:", creditValue);
+    };*/
+
+    async function getCustomer(name, vat_no) {
+        if (!vat_no || !name) {
+            return;
+        }
+        console.log("inside get Customer");
+        const requestOptions = {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': localStorage.getItem('access_token'),
+            },
+        };
+
+        let searchParams = {};
+        if (localStorage.getItem("store_id")) {
+            searchParams.store_id = localStorage.getItem("store_id");
+        }
+        let queryParams = ObjectToSearchQueryParams(searchParams);
+
+        await fetch('/v1/customer/vat_no/name?vat_no=' + vat_no + '&name=' + name + "&" + queryParams, requestOptions)
+            .then(async response => {
+                const isJson = response.headers.get('content-type')?.includes('application/json');
+                const data = isJson && await response.json();
+
+                // check for error response
+                if (!response.ok) {
+                    const error = (data && data.errors);
+                    return Promise.reject(error);
+                }
+
+                console.log("Customer Response:");
+                console.log(data);
+                let customerValue = data.result;
+                customer = customerValue;
+                setCustomer(customer);
+
+                selectedCustomers = [
+                    {
+                        id: customerValue.id,
+                        name: customerValue.name,
+                        search_label: customerValue.search_label,
+                    }
+                ];
+                setSelectedCustomers([...selectedCustomers]);
+
+
+            })
+            .catch(error => {
+
+            });
+    }
+
+
+    async function getVendor(id) {
+        console.log("inside get Vendor");
+        const requestOptions = {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': localStorage.getItem('access_token'),
+            },
+        };
+
+        let searchParams = {};
+        if (localStorage.getItem("store_id")) {
+            searchParams.store_id = localStorage.getItem("store_id");
+        }
+        let queryParams = ObjectToSearchQueryParams(searchParams);
+
+        await fetch('/v1/vendor/' + id + "?" + queryParams, requestOptions)
+            .then(async response => {
+                const isJson = response.headers.get('content-type')?.includes('application/json');
+                const data = isJson && await response.json();
+
+                // check for error response
+                if (!response.ok) {
+                    const error = (data && data.errors);
+                    return Promise.reject(error);
+                }
+
+                console.log("Vendor Response:");
+                console.log(data);
+                let vendorData = data.result;
+                vendor = vendorData
+                setVendor(vendor);
+            })
+            .catch(error => {
+
+            });
+    }
+
+
+    let [showBalanceSheet, setShowAccountBalanceSheet] = useState(false);
+    const timerRef = useRef(null);
+    const AccountBalanceSheetRef = useRef();
+    function openBalanceSheetDialogue(account) {
+        setShowAccountBalanceSheet(true);
+
+        if (timerRef.current) clearTimeout(timerRef.current);
+        timerRef.current = setTimeout(() => {
+            AccountBalanceSheetRef.current?.open(account);
+        }, 100);
+    }
+
+    return (
+        <>
+            {showBalanceSheet && <PostingIndex ref={AccountBalanceSheetRef} />}
+            <Modal show={show} fullscreen onHide={handleClose} animation={false} scrollable={true}
+                backdrop={false}                // ✅ Allow editing background
+                keyboard={false}
+                centered={false}                // ❌ disable auto-centering
+                enforceFocus={false}            // ✅ allow focus outside
+                dialogAs={({ children, ...props }) => (
+                    <Draggable handle=".modal-header" nodeRef={dragRef}>
+                        <div
+                            ref={dragRef}
+                            className="modal-dialog modal-fullscreen"    // ✅ preserve Bootstrap xl class
+                            {...props}
+                            style={{
+                                position: "absolute",
+                                top: "0%",
+                                left: "0%",
+                                transform: "translate(-50%, -50%)",
+                                margin: "0",
+                                zIndex: 1055,
+                                width: "100%",           // Full width inside container
+                            }}
+                        >
+                            <div className="modal-content">{children}</div>
+                        </div>
+                    </Draggable>
+                )}
+            >
+                <Modal.Header>
+                    <Modal.Title>{enableSelection ? "Select Sale" : vendor.code + "/" + vendor?.name + "'s Pendings "}
+                    </Modal.Title>
+
+
+                    <div className="col align-self-end text-end">
+                        <Button variant="primary" disabled={!vendor.account} onClick={() => {
+                            openBalanceSheetDialogue(vendor.account)
+                        }} >
+                            Balance Sheet
+                            <Badge bg="danger" style={{ marginLeft: "2px" }}>
+                                <Amount amount={trimTo2Decimals(vendor.credit_balance)} />
+                            </Badge>
+
+                        </Button>
+
+                        <button
+                            type="button"
+                            className="btn-close"
+                            onClick={handleClose}
+                            aria-label="Close"
+                        ></button>
+
+                    </div>
+                </Modal.Header>
+                <Modal.Body>
+                    <>
+
+                        <Tabs
+                            defaultActiveKey="purchase"
+                            id="uncontrolled-tab-example"
+                            className="mb-3"
+                        >
+                            <Tab eventKey="purchase" title={
+                                <>
+                                    Purchases <Badge bg={vendor?.stores ? vendor?.stores[localStorage.getItem("store_id")]?.["purchase_balance_amount"] > 0 ? "danger" : "secondary" : "secondary"}>
+                                        <Amount amount={vendor?.stores ? trimTo2Decimals(vendor?.stores[localStorage.getItem("store_id")]?.["purchase_balance_amount"]) : 0} />
+                                    </Badge>
+                                </>
+                            }
+
+                            >
+                                <PurchaseIndex
+                                    handleUpdated={handleUpdated}
+                                    enableSelection={enableSelection}
+                                    selectedVendors={selectedVendors}
+                                    selectedPaymentStatusList={selectedPaymentStatusList}
+                                    pendingView={true}
+                                />
+                            </Tab>
+                            <Tab eventKey="purchase_return"
+                                title={
+                                    <>
+                                        Purchases Returns <Badge bg={vendor?.stores ? vendor?.stores[localStorage.getItem("store_id")]?.["purchase_return_balance_amount"] > 0 ? "danger" : "secondary" : "secondary"}>
+                                            <Amount amount={vendor?.stores ? trimTo2Decimals(vendor?.stores[localStorage.getItem("store_id")]?.["purchase_return_balance_amount"]) : 0} />
+                                        </Badge>
+                                    </>
+                                }
+                            >
+                                <PurchaseReturnIndex
+                                    handleUpdated={handleUpdated}
+                                    enableSelection={enableSelection}
+                                    selectedVendors={selectedVendors}
+                                    selectedPaymentStatusList={selectedPaymentStatusList}
+                                    pendingView={true}
+                                />
+                            </Tab>
+
+                            <Tab eventKey="sales"
+                                disabled={!selectedCustomers?.length}
+                                title={
+                                    <>
+                                        Sales <Badge bg={customer?.stores ? customer?.stores[localStorage.getItem("store_id")]?.["sales_balance_amount"] > 0 ? "danger" : "secondary" : "secondary"}>
+                                            <Amount amount={customer?.stores ? trimTo2Decimals(customer?.stores[localStorage.getItem("store_id")]?.["sales_balance_amount"]) : 0} />
+                                        </Badge>
+                                    </>
+                                }>
+                                <OrderIndex
+                                    handleUpdated={handleUpdated}
+                                    enableSelection={enableSelection}
+                                    onSelectSale={handleSelected}
+                                    selectedCustomers={selectedCustomers}
+                                    selectedPaymentStatusList={selectedPaymentStatusList}
+                                    pendingView={true}
+                                />
+                            </Tab>
+                            <Tab eventKey="salesReturn"
+                                disabled={!selectedCustomers?.length}
+                                title={
+                                    <>
+                                        Sales Return <Badge bg={customer?.stores ? customer?.stores[localStorage.getItem("store_id")]?.["sales_return_balance_amount"] > 0 ? "danger" : "secondary" : "secondary"}>
+                                            <Amount amount={customer?.stores ? trimTo2Decimals(customer?.stores[localStorage.getItem("store_id")]?.["sales_return_balance_amount"]) : 0} />
+                                        </Badge>
+                                    </>
+                                }>
+                                <SalesReturnIndex
+                                    handleUpdated={handleUpdated}
+                                    enableSelection={enableSelection}
+                                    onSelectSale={handleSelected}
+                                    selectedCustomers={selectedCustomers}
+                                    selectedPaymentStatusList={selectedPaymentStatusList}
+                                    pendingView={true}
+                                />
+                            </Tab>
+                            <Tab eventKey="quotation_sales"
+                                disabled={!selectedCustomers?.length}
+                                title={
+                                    <>
+                                        Qtn. Sales <Badge bg={customer?.stores ? customer?.stores[localStorage.getItem("store_id")]?.["quotation_invoice_balance_amount"] > 0 ? "danger" : "secondary" : "secondary"}>
+                                            <Amount amount={customer?.stores ? trimTo2Decimals(customer?.stores[localStorage.getItem("store_id")]?.["quotation_invoice_balance_amount"]) : 0} />
+                                        </Badge>
+                                    </>
+                                }>
+                                <QuotationIndex
+                                    handleUpdated={handleUpdated}
+                                    enableSelection={enableSelection}
+                                    onSelectSale={handleSelected}
+                                    type={"invoice"}
+                                    selectedCustomers={selectedCustomers}
+                                    selectedPaymentStatusList={selectedPaymentStatusList}
+                                    pendingView={true}
+
+                                />
+                            </Tab>
+                            <Tab eventKey="quotation_sales_return"
+                                disabled={!selectedCustomers?.length}
+                                title={
+                                    <>
+                                        Qtn. Sales Return <Badge bg={customer?.stores ? customer?.stores[localStorage.getItem("store_id")]?.["quotation_sales_return_balance_amount"] > 0 ? "danger" : "secondary" : "secondary"}>
+                                            <Amount amount={customer?.stores ? trimTo2Decimals(customer?.stores[localStorage.getItem("store_id")]?.["quotation_sales_return_balance_amount"]) : 0} />
+                                        </Badge>
+                                    </>
+                                }>
+                                <QuotationSalesReturnIndex
+                                    handleUpdated={handleUpdated}
+                                    enableSelection={enableSelection}
+                                    onSelectSale={handleSelected}
+                                    type={"invoice"}
+                                    selectedCustomers={selectedCustomers}
+                                    selectedPaymentStatusList={selectedPaymentStatusList}
+                                    pendingView={true}
+
+                                />
+                            </Tab>
+
+                        </Tabs>
+
+                    </>
+                </Modal.Body>
+            </Modal >
+        </>);
+
+
+});
+
+export default VendorPending;
+

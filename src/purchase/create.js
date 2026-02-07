@@ -9,7 +9,7 @@ import { Typeahead, Menu, MenuItem } from "react-bootstrap-typeahead";
 import NumberFormat from "react-number-format";
 import DatePicker from "react-datepicker";
 import { format } from "date-fns";
-import { Spinner } from "react-bootstrap";
+import { Spinner, Badge } from "react-bootstrap";
 import ProductView from "./../product/view.js";
 import { trimTo2Decimals, trimTo8Decimals } from "../utils/numberUtils";
 import ResizableTableCell from './../utils/ResizableTableCell';
@@ -35,6 +35,7 @@ import { DragDropContext, Droppable, Draggable } from "react-beautiful-dnd";
 import PurchaseReturnCreate from "../purchase_return/create.js";
 import VendorWithdrawalCreate from "../customer_withdrawal/create.js";
 import SalesUpdateForm from "../order/create.js";
+import VendorPending from "./../utils/vendor_pending.js";
 
 const columnStyle = {
     width: '20%',
@@ -413,7 +414,8 @@ const PurchaseCreate = forwardRef((props, ref) => {
                         {
                             id: purchase.vendor_id,
                             name: purchase.vendor_name,
-                            search_label: purchase.vendor.search_label,
+                            search_label: purchase.vendor?.search_label || "",
+                            credit_balance: purchase.vendor?.credit_balance || 0,
                         }
                     ];
                     setSelectedVendors([...selectedVendors]);
@@ -2517,8 +2519,54 @@ const PurchaseCreate = forwardRef((props, ref) => {
     }, [loadWarehouses, show]);
 
 
+    function openVendorUpdateForm(id) {
+        VendorCreateFormRef.current.open(id);
+    }
+
+
+    const handleVendorUpdated = (updatedVendor) => {
+
+        // alert(updatedVendor);
+        if (updatedVendor.name && updatedVendor.id) {
+            // alert("updatedVendor.vendor_name:" + updatedVendor.name);
+            let selectedVendors = [
+                {
+                    id: updatedVendor.id,
+                    name: updatedVendor.name,
+                    search_label: updatedVendor.search_label,
+                }
+            ];
+            setSelectedVendors([...selectedVendors]);
+
+            formData.vendor_id = updatedVendor.id;
+            if (updatedVendor.use_remarks_in_sales && updatedVendor.remarks) {
+                formData.remarks = updatedVendor.remarks;
+            }
+
+            if (updatedVendor.phone && !formData.phone) {
+                formData.phone = updatedVendor.phone;
+            }
+
+            setFormData({ ...formData });
+        }
+    };
+
+
+    let [showVendorPending, setShowVendorPending] = useState(false);
+
+    const VendorPendingRef = useRef();
+    function openVendorPending(vendor) {
+        setShowVendorPending(true);
+        if (timerRef.current) clearTimeout(timerRef.current);
+        timerRef.current = setTimeout(() => {
+            VendorPendingRef.current?.open(false, vendor);
+        }, 50);
+    }
+
     return (
         <>
+
+            {showVendorPending && <VendorPending ref={VendorPendingRef} />}
             {showReferenceUpdateForm && <>
                 <VendorWithdrawalCreate ref={VendorWithdrawalUpdateFormRef} onUpdated={handleReferenceUpdated} />
                 <SalesUpdateForm ref={SalesUpdateFormRef} onUpdated={handleReferenceUpdated} />
@@ -2666,7 +2714,7 @@ const PurchaseCreate = forwardRef((props, ref) => {
 
             <UserCreate ref={UserCreateFormRef} showToastMessage={props.showToastMessage} />
             <SignatureCreate ref={SignatureCreateFormRef} showToastMessage={props.showToastMessage} />
-            <VendorCreate ref={VendorCreateFormRef} showToastMessage={props.showToastMessage} />
+            <VendorCreate ref={VendorCreateFormRef} onUpdated={handleVendorUpdated} />
             <Modal show={show} size="xl" fullscreen onHide={handleClose} animation={false} backdrop="static" scrollable={true}>
                 <Modal.Header>
                     <Modal.Title>
@@ -2858,6 +2906,16 @@ const PurchaseCreate = forwardRef((props, ref) => {
                                 }}
                             />
                             <Button hide={true.toString()} onClick={openVendorCreateForm} className="btn btn-outline-secondary btn-primary btn-sm" type="button" id="button-addon1"> <i className="bi bi-plus-lg"></i> New</Button>
+
+                            {selectedVendors.length > 0 && formData.vendor_id && <Button style={{ marginLeft: "8px" }} variant="btn btn-sm btn-primary" onClick={() => {
+                                openVendorPending(selectedVendors[0]);
+                            }} >
+                                Pendings
+                                <Badge bg="danger" style={{ marginLeft: "2px" }}>
+                                    <Amount amount={trimTo2Decimals(selectedVendors[0]?.credit_balance)} />
+                                </Badge>
+                            </Button>}
+
                             {errors.vendor_id && (
                                 <div style={{ color: "red" }}>
                                     {errors.vendor_id}
@@ -2865,6 +2923,13 @@ const PurchaseCreate = forwardRef((props, ref) => {
                             )}
                         </div>
                         <div className="col-md-1">
+
+                            {formData.vendor_id && <><Button className="btn btn-default" style={{ marginTop: "30px" }} onClick={() => {
+                                openVendorUpdateForm(formData.vendor_id);
+                            }}>
+                                <i class="bi bi-pencil"></i>
+                            </Button>&nbsp;</>}
+
                             <Button className="btn btn-primary" style={{ marginTop: "30px" }} onClick={openVendors}>
                                 <i class="bi bi-list"></i>
                             </Button>

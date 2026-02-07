@@ -13,7 +13,7 @@ const CustomerView = forwardRef((props, ref) => {
                 await getCustomer(id);
                 if (timerRef.current) clearTimeout(timerRef.current);
                 timerRef.current = setTimeout(() => {
-                    ImageGalleryRef.current.open();
+                    ImageGalleryRef.current?.open();
                 }, 300);
 
                 SetShow(true);
