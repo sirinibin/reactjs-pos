@@ -451,7 +451,8 @@ const OrderCreate = forwardRef((props, ref) => {
                         {
                             id: formData.customer_id,
                             name: formData.customer_name,
-                            search_label: formData.customer.search_label,
+                            vat_no: formData.customer?.vat_no || "",
+                            search_label: formData.customer?.search_label || "",
                             credit_balance: formData.customer?.credit_balance || 0,
                         }
                     ];

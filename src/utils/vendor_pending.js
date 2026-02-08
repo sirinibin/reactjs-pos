@@ -29,6 +29,12 @@ const VendorPending = forwardRef((props, ref) => {
 
     useImperativeHandle(ref, () => ({
         open(enableSelectionValue, vendorValue) {
+            vendor = {}
+            setVendor(vendor);
+            customer = {};
+            setCustomer(customer);
+
+
             vendor = vendorValue;
             setVendor(vendor);
 

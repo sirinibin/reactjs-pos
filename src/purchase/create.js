@@ -414,6 +414,7 @@ const PurchaseCreate = forwardRef((props, ref) => {
                         {
                             id: purchase.vendor_id,
                             name: purchase.vendor_name,
+                            vat_no: purchase.vendor?.vat_no || "",
                             search_label: purchase.vendor?.search_label || "",
                             credit_balance: purchase.vendor?.credit_balance || 0,
                         }

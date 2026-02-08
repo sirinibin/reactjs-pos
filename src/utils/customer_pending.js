@@ -29,6 +29,11 @@ const CustomerPending = forwardRef((props, ref) => {
 
     useImperativeHandle(ref, () => ({
         open(enableSelectionValue, customerValue) {
+            vendor = {}
+            setVendor(vendor);
+            customer = {};
+            setCustomer(customer);
+
             customer = customerValue
             setCustomer(customer);
 
@@ -121,10 +126,12 @@ const CustomerPending = forwardRef((props, ref) => {
     };*/
 
     async function getVendor(name, vat_no) {
+        console.log("inside get Vendor");
         if (!vat_no || !name) {
+            console.log("cancelling get Vendor");
             return;
         }
-        console.log("inside get Customer");
+
         const requestOptions = {
             method: 'GET',
             headers: {
@@ -150,7 +157,7 @@ const CustomerPending = forwardRef((props, ref) => {
                     return Promise.reject(error);
                 }
 
-                console.log("Customer Response:");
+                console.log("Vendor Response:");
                 console.log(data);
                 let vendorValue = data.result;
                 vendor = vendorValue;
