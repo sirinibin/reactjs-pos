@@ -719,6 +719,8 @@ function ExpenseIndex(props) {
                 { title: "الرقم التسلسلي - S/L No.", width: { wch: 18 }, style: { fill: { patternType: "solid", fgColor: { rgb: "FFCCEEFF" } }, font: { vertAlign: true, bold: true }, alignment: { horizontal: "center", vertical: "center" } } },//pixels width 
                 { title: "تاريخ الفاتورة - Date of Invoice", width: { wch: 25 }, style: { fill: { patternType: "solid", fgColor: { rgb: "FFCCEEFF" } }, font: { vertAlign: true, bold: true }, alignment: { horizontal: "center", vertical: "center" } } },//pixels width
                 { title: "رقم الفاتورة - Invoice Number", width: { wch: 50 }, style: { fill: { patternType: "solid", fgColor: { rgb: "FFCCEEFF" } }, font: { vertAlign: true, bold: true }, alignment: { horizontal: "center", vertical: "center" } } },//pixels width
+                { title: "وصف - Description", width: { wch: 25 }, style: { fill: { patternType: "solid", fgColor: { rgb: "FFCCEEFF" } }, font: { vertAlign: true, bold: true }, alignment: { horizontal: "center", vertical: "center" } } },//pixels width
+                { title: "فئة - Category", width: { wch: 25 }, style: { fill: { patternType: "solid", fgColor: { rgb: "FFCCEEFF" } }, font: { vertAlign: true, bold: true }, alignment: { horizontal: "center", vertical: "center" } } },//pixels 
                 { title: "اسم المورد بالعربية - Supplier Name", width: { wch: 90 }, style: { fill: { patternType: "solid", fgColor: { rgb: "FFCCEEFF" } }, font: { vertAlign: true, bold: true }, alignment: { horizontal: "center", vertical: "center" } } },//pixels width
                 { title: "الرقمالضريبيللمورد - Supplier VAT No", width: { wch: 30 }, style: { fill: { patternType: "solid", fgColor: { rgb: "FFCCEEFF" } }, font: { vertAlign: true, bold: true }, alignment: { horizontal: "center", vertical: "center" } } },//pixels width
                 { title: "المبلغ قبل الضريبة - Amount Before VAT", width: { wch: 30 }, style: { fill: { patternType: "solid", fgColor: { rgb: "FFCCEEFF" } }, font: { vertAlign: true, bold: true }, alignment: { horizontal: "center", vertical: "center" } } },//pixels width
@@ -767,6 +769,8 @@ function ExpenseIndex(props) {
                     { value: invoiceCount, style: { alignment: { horizontal: "center" } } },
                     { value: expenseDate, style: { alignment: { horizontal: "center" } } },
                     { value: invoiceNo, style: { alignment: { horizontal: "center" } } },
+                    { value: expense.description ? expense.description : "", style: { alignment: { horizontal: "center" } } },
+                    { value: expense.category_name[0] ? expense.category_name[0] : "", style: { alignment: { horizontal: "center" } } },
                     { value: expense.vendor_name ? (expense.vendor_name + (expense.vendor_name_arabic ? " | " + expense.vendor_name_arabic : "")) : "" },
                     { value: supplierVatNo ? supplierVatNo : "", style: { alignment: { horizontal: "center" } } },
                     { value: amountBeforeVAT.toFixed(2), style: { alignment: { horizontal: "right" } } },
@@ -788,9 +792,13 @@ function ExpenseIndex(props) {
             { value: "", },
             { value: "", },
             { value: "", },
+            { value: "", },
+            { value: "", },
         ]);
 
         excelData[0].data.push([
+            { value: "", },
+            { value: "", },
             { value: "", },
             { value: "", },
             { value: "", },
