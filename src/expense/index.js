@@ -57,6 +57,7 @@ function ExpenseIndex(props) {
     //Created By Expense Auto Suggestion
     const [categoryOptions, setCategoryOptions] = useState([]);
     const [selectedExpenseCategories, setSelectedExpenseCategories] = useState([]);
+    const [selectedExcludeExpenseCategories, setSelectedExcludeExpenseCategories] = useState([]);
 
 
     useEffect(() => {
@@ -256,6 +257,8 @@ function ExpenseIndex(props) {
             setSelectedCreatedByUsers(values);
         } else if (field === "category_id") {
             setSelectedExpenseCategories(values);
+        } else if (field === "exclude_category_id") {
+            setSelectedExcludeExpenseCategories(values);
         } else if (field === "payment_method") {
             setSelectedPaymentMethodList(values);
         } else if (field === "vendor_id") {
@@ -1472,6 +1475,33 @@ function ExpenseIndex(props) {
                                                                 options={categoryOptions}
                                                                 placeholder="Select Categories"
                                                                 selected={selectedExpenseCategories}
+                                                                highlightOnlyResult={true}
+                                                                onInputChange={(searchTerm, e) => {
+                                                                    suggestCategories(searchTerm);
+                                                                }}
+                                                                ref={categorySearchRef}
+                                                                onKeyDown={(e) => {
+                                                                    if (e.key === "Escape") {
+                                                                        setCategoryOptions([]);
+                                                                        categorySearchRef.current?.clear();
+                                                                    }
+                                                                }}
+                                                                multiple
+                                                            />
+                                                            Excl.
+                                                            <Typeahead
+                                                                id="exclude_category_id"
+
+                                                                labelKey="name"
+                                                                onChange={(selectedItems) => {
+                                                                    searchByMultipleValuesField(
+                                                                        "exclude_category_id",
+                                                                        selectedItems
+                                                                    );
+                                                                }}
+                                                                options={categoryOptions}
+                                                                placeholder="Select Excl. Categories"
+                                                                selected={selectedExcludeExpenseCategories}
                                                                 highlightOnlyResult={true}
                                                                 onInputChange={(searchTerm, e) => {
                                                                     suggestCategories(searchTerm);
