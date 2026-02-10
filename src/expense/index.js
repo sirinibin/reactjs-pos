@@ -1444,7 +1444,7 @@ function ExpenseIndex(props) {
                                                             col.key !== "select" &&
                                                             col.key !== "date" &&
                                                             col.key !== "payment_method" &&
-                                                            col.key !== "category_name" &&
+                                                            col.key !== "category" &&
                                                             col.key !== "created_by" &&
                                                             col.key !== "created_at" &&
                                                             col.key !== "actions_end" &&
@@ -1458,9 +1458,10 @@ function ExpenseIndex(props) {
                                                                 }
                                                                 className="form-control"
                                                             /></th>}
-                                                        {col.key === "category_name" && <th>
+                                                        {(col.fieldName === "category_name") && <th>
                                                             <Typeahead
                                                                 id="category_id"
+
                                                                 labelKey="name"
                                                                 onChange={(selectedItems) => {
                                                                     searchByMultipleValuesField(
@@ -1485,6 +1486,7 @@ function ExpenseIndex(props) {
                                                                 multiple
                                                             />
                                                         </th>}
+
                                                         {col.key === "vendor" && <th>
                                                             <Typeahead
                                                                 id="vendor_id"

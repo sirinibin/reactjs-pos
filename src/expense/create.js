@@ -27,6 +27,9 @@ const ExpenseCreate = forwardRef((props, ref) => {
     useImperativeHandle(ref, () => ({
         open(id) {
 
+            selectedVendors = [];
+            setSelectedVendors(selectedVendors);
+
 
             selectedCategories = [];
             setSelectedCategories(selectedCategories);
