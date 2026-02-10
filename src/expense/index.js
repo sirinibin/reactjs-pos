@@ -261,6 +261,8 @@ function ExpenseIndex(props) {
             setSelectedExcludeExpenseCategories(values);
         } else if (field === "payment_method") {
             setSelectedPaymentMethodList(values);
+        } else if (field === "exclude_payment_method") {
+            setSelectedExcludePaymentMethodList(values);
         } else if (field === "vendor_id") {
             setSelectedVendors(values);
         }
@@ -532,6 +534,8 @@ function ExpenseIndex(props) {
     const [userOptions, setUserOptions] = useState([]);
     const [selectedCreatedByUsers, setSelectedCreatedByUsers] = useState([]);
     const [selectedPaymentMethodList, setSelectedPaymentMethodList] = useState([]);
+    const [selectedExcludePaymentMethodList, setSelectedExcludePaymentMethodList] = useState([]);
+
     const paymentMethodOptions = [
         {
             id: "cash",
@@ -1562,6 +1566,22 @@ function ExpenseIndex(props) {
                                                                 options={paymentMethodOptions}
                                                                 placeholder="Select payment method"
                                                                 selected={selectedPaymentMethodList}
+                                                                highlightOnlyResult={true}
+                                                                multiple
+                                                            />
+                                                            Excl.
+                                                            <Typeahead
+                                                                id="exclude_payment_method"
+                                                                labelKey="name"
+                                                                onChange={(selectedItems) => {
+                                                                    searchByMultipleValuesField(
+                                                                        "exclude_payment_method",
+                                                                        selectedItems
+                                                                    );
+                                                                }}
+                                                                options={paymentMethodOptions}
+                                                                placeholder="Select Excl. payment method"
+                                                                selected={selectedExcludePaymentMethodList}
                                                                 highlightOnlyResult={true}
                                                                 multiple
                                                             />
