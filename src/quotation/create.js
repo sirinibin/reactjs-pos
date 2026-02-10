@@ -677,24 +677,27 @@ const QuotationCreate = forwardRef((props, ref) => {
     // Fetch page 1 and page 2 in parallel
     const urls = [
       "/v1/product?" + Select + queryString + "&limit=200&page=1&sort=-country_name",
-      "/v1/product?" + Select + queryString + "&limit=200&page=2&sort=-country_name"
+      "/v1/product?" + Select + queryString + "&limit=200&page=2&sort=-country_name",
+      "/v1/product?" + Select + queryString + "&limit=200&page=3&sort=-country_name"
     ];
 
-    const [result1, result2] = await Promise.all([
+    const [result1, result2, result3] = await Promise.all([
       fetch(urls[0], requestOptions),
-      fetch(urls[1], requestOptions)
+      fetch(urls[1], requestOptions),
+      fetch(urls[2], requestOptions)
     ]);
 
     const data1 = await result1.json();
     const data2 = await result2.json();
-
+    const data3 = await result3.json();
     // Only update if this is the latest request
     if (latestRequestRef.current !== requestId) return;
 
     // Combine results from both pages
     let products = [
       ...(data1.result || []),
-      ...(data2.result || [])
+      ...(data2.result || []),
+      ...(data3.result || [])
     ];
 
     if (!products || products.length === 0) {
