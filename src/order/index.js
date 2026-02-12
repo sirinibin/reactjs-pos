@@ -1706,7 +1706,7 @@ const OrderIndex = forwardRef((props, ref) => {
                 setShowPrintTypeSelection(showPrintTypeSelection);
             }} centered>
                 <Modal.Header closeButton>
-                    <Modal.Title>Select Print Type</Modal.Title>
+                    <Modal.Title>{t("Select Print Type")}</Modal.Title>
                 </Modal.Header>
                 <Modal.Body className="d-flex justify-content-around">
                     <Button variant="secondary" ref={printButtonRef} onClick={() => {
@@ -1720,7 +1720,7 @@ const OrderIndex = forwardRef((props, ref) => {
                             }, 100);
                         }
                     }}>
-                        <i className="bi bi-printer"></i> Print
+                        <i className="bi bi-printer"></i> {t("Print")}
                     </Button>
 
                     <Button variant="primary" ref={printA4ButtonRef} onClick={() => {
@@ -1736,7 +1736,7 @@ const OrderIndex = forwardRef((props, ref) => {
                             }
                         }}
                     >
-                        <i className="bi bi-printer"></i> Print A4 Invoice
+                        <i className="bi bi-printer"></i> {t("Print A4 Invoice")}
                     </Button>
                 </Modal.Body>
             </Modal>

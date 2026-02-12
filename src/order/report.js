@@ -5,11 +5,14 @@ import ReportContent from './reportContent.js';
 //import { useReactToPrint } from 'react-to-print';
 import html2pdf from 'html2pdf.js';
 import "./print.css";
+import { useTranslation } from 'react-i18next';
 //import jsPDF from "jspdf";
 //import html2canvas from "html2canvas";
 
 
 const ReportPreview = forwardRef((props, ref) => {
+    const { t } = useTranslation('common');
+
     let [modelName, setModelName] = useState("sales_report");
     let [model, setModel] = useState({});
     const [show, setShow] = useState(props.show);
@@ -1158,7 +1161,7 @@ const ReportPreview = forwardRef((props, ref) => {
             <Modal.Header className="d-flex flex-wrap align-items-center justify-content-between">
                 {/* Left: Title */}
                 <div className="flex-grow-1">
-                    <Modal.Title>{formatModelName(modelName)} Preview</Modal.Title>
+                    <Modal.Title>{t(`${formatModelName(modelName)} Preview`)}</Modal.Title>
                 </div>
 
                 {/* Right: Fixed control block */}
@@ -1167,13 +1170,13 @@ const ReportPreview = forwardRef((props, ref) => {
                     {showSlider && (
                         <div className="d-flex align-items-center border rounded bg-light p-2">
                             <button className="btn btn-outline-secondary" onClick={decrement}>−</button>
-                            <span className="mx-2">Font Size: {fontSizes[modelName + "_" + selectedText]?.size}</span>
+                            <span className="mx-2">{t("Font Size")}: {fontSizes[modelName + "_" + selectedText]?.size}</span>
                             <button className="btn btn-outline-secondary" onClick={increment}>+</button>
                             <button className="btn-close ms-2" onClick={() => setShowSlider(false)}></button>
                         </div>
                     )}
 
-                    <label htmlFor="font-select">Select Font: </label>
+                    <label htmlFor="font-select">{t("Select Font")}: </label>
                     <select id="font-select" value={fontSizes[modelName + "_font"]} onChange={handleFontChange}>
                         {fonts.map((font) => (
                             <option key={font.value} value={font.value}>
@@ -1200,7 +1203,7 @@ const ReportPreview = forwardRef((props, ref) => {
                                 saveToLocalStorage("fontSizes", fontSizes);
                             }}
                         />
-                        <label htmlFor="storeHeaderCheck" className="form-check-label">Show Store Header</label>
+                        <label htmlFor="storeHeaderCheck" className="form-check-label">{t("Show Store Header")}</label>
                     </div>}
 
 
@@ -1209,14 +1212,14 @@ const ReportPreview = forwardRef((props, ref) => {
 
                     {<div className="d-flex align-items-center border rounded bg-light p-2" style={{ marginRight: "200px" }}>
                         <button className="btn btn-outline-secondary" onClick={() => decrementSize(modelName + "_marginTop")}>−</button>
-                        <span className="mx-2">Margin Top: {fontSizes[modelName + "_marginTop"]?.size}</span>
+                        <span className="mx-2">{t("Margin Top")}: {fontSizes[modelName + "_marginTop"]?.size}</span>
                         <button className="btn btn-outline-secondary" onClick={() => incrementSize(modelName + "_marginTop")}>+</button>
 
                     </div>}
 
                     <div className="col ">
                         <>
-                            <label className="form-label">Page Size:&nbsp;</label>
+                            <label className="form-label">{t("Page Size")}:&nbsp;</label>
                             <select
                                 value={fontSizes[modelName + "_reportPageSize"]}
                                 onChange={(e) => {
@@ -1270,7 +1273,7 @@ const ReportPreview = forwardRef((props, ref) => {
                             className="me-2"
                         >
                             <>
-                                <i className="bi bi-printer"></i> Print
+                                <i className="bi bi-printer"></i> {t("Print")}
                             </>
                         </Button>
                         <button className="btn-close" onClick={handleClose} aria-label="Close"></button>

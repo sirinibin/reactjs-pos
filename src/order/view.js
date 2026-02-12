@@ -7,8 +7,10 @@ import OrderPrint from './print.js';
 import { format } from "date-fns";
 import { QRCodeCanvas } from "qrcode.react";
 import { trimTo2Decimals } from "../utils/numberUtils";
+import { useTranslation } from 'react-i18next';
 
 const OrderView = forwardRef((props, ref) => {
+    const { t } = useTranslation('common');
 
     let [salesID, setSalesID] = useState("");
     useImperativeHandle(ref, () => ({
@@ -147,7 +149,7 @@ const OrderView = forwardRef((props, ref) => {
 
 
     function getOrder(id) {
-        console.log("inside get Order");
+        // console.log("inside get Order");
         const requestOptions = {
             method: 'GET',
             headers: {
@@ -177,8 +179,8 @@ const OrderView = forwardRef((props, ref) => {
 
                 // setErrors({});
 
-                console.log("Response:");
-                console.log(data);
+                // console.log("Response:");
+                // console.log(data);
 
                 model = data.result;
 
@@ -211,7 +213,7 @@ const OrderView = forwardRef((props, ref) => {
     let [store, setStore] = useState({});
 
     async function getStore(id) {
-        console.log("inside get Store");
+        // console.log("inside get Store");
         const requestOptions = {
             method: 'GET',
             headers: {
@@ -231,8 +233,8 @@ const OrderView = forwardRef((props, ref) => {
                     return Promise.reject(error);
                 }
 
-                console.log("Response:");
-                console.log(data);
+                //console.log("Response:");
+                //console.log(data);
                 store = data.result;
                 setStore({ ...store });
             })
@@ -357,7 +359,7 @@ const OrderView = forwardRef((props, ref) => {
             setShowPrintTypeSelection(showPrintTypeSelection);
         }} centered>
             <Modal.Header closeButton>
-                <Modal.Title>Select Print Type</Modal.Title>
+                <Modal.Title>{t("Select Print Type")}</Modal.Title>
             </Modal.Header>
             <Modal.Body className="d-flex justify-content-around">
 
@@ -372,7 +374,7 @@ const OrderView = forwardRef((props, ref) => {
                         }, 100);
                     }
                 }}>
-                    <i className="bi bi-printer"></i> Print
+                    <i className="bi bi-printer"></i> {t("Print")}
                 </Button>
 
                 <Button variant="primary" ref={printA4ButtonRef} onClick={() => {
@@ -388,7 +390,7 @@ const OrderView = forwardRef((props, ref) => {
                         }
                     }}
                 >
-                    <i className="bi bi-printer"></i> Print A4 Invoice
+                    <i className="bi bi-printer"></i> {t("Print A4 Invoice")}
                 </Button>
             </Modal.Body>
         </Modal >
@@ -397,28 +399,28 @@ const OrderView = forwardRef((props, ref) => {
         <OrderPrint ref={PrintRef} />
         <Modal show={show} size="xl" onHide={handleClose} animation={false} scrollable={true}>
             <Modal.Header>
-                <Modal.Title>Details of Sales Order #{model.code}</Modal.Title>
+                <Modal.Title>{t("Details of Sales")} #{model.code}</Modal.Title>
 
                 <div className="col align-self-end text-end">
                     {props.openCreateForm ? <Button variant="primary" onClick={() => {
                         handleClose();
                         props.openCreateForm();
                     }}>
-                        <i className="bi bi-plus"></i> Create
+                        <i className="bi bi-plus"></i> {t("Create")}
                     </Button> : ""}
                     &nbsp;&nbsp;
 
                     <Button variant="secondary" onClick={() => {
                         openPrint();
                     }}>
-                        <i className="bi bi-printer"></i> Print
+                        <i className="bi bi-printer"></i> {t("Print")}
                     </Button>
 
                     &nbsp;&nbsp;
                     <Button variant="primary" onClick={() => {
                         openPreview();
                     }}>
-                        <i className="bi bi-printer"></i> Print A4 Invoice
+                        <i className="bi bi-printer"></i> {t("Print A4 Invoice")}
                     </Button>
 
                     &nbsp;&nbsp;
@@ -433,7 +435,7 @@ const OrderView = forwardRef((props, ref) => {
                         type="button"
                         className="btn-close"
                         onClick={handleClose}
-                        aria-label="Close"
+                        aria-label={t("Close")}
                     ></button>
 
                 </div>
@@ -445,19 +447,19 @@ const OrderView = forwardRef((props, ref) => {
                     <table className="table table-striped table-sm table-bordered">
                         <thead>
                             <tr className="text-center">
-                                <th>SI No.</th>
-                                <th>Part No.</th>
-                                <th>Name</th>
-                                <th>Qty</th>
-                                <th>Unit Price</th>
-                                <th>Disc.</th>
-                                <th>Disc. %</th>
-                                <th>Price</th>
-                                <th>Qty Returned</th>
-                                <th>Purchase Unit Price</th>
-                                <th>Purchase Price</th>
-                                <th>Profit</th>
-                                <th>Loss</th>
+                                <th>{t("SI No.")}</th>
+                                <th>{t("Part No.")}</th>
+                                <th>{t("Name")}</th>
+                                <th>{t("Qty")}</th>
+                                <th>{t("Unit Price")}</th>
+                                <th>{t("Disc.")}</th>
+                                <th>{t("Disc. %")}</th>
+                                <th>{t("Price")}</th>
+                                <th>{t("Qty Returned")}</th>
+                                <th>{t("Purchase Unit Price")}</th>
+                                <th>{t("Purchase Price")}</th>
+                                <th>{t("Profit")}</th>
+                                <th>{t("Loss")}</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -543,7 +545,7 @@ const OrderView = forwardRef((props, ref) => {
                                 </tr>
                             ))}
                             <tr>
-                                <th colSpan="7" className="text-end">Total</th>
+                                <th colSpan="7" className="text-end">{t("Total")}</th>
                                 <td className="text-end">
                                     {model.total ? <NumberFormat
                                         value={trimTo2Decimals(model.total)}
@@ -576,7 +578,7 @@ const OrderView = forwardRef((props, ref) => {
                             </tr>
                             <tr>
                                 <th colSpan="7" className="text-end">
-                                    Shipping / Handling Fees
+                                    {t("Shipping / Handling Fees")}
                                 </th>
                                 <td className="text-end">
                                     {model.shipping_handling_fees ? <NumberFormat
@@ -593,7 +595,7 @@ const OrderView = forwardRef((props, ref) => {
                             </tr>
                             <tr>
                                 <th colSpan="7" className="text-end">
-                                    Discount
+                                    {t("Discount")}
                                 </th>
                                 <td className="text-end">
                                     {model.discount ? <NumberFormat
@@ -621,7 +623,7 @@ const OrderView = forwardRef((props, ref) => {
                                 </td>
                             </tr>
                             <tr>
-                                <th colSpan="7" className="text-end">VAT {trimTo2Decimals(model.vat_percent) + "%"}</th>
+                                <th colSpan="7" className="text-end">{t("VAT {{vatPercent}}%", { vatPercent: trimTo2Decimals(model.vat_percent) })}</th>
                                 <td className="text-end">
                                     <NumberFormat
                                         value={trimTo2Decimals(model.vat_price)}
@@ -636,7 +638,7 @@ const OrderView = forwardRef((props, ref) => {
                                 <td className="text-end">0.00</td>
                             </tr>
                             <tr>
-                                <th colSpan="7" className="text-end">Net Total Before Rounding</th>
+                                <th colSpan="7" className="text-end">{t("Net Total Before Rounding")}</th>
                                 <th className="text-end">
                                     <NumberFormat
                                         value={trimTo2Decimals((model.net_total - model.rounding_amount))}
@@ -653,7 +655,7 @@ const OrderView = forwardRef((props, ref) => {
                                 <td className="text-end">0.00</td>
                             </tr>
                             <tr>
-                                <th colSpan="7" className="text-end">Rounding Amount</th>
+                                <th colSpan="7" className="text-end">{t("Rounding Amount")}</th>
                                 <th className="text-end">
                                     <NumberFormat
                                         value={trimTo2Decimals(model.rounding_amount)}
@@ -670,7 +672,7 @@ const OrderView = forwardRef((props, ref) => {
                                 <td className="text-end">0.00</td>
                             </tr>
                             <tr>
-                                <th colSpan="7" className="text-end">Net Total</th>
+                                <th colSpan="7" className="text-end">{t("Net Total")}</th>
                                 <th className="text-end">
                                     <NumberFormat
                                         value={trimTo2Decimals(model.net_total)}
@@ -680,7 +682,7 @@ const OrderView = forwardRef((props, ref) => {
                                         renderText={(value, props) => value}
                                     />
                                 </th>
-                                <th colSpan={3} className="text-end">Cash discount</th>
+                                <th colSpan={3} className="text-end">{t("Cash discount")}</th>
                                 <td className="text-end">
                                     <NumberFormat
                                         value={trimTo2Decimals(model.cash_discount)}
@@ -694,7 +696,7 @@ const OrderView = forwardRef((props, ref) => {
                             </tr>
                             <tr>
                                 <td colSpan="8"></td>
-                                <th colSpan="3" className="text-end">Commission</th>
+                                <th colSpan="3" className="text-end">{t("Commission")}</th>
                                 <th className="text-end">
                                     <NumberFormat
                                         value={trimTo2Decimals(model.commission)}
@@ -710,7 +712,7 @@ const OrderView = forwardRef((props, ref) => {
                             </tr>
                             <tr>
                                 <td colSpan="8"></td>
-                                <th colSpan="3" className="text-end">Net Profit / Loss</th>
+                                <th colSpan="3" className="text-end">{t("Net Profit / Loss")}</th>
                                 <th className="text-end">
                                     <NumberFormat
                                         value={trimTo2Decimals(model.net_profit)}
@@ -734,35 +736,35 @@ const OrderView = forwardRef((props, ref) => {
                     </table>
                 </div>
 
-                <h4>Zatca Info</h4>
+                <h4>{t("Zatca Info")}</h4>
                 <Table striped bordered hover responsive="xl">
                     <tbody>
                         <tr>
-                            <td><b>Zatca reporting/clearance passed</b><br /> {model.zatca?.reporting_passed ? "YES" : "NO"}</td>
-                            <td><b>Zatca reporting/clearance passed At</b><br /> {model.zatca?.reporting_passed_at ? format(
+                            <td><b>{t("Zatca reporting/clearance passed")}</b><br /> {model.zatca?.reporting_passed ? t("YES") : t("NO")}</td>
+                            <td><b>{t("Zatca reporting/clearance passed At")}</b><br /> {model.zatca?.reporting_passed_at ? format(
                                 new Date(model.zatca?.reporting_passed_at),
                                 "MMM dd yyyy h:mm:ssa"
                             ) : "Not set"} </td>
-                            <td><b>Reported Invoice Hash</b><br />{model.zatca?.reporting_invoice_hash}</td>
+                            <td><b>{t("Reported Invoice Hash")}</b><br />{model.zatca?.reporting_invoice_hash}</td>
                         </tr>
                         <tr>
-                            <td><b>Signing time</b><br />{model.zatca?.signing_time ? format(
+                            <td><b>{t("Signing time")}</b><br />{model.zatca?.signing_time ? format(
                                 new Date(model.zatca?.signing_time),
                                 "MMM dd yyyy h:mm:ssa"
                             ) : "Not set"}</td>
                             <td>
                                 {model.zatca?.qr_code ? <QRCodeCanvas value={model.zatca?.qr_code} style={{ width: "128px", height: "128px" }} size={128} /> : ""}
                             </td>
-                            <td><b>Previous Invoice Hash(PIH)</b><br /> {model.prev_hash}</td>
+                            <td><b>{t("Previous Invoice Hash")} (PIH)</b><br /> {model.prev_hash}</td>
                         </tr>
                         <tr>
-                            <td><b>Compliance check failed count</b><br />{model.zatca?.compliance_check_failed_count}</td>
-                            <td><b>Compliance check last failed at</b><br />{model.zatca?.compliance_check_last_failed_at ? format(
+                            <td><b>{t("Compliance check failed count")}</b><br />{model.zatca?.compliance_check_failed_count}</td>
+                            <td><b>{t("Compliance check last failed at")}</b><br />{model.zatca?.compliance_check_last_failed_at ? format(
                                 new Date(model.zatca?.compliance_check_last_failed_at),
                                 "MMM dd yyyy h:mm:ssa"
                             ) : "Not set"}</td>
                             <td>
-                                <b>Compliance check errors:</b>
+                                <b>{t("Compliance check errors")}:</b>
                                 <ol>
                                     {model.zatca?.compliance_check_errors &&
                                         model.zatca?.compliance_check_errors.map((error) => (
@@ -770,13 +772,13 @@ const OrderView = forwardRef((props, ref) => {
                                         ))}
                                 </ol>
                             </td>
-                            <td><b>Reporting failed count</b><br />{model.zatca?.reporting_failed_count}</td>
-                            <td><b>Reporting last failed at</b><br />{model.zatca?.reporting_last_failed_at ? format(
+                            <td><b>{t("Reporting failed count")}</b><br />{model.zatca?.reporting_failed_count}</td>
+                            <td><b>{t("Reporting last failed at")}</b><br />{model.zatca?.reporting_last_failed_at ? format(
                                 new Date(model.zatca?.reporting_last_failed_at),
                                 "MMM dd yyyy h:mm:ssa"
                             ) : "Not set"}</td>
                             <td>
-                                <b>Reporting errors:</b>
+                                <b>{t("Reporting errors")}:</b>
                                 <ol>
                                     {model.zatca?.reporting_errors &&
                                         model.zatca?.reporting_errors.map((error) => (
@@ -794,41 +796,41 @@ const OrderView = forwardRef((props, ref) => {
                     <tbody>
                         <tr>
                             <th>UUID:</th><td> {model.uuid}</td>
-                            <th>Invoice Count Value(ICU):</th><td> {model.invoice_count_value}</td>
-                            <th>Store:</th><td> {model.store_name}</td>
-                            <th>Customer:</th><td> {model.customer_name}</td>
-                            <th>Delivered by:</th><td> {model.delivered_by_name}</td>
+                            <th>{t("Invoice Count Value")} (ICU):</th><td> {model.invoice_count_value}</td>
+                            <th>{t("Store")}:</th><td> {model.store_name}</td>
+                            <th>{t("Customer")}:</th><td> {model.customer_name}</td>
+                            <th>{t("Delivered by")}:</th><td> {model.delivered_by_name}</td>
                         </tr>
                         <tr>
-                            <th>Date:</th><td>
+                            <th>{t("Date")}:</th><td>
                                 {model.date ? format(
                                     new Date(model.date),
                                     "MMM dd yyyy h:mm:ssa"
                                 ) : "Not set"}
                             </td>
-                            <th>VAT %:</th><td> {model.vat_percent}%</td>
-                            <th>Discount :</th><td> {model.discount} </td>
-                            <th>Discount %:</th><td> {model.discount_percent}</td>
+                            <th>{t("VAT")} %:</th><td> {model.vat_percent}%</td>
+                            <th>{t("Discount")} :</th><td> {model.discount} </td>
+                            <th>{t("Discount %")}:</th><td> {model.discount_percent}</td>
                         </tr>
                         <tr>
-                            <th>Status:</th><td> {model.status}</td>
-                            <th>Created At:</th><td> {model.created_at}</td>
-                            <th>Updated At:</th><td> {model.updated_at}</td>
+                            <th>{t("Status")}:</th><td> {t(model.status)}</td>
+                            <th>{t("Created At")}:</th><td> {model.created_at}</td>
+                            <th>{t("Updated At")}:</th><td> {model.updated_at}</td>
                         </tr>
                         <tr>
-                            <th>Payment Status:</th><td> {model.payment_status}</td>
-                            <th>Payment Method:</th><td> {model.payment_method}</td>
-                            <th>Partial Payment Amount:</th><td> {model.partial_payment_amount}</td>
+                            <th>{t("Payment Status")}:</th><td> {t(model.payment_status)}</td>
+                            <th>{t("Payment Method")}:</th><td> {t(model.payment_method)}</td>
+                            <th>{t("Partial Payment Amount")}:</th><td> {model.partial_payment_amount}</td>
                         </tr>
                         <tr>
-                            <th>Created By:</th><td> {model.created_by_name}</td>
-                            <th>Updated By:</th><td> {model.updated_by_name}</td>
-                            <th>Profit:</th>  <td> {model.profit} </td>
-                            <th>Loss:</th><td> {model.loss} </td>
+                            <th>{t("Created By")}:</th><td> {model.created_by_name}</td>
+                            <th>{t("Updated By")}:</th><td> {model.updated_by_name}</td>
+                            <th>{t("Profit")}:</th>  <td> {model.profit} </td>
+                            <th>{t("Loss")}:</th><td> {model.loss} </td>
                         </tr>
                         <tr>
                             {salesCashDiscountList.length > 0 ?
-                                <th>Cash Discounts</th> : ""}
+                                <th>{t("Cash Discounts")}</th> : ""}
                             {salesCashDiscountList.length > 0 ?
                                 <td>
                                     <div className="table-responsive" style={{ overflowX: "auto" }}>
@@ -836,14 +838,14 @@ const OrderView = forwardRef((props, ref) => {
                                             <thead>
                                                 <tr className="text-center">
                                                     <th>
-                                                        Amount
+                                                        {t("Amount")}
                                                     </th>
 
                                                     <th>
-                                                        Created By
+                                                        {t("Created By")}
                                                     </th>
                                                     <th>
-                                                        Created At
+                                                        {t("Created At")}
                                                     </th>
                                                 </tr>
                                             </thead>
@@ -866,7 +868,7 @@ const OrderView = forwardRef((props, ref) => {
                                     </div>
                                 </td> : ""}
                             {salesPaymentList.length > 0 ?
-                                <th>Payments</th> : ""}
+                                <th>{t("Payments")}</th> : ""}
                             {salesPaymentList.length > 0 ?
                                 <td>
                                     <div className="table-responsive" style={{ overflowX: "auto" }}>
@@ -874,17 +876,17 @@ const OrderView = forwardRef((props, ref) => {
                                             <thead>
                                                 <tr className="text-center">
                                                     <th>
-                                                        Amount
+                                                        {t("Amount")}
                                                     </th>
                                                     <th>
-                                                        Payment Method
+                                                        {t("Payment Method")}
                                                     </th>
 
                                                     <th>
-                                                        Created By
+                                                        {t("Created By")}
                                                     </th>
                                                     <th>
-                                                        Created At
+                                                        {t("Created At")}
                                                     </th>
                                                 </tr>
                                             </thead>
@@ -893,7 +895,7 @@ const OrderView = forwardRef((props, ref) => {
                                                     salesPaymentList.map((payment) => (
                                                         <tr key={payment.id}>
                                                             <td>{trimTo2Decimals(payment.amount)}</td>
-                                                            <td>{payment.method}</td>
+                                                            <td>{t(payment.method)}</td>
                                                             <td>{payment.created_by_name}</td>
                                                             <td>
                                                                 {format(

@@ -7,9 +7,11 @@ import OrderPrintContent4 from './printContent4.js';
 
 import { useReactToPrint } from 'react-to-print';
 import { Invoice } from '@axenda/zatca';
+import { useTranslation } from 'react-i18next';
 //import { format } from "date-fns";
 
 const OrderPrint = forwardRef((props, ref) => {
+    const { t } = useTranslation('common');
     // let [InvoiceBackground, setInvoiceBackground] = useState("");
     useImperativeHandle(ref, () => ({
         async open(modelObj, modelNameStr) {
@@ -165,8 +167,8 @@ const OrderPrint = forwardRef((props, ref) => {
                     return Promise.reject(error);
                 }
 
-                console.log("Response:");
-                console.log(data);
+                //console.log("Response:");
+                //console.log(data);
 
                 model = data.result;
                 setModel({ ...model });
@@ -226,15 +228,15 @@ const OrderPrint = forwardRef((props, ref) => {
             }
         }
 
-        console.log("model.pages:", model.pages);
+        //console.log("model.pages:", model.pages);
 
-        console.log("model.products:", model.products);
+        //console.log("model.products:", model.products);
         getQRCodeContents();
         //model.qr_content = getQRCodeContents();
         //setModel({ ...model });
 
         setShow(true);
-        console.log("model:", model);
+        //console.log("model:", model);
     }
 
 
@@ -1103,11 +1105,11 @@ const OrderPrint = forwardRef((props, ref) => {
     return (<>
         <Modal show={show} scrollable={true} size="xl" fullscreen={model.store?.code === "PH2" || model.store?.code === "LGK-SIMULATION" || model.store?.code === "LGK"} onHide={handleClose} animation={false} style={{ overflowY: "auto", height: "auto" }}>
             <Modal.Header className="d-flex flex-wrap align-items-center justify-content-between">
-                <Modal.Title>Invoice Preview</Modal.Title>
+                <Modal.Title>{t("Invoice Preview")}</Modal.Title>
                 <div className="row" style={{ border: "solid 0px" }}>
                     <div className="col align-self-end text-end" style={{ border: "solid 0px", minWidth: "200px" }}>
                         <>
-                            <label className="form-label">Page Size:&nbsp;</label>
+                            <label className="form-label">{t("Page Size")}:&nbsp;</label>
                             <select
                                 value={fontSizes[modelName + "_printPageSize"]}
                                 onChange={(e) => {
@@ -1138,7 +1140,7 @@ const OrderPrint = forwardRef((props, ref) => {
 
                     <div className="col align-self-end text-end" style={{ border: "solid 0px", minWidth: "100px" }}>
                         <Button variant="primary" className="btn btn-primary mb-3" onClick={handlePrint}>
-                            <i className="bi bi-printer"></i> Print
+                            <i className="bi bi-printer"></i> {t("Print")}
                         </Button>
                         <button
                             type="button"

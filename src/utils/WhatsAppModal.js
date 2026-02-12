@@ -1,8 +1,13 @@
 // WhatsAppModal.js
 import React from 'react';
 import { Modal, Button, Form } from 'react-bootstrap';
+import { useTranslation } from 'react-i18next';
+//import jsPDF from "jspdf";
+//import html2canvas from "html2canvas";
+
 
 const WhatsAppModal = ({ show, onClose, onChoice, defaultNumber, defaultMessage }) => {
+    const { t } = useTranslation('common');
     const [number, setNumber] = React.useState(defaultNumber || "");
     const [message, setMessage] = React.useState(defaultMessage || "");
 
@@ -27,33 +32,33 @@ const WhatsAppModal = ({ show, onClose, onChoice, defaultNumber, defaultMessage 
     return (
         <Modal show={show} onHide={onClose} centered>
             <Modal.Header closeButton>
-                <Modal.Title>Send WhatsApp Message</Modal.Title>
+                <Modal.Title>{t("Send WhatsApp Message")}</Modal.Title>
             </Modal.Header>
             <Modal.Body>
                 <Form.Group>
-                    <Form.Label className="fw-bold" >Message</Form.Label>
+                    <Form.Label className="fw-bold" >{t("Message")}</Form.Label>
                     <Form.Control
                         as="textarea"
                         rows={3}
                         value={message}
                         onChange={(e) => setMessage(e.target.value)}
-                        placeholder="Type your message here"
+                        placeholder={t("Type your message here")}
                     />
-                    <Form.Label className="fw-bold mt-2" >WhatsApp Number(with country code, e.g., 9665xxxxxxxx)</Form.Label>
+                    <Form.Label className="fw-bold mt-2" >{t("WhatsApp Number(with country code, e.g., 9665xxxxxxxx)")}</Form.Label>
                     <Form.Control
                         type="text"
                         value={number}
                         onChange={(e) => setNumber(e.target.value)}
-                        placeholder="e.g., 9665xxxxxxxx"
+                        placeholder={t("e.g., 9665xxxxxxxx")}
                     />
                 </Form.Group>
             </Modal.Body>
             <Modal.Footer>
                 <Button variant="primary" disabled={!number} onClick={handleSendToNumber}>
-                    Send to this number
+                    {t("Send to this number")}
                 </Button>
                 <Button variant="secondary" onClick={handleSendToContacts}>
-                    Send to WhatsApp contacts
+                    {t("Send to WhatsApp contacts")}
                 </Button>
             </Modal.Footer>
         </Modal>

@@ -15,9 +15,11 @@ import { PDFDocument } from 'pdf-lib';
 //import "jspdf-attachfiles";
 //import jsPDF from "jspdf";
 //import html2canvas from "html2canvas";
+import { useTranslation } from 'react-i18next';
 
 
 const Preview = forwardRef((props, ref) => {
+    const { t } = useTranslation('common');
     let [InvoiceBackground, setInvoiceBackground] = useState("");
 
     useImperativeHandle(ref, () => ({
@@ -1354,19 +1356,19 @@ const Preview = forwardRef((props, ref) => {
         // ...existing code...
         let cacheBuster = `?v=${Date.now()}`;
         if ((modelName === "quotation" || modelName === "whatsapp_quotation") && model?.type === "invoice") {
-            message = `Hello, here is your Invoice:\n${window.location.origin}/pdfs/${fileName}.pdf${cacheBuster}`;
+            message = `${t("Hello, here is your Invoice")}:\n${window.location.origin}/pdfs/${fileName}.pdf${cacheBuster}`;
         } else if ((modelName === "quotation" || modelName === "whatsapp_quotation") && model?.type === "quotation") {
-            message = `Hello, here is your Quotation:\n${window.location.origin}/pdfs/${fileName}.pdf${cacheBuster}`;
+            message = `${t("Hello, here is your Quotation")}:\n${window.location.origin}/pdfs/${fileName}.pdf${cacheBuster}`;
         } else if (modelName === "delivery_note" || modelName === "whatsapp_delivery_note") {
-            message = `Hello, here is your Delivery Note:\n${window.location.origin}/pdfs/${fileName}.pdf${cacheBuster}`;
+            message = `${t("Hello, here is your Delivery Note")}:\n${window.location.origin}/pdfs/${fileName}.pdf${cacheBuster}`;
         } else if (modelName === "sales_return" || modelName === "whatsapp_sales_return") {
-            message = `Hello, here is your Return Invoice:\n${window.location.origin}/pdfs/${fileName}.pdf${cacheBuster}`;
+            message = `${t("Hello, here is your Return Invoice")}:\n${window.location.origin}/pdfs/${fileName}.pdf${cacheBuster}`;
         } else if (modelName === "quotation_sales_return" || modelName === "whatsapp_quotation_sales_return") {
-            message = `Hello, here is your Return Invoice:\n${window.location.origin}/pdfs/${fileName}.pdf${cacheBuster}`;
+            message = `${t("Hello, here is your Return Invoice")}:\n${window.location.origin}/pdfs/${fileName}.pdf${cacheBuster}`;
         } else if (modelName === "stock_transfer" || modelName === "whatsapp_stock_transfer") {
-            message = `Hello, here is your Stock Transfer:\n${window.location.origin}/pdfs/${fileName}.pdf${cacheBuster}`;
+            message = `${t("Hello, here is your Stock Transfer")}:\n${window.location.origin}/pdfs/${fileName}.pdf${cacheBuster}`;
         } else {
-            message = `Hello, here is your Invoice:\n${window.location.origin}/pdfs/${fileName}.pdf${cacheBuster}`;
+            message = `${t("Hello, here is your Invoice")}:\n${window.location.origin}/pdfs/${fileName}.pdf${cacheBuster}`;
         }
 
         if (timerRef.current) clearTimeout(timerRef.current);
@@ -1379,7 +1381,7 @@ const Preview = forwardRef((props, ref) => {
             setShowWhatsAppMessageModal(true);
         }, 100);
 
-    }, [getFileName, model, phone, modelName, formatPhoneForWhatsApp]);
+    }, [getFileName, model, phone, modelName, formatPhoneForWhatsApp, t]);
 
     /*
     const openWhatsAppShare = useCallback(async () => {
@@ -1898,7 +1900,7 @@ const Preview = forwardRef((props, ref) => {
             <Modal.Header className="d-flex flex-wrap align-items-center justify-content-between">
                 {/* Left: Title */}
                 <div className="flex-grow-1">
-                    <Modal.Title>{formatModelName(modelName)} Preview</Modal.Title>
+                    <Modal.Title>{t(`${formatModelName(modelName)} Preview`)}</Modal.Title>
                 </div>
 
                 {/* Right: Fixed control block */}
@@ -1907,7 +1909,7 @@ const Preview = forwardRef((props, ref) => {
                     {showSlider && (
                         <div className="d-flex align-items-center border rounded bg-light p-2">
                             <button className="btn btn-outline-secondary" onClick={decrement}>−</button>
-                            <span className="mx-2">Font Size: {fontSizes[modelName + "_" + selectedText]?.size}</span>
+                            <span className="mx-2">{t("Font Size")}: {fontSizes[modelName + "_" + selectedText]?.size}</span>
                             <button className="btn btn-outline-secondary" onClick={increment}>+</button>
                             <button className="btn-close ms-2" onClick={() => setShowSlider(false)}></button>
                         </div>
@@ -1919,7 +1921,7 @@ const Preview = forwardRef((props, ref) => {
                                 <button className="btn btn-outline-secondary" onClick={() => {
                                     QrSize("decrement", "width");
                                 }}>−</button>
-                                <span className="mx-2">Width: {fontSizes[modelName + "_qrCode"]["width"]?.size}</span>
+                                <span className="mx-2">{t("Width")}: {fontSizes[modelName + "_qrCode"]["width"]?.size}</span>
                                 <button className="btn btn-outline-secondary" onClick={() => {
                                     QrSize("increment", "width");
                                 }}>+</button>
@@ -1928,7 +1930,7 @@ const Preview = forwardRef((props, ref) => {
                                 <button className="btn btn-outline-secondary" style={{ marginLeft: "10px" }} onClick={() => {
                                     QrSize("decrement", "height");
                                 }}>−</button>
-                                <span className="mx-2">Height: {fontSizes[modelName + "_qrCode"]["height"]?.size}</span>
+                                <span className="mx-2">{t("Height")}: {fontSizes[modelName + "_qrCode"]["height"]?.size}</span>
                                 <button className="btn btn-outline-secondary" onClick={() => {
                                     QrSize("increment", "height");
                                 }}>+</button>
@@ -1948,7 +1950,7 @@ const Preview = forwardRef((props, ref) => {
                         </>
                     )}
 
-                    <label htmlFor="font-select">Select Font: </label>
+                    <label htmlFor="font-select">{t("Select Font")}: </label>
                     <select id="font-select" value={fontSizes[modelName + "_font"]} onChange={handleFontChange}>
                         {fonts.map((font) => (
                             <option key={font.value} value={font.value}>
@@ -1972,7 +1974,7 @@ const Preview = forwardRef((props, ref) => {
                                 saveToLocalStorage("fontSizes", fontSizes);
                             }}
                         />
-                        <label htmlFor="storeHeaderCheck" className="form-check-label">Show Store Header</label>
+                        <label htmlFor="storeHeaderCheck" className="form-check-label">{t("Show Store Header")}</label>
                     </div>
 
 
@@ -1981,13 +1983,13 @@ const Preview = forwardRef((props, ref) => {
 
                     <div className="d-flex align-items-center border rounded bg-light p-2" style={{ marginRight: "200px" }}>
                         <button className="btn btn-outline-secondary" onClick={() => decrementSize(modelName + "_marginTop")}>−</button>
-                        <span className="mx-2">Margin Top: {fontSizes[modelName + "_marginTop"]?.size}</span>
+                        <span className="mx-2">{t("Margin Top")}: {fontSizes[modelName + "_marginTop"]?.size}</span>
                         <button className="btn btn-outline-secondary" onClick={() => incrementSize(modelName + "_marginTop")}>+</button>
                     </div>
 
                     <div className="col ">
                         <>
-                            <label className="form-label">Page Size:&nbsp;</label>
+                            <label className="form-label">{t("Page Size")}:&nbsp;</label>
                             <select
                                 value={fontSizes[modelName + "_pageSize"]}
                                 onChange={(e) => {
@@ -2062,7 +2064,7 @@ const Preview = forwardRef((props, ref) => {
                             {!isProcessing && <>
                                 {!whatsAppShare ? (
                                     <>
-                                        <i className="bi bi-printer"></i> Print
+                                        <i className="bi bi-printer"></i> {t("Print")}
                                     </>
                                 ) : (
                                     <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="white" viewBox="0 0 16 16">
@@ -2090,7 +2092,7 @@ const Preview = forwardRef((props, ref) => {
                                                 </Button>
 
                         */}
-                        <button className="btn-close" onClick={handleClose} aria-label="Close"></button>
+                        <button className="btn-close" onClick={handleClose} aria-label={t("Close")} ></button>
                     </div>
                 </div>
             </Modal.Header>
