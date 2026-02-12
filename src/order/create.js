@@ -1021,7 +1021,7 @@ const OrderCreate = forwardRef((props, ref) => {
     useEffect(() => {
         const listener = event => {
             if (event.code === "Enter" || event.code === "NumpadEnter") {
-                console.log("Enter key was pressed. Run your function-order.123");
+                //console.log("Enter key was pressed. Run your function-order.123");
                 // event.preventDefault();
 
 
@@ -1029,7 +1029,7 @@ const OrderCreate = forwardRef((props, ref) => {
                 var form = event.target.form;
                 if (form && event.target) {
                     var index = Array.prototype.indexOf.call(form, event.target);
-                    console.log("form.elements:", form.elements);
+                    // console.log("form.elements:", form.elements);
                     if (form && form.elements[index + 1]) {
                         //
                         if (event.target.getAttribute("class").includes("barcode")) {
@@ -1142,10 +1142,10 @@ const OrderCreate = forwardRef((props, ref) => {
 
 
     async function suggestCustomers(searchTerm) {
-        console.log("Inside handle suggestCustomers");
+        //console.log("Inside handle suggestCustomers");
         setCustomerOptions([]);
 
-        console.log("searchTerm:" + searchTerm);
+        //console.log("searchTerm:" + searchTerm);
         if (!searchTerm) {
             setTimeout(() => {
                 setOpenCustomerSearchResult(false);
@@ -1453,7 +1453,7 @@ const OrderCreate = forwardRef((props, ref) => {
         if (product) {
             addProduct(product);
         } else {
-            errors["bar_code"] = "Invalid Barcode:" + formData.barcode
+            errors["bar_code"] = t("Invalid Barcode") + ":" + formData.barcode
             setErrors({ ...errors });
         }
 
@@ -1523,7 +1523,7 @@ const OrderCreate = forwardRef((props, ref) => {
 
 
             if (unitPrice && /^\d*\.?\d{0,8}$/.test(unitPrice) === false) {
-                errors["unit_price_" + i] = "Max decimal points allowed is 8";
+                errors["unit_price_" + i] = t("Max decimal points allowed is 8");
                 setErrors({ ...errors });
                 haveErrors = true;
             }
@@ -1531,7 +1531,7 @@ const OrderCreate = forwardRef((props, ref) => {
             let unitPriceWithVAT = parseFloat(selectedProducts[i].unit_price_with_vat);
 
             if (unitPriceWithVAT && /^\d*\.?\d{0,8}$/.test(unitPriceWithVAT) === false) {
-                errors["unit_price_with_vat_" + i] = "Max decimal points allowed is 8";
+                errors["unit_price_with_vat_" + i] = t("Max decimal points allowed is 8");
                 setErrors({ ...errors });
                 haveErrors = true;
             }
@@ -1543,7 +1543,7 @@ const OrderCreate = forwardRef((props, ref) => {
             if (selectedProducts[i].unit_discount) {
                 unitDiscount = parseFloat(selectedProducts[i].unit_discount)
                 if (/^\d*\.?\d{0,8}$/.test(unitDiscount) === false) {
-                    errors["unit_discount_" + i] = "Max decimal points allowed is 8";
+                    errors["unit_discount_" + i] = t("Max decimal points allowed is 8");
                     setErrors({ ...errors });
                     haveErrors = true;
                 }
@@ -1554,7 +1554,7 @@ const OrderCreate = forwardRef((props, ref) => {
             if (selectedProducts[i].unit_discount_with_vat) {
                 unitDiscountWithVAT = parseFloat(selectedProducts[i].unit_discount_with_vat)
                 if (/^\d*\.?\d{0,8}$/.test(unitDiscountWithVAT) === false) {
-                    errors["unit_discount_with_vat_" + i] = "Max decimal points allowed is 8";
+                    errors["unit_discount_with_vat_" + i] = t("Max decimal points allowed is 8");
                     setErrors({ ...errors });
                     haveErrors = true;
                 }
@@ -1566,7 +1566,7 @@ const OrderCreate = forwardRef((props, ref) => {
             if (selectedProducts[i].unit_discount_percent) {
                 unitDiscountPercent = parseFloat(selectedProducts[i].unit_discount_percent)
                 if (/^\d*\.?\d{0,8}$/.test(unitDiscountPercent) === false) {
-                    errors["unit_discount_percent_" + i] = "Max decimal points allowed is 8";
+                    errors["unit_discount_percent_" + i] = t("Max decimal points allowed is 8");
                     setErrors({ ...errors });
                     haveErrors = true;
                 }
@@ -1574,8 +1574,8 @@ const OrderCreate = forwardRef((props, ref) => {
 
             if (store?.settings?.block_sale_when_purchase_price_is_higher) {
                 if (selectedProducts[i].purchase_unit_price > selectedProducts[i].unit_price) {
-                    errors["purchase_unit_price_" + i] = "Purchase unit price is greater than Unit Price(without VAT)";
-                    errors["unit_price_" + i] = "Unit price is less  than Purchase Unit Price(without VAT)";
+                    errors["purchase_unit_price_" + i] = t("Purchase unit price is greater than Unit Price(without VAT)");
+                    errors["unit_price_" + i] = t("Unit price is less  than Purchase Unit Price(without VAT)");
                     setErrors({ ...errors });
                     haveErrors = true;
                 } else {
@@ -1617,7 +1617,7 @@ const OrderCreate = forwardRef((props, ref) => {
 
 
         if (!validatePaymentAmounts()) {
-            console.log("Errors on payments")
+            //console.log("Errors on payments")
             haveErrors = true;
         }
 
@@ -1625,62 +1625,62 @@ const OrderCreate = forwardRef((props, ref) => {
 
 
         if (!formData.shipping_handling_fees && formData.shipping_handling_fees !== 0) {
-            errors["shipping_handling_fees"] = "Invalid shipping / handling fees";
+            errors["shipping_handling_fees"] = t("Invalid shipping / handling fees");
             setErrors({ ...errors });
             haveErrors = true;
         }
 
         if (parseFloat(formData.shipping_handling_fees) < 0) {
-            errors["shipping_handling_fees"] = "shipping cost should not be < 0";
+            errors["shipping_handling_fees"] = t("shipping cost should not be < 0");
             setErrors({ ...errors });
             haveErrors = true;
         }
 
         if (/^\d*\.?\d{0,2}$/.test(parseFloat(formData.shipping_handling_fees)) === false) {
-            errors["shipping_handling_fees"] = "Max. decimal points allowed is 2";
+            errors["shipping_handling_fees"] = t("Max. decimal points allowed is 2");
             setErrors({ ...errors });
             haveErrors = true;
         }
 
         if (/^\d*\.?\d{0,2}$/.test(parseFloat(formData.discount)) === false) {
-            errors["discount"] = "Max. decimal points allowed is 2";
+            errors["discount"] = t("Max. decimal points allowed is 2");
             setErrors({ ...errors });
             haveErrors = true;
         }
 
         if (/^-?\d*\.?\d{0,2}$/.test(parseFloat(formData.rounding_amount)) === false) {
-            errors["rounding_amount"] = "Max. decimal points allowed is 2";
+            errors["rounding_amount"] = t("Max. decimal points allowed is 2");
             setErrors({ ...errors });
             haveErrors = true;
         }
 
         if (parseFloat(formData.discount) < 0) {
-            errors["discount"] = "discount should not be < 0";
+            errors["discount"] = t("discount should not be < 0");
             setErrors({ ...errors });
             haveErrors = true;
         }
 
 
         if (!formData.discount_percent && formData.discount_percent !== 0) {
-            errors["discount_percent"] = "Invalid discount percent";
+            errors["discount_percent"] = t("Invalid discount percent");
             setErrors({ ...errors });
             haveErrors = true;
         }
 
         if (parseFloat(formData.discount_percent) > 100) {
-            errors["discount_percent"] = "Discount percent cannot be > 100";
+            errors["discount_percent"] = t("Discount percent cannot be > 100");
             setErrors({ ...errors });
             haveErrors = true;
         }
 
         if (!formData.vat_percent && formData.vat_percent !== 0) {
-            errors["vat_percent"] = "Invalid vat percent";
+            errors["vat_percent"] = t("Invalid vat percent");
             setErrors({ ...errors });
             haveErrors = true;
         }
 
         if (haveErrors) {
-            console.log("Errors: ", errors);
+            //console.log("Errors: ", errors);
             return;
         }
 
@@ -1750,13 +1750,13 @@ const OrderCreate = forwardRef((props, ref) => {
                 }
 
                 if (formData.id) {
-                    setToastMessage(`Updated Successfully✅`);
+                    setToastMessage(t(`Updated Successfully`) + "✅");
                     setShowToast(true);
                     if (props.showToastMessage) {
                         if (props.showToastMessage) props.showToastMessage("Sale updated successfully!", "success");
                     }
                 } else {
-                    setToastMessage(`Created Successfully✅`);
+                    setToastMessage(t(`Created Successfully`) + "✅");
                     setShowToast(true);
                     if (props.showToastMessage) {
                         if (props.showToastMessage) props.showToastMessage("Sale created successfully!", "success");
@@ -1764,7 +1764,7 @@ const OrderCreate = forwardRef((props, ref) => {
                 }
 
                 setTimeout(() => {
-                    setToastMessage(`Preparing Print Preview...`);
+                    setToastMessage(t(`Preparing Print Preview`) + "...");
                     setShowToast(true);
                     setTimeout(() => setShowToast(false), 1000);
                 }, 800);
@@ -1806,10 +1806,10 @@ const OrderCreate = forwardRef((props, ref) => {
             })
             .catch((error) => {
                 setIsSubmitting(false);
-                console.log("Inside catch");
-                console.log(error);
+                //console.log("Inside catch");
+                //console.log(error);
                 setErrors({ ...error });
-                console.error("There was an error!", error);
+                //console.error("There was an error!", error);
                 if (props.showToastMessage) {
                     if (props.showToastMessage) props.showToastMessage("Failed to process sale!", "danger");
                 }
@@ -1862,18 +1862,18 @@ const OrderCreate = forwardRef((props, ref) => {
         console.log("INSIDE CHECK ERROR");
 
         if (selectedProducts[i].quantity && selectedProducts[i].quantity <= 0) {
-            errors["quantity_" + i] = "Quantity should be > 0";
+            errors["quantity_" + i] = t("Quantity should be > 0");
         } else if (!selectedProducts[i].quantity) {
-            errors["quantity_" + i] = "Quantity is required";
+            errors["quantity_" + i] = t("Quantity is required");
         } else {
             delete errors["quantity_" + i];
         }
 
 
         if (selectedProducts[i].unit_price && selectedProducts[i].unit_price <= 0) {
-            errors["unit_price_" + i] = "Unit Price should be > 0";
+            errors["unit_price_" + i] = t("Unit Price should be > 0");
         } else if (!selectedProducts[i].unit_price) {
-            errors["unit_price_" + i] = "Unit Price is required";
+            errors["unit_price_" + i] = t("Unit Price is required");
         } else {
             delete errors["unit_price_" + i];
         }
@@ -1881,9 +1881,9 @@ const OrderCreate = forwardRef((props, ref) => {
 
         if (store?.settings?.block_sale_when_purchase_price_is_higher) {
             if (selectedProducts[i].purchase_unit_price && selectedProducts[i].purchase_unit_price <= 0) {
-                errors["purchase_unit_price_" + i] = "Purchase Unit Price should be > 0";
+                errors["purchase_unit_price_" + i] = t("Purchase Unit Price should be > 0");
             } else if (!selectedProducts[i].purchase_unit_price) {
-                errors["purchase_unit_price_" + i] = "Purchase Unit Price is required";
+                errors["purchase_unit_price_" + i] = t("Purchase Unit Price is required");
             } else {
                 delete errors["purchase_unit_price_" + i];
             }
@@ -1894,8 +1894,8 @@ const OrderCreate = forwardRef((props, ref) => {
         if (selectedProducts[i].purchase_unit_price > 0 && selectedProducts[i].unit_price > 0) {
 
             if (selectedProducts[i].purchase_unit_price > selectedProducts[i].unit_price) {
-                errors["purchase_unit_price_" + i] = "Purchase Unit Price should not be greater than Unit Price(without VAT)"
-                errors["unit_price_" + i] = "Unit price should not be less than Purchase Unit Price(without VAT)"
+                errors["purchase_unit_price_" + i] = t("Purchase Unit Price should not be greater than Unit Price(without VAT)")
+                errors["unit_price_" + i] = t("Unit price should not be less than Purchase Unit Price(without VAT)")
             } else {
                 delete errors["purchase_unit_price_" + i];
                 delete errors["unit_price_" + i];
@@ -1956,7 +1956,7 @@ const OrderCreate = forwardRef((props, ref) => {
         }
 
         if (!formData.id && selectedProducts[i].quantity > selectedProducts[i].stock) {
-            warnings["quantity_" + i] = "Warning: Available stock is " + (selectedProducts[i].stock);
+            warnings["quantity_" + i] = t("Warning: Available stock is") + " " + (selectedProducts[i].stock);
         } else {
             delete warnings["quantity_" + i];
         }
@@ -1968,11 +1968,11 @@ const OrderCreate = forwardRef((props, ref) => {
             stock = product.product_stores[localStorage.getItem("store_id")].stock;
             selectedProducts[i].stock = stock;
             selectedProducts[i].warehouse_stocks = product.product_stores[localStorage.getItem("store_id")]?.warehouse_stocks ? product.product_stores[localStorage.getItem("store_id")]?.warehouse_stocks : {};
-
+    
             setSelectedProducts([...selectedProducts]);
         }
-
-
+    
+    
         let oldQty = 0;
         for (let j = 0; j < oldProducts?.length; j++) {
             if (oldProducts[j]?.product_id === selectedProducts[i]?.product_id) {
@@ -1982,33 +1982,33 @@ const OrderCreate = forwardRef((props, ref) => {
                         selectedProducts[i].stock = 0;
                     }
                     selectedProducts[i].stock += oldQty;
-
-
+    
+    
                     if (!selectedProducts[i].warehouse_stocks) {
                         selectedProducts[i].warehouse_stocks = {};
                     }
-
+    
                     if (oldProducts[j].warehouse_code) {
                         if (!selectedProducts[i].warehouse_stocks[oldProducts[j].warehouse_code]) {
                             selectedProducts[i].warehouse_stocks[oldProducts[j].warehouse_code] = 0;
                         }
-
+    
                         selectedProducts[i].warehouse_stocks[oldProducts[j].warehouse_code] += oldQty;
                     } else {
                         selectedProducts[i].warehouse_stocks["main_store"] = selectedProducts[i].stock;
                     }
-
-
-
+    
+    
+    
                     setSelectedProducts([...selectedProducts]);
                 }
                 break;
             }
         }
-
-
+    
+    
         
-
+    
         if (product.product_stores && (stock + oldQty) < selectedProducts[i].quantity) {
             if (formData.id) {
                 warnings["quantity_" + i] = "Warning: Available stock is " + (stock + oldQty);
@@ -2026,7 +2026,7 @@ const OrderCreate = forwardRef((props, ref) => {
 
 
     async function getProduct(id, selectStr) {
-        console.log("inside get Product");
+        // console.log("inside get Product");
         const requestOptions = {
             method: "GET",
             headers: {
@@ -2177,8 +2177,8 @@ const OrderCreate = forwardRef((props, ref) => {
             index = getProductIndex(product.id);
         }
         if (product.quantity_returned > 0) {
-            errors["product_" + index] = "This product cannot be removed as it is returned, Note: Please remove the product from sales return and try again";
-            alert("This product cannot be removed as it is returned, Note: Please remove the product from sales return and try again");
+            errors["product_" + index] = t("This product cannot be removed as it is returned, Note: Please remove the product from sales return and try again");
+            alert(t("This product cannot be removed as it is returned, Note: Please remove the product from sales return and try again"));
             setErrors({ ...errors });
             return;
         }
@@ -2417,8 +2417,8 @@ const OrderCreate = forwardRef((props, ref) => {
         for (var i = 0; i < selectedProducts.length; i++) {
 
             let unitPrice = parseFloat(selectedProducts[i].unit_price);
-            console.log("unitPrice:", unitPrice);
-            console.log("selectedProducts[i].unit_price_with_vat:", selectedProducts[i].unit_price_with_vat);
+            //console.log("unitPrice:", unitPrice);
+            //console.log("selectedProducts[i].unit_price_with_vat:", selectedProducts[i].unit_price_with_vat);
 
 
             let unitPriceWithVAT = parseFloat(selectedProducts[i].unit_price_with_vat);
@@ -2499,7 +2499,7 @@ const OrderCreate = forwardRef((props, ref) => {
                 "/v1/order/calculate-net-total",
                 requestOptions
             );
-            console.log("Done")
+            //console.log("Done")
             if (!result.ok) {
                 return;
             }
@@ -2552,7 +2552,7 @@ const OrderCreate = forwardRef((props, ref) => {
 
                     for (let j = 0; j < res.result?.products?.length; j++) {
                         if (res.result?.products[j].product_id === selectedProducts[i].product_id) {
-                            console.log("Discounts updated from server")
+                            //console.log("Discounts updated from server")
                         }
                     }
                 }
@@ -2589,14 +2589,14 @@ const OrderCreate = forwardRef((props, ref) => {
 
 
         } catch (err) {
-            console.error("Failed to parse response:", err);
+            // console.error("Failed to parse response:", err);
         }
     }
 
 
 
     function findTotalPayments() {
-        console.log("Inisde findTotalPayments")
+        //console.log("Inisde findTotalPayments")
         let totalPayment = 0.00;
         for (var i = 0; i < formData.payments_input?.length; i++) {
             if (formData.payments_input[i].amount && !formData.payments_input[i].deleted) {
@@ -2606,9 +2606,9 @@ const OrderCreate = forwardRef((props, ref) => {
 
         //totalPaymentAmount = totalPayment;
         // alert(totalPaymentAmount)
-        console.log("totalPaymentAmount:", totalPaymentAmount);
+        // console.log("totalPaymentAmount:", totalPaymentAmount);
         setTotalPaymentAmount(totalPaymentAmount);
-        console.log("totalPayment:", totalPayment)
+        //console.log("totalPayment:", totalPayment)
         balanceAmount = (parseFloat(trimTo2Decimals(formData.net_total)) - parseFloat(parseFloat(trimTo2Decimals(cashDiscount)))) - parseFloat(trimTo2Decimals(totalPayment));
         balanceAmount = parseFloat(trimTo2Decimals(balanceAmount));
         setBalanceAmount(balanceAmount);
@@ -2693,7 +2693,7 @@ const OrderCreate = forwardRef((props, ref) => {
 
 
     function validatePaymentAmounts() {
-        console.log("validatePaymentAmount: formData.net_total:", formData.net_total)
+        //console.log("validatePaymentAmount: formData.net_total:", formData.net_total)
         delete errors["cash_discount"];
         setErrors({ ...errors });
 
@@ -2713,7 +2713,7 @@ const OrderCreate = forwardRef((props, ref) => {
 
 
         if (cashDiscount > 0 && cashDiscount >= formData.net_total) {
-            errors["cash_discount"] = t("Cash discount should not be >= ") + trimTo2Decimals(formData.net_total).toString();
+            errors["cash_discount"] = t("Cash discount should not be greater than or equal to {{max}}", { max: trimTo2Decimals(formData.net_total).toString() });
             setErrors({ ...errors });
             haveErrors = true
             return false;
@@ -2731,17 +2731,17 @@ const OrderCreate = forwardRef((props, ref) => {
             setErrors({ ...errors });
 
             if (!formData.payments_input[key].amount) {
-                errors["payment_amount_" + key] = "Payment amount is required";
+                errors["payment_amount_" + key] = t("Payment amount is required");
                 setErrors({ ...errors });
                 haveErrors = true;
             } else if (formData.payments_input[key].amount === 0) {
-                errors["payment_amount_" + key] = "Amount should be greater than zero";
+                errors["payment_amount_" + key] = t("Amount should be greater than zero");
                 setErrors({ ...errors });
                 haveErrors = true;
             }
 
             if (!formData.payments_input[key].date_str) {
-                errors["payment_date_" + key] = "Payment date is required";
+                errors["payment_date_" + key] = t("Payment date is required");
                 setErrors({ ...errors });
                 haveErrors = true;
             } /* else if ((new Date(formData.payments_input[key].date_str)) < (new Date(formData.date_str))) {
@@ -2751,7 +2751,7 @@ const OrderCreate = forwardRef((props, ref) => {
             }*/
 
             if (!formData.payments_input[key].method) {
-                errors["payment_method_" + key] = "Payment method is required";
+                errors["payment_method_" + key] = t("Payment method is required");
                 setErrors({ ...errors });
                 haveErrors = true;
             }
@@ -3062,7 +3062,7 @@ const OrderCreate = forwardRef((props, ref) => {
         }
 
 
-        setToastMessage(`${addedCount} product${addedCount !== 1 ? "s" : ""} added ✅`);
+        setToastMessage(t(`{{addedCount}} product(s) are added`, { addedCount: addedCount }) + "✅");
         setShowToast(true);
 
         setTimeout(() => setShowToast(false), 3000);
@@ -3090,7 +3090,8 @@ const OrderCreate = forwardRef((props, ref) => {
         }
 
 
-        setToastMessage(`${addedCount} product${addedCount !== 1 ? "s" : ""} added ✅`);
+        //setToastMessage(`${addedCount} product${addedCount !== 1 ? "s" : ""} added ✅`);
+        setToastMessage(t(`{{addedCount}} product(s) are added`, { addedCount: addedCount }) + "✅");
         setShowToast(true);
         if (selectedCustomers && !formData.id) {
             formData.customer_id = selectedCustomers[0]?.id;
@@ -3197,14 +3198,14 @@ const OrderCreate = forwardRef((props, ref) => {
 
     const renderNetTotalBeforeRoundingTooltip = (props) => (
         <Tooltip id="label-tooltip" {...props}>
-            {t("Total Taxable Amount(without VAT)")} + {t("VAT Price ( " + formData.vat_percent + "% of Taxable Amount)")}
+            {t("Total Taxable Amount(without VAT)")} + {t("VAT Price ( {{vatPercent}}% of Taxable Amount)", { vatPercent: formData.vat_percent })}
             {"(" + trimTo2Decimals(formData.total + shipping - discount) + " + " + trimTo2Decimals(formData.vat_price) + ") = " + trimTo2Decimals(formData.net_total - roundingAmount)}
         </Tooltip>
     );
 
     const renderNetTotalTooltip = (props) => (
         <Tooltip id="label-tooltip" {...props}>
-            {t("Total Taxable Amount(without VAT)")} + {t("VAT Price ( " + formData.vat_percent + "% of Taxable Amount)")} {roundingAmount > 0 ? " + " + t("Rounding Amount") : " - " + t("Rounding Amount")}
+            {t("Total Taxable Amount(without VAT)")} + {t("VAT Price ( {{vatPercent}}% of Taxable Amount)", { vatPercent: formData.vat_percent })} {roundingAmount > 0 ? " + " + t("Rounding Amount") : " - " + t("Rounding Amount")}
             {"(" + trimTo2Decimals(formData.total + shipping - discount) + " + " + trimTo2Decimals(formData.vat_price) + `${roundingAmount > 0 ? " + " : " - "}` + trimTo2Decimals(roundingAmount) + " ) = " + trimTo2Decimals(formData.net_total)}
         </Tooltip>
     );
@@ -3341,7 +3342,7 @@ const OrderCreate = forwardRef((props, ref) => {
 
         if (model.phone) {
             if (!validatePhoneNumber(model.phone)) {
-                errors["phone"] = "Invalid phone no."
+                errors["phone"] = t("Invalid phone no.")
                 setErrors({ ...errors });
                 return;
             }
@@ -3494,7 +3495,7 @@ const OrderCreate = forwardRef((props, ref) => {
         setSearchProductsColumns(clonedDefaults);
 
         setShowSuccess(true);
-        setSuccessMessage("Successfully restored to default settings!");
+        setSuccessMessage(t("Successfully restored to default settings!"));
     }
 
 
@@ -4893,57 +4894,57 @@ const OrderCreate = forwardRef((props, ref) => {
                                                             <Dropdown.Menu style={{ zIndex: 9999, position: "absolute" }} popperConfig={{ modifiers: [{ name: 'preventOverflow', options: { boundary: 'viewport' } }] }}>
                                                                 <Dropdown.Item onClick={() => openLinkedProducts(product)}>
                                                                     <i className="bi bi-link"></i>&nbsp;
-                                                                    Linked Products ({getShortcut('linkedProducts')})
+                                                                    {t("Linked Products")} ({getShortcut('linkedProducts')})
                                                                 </Dropdown.Item>
 
                                                                 <Dropdown.Item onClick={() => openProductHistory(product)}>
                                                                     <i className="bi bi-clock-history"></i>&nbsp;
-                                                                    History ({getShortcut('productHistory')})
+                                                                    {t("History")} ({getShortcut('productHistory')})
                                                                 </Dropdown.Item>
 
                                                                 <Dropdown.Item onClick={() => openSalesHistory(product)}>
                                                                     <i className="bi bi-clock-history"></i>&nbsp;
-                                                                    Sales History ({getShortcut('salesHistory')})
+                                                                    {t("Sales History")} ({getShortcut('salesHistory')})
                                                                 </Dropdown.Item>
 
                                                                 <Dropdown.Item onClick={() => openSalesReturnHistory(product)}>
                                                                     <i className="bi bi-clock-history"></i>&nbsp;
-                                                                    Sales Return History ({getShortcut('salesReturnHistory')})
+                                                                    {t("Sales Return History")} ({getShortcut('salesReturnHistory')})
                                                                 </Dropdown.Item>
 
                                                                 <Dropdown.Item onClick={() => openPurchaseHistory(product)}>
                                                                     <i className="bi bi-clock-history"></i>&nbsp;
-                                                                    Purchase History ({getShortcut('purchaseHistory')})
+                                                                    {t("Purchase History")} ({getShortcut('purchaseHistory')})
                                                                 </Dropdown.Item>
 
                                                                 <Dropdown.Item onClick={() => openPurchaseReturnHistory(product)}>
                                                                     <i className="bi bi-clock-history"></i>&nbsp;
-                                                                    Purchase Return History ({getShortcut('purchaseReturnHistory')})
+                                                                    {t("Purchase Return History")} ({getShortcut('purchaseReturnHistory')})
                                                                 </Dropdown.Item>
 
                                                                 <Dropdown.Item onClick={() => openDeliveryNoteHistory(product)}>
                                                                     <i className="bi bi-clock-history"></i>&nbsp;
-                                                                    Delivery Note History ({getShortcut('deliveryNoteHistory')})
+                                                                    {t("Delivery Note History")} ({getShortcut('deliveryNoteHistory')})
                                                                 </Dropdown.Item>
 
                                                                 <Dropdown.Item onClick={() => openQuotationHistory(product, "quotation")}>
                                                                     <i className="bi bi-clock-history"></i>&nbsp;
-                                                                    Quotation History ({getShortcut('quotationHistory')})
+                                                                    {t("Quotation History")} ({getShortcut('quotationHistory')})
                                                                 </Dropdown.Item>
 
                                                                 <Dropdown.Item onClick={() => openQuotationSalesHistory(product)}>
                                                                     <i className="bi bi-clock-history"></i>&nbsp;
-                                                                    Qtn. Sales History ({getShortcut('quotationSalesHistory')})
+                                                                    {t("Qtn. Sales History")} ({getShortcut('quotationSalesHistory')})
                                                                 </Dropdown.Item>
 
                                                                 <Dropdown.Item onClick={() => openQuotationSalesReturnHistory(product)}>
                                                                     <i className="bi bi-clock-history"></i>&nbsp;
-                                                                    Qtn. Sales Return History ({getShortcut('quotationSalesReturnHistory')})
+                                                                    {t("Qtn. Sales Return History")} ({getShortcut('quotationSalesReturnHistory')})
                                                                 </Dropdown.Item>
 
                                                                 <Dropdown.Item onClick={() => openProductImages(product.product_id)}>
                                                                     <i className="bi bi-clock-history"></i>&nbsp;
-                                                                    Images ({getShortcut('images')})
+                                                                    {t("Images")} ({getShortcut('images')})
                                                                 </Dropdown.Item>
                                                             </Dropdown.Menu>
 
@@ -4961,7 +4962,7 @@ const OrderCreate = forwardRef((props, ref) => {
                                                             className={`form-control text-end ${errors["purchase_unit_price_" + index] ? 'is-invalid' : ''} ${warnings["purchase_unit_price_" + index] ? 'border-warning text-warning' : ''}`}
                                                             onWheel={(e) => e.target.blur()}
                                                             value={product.purchase_unit_price}
-                                                            placeholder="Purchase Unit Price"
+                                                            placeholder={t("Purchase Unit Price")}
                                                             ref={(el) => {
                                                                 if (!inputRefs.current[index]) inputRefs.current[index] = {};
                                                                 inputRefs.current[index][`${"sales_product_purchase_unit_price_" + index}`] = el;
@@ -5072,11 +5073,11 @@ const OrderCreate = forwardRef((props, ref) => {
                                                                     });
                                                                     const details = orderedEntries
                                                                         .map(([key, value]) => {
-                                                                            let name = key === "main_store" ? "Main Store" : key.replace(/^wh/, "WH").toUpperCase();
+                                                                            let name = key === "main_store" ? t("Main Store") : key.replace(/^wh/, "WH").toUpperCase();
                                                                             return `${name}: ${value}`;
                                                                         })
                                                                         .join(", ");
-                                                                    return details ? `(${details})` : "(Main Store: " + selectedProducts[index].stock + ")";
+                                                                    return details ? `(${details})` : "(" + t("Main Store") + ": " + selectedProducts[index].stock + ")";
                                                                 })()}
                                                             </Tooltip>
                                                         }
@@ -5118,7 +5119,7 @@ const OrderCreate = forwardRef((props, ref) => {
                                                             checkWarning(index, selectedProducts[index]);
                                                         }}
                                                     >
-                                                        <option value="main_store">Main Store</option>
+                                                        <option value="main_store">{t("Main Store")}</option>
                                                         {warehouseList.map((warehouse) => (
                                                             <option key={warehouse.id} value={warehouse.id}>
                                                                 {warehouse.name} ({warehouse.code})
@@ -5127,7 +5128,7 @@ const OrderCreate = forwardRef((props, ref) => {
                                                     </select>
                                                     {errors[`warehouse_${index}`] && (
                                                         <div style={{ color: "red" }}>
-                                                            {errors[`warehouse_${index}`]}
+                                                            {t(errors[`warehouse_${index}`])}
                                                         </div>
                                                     )}
                                                 </td>}
@@ -5309,7 +5310,7 @@ const OrderCreate = forwardRef((props, ref) => {
 
 
                                                                     if (/^\d*\.?\d{0,8}$/.test(parseFloat(e.target.value)) === false) {
-                                                                        errors["unit_price_" + index] = "Max decimal points allowed is 8";
+                                                                        errors["unit_price_" + index] = t("Max decimal points allowed is 8");
                                                                         setErrors({ ...errors });
                                                                     }
 
@@ -5357,7 +5358,7 @@ const OrderCreate = forwardRef((props, ref) => {
                                                                     if (!inputRefs.current[index]) inputRefs.current[index] = {};
                                                                     inputRefs.current[index][`${"sales_product_unit_price_with_vat_" + index}`] = el;
                                                                 }}
-                                                                placeholder="Unit Price(with VAT)"
+                                                                placeholder={t("Unit Price(with VAT)")}
 
                                                                 onFocus={() => {
                                                                     if (timerRef.current) clearTimeout(timerRef.current);
@@ -5406,7 +5407,7 @@ const OrderCreate = forwardRef((props, ref) => {
                                                                     }
 
                                                                     if (e.target.value === 0) {
-                                                                        errors["unit_price_with_vat_" + index] = "Unit Price should be > 0";
+                                                                        errors["unit_price_with_vat_" + index] = t("Unit Price should be > 0");
                                                                         selectedProducts[index].unit_price_with_vat = 0;
                                                                         selectedProducts[index].unit_price = 0;
                                                                         setSelectedProducts([...selectedProducts]);
@@ -5421,7 +5422,7 @@ const OrderCreate = forwardRef((props, ref) => {
                                                                     }
 
                                                                     if (/^\d*\.?\d{0,8}$/.test(parseFloat(e.target.value)) === false) {
-                                                                        errors["unit_price_with_vat_" + index] = "Max decimal points allowed is 8";
+                                                                        errors["unit_price_with_vat_" + index] = t("Max decimal points allowed is 8");
                                                                         setErrors({ ...errors });
                                                                     }
 
@@ -5511,7 +5512,7 @@ const OrderCreate = forwardRef((props, ref) => {
                                                                         selectedProducts[index].unit_discount_percent = 0.00;
                                                                         selectedProducts[index].unit_discount_percent_with_vat = 0.00;
                                                                         setFormData({ ...formData });
-                                                                        errors["unit_discount_" + index] = "Unit discount should be >= 0";
+                                                                        errors["unit_discount_" + index] = t("Unit discount should be greater than or equal 0");
                                                                         setErrors({ ...errors });
                                                                         timerRef.current = setTimeout(() => {
                                                                             CalCulateLineTotals(index);
@@ -5540,7 +5541,7 @@ const OrderCreate = forwardRef((props, ref) => {
                                                                     setErrors({ ...errors });
 
                                                                     if (/^\d*\.?\d{0,8}$/.test(parseFloat(e.target.value)) === false) {
-                                                                        errors["unit_discount_" + index] = "Max decimal points allowed is 8";
+                                                                        errors["unit_discount_" + index] = t("Max decimal points allowed is 8");
                                                                         setErrors({ ...errors });
                                                                     }
 
@@ -5650,7 +5651,7 @@ const OrderCreate = forwardRef((props, ref) => {
                                                                         selectedProducts[index].unit_discount = 0.00;
                                                                         selectedProducts[index].unit_discount_percent_with_vat = 0.00;
                                                                         setFormData({ ...formData });
-                                                                        errors["unit_discount_" + index] = "Unit discount should be >= 0";
+                                                                        errors["unit_discount_" + index] = t("Unit discount should be greater than or equal to zero");
                                                                         setErrors({ ...errors });
                                                                         timerRef.current = setTimeout(() => {
                                                                             CalCulateLineTotals(index);
@@ -5679,7 +5680,7 @@ const OrderCreate = forwardRef((props, ref) => {
                                                                     setErrors({ ...errors });
 
                                                                     if (/^\d*\.?\d{0,8}$/.test(parseFloat(e.target.value)) === false) {
-                                                                        errors["unit_discount_with_vat_" + index] = "Max decimal points allowed is 8";
+                                                                        errors["unit_discount_with_vat_" + index] = t("Max decimal points allowed is 8");
                                                                         setErrors({ ...errors });
                                                                     }
 
@@ -5823,7 +5824,7 @@ const OrderCreate = forwardRef((props, ref) => {
                                                                         selectedProducts[index].unit_discount_with_vat = 0.00;
                                                                         selectedProducts[index].unit_discount = 0.00;
                                                                         setFormData({ ...formData });
-                                                                        errors["unit_discount_percent_" + index] = "Unit discount % should be >= 0";
+                                                                        errors["unit_discount_percent_" + index] = t("Unit discount % should be greater than or equal to zero");
                                                                         setErrors({ ...errors });
                                                                         timerRef.current = setTimeout(() => {
                                                                             CalCulateLineTotals(index);
@@ -5970,7 +5971,7 @@ const OrderCreate = forwardRef((props, ref) => {
 
 
                                                                     if (/^\d*\.?\d{0,2}$/.test(parseFloat(e.target.value)) === false) {
-                                                                        errors["line_total_" + index] = "Max decimal points allowed is 2";
+                                                                        errors["line_total_" + index] = t("Max decimal points allowed is 2");
                                                                         setErrors({ ...errors });
                                                                     }
 
@@ -6089,7 +6090,7 @@ const OrderCreate = forwardRef((props, ref) => {
 
 
                                                                     if (/^\d*\.?\d{0,2}$/.test(parseFloat(e.target.value)) === false) {
-                                                                        errors["line_total_with_vat_" + index] = "Max decimal points allowed is 2";
+                                                                        errors["line_total_with_vat_" + index] = t("Max decimal points allowed is 2");
                                                                         setErrors({ ...errors });
                                                                     }
 
@@ -6393,7 +6394,7 @@ const OrderCreate = forwardRef((props, ref) => {
 
 
                                                     if (/^\d*\.?\d{0,2}$/.test(parseFloat(e.target.value)) === false) {
-                                                        errors["discount"] = "Max. decimal points allowed is 2";
+                                                        errors["discount"] = t("Max. decimal points allowed is 2");
                                                         setErrors({ ...errors });
                                                     }
 
@@ -6460,7 +6461,7 @@ const OrderCreate = forwardRef((props, ref) => {
                                                         discountPercent = 0;
                                                         setDiscountPercent(discountPercent);
 
-                                                        errors["discount_percent_with_vat"] = "Discount percent should be >= 0";
+                                                        errors["discount_percent_with_vat"] = t("Discount percent should be greater than or equal to zero");
                                                         setErrors({ ...errors });
                                                         timerRef.current = setTimeout(() => {
                                                             reCalculate();
@@ -6571,7 +6572,7 @@ const OrderCreate = forwardRef((props, ref) => {
 
 
                                                     if (/^\d*\.?\d{0,2}$/.test(parseFloat(e.target.value)) === false) {
-                                                        errors["discount_with_vat"] = "Max. decimal points allowed is 2";
+                                                        errors["discount_with_vat"] = t("Max. decimal points allowed is 2");
                                                         setErrors({ ...errors });
                                                     }
 
@@ -6627,7 +6628,7 @@ const OrderCreate = forwardRef((props, ref) => {
                                                 formData.vat_price = 0.00;
 
                                                 setFormData({ ...formData });
-                                                errors["vat_percent"] = "Vat percent should be >= 0";
+                                                errors["vat_percent"] = t("VAT percent should be greater than or equal to zero");
                                                 setErrors({ ...errors });
                                                 reCalculate();
                                                 return;
@@ -6638,7 +6639,7 @@ const OrderCreate = forwardRef((props, ref) => {
                                                 formData.vat_percent = "";
                                                 formData.vat_price = 0.00;
                                                 //formData.discount_percent = 0.00;
-                                                errors["vat_percent"] = "Invalid vat percent";
+                                                errors["vat_percent"] = t("Invalid vat percent");
                                                 setFormData({ ...formData });
                                                 setErrors({ ...errors });
                                                 return;
@@ -6733,7 +6734,7 @@ const OrderCreate = forwardRef((props, ref) => {
                                                         if (/^-?\d*\.?\d{0,2}$/.test(parseFloat(e.target.value)) === false) {
                                                             roundingAmount = parseFloat(e.target.value);
 
-                                                            errors["rounding_amount"] = "Max. decimal points allowed is 2";
+                                                            errors["rounding_amount"] = t("Max. decimal points allowed is 2");
                                                             setErrors({ ...errors });
                                                             return;
                                                         }
