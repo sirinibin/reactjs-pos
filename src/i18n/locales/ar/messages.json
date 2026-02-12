@@ -1,0 +1,10 @@
+{
+  "success": {
+    "created": "تم إنشاء {{entity}} بنجاح!",
+    "updated": "تم تحديث {{entity}} بنجاح!"
+  },
+  "error": {
+    "creating": "خطأ في إنشاء {{entity}}!",
+    "updating": "خطأ في تحديث {{entity}}!"
+  }
+}

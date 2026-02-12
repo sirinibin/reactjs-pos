@@ -2,8 +2,10 @@ import React, { useEffect, useState, useCallback } from 'react';
 import {
     Link
 } from "react-router-dom";
+import { useTranslation } from 'react-i18next';
 
 function Sidebar(props) {
+    const { t } = useTranslation('common');
     const [appState, ChangeState] = useState({
         activeTab: '',
         tabs: [
@@ -118,7 +120,7 @@ function Sidebar(props) {
                 }} className={toggleActiveStyles(appState.tabs[0])}>
                     <Link to="/dashboard/sales" className="sidebar-link">
                         <i className="bi bi-currency-dollar" />
-                        <span className="align-middle">Sales</span>
+                        <span className="align-middle">{t('sales')}</span>
                     </Link>
                 </li>
                 <li onClick={() => {

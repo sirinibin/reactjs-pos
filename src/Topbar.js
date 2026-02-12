@@ -1,8 +1,11 @@
 import React from 'react';
 import Dropdown from 'react-bootstrap/Dropdown';
 import DropdownButton from 'react-bootstrap/DropdownButton';
+import { useTranslation } from 'react-i18next';
+import LanguageSwitcher from './components/LanguageSwitcher';
 
 function Topbar(props) {
+    const { t } = useTranslation('common');
     function onTrigger(event) {
         props.parentCallback();
         event.preventDefault();
@@ -28,10 +31,15 @@ function Topbar(props) {
 
 
         <div className="navbar-collapse collapse">
-            {localStorage.getItem("branch_name") ? "Branch: " + localStorage.getItem("branch_name") : ""}
+            {localStorage.getItem("branch_name") ? t('labels.branch') + ": " + localStorage.getItem("branch_name") : ""}
 
 
             <ul className="navbar-nav navbar-align">
+
+                <li className="nav-item dropdown">
+                    {/* Language Switcher */}
+                    <LanguageSwitcher />
+                </li>
 
                 <li className="nav-item dropdown">
                     <a href="/"
@@ -50,7 +58,7 @@ function Topbar(props) {
                     >
                         <Dropdown.Item onClick={(e) => {
                             logOut(e);
-                        }} > <i class="bi bi-box-arrow-right"></i> LotOut</Dropdown.Item>
+                        }} > <i className="bi bi-box-arrow-right"></i> {t('buttons.logout')}</Dropdown.Item>
                     </DropdownButton>
 
                     {/*<a href="/"

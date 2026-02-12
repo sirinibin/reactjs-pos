@@ -4,8 +4,11 @@ import Amount from "./amount.js";
 import { trimTo2Decimals } from "./numberUtils";
 import { Modal, Button, OverlayTrigger, Tooltip } from "react-bootstrap";
 import { DragDropContext, Droppable, Draggable } from "react-beautiful-dnd";
+import { useTranslation } from 'react-i18next';
 
 const StatsSummary = ({ title, stats = {}, statsWithInfo = {}, defaultOpen = false, onToggle }) => {
+    const { t } = useTranslation();
+
     const [isOpen, setIsOpen] = useState(defaultOpen);
     const [showSettings, setShowSettings] = useState(false);
     const [leftFields, setLeftFields] = useState([]);
@@ -117,7 +120,7 @@ const StatsSummary = ({ title, stats = {}, statsWithInfo = {}, defaultOpen = fal
                 <div className="mb-2" key={index}>
                     <div className="d-flex justify-content-between align-items-center">
                         <span>
-                            {f.label}
+                            {t(f.label)}
                             {f.info ? (
                                 <OverlayTrigger placement="right" overlay={renderInfoTooltip(f.info)}>
                                     <span style={{ textDecoration: 'underline dotted', cursor: 'pointer', marginLeft: '6px' }}>ℹ️</span>
@@ -176,14 +179,14 @@ const StatsSummary = ({ title, stats = {}, statsWithInfo = {}, defaultOpen = fal
     const renderSettingsModal = () => (
         <Modal show={showSettings} onHide={() => setShowSettings(false)} size="lg">
             <Modal.Header closeButton>
-                <Modal.Title>Customize {title} Summary</Modal.Title>
+                <Modal.Title>{t(`Customize ${title} Summary`)}</Modal.Title>
             </Modal.Header>
             <Modal.Body>
                 <DragDropContext onDragEnd={handleDragEnd}>
                     <div className="row">
                         {[{ id: "left", fields: leftFields, setFields: setLeftFields }, { id: "right", fields: rightFields, setFields: setRightFields }].map(({ id, fields, setFields }) => (
                             <div className="col-md-6" key={id}>
-                                <h6 className="text-center">{id === "left" ? "Left Column" : "Right Column"}</h6>
+                                <h6 className="text-center">{id === "left" ? t("Left Column") : t("Right Column")}</h6>
                                 <Droppable droppableId={id}>
                                     {(provided) => (
                                         <div ref={provided.innerRef} {...provided.droppableProps} style={{ minHeight: "50px" }}>
@@ -207,7 +210,7 @@ const StatsSummary = ({ title, stats = {}, statsWithInfo = {}, defaultOpen = fal
                                                                     setFields(updated);
                                                                 }}
                                                             />
-                                                            {field.label}
+                                                            {t(field.label)}
                                                         </div>
                                                     )}
                                                 </Draggable>
@@ -223,10 +226,10 @@ const StatsSummary = ({ title, stats = {}, statsWithInfo = {}, defaultOpen = fal
             </Modal.Body>
             <Modal.Footer>
                 <Button variant="outline-danger" onClick={restoreDefaults}>
-                    Restore to Defaults
+                    {t("Restore to Defaults")}
                 </Button>
                 <Button variant="secondary" onClick={() => setShowSettings(false)}>
-                    Close
+                    {t("Close")}
                 </Button>
             </Modal.Footer>
         </Modal>
@@ -235,7 +238,7 @@ const StatsSummary = ({ title, stats = {}, statsWithInfo = {}, defaultOpen = fal
     return (
         <div className="mb-3">
             <button className="btn btn-outline-primary mb-2" onClick={handleToggle}>
-                {isOpen ? `Hide ${title} Summary` : `Show ${title} Summary`}
+                {isOpen ? t(`Hide ${title} Summary`) : t(`Show ${title} Summary`)}
             </button>
 
             {(isOpen) && (
@@ -243,7 +246,7 @@ const StatsSummary = ({ title, stats = {}, statsWithInfo = {}, defaultOpen = fal
                     <div className="row">
                         <div className="col">
                             <div className="d-flex justify-content-start mb-2">
-                                <h4>{` ${title}`}</h4>
+                                <h4>{t(`${title}`)}</h4>
                             </div>
                         </div>
                         <div className="col">

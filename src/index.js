@@ -1,6 +1,8 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
+import './i18n/config'; // Initialize i18n before React renders
 import './index.css';
+import './rtl.css'; // RTL support
 import 'font-awesome/css/font-awesome.min.css';
 import './App.css';
 import "bootstrap-icons/font/bootstrap-icons.css";

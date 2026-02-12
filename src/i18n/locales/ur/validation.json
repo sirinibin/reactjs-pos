@@ -1,0 +1,5 @@
+{
+  "required": "{{field}} ضروری ہے",
+  "invalid": "غلط {{field}}",
+  "looks_good": "اچھا لگ رہا ہے!"
+}

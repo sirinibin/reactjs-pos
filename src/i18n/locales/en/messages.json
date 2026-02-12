@@ -1,0 +1,10 @@
+{
+  "success": {
+    "created": "{{entity}} Created Successfully!",
+    "updated": "{{entity}} Updated Successfully!"
+  },
+  "error": {
+    "creating": "Error Creating {{entity}}!",
+    "updating": "Error Updating {{entity}}!"
+  }
+}

@@ -3,9 +3,11 @@ import { Modal, Button } from "react-bootstrap";
 
 import { Spinner } from "react-bootstrap";
 import { Typeahead } from "react-bootstrap-typeahead";
+import { useTranslation } from 'react-i18next';
 
 
 const ProductCategoryCreate = forwardRef((props, ref) => {
+    const { t } = useTranslation(['common', 'messages', 'validation', 'modules']);
 
     useImperativeHandle(ref, () => ({
         open(id) {
@@ -237,7 +239,10 @@ const ProductCategoryCreate = forwardRef((props, ref) => {
 
                 console.log("Response:");
                 console.log(data);
-                if (props.showToastMessage) props.showToastMessage("Product Category Created Successfully!", "success");
+                if (props.showToastMessage) props.showToastMessage(
+                    t('messages:success.created', { entity: t('modules:product_category.title') }),
+                    "success"
+                );
                 if (props.refreshList) {
                     props.refreshList();
                 }
@@ -252,7 +257,10 @@ const ProductCategoryCreate = forwardRef((props, ref) => {
                 console.log(error);
                 setErrors({ ...error });
                 console.error("There was an error!", error);
-                if (props.showToastMessage) props.showToastMessage("Error Creating ProductCategory!", "danger");
+                if (props.showToastMessage) props.showToastMessage(
+                    t('messages:error.creating', { entity: t('modules:product_category.title') }),
+                    "danger"
+                );
             });
     }
 
@@ -308,7 +316,7 @@ const ProductCategoryCreate = forwardRef((props, ref) => {
             <Modal show={show} keyboard={false} size="lg" onHide={handleClose} animation={false} backdrop="static" scrollable={true}>
                 <Modal.Header>
                     <Modal.Title>
-                        {formData.id ? "Update Product Category #" + formData.name : "Create New Product Category"}
+                        {formData.id ? t('modules:product_category.update', { name: formData.name }) : t('modules:product_category.create_new')}
                     </Modal.Title>
 
                     <div className="col align-self-end text-end">
@@ -317,7 +325,7 @@ const ProductCategoryCreate = forwardRef((props, ref) => {
                             if (props.openDetailsView)
                                 props.openDetailsView(formData.id);
                         }}>
-                            <i className="bi bi-eye"></i> View Detail
+                            <i className="bi bi-eye"></i> {t('common:buttons.view_detail')}
                         </Button> : ""}
                         &nbsp;&nbsp;
                         <Button variant="primary" onClick={handleCreate} >
@@ -332,7 +340,7 @@ const ProductCategoryCreate = forwardRef((props, ref) => {
 
                                 : ""
                             }
-                            {formData.id && !isProcessing ? "Update" : !isProcessing ? "Create" : ""}
+                            {formData.id && !isProcessing ? t('common:buttons.update') : !isProcessing ? t('common:buttons.create') : ""}
                         </Button>
                         <button
                             type="button"
@@ -346,7 +354,7 @@ const ProductCategoryCreate = forwardRef((props, ref) => {
                     <form className="row g-3 needs-validation" onSubmit={handleCreate}>
 
                         <div className="col-md-6">
-                            <label className="form-label">Name*</label>
+                            <label className="form-label">{t('common:labels.name')}*</label>
 
                             <div className="input-group mb-3">
                                 <input
@@ -363,7 +371,7 @@ const ProductCategoryCreate = forwardRef((props, ref) => {
                                     }}
                                     className="form-control"
 
-                                    placeholder="Name"
+                                    placeholder={t('common:labels.name')}
                                 />
                                 {errors.name && (
                                     <div style={{ color: "red" }}>
@@ -374,14 +382,14 @@ const ProductCategoryCreate = forwardRef((props, ref) => {
                                 {formData.name && !errors.name && (
                                     <div style={{ color: "green" }}>
                                         <i className="bi bi-check-lg"> </i>
-                                        Looks good!
+                                        {t('validation:looks_good')}
                                     </div>
                                 )}
                             </div>
                         </div>
 
                         <div className="col-md-6">
-                            <label className="form-label">Parent(Optional)</label>
+                            <label className="form-label">{t('common:labels.parent')}</label>
 
                             <div className="input-group mb-3">
                                 <Typeahead
@@ -432,14 +440,14 @@ const ProductCategoryCreate = forwardRef((props, ref) => {
                                 {formData.parent_id && !errors.parent_id && (
                                     <div style={{ color: "green" }}>
                                         <i className="bi bi-check-lg"> </i>
-                                        Looks good!
+                                        {t('validation:looks_good')}
                                     </div>
                                 )}
                             </div>
                         </div>
                         <Modal.Footer>
                             <Button variant="secondary" onClick={handleClose}>
-                                Close
+                                {t('common:buttons.close')}
                             </Button>
                             <Button variant="primary" onClick={handleCreate} >
                                 {isProcessing ?
@@ -449,9 +457,9 @@ const ProductCategoryCreate = forwardRef((props, ref) => {
                                         size="sm"
                                         role="status"
                                         aria-hidden={true}
-                                    /> + " Processing..."
+                                    /> + " " + t('common:status.processing')
 
-                                    : formData.id ? "Update" : "Create"
+                                    : formData.id ? t('common:buttons.update') : t('common:buttons.create')
                                 }
                             </Button>
                         </Modal.Footer>

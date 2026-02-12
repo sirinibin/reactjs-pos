@@ -1,0 +1,7 @@
+{
+  "product_category": {
+    "title": "Product Category",
+    "create_new": "Create New Product Category",
+    "update": "Update Product Category #{{name}}"
+  }
+}

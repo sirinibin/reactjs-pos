@@ -51,6 +51,7 @@ import CustomerDepositCreate from "../customer_deposit/create.js";
 import SalesReturnCreate from "../sales_return/create.js";
 import CustomerPending from "./../utils/customer_pending.js";
 import Badge from 'react-bootstrap/Badge';
+import { useTranslation } from 'react-i18next';
 
 
 const columnStyle = {
@@ -63,6 +64,8 @@ const columnStyle = {
 };
 
 const OrderCreate = forwardRef((props, ref) => {
+    const { t } = useTranslation('common');
+
     useImperativeHandle(ref, () => ({
         async open(id) {
             if (id) {
@@ -1606,7 +1609,7 @@ const OrderCreate = forwardRef((props, ref) => {
         setErrors({ ...errors });
 
         if (formData.products.length === 0) {
-            errors["products"] = "No products added";
+            errors["products"] = t("No products added");
             setErrors({ ...errors });
             haveErrors = true;
         }
@@ -2710,7 +2713,7 @@ const OrderCreate = forwardRef((props, ref) => {
 
 
         if (cashDiscount > 0 && cashDiscount >= formData.net_total) {
-            errors["cash_discount"] = "Cash discount should not be >= " + trimTo2Decimals(formData.net_total).toString();
+            errors["cash_discount"] = t("Cash discount should not be >= ") + trimTo2Decimals(formData.net_total).toString();
             setErrors({ ...errors });
             haveErrors = true
             return false;
@@ -3187,21 +3190,21 @@ const OrderCreate = forwardRef((props, ref) => {
 
     const renderTooltip = (props) => (
         <Tooltip id="label-tooltip" {...props}>
-            Total(without VAT) + Shipping & Handling Fees - Discount(without VAT)
+            {t("Total(without VAT)")} + {t("Shipping & Handling Fees")} - {t("Discount(without VAT)")}
             {"(" + trimTo2Decimals(formData.total) + " + " + trimTo2Decimals(shipping) + " - " + trimTo2Decimals(discount) + ") = " + trimTo2Decimals(formData.total + shipping - discount)}
         </Tooltip>
     );
 
     const renderNetTotalBeforeRoundingTooltip = (props) => (
         <Tooltip id="label-tooltip" {...props}>
-            Total Taxable Amount(without VAT) + VAT Price ( 15% of Taxable Amount)
+            {t("Total Taxable Amount(without VAT)")} + {t("VAT Price ( " + formData.vat_percent + "% of Taxable Amount)")}
             {"(" + trimTo2Decimals(formData.total + shipping - discount) + " + " + trimTo2Decimals(formData.vat_price) + ") = " + trimTo2Decimals(formData.net_total - roundingAmount)}
         </Tooltip>
     );
 
     const renderNetTotalTooltip = (props) => (
         <Tooltip id="label-tooltip" {...props}>
-            Total Taxable Amount(without VAT) + VAT Price ( 15% of Taxable Amount) {roundingAmount > 0 ? " + Rounding Amount" : " - Rounding Amount"}
+            {t("Total Taxable Amount(without VAT)")} + {t("VAT Price ( " + formData.vat_percent + "% of Taxable Amount)")} {roundingAmount > 0 ? " + " + t("Rounding Amount") : " - " + t("Rounding Amount")}
             {"(" + trimTo2Decimals(formData.total + shipping - discount) + " + " + trimTo2Decimals(formData.vat_price) + `${roundingAmount > 0 ? " + " : " - "}` + trimTo2Decimals(roundingAmount) + " ) = " + trimTo2Decimals(formData.net_total)}
         </Tooltip>
     );
@@ -3652,7 +3655,7 @@ const OrderCreate = forwardRef((props, ref) => {
 
             <Modal show={showSuccess} onHide={() => setShowSuccess(false)} centered>
                 <Modal.Header closeButton>
-                    <Modal.Title>Success</Modal.Title>
+                    <Modal.Title>{t('Success')}</Modal.Title>
                 </Modal.Header>
                 <Modal.Body>
                     <Alert variant="success">
@@ -3661,7 +3664,7 @@ const OrderCreate = forwardRef((props, ref) => {
                 </Modal.Body>
                 <Modal.Footer>
                     <Button variant="secondary" onClick={() => setShowSuccess(false)}>
-                        Close
+                        {t('Close')}
                     </Button>
                 </Modal.Footer>
             </Modal>
@@ -3680,14 +3683,14 @@ const OrderCreate = forwardRef((props, ref) => {
                             title="Table Settings"
 
                         />
-                        Product Search Settings
+                        {t("Product Search Settings")}
                     </Modal.Title>
                 </Modal.Header>
                 <Modal.Body>
                     {/* Column Settings */}
                     {showProductSearchSettings && (
                         <>
-                            <h6 className="mb-2">Customize Columns</h6>
+                            <h6 className="mb-2">{t("Customize Columns")}</h6>
                             <DragDropContext onDragEnd={onDragEnd}>
                                 <Droppable droppableId="columns">
                                     {(provided) => (
@@ -3720,7 +3723,7 @@ const OrderCreate = forwardRef((props, ref) => {
                                                                                 handleToggleColumn(index);
                                                                             }}
                                                                         />
-                                                                        {col.label}
+                                                                        {t(col.label)}
                                                                     </div>
                                                                     <span style={{ cursor: "grab" }}>☰</span>
                                                                 </li>
@@ -3738,17 +3741,15 @@ const OrderCreate = forwardRef((props, ref) => {
                 </Modal.Body>
                 <Modal.Footer>
                     <Button variant="secondary" onClick={() => setShowProductSearchSettings(false)}>
-                        Close
+                        {t('Close')}
                     </Button>
                     <Button
                         variant="primary"
                         onClick={() => {
                             RestoreDefaultSettings();
-                            // Save to localStorage here if needed
-                            //setShowSettings(false);
                         }}
                     >
-                        Restore to Default
+                        {t('Restore to Default')}
                     </Button>
                 </Modal.Footer>
             </Modal>
@@ -3764,7 +3765,7 @@ const OrderCreate = forwardRef((props, ref) => {
                 setShowPrintTypeSelection(showPrintTypeSelection);
             }} centered>
                 <Modal.Header closeButton>
-                    <Modal.Title>Select Print Type</Modal.Title>
+                    <Modal.Title>{t('Select Print Type')}</Modal.Title>
                 </Modal.Header>
                 <Modal.Body className="d-flex justify-content-around">
 
@@ -3781,7 +3782,7 @@ const OrderCreate = forwardRef((props, ref) => {
                             }, 100);
                         }
                     }}>
-                        <i className="bi bi-printer"></i> Print
+                        <i className="bi bi-printer"></i> {t('Print')}
                     </Button>
 
                     <Button variant="primary" ref={printA4ButtonRef} onClick={() => {
@@ -3797,7 +3798,7 @@ const OrderCreate = forwardRef((props, ref) => {
                             }
                         }}
                     >
-                        <i className="bi bi-printer"></i> Print A4 Invoice
+                        <i className="bi bi-printer"></i> {t('Print A4 Invoice')}
                     </Button>
                 </Modal.Body>
             </Modal >
@@ -3850,14 +3851,14 @@ const OrderCreate = forwardRef((props, ref) => {
                 onHide={handleClose} animation={false} backdrop="static" scrollable={true}>
                 <Modal.Header>
                     <Modal.Title>
-                        {isUpdateForm ? "Update Sales Order #" + formData.code : "Create New Sales Order"}
+                        {isUpdateForm ? t("Update Sales") + " #" + formData.code : t("Create New Sales Order")}
 
                     </Modal.Title>
                     {store.zatca?.phase === "2" && !isUpdateForm && <div style={{ marginLeft: "20px" }}>
                         <input type="checkbox" id="sales_report_to_zatca" name="report_to_zatca" checked={formData.enable_report_to_zatca} onChange={(e) => {
                             formData.enable_report_to_zatca = !formData.enable_report_to_zatca;
                             setFormData({ ...formData });
-                        }} /> Report to Zatca <br />
+                        }} /> {t("Report to Zatca")} <br />
                     </div>}
                     <div className="col align-self-end text-end">
 
@@ -3876,7 +3877,7 @@ const OrderCreate = forwardRef((props, ref) => {
 
                             }}
                         >
-                            <i className="bi-chevron-double-left"></i> Previous
+                            <i className="bi-chevron-double-left"></i> {t('Previous')}
                         </Button>
                         &nbsp;&nbsp;
                         <Button
@@ -3889,7 +3890,7 @@ const OrderCreate = forwardRef((props, ref) => {
                                 openNextForm();
                             }}
                         >
-                            Next  <i className="bi-chevron-double-right"></i>
+                            {t('Next')}  <i className="bi-chevron-double-right"></i>
                         </Button>
                         &nbsp;&nbsp;
                         <Button
@@ -3902,16 +3903,16 @@ const OrderCreate = forwardRef((props, ref) => {
                                 openCreateForm();
                             }}
                         >
-                            <i className="bi bi-plus"></i>  Create New
+                            <i className="bi bi-plus"></i>  {t('Create New')}
                         </Button>
                         &nbsp;&nbsp;
                         <Button variant="secondary" disabled={!isUpdateForm} onClick={openPrint}>
-                            <i className="bi bi-printer"></i> Print
+                            <i className="bi bi-printer"></i> {t('Print')}
                         </Button>
                         &nbsp;&nbsp;
 
                         <Button variant="primary" disabled={!isUpdateForm} onClick={openPreview}>
-                            <i className="bi bi-printer"></i> Print A4 Invoice
+                            <i className="bi bi-printer"></i> {t('Print A4 Invoice')}
                         </Button>
                         &nbsp;&nbsp;
 
@@ -3934,7 +3935,7 @@ const OrderCreate = forwardRef((props, ref) => {
 
                                 : ""
                             }
-                            {isUpdateForm && !isSubmitting ? "Update" : !isSubmitting ? "Create" : ""}
+                            {isUpdateForm && !isSubmitting ? t('Update') : !isSubmitting ? t('Create') : ""}
 
                         </Button>
 
@@ -3980,7 +3981,7 @@ const OrderCreate = forwardRef((props, ref) => {
                                         const message = Array.isArray(errors[key]) ? errors[key][0] : errors[key];
                                         return message ? (
                                             <li key={index} style={{ color: "red" }}>
-                                                {message}
+                                                {t(message)}
                                             </li>
                                         ) : null;
                                     })}
@@ -3990,7 +3991,7 @@ const OrderCreate = forwardRef((props, ref) => {
                     </div>
                     <form className="row g-3 needs-validation" onSubmit={e => { e.preventDefault(); handleCreate(e); }} >
                         <div className="col-md-10" style={{ border: "solid 0px" }}>
-                            <label className="form-label">Customer</label>
+                            <label className="form-label">{t('Customer')}</label>
                             <Typeahead
                                 id="customer_id"
                                 filterBy={() => true}
@@ -4028,7 +4029,7 @@ const OrderCreate = forwardRef((props, ref) => {
                                     setOpenCustomerSearchResult(false);
                                 }}
                                 options={customerOptions}
-                                placeholder="Customer Name / Mob / VAT # / ID"
+                                placeholder={t('Customer Name / Mob / VAT # / ID')}
                                 selected={selectedCustomers}
                                 highlightOnlyResult={true}
                                 ref={customerSearchRef}
@@ -4066,12 +4067,12 @@ const OrderCreate = forwardRef((props, ref) => {
                                             {/* Header */}
                                             <MenuItem disabled>
                                                 <div style={{ display: 'flex', fontWeight: 'bold', padding: '4px 8px', borderBottom: '1px solid #ddd' }}>
-                                                    <div style={{ width: '10%' }}>ID</div>
-                                                    <div style={{ width: '47%' }}>Name</div>
-                                                    <div style={{ width: '10%' }}>Phone</div>
-                                                    <div style={{ width: '13%' }}>VAT</div>
-                                                    <div style={{ width: '10%' }}>Credit Balance</div>
-                                                    <div style={{ width: '10%' }}>Credit Limit</div>
+                                                    <div style={{ width: '10%' }}>{t("ID")}</div>
+                                                    <div style={{ width: '47%' }}>{t("Name")}</div>
+                                                    <div style={{ width: '10%' }}>{t("Phone")}</div>
+                                                    <div style={{ width: '13%' }}>{t("VAT NO.")}</div>
+                                                    <div style={{ width: '10%' }}>{t("Credit Balance")}</div>
+                                                    <div style={{ width: '10%' }}>{t("Credit Limit")}</div>
                                                 </div>
                                             </MenuItem>
 
@@ -4132,12 +4133,12 @@ const OrderCreate = forwardRef((props, ref) => {
                                     );
                                 }}
                             />
-                            <Button hide={true.toString()} onClick={openCustomerCreateForm} className="btn btn-outline-secondary btn-primary btn-sm" type="button" id="button-addon1"> <i className="bi bi-plus-lg"></i> New</Button>
+                            <Button hide={true.toString()} onClick={openCustomerCreateForm} className="btn btn-outline-secondary btn-primary btn-sm" type="button" id="button-addon1"> <i className="bi bi-plus-lg"></i> {t('New')}</Button>
 
                             {selectedCustomers.length > 0 && formData.customer_id && <Button style={{ marginLeft: "8px" }} variant="btn btn-sm btn-primary" onClick={() => {
                                 openCustomerPending(selectedCustomers[0]);
                             }} >
-                                Pendings
+                                {t('Pendings')}
                                 <Badge bg="danger" style={{ marginLeft: "2px" }}>
                                     <Amount amount={trimTo2Decimals(selectedCustomers[0]?.credit_balance)} />
                                 </Badge>
@@ -4145,7 +4146,7 @@ const OrderCreate = forwardRef((props, ref) => {
 
                             {errors.customer_id && (
                                 <div style={{ color: "red" }}>
-                                    {errors.customer_id}
+                                    {t(errors.customer_id)}
                                 </div>
                             )}
 
@@ -4165,27 +4166,27 @@ const OrderCreate = forwardRef((props, ref) => {
                         </div>
 
                         <div className="col-md-2">
-                            <label className="form-label">Product Barcode Scan</label>
+                            <label className="form-label">{t('Product Barcode Scan')}</label>
 
                             <div className="input-group mb-3">
                                 <DebounceInput
                                     minLength={3}
                                     debounceTimeout={100}
-                                    placeholder="Scan Barcode"
+                                    placeholder={t('Scan Barcode')}
                                     className="form-control barcode"
                                     value={formData.barcode}
                                     onChange={event => getProductByBarCode(event.target.value)} />
                                 {errors.bar_code && (
                                     <div style={{ color: "red" }}>
 
-                                        {errors.bar_code}
+                                        {t(errors.bar_code)}
                                     </div>
                                 )}
                             </div>
                         </div>
 
                         <div className="col-md-3">
-                            <label className="form-label">Date*</label>
+                            <label className="form-label">{t('Date') + " *"}</label>
                             <div className="input-group mb-3">
                                 <DatePicker
                                     id="date_str"
@@ -4208,14 +4209,14 @@ const OrderCreate = forwardRef((props, ref) => {
 
                                 {errors.date_str && (
                                     <div style={{ color: "red" }}>
-                                        {errors.date_str}
+                                        {t(errors.date_str)}
                                     </div>
                                 )}
                             </div>
                         </div>
 
                         <div className="col-md-2">
-                            <label className="form-label">Phone ( 05.. / +966..)</label>
+                            <label className="form-label">{t('Phone') + "( 05.. / +966..)"}</label>
 
                             <div className="input-group mb-3">
                                 <input
@@ -4232,13 +4233,13 @@ const OrderCreate = forwardRef((props, ref) => {
                                     }}
                                     className="form-control"
 
-                                    placeholder="Phone"
+                                    placeholder={t('Phone')}
                                 />
                             </div>
                             {errors.phone && (
                                 <div style={{ color: "red" }}>
 
-                                    {errors.phone}
+                                    {t(errors.phone)}
                                 </div>
                             )}
                         </div>
@@ -4254,7 +4255,7 @@ const OrderCreate = forwardRef((props, ref) => {
 
 
                         <div className="col-md-2">
-                            <label className="form-label">VAT NO.(15 digits)</label>
+                            <label className="form-label">{t('VAT NO.(15 digits)')}</label>
 
                             <div className="input-group mb-3">
                                 <input
@@ -4271,19 +4272,19 @@ const OrderCreate = forwardRef((props, ref) => {
                                     }}
                                     className="form-control"
 
-                                    placeholder="VAT NO."
+                                    placeholder={t('VAT NO.')}
                                 />
                             </div>
                             {errors.vat_no && (
                                 <div style={{ color: "red" }}>
 
-                                    {errors.vat_no}
+                                    {t(errors.vat_no)}
                                 </div>
                             )}
                         </div>
 
                         <div className="col-md-3">
-                            <label className="form-label">Address</label>
+                            <label className="form-label">{t('Address')}</label>
                             <div className="input-group mb-3">
                                 <textarea
                                     value={formData.address}
@@ -4297,18 +4298,18 @@ const OrderCreate = forwardRef((props, ref) => {
                                     }}
                                     className="form-control"
                                     id="address"
-                                    placeholder="Address"
+                                    placeholder={t('Address')}
                                 />
                             </div>
                             {errors.address && (
                                 <div style={{ color: "red" }}>
 
-                                    {errors.address}
+                                    {t(errors.address)}
                                 </div>
                             )}
                         </div>
                         <div className="col-md-3">
-                            <label className="form-label">Remarks</label>
+                            <label className="form-label">{t('Remarks')}</label>
                             <div className="input-group mb-3">
                                 <textarea
                                     value={formData.remarks}
@@ -4322,18 +4323,18 @@ const OrderCreate = forwardRef((props, ref) => {
                                     }}
                                     className="form-control"
                                     id="remarks"
-                                    placeholder="Remarks"
+                                    placeholder={t('Remarks')}
                                 />
                             </div>
                             {errors.remarks && (
                                 <div style={{ color: "red" }}>
 
-                                    {errors.remarks}
+                                    {t(errors.remarks)}
                                 </div>
                             )}
                         </div>
                         <div className="col-md-10" >
-                            <label className="form-label">Product Search*</label>
+                            <label className="form-label">{t('Product Search') + "*"}</label>
                             <Typeahead
                                 id="product_id"
                                 filterBy={() => true}
@@ -4373,7 +4374,7 @@ const OrderCreate = forwardRef((props, ref) => {
                                     }, 100);
                                 }}
                                 options={productOptions}
-                                placeholder="Part No. | Name | Name in Arabic | Brand | Country"
+                                placeholder={t('Part No. | Name | Name in Arabic | Brand | Country')}
                                 highlightOnlyResult={true}
                                 onKeyDown={(e) => {
                                     if (e.key === "Escape") {
@@ -4417,15 +4418,15 @@ const OrderCreate = forwardRef((props, ref) => {
                                                     {searchProductsColumns.filter(c => c.visible).map((col) => {
                                                         return (<>
                                                             {col.key === "select" && <div style={{ width: getColumnWidth(col), border: "solid 0px", }}></div>}
-                                                            {col.key === "part_number" && <div style={{ width: getColumnWidth(col), border: "solid 0px", }}>Part Number</div>}
-                                                            {col.key === "name" && <div style={{ width: getColumnWidth(col), border: "solid 0px", }}>Name</div>}
-                                                            {col.key === "unit_price" && <div style={{ width: getColumnWidth(col), border: "solid 0px", }}>S.Unit Price</div>}
-                                                            {col.key === "stock" && <div style={{ width: getColumnWidth(col), border: "solid 0px", }}>Stock</div>}
-                                                            {col.key === "photos" && <div style={{ width: getColumnWidth(col), border: "solid 0px", }}>Photos</div>}
-                                                            {col.key === "brand" && <div style={{ width: getColumnWidth(col), border: "solid 0px", }}>Brand</div>}
-                                                            {col.key === "purchase_price" && <div style={{ width: getColumnWidth(col), border: "solid 0px", }}>P.Unit Price</div>}
-                                                            {col.key === "country" && <div style={{ width: getColumnWidth(col), border: "solid 0px", }}>Country</div>}
-                                                            {col.key === "rack" && <div style={{ width: getColumnWidth(col), border: "solid 0px", }}>Rack</div>}
+                                                            {col.key === "part_number" && <div style={{ width: getColumnWidth(col), border: "solid 0px", }}>{t("Part Number")}</div>}
+                                                            {col.key === "name" && <div style={{ width: getColumnWidth(col), border: "solid 0px", }}>{t("Name")}</div>}
+                                                            {col.key === "unit_price" && <div style={{ width: getColumnWidth(col), border: "solid 0px", }}>{t("S.Unit Price")}</div>}
+                                                            {col.key === "stock" && <div style={{ width: getColumnWidth(col), border: "solid 0px", }}>{t("Stock")}</div>}
+                                                            {col.key === "photos" && <div style={{ width: getColumnWidth(col), border: "solid 0px", }}>{t("Photos")}</div>}
+                                                            {col.key === "brand" && <div style={{ width: getColumnWidth(col), border: "solid 0px", }}>{t("Brand")}</div>}
+                                                            {col.key === "purchase_price" && <div style={{ width: getColumnWidth(col), border: "solid 0px", }}>{t("P.Unit Price")}</div>}
+                                                            {col.key === "country" && <div style={{ width: getColumnWidth(col), border: "solid 0px", }}>{t("Country")}</div>}
+                                                            {col.key === "rack" && <div style={{ width: getColumnWidth(col), border: "solid 0px", }}>{t("Rack")}</div>}
                                                         </>)
                                                     })}
                                                     {/* Settings icon on right */}
@@ -4628,11 +4629,11 @@ const OrderCreate = forwardRef((props, ref) => {
                                 }}
                             />
 
-                            <Button hide={true.toString()} onClick={openProductCreateForm} className="btn btn-outline-secondary btn-primary btn-sm" type="button" id="button-addon1"> <i className="bi bi-plus-lg"></i> New</Button>
+                            <Button hide={true.toString()} onClick={openProductCreateForm} className="btn btn-outline-secondary btn-primary btn-sm" type="button" id="button-addon1"> <i className="bi bi-plus-lg"></i> {t('New')}</Button>
                             {errors.product_id ? (
                                 <div style={{ color: "red" }}>
 
-                                    {errors.product_id}
+                                    {t(errors.product_id)}
                                 </div>
                             ) : ""}
                         </div>
@@ -4647,7 +4648,7 @@ const OrderCreate = forwardRef((props, ref) => {
                             <div style={{ zIndex: "9999 !important", marginTop: "30px" }}>
                                 <Dropdown style={{}}>
                                     <Dropdown.Toggle variant="success" id="dropdown-basic">
-                                        <i className="bi bi-download"></i>    Import
+                                        <i className="bi bi-download"></i>    {t('Import')}
                                     </Dropdown.Toggle>
                                     <Dropdown.Menu >
                                         <Dropdown.Item onClick={() => {
@@ -4655,7 +4656,7 @@ const OrderCreate = forwardRef((props, ref) => {
                                         }}>
                                             <i className="bi bi-file-earmark-text"></i>
                                             &nbsp;
-                                            From Quotations
+                                            {t('From Quotations')}
                                         </Dropdown.Item>
 
                                         <Dropdown.Item onClick={() => {
@@ -4663,7 +4664,7 @@ const OrderCreate = forwardRef((props, ref) => {
                                         }}>
                                             <i className="bi bi-file-earmark-text"></i>
                                             &nbsp;
-                                            From Delivery Notes
+                                            {t('From Delivery Notes')}
                                         </Dropdown.Item>
                                     </Dropdown.Menu>
                                 </Dropdown>
@@ -4705,22 +4706,22 @@ const OrderCreate = forwardRef((props, ref) => {
                                 <thead>
                                     <tr className="text-center">
                                         <th ></th>
-                                        <th >SI No.</th>
-                                        <th>Part No.</th>
-                                        <th style={{ minWidth: "250px" }}>Name</th>
-                                        <th>Info</th>
-                                        <th>Purchase Unit Price(without VAT)</th>
-                                        <th>Stock</th>
-                                        {store.settings?.enable_warehouse_module && <th>Remove Stock From</th>}
-                                        <th style={{ minWidth: "80px", maxWidth: "80px" }}>Qty</th>
-                                        <th>Unit Price(without VAT)</th>
-                                        <th>Unit Price(with VAT)</th>
-                                        <th>Unit Disc.(without VAT)</th>
-                                        <th>Unit Disc.(with VAT)</th>
+                                        <th >{t('SI No.')}</th>
+                                        <th>{t('Part No.')}</th>
+                                        <th style={{ minWidth: "250px" }}>{t('Name')}</th>
+                                        <th>{t('Info')}</th>
+                                        <th>{t('Purchase Unit Price(without VAT)')}</th>
+                                        <th>{t('Stock')}</th>
+                                        {store.settings?.enable_warehouse_module && <th>{t('Remove Stock From')}</th>}
+                                        <th style={{ minWidth: "80px", maxWidth: "80px" }}>{t('Qty')}</th>
+                                        <th>{t('Unit Price(without VAT)')}</th>
+                                        <th>{t('Unit Price(with VAT)')}</th>
+                                        <th>{t('Unit Disc.(without VAT)')}</th>
+                                        <th>{t('Unit Disc.(with VAT)')}</th>
                                         {/*  <th>Unit Disc. %(without VAT)</th>*/}
-                                        <th>Unit Disc. %(with VAT)</th>
-                                        <th>Price(without VAT)</th>
-                                        <th>Price(with VAT)</th>
+                                        <th>{t('Unit Disc. %(with VAT)')}</th>
+                                        <th>{t('Price(without VAT)')}</th>
+                                        <th>{t('Price(with VAT)')}</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -4758,7 +4759,7 @@ const OrderCreate = forwardRef((props, ref) => {
                                                             onKeyDown={(e) => {
                                                                 RunKeyActions(e, product);
                                                             }}
-                                                            placeholder="Part No." onChange={(e) => {
+                                                            placeholder={t("Part No.")} onChange={(e) => {
                                                                 delete errors["part_number_" + index];
                                                                 setErrors({ ...errors });
                                                                 if (!e.target.value) {
@@ -6140,7 +6141,7 @@ const OrderCreate = forwardRef((props, ref) => {
                                     <tr>
 
 
-                                        <th colSpan="8" className="text-end">Total(without VAT)</th>
+                                        <th colSpan="8" className="text-end">{t("Total(without VAT)")}</th>
                                         <td className="text-end" style={{ width: "200px" }} >
                                             <NumberFormat
                                                 value={trimTo2Decimals(formData.total)}
@@ -6152,7 +6153,7 @@ const OrderCreate = forwardRef((props, ref) => {
                                         </td>
                                     </tr>
                                     <tr>
-                                        <th colSpan="8" className="text-end">Total(with VAT)</th>
+                                        <th colSpan="8" className="text-end">{t("Total(with VAT)")}</th>
                                         <td className="text-end" style={{ width: "200px" }} >
                                             <NumberFormat
                                                 value={trimTo2Decimals(formData.total_with_vat)}
@@ -6165,7 +6166,7 @@ const OrderCreate = forwardRef((props, ref) => {
                                     </tr>
                                     <tr>
                                         <th colSpan="8" className="text-end">
-                                            Shipping & Handling Fees
+                                            {t("Shipping & Handling Fees")}
                                         </th>
                                         <td className="text-end">
                                             <input type="number" id="sales_shipping_fees" name="sales_shipping_fees" onWheel={(e) => e.target.blur()} style={{ width: "150px" }} className="text-start" value={shipping} onChange={(e) => {
@@ -6211,7 +6212,7 @@ const OrderCreate = forwardRef((props, ref) => {
 
 
                                                 if (/^\d*\.?\d{0,2}$/.test(parseFloat(e.target.value)) === false) {
-                                                    errors["shipping_handling_fees"] = "Max. decimal points allowed is 2";
+                                                    errors["shipping_handling_fees"] = t("Max. decimal points allowed is 2");
                                                     setErrors({ ...errors });
                                                 }
 
@@ -6232,7 +6233,7 @@ const OrderCreate = forwardRef((props, ref) => {
                                     </tr>
                                     <tr>
                                         <th colSpan="8" className="text-end">
-                                            Discount(without VAT) <input type="number" id="discount_percent" name="discount_percent" onWheel={(e) => e.target.blur()} disabled={true} style={{ width: "50px" }} className="text-start" value={discountPercent} onChange={(e) => {
+                                            {t("Discount(without VAT)")} <input type="number" id="discount_percent" name="discount_percent" onWheel={(e) => e.target.blur()} disabled={true} style={{ width: "50px" }} className="text-start" value={discountPercent} onChange={(e) => {
                                                 if (timerRef.current) clearTimeout(timerRef.current);
                                                 if (parseFloat(e.target.value) === 0) {
 
@@ -6415,7 +6416,7 @@ const OrderCreate = forwardRef((props, ref) => {
                                     </tr>
                                     <tr>
                                         <th colSpan="8" className="text-end">
-                                            Discount(with VAT) <input
+                                            {t("Discount(with VAT)")} <input
                                                 type="number"
                                                 id="discount_percent"
                                                 name="discount_percent"
@@ -6593,7 +6594,7 @@ const OrderCreate = forwardRef((props, ref) => {
                                     </tr>
                                     <tr>
                                         <th colSpan="8" className="text-end">
-                                            Total Taxable Amount(without VAT)
+                                            {t("Total Taxable Amount(without VAT)")}
                                             <OverlayTrigger placement="right" overlay={renderTooltip}>
                                                 <span style={{ textDecoration: 'underline dotted', cursor: 'pointer' }}>ℹ️</span>
                                             </OverlayTrigger>
@@ -6611,7 +6612,7 @@ const OrderCreate = forwardRef((props, ref) => {
                                     </tr>
                                     <tr>
 
-                                        <th colSpan="8" className="text-end"> VAT  <input type="number" id="sales_vat_percent" name="sales_vat_percent" onWheel={(e) => e.target.blur()} disabled={true} className="text-center" style={{ width: "50px" }} value={formData.vat_percent} onChange={(e) => {
+                                        <th colSpan="8" className="text-end"> {t("VAT")} <input type="number" id="sales_vat_percent" name="sales_vat_percent" onWheel={(e) => e.target.blur()} disabled={true} className="text-center" style={{ width: "50px" }} value={formData.vat_percent} onChange={(e) => {
                                             console.log("Inside onchange vat percent");
                                             if (parseFloat(e.target.value) === 0) {
                                                 formData.vat_percent = parseFloat(e.target.value);
@@ -6668,7 +6669,7 @@ const OrderCreate = forwardRef((props, ref) => {
                                     </tr>
                                     <tr>
                                         <th colSpan="8" className="text-end">
-                                            Net Total(with VAT) Before Rounding
+                                            {t("Net Total(with VAT) Before Rounding")}
                                             <OverlayTrigger placement="right" overlay={renderNetTotalBeforeRoundingTooltip}>
                                                 <span style={{ textDecoration: 'underline dotted', cursor: 'pointer' }}>ℹ️</span>
                                             </OverlayTrigger>
@@ -6685,7 +6686,7 @@ const OrderCreate = forwardRef((props, ref) => {
                                     </tr>
                                     <tr>
 
-                                        <th colSpan="8" className="text-end">  Rounding Amount
+                                        <th colSpan="8" className="text-end">  {t("Rounding Amount")}
                                             [<input type="checkbox"
                                                 id="sales_auto_rounding_amount"
                                                 name="sales_auto_rounding_amount"
@@ -6703,7 +6704,7 @@ const OrderCreate = forwardRef((props, ref) => {
                                                     }, 100);
 
                                                     console.log(formData);
-                                                }} />{" Auto Calculate]"}
+                                                }} />{" " + t("Auto Calculate") + "]"}
                                         </th>
                                         <td className="text-end">
                                             <input type="number"
@@ -6773,7 +6774,7 @@ const OrderCreate = forwardRef((props, ref) => {
                                     </tr>
                                     <tr>
                                         <th colSpan="8" className="text-end">
-                                            Net Total(with VAT)
+                                            {t("Net Total(with VAT)")}
                                             <OverlayTrigger placement="right" overlay={renderNetTotalTooltip}>
                                                 <span style={{ textDecoration: 'underline dotted', cursor: 'pointer' }}>ℹ️</span>
                                             </OverlayTrigger>
@@ -6864,7 +6865,7 @@ const OrderCreate = forwardRef((props, ref) => {
                         </div>
                                 */}
                         <div className="col-md-2">
-                            <label className="form-label">Cash discount</label>
+                            <label className="form-label">{t("Cash discount")}</label>
                             <input
                                 type='number'
                                 ref={cashDiscountRef}
@@ -6892,7 +6893,7 @@ const OrderCreate = forwardRef((props, ref) => {
                                     setCashDiscount(cashDiscount);
 
                                     if (cashDiscount > 0 && cashDiscount >= formData.net_total) {
-                                        errors["cash_discount"] = "Cash discount should not be greater than or equal to Net Total: " + formData.net_total?.toString();
+                                        errors["cash_discount"] = t("Cash discount should not be greater than or equal to Net Total: ") + formData.net_total?.toString();
                                         setErrors({ ...errors });
                                         return;
                                     }
@@ -6934,29 +6935,29 @@ const OrderCreate = forwardRef((props, ref) => {
                         </div>
 
                         <div className="col-md-8">
-                            <label className="form-label">Payments Received</label>
+                            <label className="form-label">{t("Payments Received")}</label>
 
                             <div class="table-responsive" style={{ maxWidth: "900px" }}>
                                 <Button variant="secondary" style={{ alignContent: "right", marginBottom: "10px" }} onClick={addNewPayment}>
-                                    Create new payment
+                                    {t("Create New Payment")}
                                 </Button>
                                 <table class="table table-striped table-sm table-bordered">
                                     {formData.payments_input && formData.payments_input?.length > 0 &&
                                         <thead>
                                             <th>
-                                                Date
+                                                {t("Date")}
                                             </th>
                                             <th>
-                                                Amount
+                                                {t("Amount")}
                                             </th>
                                             <th>
-                                                Payment method
+                                                {t("Payment Method")}
                                             </th>
                                             <th>
-                                                Reference
+                                                {t("Reference")}
                                             </th>
                                             <th>
-                                                Action
+                                                {t("Action")}
                                             </th>
                                         </thead>}
                                     <tbody>
@@ -6985,7 +6986,7 @@ const OrderCreate = forwardRef((props, ref) => {
                                                         {errors["payment_date_" + key] && (
                                                             <div style={{ color: "red" }}>
 
-                                                                {errors["payment_date_" + key]}
+                                                                {t(errors["payment_date_" + key])}
                                                             </div>
                                                         )}
                                                     </td>
@@ -7012,7 +7013,7 @@ const OrderCreate = forwardRef((props, ref) => {
                                                         {errors["payment_amount_" + key] && (
                                                             <div style={{ color: "red" }}>
 
-                                                                {errors["payment_amount_" + key]}
+                                                                {t(errors["payment_amount_" + key])}
                                                             </div>
                                                         )}
                                                     </td>
@@ -7024,7 +7025,7 @@ const OrderCreate = forwardRef((props, ref) => {
                                                                 setErrors({ ...errors });
 
                                                                 if (!e.target.value) {
-                                                                    errors["payment_method_" + key] = "Payment method is required";
+                                                                    errors["payment_method_" + key] = t("Payment method is required");
                                                                     setErrors({ ...errors });
 
                                                                     formData.payments_input[key].method = "";
@@ -7040,21 +7041,20 @@ const OrderCreate = forwardRef((props, ref) => {
                                                                 console.log(formData);
                                                             }}
                                                         >
-                                                            <option value="">Select</option>
-                                                            <option value="cash">Cash</option>
-                                                            <option value="debit_card">Debit Card</option>
-                                                            <option value="credit_card">Credit Card</option>
-                                                            <option value="bank_card">Bank Card</option>
-                                                            <option value="bank_transfer">Bank Transfer</option>
-                                                            <option value="bank_cheque">Bank Cheque</option>
-                                                            <option value="sales_return">Sales Return</option>
-                                                            <option value="purchase">Purchase</option>
-                                                            <option value="customer_account">Customer Account</option>
+                                                            <option value="">{t("Select")}</option>
+                                                            <option value="cash">{t("Cash")}</option>
+                                                            <option value="debit_card">{t("Debit Card")}</option>
+                                                            <option value="credit_card">{t("Credit Card")}</option>
+                                                            <option value="bank_card">{t("Bank Card")}</option>
+                                                            <option value="bank_transfer">{t("Bank Transfer")}</option>
+                                                            <option value="bank_cheque">{t("Bank Cheque")}</option>
+                                                            <option value="sales_return">{t("Sales Return")}</option>
+                                                            <option value="purchase">{t("Purchase")}</option>
                                                         </select>
                                                         {errors["payment_method_" + key] && (
                                                             <div style={{ color: "red" }}>
 
-                                                                {errors["payment_method_" + key]}
+                                                                {t(errors["payment_method_" + key])}
                                                             </div>
                                                         )}
                                                     </td>
@@ -7072,7 +7072,7 @@ const OrderCreate = forwardRef((props, ref) => {
                                                         <Button variant="danger" onClick={(event) => {
                                                             removePayment(key);
                                                         }}>
-                                                            Remove
+                                                            {t("Remove")}
                                                         </Button>
 
                                                     </td>
@@ -7080,36 +7080,36 @@ const OrderCreate = forwardRef((props, ref) => {
                                             ))}
                                         <tr>
                                             <td class="text-end">
-                                                <b>Total</b>
+                                                <b>{t("Total")}</b>
                                             </td>
                                             <td><b style={{ marginLeft: "14px" }}>{trimTo2Decimals(totalPaymentAmount)}</b>
                                                 {errors["total_payment"] && (
                                                     <div style={{ color: "red" }}>
-                                                        {errors["total_payment"]}
+                                                        {t(errors["total_payment"])}
                                                     </div>
                                                 )}
                                             </td>
                                             <td>
-                                                <b style={{ marginLeft: "12px", alignSelf: "end" }}>Balance: {trimTo2Decimals(balanceAmount)}</b>
+                                                <b style={{ marginLeft: "12px", alignSelf: "end" }}>{t("Balance")}: {trimTo2Decimals(balanceAmount)}</b>
                                                 {errors["customer_credit_limit"] && (
                                                     <div style={{ color: "red" }}>
-                                                        {errors["customer_credit_limit"]}
+                                                        {t(errors["customer_credit_limit"])}
                                                     </div>
                                                 )}
                                             </td>
                                             <td colSpan={2}>
-                                                <b>Payment status: </b>
+                                                <b>{t("Payment status")}: </b>
                                                 {paymentStatus === "paid" ?
                                                     <span className="badge bg-success">
-                                                        Paid
+                                                        {t("Paid")}
                                                     </span> : ""}
                                                 {paymentStatus === "paid_partially" ?
                                                     <span className="badge bg-warning">
-                                                        Paid Partially
+                                                        {t("Paid Partially")}
                                                     </span> : ""}
                                                 {paymentStatus === "not_paid" ?
                                                     <span className="badge bg-danger">
-                                                        Not Paid
+                                                        {t("Not Paid")}
                                                     </span> : ""}
                                             </td>
                                         </tr>
@@ -7122,7 +7122,7 @@ const OrderCreate = forwardRef((props, ref) => {
 
                         <div className="row">
                             <div className="col-md-2">
-                                <label className="form-label">Commission</label>
+                                <label className="form-label">{t("Commission")}</label>
                                 <input
                                     type='number'
                                     ref={commissionRef}
@@ -7145,13 +7145,13 @@ const OrderCreate = forwardRef((props, ref) => {
                                         setCommission(commission);
 
                                         if (commission > 0 && commission >= formData.net_total) {
-                                            errors["commission"] = "Commission should not be greater than or equal to Net Total: " + formData.net_total?.toString();
+                                            errors["commission"] = t("Commission should not be greater than or equal to Net Total: ") + formData.net_total?.toString();
                                             setErrors({ ...errors });
                                             return;
                                         }
 
                                         if (commission > 0 && !formData.commission_payment_method) {
-                                            errors["commission_payment_method"] = "Payment method is required";
+                                            errors["commission_payment_method"] = t("Payment method is required");
                                             setErrors({ ...errors });
                                             return;
                                         }
@@ -7181,12 +7181,12 @@ const OrderCreate = forwardRef((props, ref) => {
                                 />
                                 {errors.commission && (
                                     <div style={{ color: "red" }}>
-                                        {errors.commission}
+                                        {t(errors.commission)}
                                     </div>
                                 )}
                             </div>
                             <div className="col-md-2">
-                                <label className="form-label">Commission Payment Method</label>
+                                <label className="form-label">{t("Commission Payment Method")}</label>
                                 <select value={formData.commission_payment_method} className="form-control "
                                     onChange={(e) => {
                                         // errors["payment_method"] = [];
@@ -7194,7 +7194,7 @@ const OrderCreate = forwardRef((props, ref) => {
                                         setErrors({ ...errors });
 
                                         if (!e.target.value && commission > 0) {
-                                            errors["commission_payment_method"] = "Payment method is required";
+                                            errors["commission_payment_method"] = t("Payment method is required");
                                             setErrors({ ...errors });
 
                                             formData.commission_payment_method = "";
@@ -7210,17 +7210,17 @@ const OrderCreate = forwardRef((props, ref) => {
                                         console.log(formData);
                                     }}
                                 >
-                                    <option value="">Select</option>
-                                    <option value="cash">Cash</option>
-                                    <option value="debit_card">Debit Card</option>
-                                    <option value="credit_card">Credit Card</option>
-                                    <option value="bank_card">Bank Card</option>
-                                    <option value="bank_transfer">Bank Transfer</option>
-                                    <option value="bank_cheque">Bank Cheque</option>
+                                    <option value="">{t("Select")}</option>
+                                    <option value="cash">{t("Cash")}</option>
+                                    <option value="debit_card">{t("Debit Card")}</option>
+                                    <option value="credit_card">{t("Credit Card")}</option>
+                                    <option value="bank_card">{t("Bank Card")}</option>
+                                    <option value="bank_transfer">{t("Bank Transfer")}</option>
+                                    <option value="bank_cheque">{t("Bank Cheque")}</option>
                                 </select>
                                 {errors["commission_payment_method"] && (
                                     <div style={{ color: "red" }}>
-                                        {errors["commission_payment_method"]}
+                                        {t(errors["commission_payment_method"])}
                                     </div>
                                 )}
                             </div>
@@ -7228,7 +7228,7 @@ const OrderCreate = forwardRef((props, ref) => {
 
                         <Modal.Footer>
                             <Button variant="secondary" onClick={handleClose}>
-                                Close
+                                {t("Close")}
                             </Button>
                             <Button
                                 variant="primary"
@@ -7249,7 +7249,7 @@ const OrderCreate = forwardRef((props, ref) => {
 
                                     : ""
                                 }
-                                {isUpdateForm && !isSubmitting ? "Update" : !isSubmitting ? "Create" : ""}
+                                {isUpdateForm && !isSubmitting ? t("Update") : !isSubmitting ? t("Create") : ""}
 
                             </Button>
                         </Modal.Footer>

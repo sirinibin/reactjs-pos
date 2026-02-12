@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef, forwardRef, useContext, useCallback, useMemo } from "react";
+import { useTranslation } from 'react-i18next';
 import OrderCreate from "./create.js";
 import OrderView from "./view.js";
 
@@ -55,6 +56,7 @@ const TimeAgo = ({ date }) => {
 
 
 const OrderIndex = forwardRef((props, ref) => {
+    const { t } = useTranslation('common');
     //deploy to master
     let [enableSelection, setEnableSelection] = useState(false);
     let [pendingView, setPendingView] = useState(false);
@@ -1608,6 +1610,7 @@ const OrderIndex = forwardRef((props, ref) => {
 
     return (
         <>
+
             {showCustomerUpdateForm && <CustomerCreate ref={CustomerUpdateFormRef} />}
             {/* ⚙️ Settings Modal */}
             <Modal
@@ -1621,17 +1624,16 @@ const OrderIndex = forwardRef((props, ref) => {
                         <i
                             className="bi bi-gear-fill"
                             style={{ fontSize: "1.2rem", marginRight: "4px" }}
-                            title="Table Settings"
-
+                            title={t('Table Settings')}
                         />
-                        Sales Settings
+                        {t('Sales Settings')}
                     </Modal.Title>
                 </Modal.Header>
                 <Modal.Body>
                     {/* Column Settings */}
                     {showSettings && (
                         <>
-                            <h6 className="mb-2">Customize Columns</h6>
+                            <h6 className="mb-2">{t('Customize Columns')}</h6>
                             <DragDropContext onDragEnd={onDragEnd}>
                                 <Droppable droppableId="columns">
                                     {(provided) => (
@@ -1664,7 +1666,7 @@ const OrderIndex = forwardRef((props, ref) => {
                                                                                 handleToggleColumn(index);
                                                                             }}
                                                                         />
-                                                                        {col.label}
+                                                                        {t(col.label)}
                                                                     </div>
                                                                     <span style={{ cursor: "grab" }}>☰</span>
                                                                 </li>
@@ -1682,7 +1684,7 @@ const OrderIndex = forwardRef((props, ref) => {
                 </Modal.Body>
                 <Modal.Footer>
                     <Button variant="secondary" onClick={() => setShowSettings(false)}>
-                        Close
+                        {t('Close')}
                     </Button>
                     <Button
                         variant="primary"
@@ -1692,7 +1694,7 @@ const OrderIndex = forwardRef((props, ref) => {
                             //setShowSettings(false);
                         }}
                     >
-                        Restore to Default
+                        {t('Restore to Default')}
                     </Button>
                 </Modal.Footer>
             </Modal>
@@ -1748,11 +1750,11 @@ const OrderIndex = forwardRef((props, ref) => {
             {/* Error Modal */}
             <Modal show={showErrors} onHide={() => setShowErrors(false)} centered>
                 <Modal.Header closeButton>
-                    <Modal.Title>Error</Modal.Title>
+                    <Modal.Title>{t('Error')}</Modal.Title>
                 </Modal.Header>
                 <Modal.Body>
                     <Alert variant="danger">
-                        ❌ Oops! Something went wrong. Please try again later.
+                        ❌ {t('Oops! Something went wrong. Please try again later.')}
                     </Alert>
                     {Object.keys(errors).length > 0 ?
                         <div>
@@ -1771,14 +1773,14 @@ const OrderIndex = forwardRef((props, ref) => {
                 </Modal.Body>
                 <Modal.Footer>
                     <Button variant="secondary" onClick={() => setShowErrors(false)}>
-                        Close
+                        {t('Close')}
                     </Button>
                 </Modal.Footer>
             </Modal>
 
             <Modal show={showSuccess} onHide={() => setShowSuccess(false)} centered>
                 <Modal.Header closeButton>
-                    <Modal.Title>Success</Modal.Title>
+                    <Modal.Title>{t('Success')}</Modal.Title>
                 </Modal.Header>
                 <Modal.Body>
                     <Alert variant="success">
@@ -1787,7 +1789,7 @@ const OrderIndex = forwardRef((props, ref) => {
                 </Modal.Body>
                 <Modal.Footer>
                     <Button variant="secondary" onClick={() => setShowSuccess(false)}>
-                        Close
+                        {t('Close')}
                     </Button>
                 </Modal.Footer>
             </Modal>
@@ -1797,7 +1799,7 @@ const OrderIndex = forwardRef((props, ref) => {
                     <div className="col">
                         <span className="text-end">
                             <StatsSummary
-                                title="Sales"
+                                title={'Sales'}
                                 stats={{
                                     "Sales": totalSales,
                                     "Cash Sales": totalCashSales,
@@ -1826,7 +1828,7 @@ const OrderIndex = forwardRef((props, ref) => {
                 </div>
                 <div className="row">
                     <div className="col">
-                        <h1 className="h3">Sales Orders</h1>
+                        <h1 className="h3">{t('Sales')}</h1>
                     </div>
 
 
@@ -1836,14 +1838,14 @@ const OrderIndex = forwardRef((props, ref) => {
                             openReportPreview();
                         }} style={{ marginRight: "8px" }} className="btn btn-primary mb-3">
                             <i className="bi bi-printer"></i>&nbsp;
-                            Print Report
+                            {t('Print Report')}
                         </Button>
 
-                        <ExcelFile filename={salesReportFileName} element={excelData.length > 0 ? <Button variant="success" className="btn btn-primary mb-3 success" >Download Sales Report(XLS)</Button> : ""}>
+                        <ExcelFile filename={salesReportFileName} element={excelData.length > 0 ? <Button variant="success" className="btn btn-primary mb-3 success" >{t('Download Sales Report(XLS)')}</Button> : ""}>
                             <ExcelSheet dataSet={excelData} name={salesReportFileName} />
                         </ExcelFile>
 
-                        {excelData.length === 0 ? <Button variant="primary" className="btn btn-primary mb-3" onClick={getAllOrders} >{fettingAllRecordsInProgress ? "Preparing.." : "Sales Report(XLS)"}</Button> : ""}
+                        {excelData.length === 0 ? <Button variant="primary" className="btn btn-primary mb-3" onClick={getAllOrders} >{fettingAllRecordsInProgress ? t('Preparing..') : t('Sales Report(XLS)')}</Button> : ""}
                         &nbsp;&nbsp;
 
                         <Button
@@ -1854,7 +1856,7 @@ const OrderIndex = forwardRef((props, ref) => {
                                 openCreateForm();
                             }}
                         >
-                            <i className="bi bi-plus-lg"></i> Create
+                            <i className="bi bi-plus-lg"></i> {t('Create')}
                         </Button>
                     </div>
                 </div>
@@ -1871,7 +1873,7 @@ const OrderIndex = forwardRef((props, ref) => {
                                 <div className="row">
                                     {totalItems === 0 && (
                                         <div className="col">
-                                            <p className="text-start">No Orders to display</p>
+                                            <p className="text-start">{t('No Orders to display')}</p>
                                         </div>
                                     )}
                                 </div>
@@ -1907,7 +1909,7 @@ const OrderIndex = forwardRef((props, ref) => {
                                     <div className="col text-end">
                                         {totalItems > 0 && (
                                             <>
-                                                <label className="form-label">Size:&nbsp;</label>
+                                                <label className="form-label">{t('Size')}:&nbsp;</label>
                                                 <select
                                                     value={pageSize}
                                                     onChange={(e) => {
@@ -1943,14 +1945,14 @@ const OrderIndex = forwardRef((props, ref) => {
                                 <div className="row">
                                     <div className="col" style={{ border: "solid 0px", width: "100%" }}>
                                         {totalPages ? <ReactPaginate
-                                            breakLabel="..."
-                                            nextLabel="next >"
+                                            breakLabel={t('...')}
+                                            nextLabel={t('next >')}
                                             onPageChange={(event) => {
                                                 changePage(event.selected + 1);
                                             }}
                                             pageRangeDisplayed={5}
                                             pageCount={totalPages}
-                                            previousLabel="< previous"
+                                            previousLabel={t('< previous')}
                                             renderOnZeroPageCount={null}
                                             className="pagination  flex-wrap"
                                             pageClassName="page-item"
@@ -1988,8 +1990,7 @@ const OrderIndex = forwardRef((props, ref) => {
                                         <>
                                             <div className="col text-start">
                                                 <p className="text-start">
-                                                    showing {offset + 1}-{offset + currentPageItemsCount} of{" "}
-                                                    {totalItems}
+                                                    {t('showing')} {offset + 1}-{offset + currentPageItemsCount} {t('of')} {totalItems}
                                                 </p>
                                             </div>
 
@@ -1997,7 +1998,7 @@ const OrderIndex = forwardRef((props, ref) => {
 
                                             <div className="col text-end">
                                                 <p className="text-end">
-                                                    page {page} of {totalPages}
+                                                    {t('page')} {page} {t('of')} {totalPages}
                                                 </p>
                                             </div>
                                         </>
@@ -2010,8 +2011,8 @@ const OrderIndex = forwardRef((props, ref) => {
                                             <tr className="text-center main-header">
                                                 {columns.filter(c => c.visible).map((col) => {
                                                     return (<>
-                                                        {col.key === "actions" && <th key={col.key}>{col.label}</th>}
-                                                        {col.key === "select" && enableSelection && <th key={col.key}>{col.label}</th>}
+                                                        {col.key === "actions" && <th key={col.key}>{t(col.label)}</th>}
+                                                        {col.key === "select" && enableSelection && <th key={col.key}>{t(col.label)}</th>}
                                                         {col.key === "reported_to_zatca" && store.zatca?.phase === "2" && store.zatca?.connected && <th>
                                                             <b
                                                                 style={{
@@ -2022,7 +2023,7 @@ const OrderIndex = forwardRef((props, ref) => {
                                                                     sort(col.fieldName);
                                                                 }}
                                                             >
-                                                                {col.label}
+                                                                {t(col.label)}
                                                                 {sortField === col.fieldName && sortOrder === "-" ? (
                                                                     <i className="bi bi-sort-alpha-up-alt"></i>
                                                                 ) : null}
@@ -2041,7 +2042,7 @@ const OrderIndex = forwardRef((props, ref) => {
                                                                     sort(col.fieldName);
                                                                 }}
                                                             >
-                                                                {col.label}
+                                                                {t(col.label)}
                                                                 {sortField === col.fieldName && sortOrder === "-" ? (
                                                                     <i className="bi bi-sort-alpha-up-alt"></i>
                                                                 ) : null}
@@ -2077,6 +2078,7 @@ const OrderIndex = forwardRef((props, ref) => {
                                                                     searchByFieldValue(col.fieldName, e.target.value)
                                                                 }
                                                                 className="form-control"
+                                                                placeholder={t('Search')}
                                                             /></th>}
                                                         {col.key === "payment_methods" && <th>
                                                             <Typeahead
@@ -2090,7 +2092,7 @@ const OrderIndex = forwardRef((props, ref) => {
                                                                     );
                                                                 }}
                                                                 options={paymentMethodOptions}
-                                                                placeholder="Select payment methods"
+                                                                placeholder={t('Select payment methods')}
                                                                 selected={selectedPaymentMethodList}
                                                                 highlightOnlyResult={true}
                                                                 multiple
@@ -2126,7 +2128,7 @@ const OrderIndex = forwardRef((props, ref) => {
                                                                     );
                                                                 }}
                                                                 options={userOptions}
-                                                                placeholder="Select Users"
+                                                                placeholder={t('Select Users')}
                                                                 selected={selectedCreatedByUsers}
                                                                 highlightOnlyResult={true}
                                                                 onInputChange={(searchTerm, e) => {
@@ -2167,13 +2169,13 @@ const OrderIndex = forwardRef((props, ref) => {
                                                                     setShowCreatedAtDateRange(!showCreatedAtDateRange)
                                                                 }
                                                             >
-                                                                {showCreatedAtDateRange ? "Less.." : "More.."}
+                                                                {showCreatedAtDateRange ? t('Less') + ".." : t('More') + ".."}
                                                             </small>
                                                             <br />
 
                                                             {showCreatedAtDateRange ? (
                                                                 <span className="text-left">
-                                                                    From:{" "}
+                                                                    {t('From')}: {" "}
                                                                     <DatePicker
                                                                         id="created_at_from"
                                                                         autoComplete="off"
@@ -2193,7 +2195,7 @@ const OrderIndex = forwardRef((props, ref) => {
                                                                             setSelectedCreatedAtFromDate(date);
                                                                         }}
                                                                     />
-                                                                    To:{" "}
+                                                                    {t('To')}: {" "}
                                                                     <DatePicker
                                                                         id="created_at_to"
                                                                         autoComplete="off"
@@ -2227,7 +2229,7 @@ const OrderIndex = forwardRef((props, ref) => {
                                                                     );
                                                                 }}
                                                                 options={paymentStatusOptions}
-                                                                placeholder="Select Payment Status"
+                                                                placeholder={t('Select Payment Status')}
                                                                 selected={selectedPaymentStatusList}
                                                                 highlightOnlyResult={true}
                                                                 multiple
@@ -2239,11 +2241,11 @@ const OrderIndex = forwardRef((props, ref) => {
                                                                     searchByFieldValue("zatca.reporting_passed", e.target.value);
                                                                 }}
                                                             >
-                                                                <option value="" SELECTED>Select</option>
-                                                                <option value="reported">REPORTED</option>
-                                                                <option value="compliance_failed">COMPLIANCE FAILED</option>
-                                                                <option value="reporting_failed">REPORTING FAILED</option>
-                                                                <option value="not_reported">NOT REPORTED</option>
+                                                                <option value="" SELECTED>{t('Select')}</option>
+                                                                <option value="reported">{t('REPORTED')}</option>
+                                                                <option value="compliance_failed">{t('COMPLIANCE FAILED')}</option>
+                                                                <option value="reporting_failed">{t('REPORTING FAILED')}</option>
+                                                                <option value="not_reported">{t('NOT REPORTED')}</option>
                                                             </select>
                                                         </th>}
                                                         {col.key === "customer" && <th>
@@ -2259,7 +2261,7 @@ const OrderIndex = forwardRef((props, ref) => {
                                                                     );
                                                                 }}
                                                                 options={customerOptions}
-                                                                placeholder="Customer Name / Mob / VAT # / ID"
+                                                                placeholder={t('Customer Name / Mob / VAT # / ID')}
                                                                 selected={selectedCustomers}
                                                                 highlightOnlyResult={true}
                                                                 onInputChange={(searchTerm, e) => {
@@ -2310,13 +2312,13 @@ const OrderIndex = forwardRef((props, ref) => {
                                                                     }}
                                                                     onClick={(e) => setShowDateRange(!showDateRange)}
                                                                 >
-                                                                    {showDateRange ? "Less.." : "More.."}
+                                                                    {showDateRange ? t('Less') + ".." : t('More') + ".."}
                                                                 </small>
                                                                 <br />
 
                                                                 {showDateRange ? (
                                                                     <span className="text-left">
-                                                                        From:{" "}
+                                                                        {t('From')}: {" "}
                                                                         <DatePicker
                                                                             id="from_date"
                                                                             autoComplete="off"
@@ -2336,7 +2338,7 @@ const OrderIndex = forwardRef((props, ref) => {
                                                                                 setSelectedFromDate(date);
                                                                             }}
                                                                         />
-                                                                        To:{" "}
+                                                                        {t('To')}: {" "}
                                                                         <DatePicker
                                                                             id="to_date"
                                                                             autoComplete="off"
@@ -2405,14 +2407,14 @@ const OrderIndex = forwardRef((props, ref) => {
                                                                             openSalesReturnCreateForm(order.id);
                                                                         }}
                                                                     >
-                                                                        <i className="bi bi-arrow-left"></i> Return
+                                                                        <i className="bi bi-arrow-left"></i> {t("Return")}
                                                                     </Button>
                                                                 </td>}
                                                                 {(col.key === "select" && enableSelection) && <td style={{ width: "auto", whiteSpace: "nowrap" }}>
                                                                     <Button className="btn btn-success btn-sm" onClick={() => {
                                                                         handleSelected(order);
                                                                     }}>
-                                                                        Select
+                                                                        {t("Select")}
                                                                     </Button>
                                                                 </td>}
                                                                 {(col.fieldName === "code") && <td style={{ width: "auto", whiteSpace: "nowrap" }}>
@@ -2442,26 +2444,26 @@ const OrderIndex = forwardRef((props, ref) => {
                                                                 </td>}
                                                                 {(col.fieldName === "zatca.reporting_passed" && store.zatca?.phase === "2" && store.zatca?.connected) && <td style={{ width: "auto", whiteSpace: "nowrap" }}>
                                                                     {!order.zatca?.compliance_passed && !order.zatca?.reporting_passed && order.zatca?.compliance_check_failed_count > 0 ? <span className="badge bg-danger">
-                                                                        Compliance check failed
+                                                                        {t("Compliance check failed")}
                                                                         {!order.zatca.compliance_passed && order.zatca.compliance_check_last_failed_at ? <span>&nbsp;<TimeAgo date={order.zatca.compliance_check_last_failed_at} />&nbsp;</span> : ""}
                                                                         &nbsp;</span> : ""}
                                                                     {!order.zatca?.reporting_passed && order.zatca?.reporting_failed_count > 0 ? <span> <span className="badge bg-danger">
-                                                                        Reporting failed
+                                                                        {t("Reporting failed")}
                                                                         {!order.zatca.reporting_passed && order.zatca.reporting_last_failed_at ? <span><TimeAgo date={order.zatca.reporting_last_failed_at} />&nbsp;</span> : ""}
                                                                     </span> &nbsp;</span> : ""}
                                                                     {order.zatca?.reporting_passed ? <span>&nbsp;<span className="badge bg-success">
-                                                                        Reported
+                                                                        {t("Reported")}
                                                                         {order.zatca.reporting_passed && order.zatca.reporting_passed_at ? <span>&nbsp;<TimeAgo date={order.zatca.reporting_passed_at} />&nbsp;</span> : ""}
                                                                         &nbsp;</span></span> : ""}
 
                                                                     {!order.zatca?.reporting_passed && !order.zatca?.compliance_passed && !order.zatca?.reporting_failed_count && !order.zatca?.compliance_check_failed_count ? <span className="badge bg-warning">
-                                                                        Not Reported
+                                                                        {t("Not Reported")}
                                                                         &nbsp;</span> : ""}
                                                                     {!order.zatca.reporting_passed ? <span> &nbsp; <Button disabled={reportingInProgress} style={{ marginTop: "3px" }} className="btn btn btn-sm" onClick={() => {
                                                                         ReportInvoiceToZatca(order.id, index);
                                                                     }}>
                                                                         {!order.zatca?.reportingInProgress && (order.zatca?.reporting_failed_count > 0 || order.zatca?.compliance_check_failed_count > 0) ? <i class="bi bi-bootstrap-reboot"></i> : ""}
-                                                                        {!order.zatca?.reportingInProgress && (!order.zatca?.reporting_failed_count > 0 && !order.zatca?.compliance_check_failed_count) ? <span class="bi-arrow-right-circle">&nbsp;Report</span> : ""}
+                                                                        {!order.zatca?.reportingInProgress && (!order.zatca?.reporting_failed_count > 0 && !order.zatca?.compliance_check_failed_count) ? <span class="bi-arrow-right-circle">&nbsp; {t("Report")}</span> : ""}
 
                                                                         {order.zatca?.reportingInProgress ? <Spinner
                                                                             as="span"
@@ -2482,21 +2484,21 @@ const OrderIndex = forwardRef((props, ref) => {
                                                                 {(col.fieldName === "payment_status") && <td style={{ width: "auto", whiteSpace: "nowrap" }}>
                                                                     {order.payment_status === "paid" ?
                                                                         <span className="badge bg-success">
-                                                                            Paid
+                                                                            {t("Paid")}
                                                                         </span> : ""}
                                                                     {order.payment_status === "paid_partially" ?
                                                                         <span className="badge bg-warning">
-                                                                            Paid Partially
+                                                                            {t("Paid Partially")}
                                                                         </span> : ""}
                                                                     {order.payment_status === "not_paid" ?
                                                                         <span className="badge bg-danger">
-                                                                            Not Paid
+                                                                            {t("Not Paid")}
                                                                         </span> : ""}
                                                                 </td>}
                                                                 {(col.fieldName === "payment_methods") && <td style={{ width: "auto", whiteSpace: "nowrap" }}>
                                                                     {order.payment_methods &&
                                                                         order.payment_methods.map((name) => (
-                                                                            <span className="badge bg-info">{name}</span>
+                                                                            <span className="badge bg-info">{t(name)}</span>
                                                                         ))}
                                                                 </td>}
                                                                 {(col.fieldName === "cash_discount") && <td style={{ width: "auto", whiteSpace: "nowrap" }}>
@@ -2544,13 +2546,13 @@ const OrderIndex = forwardRef((props, ref) => {
 
                                 {totalPages ? <ReactPaginate
                                     breakLabel="..."
-                                    nextLabel="next >"
+                                    nextLabel={t("next >")}
                                     onPageChange={(event) => {
                                         changePage(event.selected + 1);
                                     }}
                                     pageRangeDisplayed={5}
                                     pageCount={totalPages}
-                                    previousLabel="< previous"
+                                    previousLabel={t("< previous")}
                                     renderOnZeroPageCount={null}
                                     className="pagination  flex-wrap"
                                     pageClassName="page-item"
