@@ -87,16 +87,16 @@ const OrderIndex = forwardRef((props, ref) => {
 
         excelData = [{
             columns: [
-                { title: "Description", width: { wch: 50 } },//pixels width 
-                { title: "Quantity", width: { wpx: 90 } },//char width 
-                { title: "Unit", width: { wpx: 90 } },
-                { title: "Rate", width: { wpx: 90 } },
-                { title: "Gross", width: { wpx: 90 } },
-                { title: "Disc %", width: { wpx: 90 } },
-                { title: "Disc", width: { wpx: 90 } },
-                { title: "Tax %", width: { wpx: 90 } },
-                { title: "Tax Amount", width: { wpx: 180 } },
-                { title: "Net Amount", width: { wpx: 90 } },
+                { title: t("Description"), width: { wch: 50 } },//pixels width 
+                { title: t("Quantity"), width: { wpx: 90 } },//char width 
+                { title: t("Unit"), width: { wpx: 90 } },
+                { title: t("Rate"), width: { wpx: 90 } },
+                { title: t("Gross"), width: { wpx: 90 } },
+                { title: t("Disc %"), width: { wpx: 90 } },
+                { title: t("Disc"), width: { wpx: 90 } },
+                { title: t("Tax %"), width: { wpx: 90 } },
+                { title: t("Tax Amount"), width: { wpx: 180 } },
+                { title: t("Net Amount"), width: { wpx: 90 } },
             ],
             data: [],
             filename: salesReportFileName,
@@ -195,7 +195,7 @@ const OrderIndex = forwardRef((props, ref) => {
                     { value: "", },
                     { value: "", },
                     {
-                        value: "Shipping/Handling Fees",
+                        value: t("Shipping/Handling Fees"),
                     }, {
                         value: trimTo2Decimals(order.shipping_handling_fees),
                     },
@@ -211,7 +211,7 @@ const OrderIndex = forwardRef((props, ref) => {
                     { value: "", },
                     { value: "", },
                     {
-                        value: "Discount",
+                        value: t("Discount"),
                     }, {
                         value: trimTo2Decimals(order.discount),
                     },
@@ -227,7 +227,7 @@ const OrderIndex = forwardRef((props, ref) => {
                     { value: "", },
                     { value: "", },
                     {
-                        value: "Total Amount After Discount",
+                        value: t("Total Amount After Discount"),
                     }, {
                         value: trimTo2Decimals(totalAmountAfterDiscount),
                     },
@@ -243,7 +243,7 @@ const OrderIndex = forwardRef((props, ref) => {
                     { value: "", },
                     { value: "", },
                     {
-                        value: "Total Amount Before VAT",
+                        value: t("Total Amount Before VAT"),
                     }, {
                         value: trimTo2Decimals(totalAmountBeforeVat),
                     },
@@ -259,7 +259,7 @@ const OrderIndex = forwardRef((props, ref) => {
                     { value: "", },
                     { value: "", },
                     {
-                        value: "VAT Amount",
+                        value: t("VAT Amount"),
                     }, {
                         value: trimTo2Decimals(order.vat_price),
                     },
@@ -277,7 +277,7 @@ const OrderIndex = forwardRef((props, ref) => {
                     { value: "", },
                     { value: "", },
                     {
-                        value: "Total Amount After VAT",
+                        value: t("Total Amount After VAT"),
                     }, {
                         value: trimTo2Decimals(totalAmountAfterVat),
                     },
@@ -300,7 +300,7 @@ const OrderIndex = forwardRef((props, ref) => {
                 { value: "", },
                 { value: "", },
                 {
-                    value: "Day Total Before VAT",
+                    value: t("Day Total Before VAT"),
                 }, {
                     value: trimTo2Decimals(dayTotalBeforeVAT),
                 },
@@ -316,7 +316,7 @@ const OrderIndex = forwardRef((props, ref) => {
                 { value: "", },
                 { value: "", },
                 {
-                    value: "Day VAT",
+                    value: t("Day VAT"),
                 }, {
                     value: trimTo2Decimals(dayVAT),
                 },
@@ -332,7 +332,7 @@ const OrderIndex = forwardRef((props, ref) => {
                 { value: "", },
                 { value: "", },
                 {
-                    value: "Day Total After VAT",
+                    value: t("Day Total After VAT"),
                 }, {
                     value: trimTo2Decimals(dayTotalAfterVAT),
                 },
@@ -372,7 +372,7 @@ const OrderIndex = forwardRef((props, ref) => {
             { value: "", },
             { value: "", },
             {
-                value: "Total Amount Before VAT",
+                value: t("Total Amount Before VAT"),
             }, {
                 value: trimTo2Decimals(totalAmountBeforeVAT),
             },
@@ -388,7 +388,7 @@ const OrderIndex = forwardRef((props, ref) => {
             { value: "", },
             { value: "", },
             {
-                value: "Total VAT",
+                value: t("Total VAT"),
             }, {
                 value: trimTo2Decimals(totalVAT),
             },
@@ -404,7 +404,7 @@ const OrderIndex = forwardRef((props, ref) => {
             { value: "", },
             { value: "", },
             {
-                value: "Total Amount After VAT",
+                value: t("Total Amount After VAT"),
             }, {
                 value: trimTo2Decimals(totalAmountAfterVAT),
             },
@@ -413,7 +413,7 @@ const OrderIndex = forwardRef((props, ref) => {
 
         setExcelData(excelData);
 
-        console.log("excelData:", excelData);
+        //console.log("excelData:", excelData);
     }
 
     function makeSalesReportFilename() {
@@ -1990,15 +1990,20 @@ const OrderIndex = forwardRef((props, ref) => {
                                         <>
                                             <div className="col text-start">
                                                 <p className="text-start">
-                                                    {t('showing')} {offset + 1}-{offset + currentPageItemsCount} {t('of')} {totalItems}
+                                                    {t("Showing {{from}}-{{to}} of {{totalItems}}", {
+                                                        from: (offset + 1),
+                                                        to: (offset + currentPageItemsCount),
+                                                        totalItems: totalItems,
+                                                    })}
                                                 </p>
                                             </div>
 
-
-
                                             <div className="col text-end">
                                                 <p className="text-end">
-                                                    {t('page')} {page} {t('of')} {totalPages}
+                                                    {t("Page {{page}} of {{totalPages}}", {
+                                                        page: page,
+                                                        totalPages: totalPages,
+                                                    })}
                                                 </p>
                                             </div>
                                         </>

@@ -3,9 +3,10 @@ import { Modal } from "react-bootstrap";
 import "react-datepicker/dist/react-datepicker.css";
 import Draggable from "react-draggable";
 import OrderIndex from "./../order/index.js";
-
+import { useTranslation } from 'react-i18next';
 
 const Sales = forwardRef((props, ref) => {
+    const { t } = useTranslation('common');
     const dragRef = useRef(null);
     let [selectedCustomers, setSelectedCustomers] = useState([]);
     let [selectedPaymentStatusList, setSelectedPaymentStatusList] = useState([]);
@@ -72,13 +73,13 @@ const Sales = forwardRef((props, ref) => {
                 )}
             >
                 <Modal.Header>
-                    <Modal.Title>{enableSelection ? "Select Sale" : "Sales"}</Modal.Title>
+                    <Modal.Title>{enableSelection ? t("Select Sale") : t("Sales")}</Modal.Title>
                     <div className="col align-self-end text-end">
                         <button
                             type="button"
                             className="btn-close"
                             onClick={handleClose}
-                            aria-label="Close"
+                            aria-label={t("Close")}
                         ></button>
 
                     </div>

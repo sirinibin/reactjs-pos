@@ -28,6 +28,7 @@ import OrderPrint from './../order/print.js';
 import { DragDropContext, Droppable, Draggable } from "react-beautiful-dnd";
 import CustomerCreate from "./../customer/create.js";
 import OrderCreate from "./../order/create.js";
+import { useTranslation } from 'react-i18next';
 
 
 const ExcelFile = ReactExport.ExcelFile;
@@ -54,6 +55,7 @@ const TimeAgo = ({ date }) => {
 
 //function SalesReturnIndex(props) {
 const SalesReturnIndex = forwardRef((props, ref) => {
+    const { t } = useTranslation('common');
 
     let [enableSelection, setEnableSelection] = useState(false);
     let [pendingView, setPendingView] = useState(false);
@@ -218,11 +220,11 @@ const SalesReturnIndex = forwardRef((props, ref) => {
                 salesreturnList[index].zatca.reportingInProgress = false;
                 setSalesReturnList([...salesreturnList]);
 
-                console.log("Response:");
-                console.log(data);
-                if (props.showToastMessage) props.showToastMessage("Invoice reported successfully to Zatca!", "success");
+                //console.log("Response:");
+                //console.log(data);
+                if (props.showToastMessage) props.showToastMessage(t("Successfully Reported to Zatca!"), "success");
                 setShowSuccess(true);
-                setSuccessMessage("Successfully Reported to Zatca!")
+                setSuccessMessage(t("Successfully Reported to Zatca!"))
                 list();
             })
             .catch((error) => {
@@ -231,12 +233,12 @@ const SalesReturnIndex = forwardRef((props, ref) => {
                 salesreturnList[index].zatca.reportingInProgress = false;
                 setSalesReturnList([...salesreturnList]);
                 setShowErrors(true);
-                console.log("Inside catch");
-                console.log(error);
+                //console.log("Inside catch");
+                //console.log(error);
                 setErrors({ ...error });
                 // setErrors({ ...error });
-                console.error("There was an error!", error);
-                if (props.showToastMessage) props.showToastMessage("Invoice reporting to Zatca failed!", "danger");
+                //console.error("There was an error!", error);
+                if (props.showToastMessage) props.showToastMessage(t("Invoice reporting to Zatca failed!"), "danger");
                 list();
             });
     }
@@ -283,7 +285,7 @@ const SalesReturnIndex = forwardRef((props, ref) => {
     let [fettingAllRecordsInProgress, setFettingAllRecordsInProgress] = useState(false);
 
     function prepareExcelData() {
-        console.log("Inside prepareExcelData()");
+        //console.log("Inside prepareExcelData()");
         var groupedByDate = [];
         for (var i = 0; i < allSalesReturns.length; i++) {
             let date = format(
@@ -298,20 +300,20 @@ const SalesReturnIndex = forwardRef((props, ref) => {
 
         }
 
-        console.log("groupedByDate:", groupedByDate);
+        //console.log("groupedByDate:", groupedByDate);
 
         excelData = [{
             columns: [
-                { title: "Description", width: { wch: 50 } },//pixels width 
-                { title: "Quantity", width: { wpx: 90 } },//char width 
-                { title: "Unit", width: { wpx: 90 } },
-                { title: "Rate", width: { wpx: 90 } },
-                { title: "Gross", width: { wpx: 90 } },
-                { title: "Disc %", width: { wpx: 90 } },
-                { title: "Disc", width: { wpx: 90 } },
-                { title: "Tax %", width: { wpx: 90 } },
-                { title: "Tax Amount", width: { wpx: 180 } },
-                { title: "Net Amount", width: { wpx: 90 } },
+                { title: t("Description"), width: { wch: 50 } },//pixels width 
+                { title: t("Quantity"), width: { wpx: 90 } },//char width 
+                { title: t("Unit"), width: { wpx: 90 } },
+                { title: t("Rate"), width: { wpx: 90 } },
+                { title: t("Gross"), width: { wpx: 90 } },
+                { title: t("Disc %"), width: { wpx: 90 } },
+                { title: t("Disc"), width: { wpx: 90 } },
+                { title: t("Tax %"), width: { wpx: 90 } },
+                { title: t("Tax Amount"), width: { wpx: 180 } },
+                { title: t("Net Amount"), width: { wpx: 90 } },
             ],
             data: [],
         }];
@@ -324,7 +326,7 @@ const SalesReturnIndex = forwardRef((props, ref) => {
         let invoiceCount = 0;
         for (let returnDate in groupedByDate) {
 
-            console.log("returnDate:", returnDate);
+            //console.log("returnDate:", returnDate);
             excelData[0].data.push([{ value: "Inv Date: " + returnDate }]);
 
             let dayTotalBeforeVAT = 0.00;
@@ -403,7 +405,7 @@ const SalesReturnIndex = forwardRef((props, ref) => {
                     { value: "", },
                     { value: "", },
                     {
-                        value: "Shipping/Handling Fees",
+                        value: t("Shipping/Handling Fees"),
                     }, {
                         value: trimTo2Decimals(salesReturn.shipping_handling_fees),
                     },
@@ -419,7 +421,7 @@ const SalesReturnIndex = forwardRef((props, ref) => {
                     { value: "", },
                     { value: "", },
                     {
-                        value: "Discount",
+                        value: t("Discount"),
                     }, {
                         value: trimTo2Decimals(salesReturn.discount),
                     },
@@ -435,7 +437,7 @@ const SalesReturnIndex = forwardRef((props, ref) => {
                     { value: "", },
                     { value: "", },
                     {
-                        value: "Total Amount After Discount",
+                        value: t("Total Amount After Discount"),
                     }, {
                         value: trimTo2Decimals(totalAmountAfterDiscount),
                     },
@@ -451,7 +453,7 @@ const SalesReturnIndex = forwardRef((props, ref) => {
                     { value: "", },
                     { value: "", },
                     {
-                        value: "Total Amount Before VAT",
+                        value: t("Total Amount Before VAT"),
                     }, {
                         value: trimTo2Decimals(totalAmountBeforeVat),
                     },
@@ -468,7 +470,7 @@ const SalesReturnIndex = forwardRef((props, ref) => {
                     { value: "", },
                     { value: "", },
                     {
-                        value: "VAT Amount",
+                        value: t("VAT Amount"),
                     }, {
                         value: trimTo2Decimals(salesReturn.vat_price),
                     },
@@ -486,7 +488,7 @@ const SalesReturnIndex = forwardRef((props, ref) => {
                     { value: "", },
                     { value: "", },
                     {
-                        value: "Total Amount After VAT",
+                        value: t("Total Amount After VAT"),
                     }, {
                         value: trimTo2Decimals(totalAmountAfterVat),
                     },
@@ -508,7 +510,7 @@ const SalesReturnIndex = forwardRef((props, ref) => {
                 { value: "", },
                 { value: "", },
                 {
-                    value: "Day Total Before VAT",
+                    value: t("Day Total Before VAT"),
                 }, {
                     value: trimTo2Decimals(dayTotalBeforeVAT),
                 },
@@ -524,7 +526,7 @@ const SalesReturnIndex = forwardRef((props, ref) => {
                 { value: "", },
                 { value: "", },
                 {
-                    value: "Day VAT",
+                    value: t("Day VAT"),
                 }, {
                     value: trimTo2Decimals(dayVAT),
                 },
@@ -540,7 +542,7 @@ const SalesReturnIndex = forwardRef((props, ref) => {
                 { value: "", },
                 { value: "", },
                 {
-                    value: "Day Total After VAT",
+                    value: t("Day Total After VAT"),
                 }, {
                     value: trimTo2Decimals(dayTotalAfterVAT),
                 },
@@ -582,7 +584,7 @@ const SalesReturnIndex = forwardRef((props, ref) => {
             { value: "", },
             { value: "", },
             {
-                value: "Total Amount Before VAT",
+                value: t("Total Amount Before VAT"),
             }, {
                 value: trimTo2Decimals(totalAmountBeforeVAT),
             },
@@ -598,7 +600,7 @@ const SalesReturnIndex = forwardRef((props, ref) => {
             { value: "", },
             { value: "", },
             {
-                value: "Total VAT",
+                value: t("Total VAT"),
             }, {
                 value: trimTo2Decimals(totalVAT),
             },
@@ -614,7 +616,7 @@ const SalesReturnIndex = forwardRef((props, ref) => {
             { value: "", },
             { value: "", },
             {
-                value: "Total Amount After VAT",
+                value: t("Total Amount After VAT"),
             }, {
                 value: trimTo2Decimals(totalAmountAfterVAT),
             },
@@ -623,7 +625,7 @@ const SalesReturnIndex = forwardRef((props, ref) => {
 
         setExcelData(excelData);
 
-        console.log("excelData:", excelData);
+        //console.log("excelData:", excelData);
     }
 
     function makeSalesReturnReportFilename() {
@@ -711,9 +713,6 @@ const SalesReturnIndex = forwardRef((props, ref) => {
                         return [];
                     }
 
-
-
-
                     return data.result;
 
 
@@ -734,7 +733,7 @@ const SalesReturnIndex = forwardRef((props, ref) => {
         allSalesReturns = salesReturns;
         setAllSalesReturns(salesReturns);
 
-        console.log("allSalesReturns:", allSalesReturns);
+        //console.log("allSalesReturns:", allSalesReturns);
         prepareExcelData();
         fettingAllRecordsInProgress = false;
         setFettingAllRecordsInProgress(false);
@@ -780,10 +779,10 @@ const SalesReturnIndex = forwardRef((props, ref) => {
 
 
     async function suggestCustomers(searchTerm) {
-        console.log("Inside handle suggestCustomers");
+        //console.log("Inside handle suggestCustomers");
         setCustomerOptions([]);
 
-        console.log("searchTerm:" + searchTerm);
+        //console.log("searchTerm:" + searchTerm);
         if (!searchTerm) {
             return;
         }
@@ -824,7 +823,7 @@ const SalesReturnIndex = forwardRef((props, ref) => {
     }
 
     async function suggestUsers(searchTerm) {
-        console.log("Inside handle suggestUsers");
+        //console.log("Inside handle suggestUsers");
         setCustomerOptions([]);
 
         console.log("searchTerm:" + searchTerm);
@@ -938,10 +937,6 @@ const SalesReturnIndex = forwardRef((props, ref) => {
 
         searchParams[field] = Object.values(values)
             .map(function (model) {
-                if (model.name === "UNKNOWN CUSTOMER") {
-                    return "unknown_customer";
-                }
-
                 return model.id;
             })
             .join(",");
@@ -1082,7 +1077,7 @@ const SalesReturnIndex = forwardRef((props, ref) => {
     useEffect(() => {
         if (lastMessage) {
             const jsonMessage = JSON.parse(lastMessage.data);
-            console.log("Received Message in User list:", jsonMessage);
+            // console.log("Received Message in User list:", jsonMessage);
             if (jsonMessage.event === "sales_return_updated") {
                 list();
             }
@@ -1307,7 +1302,6 @@ const SalesReturnIndex = forwardRef((props, ref) => {
         setShowOrderPreview(true);
         setShowPrintTypeSelection(false);
 
-
         if (timerRef.current) clearTimeout(timerRef.current);
 
         timerRef.current = setTimeout(() => {
@@ -1379,28 +1373,28 @@ const SalesReturnIndex = forwardRef((props, ref) => {
     //Table settings
 
     const defaultColumns = useMemo(() => [
-        { key: "actions", label: "Actions", fieldName: "actions", visible: true },
-        { key: "select", label: "Select", fieldName: "select", visible: true },
-        { key: "id", label: "Return ID", fieldName: "code", visible: true },
-        { key: "order_code", label: "Sales ID", fieldName: "order_code", visible: true },
-        { key: "date", label: "Date", fieldName: "date", visible: true },
-        { key: "customer", label: "Customer", fieldName: "customer_name", visible: true },
-        { key: "net_total", label: "Net Total", fieldName: "net_total", visible: true },
-        { key: "total_payment_paid", label: "Amount Paid", fieldName: "total_payment_paid", visible: true },
-        { key: "credit_balance", label: "Credit Balance", fieldName: "balance_amount", visible: true },
-        { key: "reported_to_zatca", label: "Reported to Zatca", fieldName: "zatca.reporting_passed", visible: true },
-        { key: "payment_status", label: "Payment Status", fieldName: "payment_status", visible: true },
-        { key: "payment_methods", label: "Payment Methods", fieldName: "payment_methods", visible: true },
-        { key: "cash_discount", label: "Cash Discount", fieldName: "cash_discount", visible: true },
-        { key: "commission", label: "Commission", fieldName: "commission", visible: true },
-        { key: "commission_payment_method", label: "Commission Payment Method", fieldName: "commission_payment_method", visible: true },
-        { key: "discount", label: "Discount", fieldName: "discount", visible: true },
-        { key: "net_profit", label: "Net Profit", fieldName: "net_profit", visible: true },
-        { key: "net_loss", label: "Net Loss", fieldName: "net_loss", visible: true },
-        { key: "created_by", label: "Created By", fieldName: "created_by", visible: true },
-        { key: "created_at", label: "Created At", fieldName: "created_at", visible: true },
-        { key: "actions_end", label: "Actions", fieldName: "actions_end", visible: true },
-    ], []);
+        { key: "actions", label: t("Actions"), fieldName: "actions", visible: true },
+        { key: "select", label: t("Select"), fieldName: "select", visible: true },
+        { key: "id", label: t("Return ID"), fieldName: "code", visible: true },
+        { key: "order_code", label: t("Sales ID"), fieldName: "order_code", visible: true },
+        { key: "date", label: t("Date"), fieldName: "date", visible: true },
+        { key: "customer", label: t("Customer"), fieldName: "customer_name", visible: true },
+        { key: "net_total", label: t("Net Total"), fieldName: "net_total", visible: true },
+        { key: "total_payment_paid", label: t("Amount Paid"), fieldName: "total_payment_paid", visible: true },
+        { key: "credit_balance", label: t("Credit Balance"), fieldName: "balance_amount", visible: true },
+        { key: "reported_to_zatca", label: t("Reported to Zatca"), fieldName: "zatca.reporting_passed", visible: true },
+        { key: "payment_status", label: t("Payment Status"), fieldName: "payment_status", visible: true },
+        { key: "payment_methods", label: t("Payment Methods"), fieldName: "payment_methods", visible: true },
+        { key: "cash_discount", label: t("Cash Discount"), fieldName: "cash_discount", visible: true },
+        { key: "commission", label: t("Commission"), fieldName: "commission", visible: true },
+        { key: "commission_payment_method", label: t("Commission Payment Method"), fieldName: "commission_payment_method", visible: true },
+        { key: "discount", label: t("Discount"), fieldName: "discount", visible: true },
+        { key: "net_profit", label: t("Net Profit"), fieldName: "net_profit", visible: true },
+        { key: "net_loss", label: t("Net Loss"), fieldName: "net_loss", visible: true },
+        { key: "created_by", label: t("Created By"), fieldName: "created_by", visible: true },
+        { key: "created_at", label: t("Created At"), fieldName: "created_at", visible: true },
+        { key: "actions_end", label: t("Actions"), fieldName: "actions_end", visible: true },
+    ], [t]);
 
 
     const [columns, setColumns] = useState(defaultColumns);
@@ -1469,7 +1463,7 @@ const SalesReturnIndex = forwardRef((props, ref) => {
         setColumns(defaultColumns);
 
         setShowSuccess(true);
-        setSuccessMessage("Successfully restored to default settings!")
+        setSuccessMessage(t("Successfully restored to default settings!"))
     }
 
     // Save column settings to localStorage
@@ -1561,14 +1555,14 @@ const SalesReturnIndex = forwardRef((props, ref) => {
                             title="Table Settings"
 
                         />
-                        Sales Return Settings
+                        {t("Sales Return Settings")}
                     </Modal.Title>
                 </Modal.Header>
                 <Modal.Body>
                     {/* Column Settings */}
                     {showSettings && (
                         <>
-                            <h6 className="mb-2">Customize Columns</h6>
+                            <h6 className="mb-2">{t("Customize Columns")}</h6>
                             <DragDropContext onDragEnd={onDragEnd}>
                                 <Droppable droppableId="columns">
                                     {(provided) => (
@@ -1619,7 +1613,7 @@ const SalesReturnIndex = forwardRef((props, ref) => {
                 </Modal.Body>
                 <Modal.Footer>
                     <Button variant="secondary" onClick={() => setShowSettings(false)}>
-                        Close
+                        {t("Close")}
                     </Button>
                     <Button
                         variant="primary"
@@ -1627,7 +1621,7 @@ const SalesReturnIndex = forwardRef((props, ref) => {
                             RestoreDefaultSettings();
                         }}
                     >
-                        Restore to Default
+                        {t("Restore to Default")}
                     </Button>
                 </Modal.Footer>
             </Modal>
@@ -1638,7 +1632,7 @@ const SalesReturnIndex = forwardRef((props, ref) => {
                 setShowPrintTypeSelection(showPrintTypeSelection);
             }} centered>
                 <Modal.Header closeButton>
-                    <Modal.Title>Select Print Type</Modal.Title>
+                    <Modal.Title>{t("Select Print Type")}</Modal.Title>
                 </Modal.Header>
                 <Modal.Body className="d-flex justify-content-around">
                     <Button variant="secondary" ref={printButtonRef} onClick={() => {
@@ -1652,7 +1646,7 @@ const SalesReturnIndex = forwardRef((props, ref) => {
                             }, 100);
                         }
                     }}>
-                        <i className="bi bi-printer"></i> Print
+                        <i className="bi bi-printer"></i> {t("Print")}
                     </Button>
 
                     <Button variant="primary" ref={printA4ButtonRef} onClick={() => {
@@ -1668,7 +1662,7 @@ const SalesReturnIndex = forwardRef((props, ref) => {
                             }
                         }}
                     >
-                        <i className="bi bi-printer"></i> Print A4 Invoice
+                        <i className="bi bi-printer"></i> {t("Print A4 Invoice")}
                     </Button>
                 </Modal.Body>
             </Modal>
@@ -1684,11 +1678,11 @@ const SalesReturnIndex = forwardRef((props, ref) => {
             {/* Error Modal */}
             <Modal show={showErrors} onHide={() => setShowErrors(false)} centered>
                 <Modal.Header closeButton>
-                    <Modal.Title>Error</Modal.Title>
+                    <Modal.Title>{t("Error")}</Modal.Title>
                 </Modal.Header>
                 <Modal.Body>
                     <Alert variant="danger">
-                        ❌ Oops! Something went wrong. Please try again later.
+                        ❌ {t("Oops! Something went wrong. Please try again later")}
                     </Alert>
                     {Object.keys(errors).length > 0 ?
                         <div>
@@ -1697,9 +1691,9 @@ const SalesReturnIndex = forwardRef((props, ref) => {
                                 {errors && Object.keys(errors).map((key, index) => {
                                     console.log("Key", key);
                                     if (Array.isArray(errors[key])) {
-                                        return (errors[key][0] ? <li style={{ color: "red" }}>{errors[key]}</li> : "");
+                                        return (errors[key][0] ? <li style={{ color: "red" }}>{t(errors[key])}</li> : "");
                                     } else {
-                                        return (errors[key] ? <li style={{ color: "red" }}>{errors[key]}</li> : "");
+                                        return (errors[key] ? <li style={{ color: "red" }}>{t(errors[key])}</li> : "");
                                     }
 
                                 })}
@@ -1707,14 +1701,14 @@ const SalesReturnIndex = forwardRef((props, ref) => {
                 </Modal.Body>
                 <Modal.Footer>
                     <Button variant="secondary" onClick={() => setShowErrors(false)}>
-                        Close
+                        {t("Close")}
                     </Button>
                 </Modal.Footer>
             </Modal>
 
             <Modal show={showSuccess} onHide={() => setShowSuccess(false)} centered>
                 <Modal.Header closeButton>
-                    <Modal.Title>Success</Modal.Title>
+                    <Modal.Title>{t("Success")}</Modal.Title>
                 </Modal.Header>
                 <Modal.Body>
                     <Alert variant="success">
@@ -1723,7 +1717,7 @@ const SalesReturnIndex = forwardRef((props, ref) => {
                 </Modal.Body>
                 <Modal.Footer>
                     <Button variant="secondary" onClick={() => setShowSuccess(false)}>
-                        Close
+                        {t("Close")}
                     </Button>
                 </Modal.Footer>
             </Modal>
@@ -1764,7 +1758,7 @@ const SalesReturnIndex = forwardRef((props, ref) => {
 
                 <div className="row">
                     <div className="col">
-                        <h1 className="h3">Sales Returns</h1>
+                        <h1 className="h3">{t("Sales Returns")}</h1>
                     </div>
 
                     <div className="col text-end">
@@ -1772,14 +1766,14 @@ const SalesReturnIndex = forwardRef((props, ref) => {
                             openReportPreview();
                         }} style={{ marginRight: "8px" }} className="btn btn-primary mb-3">
                             <i className="bi bi-printer"></i>&nbsp;
-                            Print Report
+                            {t("Print Report")}
                         </Button>
 
-                        <ExcelFile filename={salesReturnReportFileName} element={excelData.length > 0 ? <Button variant="success" className="btn btn-primary mb-3 success" >Download Sales Return Report</Button> : ""}>
+                        <ExcelFile filename={salesReturnReportFileName} element={excelData.length > 0 ? <Button variant="success" className="btn btn-primary mb-3 success" > {t("Download Sales Return Report")}</Button> : ""}>
                             <ExcelSheet dataSet={excelData} name={salesReturnReportFileName} />
                         </ExcelFile>
 
-                        {excelData.length === 0 ? <Button variant="primary" className="btn btn-primary mb-3" onClick={getAllSalesReturns} >{fettingAllRecordsInProgress ? "Preparing.." : "Sales Return Report"}</Button> : ""}
+                        {excelData.length === 0 ? <Button variant="primary" className="btn btn-primary mb-3" onClick={getAllSalesReturns} >{fettingAllRecordsInProgress ? t("Preparing..") : t("Sales Return Report")}</Button> : ""}
                         &nbsp;&nbsp;
 
 
@@ -1801,7 +1795,7 @@ const SalesReturnIndex = forwardRef((props, ref) => {
                             className="btn btn-primary mb-3"
                             onClick={openSales}
                         >
-                            <i className="bi bi-plus-lg"></i> Create
+                            <i className="bi bi-plus-lg"></i> {t("Create")}
                         </Button>
 
                     </div>
@@ -1819,7 +1813,7 @@ const SalesReturnIndex = forwardRef((props, ref) => {
                                 <div className="row">
                                     {totalItems === 0 && (
                                         <div className="col">
-                                            <p className="text-start">No Sales Returns to display</p>
+                                            <p className="text-start">{t("No Sales Returns to display")}</p>
                                         </div>
                                     )}
                                 </div>
@@ -1844,7 +1838,7 @@ const SalesReturnIndex = forwardRef((props, ref) => {
                                             ) : (
                                                 <i className="fa fa-refresh"></i>
                                             )}
-                                            <span className="visually-hidden">Loading...</span>
+                                            <span className="visually-hidden">{t("Loading...")}</span>
                                         </Button>
                                     </div>
                                     <div className="col text-center">
@@ -1854,7 +1848,7 @@ const SalesReturnIndex = forwardRef((props, ref) => {
                                     </div>
                                     <div className="col text-end">
                                         <>
-                                            <label className="form-label">Size:&nbsp;</label>
+                                            <label className="form-label">{t("Size")}:&nbsp;</label>
                                             <select
                                                 value={pageSize}
                                                 onChange={(e) => {
@@ -1890,13 +1884,14 @@ const SalesReturnIndex = forwardRef((props, ref) => {
 
                                         {totalPages ? < ReactPaginate
                                             breakLabel="..."
-                                            nextLabel="next >"
+
                                             onPageChange={(event) => {
                                                 changePage(event.selected + 1);
                                             }}
                                             pageRangeDisplayed={5}
                                             pageCount={totalPages}
-                                            previousLabel="< previous"
+                                            previousLabel={t("< previous")}
+                                            nextLabel={t("next >")}
                                             renderOnZeroPageCount={null}
                                             className="pagination  flex-wrap"
                                             pageClassName="page-item"
@@ -1922,7 +1917,7 @@ const SalesReturnIndex = forwardRef((props, ref) => {
                                             <i
                                                 className="bi bi-gear-fill"
                                                 style={{ fontSize: "1.2rem" }}
-                                                title="Table Settings"
+                                                title={t("Table Settings")}
 
                                             />
                                         </button>
@@ -1934,14 +1929,20 @@ const SalesReturnIndex = forwardRef((props, ref) => {
                                         <>
                                             <div className="col text-start">
                                                 <p className="text-start">
-                                                    showing {offset + 1}-{offset + currentPageItemsCount} of{" "}
-                                                    {totalItems}
+                                                    {t("Showing {{from}}-{{to}} of {{totalItems}}", {
+                                                        from: (offset + 1),
+                                                        to: (offset + currentPageItemsCount),
+                                                        totalItems: totalItems,
+                                                    })}
                                                 </p>
                                             </div>
 
                                             <div className="col text-end">
                                                 <p className="text-end">
-                                                    page {page} of {totalPages}
+                                                    {t("Page {{page}} of {{totalPages}}", {
+                                                        page: page,
+                                                        totalPages: totalPages,
+                                                    })}
                                                 </p>
                                             </div>
                                         </>
@@ -1996,307 +1997,6 @@ const SalesReturnIndex = forwardRef((props, ref) => {
                                                         </th>}
                                                     </>);
                                                 })}
-
-                                                {/*<th>Actions</th>
-                                                <th>
-                                                    <b
-                                                        style={{
-                                                            textDecoration: "underline",
-                                                            cursor: "pointer",
-                                                        }}
-                                                        onClick={() => {
-                                                            sort("code");
-                                                        }}
-                                                    >
-                                                        Sales Return ID
-                                                        {sortField === "code" && sortSalesReturn === "-" ? (
-                                                            <i className="bi bi-sort-alpha-up-alt"></i>
-                                                        ) : null}
-                                                        {sortField === "code" && sortSalesReturn === "" ? (
-                                                            <i className="bi bi-sort-alpha-up"></i>
-                                                        ) : null}
-                                                    </b>
-                                                </th>
-
-                                                <th>
-                                                    <b
-                                                        style={{
-                                                            textDecoration: "underline",
-                                                            cursor: "pointer",
-                                                        }}
-                                                        onClick={() => {
-                                                            sort("date");
-                                                        }}
-                                                    >
-                                                        Date
-                                                        {sortField === "date" && sortSalesReturn === "-" ? (
-                                                            <i className="bi bi-sort-down"></i>
-                                                        ) : null}
-                                                        {sortField === "date" && sortSalesReturn === "" ? (
-                                                            <i className="bi bi-sort-up"></i>
-                                                        ) : null}
-                                                    </b>
-                                                </th>
-                                                <th>
-                                                    <b
-                                                        style={{
-                                                            textDecoration: "underline",
-                                                            cursor: "pointer",
-                                                        }}
-                                                        onClick={() => {
-                                                            sort("customer_name");
-                                                        }}
-                                                    >
-                                                        Customer
-                                                        {sortField === "customer_name" &&
-                                                            sortSalesReturn === "-" ? (
-                                                            <i className="bi bi-sort-alpha-up-alt"></i>
-                                                        ) : null}
-                                                        {sortField === "customer_name" && sortSalesReturn === "" ? (
-                                                            <i className="bi bi-sort-alpha-up"></i>
-                                                        ) : null}
-                                                    </b>
-                                                </th>
-                                                <th>
-                                                    <b
-                                                        style={{
-                                                            textDecoration: "underline",
-                                                            cursor: "pointer",
-                                                        }}
-                                                        onClick={() => {
-                                                            sort("net_total");
-                                                        }}
-                                                    >
-                                                        Net Total
-                                                        {sortField === "net_total" && sortSalesReturn === "-" ? (
-                                                            <i className="bi bi-sort-numeric-down"></i>
-                                                        ) : null}
-                                                        {sortField === "net_total" && sortSalesReturn === "" ? (
-                                                            <i className="bi bi-sort-numeric-up"></i>
-                                                        ) : null}
-                                                    </b>
-                                                </th>
-
-                                                <th>
-                                                    <b
-                                                        style={{
-                                                            textDecoration: "underline",
-                                                            cursor: "pointer",
-                                                        }}
-                                                        onClick={() => {
-                                                            sort("total_payment_paid");
-                                                        }}
-                                                    >
-                                                        Amount paid
-                                                        {sortField === "total_payment_paid" && sortOrder === "-" ? (
-                                                            <i className="bi bi-sort-numeric-down"></i>
-                                                        ) : null}
-                                                        {sortField === "total_payment_paid" && sortOrder === "" ? (
-                                                            <i className="bi bi-sort-numeric-up"></i>
-                                                        ) : null}
-                                                    </b>
-                                                </th>
-                                                <th>
-                                                    <b
-                                                        style={{
-                                                            textDecoration: "underline",
-                                                            cursor: "pointer",
-                                                        }}
-                                                        onClick={() => {
-                                                            sort("balance_amount");
-                                                        }}
-                                                    >
-                                                        Credit Balance
-                                                        {sortField === "balance_amount" && sortOrder === "-" ? (
-                                                            <i className="bi bi-sort-numeric-down"></i>
-                                                        ) : null}
-                                                        {sortField === "balance_amount" && sortOrder === "" ? (
-                                                            <i className="bi bi-sort-numeric-up"></i>
-                                                        ) : null}
-                                                    </b>
-                                                </th>
-                                                <th>
-                                                    <b
-                                                        style={{
-                                                            textDecoration: "underline",
-                                                            cursor: "pointer",
-                                                        }}
-                                                        onClick={() => {
-                                                            sort("order_code");
-                                                        }}
-                                                    >
-                                                        Sales ID
-                                                        {sortField === "order_code" && sortSalesReturn === "-" ? (
-                                                            <i className="bi bi-sort-alpha-up-alt"></i>
-                                                        ) : null}
-                                                        {sortField === "order_code" && sortSalesReturn === "" ? (
-                                                            <i className="bi bi-sort-alpha-up"></i>
-                                                        ) : null}
-                                                    </b>
-                                                </th>
-
-                                               
-                                                {store.zatca?.phase === "2" && store.zatca?.connected ? <th>
-                                                    <b
-                                                        style={{
-                                                            textDecoration: "underline",
-                                                            cursor: "pointer",
-                                                        }}
-                                                        onClick={() => {
-                                                            sort("zatca.reporting_passed");
-                                                        }}
-                                                    >
-                                                        Reported to Zatca
-                                                        {sortField === "zatca.reporting_passed" && sortOrder === "-" ? (
-                                                            <i className="bi bi-sort-alpha-up-alt"></i>
-                                                        ) : null}
-                                                        {sortField === "zatca.reporting_passed" && sortOrder === "" ? (
-                                                            <i className="bi bi-sort-alpha-up"></i>
-                                                        ) : null}
-                                                    </b>
-                                                </th> : ""}
-                                                <th>
-                                                    <b
-                                                        style={{
-                                                            textDecoration: "underline",
-                                                            cursor: "pointer",
-                                                        }}
-                                                        onClick={() => {
-                                                            sort("payment_status");
-                                                        }}
-                                                    >
-                                                        Payment Status
-                                                        {sortField === "payment_status" && sortOrder === "-" ? (
-                                                            <i className="bi bi-sort-alpha-up-alt"></i>
-                                                        ) : null}
-                                                        {sortField === "payment_status" && sortOrder === "" ? (
-                                                            <i className="bi bi-sort-alpha-up"></i>
-                                                        ) : null}
-                                                    </b>
-                                                </th>
-                                                <th>
-                                                    <b
-                                                        style={{
-                                                            textDecoration: "underline",
-                                                            cursor: "pointer",
-                                                        }}
-                                                        onClick={() => {
-                                                            sort("payment_methods");
-                                                        }}
-                                                    >
-                                                        Payment Methods
-                                                        {sortField === "payment_methods" && sortOrder === "-" ? (
-                                                            <i className="bi bi-sort-alpha-up-alt"></i>
-                                                        ) : null}
-                                                        {sortField === "payment_methods" && sortOrder === "" ? (
-                                                            <i className="bi bi-sort-alpha-up"></i>
-                                                        ) : null}
-                                                    </b>
-                                                </th>
-
-
-                                                <th>
-                                                    <b
-                                                        style={{
-                                                            textDecoration: "underline",
-                                                            cursor: "pointer",
-                                                        }}
-                                                        onClick={() => {
-                                                            sort("cash_discount");
-                                                        }}
-                                                    >
-                                                        Cash Discount
-                                                        {sortField === "cash_discount" && sortOrder === "-" ? (
-                                                            <i className="bi bi-sort-numeric-down"></i>
-                                                        ) : null}
-                                                        {sortField === "cash_discount" && sortOrder === "" ? (
-                                                            <i className="bi bi-sort-numeric-up"></i>
-                                                        ) : null}
-                                                    </b>
-                                                </th>
-
-
-                                                <th>
-                                                    <b
-                                                        style={{
-                                                            textDecoration: "underline",
-                                                            cursor: "pointer",
-                                                        }}
-                                                        onClick={() => {
-                                                            sort("net_profit");
-                                                        }}
-                                                    >
-                                                        Net Profit
-                                                        {sortField === "net_profit" && sortSalesReturn === "-" ? (
-                                                            <i className="bi bi-sort-numeric-down"></i>
-                                                        ) : null}
-                                                        {sortField === "net_profit" && sortSalesReturn === "" ? (
-                                                            <i className="bi bi-sort-numeric-up"></i>
-                                                        ) : null}
-                                                    </b>
-                                                </th>
-                                                <th>
-                                                    <b
-                                                        style={{
-                                                            textDecoration: "underline",
-                                                            cursor: "pointer",
-                                                        }}
-                                                        onClick={() => {
-                                                            sort("net_loss");
-                                                        }}
-                                                    >
-                                                        Net Loss
-                                                        {sortField === "net_loss" && sortSalesReturn === "-" ? (
-                                                            <i className="bi bi-sort-numeric-down"></i>
-                                                        ) : null}
-                                                        {sortField === "net_loss" && sortSalesReturn === "" ? (
-                                                            <i className="bi bi-sort-numeric-up"></i>
-                                                        ) : null}
-                                                    </b>
-                                                </th>
-
-
-
-
-                                                <th>
-                                                    <b
-                                                        style={{
-                                                            textDecoration: "underline",
-                                                            cursor: "pointer",
-                                                        }}
-                                                        onClick={() => {
-                                                            sort("created_by");
-                                                        }}
-                                                    >
-                                                        Created By
-                                                        {sortField === "created_by" && sortSalesReturn === "-" ? (
-                                                            <i className="bi bi-sort-alpha-up-alt"></i>
-                                                        ) : null}
-                                                        {sortField === "created_by" && sortSalesReturn === "" ? (
-                                                            <i className="bi bi-sort-alpha-up"></i>
-                                                        ) : null}
-                                                    </b>
-                                                </th>
-                                                <th>
-                                                    <b
-                                                        style={{
-                                                            textDecoration: "underline",
-                                                            cursor: "pointer",
-                                                        }}
-                                                        onClick={() => {
-                                                            sort("created_at");
-                                                        }}
-                                                    >
-                                                        Created At
-                                                        {sortField === "created_at" && sortSalesReturn === "-" ? (
-                                                            <i className="bi bi-sort-down"></i>
-                                                        ) : null}
-                                                        {sortField === "created_at" && sortSalesReturn === "" ? (
-                                                            <i className="bi bi-sort-up"></i>
-                                                        ) : null}
-                                                    </b>
-                                                </th>
-                                                <th>Actions</th>*/}
                                             </tr>
                                         </thead>
 
@@ -2338,7 +2038,7 @@ const SalesReturnIndex = forwardRef((props, ref) => {
                                                                     );
                                                                 }}
                                                                 options={paymentMethodOptions}
-                                                                placeholder="Select payment methods"
+                                                                placeholder={t("Select payment methods")}
                                                                 selected={selectedPaymentMethodList}
                                                                 highlightOnlyResult={true}
                                                                 multiple
@@ -2357,7 +2057,7 @@ const SalesReturnIndex = forwardRef((props, ref) => {
                                                                     );
                                                                 }}
                                                                 options={commissionPaymentMethodOptions}
-                                                                placeholder="Select payment methods"
+                                                                placeholder={t("Select payment methods")}
                                                                 selected={selectedCommissionPaymentMethodList}
                                                                 highlightOnlyResult={true}
                                                                 multiple
@@ -2375,7 +2075,7 @@ const SalesReturnIndex = forwardRef((props, ref) => {
                                                                     );
                                                                 }}
                                                                 options={userOptions}
-                                                                placeholder="Select Users"
+                                                                placeholder={t("Select Users")}
                                                                 selected={selectedCreatedByUsers}
                                                                 highlightOnlyResult={true}
                                                                 onInputChange={(searchTerm, e) => {
@@ -2414,13 +2114,13 @@ const SalesReturnIndex = forwardRef((props, ref) => {
                                                                     setShowCreatedAtDateRange(!showCreatedAtDateRange)
                                                                 }
                                                             >
-                                                                {showCreatedAtDateRange ? "Less.." : "More.."}
+                                                                {showCreatedAtDateRange ? t("Less..") : t("More..")}
                                                             </small>
                                                             <br />
 
                                                             {showCreatedAtDateRange ? (
                                                                 <span className="text-left">
-                                                                    From:{" "}
+                                                                    {t("From")}:{" "}
                                                                     <DatePicker
                                                                         id="created_at_from"
                                                                         value={createdAtFromValue}
@@ -2439,7 +2139,7 @@ const SalesReturnIndex = forwardRef((props, ref) => {
                                                                             setSelectedCreatedAtFromDate(date);
                                                                         }}
                                                                     />
-                                                                    To:{" "}
+                                                                    {t("To")}:{" "}
                                                                     <DatePicker
                                                                         id="created_at_to"
                                                                         value={createdAtToValue}
@@ -2472,7 +2172,7 @@ const SalesReturnIndex = forwardRef((props, ref) => {
                                                                     );
                                                                 }}
                                                                 options={paymentStatusOptions}
-                                                                placeholder="Select Payment Status"
+                                                                placeholder={t("Select Payment Status")}
                                                                 selected={selectedPaymentStatusList}
                                                                 highlightOnlyResult={true}
                                                                 multiple
@@ -2484,11 +2184,11 @@ const SalesReturnIndex = forwardRef((props, ref) => {
                                                                     searchByFieldValue("zatca.reporting_passed", e.target.value);
                                                                 }}
                                                             >
-                                                                <option value="" SELECTED>Select</option>
-                                                                <option value="reported">REPORTED</option>
-                                                                <option value="compliance_failed">COMPLIANCE FAILED</option>
-                                                                <option value="reporting_failed">REPORTING FAILED</option>
-                                                                <option value="not_reported">NOT REPORTED</option>
+                                                                <option value="" SELECTED>{t("Select")}</option>
+                                                                <option value="reported">{t("REPORTED")}</option>
+                                                                <option value="compliance_failed">{t("COMPLIANCE FAILED")}</option>
+                                                                <option value="reporting_failed">{t("REPORTING FAILED")}</option>
+                                                                <option value="not_reported">{t("NOT REPORTED")}</option>
                                                             </select>
                                                         </th>}
                                                         {col.key === "customer" && <th>
@@ -2504,7 +2204,7 @@ const SalesReturnIndex = forwardRef((props, ref) => {
                                                                     );
                                                                 }}
                                                                 options={customerOptions}
-                                                                placeholder="Customer Name / Mob / VAT # / ID"
+                                                                placeholder={t("Customer Name / Mob / VAT # / ID")}
                                                                 selected={selectedCustomers}
                                                                 highlightOnlyResult={true}
                                                                 onInputChange={(searchTerm, e) => {
@@ -2560,7 +2260,7 @@ const SalesReturnIndex = forwardRef((props, ref) => {
 
                                                                 {showDateRange ? (
                                                                     <span className="text-left">
-                                                                        From:{" "}
+                                                                        {t("From:")}{" "}
                                                                         <DatePicker
                                                                             id="from_date"
                                                                             value={fromDateValue}
@@ -2579,7 +2279,7 @@ const SalesReturnIndex = forwardRef((props, ref) => {
                                                                                 setSelectedFromDate(date);
                                                                             }}
                                                                         />
-                                                                        To:{" "}
+                                                                        {t("To")}:{" "}
                                                                         <DatePicker
                                                                             id="to_date"
                                                                             value={toDateValue}
@@ -2604,358 +2304,6 @@ const SalesReturnIndex = forwardRef((props, ref) => {
                                                         </th>}
                                                     </>);
                                                 })}
-                                                {/* <th></th>
-                                                <th>
-                                                    <input
-                                                        type="text"
-                                                        id="sales_return_code"
-                                                        name="sales_return_code"
-                                                        onChange={(e) =>
-                                                            searchByFieldValue("code", e.target.value)
-                                                        }
-                                                        className="form-control"
-                                                    />
-                                                </th>
-
-                                                <th>
-                                                    <div style={{ minWidth: "125px" }}>
-                                                        <DatePicker
-                                                            id="date_str"
-                                                            value={dateValue}
-                                                            selected={selectedDate}
-                                                            className="form-control"
-                                                            dateFormat="MMM dd yyyy"
-                                                            isClearable={true}
-                                                            onChange={(date) => {
-                                                                if (!date) {
-                                                                    setDateValue("");
-                                                                    searchByDateField("date_str", "");
-                                                                    return;
-                                                                }
-                                                                searchByDateField("date_str", date);
-                                                                selectedDate = date;
-                                                                setSelectedDate(date);
-                                                            }}
-                                                        />
-                                                        <small
-                                                            style={{
-                                                                color: "blue",
-                                                                textDecoration: "underline",
-                                                                cursor: "pointer",
-                                                            }}
-                                                            onClick={(e) => setShowDateRange(!showDateRange)}
-                                                        >
-                                                            {showDateRange ? "Less.." : "More.."}
-                                                        </small>
-                                                        <br />
-
-                                                        {showDateRange ? (
-                                                            <span className="text-left">
-                                                                From:{" "}
-                                                                <DatePicker
-                                                                    id="from_date"
-                                                                    value={fromDateValue}
-                                                                    selected={selectedFromDate}
-                                                                    className="form-control"
-                                                                    dateFormat="MMM dd yyyy"
-                                                                    isClearable={true}
-                                                                    onChange={(date) => {
-                                                                        if (!date) {
-                                                                            setFromDateValue("");
-                                                                            searchByDateField("from_date", "");
-                                                                            return;
-                                                                        }
-                                                                        searchByDateField("from_date", date);
-                                                                        selectedFromDate = date;
-                                                                        setSelectedFromDate(date);
-                                                                    }}
-                                                                />
-                                                                To:{" "}
-                                                                <DatePicker
-                                                                    id="to_date"
-                                                                    value={toDateValue}
-                                                                    selected={selectedToDate}
-                                                                    className="form-control"
-                                                                    dateFormat="MMM dd yyyy"
-                                                                    isClearable={true}
-                                                                    onChange={(date) => {
-                                                                        if (!date) {
-                                                                            setToDateValue("");
-                                                                            searchByDateField("to_date", "");
-                                                                            return;
-                                                                        }
-                                                                        searchByDateField("to_date", date);
-                                                                        selectedToDate = date;
-                                                                        setSelectedToDate(date);
-                                                                    }}
-                                                                />
-                                                            </span>
-                                                        ) : null}
-                                                    </div>
-                                                </th>
-                                                <th>
-                                                    <Typeahead
-                                                        id="customer_id"
-                                                        filterBy={['additional_keywords']}
-                                                        labelKey="search_label"
-                                                        style={{ minWidth: "300px" }}
-                                                        onChange={(selectedItems) => {
-                                                            searchByMultipleValuesField(
-                                                                "customer_id",
-                                                                selectedItems
-                                                            );
-                                                        }}
-                                                        options={customerOptions}
-                                                        placeholder="Customer Name / Mob / VAT # / ID"
-                                                        selected={selectedCustomers}
-                                                        highlightOnlyResult={true}
-                                                        onInputChange={(searchTerm, e) => {
-                                                            if (timerRef.current) clearTimeout(timerRef.current);
-                                                            timerRef.current = setTimeout(() => {
-                                                                suggestCustomers(searchTerm);
-                                                            }, 100);
-                                                        }}
-                                                        ref={customerSearchRef}
-                                                        onKeyDown={(e) => {
-                                                            if (e.key === "Escape") {
-                                                                formData.customer_id = "";
-                                                                formData.customer_name = "";
-                                                                setFormData({ ...formData });
-                                                                setCustomerOptions([]);
-                                                                customerSearchRef.current?.clear();
-                                                            }
-                                                        }}
-                                                        multiple
-                                                    />
-                                                </th>
-                                                <th>
-                                                    <input
-                                                        type="text"
-                                                        id="sales_return_net_total"
-                                                        name="sales_return_net_total"
-                                                        onChange={(e) =>
-                                                            searchByFieldValue("net_total", e.target.value)
-                                                        }
-                                                        className="form-control"
-                                                    />
-                                                </th>
-
-                                                <th>
-                                                    <input
-                                                        type="text"
-                                                        id="sales_return_total_payment_paid"
-                                                        name="sales_return_total_payment_paid"
-                                                        onChange={(e) =>
-                                                            searchByFieldValue("total_payment_paid", e.target.value)
-                                                        }
-                                                        className="form-control"
-                                                    />
-                                                </th>
-                                                <th>
-                                                    <input
-                                                        type="text"
-                                                        id="sales_return_balance_amount"
-                                                        name="sales_return_balance_amount"
-                                                        onChange={(e) =>
-                                                            searchByFieldValue("balance_amount", e.target.value)
-                                                        }
-                                                        className="form-control"
-                                                    />
-                                                </th>
-                                                <th>
-                                                    <input
-                                                        type="text"
-                                                        id="sales_return_order_code"
-                                                        name="sales_return_order_code"
-                                                        onChange={(e) =>
-                                                            searchByFieldValue("order_code", e.target.value)
-                                                        }
-                                                        className="form-control"
-                                                    />
-                                                </th>
-
-                                               
-                                                {store.zatca?.phase === "2" && store.zatca?.connected ? <th>
-                                                    <select
-                                                        onChange={(e) => {
-                                                            searchByFieldValue("zatca.reporting_passed", e.target.value);
-                                                        }}
-                                                    >
-                                                        <option value="" SELECTED>Select</option>
-                                                        <option value="reported">REPORTED</option>
-                                                        <option value="compliance_failed">COMPLIANCE FAILED</option>
-                                                        <option value="reporting_failed">REPORTING FAILED</option>
-                                                        <option value="not_reported">NOT REPORTED</option>
-                                                    </select>
-                                                </th> : ""}
-                                                <th>
-                                                    <Typeahead
-                                                        id="payment_status"
-
-                                                        labelKey="name"
-                                                        onChange={(selectedItems) => {
-                                                            searchByMultipleValuesField(
-                                                                "payment_status",
-                                                                selectedItems
-                                                            );
-                                                        }}
-                                                        options={paymentStatusOptions}
-                                                        placeholder="Select Payment Status"
-                                                        selected={selectedPaymentStatusList}
-                                                        highlightOnlyResult={true}
-                                                        multiple
-                                                    />
-                                                </th>
-                                                <th>
-                                                    <Typeahead
-                                                        id="payment_methods"
-
-                                                        labelKey="name"
-                                                        onChange={(selectedItems) => {
-                                                            searchByMultipleValuesField(
-                                                                "payment_methods",
-                                                                selectedItems
-                                                            );
-                                                        }}
-                                                        options={paymentMethodOptions}
-                                                        placeholder="Select payment methods"
-                                                        selected={selectedPaymentMethodList}
-                                                        highlightOnlyResult={true}
-                                                        multiple
-                                                    />
-                                                </th>
-
-                                                <th>
-                                                    <input
-                                                        type="text"
-                                                        id="sales_return_cash_discount"
-                                                        name="sales_return_cash_discount"
-                                                        onChange={(e) =>
-                                                            searchByFieldValue("cash_discount", e.target.value)
-                                                        }
-                                                        className="form-control"
-                                                    />
-                                                </th>
-                                                <th>
-                                                    <input
-                                                        type="text"
-                                                        id="sales_return_net_profit"
-                                                        name="sales_return_net_profit"
-                                                        onChange={(e) =>
-                                                            searchByFieldValue("net_profit", e.target.value)
-                                                        }
-                                                        className="form-control"
-                                                    />
-                                                </th>
-                                                <th>
-                                                    <input
-                                                        type="text"
-                                                        id="sales_return_net_loss"
-                                                        name="sales_return_net_loss"
-                                                        onChange={(e) =>
-                                                            searchByFieldValue("net_loss", e.target.value)
-                                                        }
-                                                        className="form-control"
-                                                    />
-                                                </th>
-                                                <th>
-                                                    <Typeahead
-                                                        id="created_by"
-                                                        labelKey="name"
-
-                                                        onChange={(selectedItems) => {
-                                                            searchByMultipleValuesField(
-                                                                "created_by",
-                                                                selectedItems
-                                                            );
-                                                        }}
-                                                        options={userOptions}
-                                                        placeholder="Select Users"
-                                                        selected={selectedCreatedByUsers}
-                                                        highlightOnlyResult={true}
-                                                        onInputChange={(searchTerm, e) => {
-                                                            suggestUsers(searchTerm);
-                                                        }}
-                                                        multiple
-                                                    />
-                                                </th>
-                                                <th>
-                                                    <DatePicker
-                                                        id="created_at"
-                                                        value={createdAtValue}
-                                                        selected={selectedCreatedAtDate}
-                                                        className="form-control"
-                                                        dateFormat="MMM dd yyyy"
-                                                        isClearable={true}
-                                                        onChange={(date) => {
-                                                            if (!date) {
-                                                                setCreatedAtValue("");
-                                                                searchByDateField("created_at", "");
-                                                                return;
-                                                            }
-                                                            searchByDateField("created_at", date);
-                                                            selectedCreatedAtDate = date;
-                                                            setSelectedCreatedAtDate(date);
-                                                        }}
-                                                    />
-                                                    <small
-                                                        style={{
-                                                            color: "blue",
-                                                            textDecoration: "underline",
-                                                            cursor: "pointer",
-                                                        }}
-                                                        onClick={(e) =>
-                                                            setShowCreatedAtDateRange(!showCreatedAtDateRange)
-                                                        }
-                                                    >
-                                                        {showCreatedAtDateRange ? "Less.." : "More.."}
-                                                    </small>
-                                                    <br />
-
-                                                    {showCreatedAtDateRange ? (
-                                                        <span className="text-left">
-                                                            From:{" "}
-                                                            <DatePicker
-                                                                id="created_at_from"
-                                                                value={createdAtFromValue}
-                                                                selected={selectedCreatedAtFromDate}
-                                                                className="form-control"
-                                                                dateFormat="MMM dd yyyy"
-                                                                isClearable={true}
-                                                                onChange={(date) => {
-                                                                    if (!date) {
-                                                                        setCreatedAtFromValue("");
-                                                                        searchByDateField("created_at_from", "");
-                                                                        return;
-                                                                    }
-                                                                    searchByDateField("created_at_from", date);
-                                                                    selectedCreatedAtFromDate = date;
-                                                                    setSelectedCreatedAtFromDate(date);
-                                                                }}
-                                                            />
-                                                            To:{" "}
-                                                            <DatePicker
-                                                                id="created_at_to"
-                                                                value={createdAtToValue}
-                                                                selected={selectedCreatedAtToDate}
-                                                                className="form-control"
-                                                                dateFormat="MMM dd yyyy"
-                                                                isClearable={true}
-                                                                onChange={(date) => {
-                                                                    if (!date) {
-                                                                        setCreatedAtToValue("");
-                                                                        searchByDateField("created_at_to", "");
-                                                                        return;
-                                                                    }
-                                                                    searchByDateField("created_at_to", date);
-                                                                    selectedCreatedAtToDate = date;
-                                                                    setSelectedCreatedAtToDate(date);
-                                                                }}
-                                                            />
-                                                        </span>
-                                                    ) : null}
-                                                </th>
-                                                <th></th>*/}
                                             </tr>
                                         </thead>
 
@@ -2995,7 +2343,7 @@ const SalesReturnIndex = forwardRef((props, ref) => {
                                                                     <Button className="btn btn-success btn-sm" onClick={() => {
                                                                         handleSelected(salesReturn);
                                                                     }}>
-                                                                        Select
+                                                                        {t("Select")}
                                                                     </Button>
                                                                 </td>}
                                                                 {(col.fieldName === "code") && <td style={{ width: "auto", whiteSpace: "nowrap" }}>
@@ -3034,26 +2382,26 @@ const SalesReturnIndex = forwardRef((props, ref) => {
                                                                 </td>}
                                                                 {(col.fieldName === "zatca.reporting_passed" && store.zatca?.phase === "2" && store.zatca?.connected) && <td style={{ width: "auto", whiteSpace: "nowrap" }}>
                                                                     {!salesReturn.zatca?.compliance_passed && !salesReturn.zatca?.reporting_passed && salesReturn.zatca?.compliance_check_failed_count > 0 ? <span className="badge bg-danger">
-                                                                        Compliance check failed
+                                                                        {t("Compliance check failed")}
                                                                         {!salesReturn.zatca.compliance_passed && salesReturn.zatca.compliance_check_last_failed_at ? <span>&nbsp;<TimeAgo date={salesReturn.zatca.compliance_check_last_failed_at} />&nbsp;</span> : ""}
                                                                         &nbsp;</span> : ""}
                                                                     {!salesReturn.zatca?.reporting_passed && salesReturn.zatca?.reporting_failed_count > 0 ? <span> <span className="badge bg-danger">
-                                                                        Reporting failed
+                                                                        {t("Reporting failed")}
                                                                         {!salesReturn.zatca.reporting_passed && salesReturn.zatca.reporting_last_failed_at ? <span><TimeAgo date={salesReturn.zatca.reporting_last_failed_at} />&nbsp;</span> : ""}
                                                                     </span> &nbsp;</span> : ""}
                                                                     {salesReturn.zatca?.reporting_passed ? <span>&nbsp;<span className="badge bg-success">
-                                                                        Reported
+                                                                        {t("Reported")}
                                                                         {salesReturn.zatca.reporting_passed && salesReturn.zatca.reporting_passed_at ? <span>&nbsp;<TimeAgo date={salesReturn.zatca.reporting_passed_at} />&nbsp;</span> : ""}
                                                                         &nbsp;</span></span> : ""}
 
                                                                     {!salesReturn.zatca?.reporting_passed && !salesReturn.zatca?.compliance_passed && !salesReturn.zatca?.reporting_failed_count && !salesReturn.zatca?.compliance_check_failed_count ? <span className="badge bg-warning">
-                                                                        Not Reported
+                                                                        {t("Not Reported")}
                                                                         &nbsp;</span> : ""}
                                                                     {!salesReturn.zatca.reporting_passed ? <span> &nbsp; <Button disabled={reportingInProgress} style={{ marginTop: "3px" }} className="btn btn btn-sm" onClick={() => {
                                                                         ReportInvoiceToZatca(salesReturn.id, index);
                                                                     }}>
                                                                         {!salesReturn.zatca?.reportingInProgress && (salesReturn.zatca?.reporting_failed_count > 0 || salesReturn.zatca?.compliance_check_failed_count > 0) ? <i class="bi bi-bootstrap-reboot"></i> : ""}
-                                                                        {!salesReturn.zatca?.reportingInProgress && (!salesReturn.zatca?.reporting_failed_count > 0 && !salesReturn.zatca?.compliance_check_failed_count) ? <span class="bi-arrow-right-circle">&nbsp;Report</span> : ""}
+                                                                        {!salesReturn.zatca?.reportingInProgress && (!salesReturn.zatca?.reporting_failed_count > 0 && !salesReturn.zatca?.compliance_check_failed_count) ? <span class="bi-arrow-right-circle">&nbsp;{t("Report")}</span> : ""}
                                                                         {salesReturn.zatca?.reportingInProgress ? <Spinner
                                                                             as="span"
                                                                             animation="border"
@@ -3072,21 +2420,21 @@ const SalesReturnIndex = forwardRef((props, ref) => {
                                                                 {(col.fieldName === "payment_status") && <td style={{ width: "auto", whiteSpace: "nowrap" }}>
                                                                     {salesReturn.payment_status === "paid" ?
                                                                         <span className="badge bg-success">
-                                                                            Paid
+                                                                            {t("Paid")}
                                                                         </span> : ""}
                                                                     {salesReturn.payment_status === "paid_partially" ?
                                                                         <span className="badge bg-warning">
-                                                                            Paid Partially
+                                                                            {t("Paid Partially")}
                                                                         </span> : ""}
                                                                     {salesReturn.payment_status === "not_paid" ?
                                                                         <span className="badge bg-danger">
-                                                                            Not Paid
+                                                                            {t("Not Paid")}
                                                                         </span> : ""}
                                                                 </td>}
                                                                 {(col.fieldName === "payment_methods") && <td style={{ width: "auto", whiteSpace: "nowrap" }}>
                                                                     {salesReturn.payment_methods &&
                                                                         salesReturn.payment_methods.map((name) => (
-                                                                            <span className="badge bg-info">{name}</span>
+                                                                            <span className="badge bg-info">{t(name)}</span>
                                                                         ))}
                                                                 </td>}
                                                                 {(col.fieldName === "cash_discount") && <td style={{ width: "auto", whiteSpace: "nowrap" }}>
@@ -3096,7 +2444,7 @@ const SalesReturnIndex = forwardRef((props, ref) => {
                                                                     {salesReturn.commission && <Amount amount={trimTo2Decimals(salesReturn.commission)} />}
                                                                 </td>}
                                                                 {(col.fieldName === "commission_payment_method") && <td style={{ width: "auto", whiteSpace: "nowrap" }}>
-                                                                    {salesReturn.commission_payment_method && <span className="badge bg-info">{salesReturn.commission_payment_method}</span>}
+                                                                    {salesReturn.commission_payment_method && <span className="badge bg-info">{t(salesReturn.commission_payment_method)}</span>}
                                                                 </td>}
                                                                 {(col.fieldName === "discount") && <td style={{ width: "auto", whiteSpace: "nowrap" }}>
                                                                     {trimTo2Decimals(salesReturn.discount)}
@@ -3112,152 +2460,6 @@ const SalesReturnIndex = forwardRef((props, ref) => {
                                                                 </td>}
                                                             </>)
                                                         })}
-                                                        {/* <td style={{ width: "auto", whiteSpace: "nowrap" }} >
-                                                            <Button className="btn btn-light btn-sm" onClick={() => {
-                                                                openUpdateForm(salesreturn.id, salesreturn.order_id);
-                                                            }}>
-                                                                <i className="bi bi-pencil"></i>
-                                                            </Button>
-
-
-                                                            <Button className="btn btn-primary btn-sm" onClick={() => {
-                                                                openDetailsView(salesreturn.id);
-                                                            }}>
-                                                                <i className="bi bi-eye"></i>
-                                                            </Button>
-                                                            &nbsp;
-
-                                                            <Button className="btn btn-primary btn-sm" onClick={() => {
-                                                                // openPreview(salesreturn);
-                                                                openPrintTypeSelection(salesreturn);
-                                                            }}>
-                                                                <i className="bi bi-printer"></i>
-                                                            </Button>
-                                                            &nbsp;
-                                                            <Button className={`btn btn-success btn-sm`} style={{}} onClick={() => {
-                                                                sendWhatsAppMessage(salesreturn);
-                                                            }}>
-                                                                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="white" viewBox="0 0 16 16">
-                                                                    <path d="M13.601 2.326A7.875 7.875 0 0 0 8.036 0C3.596 0 0 3.597 0 8.036c0 1.417.37 2.805 1.07 4.03L0 16l3.993-1.05a7.968 7.968 0 0 0 4.043 1.085h.003c4.44 0 8.036-3.596 8.036-8.036 0-2.147-.836-4.166-2.37-5.673ZM8.036 14.6a6.584 6.584 0 0 1-3.35-.92l-.24-.142-2.37.622.63-2.31-.155-.238a6.587 6.587 0 0 1-1.018-3.513c0-3.637 2.96-6.6 6.6-6.6 1.764 0 3.42.69 4.67 1.94a6.56 6.56 0 0 1 1.93 4.668c0 3.637-2.96 6.6-6.6 6.6Zm3.61-4.885c-.198-.1-1.17-.578-1.352-.644-.18-.066-.312-.1-.444.1-.13.197-.51.644-.626.775-.115.13-.23.15-.428.05-.198-.1-.837-.308-1.594-.983-.59-.525-.99-1.174-1.11-1.372-.116-.198-.012-.305.088-.403.09-.09.198-.23.298-.345.1-.115.132-.197.2-.33.065-.13.032-.247-.017-.345-.05-.1-.444-1.07-.61-1.46-.16-.384-.323-.332-.444-.338l-.378-.007c-.13 0-.344.048-.525.23s-.688.672-.688 1.64c0 .967.704 1.9.802 2.03.1.13 1.386 2.116 3.365 2.963.47.203.837.324 1.122.414.472.15.902.13 1.24.08.378-.057 1.17-.48 1.336-.942.165-.462.165-.858.116-.943-.048-.084-.18-.132-.378-.23Z" />
-                                                                </svg>
-                                                            </Button>
-                                                            &nbsp;
-                                                        </td>
-                                                        <td style={{ width: "auto", whiteSpace: "nowrap" }} >{salesreturn.code}</td>
-
-                                                        <td style={{ width: "auto", whiteSpace: "nowrap" }} >
-                                                            {format(
-                                                                new Date(salesreturn.date),
-                                                                "MMM dd yyyy h:mma"
-                                                            )}
-                                                        </td>
-                                                        <td className="text-start" style={{ width: "auto", whiteSpace: "nowrap" }} >
-                                                            <OverflowTooltip value={salesreturn.customer_name} />
-                                                        </td>
-                                                        <td> <Amount amount={salesreturn.net_total} /> </td>
-                                                        <td>
-
-                                                            <Button variant="link" onClick={() => {
-                                                                openPaymentsDialogue(salesreturn);
-                                                            }}>
-                                                                <Amount amount={trimTo2Decimals(salesreturn.total_payment_paid)} />
-                                                            </Button>
-
-                                                        </td>
-                                                        <td> <Amount amount={trimTo2Decimals(salesreturn.balance_amount)} /></td>
-                                                        <td style={{ width: "auto", whiteSpace: "nowrap" }} >{salesreturn.order_code}</td>
-
-                                                        {store.zatca?.phase === "2" && store.zatca?.connected ? <td style={{ width: "auto", whiteSpace: "nowrap" }}>
-
-                                                            {!salesreturn.zatca?.compliance_passed && salesreturn.zatca?.compliance_check_failed_count > 0 ? <span className="badge bg-danger">
-                                                                Compliance check failed
-                                                                {!salesreturn.zatca.compliance_passed && salesreturn.zatca.compliance_check_last_failed_at ? <span>&nbsp;<TimeAgo date={salesreturn.zatca.compliance_check_last_failed_at} />&nbsp;</span> : ""}
-                                                                &nbsp;</span> : ""}
-
-                                                            {!salesreturn.zatca?.reporting_passed && salesreturn.zatca?.reporting_failed_count > 0 ? <span> <span className="badge bg-danger">
-                                                                Reporting failed
-                                                                {!salesreturn.zatca.reporting_passed && salesreturn.zatca.reporting_last_failed_at ? <span><TimeAgo date={salesreturn.zatca.reporting_last_failed_at} />&nbsp;</span> : ""}
-                                                            </span> &nbsp;</span> : ""}
-
-                                                            {salesreturn.zatca?.reporting_passed ? <span>&nbsp;<span className="badge bg-success">
-                                                                Reported
-                                                                {salesreturn.zatca.reporting_passed && salesreturn.zatca.reporting_passed_at ? <span>&nbsp;<TimeAgo date={salesreturn.zatca.reporting_passed_at} />&nbsp;</span> : ""}
-                                                                &nbsp;</span></span> : ""}
-
-                                                            {!salesreturn.zatca?.reporting_passed && !salesreturn.zatca?.compliance_passed && !salesreturn.zatca?.reporting_failed_count && !salesreturn.zatca?.compliance_check_failed_count ? <span className="badge bg-warning">
-                                                                Not Reported
-                                                                &nbsp;</span> : ""}
-
-                                                            {!salesreturn.zatca.reporting_passed ? <span> &nbsp; <Button disabled={reportingInProgress} style={{ marginTop: "3px" }} className="btn btn btn-sm" onClick={() => {
-                                                                ReportInvoiceToZatca(salesreturn.id, index);
-                                                            }}>
-
-                                                                {!salesreturn.zatca?.reportingInProgress && (salesreturn.zatca?.reporting_failed_count > 0 || salesreturn.zatca?.compliance_check_failed_count > 0) ? <i class="bi bi-bootstrap-reboot"></i> : ""}
-                                                                {!salesreturn.zatca?.reportingInProgress && (!salesreturn.zatca?.reporting_failed_count > 0 && !salesreturn.zatca?.compliance_check_failed_count) ? <span class="bi-arrow-right-circle">&nbsp;Report</span> : ""}
-                                                                {salesreturn.zatca?.reportingInProgress ? <Spinner
-                                                                    as="span"
-                                                                    animation="border"
-                                                                    size="sm"
-                                                                    role="status"
-                                                                    aria-hidden={true}
-                                                                /> : ""}
-                                                            </Button></span> : ""}
-                                                            {salesreturn.zatca?.reporting_passed ? <span>&nbsp;
-
-                                                                <Button onClick={() => {
-                                                                    window.open("/zatca/returns/xml/" + salesreturn.code + ".xml", "_blank");
-                                                                }}><i class="bi bi-filetype-xml"></i> XML
-                                                                </Button>
-                                                            </span> : ""}
-                                                        </td> : ""}
-                                                      
-                                                        <td>
-                                                            {salesreturn.payment_status === "paid" ?
-                                                                <span className="badge bg-success">
-                                                                    Paid
-                                                                </span> : ""}
-                                                            {salesreturn.payment_status === "paid_partially" ?
-                                                                <span className="badge bg-warning">
-                                                                    Paid Partially
-                                                                </span> : ""}
-                                                            {salesreturn.payment_status === "not_paid" ?
-                                                                <span className="badge bg-danger">
-                                                                    Not Paid
-                                                                </span> : ""}
-                                                        </td>
-                                                        <td>
-
-                                                            {salesreturn.payment_methods &&
-                                                                salesreturn.payment_methods.map((name) => (
-                                                                    <span className="badge bg-info">{name}</span>
-                                                                ))}
-
-                                                        </td>
-                                                        <td>{trimTo2Decimals(salesreturn.cash_discount)}</td>
-                                                        <td> <Amount amount={trimTo2Decimals(salesreturn.net_profit)} /> </td>
-                                                        <td> <Amount amount={trimTo2Decimals(salesreturn.net_loss)} />  </td>
-                                                        <td style={{ width: "auto", whiteSpace: "nowrap" }} >{salesreturn.created_by_name}</td>
-
-                                                        <td style={{ width: "auto", whiteSpace: "nowrap" }} >
-                                                            {format(
-                                                                new Date(salesreturn.created_at),
-                                                                "MMM dd yyyy h:mma"
-                                                            )}
-                                                        </td>
-                                                        <td style={{ width: "auto", whiteSpace: "nowrap" }} >
-                                                            <Button className="btn btn-light btn-sm" onClick={() => {
-                                                                openUpdateForm(salesreturn.id);
-                                                            }}>
-                                                                <i className="bi bi-pencil"></i>
-                                                            </Button>
-
-
-                                                            <Button className="btn btn-primary btn-sm" onClick={() => {
-                                                                openDetailsView(salesreturn.id);
-                                                            }}>
-                                                                <i className="bi bi-eye"></i>
-                                                            </Button>
-                                                        </td>*/}
                                                     </tr>
                                                 ))}
                                         </tbody>
@@ -3266,13 +2468,13 @@ const SalesReturnIndex = forwardRef((props, ref) => {
 
                                 {totalPages ? <ReactPaginate
                                     breakLabel="..."
-                                    nextLabel="next >"
                                     onPageChange={(event) => {
                                         changePage(event.selected + 1);
                                     }}
                                     pageRangeDisplayed={5}
                                     pageCount={totalPages}
-                                    previousLabel="< previous"
+                                    nextLabel={t("next >")}
+                                    previousLabel={t("< previous")}
                                     renderOnZeroPageCount={null}
                                     className="pagination  flex-wrap"
                                     pageClassName="page-item"
@@ -3292,14 +2494,14 @@ const SalesReturnIndex = forwardRef((props, ref) => {
 
             <Modal show={showSalesReturnPaymentHistory} size="lg" onHide={handlePaymentHistoryClose} animation={false} scrollable={true}>
                 <Modal.Header>
-                    <Modal.Title>Payment history of Sales Return #{selectedSalesReturn.code}</Modal.Title>
+                    <Modal.Title>{t("Payment history of Sales Return")} #{selectedSalesReturn.code}</Modal.Title>
 
                     <div className="col align-self-end text-end">
                         <button
                             type="button"
                             className="btn-close"
                             onClick={handlePaymentHistoryClose}
-                            aria-label="Close"
+                            aria-label={t("Close")}
                         ></button>
 
                     </div>

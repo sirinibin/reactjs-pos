@@ -128,7 +128,7 @@ function Sidebar(props) {
                 }} className={toggleActiveStyles(appState.tabs[1])}>
                     <Link to="/dashboard/salesreturn" className="sidebar-link">
                         <i className="bi bi-currency-dollar" />
-                        <span className="align-middle">Sales Returns</span>
+                        <span className="align-middle">{t("Sales Returns")}</span>
                     </Link>
                 </li>
                 <li onClick={() => {
@@ -136,7 +136,7 @@ function Sidebar(props) {
                 }} className={toggleActiveStyles(appState.tabs[2])}>
                     <Link to="/dashboard/purchases" className="sidebar-link">
                         <i className="bi bi-currency-dollar" />
-                        <span className="align-middle">Purchases</span>
+                        <span className="align-middle">{t("Purchases")}</span>
                     </Link>
                 </li>
                 <li onClick={() => {
@@ -144,7 +144,7 @@ function Sidebar(props) {
                 }} className={toggleActiveStyles(appState.tabs[3])}>
                     <Link to="/dashboard/purchasereturn" className="sidebar-link">
                         <i className="bi bi-currency-dollar" />
-                        <span className="align-middle">Purchase Returns</span>
+                        <span className="align-middle">{t("Purchase Returns")}</span>
                     </Link>
                 </li>
                 <li onClick={() => {
@@ -152,7 +152,7 @@ function Sidebar(props) {
                 }} className={toggleActiveStyles(appState.tabs[4])} >
                     <Link to="/dashboard/delivery-notes" className="sidebar-link">
                         <i className="bi bi-file-earmark-text" />
-                        <span className="align-middle">Delivery Notes</span>
+                        <span className="align-middle">{t("Delivery Notes")}</span>
                     </Link>
                 </li>
 
@@ -161,7 +161,7 @@ function Sidebar(props) {
                 }} className={toggleActiveStyles(appState.tabs[5])} >
                     <Link to="/dashboard/quotations" className="sidebar-link">
                         <i className="bi bi-file-earmark-text" />
-                        <span className="align-middle">Quotations</span>
+                        <span className="align-middle">{t("Quotations")}</span>
                     </Link>
                 </li>
 
@@ -170,7 +170,7 @@ function Sidebar(props) {
                 }} className={toggleActiveStyles(appState.tabs[6])} >
                     <Link to="/dashboard/quotation_sales_returns" className="sidebar-link">
                         <i className="bi bi-file-earmark-text" />
-                        <span className="align-middle">Quotation Sales Returns</span>
+                        <span className="align-middle">{t("Quotation Sales Returns")}</span>
                     </Link>
                 </li>
 
@@ -179,7 +179,7 @@ function Sidebar(props) {
                 }} className={toggleActiveStyles(appState.tabs[7])} >
                     <Link to="/dashboard/stats" className="sidebar-link">
                         <i className="bi bi-file-earmark-text" />
-                        <span className="align-middle">Stats</span>
+                        <span className="align-middle">{t("Statistics")}</span>
                     </Link>
                 </li>
 
@@ -188,7 +188,7 @@ function Sidebar(props) {
                 }} className={toggleActiveStyles(appState.tabs[8])}>
                     <Link to="/dashboard/vendors" className="sidebar-link">
                         <i className="bi bi-shop" />
-                        <span className="align-middle">Vendors/Suppliers</span>
+                        <span className="align-middle">{t("Vendors/Suppliers")}</span>
                     </Link>
                 </li>
                 <li onClick={() => {
@@ -196,7 +196,7 @@ function Sidebar(props) {
                 }} className={toggleActiveStyles(appState.tabs[9])}>
                     <Link to="/dashboard/stores" className="sidebar-link">
                         <i className="bi bi-shop" />
-                        <span className="align-middle">Stores</span>
+                        <span className="align-middle">{t("Stores")}</span>
                     </Link>
                 </li>
                 {store?.settings?.enable_warehouse_module && <>
@@ -205,7 +205,7 @@ function Sidebar(props) {
                     }} className={toggleActiveStyles(appState.tabs[10])}>
                         <Link to="/dashboard/warehouses" className="sidebar-link">
                             <i className="bi bi-shop" />
-                            <span className="align-middle">Warehouses</span>
+                            <span className="align-middle">{t("Warehouses")}</span>
                         </Link>
                     </li>
 
@@ -215,7 +215,7 @@ function Sidebar(props) {
                     }} className={toggleActiveStyles(appState.tabs[11])}>
                         <Link to="/dashboard/stock-transfers" className="sidebar-link">
                             <i className="bi bi-shop" />
-                            <span className="align-middle">Stock Transfers</span>
+                            <span className="align-middle">{t("Stock Transfers")}</span>
                         </Link>
                     </li>
                 </>}
@@ -226,7 +226,7 @@ function Sidebar(props) {
                 }} className={toggleActiveStyles(appState.tabs[12])}>
                     <Link to="/dashboard/customers" className="sidebar-link">
                         <i className="bi bi-people" />
-                        <span className="align-middle">Customers</span>
+                        <span className="align-middle">{t("Customers")}</span>
                     </Link>
                 </li>
                 <li onClick={() => {
@@ -234,7 +234,7 @@ function Sidebar(props) {
                 }} className={toggleActiveStyles(appState.tabs[13])}>
                     <Link to="/dashboard/products" className="sidebar-link">
                         <i className="bi bi-cart" />
-                        <span className="align-middle">Products</span>
+                        <span className="align-middle">{t("Products")}</span>
                     </Link>
                 </li>
                 <li onClick={() => {
@@ -242,7 +242,7 @@ function Sidebar(props) {
                 }} className={toggleActiveStyles(appState.tabs[14])}>
                     <Link to="/dashboard/product_category" className="sidebar-link">
                         <i className="bi bi-diagram-3" />
-                        <span className="align-middle">Product Category</span>
+                        <span className="align-middle">{t("Product Categories")}</span>
                     </Link>
                 </li>
                 <li onClick={() => {
@@ -250,7 +250,7 @@ function Sidebar(props) {
                 }} className={toggleActiveStyles(appState.tabs[15])}>
                     <Link to="/dashboard/product_brand" className="sidebar-link">
                         <i className="bi bi-diagram-3" />
-                        <span className="align-middle">Product Brand</span>
+                        <span className="align-middle">{t("Product Brands")}</span>
                     </Link>
                 </li>
                 <li onClick={() => {
@@ -258,7 +258,7 @@ function Sidebar(props) {
                 }} className={toggleActiveStyles(appState.tabs[16])}>
                     <Link to="/dashboard/expense_category" className="sidebar-link">
                         <i className="bi bi-diagram-3" />
-                        <span className="align-middle">Expense Category</span>
+                        <span className="align-middle">{t("Expense Categories")}</span>
                     </Link>
                 </li>
                 <li onClick={() => {
@@ -266,7 +266,7 @@ function Sidebar(props) {
                 }} className={toggleActiveStyles(appState.tabs[17])}>
                     <Link to="/dashboard/expenses" className="sidebar-link">
                         <i className="bi bi-currency-dollar" />
-                        <span className="align-middle">Expenses</span>
+                        <span className="align-middle">{t("Expenses")}</span>
                     </Link>
                 </li>
                 {localStorage.getItem("user_role") === "Admin" ? <li onClick={() => {
@@ -274,7 +274,7 @@ function Sidebar(props) {
                 }} className={toggleActiveStyles(appState.tabs[18])}>
                     <Link to="/dashboard/analytics" className="sidebar-link">
                         <i className="bi bi-graph-up" />
-                        <span className="align-middle">Analytics</span>
+                        <span className="align-middle">{t("Analytics")}</span>
                     </Link>
                 </li> : ""}
                 <li onClick={() => {
@@ -282,7 +282,7 @@ function Sidebar(props) {
                 }} className={toggleActiveStyles(appState.tabs[19])}>
                     <Link to="/dashboard/receivables" className="sidebar-link">
                         <i className="bi bi-currency-dollar" />
-                        <span className="align-middle">Receivables</span>
+                        <span className="align-middle">{t("Receivables")}</span>
                     </Link>
                 </li>
                 <li onClick={() => {
@@ -290,7 +290,7 @@ function Sidebar(props) {
                 }} className={toggleActiveStyles(appState.tabs[20])}>
                     <Link to="/dashboard/payables" className="sidebar-link">
                         <i className="bi bi-currency-dollar" />
-                        <span className="align-middle">Payables</span>
+                        <span className="align-middle">{t("Payables")}</span>
                     </Link>
                 </li>
                 <li onClick={() => {
@@ -298,7 +298,7 @@ function Sidebar(props) {
                 }} className={toggleActiveStyles(appState.tabs[21])}>
                     <Link to="/dashboard/capitals" className="sidebar-link">
                         <i className="bi bi-currency-dollar" />
-                        <span className="align-middle">Capitals</span>
+                        <span className="align-middle">{t("Capitals")}</span>
                     </Link>
                 </li>
                 <li onClick={() => {
@@ -306,7 +306,7 @@ function Sidebar(props) {
                 }} className={toggleActiveStyles(appState.tabs[22])}>
                     <Link to="/dashboard/dividents" className="sidebar-link">
                         <i className="bi bi-currency-dollar" />
-                        <span className="align-middle">Drawings</span>
+                        <span className="align-middle">{t("Drawings")}</span>
                     </Link>
                 </li>
                 <li onClick={() => {
@@ -314,7 +314,7 @@ function Sidebar(props) {
                 }} className={toggleActiveStyles(appState.tabs[23])}>
                     <Link to="/dashboard/ledger" className="sidebar-link">
                         <i className="bi bi-file-earmark-text" />
-                        <span className="align-middle">Ledger</span>
+                        <span className="align-middle">{t("Ledger")}</span>
                     </Link>
                 </li>
                 <li onClick={() => {
@@ -322,7 +322,7 @@ function Sidebar(props) {
                 }} className={toggleActiveStyles(appState.tabs[24])}>
                     <Link to="/dashboard/accounts" className="sidebar-link">
                         <i className="bi bi-file-person" />
-                        <span className="align-middle">Accounts & Trial balances</span>
+                        <span className="align-middle">{t("Accounts & Trial Balances")}</span>
                     </Link>
                 </li>
                 {localStorage.getItem("user_role") === "Admin" ? <li onClick={() => {
@@ -330,7 +330,7 @@ function Sidebar(props) {
                 }} className={toggleActiveStyles(appState.tabs[25])}>
                     <Link to="/dashboard/users" className="sidebar-link">
                         <i className="bi bi-file-person" />
-                        <span className="align-middle">Users</span>
+                        <span className="align-middle">{t("Users")}</span>
                     </Link>
                 </li> : ""}
                 {/*<li onClick={() => {

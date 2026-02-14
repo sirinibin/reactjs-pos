@@ -35,9 +35,9 @@ import * as bootstrap from 'bootstrap';
 
 import CustomerWithdrawalCreate from "../customer_withdrawal/create.js";
 import SalesCreate from "../order/create.js";
-
+import { useTranslation } from 'react-i18next';
 const SalesReturnCreate = forwardRef((props, ref) => {
-
+    const { t } = useTranslation('common');
 
     function ResetForm() {
         cashDiscount = "";
@@ -156,8 +156,8 @@ const SalesReturnCreate = forwardRef((props, ref) => {
                     return Promise.reject(error);
                 }
 
-                console.log("Response:");
-                console.log(data);
+                // console.log("Response:");
+                // console.log(data);
                 store = data.result;
                 setStore(store);
             })
@@ -181,7 +181,7 @@ const SalesReturnCreate = forwardRef((props, ref) => {
     let [selectedCustomers, setSelectedCustomers] = useState([]);
 
     function getSalesReturn(id) {
-        console.log("inside getSalesReturn id:", id);
+        //console.log("inside getSalesReturn id:", id);
         const requestOptions = {
             method: 'GET',
             headers: {
@@ -212,8 +212,8 @@ const SalesReturnCreate = forwardRef((props, ref) => {
 
                 setErrors({});
 
-                console.log("Response:");
-                console.log(data);
+                //console.log("Response:");
+                //console.log(data);
 
                 let salesReturn = data.result;
                 // formData = purchaseReturn;
@@ -302,7 +302,7 @@ const SalesReturnCreate = forwardRef((props, ref) => {
                 }
 
                 if (data.result.payments) {
-                    console.log("data.result.payments:", data.result.payments);
+                    //console.log("data.result.payments:", data.result.payments);
                     formData.payments_input = data.result.payments;
                     for (var i = 0; i < formData.payments_input?.length; i++) {
                         formData.payments_input[i].date_str = formData.payments_input[i].date
@@ -356,7 +356,7 @@ const SalesReturnCreate = forwardRef((props, ref) => {
     useEffect(() => {
         const listener = event => {
             if (event.code === "Enter" || event.code === "NumpadEnter") {
-                console.log("Enter key was pressed. Run your function.");
+                //console.log("Enter key was pressed. Run your function.");
                 // event.preventDefault();
 
                 var form = event.target.form;
@@ -382,7 +382,7 @@ const SalesReturnCreate = forwardRef((props, ref) => {
     let [order, setOrder] = useState({});
 
     function getOrder(id) {
-        console.log("inside get SalesReturn");
+        //console.log("inside get SalesReturn");
         const requestOptions = {
             method: 'GET',
             headers: {
@@ -414,8 +414,8 @@ const SalesReturnCreate = forwardRef((props, ref) => {
 
                 setErrors({});
 
-                console.log("Response sale:");
-                console.log(data);
+                //console.log("Response sale:");
+                //console.log(data);
 
                 order = data.result;
                 setOrder(order);
@@ -455,7 +455,7 @@ const SalesReturnCreate = forwardRef((props, ref) => {
                     setSelectedProducts(updatedProducts);
 
                     //formData = order;
-                    console.log("order.id:", order.id);
+                    //console.log("order.id:", order.id);
                     formData.id = "";
                     formData.products = order.products;
                     // formData.order_id = order.id;
@@ -871,7 +871,7 @@ const SalesReturnCreate = forwardRef((props, ref) => {
     }
 
     async function getProduct(id) {
-        console.log("inside get Product");
+        //console.log("inside get Product");
         const requestOptions = {
             method: "GET",
             headers: {
@@ -909,9 +909,9 @@ const SalesReturnCreate = forwardRef((props, ref) => {
     function handleCreate(event) {
         let haveErrors = false;
         event.preventDefault();
-        console.log("Inside handle Create");
-        console.log("selectedProducts:", selectedProducts);
-        console.log("formData.order_id:", formData.order_id);
+        //console.log("Inside handle Create");
+        //console.log("selectedProducts:", selectedProducts);
+        //console.log("formData.order_id:", formData.order_id);
 
         if (!cashDiscount) {
             formData.cash_discount = 0;
@@ -966,7 +966,7 @@ const SalesReturnCreate = forwardRef((props, ref) => {
             let unitPrice = parseFloat(selectedProducts[i].unit_price);
 
             if (unitPrice && /^\d*\.?\d{0,8}$/.test(unitPrice) === false) {
-                errors["unit_price_" + i] = "Max decimal points allowed is 8";
+                errors["unit_price_" + i] = t("Max decimal points allowed is 8");
                 setErrors({ ...errors });
                 haveErrors = true;
             }
@@ -974,7 +974,7 @@ const SalesReturnCreate = forwardRef((props, ref) => {
             let unitPriceWithVAT = parseFloat(selectedProducts[i].unit_price_with_vat);
 
             if (unitPriceWithVAT && /^\d*\.?\d{0,8}$/.test(unitPriceWithVAT) === false) {
-                errors["unit_price_with_vat_" + i] = "Max decimal points allowed is 8";
+                errors["unit_price_with_vat_" + i] = t("Max decimal points allowed is 8");
                 setErrors({ ...errors });
                 haveErrors = true;
             }
@@ -985,7 +985,7 @@ const SalesReturnCreate = forwardRef((props, ref) => {
             if (selectedProducts[i].unit_discount) {
                 unitDiscount = parseFloat(selectedProducts[i].unit_discount)
                 if (/^\d*\.?\d{0,8}$/.test(unitDiscount) === false) {
-                    errors["unit_discount_" + i] = "Max decimal points allowed is 8";
+                    errors["unit_discount_" + i] = t("Max decimal points allowed is 8");
                     setErrors({ ...errors });
                     haveErrors = true;
                 }
@@ -996,7 +996,7 @@ const SalesReturnCreate = forwardRef((props, ref) => {
             if (selectedProducts[i].unit_discount_with_vat) {
                 unitDiscountWithVAT = parseFloat(selectedProducts[i].unit_discount_with_vat)
                 if (/^\d*\.?\d{0,8}$/.test(unitDiscountWithVAT) === false) {
-                    errors["unit_discount_with_vat_" + i] = "Max decimal points allowed is 8";
+                    errors["unit_discount_with_vat_" + i] = t("Max decimal points allowed is 8");
                     setErrors({ ...errors });
                     haveErrors = true;
                 }
@@ -1007,7 +1007,7 @@ const SalesReturnCreate = forwardRef((props, ref) => {
             if (selectedProducts[i].unit_discount_percent) {
                 unitDiscountPercent = parseFloat(selectedProducts[i].unit_discount_percent)
                 if (/^\d*\.?\d{0,8}$/.test(unitDiscountPercent) === false) {
-                    errors["unit_discount_percent_" + i] = "Max decimal points allowed is 8";
+                    errors["unit_discount_percent_" + i] = t("Max decimal points allowed is 8");
                     setErrors({ ...errors });
                     haveErrors = true;
                 }
@@ -1018,7 +1018,7 @@ const SalesReturnCreate = forwardRef((props, ref) => {
             if (selectedProducts[i].unit_discount_percent_with_vat) {
                 unitDiscountPercentWithVAT = parseFloat(selectedProducts[i].unit_discount_percent_with_vat)
                 if (/^\d*\.?\d{0,8}$/.test(unitDiscountPercent) === false) {
-                    errors["unit_discount_percent_with_vat" + i] = "Max decimal points allowed is 8";
+                    errors["unit_discount_percent_with_vat" + i] = t("Max decimal points allowed is 8");
                     setErrors({ ...errors });
                     haveErrors = true;
                 }
@@ -1062,21 +1062,21 @@ const SalesReturnCreate = forwardRef((props, ref) => {
         formData.discount_percent = parseFloat(formData.discount_percent);
 
         formData.vat_percent = parseFloat(formData.vat_percent);
-        console.log("formData.discount:", formData.discount);
+        // console.log("formData.discount:", formData.discount);
 
 
         delete errors["products"];
         setErrors({ ...errors });
 
         if (selectedProductsCount === 0) {
-            errors["products"] = "No products selected";
+            errors["products"] = t("No products selected");
             setErrors({ ...errors });
             haveErrors = true;
         }
 
 
         if (formData.products.length === 0) {
-            errors["products"] = "No products added";
+            errors["products"] = t("No products added");
             setErrors({ ...errors });
             haveErrors = true;
         }
@@ -1086,30 +1086,30 @@ const SalesReturnCreate = forwardRef((props, ref) => {
 
 
         if (!formData.discount_percent && formData.discount_percent !== 0) {
-            errors["discount_percent"] = "Invalid discount percent";
+            errors["discount_percent"] = t("Invalid discount percent");
             setErrors({ ...errors });
             haveErrors = true;
         }
 
         if (parseFloat(formData.discount_percent) > 100) {
-            errors["discount_percent"] = "Discount percent cannot be > 100";
+            errors["discount_percent"] = t("Discount percent cannot be > 100");
             setErrors({ ...errors });
             haveErrors = true;
         }
 
         if (!validatePaymentAmounts()) {
-            console.log("Errors on payments")
+            //console.log("Errors on payments")
             haveErrors = true;
         }
 
         if (!formData.shipping_handling_fees && formData.shipping_handling_fees !== 0) {
-            errors["shipping_handling_fees"] = "Invalid shipping / handling fees";
+            errors["shipping_handling_fees"] = t("Invalid shipping / handling fees");
             setErrors({ ...errors });
             haveErrors = true;
         }
 
         if (/^\d*\.?\d{0,2}$/.test(parseFloat(formData.shipping_handling_fees)) === false) {
-            errors["shipping_handling_fees"] = "Max. decimal points allowed is 2";
+            errors["shipping_handling_fees"] = t("Max. decimal points allowed is 2");
             setErrors({ ...errors });
             haveErrors = true;
         }
@@ -1117,27 +1117,27 @@ const SalesReturnCreate = forwardRef((props, ref) => {
 
 
         if (/^-?\d*\.?\d{0,2}$/.test(parseFloat(formData.rounding_amount)) === false) {
-            errors["rounding_amount"] = "Max. decimal points allowed is 2";
+            errors["rounding_amount"] = t("Max. decimal points allowed is 2");
             setErrors({ ...errors });
             haveErrors = true;
         }
 
 
         if (!formData.discount && formData.discount !== 0) {
-            errors["discount"] = "Invalid discount";
+            errors["discount"] = t("Invalid discount");
             setErrors({ ...errors });
             haveErrors = true;
         }
 
         if (/^\d*\.?\d{0,2}$/.test(parseFloat(formData.discount)) === false) {
-            errors["discount"] = "Max. decimal points allowed is 2";
+            errors["discount"] = t("Max. decimal points allowed is 2");
             setErrors({ ...errors });
             haveErrors = true;
         }
 
 
         if (haveErrors) {
-            console.log("Errors: ", errors);
+            //console.log("Errors: ", errors);
             return;
         }
 
@@ -1169,7 +1169,7 @@ const SalesReturnCreate = forwardRef((props, ref) => {
             body: JSON.stringify(formData),
         };
 
-        console.log("formData:", formData);
+        //console.log("formData:", formData);
 
         let searchParams = {};
         if (localStorage.getItem("store_id")) {
@@ -1202,12 +1202,12 @@ const SalesReturnCreate = forwardRef((props, ref) => {
                 setErrors({});
                 setProcessing(false);
 
-                console.log("Response:");
-                console.log(data);
+                //console.log("Response:");
+                //console.log(data);
                 if (formData.id) {
-                    if (props.showToastMessage) props.showToastMessage("Sales return updated successfully!", "success");
+                    if (props.showToastMessage) props.showToastMessage(t("Sales return updated successfully!"), "success");
                 } else {
-                    if (props.showToastMessage) props.showToastMessage("Sales return created successfully!", "success");
+                    if (props.showToastMessage) props.showToastMessage(t("Sales return created successfully!"), "success");
                 }
 
                 if (props.refreshList) {
@@ -1227,11 +1227,11 @@ const SalesReturnCreate = forwardRef((props, ref) => {
             })
             .catch((error) => {
                 setProcessing(false);
-                console.log("Inside catch");
+                //console.log("Inside catch");
                 console.log(error);
                 setErrors({ ...error });
-                console.error("There was an error!", error);
-                if (props.showToastMessage) props.showToastMessage("Failed to process sales return!", "danger");
+                //console.error("There was an error!", error);
+                if (props.showToastMessage) props.showToastMessage(t("Failed to process sales return!"), "danger");
             });
     }
 
@@ -1264,7 +1264,7 @@ const SalesReturnCreate = forwardRef((props, ref) => {
         const requestId = Date.now();
         latestRequestRef.current = requestId;
 
-        console.log("inside reCalculate");
+        //console.log("inside reCalculate");
         if (!cashDiscount) {
             formData.cash_discount = 0;
         } else {
@@ -1320,8 +1320,8 @@ const SalesReturnCreate = forwardRef((props, ref) => {
         for (var i = 0; i < selectedProducts.length; i++) {
 
             let unitPrice = parseFloat(selectedProducts[i].unit_price);
-            console.log("unitPrice:", unitPrice);
-            console.log("selectedProducts[i].unit_price_with_vat:", selectedProducts[i].unit_price_with_vat);
+            //console.log("unitPrice:", unitPrice);
+            //console.log("selectedProducts[i].unit_price_with_vat:", selectedProducts[i].unit_price_with_vat);
 
 
             let unitPriceWithVAT = parseFloat(selectedProducts[i].unit_price_with_vat);
@@ -1403,7 +1403,7 @@ const SalesReturnCreate = forwardRef((props, ref) => {
                 "/v1/sales-return/calculate-net-total",
                 requestOptions
             );
-            console.log("Done")
+            //console.log("Done")
             if (!result.ok) {
                 return;
             }
@@ -1497,7 +1497,7 @@ const SalesReturnCreate = forwardRef((props, ref) => {
                                 selectedProducts[i].unit_price_with_vat = "";
                             }
                                 */
-                            console.log("Discounts updated from server")
+                            //console.log("Discounts updated from server")
                         }
                     }
                 }
@@ -1535,7 +1535,7 @@ const SalesReturnCreate = forwardRef((props, ref) => {
             setFormData({ ...formData });
             validatePaymentAmounts();
         } catch (err) {
-            console.error("Failed to parse response:", err);
+            // console.error("Failed to parse response:", err);
         }
     }
 
@@ -1611,14 +1611,14 @@ const SalesReturnCreate = forwardRef((props, ref) => {
 
 
         if (formData.net_total && cashDiscount > 0 && cashDiscount >= formData.net_total) {
-            errors["cash_discount"] = "Cash discount should not be >= " + trimTo2Decimals(formData.net_total).toString();
+            errors["cash_discount"] = t("Cash discount should not be greater than or equal to {{max}}", { max: trimTo2Decimals(formData.net_total).toString() });
             setErrors({ ...errors });
             haveErrors = true
             return false;
         }
 
         if (formData.net_total && commission > 0 && commission >= formData.net_total) {
-            errors["commission"] = "Commission should not be >= " + trimTo2Decimals(formData.net_total).toString();
+            errors["commission"] = t("Commission should not be greater than or equal to {{max}}", { max: trimTo2Decimals(formData.net_total).toString() });
             setErrors({ ...errors });
             haveErrors = true
             return false;
@@ -1638,17 +1638,17 @@ const SalesReturnCreate = forwardRef((props, ref) => {
             setErrors({ ...errors });
 
             if (!formData.payments_input[key].amount) {
-                errors["payment_amount_" + key] = "Payment amount is required";
+                errors["payment_amount_" + key] = t("Payment amount is required");
                 setErrors({ ...errors });
                 haveErrors = true;
             } else if (formData.payments_input[key].amount === 0) {
-                errors["payment_amount_" + key] = "Amount should be greater than zero";
+                errors["payment_amount_" + key] = t("Amount should be greater than zero");
                 setErrors({ ...errors });
                 haveErrors = true;
             }
 
             if (!formData.payments_input[key].date_str) {
-                errors["payment_date_" + key] = "Payment date is required";
+                errors["payment_date_" + key] = t("Payment date is required");
                 setErrors({ ...errors });
                 haveErrors = true;
             }/* else if ((new Date(formData.payments_input[key].date_str)) < (new Date(formData.date_str))) {
@@ -1658,7 +1658,7 @@ const SalesReturnCreate = forwardRef((props, ref) => {
             }*/
 
             if (!formData.payments_input[key].method) {
-                errors["payment_method_" + key] = "Payment method is required";
+                errors["payment_method_" + key] = t("Payment method is required");
                 setErrors({ ...errors });
                 haveErrors = true;
             }
@@ -1819,21 +1819,25 @@ const SalesReturnCreate = forwardRef((props, ref) => {
 
     const renderTooltip = (props) => (
         <Tooltip id="label-tooltip" {...props}>
-            Total(without VAT) + Shipping & Handling Fees - Discount(without VAT)
+            {t("Total(without VAT) + Shipping & Handling Fees - Discount(without VAT)")}
             {"(" + trimTo2Decimals(formData.total) + " + " + trimTo2Decimals(shipping) + " - " + trimTo2Decimals(discount) + ") = " + trimTo2Decimals(formData.total + shipping - discount)}
         </Tooltip>
     );
 
     const renderNetTotalBeforeRoundingTooltip = (props) => (
         <Tooltip id="label-tooltip" {...props}>
-            Total Taxable Amount(without VAT) + VAT Price ( 15% of Taxable Amount)
+            {t("Total Taxable Amount(without VAT) + VAT Price ( {{vatPercent}}% of Taxable Amount)", {
+                vatPercent: formData.vat_percent,
+            })}
             {"(" + trimTo2Decimals(formData.total + shipping - discount) + " + " + trimTo2Decimals(formData.vat_price) + ") = " + trimTo2Decimals(formData.net_total - roundingAmount)}
         </Tooltip>
     );
 
     const renderNetTotalTooltip = (props) => (
         <Tooltip id="label-tooltip" {...props}>
-            Total Taxable Amount(without VAT) + VAT Price ( 15% of Taxable Amount) {roundingAmount > 0 ? " + Rounding Amount" : " - Rounding Amount"}
+            {t("Total Taxable Amount(without VAT) + VAT Price ( {{vatPercent}}% of Taxable Amount)", {
+                vatPercent: formData.vat_percent,
+            })} {roundingAmount > 0 ? " + Rounding Amount" : " - Rounding Amount"}
             {"(" + trimTo2Decimals(formData.total + shipping - discount) + " + " + trimTo2Decimals(formData.vat_price) + `${roundingAmount > 0 ? " + " : " - "}` + trimTo2Decimals(roundingAmount) + " ) = " + trimTo2Decimals(formData.net_total)}
         </Tooltip>
     );
@@ -1928,18 +1932,18 @@ const SalesReturnCreate = forwardRef((props, ref) => {
 
     function checkError(i) {
         if (selectedProducts[i].quantity && selectedProducts[i].quantity <= 0) {
-            errors["quantity_" + i] = "Quantity should be > 0";
+            errors["quantity_" + i] = t("Quantity should be > 0");
         } else if (!selectedProducts[i].quantity) {
-            errors["quantity_" + i] = "Quantity is required";
+            errors["quantity_" + i] = t("Quantity is required");
         } else {
             delete errors["quantity_" + i];
         }
 
 
         if (selectedProducts[i].unit_price && selectedProducts[i].unit_price <= 0) {
-            errors["unit_price_" + i] = "Unit Price should be > 0";
+            errors["unit_price_" + i] = t("Unit Price should be > 0");
         } else if (!selectedProducts[i].unit_price) {
-            errors["unit_price_" + i] = "Unit Price is required";
+            errors["unit_price_" + i] = t("Unit Price is required");
         } else {
             delete errors["unit_price_" + i];
         }
@@ -1947,9 +1951,9 @@ const SalesReturnCreate = forwardRef((props, ref) => {
 
         if (store?.settings?.block_sale_when_purchase_price_is_higher) {
             if (selectedProducts[i].purchase_unit_price && selectedProducts[i].purchase_unit_price <= 0) {
-                errors["purchase_unit_price_" + i] = "Purchase Unit Price should be > 0";
+                errors["purchase_unit_price_" + i] = t("Purchase Unit Price should be > 0");
             } else if (!selectedProducts[i].purchase_unit_price) {
-                errors["purchase_unit_price_" + i] = "Purchase Unit Price is required";
+                errors["purchase_unit_price_" + i] = t("Purchase Unit Price is required");
             } else {
                 delete errors["purchase_unit_price_" + i];
             }
@@ -1960,8 +1964,8 @@ const SalesReturnCreate = forwardRef((props, ref) => {
         if (selectedProducts[i].purchase_unit_price > 0 && selectedProducts[i].unit_price > 0) {
 
             if (selectedProducts[i].purchase_unit_price > selectedProducts[i].unit_price) {
-                errors["purchase_unit_price_" + i] = "Purchase Unit Price should not be greater than Unit Price(without VAT)"
-                errors["unit_price_" + i] = "Unit price should not be less than Purchase Unit Price(without VAT)"
+                errors["purchase_unit_price_" + i] = t("Purchase Unit Price should not be greater than Unit Price(without VAT)")
+                errors["unit_price_" + i] = t("Unit price should not be less than Purchase Unit Price(without VAT)")
             } else {
                 delete errors["purchase_unit_price_" + i];
                 delete errors["unit_price_" + i];
@@ -2134,7 +2138,7 @@ const SalesReturnCreate = forwardRef((props, ref) => {
             <Modal show={show} size="xl" fullscreen onHide={handleClose} animation={false} backdrop="static" scrollable={true}>
                 <Modal.Header>
                     <Modal.Title>
-                        {formData.id ? "Update Sales Return  #" + formData.code + " for sales #" : "Create Sales Return for sale #"}
+                        {formData.id ? t("Update Sales Return") + "  #" + formData.code + " for sales #" : t("Create Sales Return for Sale") + " #"}
                         {formData.order_code && <span style={{ cursor: "pointer", color: "blue" }} onClick={() => {
                             openReferenceUpdateForm(formData.order_id, "sales");
                         }}>
@@ -2145,13 +2149,13 @@ const SalesReturnCreate = forwardRef((props, ref) => {
                         <input type="checkbox" id="sales_return_report_to_zatca" name="sales_return_report_to_zatca" checked={formData.enable_report_to_zatca} onChange={(e) => {
                             formData.enable_report_to_zatca = !formData.enable_report_to_zatca;
                             setFormData({ ...formData });
-                        }} /> Report to Zatca <br />
+                        }} /> {t("Report to Zatca")} <br />
                     </div>}
 
                     <div className="col align-self-end text-end">
 
                         <Button variant="primary" onClick={openPreview}>
-                            <i className="bi bi-printer"></i> Print Full Invoice
+                            <i className="bi bi-printer"></i> {t("Print Full Invoice")}
                         </Button>
                         &nbsp;&nbsp;
 
@@ -2168,14 +2172,14 @@ const SalesReturnCreate = forwardRef((props, ref) => {
 
                                     : ""
                                 }
-                                {formData.id && !isProcessing ? "Update" : !isProcessing ? "Create" : ""}
+                                {formData.id && !isProcessing ? t("Update") : !isProcessing ? t("Create") : ""}
 
                             </Button>}
                         <button
                             type="button"
                             className="btn-close"
                             onClick={handleClose}
-                            aria-label="Close"
+                            aria-label={t("Close")}
                         ></button>
                     </div>
                 </Modal.Header>
@@ -2210,7 +2214,7 @@ const SalesReturnCreate = forwardRef((props, ref) => {
                     </div>
                     <div className="row">
                         {selectedProducts?.length > 0 && <div className="col-md-3" >
-                            <label className="form-label">Date*</label>
+                            <label className="form-label">{t("Date")}*</label>
                             <div className="input-group mb-3">
                                 <DatePicker
                                     id="date_str"
@@ -2234,14 +2238,14 @@ const SalesReturnCreate = forwardRef((props, ref) => {
                             {errors.date_str && (
                                 <div style={{ color: "red" }}>
                                     <i className="bi bi-x-lg"> </i>
-                                    {errors.date_str}
+                                    {t(errors.date_str)}
                                 </div>
                             )}
 
                         </div>}
 
                         {selectedProducts?.length > 0 && <div className="col-md-2">
-                            <label className="form-label">Phone ( 05.. / +966..)</label>
+                            <label className="form-label">{t("Phone")} ( 05.. / +966..)</label>
 
                             <div className="input-group mb-3">
                                 <input
@@ -2258,13 +2262,13 @@ const SalesReturnCreate = forwardRef((props, ref) => {
                                     }}
                                     className="form-control"
 
-                                    placeholder="Phone"
+                                    placeholder={t("Phone")}
                                 />
                             </div>
                             {errors.phone && (
                                 <div style={{ color: "red" }}>
 
-                                    {errors.phone}
+                                    {t(errors.phone)}
                                 </div>
                             )}
                         </div>}
@@ -2278,7 +2282,7 @@ const SalesReturnCreate = forwardRef((props, ref) => {
                         </div>}
 
                         {selectedProducts?.length > 0 && <div className="col-md-2">
-                            <label className="form-label">VAT NO.(15 digits)</label>
+                            <label className="form-label">{t("VAT NO.(15 digits)")}</label>
 
                             <div className="input-group mb-3">
                                 <input
@@ -2295,19 +2299,19 @@ const SalesReturnCreate = forwardRef((props, ref) => {
                                     }}
                                     className="form-control"
 
-                                    placeholder="VAT NO."
+                                    placeholder={t("VAT NO.")}
                                 />
                             </div>
                             {errors.vat_no && (
                                 <div style={{ color: "red" }}>
 
-                                    {errors.vat_no}
+                                    {t(errors.vat_no)}
                                 </div>
                             )}
                         </div>}
 
                         {selectedProducts?.length > 0 && <div className="col-md-3">
-                            <label className="form-label">Address</label>
+                            <label className="form-label">{t("Address")}</label>
                             <div className="input-group mb-3">
                                 <textarea
                                     value={formData.address}
@@ -2321,19 +2325,19 @@ const SalesReturnCreate = forwardRef((props, ref) => {
                                     }}
                                     className="form-control"
                                     id="address"
-                                    placeholder="Address"
+                                    placeholder={t("Address")}
                                 />
                             </div>
                             {errors.address && (
                                 <div style={{ color: "red" }}>
 
-                                    {errors.address}
+                                    {t(errors.address)}
                                 </div>
                             )}
                         </div>}
 
                         {selectedProducts?.length > 0 && <div className="col-md-3" >
-                            <label className="form-label">Remarks</label>
+                            <label className="form-label">{t("Remarks")}</label>
                             <div className="input-group mb-3">
                                 <textarea
                                     value={formData.remarks}
@@ -2347,12 +2351,12 @@ const SalesReturnCreate = forwardRef((props, ref) => {
                                     }}
                                     className="form-control"
                                     id="remarks"
-                                    placeholder="Remarks"
+                                    placeholder={t("Remarks")}
                                 />
                             </div>
                             {errors.remarks && (
                                 <div style={{ color: "red" }}>
-                                    {errors.remarks}
+                                    {t(errors.remarks)}
                                 </div>
                             )}
                         </div>}
@@ -2366,7 +2370,7 @@ const SalesReturnCreate = forwardRef((props, ref) => {
                                 <tbody>
                                     <tr className="text-center" style={{ borderBottom: "solid 2px" }}>
                                         <th>
-                                            Select All <br />
+                                            {t("Select All")} <br />
                                             <input
                                                 type="checkbox"
                                                 className="form-check-input"
@@ -2374,22 +2378,22 @@ const SalesReturnCreate = forwardRef((props, ref) => {
                                                 onChange={handleSelectAll}
                                             />
                                         </th>
-                                        <th>SI No.</th>
-                                        <th>Part No.</th>
-                                        <th style={{ minWidth: "250px" }}>Name</th>
-                                        <th>Info</th>
-                                        <th>Purchase Unit Price(without VAT)</th>
-                                        <th>Stock</th>
-                                        <th>Qty</th>
-                                        {store.settings?.enable_warehouse_module && <th>Add Stock To</th>}
-                                        <th>Unit Price(without VAT)</th>
-                                        <th>Unit Price(with VAT)</th>
-                                        <th>Unit Disc.(without VAT)</th>
-                                        <th>Unit Disc.(with VAT)</th>
+                                        <th>{t("SI No.")}</th>
+                                        <th>{t("Part No.")}</th>
+                                        <th style={{ minWidth: "250px" }}>{t("Name")}</th>
+                                        <th>{t("Info")}</th>
+                                        <th>{t("Purchase Unit Price(without VAT)")}</th>
+                                        <th>{t("Stock")}</th>
+                                        <th>{t("Qty")}</th>
+                                        {store.settings?.enable_warehouse_module && <th>{t("Add Stock To")}</th>}
+                                        <th>{t("Unit Price(without VAT)")}</th>
+                                        <th>{t("Unit Price(with VAT)")}</th>
+                                        <th>{t("Unit Disc.(without VAT)")}</th>
+                                        <th>{t("Unit Disc.(with VAT)")}</th>
                                         {/*  <th>Unit Disc. %(without VAT)</th>*/}
-                                        <th>Unit Disc. %(with VAT)</th>
-                                        <th>Price(without VAT)</th>
-                                        <th>Price(with VAT)</th>
+                                        <th>{t("Unit Disc. %(with VAT)")}</th>
+                                        <th>{t("Price(without VAT)")}</th>
+                                        <th>{t("Price(with VAT)")}</th>
                                     </tr>
 
                                     {selectedProducts.map((product, index) => {
@@ -2429,7 +2433,7 @@ const SalesReturnCreate = forwardRef((props, ref) => {
                                                         onKeyDown={(e) => {
                                                             RunKeyActions(e, product);
                                                         }}
-                                                        placeholder="Part No." onChange={(e) => {
+                                                        placeholder={t("Part No.")} onChange={(e) => {
                                                             delete errors["part_number_" + index];
                                                             setErrors({ ...errors });
 
@@ -2446,8 +2450,8 @@ const SalesReturnCreate = forwardRef((props, ref) => {
                                                             className={`bi bi-exclamation-circle-fill ${errors[`part_number_${index}`] ? 'text-danger' : 'text-warning'} ms-2`}
                                                             data-bs-toggle="tooltip"
                                                             data-bs-placement="top"
-                                                            data-error={errors[`part_number_${index}`] || ''}
-                                                            data-warning={warnings[`part_number_${index}`] || ''}
+                                                            data-error={t(errors[`part_number_${index}`]) || ''}
+                                                            data-warning={t(warnings[`part_number_${index}`]) || ''}
                                                             title={errors[`part_number_${index}`] || warnings[`part_number_${index}`] || ''}
                                                             style={{
                                                                 fontSize: '1rem',
@@ -2544,8 +2548,8 @@ const SalesReturnCreate = forwardRef((props, ref) => {
                                                             className={`bi bi-exclamation-circle-fill ${errors[`name_${index}`] ? 'text-danger' : 'text-warning'} ms-2`}
                                                             data-bs-toggle="tooltip"
                                                             data-bs-placement="top"
-                                                            data-error={errors[`name_${index}`] || ''}
-                                                            data-warning={warnings[`name_${index}`] || ''}
+                                                            data-error={t(errors[`name_${index}`]) || ''}
+                                                            data-warning={t(warnings[`name_${index}`]) || ''}
                                                             title={errors[`name_${index}`] || warnings[`name_${index}`] || ''}
                                                             style={{
                                                                 fontSize: '1rem',
@@ -2565,57 +2569,57 @@ const SalesReturnCreate = forwardRef((props, ref) => {
                                                             <Dropdown.Menu style={{ zIndex: 9999, position: "absolute" }} popperConfig={{ modifiers: [{ name: 'preventOverflow', options: { boundary: 'viewport' } }] }}>
                                                                 <Dropdown.Item onClick={() => openLinkedProducts(product)}>
                                                                     <i className="bi bi-link"></i>&nbsp;
-                                                                    Linked Products ({getShortcut('linkedProducts')})
+                                                                    {t("Linked Products")} ({getShortcut('linkedProducts')})
                                                                 </Dropdown.Item>
 
                                                                 <Dropdown.Item onClick={() => openProductHistory(product)}>
                                                                     <i className="bi bi-clock-history"></i>&nbsp;
-                                                                    History ({getShortcut('productHistory')})
+                                                                    {t("History")} ({getShortcut('productHistory')})
                                                                 </Dropdown.Item>
 
                                                                 <Dropdown.Item onClick={() => openSalesHistory(product)}>
                                                                     <i className="bi bi-clock-history"></i>&nbsp;
-                                                                    Sales History ({getShortcut('salesHistory')})
+                                                                    {t("Sales History")} ({getShortcut('salesHistory')})
                                                                 </Dropdown.Item>
 
                                                                 <Dropdown.Item onClick={() => openSalesReturnHistory(product)}>
                                                                     <i className="bi bi-clock-history"></i>&nbsp;
-                                                                    Sales Return History ({getShortcut('salesReturnHistory')})
+                                                                    {t("Sales Return History")} ({getShortcut('salesReturnHistory')})
                                                                 </Dropdown.Item>
 
                                                                 <Dropdown.Item onClick={() => openPurchaseHistory(product)}>
                                                                     <i className="bi bi-clock-history"></i>&nbsp;
-                                                                    Purchase History ({getShortcut('purchaseHistory')})
+                                                                    {t("Purchase History")} ({getShortcut('purchaseHistory')})
                                                                 </Dropdown.Item>
 
                                                                 <Dropdown.Item onClick={() => openPurchaseReturnHistory(product)}>
                                                                     <i className="bi bi-clock-history"></i>&nbsp;
-                                                                    Purchase Return History ({getShortcut('purchaseReturnHistory')})
+                                                                    {t("Purchase Return History")} ({getShortcut('purchaseReturnHistory')})
                                                                 </Dropdown.Item>
 
                                                                 <Dropdown.Item onClick={() => openDeliveryNoteHistory(product)}>
                                                                     <i className="bi bi-clock-history"></i>&nbsp;
-                                                                    Delivery Note History ({getShortcut('deliveryNoteHistory')})
+                                                                    {t("Delivery Note History")} ({getShortcut('deliveryNoteHistory')})
                                                                 </Dropdown.Item>
 
                                                                 <Dropdown.Item onClick={() => openQuotationHistory(product, "quotation")}>
                                                                     <i className="bi bi-clock-history"></i>&nbsp;
-                                                                    Quotation History ({getShortcut('quotationHistory')})
+                                                                    {t("Quotation History")} ({getShortcut('quotationHistory')})
                                                                 </Dropdown.Item>
 
                                                                 <Dropdown.Item onClick={() => openQuotationSalesHistory(product)}>
                                                                     <i className="bi bi-clock-history"></i>&nbsp;
-                                                                    Qtn. Sales History ({getShortcut('quotationSalesHistory')})
+                                                                    {t("Qtn. Sales History")} ({getShortcut('quotationSalesHistory')})
                                                                 </Dropdown.Item>
 
                                                                 <Dropdown.Item onClick={() => openQuotationSalesReturnHistory(product)}>
                                                                     <i className="bi bi-clock-history"></i>&nbsp;
-                                                                    Qtn. Sales Return History ({getShortcut('quotationSalesReturnHistory')})
+                                                                    {t("Qtn. Sales Return History")} ({getShortcut('quotationSalesReturnHistory')})
                                                                 </Dropdown.Item>
 
                                                                 <Dropdown.Item onClick={() => openProductImages(product.product_id)}>
                                                                     <i className="bi bi-clock-history"></i>&nbsp;
-                                                                    Images ({getShortcut('images')})
+                                                                    {t("Images")} ({getShortcut('images')})
                                                                 </Dropdown.Item>
                                                             </Dropdown.Menu>
                                                         </Dropdown>
@@ -2630,7 +2634,7 @@ const SalesReturnCreate = forwardRef((props, ref) => {
                                                             className={`form-control text-end ${errors["purchase_unit_price_" + index] ? 'is-invalid' : ''} ${warnings["purchase_unit_price_" + index] ? 'border-warning text-warning' : ''}`}
                                                             onWheel={(e) => e.target.blur()}
                                                             value={product.purchase_unit_price}
-                                                            placeholder="Purchase Unit Price"
+                                                            placeholder={t("Purchase Unit Price")}
                                                             ref={(el) => {
                                                                 if (!inputRefs.current[index]) inputRefs.current[index] = {};
                                                                 inputRefs.current[index][`${"sales_return_product_purchase_unit_price_" + index}`] = el;
@@ -2699,8 +2703,8 @@ const SalesReturnCreate = forwardRef((props, ref) => {
                                                                 className={`bi bi-exclamation-circle-fill ${errors[`purchase_unit_price_${index}`] ? 'text-danger' : 'text-warning'} ms-2`}
                                                                 data-bs-toggle="tooltip"
                                                                 data-bs-placement="top"
-                                                                data-error={errors[`purchase_unit_price_${index}`] || ''}
-                                                                data-warning={warnings[`purchase_unit_price_${index}`] || ''}
+                                                                data-error={t(errors[`purchase_unit_price_${index}`]) || ''}
+                                                                data-warning={t(warnings[`purchase_unit_price_${index}`]) || ''}
                                                                 title={errors[`purchase_unit_price_${index}`] || warnings[`purchase_unit_price_${index}`] || ''}
                                                                 style={{
                                                                     fontSize: '1rem',
@@ -2737,11 +2741,11 @@ const SalesReturnCreate = forwardRef((props, ref) => {
                                                                     });
                                                                     const details = orderedEntries
                                                                         .map(([key, value]) => {
-                                                                            let name = key === "main_store" ? "Main Store" : key.replace(/^wh/, "WH").toUpperCase();
+                                                                            let name = key === "main_store" ? t("Main Store") : key.replace(/^wh/, "WH").toUpperCase();
                                                                             return `${name}: ${value}`;
                                                                         })
                                                                         .join(", ");
-                                                                    return details ? `(${details})` : "(Main Store: " + selectedProducts[index].stock + ")";
+                                                                    return details ? `(${details})` : "(" + t("Main Store") + ": " + selectedProducts[index].stock + ")";
                                                                 })()}
                                                             </Tooltip>
                                                         }
@@ -2844,8 +2848,8 @@ const SalesReturnCreate = forwardRef((props, ref) => {
                                                                 className={`bi bi-exclamation-circle-fill ${errors[`quantity_${index}`] ? 'text-danger' : 'text-warning'} ms-2`}
                                                                 data-bs-toggle="tooltip"
                                                                 data-bs-placement="top"
-                                                                data-error={errors[`quantity_${index}`] || ''}
-                                                                data-warning={warnings[`quantity_${index}`] || ''}
+                                                                data-error={t(errors[`quantity_${index}`]) || ''}
+                                                                data-warning={t(warnings[`quantity_${index}`]) || ''}
                                                                 title={errors[`quantity_${index}`] || warnings[`quantity_${index}`] || ''}
                                                                 style={{
                                                                     fontSize: '1rem',
@@ -2886,7 +2890,7 @@ const SalesReturnCreate = forwardRef((props, ref) => {
                                                             checkWarning(index, selectedProducts[index]);
                                                         }}
                                                     >
-                                                        <option value="main_store">Main Store</option>
+                                                        <option value="main_store">{t("Main Store")}</option>
                                                         {warehouseList.map((warehouse) => (
                                                             <option key={warehouse.id} value={warehouse.id}>
                                                                 {warehouse.name} ({warehouse.code})
@@ -2895,7 +2899,7 @@ const SalesReturnCreate = forwardRef((props, ref) => {
                                                     </select>
                                                     {errors[`warehouse_${index}`] && (
                                                         <div style={{ color: "red" }}>
-                                                            {errors[`warehouse_${index}`]}
+                                                            {t(errors[`warehouse_${index}`])}
                                                         </div>
                                                     )}
                                                 </td>}
@@ -2970,7 +2974,7 @@ const SalesReturnCreate = forwardRef((props, ref) => {
 
 
                                                                     if (/^\d*\.?\d{0,8}$/.test(parseFloat(e.target.value)) === false) {
-                                                                        errors["unit_price_" + index] = "Max decimal points allowed is 8";
+                                                                        errors["unit_price_" + index] = t("Max decimal points allowed is 8");
                                                                         setErrors({ ...errors });
                                                                     }
 
@@ -2993,8 +2997,8 @@ const SalesReturnCreate = forwardRef((props, ref) => {
                                                                 className={`bi bi-exclamation-circle-fill ${errors[`unit_price_${index}`] ? 'text-danger' : 'text-warning'} ms-2`}
                                                                 data-bs-toggle="tooltip"
                                                                 data-bs-placement="top"
-                                                                data-error={errors[`unit_price_${index}`] || ''}
-                                                                data-warning={warnings[`unit_price_${index}`] || ''}
+                                                                data-error={t(errors[`unit_price_${index}`]) || ''}
+                                                                data-warning={t(warnings[`unit_price_${index}`]) || ''}
                                                                 title={errors[`unit_price_${index}`] || warnings[`unit_price_${index}`] || ''}
                                                                 style={{
                                                                     fontSize: '1rem',
@@ -3018,7 +3022,7 @@ const SalesReturnCreate = forwardRef((props, ref) => {
                                                                     if (!inputRefs.current[index]) inputRefs.current[index] = {};
                                                                     inputRefs.current[index][`${"sales_return_product_unit_price_with_vat_" + index}`] = el;
                                                                 }}
-                                                                placeholder="Unit Price(with VAT)"
+                                                                placeholder={t("Unit Price(with VAT)")}
 
                                                                 onFocus={() => {
                                                                     if (timerRef.current) clearTimeout(timerRef.current);
@@ -3067,7 +3071,7 @@ const SalesReturnCreate = forwardRef((props, ref) => {
                                                                     }
 
                                                                     if (e.target.value === 0) {
-                                                                        errors["unit_price_with_vat_" + index] = "Unit Price should be > 0";
+                                                                        errors["unit_price_with_vat_" + index] = t("Unit Price should be > 0");
                                                                         selectedProducts[index].unit_price_with_vat = 0;
                                                                         selectedProducts[index].unit_price = 0;
                                                                         setSelectedProducts([...selectedProducts]);
@@ -3082,7 +3086,7 @@ const SalesReturnCreate = forwardRef((props, ref) => {
                                                                     }
 
                                                                     if (/^\d*\.?\d{0,8}$/.test(parseFloat(e.target.value)) === false) {
-                                                                        errors["unit_price_with_vat_" + index] = "Max decimal points allowed is 8";
+                                                                        errors["unit_price_with_vat_" + index] = t("Max decimal points allowed is 8");
                                                                         setErrors({ ...errors });
                                                                     }
 
@@ -3109,8 +3113,8 @@ const SalesReturnCreate = forwardRef((props, ref) => {
                                                                 className={`bi bi-exclamation-circle-fill ${errors[`unit_price_with_vat_${index}`] ? 'text-danger' : 'text-warning'} ms-2`}
                                                                 data-bs-toggle="tooltip"
                                                                 data-bs-placement="top"
-                                                                data-error={errors[`unit_price_with_vat_${index}`] || ''}
-                                                                data-warning={warnings[`unit_price_with_vat_${index}`] || ''}
+                                                                data-error={t(errors[`unit_price_with_vat_${index}`]) || ''}
+                                                                data-warning={t(warnings[`unit_price_with_vat_${index}`]) || ''}
                                                                 title={errors[`unit_price_with_vat_${index}`] || warnings[`unit_price_with_vat_${index}`] || ''}
                                                                 style={{
                                                                     fontSize: '1rem',
@@ -3172,7 +3176,7 @@ const SalesReturnCreate = forwardRef((props, ref) => {
                                                                         selectedProducts[index].unit_discount_percent = 0.00;
                                                                         selectedProducts[index].unit_discount_percent_with_vat = 0.00;
                                                                         setFormData({ ...formData });
-                                                                        errors["unit_discount_" + index] = "Unit discount should be >= 0";
+                                                                        errors["unit_discount_" + index] = t("Unit discount should be >= 0");
                                                                         setErrors({ ...errors });
                                                                         timerRef.current = setTimeout(() => {
                                                                             CalCulateLineTotals(index);
@@ -3201,7 +3205,7 @@ const SalesReturnCreate = forwardRef((props, ref) => {
                                                                     setErrors({ ...errors });
 
                                                                     if (/^\d*\.?\d{0,8}$/.test(parseFloat(e.target.value)) === false) {
-                                                                        errors["unit_discount_" + index] = "Max decimal points allowed is 8";
+                                                                        errors["unit_discount_" + index] = t("Max decimal points allowed is 8");
                                                                         setErrors({ ...errors });
                                                                     }
 
@@ -3223,8 +3227,8 @@ const SalesReturnCreate = forwardRef((props, ref) => {
                                                                 className={`bi bi-exclamation-circle-fill ${errors[`unit_discount_${index}`] ? 'text-danger' : 'text-warning'} ms-2`}
                                                                 data-bs-toggle="tooltip"
                                                                 data-bs-placement="top"
-                                                                data-error={errors[`unit_discount_${index}`] || ''}
-                                                                data-warning={warnings[`unit_discount__${index}`] || ''}
+                                                                data-error={t(errors[`unit_discount_${index}`]) || ''}
+                                                                data-warning={t(warnings[`unit_discount__${index}`]) || ''}
                                                                 title={errors[`unit_discount_${index}`] || warnings[`unit_discount_${index}`] || ''}
                                                                 style={{
                                                                     fontSize: '1rem',
@@ -3335,7 +3339,7 @@ const SalesReturnCreate = forwardRef((props, ref) => {
                                                                     setErrors({ ...errors });
 
                                                                     if (/^\d*\.?\d{0,8}$/.test(parseFloat(e.target.value)) === false) {
-                                                                        errors["unit_discount_with_vat_" + index] = "Max decimal points allowed is 8";
+                                                                        errors["unit_discount_with_vat_" + index] = t("Max decimal points allowed is 8");
                                                                         setErrors({ ...errors });
                                                                     }
 
@@ -3359,8 +3363,8 @@ const SalesReturnCreate = forwardRef((props, ref) => {
                                                                 className={`bi bi-exclamation-circle-fill ${errors[`unit_discount_with_vat_${index}`] ? 'text-danger' : 'text-warning'} ms-2`}
                                                                 data-bs-toggle="tooltip"
                                                                 data-bs-placement="top"
-                                                                data-error={errors[`unit_discount_with_vat_${index}`] || ''}
-                                                                data-warning={warnings[`unit_discount_with_vat_${index}`] || ''}
+                                                                data-error={t(errors[`unit_discount_with_vat_${index}`]) || ''}
+                                                                data-warning={t(warnings[`unit_discount_with_vat_${index}`]) || ''}
                                                                 title={errors[`unit_discount_with_vat_${index}`] || warnings[`unit_discount_with_vat_${index}`] || ''}
                                                                 style={{
                                                                     fontSize: '1rem',
@@ -3476,7 +3480,7 @@ const SalesReturnCreate = forwardRef((props, ref) => {
                                                                         selectedProducts[index].unit_discount_with_vat = 0.00;
                                                                         selectedProducts[index].unit_discount = 0.00;
                                                                         setFormData({ ...formData });
-                                                                        errors["unit_discount_percent_" + index] = "Unit discount % should be >= 0";
+                                                                        errors["unit_discount_percent_" + index] = t("Unit discount % should be greater than or equal to 0");
                                                                         setErrors({ ...errors });
                                                                         timerRef.current = setTimeout(() => {
                                                                             CalCulateLineTotals(index);
@@ -3532,8 +3536,8 @@ const SalesReturnCreate = forwardRef((props, ref) => {
                                                                 className={`bi bi-exclamation-circle-fill ${errors[`unit_discount_percent_with_vat_${index}`] ? 'text-danger' : 'text-warning'} ms-2`}
                                                                 data-bs-toggle="tooltip"
                                                                 data-bs-placement="top"
-                                                                data-error={errors[`unit_discount_percent_with_vat_${index}`] || ''}
-                                                                data-warning={warnings[`unit_discount_percent_with_vat_${index}`] || ''}
+                                                                data-error={t(errors[`unit_discount_percent_with_vat_${index}`]) || ''}
+                                                                data-warning={t(warnings[`unit_discount_percent_with_vat_${index}`]) || ''}
                                                                 title={errors[`unit_discount_percent_with_vat_${index}`] || warnings[`unit_discount_percent_with_vat_${index}`] || ''}
                                                                 style={{
                                                                     fontSize: '1rem',
@@ -3624,7 +3628,7 @@ const SalesReturnCreate = forwardRef((props, ref) => {
 
 
                                                                     if (/^\d*\.?\d{0,2}$/.test(parseFloat(e.target.value)) === false) {
-                                                                        errors["line_total_" + index] = "Max decimal points allowed is 2";
+                                                                        errors["line_total_" + index] = t("Max decimal points allowed is 2");
                                                                         setErrors({ ...errors });
                                                                     }
 
@@ -3743,7 +3747,7 @@ const SalesReturnCreate = forwardRef((props, ref) => {
 
 
                                                                     if (/^\d*\.?\d{0,2}$/.test(parseFloat(e.target.value)) === false) {
-                                                                        errors["line_total_with_vat_" + index] = "Max decimal points allowed is 2";
+                                                                        errors["line_total_with_vat_" + index] = t("Max decimal points allowed is 2");
                                                                         setErrors({ ...errors });
                                                                     }
 
@@ -3771,8 +3775,8 @@ const SalesReturnCreate = forwardRef((props, ref) => {
                                                                 className={`bi bi-exclamation-circle-fill ${errors[`line_total_with_vat_${index}`] ? 'text-danger' : 'text-warning'} ms-2`}
                                                                 data-bs-toggle="tooltip"
                                                                 data-bs-placement="top"
-                                                                data-error={errors[`line_total_with_vat_${index}`] || ''}
-                                                                data-warning={warnings[`line_total_with_vat_${index}`] || ''}
+                                                                data-error={t(errors[`line_total_with_vat_${index}`]) || ''}
+                                                                data-warning={t(warnings[`line_total_with_vat_${index}`]) || ''}
                                                                 title={errors[`line_total_with_vat_${index}`] || warnings[`line_total_with_vat_${index}`] || ''}
                                                                 style={{
                                                                     fontSize: '1rem',
@@ -3792,9 +3796,7 @@ const SalesReturnCreate = forwardRef((props, ref) => {
                             <table className="table table-striped table-sm table-bordered">
                                 <tbody>
                                     <tr>
-
-
-                                        <th colSpan="8" className="text-end">Total(without VAT)</th>
+                                        <th colSpan="8" className="text-end">{t("Total(without VAT)")}</th>
                                         <td className="text-end" style={{ width: "200px" }} >
                                             <NumberFormat
                                                 value={trimTo2Decimals(formData.total)}
@@ -3806,7 +3808,7 @@ const SalesReturnCreate = forwardRef((props, ref) => {
                                         </td>
                                     </tr>
                                     <tr>
-                                        <th colSpan="8" className="text-end">Total(with VAT)</th>
+                                        <th colSpan="8" className="text-end">{t("Total(with VAT)")}</th>
                                         <td className="text-end" style={{ width: "200px" }} >
                                             <NumberFormat
                                                 value={trimTo2Decimals(formData.total_with_vat)}
@@ -3819,7 +3821,7 @@ const SalesReturnCreate = forwardRef((props, ref) => {
                                     </tr>
                                     <tr>
                                         <th colSpan="8" className="text-end">
-                                            Shipping & Handling Fees
+                                            {t("Shipping & Handling Fees")}
                                         </th>
                                         <td className="text-end">
                                             <input type="number" id="sales_shipping_fees" name="sales_shipping_fees" onWheel={(e) => e.target.blur()} style={{ width: "150px" }} className="text-start" value={shipping} onChange={(e) => {
@@ -3865,7 +3867,7 @@ const SalesReturnCreate = forwardRef((props, ref) => {
 
 
                                                 if (/^\d*\.?\d{0, 2}$/.test(parseFloat(e.target.value)) === false) {
-                                                    errors["shipping_handling_fees"] = "Max. decimal points allowed is 2";
+                                                    errors["shipping_handling_fees"] = t("Max. decimal points allowed is 2");
                                                     setErrors({ ...errors });
                                                 }
 
@@ -3879,14 +3881,14 @@ const SalesReturnCreate = forwardRef((props, ref) => {
                                             {" "}
                                             {errors.shipping_handling_fees && (
                                                 <div style={{ color: "red" }}>
-                                                    {errors.shipping_handling_fees}
+                                                    {t(errors.shipping_handling_fees)}
                                                 </div>
                                             )}
                                         </td>
                                     </tr>
                                     <tr>
                                         <th colSpan="8" className="text-end">
-                                            Discount(without VAT) <input type="number" id="discount_percent" name="discount_percent" onWheel={(e) => e.target.blur()} disabled={true} style={{ width: "50px" }} className="text-start" value={discountPercent} onChange={(e) => {
+                                            {t("Discount(without VAT)")} <input type="number" id="discount_percent" name="discount_percent" onWheel={(e) => e.target.blur()} disabled={true} style={{ width: "50px" }} className="text-start" value={discountPercent} onChange={(e) => {
                                                 if (timerRef.current) clearTimeout(timerRef.current);
                                                 if (parseFloat(e.target.value) === 0) {
 
@@ -3964,7 +3966,7 @@ const SalesReturnCreate = forwardRef((props, ref) => {
                                             }} />{"%"}
                                             {errors.discount_percent && (
                                                 <div style={{ color: "red" }}>
-                                                    {errors.discount_percent}
+                                                    {t(errors.discount_percent)}
                                                 </div>
                                             )}
                                         </th>
@@ -4046,7 +4048,7 @@ const SalesReturnCreate = forwardRef((props, ref) => {
 
 
                                                     if (/^\d*\.?\d{0,2}$/.test(parseFloat(e.target.value)) === false) {
-                                                        errors["discount"] = "Max. decimal points allowed is 2";
+                                                        errors["discount"] = t("Max. decimal points allowed is 2");
                                                         setErrors({ ...errors });
                                                     }
 
@@ -4062,7 +4064,7 @@ const SalesReturnCreate = forwardRef((props, ref) => {
                                             {" "}
                                             {errors.discount && (
                                                 <div style={{ color: "red" }}>
-                                                    {errors.discount}
+                                                    {t(errors.discount)}
                                                 </div>
                                             )}
                                         </td>
@@ -4113,7 +4115,7 @@ const SalesReturnCreate = forwardRef((props, ref) => {
                                                         discountPercent = 0;
                                                         setDiscountPercent(discountPercent);
 
-                                                        errors["discount_percent_with_vat"] = "Discount percent should be >= 0";
+                                                        errors["discount_percent_with_vat"] = t("Discount percent should be greater than or equal to zero");
                                                         setErrors({ ...errors });
                                                         timerRef.current = setTimeout(() => {
                                                             reCalculate();
@@ -4224,7 +4226,7 @@ const SalesReturnCreate = forwardRef((props, ref) => {
 
 
                                                     if (/^\d*\.?\d{0,2}$/.test(parseFloat(e.target.value)) === false) {
-                                                        errors["discount_with_vat"] = "Max. decimal points allowed is 2";
+                                                        errors["discount_with_vat"] = t("Max. decimal points allowed is 2");
                                                         setErrors({ ...errors });
                                                     }
 
@@ -4247,7 +4249,7 @@ const SalesReturnCreate = forwardRef((props, ref) => {
                                     </tr>
                                     <tr>
                                         <th colSpan="8" className="text-end">
-                                            Total Taxable Amount(without VAT)
+                                            {t("Total Taxable Amount(without VAT)")}
                                             <OverlayTrigger placement="right" overlay={renderTooltip}>
                                                 <span style={{ textDecoration: 'underline dotted', cursor: 'pointer' }}>ℹ️</span>
                                             </OverlayTrigger>
@@ -4265,7 +4267,7 @@ const SalesReturnCreate = forwardRef((props, ref) => {
                                     </tr>
                                     <tr>
 
-                                        <th colSpan="8" className="text-end"> VAT  <input type="number" id="sales_vat_percent" name="sales_vat_percent" onWheel={(e) => e.target.blur()} disabled={true} className="text-center" style={{ width: "50px" }} value={formData.vat_percent} onChange={(e) => {
+                                        <th colSpan="8" className="text-end"> {t("VAT")}  <input type="number" id="sales_vat_percent" name="sales_vat_percent" onWheel={(e) => e.target.blur()} disabled={true} className="text-center" style={{ width: "50px" }} value={formData.vat_percent} onChange={(e) => {
                                             console.log("Inside onchange vat percent");
                                             if (parseFloat(e.target.value) === 0) {
                                                 formData.vat_percent = parseFloat(e.target.value);
@@ -4280,7 +4282,7 @@ const SalesReturnCreate = forwardRef((props, ref) => {
                                                 formData.vat_price = 0.00;
 
                                                 setFormData({ ...formData });
-                                                errors["vat_percent"] = "Vat percent should be >= 0";
+                                                errors["vat_percent"] = t("Vat percent should be greater than or equal to zero");
                                                 setErrors({ ...errors });
                                                 reCalculate();
                                                 return;
@@ -4291,7 +4293,7 @@ const SalesReturnCreate = forwardRef((props, ref) => {
                                                 formData.vat_percent = "";
                                                 formData.vat_price = 0.00;
                                                 //formData.discount_percent = 0.00;
-                                                errors["vat_percent"] = "Invalid vat percent";
+                                                errors["vat_percent"] = t("Invalid vat percent");
                                                 setFormData({ ...formData });
                                                 setErrors({ ...errors });
                                                 return;
@@ -4323,7 +4325,7 @@ const SalesReturnCreate = forwardRef((props, ref) => {
 
                                     <tr>
                                         <th colSpan="8" className="text-end">
-                                            Net Total(with VAT) Before Rounding
+                                            {t("Net Total(with VAT) Before Rounding")}
                                             <OverlayTrigger placement="right" overlay={renderNetTotalBeforeRoundingTooltip}>
                                                 <span style={{ textDecoration: 'underline dotted', cursor: 'pointer' }}>ℹ️</span>
                                             </OverlayTrigger>
@@ -4340,7 +4342,7 @@ const SalesReturnCreate = forwardRef((props, ref) => {
                                     </tr>
                                     <tr>
 
-                                        <th colSpan="8" className="text-end">  Rounding Amount
+                                        <th colSpan="8" className="text-end">  {t("Rounding Amount")}
                                             [<input type="checkbox"
                                                 id="sales_auto_rounding_amount"
                                                 name="sales_auto_rounding_amount"
@@ -4358,7 +4360,7 @@ const SalesReturnCreate = forwardRef((props, ref) => {
                                                     }, 100);
 
                                                     console.log(formData);
-                                                }} />{" Auto Calculate]"}
+                                                }} />{" " + t("Auto Calculate") + "]"}
                                         </th>
                                         <td className="text-end">
                                             <input type="number"
@@ -4387,7 +4389,7 @@ const SalesReturnCreate = forwardRef((props, ref) => {
                                                         if (/^-?\d*\.?\d{0,2}$/.test(parseFloat(e.target.value)) === false) {
                                                             roundingAmount = parseFloat(e.target.value);
 
-                                                            errors["rounding_amount"] = "Max. decimal points allowed is 2";
+                                                            errors["rounding_amount"] = t("Max. decimal points allowed is 2");
                                                             setErrors({ ...errors });
                                                             return;
                                                         }
@@ -4421,14 +4423,14 @@ const SalesReturnCreate = forwardRef((props, ref) => {
                                             {" "}
                                             {errors.rounding_amount && (
                                                 <div style={{ color: "red" }}>
-                                                    {errors.rounding_amount}
+                                                    {t(errors.rounding_amount)}
                                                 </div>
                                             )}
                                         </td>
                                     </tr>
                                     <tr>
                                         <th colSpan="8" className="text-end">
-                                            Net Total(with VAT)
+                                            {t("Net Total(with VAT)")}
                                             <OverlayTrigger placement="right" overlay={renderNetTotalTooltip}>
                                                 <span style={{ textDecoration: 'underline dotted', cursor: 'pointer' }}>ℹ️</span>
                                             </OverlayTrigger>
@@ -4448,7 +4450,7 @@ const SalesReturnCreate = forwardRef((props, ref) => {
                         </div>
 
                         <div className="col-md-2">
-                            <label className="form-label">Cash discount</label>
+                            <label className="form-label">{t("Cash discount")}</label>
                             <input
                                 type='number'
                                 ref={cashDiscountRef}
@@ -4476,7 +4478,9 @@ const SalesReturnCreate = forwardRef((props, ref) => {
                                     setCashDiscount(cashDiscount);
 
                                     if (cashDiscount > 0 && cashDiscount >= formData.net_total) {
-                                        errors["cash_discount"] = "Cash discount should not be greater than or equal to Net Total: " + formData.net_total?.toString();
+                                        errors["cash_discount"] = t("Cash discount should not be greater than or equal to Net Total: {{netTotal}}", {
+                                            netTotal: formData.net_total?.toString(),
+                                        });
                                         setErrors({ ...errors });
                                         return;
                                     }
@@ -4512,35 +4516,34 @@ const SalesReturnCreate = forwardRef((props, ref) => {
                             />
                             {errors.cash_discount && (
                                 <div style={{ color: "red" }}>
-                                    {errors.cash_discount}
+                                    {t(errors.cash_discount)}
                                 </div>
                             )}
                         </div>
 
 
                         <div className="col-md-8">
-                            <label className="form-label">Payments given</label>
-
+                            <label className="form-label">{t("Payments given")}</label>
                             <div class="table-responsive" style={{ maxWidth: "900px" }} >
                                 <Button variant="secondary" style={{ alignContent: "right" }} disabled={order.payment_status === "not_paid"} onClick={addNewPayment}>
-                                    Create new payment
+                                    {t("Create new payment")}
                                 </Button>
                                 <table class="table table-striped table-sm table-bordered">
                                     <thead>
                                         <th>
-                                            Date
+                                            {t("Date")}
                                         </th>
                                         <th>
-                                            Amount
+                                            {t("Amount")}
                                         </th>
                                         <th>
-                                            Payment method
+                                            {t("Payment method")}
                                         </th>
                                         <th>
-                                            Reference
+                                            {t("Reference")}
                                         </th>
                                         <th>
-                                            Action
+                                            {t("Action")}
                                         </th>
                                     </thead>
                                     <tbody>
@@ -4548,7 +4551,6 @@ const SalesReturnCreate = forwardRef((props, ref) => {
                                             formData.payments_input.filter(payment => !payment.deleted).map((payment, key) => (
                                                 <tr key={key}>
                                                     <td style={{ minWidth: "220px" }}>
-
                                                         <DatePicker
                                                             disabled={order.payment_status === "not_paid"}
                                                             id="date_str"
@@ -4570,7 +4572,7 @@ const SalesReturnCreate = forwardRef((props, ref) => {
                                                         {errors["payment_date_" + key] && (
                                                             <div style={{ color: "red" }}>
                                                                 <i className="bi bi-x-lg"> </i>
-                                                                {errors["payment_date_" + key]}
+                                                                {t(errors["payment_date_" + key])}
                                                             </div>
                                                         )}
                                                     </td>
@@ -4598,7 +4600,7 @@ const SalesReturnCreate = forwardRef((props, ref) => {
                                                         {errors["payment_amount_" + key] && (
                                                             <div style={{ color: "red" }}>
                                                                 <i className="bi bi-x-lg"> </i>
-                                                                {errors["payment_amount_" + key]}
+                                                                {t(errors["payment_amount_" + key])}
                                                             </div>
                                                         )}
                                                     </td>
@@ -4610,7 +4612,7 @@ const SalesReturnCreate = forwardRef((props, ref) => {
                                                                 setErrors({ ...errors });
 
                                                                 if (!e.target.value) {
-                                                                    errors["payment_method_" + key] = "Payment method is required";
+                                                                    errors["payment_method_" + key] = t("Payment method is required");
                                                                     setErrors({ ...errors });
 
                                                                     formData.payments_input[key].method = "";
@@ -4626,19 +4628,19 @@ const SalesReturnCreate = forwardRef((props, ref) => {
                                                                 console.log(formData);
                                                             }}
                                                         >
-                                                            <option value="">Select</option>
-                                                            <option value="cash">Cash</option>
-                                                            <option value="debit_card">Debit Card</option>
-                                                            <option value="credit_card">Credit Card</option>
-                                                            <option value="bank_card">Bank Card</option>
-                                                            <option value="bank_transfer">Bank Transfer</option>
-                                                            <option value="bank_cheque">Bank Cheque</option>
-                                                            <option value="sales">Sales</option>
-                                                            <option value="customer_account">Customer Account</option>
+                                                            <option value="">{t("Select")}</option>
+                                                            <option value="cash">{t("Cash")}</option>
+                                                            <option value="debit_card">{t("Debit Card")}</option>
+                                                            <option value="credit_card">{t("Credit Card")}</option>
+                                                            <option value="bank_card">{t("Bank Card")}</option>
+                                                            <option value="bank_transfer">{t("Bank Transfer")}</option>
+                                                            <option value="bank_cheque">{t("Bank Cheque")}</option>
+                                                            <option value="sales">{t("Sales")}</option>
+                                                            <option value="customer_account">{t("Customer Account")}</option>
                                                         </select>
                                                         {errors["payment_method_" + key] && (
                                                             <div style={{ color: "red" }}>
-                                                                {errors["payment_method_" + key]}
+                                                                {t(errors["payment_method_" + key])}
                                                             </div>
                                                         )}
                                                     </td>
@@ -4656,7 +4658,7 @@ const SalesReturnCreate = forwardRef((props, ref) => {
                                                         <Button variant="danger" disabled={order.payment_status === "not_paid"} onClick={(event) => {
                                                             removePayment(key);
                                                         }}>
-                                                            Remove
+                                                            {t("Remove")}
                                                         </Button>
 
                                                     </td>
@@ -4664,36 +4666,36 @@ const SalesReturnCreate = forwardRef((props, ref) => {
                                             ))}
                                         <tr>
                                             <td class="text-end">
-                                                <b>Total</b>
+                                                <b>{t("Total")}</b>
                                             </td>
                                             <td><b style={{ marginLeft: "14px" }}>{trimTo2Decimals(totalPaymentAmount)}</b>
                                                 {errors["total_payment"] && (
                                                     <div style={{ color: "red" }}>
-                                                        {errors["total_payment"]}
+                                                        {t(errors["total_payment"])}
                                                     </div>
                                                 )}
                                             </td>
                                             <td>
-                                                <b style={{ marginLeft: "12px", alignSelf: "end" }}>Balance: {trimTo2Decimals(balanceAmount)}</b>
+                                                <b style={{ marginLeft: "12px", alignSelf: "end" }}>{t("Balance")}: {trimTo2Decimals(balanceAmount)}</b>
                                                 {errors["customer_credit_limit"] && (
                                                     <div style={{ color: "red" }}>
-                                                        {errors["customer_credit_limit"]}
+                                                        {t(errors["customer_credit_limit"])}
                                                     </div>
                                                 )}
                                             </td>
                                             <td colSpan={2}>
-                                                <b>Payment status: </b>
+                                                <b>{t("Payment status")}: </b>
                                                 {paymentStatus === "paid" ?
                                                     <span className="badge bg-success">
-                                                        Paid
+                                                        {t("Paid")}
                                                     </span> : ""}
                                                 {paymentStatus === "paid_partially" ?
                                                     <span className="badge bg-warning">
-                                                        Paid Partially
+                                                        {t("Paid Partially")}
                                                     </span> : ""}
                                                 {paymentStatus === "not_paid" ?
                                                     <span className="badge bg-danger">
-                                                        Not Paid
+                                                        {t("Not Paid")}
                                                     </span> : ""}
                                             </td>
                                         </tr>
@@ -4705,7 +4707,7 @@ const SalesReturnCreate = forwardRef((props, ref) => {
 
                         <div className="row">
                             <div className="col-md-2">
-                                <label className="form-label">Commission</label>
+                                <label className="form-label">{t("Commission")}</label>
                                 <input
                                     type='number'
                                     ref={commissionRef}
@@ -4728,19 +4730,21 @@ const SalesReturnCreate = forwardRef((props, ref) => {
                                         setCommission(commission);
 
                                         if (commission > 0 && commission >= formData.net_total) {
-                                            errors["commission"] = "Commission should not be greater than or equal to Net Total: " + formData.net_total?.toString();
+                                            errors["commission"] = t("Commission should not be greater than or equal to Net Total: {{netTotal}}", {
+                                                netTotal: formData.net_total?.toString(),
+                                            });
                                             setErrors({ ...errors });
                                             return;
                                         }
 
                                         if (commission > 0 && !formData.commission_payment_method) {
-                                            errors["commission_payment_method"] = "Payment method is required";
+                                            errors["commission_payment_method"] = t("Payment method is required");
                                             setErrors({ ...errors });
                                             return;
                                         }
 
 
-                                        console.log(formData);
+                                        //console.log(formData);
                                     }}
 
                                     onKeyDown={(e) => {
@@ -4769,7 +4773,7 @@ const SalesReturnCreate = forwardRef((props, ref) => {
                                 )}
                             </div>
                             <div className="col-md-2">
-                                <label className="form-label">Commission Payment Method</label>
+                                <label className="form-label">{t("Commission Payment Method")}</label>
                                 <select value={formData.commission_payment_method} className="form-control "
                                     onChange={(e) => {
                                         // errors["payment_method"] = [];
@@ -4777,7 +4781,7 @@ const SalesReturnCreate = forwardRef((props, ref) => {
                                         setErrors({ ...errors });
 
                                         if (!e.target.value && commission > 0) {
-                                            errors["commission_payment_method"] = "Payment method is required";
+                                            errors["commission_payment_method"] = t("Payment method is required");
                                             setErrors({ ...errors });
 
                                             formData.commission_payment_method = "";
@@ -4793,17 +4797,17 @@ const SalesReturnCreate = forwardRef((props, ref) => {
                                         console.log(formData);
                                     }}
                                 >
-                                    <option value="">Select</option>
-                                    <option value="cash">Cash</option>
-                                    <option value="debit_card">Debit Card</option>
-                                    <option value="credit_card">Credit Card</option>
-                                    <option value="bank_card">Bank Card</option>
-                                    <option value="bank_transfer">Bank Transfer</option>
-                                    <option value="bank_cheque">Bank Cheque</option>
+                                    <option value="">{t("Select")}</option>
+                                    <option value="cash">{t("Cash")}</option>
+                                    <option value="debit_card">{t("Debit Card")}</option>
+                                    <option value="credit_card">{t("Credit Card")}</option>
+                                    <option value="bank_card">{t("Bank Card")}</option>
+                                    <option value="bank_transfer">{t("Bank Transfer")}</option>
+                                    <option value="bank_cheque">{t("Bank Cheque")}</option>
                                 </select>
                                 {errors["commission_payment_method"] && (
                                     <div style={{ color: "red" }}>
-                                        {errors["commission_payment_method"]}
+                                        {t(errors["commission_payment_method"])}
                                     </div>
                                 )}
                             </div>
@@ -4811,7 +4815,7 @@ const SalesReturnCreate = forwardRef((props, ref) => {
 
                         <Modal.Footer>
                             <Button variant="secondary" onClick={handleClose}>
-                                Close
+                                {t("Close")}
                             </Button>
                             {selectedProducts && selectedProducts.length > 0 &&
                                 <Button variant="primary" onClick={handleCreate} >
@@ -4824,7 +4828,7 @@ const SalesReturnCreate = forwardRef((props, ref) => {
                                             aria-hidden={true}
                                         />
 
-                                        : formData.id ? "Update" : "Create"
+                                        : formData.id ? t("Update") : t("Create")
                                     }
                                 </Button>}
                         </Modal.Footer>
