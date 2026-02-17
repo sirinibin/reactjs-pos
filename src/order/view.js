@@ -1,4 +1,4 @@
-import React, { useState, useRef, forwardRef, useImperativeHandle, useEffect, useCallback } from "react";
+import React, { useState, useRef, forwardRef, useImperativeHandle, useEffect, useCallback, useMemo } from "react";
 import { Modal, Button, Table } from 'react-bootstrap';
 
 import NumberFormat from "react-number-format";
@@ -8,9 +8,11 @@ import { format } from "date-fns";
 import { QRCodeCanvas } from "qrcode.react";
 import { trimTo2Decimals } from "../utils/numberUtils";
 import { useTranslation } from 'react-i18next';
+import { getDateLocale } from "../i18n/dateLocales";
 
 const OrderView = forwardRef((props, ref) => {
-    const { t } = useTranslation('common');
+    const { t, i18n } = useTranslation('common');
+    const dateLocale = useMemo(() => getDateLocale(i18n.language), [i18n.language]);
 
     let [salesID, setSalesID] = useState("");
     useImperativeHandle(ref, () => ({
@@ -743,14 +745,16 @@ const OrderView = forwardRef((props, ref) => {
                             <td><b>{t("Zatca reporting/clearance passed")}</b><br /> {model.zatca?.reporting_passed ? t("YES") : t("NO")}</td>
                             <td><b>{t("Zatca reporting/clearance passed At")}</b><br /> {model.zatca?.reporting_passed_at ? format(
                                 new Date(model.zatca?.reporting_passed_at),
-                                "MMM dd yyyy h:mm:ssa"
+                                "MMM dd yyyy h:mm:ssa",
+                                { locale: dateLocale }
                             ) : "Not set"} </td>
                             <td><b>{t("Reported Invoice Hash")}</b><br />{model.zatca?.reporting_invoice_hash}</td>
                         </tr>
                         <tr>
                             <td><b>{t("Signing time")}</b><br />{model.zatca?.signing_time ? format(
                                 new Date(model.zatca?.signing_time),
-                                "MMM dd yyyy h:mm:ssa"
+                                "MMM dd yyyy h:mm:ssa",
+                                { locale: dateLocale }
                             ) : "Not set"}</td>
                             <td>
                                 {model.zatca?.qr_code ? <QRCodeCanvas value={model.zatca?.qr_code} style={{ width: "128px", height: "128px" }} size={128} /> : ""}
@@ -761,7 +765,8 @@ const OrderView = forwardRef((props, ref) => {
                             <td><b>{t("Compliance check failed count")}</b><br />{model.zatca?.compliance_check_failed_count}</td>
                             <td><b>{t("Compliance check last failed at")}</b><br />{model.zatca?.compliance_check_last_failed_at ? format(
                                 new Date(model.zatca?.compliance_check_last_failed_at),
-                                "MMM dd yyyy h:mm:ssa"
+                                "MMM dd yyyy h:mm:ssa",
+                                { locale: dateLocale }
                             ) : "Not set"}</td>
                             <td>
                                 <b>{t("Compliance check errors")}:</b>
@@ -775,7 +780,8 @@ const OrderView = forwardRef((props, ref) => {
                             <td><b>{t("Reporting failed count")}</b><br />{model.zatca?.reporting_failed_count}</td>
                             <td><b>{t("Reporting last failed at")}</b><br />{model.zatca?.reporting_last_failed_at ? format(
                                 new Date(model.zatca?.reporting_last_failed_at),
-                                "MMM dd yyyy h:mm:ssa"
+                                "MMM dd yyyy h:mm:ssa",
+                                { locale: dateLocale }
                             ) : "Not set"}</td>
                             <td>
                                 <b>{t("Reporting errors")}:</b>
@@ -805,7 +811,8 @@ const OrderView = forwardRef((props, ref) => {
                             <th>{t("Date")}:</th><td>
                                 {model.date ? format(
                                     new Date(model.date),
-                                    "MMM dd yyyy h:mm:ssa"
+                                    "MMM dd yyyy h:mm:ssa",
+                                    { locale: dateLocale }
                                 ) : "Not set"}
                             </td>
                             <th>{t("VAT")} %:</th><td> {model.vat_percent}%</td>
@@ -858,7 +865,8 @@ const OrderView = forwardRef((props, ref) => {
                                                             <td>
                                                                 {format(
                                                                     new Date(salescashdiscount.created_at),
-                                                                    "MMM dd yyyy H:mma"
+                                                                    "MMM dd yyyy H:mma",
+                                                                    { locale: dateLocale }
                                                                 )}
                                                             </td>
                                                         </tr>
@@ -900,7 +908,8 @@ const OrderView = forwardRef((props, ref) => {
                                                             <td>
                                                                 {format(
                                                                     new Date(payment.created_at),
-                                                                    "MMM dd yyyy H:mma"
+                                                                    "MMM dd yyyy H:mma",
+                                                                    { locale: dateLocale }
                                                                 )}
                                                             </td>
                                                         </tr>

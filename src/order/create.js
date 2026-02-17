@@ -12,6 +12,7 @@ import { Typeahead, Menu, MenuItem } from "react-bootstrap-typeahead";
 import NumberFormat from "react-number-format";
 import DatePicker from "react-datepicker";
 import { format } from "date-fns";
+import { getDateLocale } from "../i18n/dateLocales";
 import OrderView from "./view.js";
 import "./style.css";
 import { DebounceInput } from 'react-debounce-input';
@@ -64,7 +65,8 @@ const columnStyle = {
 };
 
 const OrderCreate = forwardRef((props, ref) => {
-    const { t } = useTranslation('common');
+    const { t, i18n } = useTranslation('common');
+    const dateLocale = useMemo(() => getDateLocale(i18n.language), [i18n.language]);
 
     useImperativeHandle(ref, () => ({
         async open(id) {
@@ -1068,7 +1070,7 @@ const OrderCreate = forwardRef((props, ref) => {
         cash_discount: 0.00,
         is_discount_percent: false,
         date_str: new Date(),
-        signature_date_str: format(new Date(), "MMM dd yyyy"),
+        signature_date_str: format(new Date(), "MMM dd yyyy", { locale: dateLocale }),
         status: "delivered",
         payment_status: "",
         payment_method: "",
@@ -4194,10 +4196,12 @@ const OrderCreate = forwardRef((props, ref) => {
                                     selected={formData.date_str ? new Date(formData.date_str) : null}
                                     value={formData.date_str ? format(
                                         new Date(formData.date_str),
-                                        "MMMM d, yyyy h:mm aa"
+                                        "MMMM d, yyyy h:mm aa",
+                                        { locale: dateLocale }
                                     ) : null}
                                     className="form-control"
                                     dateFormat="MMMM d, yyyy h:mm aa"
+                                    locale={dateLocale}
                                     showTimeSelect
                                     timeIntervals="1"
                                     onChange={(value) => {
@@ -6850,6 +6854,7 @@ const OrderCreate = forwardRef((props, ref) => {
                                     selected={selectedDate}
                                     className="form-control"
                                     dateFormat="MMM dd yyyy"
+                                    locale={dateLocale}
                                     onChange={(value) => {
                                         formData.signature_date_str = format(new Date(value), "MMM dd yyyy");
                                         setFormData({ ...formData });
@@ -6972,10 +6977,12 @@ const OrderCreate = forwardRef((props, ref) => {
                                                             selected={formData.payments_input[key].date_str ? new Date(formData.payments_input[key].date_str) : null}
                                                             value={formData.payments_input[key].date_str ? format(
                                                                 new Date(formData.payments_input[key].date_str),
-                                                                "MMMM d, yyyy h:mm aa"
+                                                                "MMMM d, yyyy h:mm aa",
+                                                                { locale: dateLocale }
                                                             ) : null}
                                                             className="form-control"
                                                             dateFormat="MMMM d, yyyy h:mm aa"
+                                                            locale={dateLocale}
                                                             showTimeSelect
                                                             timeIntervals="1"
                                                             onChange={(value) => {

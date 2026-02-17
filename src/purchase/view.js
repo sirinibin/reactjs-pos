@@ -1,13 +1,16 @@
-import React, { useState, useRef, forwardRef, useImperativeHandle } from "react";
+import React, { useState, useRef, forwardRef, useImperativeHandle, useMemo } from "react";
 import Preview from './../order/preview.js';
 import { Modal, Button, Table } from 'react-bootstrap';
 
 import NumberFormat from "react-number-format";
 import PurchasePrint from './print.js';
 import { format } from "date-fns";
-
+import { useTranslation } from 'react-i18next';
+import { getDateLocale } from "../i18n/dateLocales";
 
 const PurchaseView = forwardRef((props, ref) => {
+    const { t, i18n } = useTranslation('common');
+    const dateLocale = useMemo(() => getDateLocale(i18n.language), [i18n.language]);
 
     useImperativeHandle(ref, () => ({
         open(id) {
@@ -209,16 +212,16 @@ const PurchaseView = forwardRef((props, ref) => {
         <PurchasePrint ref={PrintRef} />
         <Modal show={show} size="xl" onHide={handleClose} animation={false} scrollable={true}>
             <Modal.Header>
-                <Modal.Title>Details of Purchase #{model.code} </Modal.Title>
+                <Modal.Title>{t('Details of Purchase')} #{model.code} </Modal.Title>
 
 
                 <div className="col align-self-end text-end">
                     <Button variant="secondary" onClick={openPrint}>
-                        <i className="bi bi-printer"></i> Print Only Data
+                        <i className="bi bi-printer"></i> {t('Print')}
                     </Button>
                     &nbsp;&nbsp;
                     <Button variant="primary" onClick={openPreview}>
-                        <i className="bi bi-printer"></i> Print Full Invoice
+                        <i className="bi bi-printer"></i> {t('Print A4 Invoice')}
                     </Button>
                     &nbsp;&nbsp;
                     <Button className={`btn btn-success btn-sm`} style={{}} onClick={sendWhatsAppMessage}>
@@ -232,14 +235,14 @@ const PurchaseView = forwardRef((props, ref) => {
                         handleClose();
                         props.openCreateForm();
                     }}>
-                        <i className="bi bi-plus"></i> Create
+                        <i className="bi bi-plus"></i> {t('Create')}
                     </Button> : ""}
                     &nbsp;&nbsp;
                     {props.openUpdateForm ? <Button variant="primary" onClick={() => {
                         handleClose();
                         props.openUpdateForm(model.id);
                     }}>
-                        <i className="bi bi-pencil"></i> Edit
+                        <i className="bi bi-pencil"></i> {t('Update')}
                     </Button> : ""}
 
                     <button
@@ -257,17 +260,17 @@ const PurchaseView = forwardRef((props, ref) => {
                     <table className="table table-striped table-sm table-bordered">
                         <thead>
                             <tr className="text-center">
-                                <th>SI No.</th>
-                                <th>Part No.</th>
-                                <th>Name</th>
-                                <th>Qty</th>
-                                <th>Unit Price</th>
-                                <th>Disc.</th>
-                                <th>Disc. %</th>
-                                <th>Price</th>
-                                <th>Qty Returned</th>
-                                <th>Wholesale Unit Price</th>
-                                <th>Retail Unit Price</th>
+                                <th>{t('SI No.')}</th>
+                                <th>{t('Part No.')}</th>
+                                <th>{t('Name')}</th>
+                                <th>{t('Qty')}</th>
+                                <th>{t('Unit Price')}</th>
+                                <th>{t('Disc.')}</th>
+                                <th>{t('Disc. %')}</th>
+                                <th>{t('Price')}</th>
+                                <th>{t('Qty Returned')}</th>
+                                <th>{t('Wholesale Unit Price')}</th>
+                                <th>{t('Retail Unit Price')}</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -342,7 +345,7 @@ const PurchaseView = forwardRef((props, ref) => {
 
                             ))}
                             <tr>
-                                <th colSpan="7" className="text-end">Total</th>
+                                <th colSpan="7" className="text-end">{t('Total')}</th>
                                 <td className="text-end">
                                     <NumberFormat
                                         value={model.total}
@@ -355,7 +358,7 @@ const PurchaseView = forwardRef((props, ref) => {
                             </tr>
                             <tr>
                                 <th colSpan="7" className="text-end">
-                                    Shipping / Handling Fees
+                                    {t('Shipping / Handling Fees')}
                                 </th>
                                 <td className="text-end">
                                     {model.shipping_handling_fees ? <NumberFormat
@@ -370,7 +373,7 @@ const PurchaseView = forwardRef((props, ref) => {
                             </tr>
                             <tr>
                                 <th colSpan="7" className="text-end">
-                                    Discount
+                                    {t('Discount')}
                                 </th>
 
                                 <td className="text-end">
@@ -390,7 +393,7 @@ const PurchaseView = forwardRef((props, ref) => {
 
                             </tr>
                             <tr>
-                                <th colSpan="7" className="text-end">VAT {model.vat_percent?.toFixed(2) + "%"}</th>
+                                <th colSpan="7" className="text-end">{t('VAT')} {model.vat_percent?.toFixed(2) + "%"}</th>
                                 <td className="text-end">
                                     <NumberFormat
                                         value={model.vat_price}
@@ -403,7 +406,7 @@ const PurchaseView = forwardRef((props, ref) => {
                             </tr>
 
                             <tr>
-                                <th colSpan="7" className="text-end">Net Total</th>
+                                <th colSpan="7" className="text-end">{t('Net Total')}</th>
                                 <th className="text-end">
                                     <NumberFormat
                                         value={model.net_total}
@@ -426,38 +429,39 @@ const PurchaseView = forwardRef((props, ref) => {
                 <Table striped bordered hover responsive="lg">
                     <tbody>
                         <tr>
-                            <th>Store:</th><td> {model.store_name}</td>
-                            <th>Vendor:</th><td> {model.vendor_name}</td>
-                            <th>Vendor Invoice No.:</th><td> {model.vendor_invoice_no}</td>
-                            <th>Order Placed by:</th><td> {model.order_placed_by_name}</td>
+                            <th>{t('Store')}:</th><td> {model.store_name}</td>
+                            <th>{t('Vendor')}:</th><td> {model.vendor_name}</td>
+                            <th>{t('Vendor Invoice No.')}:</th><td> {model.vendor_invoice_no}</td>
+                            <th>{t('Order Placed by')}:</th><td> {model.order_placed_by_name}</td>
                         </tr>
                         <tr>
-                            <th>Date:</th><td> {model.date ? format(
+                            <th>{t('Date')}:</th><td> {model.date ? format(
                                 new Date(model.date),
-                                "MMMM d, yyyy h:mm aa"
+                                "MMMM d, yyyy h:mm aa",
+                                { locale: dateLocale }
                             ) : ""}</td>
-                            <th>VAT %:</th><td> {model.vat_percent}%</td>
-                            <th>Discount :</th><td> {model.discount} </td>
-                            <th>Discount %:</th><td> {model.discount_percent} </td>
+                            <th>{t('VAT %')}:</th><td> {model.vat_percent}%</td>
+                            <th>{t('Discount')} :</th><td> {model.discount} </td>
+                            <th>{t('Discount %')}:</th><td> {model.discount_percent} </td>
                         </tr>
                         <tr>
-                            <th>Payment Status:</th><td> {model.payment_status}</td>
-                            <th>Payment Method:</th><td> {model.payment_method}</td>
-                            <th>Partial Payment Amount:</th><td> {model.partial_payment_amount}</td>
+                            <th>{t('Payment Status')}:</th><td> {model.payment_status}</td>
+                            <th>{t('Payment Method')}:</th><td> {model.payment_method}</td>
+                            <th>{t('Partial Payment Amount')}:</th><td> {model.partial_payment_amount}</td>
                         </tr>
                         <tr>
-                            <th>Status:</th><td> {model.status}</td>
-                            <th>Signature Date:</th><td> {model.signature_date_str}</td>
-                            <th>Created At:</th><td> {model.created_at}</td>
-                            <th>Updated At:</th><td> {model.updated_at}</td>
+                            <th>{t('Status')}:</th><td> {model.status}</td>
+                            <th>{t('Signature Date')}:</th><td> {model.signature_date_str}</td>
+                            <th>{t('Created At')}:</th><td> {model.created_at}</td>
+                            <th>{t('Updated At')}:</th><td> {model.updated_at}</td>
                         </tr>
                         <tr>
-                            <th>Created By:</th><td> {model.created_by_name}</td>
-                            <th>Updated By:</th><td> {model.updated_by_name}</td>
+                            <th>{t('Created By')}:</th><td> {model.created_by_name}</td>
+                            <th>{t('Updated By')}:</th><td> {model.updated_by_name}</td>
                         </tr>
                         <tr>
                             {purchaseCashDiscountList.length > 0 ?
-                                <th>Cash Discounts</th> : ""}
+                                <th>{t('Cash Discounts')}</th> : ""}
                             {purchaseCashDiscountList.length > 0 ?
                                 <td>
                                     <div className="table-responsive" style={{ overflowX: "auto" }}>
@@ -465,14 +469,14 @@ const PurchaseView = forwardRef((props, ref) => {
                                             <thead>
                                                 <tr className="text-end">
                                                     <th>
-                                                        Amount
+                                                        {t('Amount')}
                                                     </th>
 
                                                     <th>
-                                                        Created By
+                                                        {t('Created By')}
                                                     </th>
                                                     <th>
-                                                        Created At
+                                                        {t('Created At')}
                                                     </th>
                                                 </tr>
                                             </thead>
@@ -485,7 +489,8 @@ const PurchaseView = forwardRef((props, ref) => {
                                                             <td>
                                                                 {format(
                                                                     new Date(discount.created_at),
-                                                                    "MMM dd yyyy H:mma"
+                                                                    "MMM dd yyyy H:mma",
+                                                                    { locale: dateLocale }
                                                                 )}
                                                             </td>
                                                         </tr>
@@ -495,7 +500,7 @@ const PurchaseView = forwardRef((props, ref) => {
                                     </div>
                                 </td> : ""}
                             {purchasePaymentList.length > 0 ?
-                                <th>Payments</th> : ""}
+                                <th>{t('Payments')}</th> : ""}
                             {purchasePaymentList.length > 0 ?
                                 <td>
                                     <div className="table-responsive" style={{ overflowX: "auto" }}>
@@ -503,17 +508,17 @@ const PurchaseView = forwardRef((props, ref) => {
                                             <thead>
                                                 <tr className="text-end">
                                                     <th>
-                                                        Amount
+                                                        {t('Amount')}
                                                     </th>
                                                     <th>
-                                                        Payment Method
+                                                        {t('Payment Method')}
                                                     </th>
 
                                                     <th>
-                                                        Created By
+                                                        {t('Created By')}
                                                     </th>
                                                     <th>
-                                                        Created At
+                                                        {t('Created At')}
                                                     </th>
                                                 </tr>
                                             </thead>
@@ -527,7 +532,8 @@ const PurchaseView = forwardRef((props, ref) => {
                                                             <td>
                                                                 {format(
                                                                     new Date(payment.created_at),
-                                                                    "MMM dd yyyy H:mma"
+                                                                    "MMM dd yyyy H:mma",
+                                                                    { locale: dateLocale }
                                                                 )}
                                                             </td>
                                                         </tr>

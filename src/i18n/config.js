@@ -93,7 +93,7 @@ export const LANGUAGE_OPTIONS = [
   { code: 'en', name: 'English', nativeName: 'English' },
   { code: 'ml', name: 'Malayalam', nativeName: 'മലയാളം' },
   { code: 'ar', name: 'Arabic', nativeName: 'العربية' },
-  { code: 'bn', name: 'Bengali', nativeName: 'বাংলা' },
+  { code: 'bn', name: 'Bengla', nativeName: 'বাংলা' },
   { code: 'ur', name: 'Urdu', nativeName: 'اردو' },
   { code: 'hn', name: 'Hindi', nativeName: 'हिन्दी' },
   { code: 'ru', name: 'Russian', nativeName: 'Русский' },

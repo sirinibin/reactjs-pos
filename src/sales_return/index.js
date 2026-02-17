@@ -29,7 +29,7 @@ import { DragDropContext, Droppable, Draggable } from "react-beautiful-dnd";
 import CustomerCreate from "./../customer/create.js";
 import OrderCreate from "./../order/create.js";
 import { useTranslation } from 'react-i18next';
-
+import { getDateLocale } from "../i18n/dateLocales";
 
 const ExcelFile = ReactExport.ExcelFile;
 const ExcelSheet = ReactExport.ExcelFile.ExcelSheet;
@@ -55,7 +55,8 @@ const TimeAgo = ({ date }) => {
 
 //function SalesReturnIndex(props) {
 const SalesReturnIndex = forwardRef((props, ref) => {
-    const { t } = useTranslation('common');
+    const { t, i18n } = useTranslation('common');
+    const dateLocale = useMemo(() => getDateLocale(i18n.language), [i18n.language]);
 
     let [enableSelection, setEnableSelection] = useState(false);
     let [pendingView, setPendingView] = useState(false);
@@ -290,7 +291,8 @@ const SalesReturnIndex = forwardRef((props, ref) => {
         for (var i = 0; i < allSalesReturns.length; i++) {
             let date = format(
                 new Date(allSalesReturns[i].date),
-                "dd-MMM-yyyy"
+                "dd-MMM-yyyy",
+                { locale: dateLocale }
             );
             if (!groupedByDate[date]) {
                 groupedByDate[date] = [];
@@ -635,7 +637,8 @@ const SalesReturnIndex = forwardRef((props, ref) => {
         } else if (searchParams["from_date"]) {
             salesReturnReportFileName += " - From " + searchParams["from_date"] + " to " + format(
                 new Date(),
-                "dd-MMM-yyyy"
+                "dd-MMM-yyyy",
+                { locale: dateLocale }
             );
         } else if (searchParams["to_date"]) {
             salesReturnReportFileName += " - Upto " + searchParams["to_date"];
@@ -878,26 +881,27 @@ const SalesReturnIndex = forwardRef((props, ref) => {
         d = new Date(d.toUTCString());
 
         value = format(d, "MMM dd yyyy");
+        let valueWithLocale = format(d, "MMM dd yyyy", { locale: dateLocale });
 
         if (field === "date_str") {
-            setDateValue(value);
+            setDateValue(valueWithLocale);
             setFromDateValue("");
             setToDateValue("");
             searchParams["from_date"] = "";
             searchParams["to_date"] = "";
             searchParams[field] = value;
         } else if (field === "from_date") {
-            setFromDateValue(value);
+            setFromDateValue(valueWithLocale);
             setDateValue("");
             searchParams["date"] = "";
             searchParams[field] = value;
         } else if (field === "to_date") {
-            setToDateValue(value);
+            setToDateValue(valueWithLocale);
             setDateValue("");
             searchParams["date"] = "";
             searchParams[field] = value;
         } else if (field === "created_at") {
-            setCreatedAtValue(value);
+            setCreatedAtValue(valueWithLocale);
             setCreatedAtFromValue("");
             setCreatedAtToValue("");
             searchParams["created_at_from"] = "";
@@ -905,12 +909,12 @@ const SalesReturnIndex = forwardRef((props, ref) => {
             searchParams[field] = value;
         }
         if (field === "created_at_from") {
-            setCreatedAtFromValue(value);
+            setCreatedAtFromValue(valueWithLocale);
             setCreatedAtValue("");
             searchParams["created_at"] = "";
             searchParams[field] = value;
         } else if (field === "created_at_to") {
-            setCreatedAtToValue(value);
+            setCreatedAtToValue(valueWithLocale);
             setCreatedAtValue("");
             searchParams["created_at"] = "";
             searchParams[field] = value;
@@ -2091,6 +2095,7 @@ const SalesReturnIndex = forwardRef((props, ref) => {
                                                                 selected={selectedCreatedAtDate}
                                                                 className="form-control"
                                                                 dateFormat="MMM dd yyyy"
+                                                                locale={dateLocale}
                                                                 isClearable={true}
                                                                 onChange={(date) => {
                                                                     if (!date) {
@@ -2127,6 +2132,7 @@ const SalesReturnIndex = forwardRef((props, ref) => {
                                                                         selected={selectedCreatedAtFromDate}
                                                                         className="form-control"
                                                                         dateFormat="MMM dd yyyy"
+                                                                        locale={dateLocale}
                                                                         isClearable={true}
                                                                         onChange={(date) => {
                                                                             if (!date) {
@@ -2146,6 +2152,7 @@ const SalesReturnIndex = forwardRef((props, ref) => {
                                                                         selected={selectedCreatedAtToDate}
                                                                         className="form-control"
                                                                         dateFormat="MMM dd yyyy"
+                                                                        locale={dateLocale}
                                                                         isClearable={true}
                                                                         onChange={(date) => {
                                                                             if (!date) {
@@ -2231,6 +2238,7 @@ const SalesReturnIndex = forwardRef((props, ref) => {
                                                                     selected={selectedDate}
                                                                     className="form-control"
                                                                     dateFormat="MMM dd yyyy"
+                                                                    locale={dateLocale}
                                                                     isClearable={true}
                                                                     onChange={(date) => {
                                                                         if (!date) {
@@ -2267,6 +2275,7 @@ const SalesReturnIndex = forwardRef((props, ref) => {
                                                                             selected={selectedFromDate}
                                                                             className="form-control"
                                                                             dateFormat="MMM dd yyyy"
+                                                                            locale={dateLocale}
                                                                             isClearable={true}
                                                                             onChange={(date) => {
                                                                                 if (!date) {
@@ -2286,6 +2295,7 @@ const SalesReturnIndex = forwardRef((props, ref) => {
                                                                             selected={selectedToDate}
                                                                             className="form-control"
                                                                             dateFormat="MMM dd yyyy"
+                                                                            locale={dateLocale}
                                                                             isClearable={true}
                                                                             onChange={(date) => {
                                                                                 if (!date) {
@@ -2359,7 +2369,7 @@ const SalesReturnIndex = forwardRef((props, ref) => {
 
                                                                 </td>}
                                                                 {(col.fieldName === "date" || col.fieldName === "created_at") && <td style={{ width: "auto", whiteSpace: "nowrap" }}>
-                                                                    {format(new Date(salesReturn[col.key]), "MMM dd yyyy h:mma")}
+                                                                    {format(new Date(salesReturn[col.key]), "MMM dd yyyy h:mma", { locale: dateLocale })}
                                                                 </td>}
                                                                 {(col.fieldName === "customer_name") && <td style={{ width: "auto", whiteSpace: "nowrap" }}>
                                                                     {salesReturn.customer_name && <span style={{ cursor: "pointer", color: "blue" }} onClick={() => {

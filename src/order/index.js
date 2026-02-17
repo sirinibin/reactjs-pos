@@ -10,6 +10,7 @@ import { Typeahead } from "react-bootstrap-typeahead";
 import { format } from "date-fns";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
+import { getDateLocale } from "../i18n/dateLocales";
 import { Button, Spinner, Modal, Alert } from "react-bootstrap";
 import ReactPaginate from "react-paginate";
 import { formatDistanceToNowStrict } from "date-fns";
@@ -56,7 +57,8 @@ const TimeAgo = ({ date }) => {
 
 
 const OrderIndex = forwardRef((props, ref) => {
-    const { t } = useTranslation('common');
+    const { t, i18n } = useTranslation('common');
+    const dateLocale = useMemo(() => getDateLocale(i18n.language), [i18n.language]);
     //deploy to master
     let [enableSelection, setEnableSelection] = useState(false);
     let [pendingView, setPendingView] = useState(false);
@@ -73,7 +75,8 @@ const OrderIndex = forwardRef((props, ref) => {
         for (var i = 0; i < allOrders.length; i++) {
             let date = format(
                 new Date(allOrders[i].date),
-                "dd-MMM-yyyy"
+                "dd-MMM-yyyy",
+                { locale: dateLocale }
             );
             if (!groupedByDate[date]) {
                 groupedByDate[date] = [];
@@ -423,7 +426,8 @@ const OrderIndex = forwardRef((props, ref) => {
         } else if (searchParams["created_at_from"]) {
             salesReportFileName += " - From " + searchParams["created_at_from"] + " to " + format(
                 new Date(),
-                "dd-MMM-yyyy"
+                "dd-MMM-yyyy",
+                { locale: dateLocale }
             );
         } else if (searchParams["created_at_to"]) {
             salesReportFileName += " - Upto " + searchParams["created_at_to"];
@@ -888,35 +892,31 @@ const OrderIndex = forwardRef((props, ref) => {
             return;
         }
 
-        if (value) {
-            let d = new Date(value);
-            value = format(d, "MMM dd yyyy");
-            console.log("value2:", value);
-            console.log(Intl.DateTimeFormat().resolvedOptions().timeZone)
-        } else {
-            value = "";
-        }
+        let d = new Date(value);
+        d = new Date(d.toUTCString());
+        value = format(d, "MMM dd yyyy");
+        let valueWithLocale = format(d, "MMM dd yyyy", { locale: dateLocale });
 
 
         if (field === "date_str") {
-            setDateValue(value);
+            setDateValue(valueWithLocale);
             setFromDateValue("");
             setToDateValue("");
             searchParams["from_date"] = "";
             searchParams["to_date"] = "";
             searchParams[field] = value;
         } else if (field === "from_date") {
-            setFromDateValue(value);
+            setFromDateValue(valueWithLocale);
             setDateValue("");
             searchParams["date"] = "";
             searchParams[field] = value;
         } else if (field === "to_date") {
-            setToDateValue(value);
+            setToDateValue(valueWithLocale);
             setDateValue("");
             searchParams["date"] = "";
             searchParams[field] = value;
         } else if (field === "created_at") {
-            setCreatedAtValue(value);
+            setCreatedAtValue(valueWithLocale);
             setCreatedAtFromValue("");
             setCreatedAtToValue("");
             searchParams["created_at_from"] = "";
@@ -925,12 +925,12 @@ const OrderIndex = forwardRef((props, ref) => {
             console.log("searchParams[field]:", searchParams[field]);
         }
         if (field === "created_at_from") {
-            setCreatedAtFromValue(value);
+            setCreatedAtFromValue(valueWithLocale);
             setCreatedAtValue("");
             searchParams["created_at"] = "";
             searchParams[field] = value;
         } else if (field === "created_at_to") {
-            setCreatedAtToValue(value);
+            setCreatedAtToValue(valueWithLocale);
             setCreatedAtValue("");
             searchParams["created_at"] = "";
             searchParams[field] = value;
@@ -2150,6 +2150,7 @@ const OrderIndex = forwardRef((props, ref) => {
                                                                 selected={selectedCreatedAtDate}
                                                                 className="form-control"
                                                                 dateFormat="MMM dd yyyy"
+                                                                locale={dateLocale}
                                                                 isClearable={true}
 
                                                                 onChange={(date) => {
@@ -2188,6 +2189,7 @@ const OrderIndex = forwardRef((props, ref) => {
                                                                         selected={selectedCreatedAtFromDate}
                                                                         className="form-control"
                                                                         dateFormat="MMM dd yyyy"
+                                                                        locale={dateLocale}
                                                                         isClearable={true}
                                                                         onChange={(date) => {
                                                                             if (!date) {
@@ -2208,6 +2210,7 @@ const OrderIndex = forwardRef((props, ref) => {
                                                                         selected={selectedCreatedAtToDate}
                                                                         className="form-control"
                                                                         dateFormat="MMM dd yyyy"
+                                                                        locale={dateLocale}
                                                                         isClearable={true}
                                                                         onChange={(date) => {
                                                                             if (!date) {
@@ -2294,6 +2297,7 @@ const OrderIndex = forwardRef((props, ref) => {
                                                                     selected={selectedDate}
                                                                     className="form-control"
                                                                     dateFormat="MMM dd yyyy"
+                                                                    locale={dateLocale}
                                                                     isClearable={true}
                                                                     onChange={(date) => {
                                                                         if (!date) {
@@ -2331,6 +2335,7 @@ const OrderIndex = forwardRef((props, ref) => {
                                                                             selected={selectedFromDate}
                                                                             className="form-control"
                                                                             dateFormat="MMM dd yyyy"
+                                                                            locale={dateLocale}
                                                                             isClearable={true}
                                                                             onChange={(date) => {
                                                                                 if (!date) {
@@ -2351,6 +2356,7 @@ const OrderIndex = forwardRef((props, ref) => {
                                                                             selected={selectedToDate}
                                                                             className="form-control"
                                                                             dateFormat="MMM dd yyyy"
+                                                                            locale={dateLocale}
                                                                             isClearable={true}
                                                                             onChange={(date) => {
                                                                                 if (!date) {
@@ -2426,7 +2432,7 @@ const OrderIndex = forwardRef((props, ref) => {
                                                                     {order.code}
                                                                 </td>}
                                                                 {(col.fieldName === "date" || col.fieldName === "created_at") && <td style={{ width: "auto", whiteSpace: "nowrap" }}>
-                                                                    {format(new Date(order[col.key]), "MMM dd yyyy h:mma")}
+                                                                    {format(new Date(order[col.key]), "MMM dd yyyy h:mma", { locale: dateLocale })}
                                                                 </td>}
                                                                 {(col.fieldName === "customer_name") && <td style={{ width: "auto", whiteSpace: "nowrap" }}>
                                                                     {order.customer_name && <span style={{ cursor: "pointer", color: "blue" }} onClick={() => {

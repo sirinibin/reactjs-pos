@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, forwardRef, useImperativeHandle, useCallback } from "react";
+import React, { useState, useEffect, useRef, forwardRef, useImperativeHandle, useCallback, useMemo } from "react";
 import { Modal, Button } from "react-bootstrap";
 import StoreCreate from "../store/create.js";
 import CustomerCreate from "./../customer/create.js";
@@ -36,8 +36,10 @@ import * as bootstrap from 'bootstrap';
 import CustomerWithdrawalCreate from "../customer_withdrawal/create.js";
 import SalesCreate from "../order/create.js";
 import { useTranslation } from 'react-i18next';
+import { getDateLocale } from "../i18n/dateLocales";
 const SalesReturnCreate = forwardRef((props, ref) => {
-    const { t } = useTranslation('common');
+    const { t, i18n } = useTranslation('common');
+    const dateLocale = useMemo(() => getDateLocale(i18n.language), [i18n.language]);
 
     function ResetForm() {
         cashDiscount = "";
@@ -84,7 +86,7 @@ const SalesReturnCreate = forwardRef((props, ref) => {
                 is_discount_percent: false,
                 //  date_str: format(new Date(), "MMM dd yyyy"),
                 date_str: new Date(),
-                signature_date_str: format(new Date(), "MMM dd yyyy"),
+                signature_date_str: format(new Date(), "MMM dd yyyy", { locale: dateLocale }),
                 status: "received",
                 rounding_amount: 0.00,
                 auto_rounding_amount: true,
@@ -630,7 +632,7 @@ const SalesReturnCreate = forwardRef((props, ref) => {
         vat_percent: 15.0,
         discount: 0.0,
         date_str: format(new Date(), "MMM dd yyyy"),
-        signature_date_str: format(new Date(), "MMM dd yyyy"),
+        signature_date_str: format(new Date(), "MMM dd yyyy", { locale: dateLocale }),
         status: "received",
         payment_status: "",
         payment_method: "",
@@ -2221,10 +2223,12 @@ const SalesReturnCreate = forwardRef((props, ref) => {
                                     selected={formData.date_str ? new Date(formData.date_str) : null}
                                     value={formData.date_str ? format(
                                         new Date(formData.date_str),
-                                        "MMMM d, yyyy h:mm aa"
+                                        "MMMM d, yyyy h:mm aa",
+                                        { locale: dateLocale }
                                     ) : null}
                                     className="form-control"
                                     dateFormat="MMMM d, yyyy h:mm aa"
+                                    locale={dateLocale}
                                     showTimeSelect
                                     timeIntervals="1"
                                     onChange={(value) => {
@@ -4557,10 +4561,12 @@ const SalesReturnCreate = forwardRef((props, ref) => {
                                                             selected={formData.payments_input[key].date_str ? new Date(formData.payments_input[key].date_str) : null}
                                                             value={formData.payments_input[key].date_str ? format(
                                                                 new Date(formData.payments_input[key].date_str),
-                                                                "MMMM d, yyyy h:mm aa"
+                                                                "MMMM d, yyyy h:mm aa",
+                                                                { locale: dateLocale }
                                                             ) : null}
                                                             className="form-control"
                                                             dateFormat="MMMM d, yyyy h:mm aa"
+                                                            locale={dateLocale}
                                                             showTimeSelect
                                                             timeIntervals="1"
                                                             onChange={(value) => {
