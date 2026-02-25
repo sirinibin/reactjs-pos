@@ -1591,11 +1591,12 @@ const StockTransferCreate = forwardRef((props, ref) => {
         }
         // alert("ok1")
 
-        if (product.product_stores && product.product_stores[localStorage.getItem("store_id")]?.stock) {
+        if (product.product_stores && (product.product_stores[localStorage.getItem("store_id")]?.stock || product.product_stores[localStorage.getItem("store_id")]?.stock === 0)) {
             stock = product.product_stores[localStorage.getItem("store_id")].stock;
             selectedProducts[i].stock = stock;
             //   alert("stock:" + selectedProducts[i].stock);
             selectedProducts[i].warehouse_stocks = product.product_stores[localStorage.getItem("store_id")]?.warehouse_stocks ? product.product_stores[localStorage.getItem("store_id")]?.warehouse_stocks : { "main_store": stock };
+            //alert(selectedProducts[i].warehouse_stocks)
             setSelectedProducts([...selectedProducts]);
         }
 
@@ -1606,6 +1607,7 @@ const StockTransferCreate = forwardRef((props, ref) => {
         selectedProducts[i].stock = selectedProducts[i].warehouse_stocks && selectedProducts[i].warehouse_stocks[fromWarehouseCode] ? selectedProducts[i].warehouse_stocks[fromWarehouseCode] : 0;
 
         if (!selectedProducts[i].warehouse_stocks) {
+            // alert("Setting zero1")
             selectedProducts[i].warehouse_stocks = { [fromWarehouseCode]: 0, [toWarehouseCode]: 0 };
         }
 
