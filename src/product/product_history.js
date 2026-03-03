@@ -3,7 +3,7 @@ import React, { useState, useRef, forwardRef, useEffect, useMemo, useCallback } 
 import { format } from "date-fns";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
-import { Button, Spinner, Modal, Alert } from "react-bootstrap";
+import { Button, Spinner, Modal, Alert, OverlayTrigger, Tooltip } from "react-bootstrap";
 import ReactPaginate from "react-paginate";
 import OrderCreate from "../order/create.js";
 import StockTransferCreate from "../stock_transfer/create.js";
@@ -820,6 +820,67 @@ const ProductHistory = forwardRef((props, ref) => {
             return "Stock Transfer";
         }
     }
+
+
+    const [warehouseList, setWarehouseList] = useState([]);
+
+    const loadWarehouses = useCallback(() => {
+        const requestOptions = {
+            method: "GET",
+            headers: {
+                "Content-Type": "application/json",
+                Authorization: localStorage.getItem("access_token"),
+            },
+        };
+        let Select =
+            "select=id,name,code,created_by_name,created_at";
+
+        const d = new Date();
+        let diff = d.getTimezoneOffset();
+        searchParams["timezone_offset"] = parseFloat(diff / 60);
+
+        if (localStorage.getItem("store_id")) {
+            searchParams.store_id = localStorage.getItem("store_id");
+        }
+
+        setSearchParams(searchParams);
+        let queryParams = ObjectToSearchQueryParams(searchParams);
+        if (queryParams !== "") {
+            queryParams = "&" + queryParams;
+        }
+
+        fetch(
+            "/v1/warehouse?" +
+            Select +
+            queryParams +
+            "&sort=name" +
+            "&page=1" +
+            "&limit=100",
+            requestOptions
+        )
+            .then(async (response) => {
+                const isJson = response.headers
+                    .get("content-type")
+                    ?.includes("application/json");
+                const data = isJson && (await response.json());
+
+                // check for error response
+                if (!response.ok) {
+                    const error = data && data.errors;
+                    return Promise.reject(error);
+                }
+
+
+                setWarehouseList(data.result);
+            })
+            .catch((error) => {
+                console.log(error);
+            });
+    }, [searchParams]);
+
+    useEffect(() => {
+        loadWarehouses();
+    }, [loadWarehouses]);
 
     // const dragRef = useRef(null);
 
@@ -1964,7 +2025,6 @@ const ProductHistory = forwardRef((props, ref) => {
                                                                 </td>}
                                                                 {(
                                                                     col.key === "quantity" ||
-                                                                    col.key === "stock" ||
                                                                     col.key === "discount" ||
                                                                     col.key === "discount_percent" ||
                                                                     col.key === "price" ||
@@ -1979,6 +2039,57 @@ const ProductHistory = forwardRef((props, ref) => {
                                                                             <Amount amount={trimTo2Decimals(history[col.key])} /> : history[col.key]
                                                                         }
                                                                     </td>}
+                                                                {col.key === "stock" && <td style={{ width: "auto", whiteSpace: "nowrap" }} >
+                                                                    {(() => {
+                                                                        const totalStock = history[col.key] ?? 0;
+                                                                        let warehouseStocks = history["warehouse_stocks"];
+                                                                        if (!warehouseStocks) {
+                                                                            warehouseStocks = { "main_store": totalStock };
+                                                                        }
+
+                                                                        for (const wh of warehouseList) {
+                                                                            if (!warehouseStocks.hasOwnProperty(wh.code)) {
+                                                                                warehouseStocks[wh.code] = 0;
+                                                                            }
+                                                                        }
+
+                                                                        // Always show Main Store first, then others
+                                                                        const orderedEntries = [];
+                                                                        if (warehouseStocks?.hasOwnProperty("main_store")) {
+                                                                            orderedEntries.push(["main_store", warehouseStocks["main_store"]]);
+                                                                        }
+
+                                                                        if (warehouseStocks)
+                                                                            Object.entries(warehouseStocks).forEach(([key, value]) => {
+                                                                                if (key !== "main_store") {
+                                                                                    orderedEntries.push([key, value]);
+                                                                                }
+                                                                            });
+
+                                                                        const details = orderedEntries
+                                                                            .map(([key, value]) => {
+                                                                                let name = key === "main_store" ? "Main Store" : key.replace(/^wh/, "WH").toUpperCase();
+                                                                                return `${name}: ${value}`;
+                                                                            })
+                                                                            .join(", ");
+
+                                                                        return (
+                                                                            <OverlayTrigger
+                                                                                placement="top"
+                                                                                overlay={
+                                                                                    <Tooltip id={`stock-tooltip-${product.id}`}>
+                                                                                        ({details})
+
+                                                                                    </Tooltip>
+                                                                                }
+                                                                            >
+                                                                                <span style={{ cursor: "pointer", textDecoration: "underline dotted" }}>
+                                                                                    <b>{totalStock}</b>
+                                                                                </span>
+                                                                            </OverlayTrigger>
+                                                                        );
+                                                                    })()}
+                                                                </td>}
                                                                 {col.key === "warehouse_code" &&
                                                                     <td style={{ width: "auto", whiteSpace: "nowrap" }}>
                                                                         {(() => {
