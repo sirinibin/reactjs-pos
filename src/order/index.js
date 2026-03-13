@@ -995,6 +995,7 @@ const OrderIndex = forwardRef((props, ref) => {
 
         const d = new Date();
         let diff = d.getTimezoneOffset();
+        console.log("Timezone diff:", diff);
         console.log("Timezone:", parseFloat(diff / 60));
         searchParams["timezone_offset"] = parseFloat(diff / 60);
 

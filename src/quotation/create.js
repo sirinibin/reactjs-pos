@@ -2573,8 +2573,45 @@ async function checkWarning(i) {
 
   }, [loadWarehouses, show]);
 
+
+  const CustomerUpdateFormRef = useRef();
+  function openCustomerUpdateForm(id) {
+    CustomerUpdateFormRef.current.open(id);
+  }
+
+  const handleCustomerUpdated = (updatedCustomer) => {
+
+    // alert(updatedCustomer);
+    if (updatedCustomer.name && updatedCustomer.id) {
+      // alert("updatedCustomer.customer_name:" + updatedCustomer.name);
+      let selectedCustomers = [
+        {
+          id: updatedCustomer.id,
+          name: updatedCustomer.name,
+          search_label: updatedCustomer.search_label,
+        }
+      ];
+      setSelectedCustomers([...selectedCustomers]);
+
+      formData.customer_id = updatedCustomer.id;
+      if (updatedCustomer.use_remarks_in_sales && updatedCustomer.remarks) {
+        formData.remarks = updatedCustomer.remarks;
+      }
+
+      if (updatedCustomer.phone && !formData.phone) {
+        formData.phone = updatedCustomer.phone;
+      }
+
+      setFormData({ ...formData });
+
+    }
+
+
+  };
+
   return (
     <>
+      <CustomerCreate ref={CustomerUpdateFormRef} showToastMessage={props.showToastMessage} onUpdated={handleCustomerUpdated} />
       {showReferenceUpdateForm && <>
         <CustomerDepositCreate ref={CustomerDepositUpdateFormRef} onUpdated={handleReferenceUpdated} />
         <QuotationSalesReturnUpdateForm ref={QuotationSalesReturnUpdateFormRef} onUpdated={handleReferenceUpdated} />
@@ -3000,6 +3037,11 @@ async function checkWarning(i) {
               </div>
 
               <div className="col-md-1">
+                {formData.customer_id && <><Button className="btn btn-default" style={{ marginTop: "30px" }} onClick={() => {
+                  openCustomerUpdateForm(formData.customer_id);
+                }}>
+                  <i class="bi bi-pencil"></i>
+                </Button>&nbsp;</>}
                 <Button className="btn btn-primary" style={{ marginTop: "30px" }} onClick={openCustomers}>
                   <i class="bi bi-list"></i>
                 </Button>
