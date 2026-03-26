@@ -615,6 +615,7 @@ const PreviewContentWithSellerInfo = forwardRef((props, ref) => {
                                             {props.model.vendor ? props.model.vendor.name : ""}
                                             {!props.model.vendor && props.model.vendorName ? props.model.vendorName : ""}
                                             {!props.model.vendorName && !props.model.vendor ? "N/A" : ""}
+                                            {props.model.vendor?.name_in_arabic ? "  " + props.model.vendor.name_in_arabic : ""}
                                         </div>
                                     </div>
 
