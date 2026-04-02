@@ -151,7 +151,7 @@ function ProductIndex(props) {
     function ObjectToSearchQueryParams(object) {
         return Object.keys(object)
             .map(function (key) {
-                return `search[${key}]=` + object[key];
+                return `search[${key}]=` + encodeURIComponent(object[key]);
             })
             .join("&");
     }
