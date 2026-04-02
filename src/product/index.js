@@ -4684,7 +4684,7 @@ function ProductIndex(props) {
                                                                                     }
                                                                                 >
                                                                                     <span style={{ cursor: "pointer", textDecoration: "underline dotted" }}>
-                                                                                        <b>{selectedWarehouse.warehouse_code ? productWarehouses[selectedWarehouse.warehouse_code][col.key] : ""}</b>
+                                                                                        <b>{selectedWarehouse.warehouse_code ? (productWarehouses[selectedWarehouse.warehouse_code]?.[col.key] ?? 0) : ""}</b>
                                                                                         <b>{!selectedWarehouse.warehouse_code ? totalValue : ""}</b>
                                                                                     </span>
                                                                                 </OverlayTrigger>
