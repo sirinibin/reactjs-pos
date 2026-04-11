@@ -10,7 +10,7 @@ import { QRCodeSVG } from "qrcode.react";
 
 const PreviewContentWithSellerInfo = forwardRef((props, ref) => {
 
-    let persianDigits = "۰۱۲۳۴۵۶۷۸۹";
+    let persianDigits = "۰۱۲۳٤۵۶۷۸۹";
     let persianMap = persianDigits.split("");
 
 

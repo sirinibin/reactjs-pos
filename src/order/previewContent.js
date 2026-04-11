@@ -10,7 +10,7 @@ import { QRCodeSVG } from "qrcode.react";
 
 const PreviewContent = forwardRef((props, ref) => {
 
-    let persianDigits = "۰۱۲۳۴۵۶۷۸۹";
+    let persianDigits = "۰۱۲۳٤۵۶۷۸۹";
     let persianMap = persianDigits.split("");
 
 
@@ -418,7 +418,6 @@ const PreviewContent = forwardRef((props, ref) => {
                                         <div className="col-md-4 print-label" dir="ltr" style={{ borderRight: detailsBorderThickness, width: detailsLabelsColumnWidthPercent, padding: "3px" }} ><b>Vendor ID | معرف البائع:</b></div>
                                         <div className="col-md-8 print-value" dir="ltr" style={{ width: detailsValuesColumnWidthPercent, padding: "3px" }} >
                                             {props.model.vendor?.code ? props.model.vendor.code : "N/A"}
-
                                         </div>
                                     </div>
 
