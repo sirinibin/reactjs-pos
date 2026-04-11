@@ -7,7 +7,7 @@ import Amount from "../utils/amount.js";
 
 const CustomerDepositPreviewContent = forwardRef((props, ref) => {
 
-    let persianDigits = "۰۱۲۳۴۵۶۷۸۹";
+    let persianDigits = "۰۱۲۳٤۵۶۷۸۹";
     let persianMap = persianDigits.split("");
 
     function convertToArabicNumber(input) {
