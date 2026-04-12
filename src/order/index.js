@@ -1837,22 +1837,22 @@ const OrderIndex = forwardRef((props, ref) => {
 
                         <Button variant="primary" onClick={() => {
                             openReportPreview();
-                        }} style={{ marginRight: "8px" }} className="btn btn-primary mb-3">
+                        }} style={{ marginRight: "8px" }} className="btn btn-primary mb-1">
                             <i className="bi bi-printer"></i>&nbsp;
                             {t('Print Report')}
                         </Button>
 
-                        <ExcelFile filename={salesReportFileName} element={excelData.length > 0 ? <Button variant="success" className="btn btn-primary mb-3 success" >{t('Download Sales Report(XLS)')}</Button> : ""}>
+                        <ExcelFile filename={salesReportFileName} element={excelData.length > 0 ? <Button variant="success" className="btn btn-primary mb-1 success" >{t('Download Sales Report(XLS)')}</Button> : ""}>
                             <ExcelSheet dataSet={excelData} name={salesReportFileName} />
                         </ExcelFile>
 
-                        {excelData.length === 0 ? <Button variant="primary" className="btn btn-primary mb-3" onClick={getAllOrders} >{fettingAllRecordsInProgress ? t('Preparing..') : t('Sales Report(XLS)')}</Button> : ""}
+                        {excelData.length === 0 ? <Button variant="primary" className="btn btn-primary mb-1" onClick={getAllOrders} >{fettingAllRecordsInProgress ? t('Preparing..') : t('Sales Report(XLS)')}</Button> : ""}
                         &nbsp;&nbsp;
 
                         <Button
                             hide={true.toString()}
                             variant="primary"
-                            className="btn btn-primary mb-3"
+                            className="btn btn-primary mb-1"
                             onClick={() => {
                                 openCreateForm();
                             }}
@@ -1870,7 +1870,7 @@ const OrderIndex = forwardRef((props, ref) => {
                         <h5   className="card-title mb-0"></h5>
                     </div>
                     */}
-                            <div className="card-body">
+                            <div className="card-body p-2">
                                 <div className="row">
                                     {totalItems === 0 && (
                                         <div className="col">
@@ -1878,73 +1878,61 @@ const OrderIndex = forwardRef((props, ref) => {
                                         </div>
                                     )}
                                 </div>
-                                <div className="row" style={{ border: "solid 0px" }}>
-                                    <div className="col text-start" style={{ border: "solid 0px" }}>
-                                        <Button
-                                            onClick={() => {
-                                                setIsRefreshInProcess(true);
-                                                list();
-                                            }}
-                                            variant="primary"
-                                            disabled={isRefreshInProcess}
-                                        >
-                                            {isRefreshInProcess ? (
-                                                <Spinner
-                                                    as="span"
-                                                    animation="border"
-                                                    size="sm"
-                                                    role="status"
-                                                    aria-hidden={true}
-                                                />
-                                            ) : (
-                                                <i className="fa fa-refresh"></i>
-                                            )}
-                                            <span className="visually-hidden">Loading...</span>
-                                        </Button>
-                                    </div>
-                                    <div className="col text-center">
-                                        {isListLoading && (
-                                            <Spinner animation="grow" variant="primary" />
+                                <div style={{ display: "flex", alignItems: "center", gap: "8px", flexWrap: "wrap", marginBottom: "8px" }}>
+                                    <Button
+                                        onClick={() => {
+                                            setIsRefreshInProcess(true);
+                                            list();
+                                        }}
+                                        variant="primary"
+                                        disabled={isRefreshInProcess}
+                                    >
+                                        {isRefreshInProcess ? (
+                                            <Spinner
+                                                as="span"
+                                                animation="border"
+                                                size="sm"
+                                                role="status"
+                                                aria-hidden={true}
+                                            />
+                                        ) : (
+                                            <i className="fa fa-refresh"></i>
                                         )}
-                                    </div>
-                                    <div className="col text-end">
-                                        {totalItems > 0 && (
-                                            <>
-                                                <label className="form-label">{t('Size')}:&nbsp;</label>
-                                                <select
-                                                    value={pageSize}
-                                                    onChange={(e) => {
-                                                        //changePageSize(e.target.value);
-                                                        setPageSize(parseInt(e.target.value));
-                                                    }}
-                                                    className="form-control pull-right"
-                                                    style={{
-                                                        border: "solid 1px",
-                                                        borderColor: "silver",
-                                                        width: "55px",
-                                                    }}
-                                                >
-                                                    <option value="5">
-                                                        5
-                                                    </option>
-                                                    <option value="10">
-                                                        10
-                                                    </option>
-                                                    <option value="20">20</option>
-                                                    <option value="40">40</option>
-                                                    <option value="50">50</option>
-                                                    <option value="100">100</option>
-                                                    <option value="500">500</option>
-                                                    <option value="1000">1000</option>
-                                                </select>
-                                            </>
-                                        )}
-                                    </div>
-                                </div>
+                                        <span className="visually-hidden">Loading...</span>
+                                    </Button>
 
-                                <br />
-                                <div className="row">
-                                    <div className="col" style={{ border: "solid 0px", width: "100%" }}>
+                                    {isListLoading && (
+                                        <Spinner animation="grow" variant="primary" />
+                                    )}
+
+                                    {totalItems > 0 && (
+                                        <>
+                                            <label className="form-label mb-0">{t('Size')}:&nbsp;</label>
+                                            <select
+                                                value={pageSize}
+                                                onChange={(e) => {
+                                                    setPageSize(parseInt(e.target.value));
+                                                }}
+                                                className="form-control"
+                                                style={{
+                                                    border: "solid 1px",
+                                                    borderColor: "silver",
+                                                    width: "55px",
+                                                }}
+                                            >
+                                                <option value="5">5</option>
+                                                <option value="10">10</option>
+                                                <option value="20">20</option>
+                                                <option value="40">40</option>
+                                                <option value="50">50</option>
+                                                <option value="100">100</option>
+                                                <option value="500">500</option>
+                                                <option value="1000">1000</option>
+                                            </select>
+                                        </>
+                                    )}
+
+                                    <div style={{ flex: 1, minWidth: 0 }}>
                                         {totalPages ? <ReactPaginate
                                             breakLabel={t('...')}
                                             nextLabel={t('next >')}
@@ -1955,7 +1943,7 @@ const OrderIndex = forwardRef((props, ref) => {
                                             pageCount={totalPages}
                                             previousLabel={t('< previous')}
                                             renderOnZeroPageCount={null}
-                                            className="pagination  flex-wrap"
+                                            className="pagination flex-wrap mb-0"
                                             pageClassName="page-item"
                                             pageLinkClassName="page-link"
                                             activeClassName="active"
@@ -1966,52 +1954,37 @@ const OrderIndex = forwardRef((props, ref) => {
                                             forcePage={page - 1}
                                         /> : ""}
                                     </div>
-                                </div>
 
-                                <div className="row">
-                                    <div className="col text-end">
-                                        <button
-                                            className="btn btn-sm btn-outline-secondary"
-                                            onClick={() => {
-                                                setShowSettings(!showSettings);
-                                            }}
-                                        >
-                                            <i
-                                                className="bi bi-gear-fill"
-                                                style={{ fontSize: "1.2rem" }}
-                                                title="Table Settings"
-
-                                            />
-                                        </button>
-                                    </div>
-                                </div>
-
-                                <div className="row">
                                     {totalItems > 0 && (
-                                        <>
-                                            <div className="col text-start">
-                                                <p className="text-start">
-                                                    {t("Showing {{from}}-{{to}} of {{totalItems}}", {
-                                                        from: (offset + 1),
-                                                        to: (offset + currentPageItemsCount),
-                                                        totalItems: totalItems,
-                                                    })}
-                                                </p>
-                                            </div>
-
-                                            <div className="col text-end">
-                                                <p className="text-end">
-                                                    {t("Page {{page}} of {{totalPages}}", {
-                                                        page: page,
-                                                        totalPages: totalPages,
-                                                    })}
-                                                </p>
-                                            </div>
-                                        </>
+                                        <span className="text-muted small text-nowrap">
+                                            {t("Showing {{from}}-{{to}} of {{totalItems}}", {
+                                                from: (offset + 1),
+                                                to: (offset + currentPageItemsCount),
+                                                totalItems: totalItems,
+                                            })}
+                                            &nbsp;|&nbsp;
+                                            {t("Page {{page}} of {{totalPages}}", {
+                                                page: page,
+                                                totalPages: totalPages,
+                                            })}
+                                        </span>
                                     )}
+
+                                    <button
+                                        className="btn btn-sm btn-outline-secondary ms-auto"
+                                        onClick={() => {
+                                            setShowSettings(!showSettings);
+                                        }}
+                                    >
+                                        <i
+                                            className="bi bi-gear-fill"
+                                            style={{ fontSize: "1.2rem" }}
+                                            title="Table Settings"
+                                        />
+                                    </button>
                                 </div>
 
-                                <div className="table-responsive" style={{ overflowX: "auto", overflowY: "auto", maxHeight: "500px" }}>
+                                <div className="table-responsive" style={{ overflowX: "auto", overflowY: "auto", height: "calc(100vh - 400px)", minHeight: "200px" }}>
                                     <table className="table table-striped table-bordered table-sm" style={{}}>
                                         <thead>
                                             <tr className="text-center main-header">
@@ -2556,26 +2529,6 @@ const OrderIndex = forwardRef((props, ref) => {
                                     </table>
                                 </div>
 
-                                {totalPages ? <ReactPaginate
-                                    breakLabel="..."
-                                    nextLabel={t("next >")}
-                                    onPageChange={(event) => {
-                                        changePage(event.selected + 1);
-                                    }}
-                                    pageRangeDisplayed={5}
-                                    pageCount={totalPages}
-                                    previousLabel={t("< previous")}
-                                    renderOnZeroPageCount={null}
-                                    className="pagination  flex-wrap"
-                                    pageClassName="page-item"
-                                    pageLinkClassName="page-link"
-                                    activeClassName="active"
-                                    previousClassName="page-item"
-                                    nextClassName="page-item"
-                                    previousLinkClassName="page-link"
-                                    nextLinkClassName="page-link"
-                                    forcePage={page - 1}
-                                /> : ""}
                             </div>
                         </div>
                     </div>
