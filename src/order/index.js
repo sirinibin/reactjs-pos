@@ -1901,10 +1901,6 @@ const OrderIndex = forwardRef((props, ref) => {
                                         <span className="visually-hidden">Loading...</span>
                                     </Button>
 
-                                    {isListLoading && (
-                                        <Spinner animation="grow" variant="primary" />
-                                    )}
-
                                     {totalItems > 0 && (
                                         <>
                                             <label className="form-label mb-0">{t('Size')}:&nbsp;</label>
@@ -1984,7 +1980,23 @@ const OrderIndex = forwardRef((props, ref) => {
                                     </button>
                                 </div>
 
-                                <div className="table-responsive" style={{ overflowX: "auto", overflowY: "auto", height: "calc(100vh - 400px)", minHeight: "200px" }}>
+                                <div className="table-responsive" style={{ position: "relative", overflowX: "auto", overflowY: "auto", minHeight: "200px" }} ref={(el) => {
+                                    if (!el) return;
+                                    const fit = () => {
+                                        const top = el.getBoundingClientRect().top;
+                                        el.style.height = Math.max(200, window.innerHeight - top - 16) + "px";
+                                    };
+                                    fit();
+                                    if (!el._fitListenerAdded) {
+                                        el._fitListenerAdded = true;
+                                        window.addEventListener("resize", fit);
+                                    }
+                                }}>
+                                    {isListLoading && (
+                                        <div style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0, display: "flex", alignItems: "center", justifyContent: "center", zIndex: 10, background: "rgba(255,255,255,0.5)" }}>
+                                            <Spinner animation="grow" variant="primary" style={{ width: "3rem", height: "3rem" }} />
+                                        </div>
+                                    )}
                                     <table className="table table-striped table-bordered table-sm" style={{}}>
                                         <thead>
                                             <tr className="text-center main-header">

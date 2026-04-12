@@ -314,7 +314,7 @@ function ExpenseCategoryIndex(props) {
                         <Button
                             hide={true.toString()}
                             variant="primary"
-                            className="btn btn-primary mb-3"
+                            className="btn btn-primary mb-1"
                             onClick={openCreateForm}
                         >
                             <i className="bi bi-plus-lg"></i> Create
@@ -330,7 +330,7 @@ function ExpenseCategoryIndex(props) {
                         <h5   className="card-title mb-0"></h5>
                     </div>
                     */}
-                            <div className="card-body">
+                            <div className="card-body p-2">
                                 <div className="row">
                                     {totalItems === 0 && (
                                         <div className="col">
@@ -338,81 +338,49 @@ function ExpenseCategoryIndex(props) {
                                         </div>
                                     )}
                                 </div>
-                                <div className="row" style={{ bexpensecategory: "solid 0px" }}>
-                                    <div className="col text-start" style={{ bexpensecategory: "solid 0px" }}>
-                                        <Button
-                                            onClick={() => {
-                                                setIsRefreshInProcess(true);
-                                                list();
-                                            }}
-                                            variant="primary"
-                                            disabled={isRefreshInProcess}
-                                        >
-                                            {isRefreshInProcess ? (
-                                                <Spinner
-                                                    as="span"
-                                                    animation="bexpensecategory"
-                                                    size="sm"
-                                                    role="status"
-                                                    aria-hidden="true"
-                                                />
-                                            ) : (
-                                                <i className="fa fa-refresh"></i>
-                                            )}
-                                            <span className="visually-hidden">Loading...</span>
-                                        </Button>
-                                    </div>
-                                    <div className="col text-center">
-                                        {isListLoading && (
-                                            <Spinner animation="grow" variant="primary" />
+                                <div style={{ display: "flex", alignItems: "center", gap: "8px", flexWrap: "wrap", marginBottom: "8px" }}>
+                                    <Button
+                                        onClick={() => { setIsRefreshInProcess(true); list(); }}
+                                        variant="primary"
+                                        disabled={isRefreshInProcess}
+                                    >
+                                        {isRefreshInProcess ? (
+                                            <Spinner as="span" animation="border" size="sm" role="status" aria-hidden="true" />
+                                        ) : (
+                                            <i className="fa fa-refresh"></i>
                                         )}
-                                    </div>
-                                    <div className="col text-end">
-                                        {totalItems > 0 && (
-                                            <>
-                                                <label className="form-label">Size:&nbsp;</label>
-                                                <select
-                                                    value={pageSize}
-                                                    onChange={(e) => {
-                                                        changePageSize(e.target.value);
-                                                    }}
-                                                    className="form-control pull-right"
-                                                    style={{
-                                                        bexpensecategory: "solid 1px",
-                                                        bexpensecategoryColor: "silver",
-                                                        width: "55px",
-                                                    }}
-                                                >
-                                                    <option value="5">
-                                                        5
-                                                    </option>
-                                                    <option value="10">
-                                                        10
-                                                    </option>
-                                                    <option value="20">20</option>
-                                                    <option value="40">40</option>
-                                                    <option value="50">50</option>
-                                                    <option value="100">100</option>
-                                                </select>
-                                            </>
-                                        )}
-                                    </div>
-                                </div>
+                                        <span className="visually-hidden">Loading...</span>
+                                    </Button>
 
-                                <br />
-                                <div className="row">
-                                    <div className="col" style={{ bexpensecategory: "solid 0px" }}>
+                                    {totalItems > 0 && (
+                                        <>
+                                            <label className="form-label mb-0">Size:&nbsp;</label>
+                                            <select
+                                                value={pageSize}
+                                                onChange={(e) => { changePageSize(e.target.value); }}
+                                                className="form-control"
+                                                style={{ border: "solid 1px", borderColor: "silver", width: "55px" }}
+                                            >
+                                                <option value="5">5</option>
+                                                <option value="10">10</option>
+                                                <option value="20">20</option>
+                                                <option value="40">40</option>
+                                                <option value="50">50</option>
+                                                <option value="100">100</option>
+                                            </select>
+                                        </>
+                                    )}
+
+                                    <div style={{ flex: 1, minWidth: 0 }}>
                                         {totalPages ? <ReactPaginate
                                             breakLabel="..."
                                             nextLabel="next >"
-                                            onPageChange={(event) => {
-                                                changePage(event.selected + 1);
-                                            }}
+                                            onPageChange={(event) => { changePage(event.selected + 1); }}
                                             pageRangeDisplayed={5}
                                             pageCount={totalPages}
                                             previousLabel="< previous"
                                             renderOnZeroPageCount={null}
-                                            className="pagination  flex-wrap"
+                                            className="pagination flex-wrap mb-0"
                                             pageClassName="page-item"
                                             pageLinkClassName="page-link"
                                             activeClassName="active"
@@ -423,26 +391,31 @@ function ExpenseCategoryIndex(props) {
                                             forcePage={page - 1}
                                         /> : ""}
                                     </div>
-                                </div>
-                                <div className="row">
-                                    {totalItems > 0 && (
-                                        <>
-                                            <div className="col text-start">
-                                                <p className="text-start">
-                                                    showing {offset + 1}-{offset + currentPageItemsCount} of{" "}
-                                                    {totalItems}
-                                                </p>
-                                            </div>
 
-                                            <div className="col text-end">
-                                                <p className="text-end">
-                                                    page {page} of {totalPages}
-                                                </p>
-                                            </div>
-                                        </>
+                                    {totalItems > 0 && (
+                                        <span className="text-muted small text-nowrap">
+                                            showing {offset + 1}-{offset + currentPageItemsCount} of {totalItems}
+                                            &nbsp;|&nbsp;page {page} of {totalPages}
+                                        </span>
                                     )}
                                 </div>
-                                <div className="table-responsive" style={{ overflowX: "auto", overflowY: "auto", maxHeight: "500px" }}>
+                                <div className="table-responsive" style={{ position: "relative", overflowX: "auto", overflowY: "auto", minHeight: "200px" }} ref={(el) => {
+                                    if (!el) return;
+                                    const fit = () => {
+                                        const top = el.getBoundingClientRect().top;
+                                        el.style.height = Math.max(200, window.innerHeight - top - 16) + "px";
+                                    };
+                                    fit();
+                                    if (!el._fitListenerAdded) {
+                                        el._fitListenerAdded = true;
+                                        window.addEventListener("resize", fit);
+                                    }
+                                }}>
+                                    {isListLoading && (
+                                        <div style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0, display: "flex", alignItems: "center", justifyContent: "center", zIndex: 10, background: "rgba(255,255,255,0.5)" }}>
+                                            <Spinner animation="grow" variant="primary" style={{ width: "3rem", height: "3rem" }} />
+                                        </div>
+                                    )}
                                     <table className="table table-striped table-sm table-bordered">
                                         <thead>
                                             <tr className="text-center">
@@ -692,26 +665,6 @@ function ExpenseCategoryIndex(props) {
                                     </table>
                                 </div>
 
-                                {totalPages ? <ReactPaginate
-                                    breakLabel="..."
-                                    nextLabel="next >"
-                                    onPageChange={(event) => {
-                                        changePage(event.selected + 1);
-                                    }}
-                                    pageRangeDisplayed={5}
-                                    pageCount={totalPages}
-                                    previousLabel="< previous"
-                                    renderOnZeroPageCount={null}
-                                    className="pagination  flex-wrap"
-                                    pageClassName="page-item"
-                                    pageLinkClassName="page-link"
-                                    activeClassName="active"
-                                    previousClassName="page-item"
-                                    nextClassName="page-item"
-                                    previousLinkClassName="page-link"
-                                    nextLinkClassName="page-link"
-                                    forcePage={page - 1}
-                                /> : ""}
                             </div>
                         </div>
                     </div>
