@@ -294,7 +294,7 @@ const OrderPrintContent3 = forwardRef((props, ref) => {
 
                     </div> : ""}
 
-                    <h4 className="print-value" style={{ fontSize: "2.8mm", position: "absolute", left: "90px", top: (963 + page.top) + "px", border: "solid " + border + "px", }}>
+                    <h4 className="print-value" style={{ fontSize: "3.2mm", position: "absolute", left: "90px", top: (953 + page.top) + "px", border: "solid " + border + "px", }}>
                         {props.model.remarks ? props.model.remarks : ""}
                     </h4>
 
