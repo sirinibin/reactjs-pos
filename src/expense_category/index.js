@@ -371,14 +371,15 @@ function ExpenseCategoryIndex(props) {
                                         </>
                                     )}
 
-                                    <div style={{ flex: 1, minWidth: 0 }}>
+                                    <div className="w-100" style={{ overflowX: "auto" }}>
                                         {totalPages ? <ReactPaginate
                                             breakLabel="..."
                                             nextLabel="next >"
                                             onPageChange={(event) => { changePage(event.selected + 1); }}
-                                            pageRangeDisplayed={5}
+                                            pageRangeDisplayed={3}
+                                            marginPagesDisplayed={1}
                                             pageCount={totalPages}
-                                            previousLabel="< previous"
+                                            previousLabel="< prev"
                                             renderOnZeroPageCount={null}
                                             className="pagination flex-wrap mb-0"
                                             pageClassName="page-item"
@@ -393,7 +394,7 @@ function ExpenseCategoryIndex(props) {
                                     </div>
 
                                     {totalItems > 0 && (
-                                        <span className="text-muted small text-nowrap">
+                                        <span className="text-muted small">
                                             showing {offset + 1}-{offset + currentPageItemsCount} of {totalItems}
                                             &nbsp;|&nbsp;page {page} of {totalPages}
                                         </span>

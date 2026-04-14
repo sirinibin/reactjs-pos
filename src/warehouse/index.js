@@ -371,26 +371,29 @@ function WarehouseIndex(props) {
                                 <br />
                                 <div className="row">
                                     <div className="col" style={{ bwarehouse: "solid 0px" }}>
-                                        {totalPages ? <ReactPaginate
-                                            breakLabel="..."
-                                            nextLabel="next >"
-                                            onPageChange={(event) => {
-                                                changePage(event.selected + 1);
-                                            }}
-                                            pageRangeDisplayed={5}
-                                            pageCount={totalPages}
-                                            previousLabel="< previous"
-                                            renderOnZeroPageCount={null}
-                                            className="pagination  flex-wrap"
-                                            pageClassName="page-item"
-                                            pageLinkClassName="page-link"
-                                            activeClassName="active"
-                                            previousClassName="page-item"
-                                            nextClassName="page-item"
-                                            previousLinkClassName="page-link"
-                                            nextLinkClassName="page-link"
-                                            forcePage={page - 1}
-                                        /> : ""}
+                                        <div className="w-100" style={{ overflowX: "auto" }}>
+                                            {totalPages ? <ReactPaginate
+                                                breakLabel="..."
+                                                nextLabel="next >"
+                                                onPageChange={(event) => {
+                                                    changePage(event.selected + 1);
+                                                }}
+                                                pageRangeDisplayed={3}
+                                                marginPagesDisplayed={1}
+                                                pageCount={totalPages}
+                                                previousLabel="< prev"
+                                                renderOnZeroPageCount={null}
+                                                className="pagination  flex-wrap"
+                                                pageClassName="page-item"
+                                                pageLinkClassName="page-link"
+                                                activeClassName="active"
+                                                previousClassName="page-item"
+                                                nextClassName="page-item"
+                                                previousLinkClassName="page-link"
+                                                nextLinkClassName="page-link"
+                                                forcePage={page - 1}
+                                            /> : ""}
+                                        </div>
                                     </div>
                                 </div>
                                 <div className="row">
@@ -518,26 +521,29 @@ function WarehouseIndex(props) {
                                     </table>
                                 </div>
 
-                                {totalPages ? <ReactPaginate
-                                    breakLabel="..."
-                                    nextLabel="next >"
-                                    onPageChange={(event) => {
-                                        changePage(event.selected + 1);
-                                    }}
-                                    pageRangeDisplayed={5}
-                                    pageCount={totalPages}
-                                    previousLabel="< previous"
-                                    renderOnZeroPageCount={null}
-                                    className="pagination  flex-wrap"
-                                    pageClassName="page-item"
-                                    pageLinkClassName="page-link"
-                                    activeClassName="active"
-                                    previousClassName="page-item"
-                                    nextClassName="page-item"
-                                    previousLinkClassName="page-link"
-                                    nextLinkClassName="page-link"
-                                    forcePage={page - 1}
-                                /> : ""}
+                                <div className="w-100" style={{ overflowX: "auto" }}>
+                                    {totalPages ? <ReactPaginate
+                                        breakLabel="..."
+                                        nextLabel="next >"
+                                        onPageChange={(event) => {
+                                            changePage(event.selected + 1);
+                                        }}
+                                        pageRangeDisplayed={3}
+                                        marginPagesDisplayed={1}
+                                        pageCount={totalPages}
+                                        previousLabel="< prev"
+                                        renderOnZeroPageCount={null}
+                                        className="pagination  flex-wrap"
+                                        pageClassName="page-item"
+                                        pageLinkClassName="page-link"
+                                        activeClassName="active"
+                                        previousClassName="page-item"
+                                        nextClassName="page-item"
+                                        previousLinkClassName="page-link"
+                                        nextLinkClassName="page-link"
+                                        forcePage={page - 1}
+                                    /> : ""}
+                                </div>
                             </div>
                         </div>
                     </div>

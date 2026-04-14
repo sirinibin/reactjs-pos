@@ -1893,7 +1893,7 @@ const SalesReturnIndex = forwardRef((props, ref) => {
                                         </div>
                                     )}
                                 </div>
-                                <div style={{ display: "flex", alignItems: "center", gap: "8px", flexWrap: "wrap", marginBottom: "8px" }}>
+                                <div className="d-flex align-items-center gap-2 flex-wrap mb-2">
                                     <Button
                                         onClick={() => { setIsRefreshInProcess(true); list(); }}
                                         variant="primary"
@@ -1924,41 +1924,44 @@ const SalesReturnIndex = forwardRef((props, ref) => {
                                         </select>
                                     </>
 
-                                    <div style={{ flex: 1, minWidth: 0 }}>
-                                        {totalPages ? <ReactPaginate
-                                            breakLabel="..."
-                                            nextLabel={t("next >")}
-                                            onPageChange={(event) => { changePage(event.selected + 1); }}
-                                            pageRangeDisplayed={5}
-                                            pageCount={totalPages}
-                                            previousLabel={t("< previous")}
-                                            renderOnZeroPageCount={null}
-                                            className="pagination flex-wrap mb-0"
-                                            pageClassName="page-item"
-                                            pageLinkClassName="page-link"
-                                            activeClassName="active"
-                                            previousClassName="page-item"
-                                            nextClassName="page-item"
-                                            previousLinkClassName="page-link"
-                                            nextLinkClassName="page-link"
-                                            forcePage={page - 1}
-                                        /> : ""}
-                                    </div>
-
-                                    {totalItems > 0 && (
-                                        <span className="text-muted small text-nowrap">
-                                            {t("Showing {{from}}-{{to}} of {{totalItems}}", { from: (offset + 1), to: (offset + currentPageItemsCount), totalItems: totalItems })}
-                                            &nbsp;|&nbsp;
-                                            {t("Page {{page}} of {{totalPages}}", { page: page, totalPages: totalPages })}
-                                        </span>
-                                    )}
-
                                     <button
                                         className="btn btn-sm btn-outline-secondary ms-auto"
                                         onClick={() => { setShowSettings(!showSettings); }}
                                     >
                                         <i className="bi bi-gear-fill" style={{ fontSize: "1.2rem" }} title={t("Table Settings")} />
                                     </button>
+
+                                    <div className="w-100 d-flex align-items-center flex-wrap gap-2">
+                                        <div style={{ flex: "1 1 auto", minWidth: 0, overflowX: "auto" }}>
+                                            {totalPages ? <ReactPaginate
+                                                breakLabel="..."
+                                                nextLabel={t("next >")}
+                                                onPageChange={(event) => { changePage(event.selected + 1); }}
+                                                pageRangeDisplayed={3}
+                                                marginPagesDisplayed={1}
+                                                pageCount={totalPages}
+                                                previousLabel={t("< prev")}
+                                                renderOnZeroPageCount={null}
+                                                className="pagination flex-wrap mb-0"
+                                                pageClassName="page-item"
+                                                pageLinkClassName="page-link"
+                                                activeClassName="active"
+                                                previousClassName="page-item"
+                                                nextClassName="page-item"
+                                                previousLinkClassName="page-link"
+                                                nextLinkClassName="page-link"
+                                                forcePage={page - 1}
+                                            /> : ""}
+                                        </div>
+
+                                        {totalItems > 0 && (
+                                            <span className="text-muted small">
+                                                {t("Showing {{from}}-{{to}} of {{totalItems}}", { from: (offset + 1), to: (offset + currentPageItemsCount), totalItems: totalItems })}
+                                                &nbsp;|&nbsp;
+                                                {t("Page {{page}} of {{totalPages}}", { page: page, totalPages: totalPages })}
+                                            </span>
+                                        )}
+                                    </div>
                                 </div>
 
                                 <div className="table-responsive" style={{ position: "relative", overflowX: "auto", overflowY: "auto", minHeight: "200px" }} ref={(el) => {

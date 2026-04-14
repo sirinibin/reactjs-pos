@@ -469,28 +469,31 @@ function AccountIndex(props) {
                                             </select>
                                         </>
                                     )}
-                                    {totalPages ? <ReactPaginate
-                                        breakLabel="..."
-                                        nextLabel="next >"
-                                        onPageChange={(event) => {
-                                            changePage(event.selected + 1);
-                                        }}
-                                        pageRangeDisplayed={5}
-                                        pageCount={totalPages}
-                                        previousLabel="< previous"
-                                        renderOnZeroPageCount={null}
-                                        className="pagination flex-wrap mb-0"
-                                        pageClassName="page-item"
-                                        pageLinkClassName="page-link"
-                                        activeClassName="active"
-                                        previousClassName="page-item"
-                                        nextClassName="page-item"
-                                        previousLinkClassName="page-link"
-                                        nextLinkClassName="page-link"
-                                        forcePage={page - 1}
-                                    /> : ""}
+                                    <div className="w-100" style={{ overflowX: "auto" }}>
+                                        {totalPages ? <ReactPaginate
+                                            breakLabel="..."
+                                            nextLabel="next >"
+                                            onPageChange={(event) => {
+                                                changePage(event.selected + 1);
+                                            }}
+                                            pageRangeDisplayed={3}
+                                            marginPagesDisplayed={1}
+                                            pageCount={totalPages}
+                                            previousLabel="< prev"
+                                            renderOnZeroPageCount={null}
+                                            className="pagination flex-wrap mb-0"
+                                            pageClassName="page-item"
+                                            pageLinkClassName="page-link"
+                                            activeClassName="active"
+                                            previousClassName="page-item"
+                                            nextClassName="page-item"
+                                            previousLinkClassName="page-link"
+                                            nextLinkClassName="page-link"
+                                            forcePage={page - 1}
+                                        /> : ""}
+                                    </div>
                                     {totalItems > 0 && (
-                                        <span className="text-nowrap ms-auto me-2">
+                                        <span className="text-muted small">
                                             showing {offset + 1}-{offset + currentPageItemsCount} of {totalItems} &nbsp;|&nbsp; page {page} of {totalPages}
                                         </span>
                                     )}

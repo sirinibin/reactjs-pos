@@ -1475,14 +1475,15 @@ function PurchaseIndex(props) {
                                         </>
                                     )}
 
-                                    <div style={{ flex: 1, minWidth: 0 }}>
+                                    <div className="w-100" style={{ overflowX: "auto" }}>
                                         {totalPages ? <ReactPaginate
                                             breakLabel="..."
                                             nextLabel={t('next >')}
                                             onPageChange={(event) => { changePage(event.selected + 1); }}
-                                            pageRangeDisplayed={5}
+                                            pageRangeDisplayed={3}
+                                            marginPagesDisplayed={1}
                                             pageCount={totalPages}
-                                            previousLabel={t('< previous')}
+                                            previousLabel={t('< prev')}
                                             renderOnZeroPageCount={null}
                                             className="pagination flex-wrap mb-0"
                                             pageClassName="page-item"
@@ -1497,7 +1498,7 @@ function PurchaseIndex(props) {
                                     </div>
 
                                     {totalItems > 0 && (
-                                        <span className="text-muted small text-nowrap">
+                                        <span className="text-muted small">
                                             {t("Showing {{from}}-{{to}} of {{totalItems}}", { from: (offset + 1), to: (offset + currentPageItemsCount), totalItems: totalItems })}
                                             &nbsp;|&nbsp;
                                             {t("Page {{page}} of {{totalPages}}", { page: page, totalPages: totalPages })}
