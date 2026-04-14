@@ -910,6 +910,10 @@ const SalesReturnCreate = forwardRef((props, ref) => {
 
 
     function handleCreate(event) {
+        if (isProcessing) {
+            return;
+        }
+
         let haveErrors = false;
         event.preventDefault();
         //console.log("Inside handle Create");
