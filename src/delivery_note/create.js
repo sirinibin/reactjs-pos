@@ -1633,6 +1633,47 @@ const DeliveryNoteCreate = forwardRef((props, ref) => {
 
   const [showSuccess, setShowSuccess] = useState(false);
   const [successMessage, setSuccessMessage] = useState(false);
+  const [showDNSPSettings, setShowDNSPSettings] = useState(false);
+  const defaultDNSPColumns = [
+    { key: 'delete', label: 'Delete', visible: true },
+    { key: 'si_no', label: 'SI No.', visible: true },
+    { key: 'select', label: 'Select (Product Selection)', visible: true },
+    { key: 'part_number', label: 'Part No.', visible: true },
+    { key: 'name', label: 'Name', visible: true },
+    { key: 'info', label: 'Info', visible: true },
+    { key: 'qty', label: 'Qty', visible: true },
+  ];
+  const [dnSPColumns, setDnSPColumns] = useState(() => {
+    try {
+      const saved = localStorage.getItem('dn_sp_table_settings');
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        const merged = defaultDNSPColumns.map(def => {
+          const found = parsed.find(p => p.key === def.key);
+          return found ? { ...def, visible: found.visible } : def;
+        });
+        return merged;
+      }
+    } catch (e) { }
+    return defaultDNSPColumns;
+  });
+  useEffect(() => {
+    localStorage.setItem('dn_sp_table_settings', JSON.stringify(dnSPColumns));
+  }, [dnSPColumns]);
+  const handleToggleDNSPColumn = (key) => {
+    setDnSPColumns(cols => cols.map(c => c.key === key ? { ...c, visible: !c.visible } : c));
+  };
+  const onDragEndDNSP = (result) => {
+    if (!result.destination) return;
+    const items = Array.from(dnSPColumns);
+    const [reordered] = items.splice(result.source.index, 1);
+    items.splice(result.destination.index, 0, reordered);
+    setDnSPColumns(items);
+  };
+  const restoreDefaultDNSPSettings = () => {
+    setDnSPColumns(defaultDNSPColumns);
+    localStorage.removeItem('dn_sp_table_settings');
+  };
 
 
   return (
@@ -2388,6 +2429,11 @@ const DeliveryNoteCreate = forwardRef((props, ref) => {
                 <i class="bi bi-list"></i>
               </Button>
             </div>
+            <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: "0" }}>
+              <Button variant="light" size="sm" title="Table Settings" onClick={() => setShowDNSPSettings(true)}>
+                <i className="bi bi-gear"></i>
+              </Button>
+            </div>
 
             <div className="table-responsive" style={{ overflowX: "auto", maxHeight: "400px", overflowY: "auto" }}>
               {enableProductSelection && <button
@@ -2401,300 +2447,73 @@ const DeliveryNoteCreate = forwardRef((props, ref) => {
               <table className="table table-striped table-sm table-bordered">
                 <tbody>
                   <tr className="text-center" style={{ borderBottom: "solid 2px" }}>
-                    <th></th>
-                    <th >SI No.</th>
-                    {enableProductSelection && <th>
-                      <input
-                        type="checkbox"
-                        checked={isAllSelected}
-                        onChange={handleSelectAll}
-                      /> <br />Select All
-                    </th>}
-
-                    <th style={{ width: "20%" }}>Part No.</th>
-                    <th style={{ width: "50%" }}>Name</th>
-                    <th >Info</th>
-                    <th style={{ width: "10%" }}>Qty</th>
+                    {dnSPColumns.filter(c => c.visible).map(col => {
+                      if (col.key === 'delete') return <th key="delete"></th>;
+                      if (col.key === 'si_no') return <th key="si_no">SI No.</th>;
+                      if (col.key === 'select') return enableProductSelection ? <th key="select"><input type="checkbox" checked={isAllSelected} onChange={handleSelectAll} /> <br />Select All</th> : null;
+                      if (col.key === 'part_number') return <th key="part_number" style={{ width: "20%" }}>Part No.</th>;
+                      if (col.key === 'name') return <th key="name" style={{ width: "50%" }}>Name</th>;
+                      if (col.key === 'info') return <th key="info">Info</th>;
+                      if (col.key === 'qty') return <th key="qty" style={{ width: "10%" }}>Qty</th>;
+                      return null;
+                    })}
                   </tr>
                   {selectedProducts.map((product, index) => (
                     <tr key={index} className="text-center">
-                      <td style={{ verticalAlign: 'middle', padding: '0.25rem' }} >
-                        <div
-                          style={{ color: "red", cursor: "pointer" }}
-                          onClick={() => {
-                            removeProduct(product);
-                          }}
-                        >
-                          <i className="bi bi-trash"> </i>
-                        </div>
-                      </td>
-                      <td style={{ verticalAlign: 'middle', padding: '0.25rem' }}>{index + 1}</td>
-                      {enableProductSelection && <td>
-                        <input
-                          type="checkbox"
-                          checked={selectedIds.includes(product.product_id)}
-                          onChange={() => handleSelect(product.product_id)}
-                        />
-                      </td>}
-                      {/*<td style={{ verticalAlign: 'middle', padding: '0.25rem', width: "auto", whiteSpace: "nowrap" }}>
+                      {dnSPColumns.filter(c => c.visible).map(col => {
+                        if (col.key === 'delete') return (<td key="delete" style={{ verticalAlign: 'middle', padding: '0.25rem' }} >
+                          <div
+                            style={{ color: "red", cursor: "pointer" }}
+                            onClick={() => {
+                              removeProduct(product);
+                            }}
+                          >
+                            <i className="bi bi-trash"> </i>
+                          </div>
+                        </td>);
+                        if (col.key === 'si_no') return (<td key="si_no" style={{ verticalAlign: 'middle', padding: '0.25rem' }}>{index + 1}</td>);
+                        if (col.key === 'select') return enableProductSelection ? (<td key="select">
+                          <input
+                            type="checkbox"
+                            checked={selectedIds.includes(product.product_id)}
+                            onChange={() => handleSelect(product.product_id)}
+                          />
+                        </td>) : null;
+                        // eslint-disable-next-line no-lone-blocks
+                        {/*<td style={{ verticalAlign: 'middle', padding: '0.25rem', width: "auto", whiteSpace: "nowrap" }}>
                         <OverflowTooltip maxWidth={120} value={product.prefix_part_number ? product.prefix_part_number + " - " + product.part_number : product.part_number} />
                       </td>*/}
-                      <ResizableTableCell style={{ verticalAlign: 'middle', padding: '0.25rem' }}
-                      >
-                        <input type="text" id={`${"delivery_note_product_part_number" + index}`}
-                          name={`${"delivery_note_product_part_number" + index}`}
-                          onWheel={(e) => e.target.blur()}
-
-                          value={selectedProducts[index].part_number}
-                          className={`form-control text-start ${errors["part_number_" + index] ? 'is-invalid' : ''} ${warnings["part_number_" + index] ? 'border-warning text-warning' : ''}`}
-                          onKeyDown={(e) => {
-                            RunKeyActions(e, product);
-                          }}
-                          placeholder="Part No." onChange={(e) => {
-                            delete errors["part_number_" + index];
-                            setErrors({ ...errors });
-
-                            if (!e.target.value) {
-                              selectedProducts[index].part_number = "";
-                              setSelectedProducts([...selectedProducts]);
-                              return;
-                            }
-                            selectedProducts[index].part_number = e.target.value;
-                            setSelectedProducts([...selectedProducts]);
-                          }} />
-                        {(errors[`part_number_${index}`] || warnings[`part_number_${index}`]) && (
-                          <i
-                            className={`bi bi-exclamation-circle-fill ${errors[`part_number_${index}`] ? 'text-danger' : 'text-warning'} ms-2`}
-                            data-bs-toggle="tooltip"
-                            data-bs-placement="top"
-                            data-error={errors[`part_number_${index}`] || ''}
-                            data-warning={warnings[`part_number_${index}`] || ''}
-                            title={errors[`part_number_${index}`] || warnings[`part_number_${index}`] || ''}
-                            style={{
-                              fontSize: '1rem',
-                              cursor: 'pointer',
-                              whiteSpace: 'nowrap',
-                            }}
-                          ></i>
-                        )}
-                      </ResizableTableCell>
-                      <ResizableTableCell style={{ verticalAlign: 'middle', padding: '0.25rem' }}
-                      >
-                        <div className="input-group">
-                          <input type="text"
-                            id={`${"delivery_note_product_name" + index}`}
-                            name={`${"delivery_note_product_name" + index}`}
+                        if (col.key === 'part_number') return (<ResizableTableCell key="part_number" style={{ verticalAlign: 'middle', padding: '0.25rem' }}
+                        >
+                          <input type="text" id={`${"delivery_note_product_part_number" + index}`}
+                            name={`${"delivery_note_product_part_number" + index}`}
                             onWheel={(e) => e.target.blur()}
-                            value={product.name}
-                            className={`form-control text-start ${errors["name_" + index] ? 'is-invalid' : ''} ${warnings["name_" + index] ? 'border-warning text-warning' : ''}`}
+
+                            value={selectedProducts[index].part_number}
+                            className={`form-control text-start ${errors["part_number_" + index] ? 'is-invalid' : ''} ${warnings["part_number_" + index] ? 'border-warning text-warning' : ''}`}
                             onKeyDown={(e) => {
                               RunKeyActions(e, product);
                             }}
-                            placeholder="Name" onChange={(e) => {
-                              delete errors["name_" + index];
+                            placeholder="Part No." onChange={(e) => {
+                              delete errors["part_number_" + index];
                               setErrors({ ...errors });
 
                               if (!e.target.value) {
-                                //errors["purchase_unit_price_" + index] = "Invalid purchase unit price";
-                                selectedProducts[index].name = "";
+                                selectedProducts[index].part_number = "";
                                 setSelectedProducts([...selectedProducts]);
-                                //setErrors({ ...errors });
-                                console.log("errors:", errors);
                                 return;
                               }
-
-
-                              selectedProducts[index].name = e.target.value;
+                              selectedProducts[index].part_number = e.target.value;
                               setSelectedProducts([...selectedProducts]);
                             }} />
-
-
-                          <div
-                            style={{ color: "blue", cursor: "pointer", marginLeft: "10px" }}
-                            onClick={() => {
-                              openUpdateProductForm(product.product_id);
-                            }}
-                          >
-                            <i className="bi bi-pencil"> </i>
-                          </div>
-
-                          <div
-                            style={{ color: "blue", cursor: "pointer", marginLeft: "10px" }}
-                            onClick={() => {
-                              openProductDetails(product.product_id);
-                            }}
-                          >
-                            <i className="bi bi-eye"> </i>
-                          </div>
-                        </div>
-                        {(errors[`name_${index}`] || warnings[`name_${index}`]) && (
-                          <i
-                            className={`bi bi-exclamation-circle-fill ${errors[`name_${index}`] ? 'text-danger' : 'text-warning'} ms-2`}
-                            data-bs-toggle="tooltip"
-                            data-bs-placement="top"
-                            data-error={errors[`name_${index}`] || ''}
-                            data-warning={warnings[`name_${index}`] || ''}
-                            title={errors[`name_${index}`] || warnings[`name_${index}`] || ''}
-                            style={{
-                              fontSize: '1rem',
-                              cursor: 'pointer',
-                              whiteSpace: 'nowrap',
-                            }}
-                          ></i>
-                        )}
-                      </ResizableTableCell>
-                      <td style={{ verticalAlign: 'middle', padding: '0.25rem' }}>
-                        <div style={{ zIndex: "9999 !important", position: "absolute !important" }}>
-                          <Dropdown drop="top">
-                            <Dropdown.Toggle variant="secondary" id="dropdown-secondary" style={{}}>
-                              <i className="bi bi-info"></i>
-                            </Dropdown.Toggle>
-
-                            <Dropdown.Menu style={{ zIndex: 9999, position: "absolute" }} popperConfig={{ modifiers: [{ name: 'preventOverflow', options: { boundary: 'viewport' } }] }}>
-                              <Dropdown.Item onClick={() => openLinkedProducts(product)}>
-                                <i className="bi bi-link"></i>&nbsp;
-                                Linked Products ({getShortcut('linkedProducts')})
-                              </Dropdown.Item>
-
-                              <Dropdown.Item onClick={() => openProductHistory(product)}>
-                                <i className="bi bi-clock-history"></i>&nbsp;
-                                History ({getShortcut('productHistory')})
-                              </Dropdown.Item>
-
-                              <Dropdown.Item onClick={() => openSalesHistory(product)}>
-                                <i className="bi bi-clock-history"></i>&nbsp;
-                                Sales History ({getShortcut('salesHistory')})
-                              </Dropdown.Item>
-
-                              <Dropdown.Item onClick={() => openSalesReturnHistory(product)}>
-                                <i className="bi bi-clock-history"></i>&nbsp;
-                                Sales Return History ({getShortcut('salesReturnHistory')})
-                              </Dropdown.Item>
-
-                              <Dropdown.Item onClick={() => openPurchaseHistory(product)}>
-                                <i className="bi bi-clock-history"></i>&nbsp;
-                                Purchase History ({getShortcut('purchaseHistory')})
-                              </Dropdown.Item>
-
-                              <Dropdown.Item onClick={() => openPurchaseReturnHistory(product)}>
-                                <i className="bi bi-clock-history"></i>&nbsp;
-                                Purchase Return History ({getShortcut('purchaseReturnHistory')})
-                              </Dropdown.Item>
-
-                              <Dropdown.Item onClick={() => openDeliveryNoteHistory(product)}>
-                                <i className="bi bi-clock-history"></i>&nbsp;
-                                Delivery Note History ({getShortcut('deliveryNoteHistory')})
-                              </Dropdown.Item>
-
-                              <Dropdown.Item onClick={() => openQuotationHistory(product, "quotation")}>
-                                <i className="bi bi-clock-history"></i>&nbsp;
-                                Quotation History ({getShortcut('quotationHistory')})
-                              </Dropdown.Item>
-
-                              <Dropdown.Item onClick={() => openQuotationSalesHistory(product)}>
-                                <i className="bi bi-clock-history"></i>&nbsp;
-                                Qtn. Sales History ({getShortcut('quotationSalesHistory')})
-                              </Dropdown.Item>
-
-                              <Dropdown.Item onClick={() => openQuotationSalesReturnHistory(product)}>
-                                <i className="bi bi-clock-history"></i>&nbsp;
-                                Qtn. Sales Return History ({getShortcut('quotationSalesReturnHistory')})
-                              </Dropdown.Item>
-
-                              <Dropdown.Item onClick={() => openProductImages(product.product_id)}>
-                                <i className="bi bi-clock-history"></i>&nbsp;
-                                Images ({getShortcut('images')})
-                              </Dropdown.Item>
-                            </Dropdown.Menu>
-                          </Dropdown>
-                        </div>
-                      </td>
-                      <td style={{
-                        verticalAlign: 'middle',
-                        padding: '0.25rem',
-                        whiteSpace: 'nowrap',
-                        width: 'auto',
-                        position: 'relative',
-                      }} >
-                        <div className="d-flex align-items-center" style={{ minWidth: 0 }}>
-                          <div className="input-group flex-nowrap" style={{ flex: '1 1 auto', minWidth: 0 }}>
-                            <input type="number"
-                              style={{ minWidth: "40px", maxWidth: "120px" }}
-                              id={`${"delivery_note_quantity_" + index}`}
-                              name={`${"delivery_note_quantity_" + index}`}
-                              value={product.quantity}
-                              className="form-control"
-
-                              placeholder="Quantity"
-
-                              ref={(el) => {
-                                if (!inputRefs.current[index]) inputRefs.current[index] = {};
-                                inputRefs.current[index][`${"delivery_note_quantity_" + index}`] = el;
-                              }}
-                              onFocus={() => handleFocus(index, `${"delivery_note_quantity_" + index}`)}
-                              onKeyDown={(e) => {
-                                RunKeyActions(e, product);
-
-                                if (e.key === "Enter") {
-                                  moveToProductSearch();
-                                }
-                              }}
-
-                              onChange={(e) => {
-                                if (timerRef.current) clearTimeout(timerRef.current);
-
-                                delete errors["quantity_" + index];
-                                setErrors({ ...errors });
-
-
-                                if (parseFloat(e.target.value) === 0) {
-                                  selectedProducts[index].quantity = e.target.value;
-                                  setSelectedProducts([...selectedProducts]);
-
-                                  timerRef.current = setTimeout(() => {
-                                    checkErrors(index);
-                                    checkWarnings(index);
-                                    reCalculate(index);
-                                  }, 100);
-                                  return;
-                                }
-
-                                if (!e.target.value) {
-                                  selectedProducts[index].quantity = e.target.value;
-                                  setSelectedProducts([...selectedProducts]);
-                                  timerRef.current = setTimeout(() => {
-                                    checkErrors(index);
-                                    checkWarnings(index);
-                                    reCalculate(index);
-                                  }, 100);
-                                  return;
-                                }
-
-
-                                product.quantity = parseFloat(e.target.value);
-
-
-                                selectedProducts[index].quantity = parseFloat(e.target.value);
-
-                                setSelectedProducts([...selectedProducts]);
-
-                                timerRef.current = setTimeout(() => {
-                                  checkErrors(index);
-                                  checkWarnings(index);
-                                  reCalculate(index);
-                                }, 100);
-
-                              }} />
-                            <span className="input-group-text" id="basic-addon2"> {selectedProducts[index].unit ? selectedProducts[index].unit[0] : "P"}</span>
-                          </div>
-                          {(errors[`quantity_${index}`] || warnings[`quantity_${index}`]) && (
+                          {(errors[`part_number_${index}`] || warnings[`part_number_${index}`]) && (
                             <i
-                              className={`bi bi-exclamation-circle-fill ${errors[`quantity_${index}`] ? 'text-danger' : 'text-warning'} ms-2`}
+                              className={`bi bi-exclamation-circle-fill ${errors[`part_number_${index}`] ? 'text-danger' : 'text-warning'} ms-2`}
                               data-bs-toggle="tooltip"
                               data-bs-placement="top"
-                              data-error={errors[`quantity_${index}`] || ''}
-                              data-warning={warnings[`quantity_${index}`] || ''}
-                              title={errors[`quantity_${index}`] || warnings[`quantity_${index}`] || ''}
+                              data-error={errors[`part_number_${index}`] || ''}
+                              data-warning={warnings[`part_number_${index}`] || ''}
+                              title={errors[`part_number_${index}`] || warnings[`part_number_${index}`] || ''}
                               style={{
                                 fontSize: '1rem',
                                 cursor: 'pointer',
@@ -2702,8 +2521,235 @@ const DeliveryNoteCreate = forwardRef((props, ref) => {
                               }}
                             ></i>
                           )}
-                        </div>
-                      </td>
+                        </ResizableTableCell>);
+                        if (col.key === 'name') return (<ResizableTableCell key="name" style={{ verticalAlign: 'middle', padding: '0.25rem' }}
+                        >
+                          <div className="input-group">
+                            <input type="text"
+                              id={`${"delivery_note_product_name" + index}`}
+                              name={`${"delivery_note_product_name" + index}`}
+                              onWheel={(e) => e.target.blur()}
+                              value={product.name}
+                              className={`form-control text-start ${errors["name_" + index] ? 'is-invalid' : ''} ${warnings["name_" + index] ? 'border-warning text-warning' : ''}`}
+                              onKeyDown={(e) => {
+                                RunKeyActions(e, product);
+                              }}
+                              placeholder="Name" onChange={(e) => {
+                                delete errors["name_" + index];
+                                setErrors({ ...errors });
+
+                                if (!e.target.value) {
+                                  //errors["purchase_unit_price_" + index] = "Invalid purchase unit price";
+                                  selectedProducts[index].name = "";
+                                  setSelectedProducts([...selectedProducts]);
+                                  //setErrors({ ...errors });
+                                  console.log("errors:", errors);
+                                  return;
+                                }
+
+
+                                selectedProducts[index].name = e.target.value;
+                                setSelectedProducts([...selectedProducts]);
+                              }} />
+
+
+                            <div
+                              style={{ color: "blue", cursor: "pointer", marginLeft: "10px" }}
+                              onClick={() => {
+                                openUpdateProductForm(product.product_id);
+                              }}
+                            >
+                              <i className="bi bi-pencil"> </i>
+                            </div>
+
+                            <div
+                              style={{ color: "blue", cursor: "pointer", marginLeft: "10px" }}
+                              onClick={() => {
+                                openProductDetails(product.product_id);
+                              }}
+                            >
+                              <i className="bi bi-eye"> </i>
+                            </div>
+                          </div>
+                          {(errors[`name_${index}`] || warnings[`name_${index}`]) && (
+                            <i
+                              className={`bi bi-exclamation-circle-fill ${errors[`name_${index}`] ? 'text-danger' : 'text-warning'} ms-2`}
+                              data-bs-toggle="tooltip"
+                              data-bs-placement="top"
+                              data-error={errors[`name_${index}`] || ''}
+                              data-warning={warnings[`name_${index}`] || ''}
+                              title={errors[`name_${index}`] || warnings[`name_${index}`] || ''}
+                              style={{
+                                fontSize: '1rem',
+                                cursor: 'pointer',
+                                whiteSpace: 'nowrap',
+                              }}
+                            ></i>
+                          )}
+                        </ResizableTableCell>);
+                        if (col.key === 'info') return (<td key="info" style={{ verticalAlign: 'middle', padding: '0.25rem' }}>
+                          <div style={{ zIndex: "9999 !important", position: "absolute !important" }}>
+                            <Dropdown drop="top">
+                              <Dropdown.Toggle variant="secondary" id="dropdown-secondary" style={{}}>
+                                <i className="bi bi-info"></i>
+                              </Dropdown.Toggle>
+
+                              <Dropdown.Menu style={{ zIndex: 9999, position: "absolute" }} popperConfig={{ modifiers: [{ name: 'preventOverflow', options: { boundary: 'viewport' } }] }}>
+                                <Dropdown.Item onClick={() => openLinkedProducts(product)}>
+                                  <i className="bi bi-link"></i>&nbsp;
+                                  Linked Products ({getShortcut('linkedProducts')})
+                                </Dropdown.Item>
+
+                                <Dropdown.Item onClick={() => openProductHistory(product)}>
+                                  <i className="bi bi-clock-history"></i>&nbsp;
+                                  History ({getShortcut('productHistory')})
+                                </Dropdown.Item>
+
+                                <Dropdown.Item onClick={() => openSalesHistory(product)}>
+                                  <i className="bi bi-clock-history"></i>&nbsp;
+                                  Sales History ({getShortcut('salesHistory')})
+                                </Dropdown.Item>
+
+                                <Dropdown.Item onClick={() => openSalesReturnHistory(product)}>
+                                  <i className="bi bi-clock-history"></i>&nbsp;
+                                  Sales Return History ({getShortcut('salesReturnHistory')})
+                                </Dropdown.Item>
+
+                                <Dropdown.Item onClick={() => openPurchaseHistory(product)}>
+                                  <i className="bi bi-clock-history"></i>&nbsp;
+                                  Purchase History ({getShortcut('purchaseHistory')})
+                                </Dropdown.Item>
+
+                                <Dropdown.Item onClick={() => openPurchaseReturnHistory(product)}>
+                                  <i className="bi bi-clock-history"></i>&nbsp;
+                                  Purchase Return History ({getShortcut('purchaseReturnHistory')})
+                                </Dropdown.Item>
+
+                                <Dropdown.Item onClick={() => openDeliveryNoteHistory(product)}>
+                                  <i className="bi bi-clock-history"></i>&nbsp;
+                                  Delivery Note History ({getShortcut('deliveryNoteHistory')})
+                                </Dropdown.Item>
+
+                                <Dropdown.Item onClick={() => openQuotationHistory(product, "quotation")}>
+                                  <i className="bi bi-clock-history"></i>&nbsp;
+                                  Quotation History ({getShortcut('quotationHistory')})
+                                </Dropdown.Item>
+
+                                <Dropdown.Item onClick={() => openQuotationSalesHistory(product)}>
+                                  <i className="bi bi-clock-history"></i>&nbsp;
+                                  Qtn. Sales History ({getShortcut('quotationSalesHistory')})
+                                </Dropdown.Item>
+
+                                <Dropdown.Item onClick={() => openQuotationSalesReturnHistory(product)}>
+                                  <i className="bi bi-clock-history"></i>&nbsp;
+                                  Qtn. Sales Return History ({getShortcut('quotationSalesReturnHistory')})
+                                </Dropdown.Item>
+
+                                <Dropdown.Item onClick={() => openProductImages(product.product_id)}>
+                                  <i className="bi bi-clock-history"></i>&nbsp;
+                                  Images ({getShortcut('images')})
+                                </Dropdown.Item>
+                              </Dropdown.Menu>
+                            </Dropdown>
+                          </div>
+                        </td>);
+                        if (col.key === 'qty') return (<td key="qty" style={{
+                          verticalAlign: 'middle',
+                          padding: '0.25rem',
+                          whiteSpace: 'nowrap',
+                          width: 'auto',
+                          position: 'relative',
+                        }} >
+                          <div className="d-flex align-items-center" style={{ minWidth: 0 }}>
+                            <div className="input-group flex-nowrap" style={{ flex: '1 1 auto', minWidth: 0 }}>
+                              <input type="number"
+                                style={{ minWidth: "40px", maxWidth: "120px" }}
+                                id={`${"delivery_note_quantity_" + index}`}
+                                name={`${"delivery_note_quantity_" + index}`}
+                                value={product.quantity}
+                                className="form-control"
+
+                                placeholder="Quantity"
+
+                                ref={(el) => {
+                                  if (!inputRefs.current[index]) inputRefs.current[index] = {};
+                                  inputRefs.current[index][`${"delivery_note_quantity_" + index}`] = el;
+                                }}
+                                onFocus={() => handleFocus(index, `${"delivery_note_quantity_" + index}`)}
+                                onKeyDown={(e) => {
+                                  RunKeyActions(e, product);
+
+                                  if (e.key === "Enter") {
+                                    moveToProductSearch();
+                                  }
+                                }}
+
+                                onChange={(e) => {
+                                  if (timerRef.current) clearTimeout(timerRef.current);
+
+                                  delete errors["quantity_" + index];
+                                  setErrors({ ...errors });
+
+
+                                  if (parseFloat(e.target.value) === 0) {
+                                    selectedProducts[index].quantity = e.target.value;
+                                    setSelectedProducts([...selectedProducts]);
+
+                                    timerRef.current = setTimeout(() => {
+                                      checkErrors(index);
+                                      checkWarnings(index);
+                                      reCalculate(index);
+                                    }, 100);
+                                    return;
+                                  }
+
+                                  if (!e.target.value) {
+                                    selectedProducts[index].quantity = e.target.value;
+                                    setSelectedProducts([...selectedProducts]);
+                                    timerRef.current = setTimeout(() => {
+                                      checkErrors(index);
+                                      checkWarnings(index);
+                                      reCalculate(index);
+                                    }, 100);
+                                    return;
+                                  }
+
+
+                                  product.quantity = parseFloat(e.target.value);
+
+
+                                  selectedProducts[index].quantity = parseFloat(e.target.value);
+
+                                  setSelectedProducts([...selectedProducts]);
+
+                                  timerRef.current = setTimeout(() => {
+                                    checkErrors(index);
+                                    checkWarnings(index);
+                                    reCalculate(index);
+                                  }, 100);
+
+                                }} />
+                              <span className="input-group-text" id="basic-addon2"> {selectedProducts[index].unit ? selectedProducts[index].unit[0] : "P"}</span>
+                            </div>
+                            {(errors[`quantity_${index}`] || warnings[`quantity_${index}`]) && (
+                              <i
+                                className={`bi bi-exclamation-circle-fill ${errors[`quantity_${index}`] ? 'text-danger' : 'text-warning'} ms-2`}
+                                data-bs-toggle="tooltip"
+                                data-bs-placement="top"
+                                data-error={errors[`quantity_${index}`] || ''}
+                                data-warning={warnings[`quantity_${index}`] || ''}
+                                title={errors[`quantity_${index}`] || warnings[`quantity_${index}`] || ''}
+                                style={{
+                                  fontSize: '1rem',
+                                  cursor: 'pointer',
+                                  whiteSpace: 'nowrap',
+                                }}
+                              ></i>
+                            )}
+                          </div>
+                        </td>);
+                        return null;
+                      })}
                     </tr>
                   )).reverse()}
                 </tbody>
@@ -2732,6 +2778,42 @@ const DeliveryNoteCreate = forwardRef((props, ref) => {
 
       </Modal>
 
+
+      {/* DN SP Table Settings Modal */}
+      <Modal show={showDNSPSettings} onHide={() => setShowDNSPSettings(false)} size="md">
+        <Modal.Header closeButton>
+          <Modal.Title>Table Settings</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          <DragDropContext onDragEnd={onDragEndDNSP}>
+            <Droppable droppableId="dn-sp-columns">
+              {(provided) => (
+                <ul className="list-group" {...provided.droppableProps} ref={provided.innerRef}>
+                  {dnSPColumns.map((col, idx) => (
+                    <Draggable key={col.key} draggableId={col.key} index={idx}>
+                      {(provided) => (
+                        <li className="list-group-item d-flex align-items-center gap-2"
+                          ref={provided.innerRef}
+                          {...provided.draggableProps}
+                          {...provided.dragHandleProps}>
+                          <input type="checkbox" checked={col.visible}
+                            onChange={() => handleToggleDNSPColumn(col.key)} />
+                          {col.label}
+                        </li>
+                      )}
+                    </Draggable>
+                  ))}
+                  {provided.placeholder}
+                </ul>
+              )}
+            </Droppable>
+          </DragDropContext>
+        </Modal.Body>
+        <Modal.Footer>
+          <Button variant="secondary" onClick={restoreDefaultDNSPSettings}>Restore Defaults</Button>
+          <Button variant="primary" onClick={() => setShowDNSPSettings(false)}>Close</Button>
+        </Modal.Footer>
+      </Modal>
 
     </>
   );
