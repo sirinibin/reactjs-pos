@@ -1443,7 +1443,7 @@ const SalesReturnIndex = forwardRef((props, ref) => {
     //Table settings
 
     const defaultColumns = useMemo(() => [
-        { key: "deleted", label: t("Deleted"), fieldName: "deleted", visible: true },
+        { key: "deleted", label: t("Deleted"), fieldName: "deleted", visible: localStorage.getItem('user_role') === "Admin" },
         { key: "actions", label: t("Actions"), fieldName: "actions", visible: true },
         { key: "select", label: t("Select"), fieldName: "select", visible: true },
         { key: "id", label: t("Return ID"), fieldName: "code", visible: true },
@@ -1481,7 +1481,12 @@ const SalesReturnIndex = forwardRef((props, ref) => {
             saved = localStorage.getItem("sales_return_table_settings");
         }
 
-        if (saved) setColumns(JSON.parse(saved));
+        if (saved) {
+            const parsed = JSON.parse(saved).map(col =>
+                col.key === 'deleted' ? { ...col, visible: localStorage.getItem('user_role') === 'Admin' ? col.visible : false } : col
+            );
+            setColumns(parsed);
+        }
 
         let missingOrUpdated = false;
         for (let i = 0; i < defaultColumns.length; i++) {
@@ -1645,7 +1650,7 @@ const SalesReturnIndex = forwardRef((props, ref) => {
                                             {columns.map((col, index) => {
                                                 return (
                                                     <>
-                                                        {((col.key === "select" && enableSelection) || col.key !== "select") && <Draggable
+                                                        {((col.key === "select" && enableSelection) || col.key !== "select") && (col.key !== "deleted" || localStorage.getItem('user_role') === "Admin") && <Draggable
                                                             key={col.key}
                                                             draggableId={col.key}
                                                             index={index}
@@ -1999,7 +2004,7 @@ const SalesReturnIndex = forwardRef((props, ref) => {
                                                                 ) : null}
                                                             </b>
                                                         </th>}
-                                                        {col.key !== "actions" && col.key !== "select" && col.key !== "zatca.reporting_passed" && <th>
+                                                        {col.key !== "actions" && col.key !== "select" && col.key !== "zatca.reporting_passed" && (col.key !== "deleted" || localStorage.getItem('user_role') === "Admin") && <th>
                                                             <b
                                                                 style={{
                                                                     textDecoration: "underline",
@@ -2029,7 +2034,7 @@ const SalesReturnIndex = forwardRef((props, ref) => {
                                                     return (<>
                                                         {(col.key === "actions" || col.key === "actions_end") && <th></th>}
                                                         {col.key === "select" && enableSelection && <th></th>}
-                                                        {col.key === "deleted" && <th>
+                                                        {col.key === "deleted" && localStorage.getItem('user_role') === "Admin" && <th>
                                                             <select
                                                                 onChange={(e) => {
                                                                     searchByFieldValue("deleted", e.target.value);
@@ -2360,14 +2365,14 @@ const SalesReturnIndex = forwardRef((props, ref) => {
                                                     <tr key={index}>
                                                         {columns.filter(c => c.visible).map((col) => {
                                                             return (<>
-                                                                {(col.key === "deleted") && <td>{salesReturn.deleted ? "YES" : "NO"}</td>}
+                                                                {(col.key === "deleted") && localStorage.getItem('user_role') === "Admin" && <td>{salesReturn.deleted ? "YES" : "NO"}</td>}
                                                                 {(col.key === "actions" || col.key === "actions_end") && <td style={{ width: "auto", whiteSpace: "nowrap" }}>
-                                                                    {!salesReturn.deleted && <><Button className="btn btn-danger btn-sm" onClick={() => {
+                                                                    {localStorage.getItem('user_role') === "Admin" && !salesReturn.deleted && <><Button className="btn btn-danger btn-sm" onClick={() => {
                                                                         confirmDelete(salesReturn.id);
                                                                     }}>
                                                                         <i className="bi bi-trash"></i>
                                                                     </Button>&nbsp;</>}
-                                                                    {salesReturn.deleted && <><Button className="btn btn-success btn-sm" onClick={() => {
+                                                                    {localStorage.getItem('user_role') === "Admin" && salesReturn.deleted && <><Button className="btn btn-success btn-sm" onClick={() => {
                                                                         confirmRestore(salesReturn.id);
                                                                     }}>
                                                                         <i className="bi bi-arrow-counterclockwise"></i>
