@@ -30,6 +30,7 @@ import CustomerCreate from "./../customer/create.js";
 import OrderCreate from "./../order/create.js";
 import { useTranslation } from 'react-i18next';
 import { getDateLocale } from "../i18n/dateLocales";
+import { confirm } from 'react-bootstrap-confirmation';
 
 const ExcelFile = ReactExport.ExcelFile;
 const ExcelSheet = ReactExport.ExcelFile.ExcelSheet;
@@ -168,6 +169,7 @@ const SalesReturnIndex = forwardRef((props, ref) => {
     const [successMessage, setSuccessMessage] = useState(false);
 
     let [reportingInProgress, setReportingInProgress] = useState(false);
+    let [deleted, setDeleted] = useState(false);
 
     let [errors, setErrors] = useState({});
     function ReportInvoiceToZatca(id, index) {
@@ -657,7 +659,7 @@ const SalesReturnIndex = forwardRef((props, ref) => {
             },
         };
         let Select =
-            "select=id,code,date,total,net_total,discount_percent,discount,products,customer_name,created_at,vat_price,loss,net_profit";
+            "select=id,code,date,total,net_total,discount_percent,discount,products,customer_name,created_at,vat_price,loss,net_profit,deleted";
 
         if (localStorage.getItem("store_id")) {
             searchParams.store_id = localStorage.getItem("store_id");
@@ -971,7 +973,7 @@ const SalesReturnIndex = forwardRef((props, ref) => {
             },
         };
         let Select =
-            "select=commission,commission_payment_method,zatca.compliance_check_last_failed_at,zatca.reporting_passed,zatca.compliance_passed,zatca.reporting_passed_at,zatca.compliane_check_passed_at,zatca.reporting_last_failed_at,zatca.reporting_failed_count,zatca.compliance_check_failed_count,id,code,date,net_total,created_by_name,customer_id,customer_name,customer_name_arabic,status,created_at,net_profit,net_loss,cash_discount,discount,order_code,order_id,total_payment_paid,payments_count,payment_methods,payment_status,balance_amount,store_id";
+            "select=commission,deleted,commission_payment_method,zatca.compliance_check_last_failed_at,zatca.reporting_passed,zatca.compliance_passed,zatca.reporting_passed_at,zatca.compliane_check_passed_at,zatca.reporting_last_failed_at,zatca.reporting_failed_count,zatca.compliance_check_failed_count,id,code,date,net_total,created_by_name,customer_id,customer_name,customer_name_arabic,status,created_at,net_profit,net_loss,cash_discount,discount,order_code,order_id,total_payment_paid,payments_count,payment_methods,payment_status,balance_amount,store_id";
         if (localStorage.getItem("store_id")) {
             searchParams.store_id = localStorage.getItem("store_id");
         }
@@ -1254,6 +1256,70 @@ const SalesReturnIndex = forwardRef((props, ref) => {
 
     let [showSalesReturnCreateForm, setShowSalesReturnCreateForm] = useState(false);
     const CreateFormRef = useRef();
+    function restoreSalesReturn(id) {
+        const requestOptions = {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                Authorization: localStorage.getItem("access_token"),
+            },
+        };
+        let searchParams = {};
+        if (localStorage.getItem("store_id")) {
+            searchParams.store_id = localStorage.getItem("store_id");
+        }
+        let queryParams = ObjectToSearchQueryParams(searchParams);
+        fetch("/v1/sales-return/restore/" + id + "?" + queryParams, requestOptions)
+            .then(async (response) => {
+                const isJson = response.headers.get("content-type")?.includes("application/json");
+                const data = isJson && (await response.json());
+                if (!response.ok) {
+                    const error = data && data.errors;
+                    return Promise.reject(error);
+                }
+                if (props.showToastMessage) props.showToastMessage(t("Sales return restored successfully!"), "success");
+                list();
+            })
+            .catch((error) => { console.log(error); });
+    }
+
+    function deleteSalesReturn(id) {
+        const requestOptions = {
+            method: "DELETE",
+            headers: {
+                "Content-Type": "application/json",
+                Authorization: localStorage.getItem("access_token"),
+            },
+        };
+        let searchParams = {};
+        if (localStorage.getItem("store_id")) {
+            searchParams.store_id = localStorage.getItem("store_id");
+        }
+        let queryParams = ObjectToSearchQueryParams(searchParams);
+        fetch("/v1/sales-return/" + id + "?" + queryParams, requestOptions)
+            .then(async (response) => {
+                const isJson = response.headers.get("content-type")?.includes("application/json");
+                const data = isJson && (await response.json());
+                if (!response.ok) {
+                    const error = data && data.errors;
+                    return Promise.reject(error);
+                }
+                if (props.showToastMessage) props.showToastMessage(t("Sales return deleted successfully!"), "success");
+                list();
+            })
+            .catch((error) => { console.log(error); });
+    }
+
+    const confirmDelete = async (id) => {
+        const result = await confirm(t('Are you sure, you want to delete this sales return?'));
+        if (result) { deleteSalesReturn(id); }
+    };
+
+    const confirmRestore = async (id) => {
+        const result = await confirm(t('Are you sure, you want to restore this sales return?'));
+        if (result) { restoreSalesReturn(id); }
+    };
+
     function openUpdateForm(id, orderID) {
         setShowSalesReturnCreateForm(true);
         if (timerRef.current) clearTimeout(timerRef.current);
@@ -1377,6 +1443,7 @@ const SalesReturnIndex = forwardRef((props, ref) => {
     //Table settings
 
     const defaultColumns = useMemo(() => [
+        { key: "deleted", label: t("Deleted"), fieldName: "deleted", visible: true },
         { key: "actions", label: t("Actions"), fieldName: "actions", visible: true },
         { key: "select", label: t("Select"), fieldName: "select", visible: true },
         { key: "id", label: t("Return ID"), fieldName: "code", visible: true },
@@ -1962,8 +2029,26 @@ const SalesReturnIndex = forwardRef((props, ref) => {
                                                     return (<>
                                                         {(col.key === "actions" || col.key === "actions_end") && <th></th>}
                                                         {col.key === "select" && enableSelection && <th></th>}
+                                                        {col.key === "deleted" && <th>
+                                                            <select
+                                                                onChange={(e) => {
+                                                                    searchByFieldValue("deleted", e.target.value);
+                                                                    if (e.target.value === "1") {
+                                                                        deleted = true;
+                                                                        setDeleted(deleted);
+                                                                    } else {
+                                                                        deleted = false;
+                                                                        setDeleted(deleted);
+                                                                    }
+                                                                }}
+                                                            >
+                                                                <option value="0">NO</option>
+                                                                <option value="1">YES</option>
+                                                            </select>
+                                                        </th>}
                                                         {col.key !== "actions" &&
                                                             col.key !== "select" &&
+                                                            col.key !== "deleted" &&
                                                             col.key !== "date" &&
                                                             col.key !== "zatca.reporting_passed" &&
                                                             col.key !== "payment_status" &&
@@ -2275,7 +2360,18 @@ const SalesReturnIndex = forwardRef((props, ref) => {
                                                     <tr key={index}>
                                                         {columns.filter(c => c.visible).map((col) => {
                                                             return (<>
+                                                                {(col.key === "deleted") && <td>{salesReturn.deleted ? "YES" : "NO"}</td>}
                                                                 {(col.key === "actions" || col.key === "actions_end") && <td style={{ width: "auto", whiteSpace: "nowrap" }}>
+                                                                    {!salesReturn.deleted && <><Button className="btn btn-danger btn-sm" onClick={() => {
+                                                                        confirmDelete(salesReturn.id);
+                                                                    }}>
+                                                                        <i className="bi bi-trash"></i>
+                                                                    </Button>&nbsp;</>}
+                                                                    {salesReturn.deleted && <><Button className="btn btn-success btn-sm" onClick={() => {
+                                                                        confirmRestore(salesReturn.id);
+                                                                    }}>
+                                                                        <i className="bi bi-arrow-counterclockwise"></i>
+                                                                    </Button>&nbsp;</>}
                                                                     <Button className="btn btn-light btn-sm" onClick={() => {
                                                                         openUpdateForm(salesReturn.id);
                                                                     }}>
