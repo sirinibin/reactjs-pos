@@ -1302,8 +1302,6 @@ const ReportPreview = forwardRef((props, ref) => {
 
                 </div>
             </Modal.Body>
-            <Modal.Footer>
-            </Modal.Footer>
         </Modal >
     </>);
 

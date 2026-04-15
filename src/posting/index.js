@@ -1609,7 +1609,7 @@ const PostingIndex = forwardRef((props, ref) => {
                                                                                     </span>
                                                                                 </div>
                                                                             )}
-                                                                            <span className="text-muted small">
+                                                                            <span className="">
                                                                                 {post.debit ? <Amount amount={post.debit} /> : <span style={{ visibility: 'hidden' }}><Amount amount={0} /></span>}
                                                                             </span>
                                                                         </div>
@@ -1629,7 +1629,7 @@ const PostingIndex = forwardRef((props, ref) => {
                                                                                     </span>
                                                                                 </div>
                                                                             )}
-                                                                            <span className="text-muted small">
+                                                                            <span className="">
                                                                                 {post.credit ? <Amount amount={post.credit} /> : <span style={{ visibility: 'hidden' }}><Amount amount={0} /></span>}
                                                                             </span>
                                                                         </div>
@@ -1667,7 +1667,7 @@ const PostingIndex = forwardRef((props, ref) => {
                                                                                 </span>
                                                                             </div>
                                                                         )}
-                                                                        <span className="text-muted small">
+                                                                        <span className="">
                                                                             {posting.posts[0].debit
                                                                                 ? <Amount amount={posting.posts[0].debit} />
                                                                                 : <span style={{ visibility: 'hidden' }}><Amount amount={0} /></span>}
@@ -1688,7 +1688,7 @@ const PostingIndex = forwardRef((props, ref) => {
                                                                                 </span>
                                                                             </div>
                                                                         )}
-                                                                        <span className="text-muted small">
+                                                                        <span className="">
                                                                             {posting.posts[0].credit
                                                                                 ? <Amount amount={posting.posts[0].credit} />
                                                                                 : <span style={{ visibility: 'hidden' }}><Amount amount={0} /></span>}
