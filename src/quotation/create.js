@@ -98,6 +98,9 @@ const QuotationCreate = forwardRef((props, ref) => {
   useImperativeHandle(ref, () => ({
     open(id, operationType) {
       if (operationType && operationType === "product_selection") {
+        selectedProducts = [];
+        setSelectedProducts([]);
+        setSelectedIds([]);
         setEnableProductSelection(true);
       }
 
@@ -212,6 +215,7 @@ const QuotationCreate = forwardRef((props, ref) => {
       });
   }
 
+
   useEffect(() => {
     const listener = (event) => {
       if (event.code === "Enter" || event.code === "NumpadEnter") {
@@ -292,9 +296,14 @@ const QuotationCreate = forwardRef((props, ref) => {
   });
 
 
+
+
+
   let [warnings, setWarnings] = useState({});
 
   useEffect(() => {
+
+
     const tooltipTriggerList = document.querySelectorAll('[data-bs-toggle="tooltip"]');
     tooltipTriggerList.forEach((el) => {
       // Dispose existing
