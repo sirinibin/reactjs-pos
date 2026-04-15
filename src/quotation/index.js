@@ -70,7 +70,7 @@ function QuotationIndex(props) {
   const [quotationList, setQuotationList] = useState([]);
 
   //pagination
-  const [pageSize, setPageSize] = useState(20);
+  const [pageSize, setPageSize] = useState(() => parseInt(localStorage.getItem('quotation_pageSize') || '10'));
   let [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(0);
   const [totalItems, setTotalItems] = useState(1);
@@ -593,6 +593,7 @@ function QuotationIndex(props) {
 
 
   function changePageSize(size) {
+    localStorage.setItem('quotation_pageSize', size);
     setPageSize(parseInt(size));
   }
 

@@ -62,7 +62,7 @@ function QuotationSalesReturnIndex(props) {
     const [quotationsalesreturnList, setQuotationSalesReturnList] = useState([]);
 
     //pagination
-    let [pageSize, setPageSize] = useState(20);
+    let [pageSize, setPageSize] = useState(() => parseInt(localStorage.getItem('quotation_sales_return_pageSize') || '10'));
     let [page, setPage] = useState(1);
     const [totalPages, setTotalPages] = useState(0);
     const [totalItems, setTotalItems] = useState(1);
@@ -989,6 +989,7 @@ function QuotationSalesReturnIndex(props) {
 
 
     function changePageSize(size) {
+        localStorage.setItem('quotation_sales_return_pageSize', size);
         setPageSize(parseInt(size));
     }
 

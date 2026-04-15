@@ -50,7 +50,7 @@ function DeliveryNoteIndex(props) {
   const [deliverynoteList, setDeliveryNoteList] = useState([]);
 
   //pagination
-  let [pageSize, setPageSize] = useState(20);
+  let [pageSize, setPageSize] = useState(() => parseInt(localStorage.getItem('delivery_note_pageSize') || '10'));
   let [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(0);
   let [totalItems, setTotalItems] = useState(0);
@@ -382,6 +382,7 @@ function DeliveryNoteIndex(props) {
 
   function changePageSize(size) {
     pageSize = parseInt(size);
+    localStorage.setItem('delivery_note_pageSize', size);
     setPageSize(pageSize);
     list();
   }

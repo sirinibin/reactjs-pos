@@ -96,7 +96,7 @@ const SalesReturnIndex = forwardRef((props, ref) => {
     const [salesreturnList, setSalesReturnList] = useState([]);
 
     //pagination
-    let [pageSize, setPageSize] = useState(20);
+    let [pageSize, setPageSize] = useState(() => parseInt(localStorage.getItem('sales_return_pageSize') || '10'));
     let [page, setPage] = useState(1);
     const [totalPages, setTotalPages] = useState(0);
     const [totalItems, setTotalItems] = useState(1);
@@ -1911,7 +1911,7 @@ const SalesReturnIndex = forwardRef((props, ref) => {
                                         <label className="form-label mb-0">{t("Size")}:&nbsp;</label>
                                         <select
                                             value={pageSize}
-                                            onChange={(e) => { setPageSize(parseInt(e.target.value)); }}
+                                            onChange={(e) => { localStorage.setItem('sales_return_pageSize', e.target.value); setPageSize(parseInt(e.target.value)); }}
                                             className="form-control"
                                             style={{ border: "solid 1px", borderColor: "silver", width: "55px" }}
                                         >

@@ -22,7 +22,7 @@ function ProductBrandIndex(props) {
     const [productbrandList, setProductBrandList] = useState([]);
 
     //pagination
-    let [pageSize, setPageSize] = useState(20);
+    let [pageSize, setPageSize] = useState(() => parseInt(localStorage.getItem('product_brand_pageSize') || '10'));
     let [page, setPage] = useState(1);
     const [totalPages, setTotalPages] = useState(0);
     const [totalItems, setTotalItems] = useState(1);
@@ -191,6 +191,7 @@ function ProductBrandIndex(props) {
 
     function changePageSize(size) {
         pageSize = parseInt(size);
+        localStorage.setItem('product_brand_pageSize', size);
         setPageSize(pageSize);
         list();
     }

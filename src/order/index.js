@@ -546,7 +546,7 @@ const OrderIndex = forwardRef((props, ref) => {
     const [orderList, setOrderList] = useState([]);
 
     //pagination
-    let [pageSize, setPageSize] = useState(20);
+    let [pageSize, setPageSize] = useState(() => parseInt(localStorage.getItem('order_pageSize') || '10'));
     let [page, setPage] = useState(1);
     const [totalPages, setTotalPages] = useState(0);
     const [totalItems, setTotalItems] = useState(1);
@@ -1908,6 +1908,7 @@ const OrderIndex = forwardRef((props, ref) => {
                                             <select
                                                 value={pageSize}
                                                 onChange={(e) => {
+                                                    localStorage.setItem('order_pageSize', e.target.value);
                                                     setPageSize(parseInt(e.target.value));
                                                 }}
                                                 className="form-control"

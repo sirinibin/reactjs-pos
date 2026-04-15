@@ -69,7 +69,7 @@ function PurchaseIndex(props) {
     const [purchaseList, setPurchaseList] = useState([]);
 
     //pagination
-    const [pageSize, setPageSize] = useState(20);
+    const [pageSize, setPageSize] = useState(() => parseInt(localStorage.getItem('purchase_pageSize') || '10'));
     let [page, setPage] = useState(1);
     const [totalPages, setTotalPages] = useState(0);
     const [totalItems, setTotalItems] = useState(1);
@@ -893,6 +893,7 @@ function PurchaseIndex(props) {
 
 
     function changePageSize(size) {
+        localStorage.setItem('purchase_pageSize', size);
         setPageSize(parseInt(size));
     }
 

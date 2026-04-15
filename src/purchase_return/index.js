@@ -59,7 +59,7 @@ function PurchaseReturnIndex(props) {
     const [purchasereturnList, setPurchaseReturnList] = useState([]);
 
     //pagination
-    const [pageSize, setPageSize] = useState(20);
+    const [pageSize, setPageSize] = useState(() => parseInt(localStorage.getItem('purchase_return_pageSize') || '10'));
     let [page, setPage] = useState(1);
     const [totalPages, setTotalPages] = useState(0);
     const [totalItems, setTotalItems] = useState(1);
@@ -798,6 +798,7 @@ function PurchaseReturnIndex(props) {
 
 
     function changePageSize(size) {
+        localStorage.setItem('purchase_return_pageSize', size);
         setPageSize(parseInt(size));
     }
 

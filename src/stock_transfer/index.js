@@ -31,7 +31,7 @@ const StockTransferIndex = forwardRef((props, ref) => {
     const [stocktransferList, setStockTransferList] = useState([]);
 
     //pagination
-    let [pageSize, setPageSize] = useState(20);
+    let [pageSize, setPageSize] = useState(() => parseInt(localStorage.getItem('stock_transfer_pageSize') || '10'));
     let [page, setPage] = useState(1);
     const [totalPages, setTotalPages] = useState(0);
     const [totalItems, setTotalItems] = useState(1);
@@ -407,6 +407,7 @@ const StockTransferIndex = forwardRef((props, ref) => {
      }, [pageSize, list]);*/
 
     function changePageSize(size) {
+        localStorage.setItem('stock_transfer_pageSize', size);
         // pageSize = parseInt(size);
         setPageSize(parseInt(size));
 
