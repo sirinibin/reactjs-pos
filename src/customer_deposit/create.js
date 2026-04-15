@@ -430,6 +430,10 @@ const CustomerDepositCreate = forwardRef((props, ref) => {
     }
 
     function handleCreate(event) {
+        if (isProcessing) {
+            return;
+        }
+
         event.preventDefault();
         console.log("Inside handle Create");
         if (!validatePaymentAmounts()) {
