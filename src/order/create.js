@@ -2090,9 +2090,9 @@ const OrderCreate = forwardRef((props, ref) => {
 
 
 
-        if (timerRef2.current[index]) clearTimeout(timerRef.current[index]);
+        if (timerRef2 && timerRef2.current && timerRef2?.current?.[index]) clearTimeout(timerRef2.current[index]);
 
-        if (!timerRef2.current[index]) {
+        if (!timerRef2?.current?.[index]) {
             timerRef2.current[index] = {};
         }
 
