@@ -952,6 +952,18 @@ const PreviewContentWithSellerInfo = forwardRef((props, ref) => {
                                                     </>}
                                                 </tr>
                                             ))}
+                                            {pageIndex === props.model.pages.length - 1 && (
+                                                <tr>
+                                                    <td></td>
+                                                    <td></td>
+                                                    <th style={{ borderLeft: tableBorderThickness, textAlign: "right" }}>Total Quantity | <span dir="rtl">الكمية الإجمالية</span>:</th>
+                                                    <td style={{ borderRight: tableBorderThickness, borderLeft: tableBorderThickness, fontWeight: "bold", background: "#f6f6f6", textAlign: "center" }}>
+                                                        {props.model.total_quantity}
+                                                    </td>
+                                                    {/* If you have more columns, add <td></td> for each, or adjust as needed */}
+                                                </tr>
+                                            )
+                                            }
                                         </tbody>
                                     </table>
                                     {props.model.pages.length === (pageIndex + 1) && <table className="table-responsive"
