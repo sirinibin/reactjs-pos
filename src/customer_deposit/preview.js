@@ -247,30 +247,93 @@ const CustomerDepositPreview = forwardRef((props, ref) => {
         }
     });*/
 
-    const handlePrint = useCallback(() => {
+    const handlePrint = useCallback(async () => {
         setIsProcessing(true);
-        const element = printAreaRef.current;
-        if (!element) return;
 
-        html2pdf().from(element).set({
-            margin: 0,
-            filename: `${getFileName()}.pdf`,
-            image: { type: 'jpeg', quality: 0.98 },
-            html2canvas: { scale: 2, useCORS: true },
-            jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
-        }).outputPdf('bloburl').then(blobUrl => {
-            setIsProcessing(false);
-            const iframe = document.createElement('iframe');
-            iframe.style.display = 'none';
-            iframe.src = blobUrl;
-            document.body.appendChild(iframe);
+        // Detect Tauri — walk up iframe parent chain (same-origin) to find the Tauri API.
+        let tauriRoot = null;
+        try {
+            let w = window;
+            while (w) {
+                if (w.__TAURI__?.core?.invoke) { tauriRoot = w.__TAURI__; break; }
+                if (w.__TAURI_INTERNALS__?.invoke) { tauriRoot = w.__TAURI_INTERNALS__; break; }
+                if (w === w.parent) break;
+                w = w.parent;
+            }
+        } catch (_) { /* cross-origin parent */ }
+        const tauriInvoke = tauriRoot?.core?.invoke ?? tauriRoot?.invoke ?? null;
+        const isInTauri = !!tauriInvoke;
 
-            iframe.onload = () => {
-                iframe.contentWindow?.focus();
-                iframe.contentWindow?.print();
-            };
-        });
-    }, [getFileName]);
+        try {
+            const fileName = getFileName();
+
+            if (isInTauri) {
+                // Tauri: use Go chromedp PDF generation (correct Arabic text), then open for printing
+                const apiResponse = await fetch('/v1/receipt/pdf', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': localStorage.getItem('access_token'),
+                    },
+                    body: JSON.stringify({
+                        model: model,
+                        modelName: modelName,
+                        fontSizes: fontSizesRef.current,
+                        filename: fileName,
+                    }),
+                });
+
+                if (!apiResponse.ok) {
+                    const errData = await apiResponse.json().catch(() => ({}));
+                    throw new Error(
+                        errData?.errors?.chrome ||
+                        errData?.errors?.pdf ||
+                        errData?.errors?.body ||
+                        `HTTP ${apiResponse.status}`
+                    );
+                }
+
+                const pdfBlob = await apiResponse.blob();
+                const arrayBuffer = await pdfBlob.arrayBuffer();
+                const uint8Array = new Uint8Array(arrayBuffer);
+                let binary = '';
+                for (let i = 0; i < uint8Array.length; i++) {
+                    binary += String.fromCharCode(uint8Array[i]);
+                }
+                const base64 = btoa(binary);
+
+                await tauriInvoke('print_pdf', {
+                    dataBase64: base64,
+                    filename: `${fileName}.pdf`,
+                });
+            } else {
+                // Web browser: use html2pdf() and print via hidden iframe
+                const element = printAreaRef.current;
+                if (!element) return;
+
+                const blobUrl = await html2pdf().from(element).set({
+                    margin: 0,
+                    filename: `${fileName}.pdf`,
+                    image: { type: 'jpeg', quality: 0.98 },
+                    html2canvas: { scale: 2, useCORS: true },
+                    jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+                }).outputPdf('bloburl');
+
+                const iframe = document.createElement('iframe');
+                iframe.style.display = 'none';
+                iframe.src = blobUrl;
+                document.body.appendChild(iframe);
+                iframe.onload = () => {
+                    iframe.contentWindow?.focus();
+                    iframe.contentWindow?.print();
+                };
+            }
+        } catch (e) {
+            alert('Print failed: ' + (e?.message || JSON.stringify(e)));
+        }
+
+        setIsProcessing(false);
+    }, [getFileName, model, modelName]);
 
 
     // Wrap handlePrint in useCallback to avoid unnecessary re-creations
@@ -324,46 +387,103 @@ const CustomerDepositPreview = forwardRef((props, ref) => {
 
     const openWhatsAppShare = useCallback(async () => {
         setIsProcessing(true);
-        console.log("Inside openWhatsAppShare")
         const element = printAreaRef.current;
         if (!element) return;
 
-        const opt = {
-            margin: 0,
-            filename: `${getFileName()}.pdf`,
-            image: { type: 'jpeg', quality: 0.98 },
-            html2canvas: { scale: 2, useCORS: true, logging: true },
-            jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
-        };
+        const fileName = getFileName();
 
-        const pdfBlob = await html2pdf().from(element).set(opt).outputPdf('blob');
+        // Detect Tauri
+        let isInTauri = false;
+        try {
+            isInTauri = !!(window.__TAURI__ || window.__TAURI_INTERNALS__ ||
+                (window.parent !== window &&
+                    (window.parent.__TAURI__ || window.parent.__TAURI_INTERNALS__)));
+        } catch (_) { /* cross-origin guard */ }
 
-        // Upload to your server
-        const formData = new FormData();
-        formData.append("file", pdfBlob, `${getFileName()}.pdf`);
+        let pdfBlob;
 
-        await fetch("/v1/upload-pdf", { method: "POST", body: formData });
-        // const { fileUrl } = await res.json();
+        if (isInTauri) {
+            // Tauri: use Go chromedp PDF generation (correct Arabic text)
+            const apiResponse = await fetch('/v1/receipt/pdf', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': localStorage.getItem('access_token'),
+                },
+                body: JSON.stringify({
+                    model: model,
+                    modelName: modelName,
+                    fontSizes: fontSizesRef.current,
+                    filename: fileName,
+                }),
+            });
 
+            if (!apiResponse.ok) {
+                const errData = await apiResponse.json().catch(() => ({}));
+                setIsProcessing(false);
+                alert('PDF generation failed: ' + (errData?.errors?.chrome || errData?.errors?.pdf || `HTTP ${apiResponse.status}`));
+                return;
+            }
 
-        // Share via WhatsApp
-        console.log(" model.phone:", model.phone);
+            pdfBlob = await apiResponse.blob();
+        } else {
+            // Web: use html2pdf()
+            const opt = {
+                margin: 0,
+                filename: `${fileName}.pdf`,
+                image: { type: 'jpeg', quality: 0.98 },
+                html2canvas: { scale: 2, useCORS: true, logging: true },
+                jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+            };
+            const pdfArrayBuffer = await html2pdf().from(element).set(opt).outputPdf('arraybuffer');
+            pdfBlob = new Blob([pdfArrayBuffer], { type: "application/pdf" });
+        }
 
-
-
+        // Upload: Tauri → filebin.net (public URL), Web → local server
+        let publicUrl = "";
+        if (isInTauri) {
+            try {
+                const binId = `startpos-${Date.now()}`;
+                const safeFileName = `${fileName}.pdf`.replace(/[^a-zA-Z0-9._-]/g, "_");
+                // Use untyped Blob so browser does NOT set Content-Type header,
+                // keeping it a simple CORS request (no preflight needed).
+                const rawBlob = new Blob([await pdfBlob.arrayBuffer()]);
+                const fbResponse = await fetch(`https://filebin.net/${binId}/${safeFileName}`, {
+                    method: "POST",
+                    body: rawBlob,
+                });
+                if (fbResponse.ok || fbResponse.status === 201) {
+                    publicUrl = `https://filebin.net/${binId}/${safeFileName}`;
+                }
+            } catch (err) {
+                console.error("filebin.net upload failed:", err);
+            }
+        } else {
+            const formData = new FormData();
+            formData.append("file", pdfBlob, `${fileName}.pdf`);
+            await fetch("/v1/upload-pdf", { method: "POST", body: formData });
+        }
 
         let whatsAppNo = "";
-
         if (phone) {
             whatsAppNo = phone;
         } else if (model.customer?.phone) {
-            whatsAppNo = model.customer?.phone
+            whatsAppNo = model.customer?.phone;
         } else if (model.vendor?.phone) {
-            whatsAppNo = model.vendor?.phone
+            whatsAppNo = model.vendor?.phone;
         }
 
-        let message = `Hello, Here is your receipt:\n${window.location.origin}/pdfs/${getFileName()}.pdf`;
+        let cacheBuster = `?v=${Date.now()}`;
+        const pdfUrl = (isInTauri && publicUrl)
+            ? publicUrl
+            : `${window.location.origin}/pdfs/${fileName}.pdf${cacheBuster}`;
 
+        let message = "";
+        if (modelName === "customer_withdrawal" || modelName === "whatsapp_customer_withdrawal") {
+            message = `Hello, here is your payment receipt:\n${pdfUrl}`;
+        } else {
+            message = `Hello, here is your receipt:\n${pdfUrl}`;
+        }
 
         if (timerRef.current) clearTimeout(timerRef.current);
 
@@ -375,7 +495,7 @@ const CustomerDepositPreview = forwardRef((props, ref) => {
             setShowWhatsAppMessageModal(true);
         }, 100);
 
-    }, [getFileName, model, formatPhoneForWhatsApp, phone]);
+    }, [getFileName, model, phone, modelName, formatPhoneForWhatsApp]);
 
 
     function setReceiptTitle(modelName) {
@@ -596,6 +716,8 @@ const CustomerDepositPreview = forwardRef((props, ref) => {
 
 
     let [fontSizes, setFontSizes] = useState(defaultFontSizes);
+    const fontSizesRef = useRef(defaultFontSizes);
+    useEffect(() => { fontSizesRef.current = fontSizes; }, [fontSizes]);
 
     useEffect(() => {
         let storedFontSizes = getFromLocalStorage("fontSizes");

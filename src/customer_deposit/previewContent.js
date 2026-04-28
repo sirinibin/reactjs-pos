@@ -158,10 +158,10 @@ const CustomerDepositPreviewContent = forwardRef((props, ref) => {
                         </div>
                     </div>
 
-                    <div className="row col-md-14" style={{ border: "solid 0px", borderColor: detailsBorderColor, fontSize: props.fontSizes[props.modelName + "_invoiceDetails"]?.size, padding: "10px" }} onClick={() => {
+                    <div className="row col-md-14" style={{ border: "solid 0px", borderColor: detailsBorderColor, fontSize: props.fontSizes[props.modelName + "_invoiceDetails"]?.size, padding: "0px", marginLeft: "0px", marginRight: "0px" }} onClick={() => {
                         props.selectText("invoiceDetails");
                     }}>
-                        <div className="col-md-12" style={{ border: detailsBorderThickness, borderColor: detailsBorderColor, marginLeft: "0px", width: `${(props.model.store?.settings?.zatca_qr_on_left_bottom || (props.modelName === "quotation" && props.model.type !== "invoice")) ? "100%" : "74%"}` }}>
+                        <div className="col-md-12" style={{ border: detailsBorderThickness, borderColor: detailsBorderColor, marginLeft: "0px", width: "100%" }}>
                             <div className="row" dir="ltr" style={{ borderBottom: detailsBorderThickness }} >
                                 <div className="col-md-4 print-label" dir="ltr" style={{ borderRight: detailsBorderThickness, borderColor: detailsBorderColor, width: detailsLabelsColumnWidthPercent, padding: "3px" }} ><b>Receipt No. | رقم الإيصال:</b></div>
                                 <div className="col-md-8 print-value" dir="ltr" style={{ borderColor: detailsBorderColor, width: detailsValuesColumnWidthPercent, padding: "3px" }} >{props.model.code ? props.model.code : ""}</div>
@@ -324,8 +324,8 @@ const CustomerDepositPreviewContent = forwardRef((props, ref) => {
                         </div>
                     </div>
 
-                    <div className="row">
-                        <div className="col">
+                    <div className="row" style={{ marginLeft: "0px", marginRight: "0px" }}>
+                        <div className="col" style={{ paddingLeft: "0px", paddingRight: "0px" }}>
                             <div
                                 className=""
                                 style={{
@@ -336,7 +336,7 @@ const CustomerDepositPreviewContent = forwardRef((props, ref) => {
 
                                 <table
                                     className="table-responsive"
-                                    style={{ border: tableBorderThickness, width: "100%" }}
+                                    style={{ border: tableBorderThickness, width: "100%", borderCollapse: "collapse" }}
                                 >
                                     <tbody style={{ fontSize: props.fontSizes[props.modelName + "_tableBody"]?.size }} className="clickable-text print-value" onClick={() => {
                                         props.selectText("tableBody");
@@ -345,7 +345,7 @@ const CustomerDepositPreviewContent = forwardRef((props, ref) => {
                                             e.stopPropagation();
                                             props.selectText("tableHead");
                                         }}>
-                                            <th className="per1 text-center" style={{ padding: "0px", width: "7%", borderRight: tableBorderThickness, borderBottom: tableBorderThickness }}>
+                                            <th className="per1 text-center" style={{ padding: "0px", width: "7%", borderLeft: tableBorderThickness, borderRight: tableBorderThickness, borderBottom: tableBorderThickness }}>
                                                 <ul
                                                     className="list-unstyled"
                                                     style={{
@@ -412,7 +412,7 @@ const CustomerDepositPreviewContent = forwardRef((props, ref) => {
                                                     <li>Discount</li>
                                                 </ul>
                                             </th>
-                                            <th className="per68 text-center" style={{ padding: "0px", width: "12%", borderBottom: tableBorderThickness }}>
+                                            <th className="per68 text-center" style={{ padding: "0px", width: "12%", borderLeft: tableBorderThickness, borderBottom: tableBorderThickness, borderRight: tableBorderThickness }}>
                                                 <ul
                                                     className="list-unstyled"
                                                     style={{
@@ -426,7 +426,7 @@ const CustomerDepositPreviewContent = forwardRef((props, ref) => {
                                         </tr>
                                         {page.payments && page.payments.map((payment, index) => (
                                             <tr style={{ borderBottom: tableBorderThickness }} key={index} className="text-center"  >
-                                                <td style={{ padding: "7px", borderRight: tableBorderThickness }}>{(index + 1) + (pageIndex * props.model.pageSize)}</td>
+                                                <td style={{ padding: "7px", borderLeft: tableBorderThickness, borderRight: tableBorderThickness }}>{(index + 1) + (pageIndex * props.model.pageSize)}</td>
                                                 <td style={{ padding: "1px", borderRight: tableBorderThickness }}>
                                                     {props.model.modelName === "customer_deposit" || props.model.modelName === "whatsapp_customer_deposit" ? "Payment Received" : ""}
                                                     {props.model.modelName === "customer_withdrawal" || props.model.modelName === "whatsapp_customer_withdrawal" ? "Paid" : ""}
@@ -439,7 +439,7 @@ const CustomerDepositPreviewContent = forwardRef((props, ref) => {
                                                 <td style={{ padding: "1px", borderRight: tableBorderThickness }} className="text-center">{payment.bank_reference ? payment.bank_reference : ""} </td>
                                                 <td style={{ padding: "1px", borderRight: tableBorderThickness, paddingRight: "2px", textAlign: "right" }}> {payment.amount ? <Amount amount={trimTo2Decimals(payment.amount)} /> : ""}</td>
                                                 <td style={{ padding: "1px", borderRight: tableBorderThickness, paddingRight: "2px", textAlign: "right" }}> {payment.amount ? <Amount amount={trimTo2Decimals(payment.discount)} /> : ""}</td>
-                                                <td style={{ padding: "1px", paddingRight: "2px", textAlign: "right" }}> {payment.amount ? <Amount amount={trimTo2Decimals((payment.amount - payment.discount))} /> : ""}</td>
+                                                <td style={{ padding: "1px", paddingRight: "2px", textAlign: "right", borderRight: tableBorderThickness }}> {payment.amount ? <Amount amount={trimTo2Decimals((payment.amount - payment.discount))} /> : ""}</td>
                                             </tr>
                                         ))}
                                     </tbody>
@@ -452,11 +452,11 @@ const CustomerDepositPreviewContent = forwardRef((props, ref) => {
                                         <tr
                                             style={{}}>
                                             <th colSpan="6" className="text-end print-label"
-                                                style={{ padding: "2px", borderRight: tableBorderThickness }}
+                                                style={{ padding: "2px", borderLeft: tableBorderThickness, borderRight: tableBorderThickness }}
                                             >
                                                 Total المجموع:
                                             </th>
-                                            <th className="text-end" colSpan="1" style={{ padding: "2px" }}>
+                                            <th className="text-end" colSpan="1" style={{ padding: "2px", borderRight: tableBorderThickness }}>
                                                 <Amount amount={trimTo2Decimals(props.model.total)} />
                                             </th>
                                         </tr>
@@ -464,11 +464,11 @@ const CustomerDepositPreviewContent = forwardRef((props, ref) => {
                                         <tr
                                             style={{}}>
                                             <th colSpan="6" className="text-end print-label"
-                                                style={{ padding: "2px", borderRight: tableBorderThickness }}
+                                                style={{ padding: "2px", borderLeft: tableBorderThickness, borderRight: tableBorderThickness }}
                                             >
                                                 Total Discount إجمالي الخصم:
                                             </th>
-                                            <th className="text-end" colSpan="1" style={{ padding: "2px" }}>
+                                            <th className="text-end" colSpan="1" style={{ padding: "2px", borderRight: tableBorderThickness }}>
                                                 <Amount amount={trimTo2Decimals(props.model.total_discount)} />
                                             </th>
                                         </tr>
@@ -476,11 +476,11 @@ const CustomerDepositPreviewContent = forwardRef((props, ref) => {
                                         <tr
                                             style={{}}>
                                             <th colSpan="6" className="text-end print-label"
-                                                style={{ padding: "2px", borderRight: tableBorderThickness }}
+                                                style={{ padding: "2px", borderLeft: tableBorderThickness, borderRight: tableBorderThickness }}
                                             >
                                                 Net Total  صافي المجموع:
                                             </th>
-                                            <th className="text-end" colSpan="1" style={{ padding: "2px" }}>
+                                            <th className="text-end" colSpan="1" style={{ padding: "2px", borderRight: tableBorderThickness }}>
                                                 <span className={props.model.store.settings.show_currency_symbol ? "icon-saudi_riyal" : ""} >
                                                     <Amount amount={trimTo2Decimals(props.model.net_total)} />
                                                 </span>
@@ -489,20 +489,20 @@ const CustomerDepositPreviewContent = forwardRef((props, ref) => {
                                     </tfoot>
                                 </table>
                                 <table className="table-responsive"
-                                    style={{ border: tableBorderThickness, width: "100%" }}>
+                                    style={{ border: tableBorderThickness, width: "100%", borderCollapse: "collapse" }}>
                                     <tbody
                                         style={{ fontSize: props.fontSizes[props.modelName + "_tableFooter"]?.size }} onClick={() => {
                                             props.selectText("tableFooter");
                                         }} className="clickable-text"
                                     >
                                         <tr style={{ borderBottom: tableBorderThickness }}>
-                                            <th colSpan="1" className="text-end print-label" style={{ padding: "2px", width: "30%", borderRight: tableBorderThickness }}>
+                                            <th colSpan="1" className="text-end print-label" style={{ padding: "2px", width: "30%", borderLeft: tableBorderThickness, borderRight: tableBorderThickness }}>
                                                 In Words بكلمات:
                                             </th>
                                             <th
                                                 className="print-table-value"
                                                 colSpan="8"
-                                                style={{ padding: "2px", width: "70%" }}
+                                                style={{ padding: "2px", width: "70%", borderRight: tableBorderThickness }}
 
                                             >
                                                 <ul
@@ -515,13 +515,13 @@ const CustomerDepositPreviewContent = forwardRef((props, ref) => {
                                             </th>
                                         </tr>
                                         <tr style={{ borderBottom: tableBorderThickness }}>
-                                            <th colSpan="1" className="text-end print-label" style={{ padding: "2px", width: "30%", borderRight: tableBorderThickness }}>
+                                            <th colSpan="1" className="text-end print-label" style={{ padding: "2px", width: "30%", borderLeft: tableBorderThickness, borderRight: tableBorderThickness }}>
                                                 Remarks ملاحظات:
                                             </th>
                                             <th
                                                 className="text-end print-table-value"
                                                 colSpan="8"
-                                                style={{ padding: "2px", width: "70%" }}
+                                                style={{ padding: "2px", width: "70%", borderRight: tableBorderThickness }}
 
                                             >
                                                 {props.model.remarks ? props.model.remarks : ""}
@@ -532,7 +532,7 @@ const CustomerDepositPreviewContent = forwardRef((props, ref) => {
                                 </table>
                                 <table
                                     className="table-responsive"
-                                    style={{ border: tableBorderThickness, width: "100%" }}
+                                    style={{ border: tableBorderThickness, width: "100%", borderCollapse: "collapse" }}
                                 >
                                     <tbody
                                         style={{ fontSize: props.fontSizes[props.modelName + "_tableFooter"]?.size }} onClick={() => {
@@ -540,14 +540,14 @@ const CustomerDepositPreviewContent = forwardRef((props, ref) => {
                                         }} className="clickable-text"
                                     >
                                         <tr style={{ borderBottom: tableBorderThickness }}>
-                                            <th className="text-end print-label" style={{ width: "20%", height: "30px", padding: "2px", borderRight: tableBorderThickness }}>
+                                            <th className="text-end print-label" style={{ width: "20%", height: "30px", padding: "2px", borderLeft: tableBorderThickness, borderRight: tableBorderThickness }}>
                                                 Received From تم الاستلام من:
                                             </th>
                                             <th style={{ width: "30%", padding: "2px", borderRight: tableBorderThickness }}> {props.model.customer?.name ? props.model.customer.name : null}</th>
                                             <th className="text-end print-label" style={{ width: "20%", padding: "2px", borderRight: tableBorderThickness }}>
                                                 Received By تم الاستلام بواسطة:
                                             </th>
-                                            <th style={{ width: "30%", padding: "2px" }}>
+                                            <th style={{ width: "30%", padding: "2px", borderRight: tableBorderThickness }}>
                                                 {props.model.store?.name ? props.model.store.name : null}
                                             </th>
                                         </tr>

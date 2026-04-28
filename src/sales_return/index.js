@@ -2477,8 +2477,26 @@ const SalesReturnIndex = forwardRef((props, ref) => {
                                                                         /> : ""}
                                                                     </Button></span> : ""}
                                                                     {salesReturn.zatca?.reporting_passed ? <span>&nbsp;
-                                                                        <Button onClick={() => {
-                                                                            window.open("/zatca/returns/xml/" + salesReturn.code + ".xml", "_blank");
+                                                                        <Button onClick={async () => {
+                                                                            const url = "/zatca/returns/xml/" + salesReturn.code + ".xml";
+                                                                            const filename = salesReturn.code + ".xml";
+                                                                            if (window.__TAURI__) {
+                                                                                try {
+                                                                                    const invoke = window.__TAURI__.core.invoke;
+                                                                                    const savedPath = await invoke("save_xml_file", { url: "http://localhost:2003" + url, filename });
+                                                                                    if (props.showToastMessage) props.showToastMessage("File saved to " + savedPath, "success");
+                                                                                } catch (e) {
+                                                                                    if (props.showToastMessage) props.showToastMessage("Download failed: " + e, "danger");
+                                                                                }
+                                                                            } else {
+                                                                                fetch(url).then(r => r.blob()).then(blob => {
+                                                                                    const a = document.createElement("a");
+                                                                                    a.href = URL.createObjectURL(blob);
+                                                                                    a.download = filename;
+                                                                                    a.click();
+                                                                                    URL.revokeObjectURL(a.href);
+                                                                                });
+                                                                            }
                                                                         }}><i class="bi bi-filetype-xml"></i> XML
                                                                         </Button>
                                                                     </span> : ""}

@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { Modal, Button } from 'react-bootstrap';
 import {
     BrowserRouter as Router,
     Switch,
@@ -50,6 +51,7 @@ import Login from './user/login.js';
 import { Redirect } from 'react-router-dom'
 import Toast from 'react-bootstrap/Toast'
 import ToastContainer from 'react-bootstrap/ToastContainer'
+import eventEmitter from './utils/eventEmitter'
 import './dashboard.css'
 import Analytics from './analytics/index.js';
 import StatsIndex from './stats/index.js';
@@ -84,6 +86,19 @@ function Dashboard() {
         };
     }, []);
 
+    useEffect(() => {
+        // Show persistent modal when geolocation is denied; close it when granted
+        const handleGeoDenied = () => setShowGeoModal(true);
+        const handleGeoGranted = () => setShowGeoModal(false);
+        eventEmitter.on('geolocation_denied', handleGeoDenied);
+        eventEmitter.on('geolocation_granted', handleGeoGranted);
+        return () => {
+            eventEmitter.off('geolocation_denied', handleGeoDenied);
+            eventEmitter.off('geolocation_granted', handleGeoGranted);
+        };
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
+
     function handleToggle() {
         if (isSidebarOpen === "collapsed") {
             SetSidebarOpen("");
@@ -95,6 +110,22 @@ function Dashboard() {
 
 
     let [toastMessages, setToastMessages] = useState([]);
+    const [showGeoModal, setShowGeoModal] = useState(false);
+    const [isTauriApp, setIsTauriApp] = useState(false);
+    useEffect(() => {
+        // Tauri injects __TAURI__ only into the top-level WebView window (tabs.html).
+        // React runs inside an <iframe> on the same origin (localhost), so we also
+        // check window.parent. Cross-origin access throws, so we wrap in try/catch.
+        try {
+            const hasTauri =
+                typeof window.__TAURI__ !== 'undefined' ||
+                typeof window.__TAURI_INTERNALS__ !== 'undefined' ||
+                (window.parent !== window && typeof window.parent.__TAURI__ !== 'undefined');
+            setIsTauriApp(hasTauri);
+        } catch (e) {
+            setIsTauriApp(false);
+        }
+    }, []);
 
     function showToastMessage(message, variant) {
         toastMessages.push({
@@ -116,10 +147,105 @@ function Dashboard() {
         setToastMessages([...toastMessages]);
     }
 
+    // Re-check geolocation permission every 10s while modal is open
+    // so it auto-closes the moment the user grants access in system settings
+    useEffect(() => {
+        if (!showGeoModal) return;
+        const recheckInterval = setInterval(async () => {
+            if (!navigator.geolocation) return;
+            try {
+                // In Tauri, navigator.permissions may never reflect 'granted' because
+                // WKWebView's permission API is bypassed by Tauri's CoreLocation routing.
+                // Attempt getCurrentPosition directly — if it succeeds, close the modal.
+                if (isTauriApp) {
+                    await new Promise((resolve, reject) => {
+                        navigator.geolocation.getCurrentPosition(resolve, reject, { timeout: 8000 });
+                    });
+                    setShowGeoModal(false);
+                    eventEmitter.emit('geolocation_granted');
+                } else if (navigator.permissions) {
+                    const perm = await navigator.permissions.query({ name: 'geolocation' });
+                    if (perm.state === 'granted') {
+                        setShowGeoModal(false);
+                        eventEmitter.emit('geolocation_granted');
+                    }
+                }
+            } catch (_) {
+                // still denied — keep modal open
+            }
+        }, 10000);
+        return () => clearInterval(recheckInterval);
+    }, [showGeoModal, isTauriApp]);
+
+    const openLocationSettings = () => {
+        if (isTauriApp) {
+            // macOS System Settings → Privacy & Security → Location Services
+            // Use our custom invoke command — tauri shell plugin's `open` rejects
+            // x-apple.systempreferences: URLs due to its hardcoded regex filter.
+            const url = 'x-apple.systempreferences:com.apple.preference.security?Privacy_LocationServices';
+            const tauri = window.__TAURI__ ||
+                (window.parent !== window ? window.parent.__TAURI__ : null);
+            try {
+                if (tauri?.core?.invoke) {
+                    tauri.core.invoke('open_system_preferences', { url }).catch((e) => {
+                        console.error('open_system_preferences failed:', e);
+                    });
+                }
+            } catch (e) {
+                console.error('Failed to open location settings:', e);
+            }
+        } else {
+            window.open('https://support.google.com/chrome/answer/142065', '_blank');
+        }
+    };
+
     if (!at) {
         return <></>;
     }
     return (<Router>
+        {/* Geolocation permission modal — stays visible until user grants access */}
+        <Modal show={showGeoModal} backdrop="static" keyboard={false} centered>
+            <Modal.Header>
+                <Modal.Title>📍 Location Access Required</Modal.Title>
+            </Modal.Header>
+            <Modal.Body>
+                <p>
+                    Start POS needs your location to track activity and provide accurate reports.
+                    Location access is currently <strong>blocked</strong>.
+                </p>
+                {isTauriApp ? (
+                    <>
+                        <p>To enable it on <strong>macOS</strong>:</p>
+                        <ol>
+                            <li>Click <strong>"Open Location Settings"</strong> below</li>
+                            <li>Find <strong>Start POS</strong> in the list and turn it <strong>On</strong></li>
+                            <li>Return to the app — this dialog will close automatically</li>
+                        </ol>
+                        <p className="text-muted" style={{ fontSize: '0.85rem' }}>
+                            Path: <em>System Settings → Privacy &amp; Security → Location Services → Start POS</em>
+                        </p>
+                    </>
+                ) : (
+                    <>
+                        <p>To enable it in your <strong>browser</strong>:</p>
+                        <ol>
+                            <li>Click the <strong>lock 🔒</strong> icon in the address bar</li>
+                            <li>Set <strong>Location</strong> to <em>Allow</em></li>
+                            <li>Reload the page</li>
+                        </ol>
+                    </>
+                )}
+            </Modal.Body>
+            <Modal.Footer>
+                <Button variant="primary" onClick={openLocationSettings}>
+                    {isTauriApp ? '⚙️ Open Location Settings' : '📖 How to enable location'}
+                </Button>
+                <Button variant="outline-secondary" onClick={() => setShowGeoModal(false)}>
+                    Dismiss
+                </Button>
+            </Modal.Footer>
+        </Modal>
+
         <ToastContainer position="top-end" className="p-3" style={{
             zIndex: 1,
             position: "relative",

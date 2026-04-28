@@ -184,24 +184,24 @@ const BalanceSheetPrintPreviewContent = forwardRef((props, ref) => {
                         </div>
                     </div>
 
-                    {pageIndex === 0 && <div className="row col-md-14" style={{ border: "solid 0px", borderColor: detailsBorderColor, fontSize: props.fontSizes[props.modelName + "_invoiceDetails"]?.size, padding: "10px" }} onClick={() => {
+                    {pageIndex === 0 && <div className="row col-md-14" style={{ border: "solid 0px", borderColor: detailsBorderColor, fontSize: props.fontSizes[props.modelName + "_invoiceDetails"]?.size, paddingTop: "10px", paddingBottom: "0px", paddingLeft: "0px", paddingRight: "0px", marginLeft: "0px", marginRight: "0px" }} onClick={() => {
                         props.selectText("invoiceDetails");
                     }}>
-                        <div className="col-md-12" style={{ border: detailsBorderThickness, borderColor: detailsBorderColor, marginLeft: "0px", width: "100%" }}>
+                        <div className="col-md-12" style={{ border: detailsBorderThickness, borderColor: detailsBorderColor, marginLeft: "0px", marginRight: "0px", paddingLeft: "0px", paddingRight: "0px", width: "100%", boxSizing: "border-box", overflow: "hidden" }}>
 
-                            <div className="row" dir="ltr" style={{ borderBottom: detailsBorderThickness }} >
-                                <div className="col-md-4 print-label" dir="ltr" style={{ borderRight: detailsBorderThickness, borderColor: detailsBorderColor, width: detailsLabelsColumnWidthPercent, padding: "3px" }} ><b>Account Name | إسم الحساب:</b></div>
+                            <div className="row" dir="ltr" style={{ borderBottom: detailsBorderThickness, marginLeft: "0px", marginRight: "0px" }} >
+                                <div className="col-md-4 print-label" dir="ltr" style={{ borderRight: detailsBorderThickness, borderColor: detailsBorderColor, width: detailsLabelsColumnWidthPercent, padding: "3px 3px 3px 5px" }} ><b>Account Name | إسم الحساب:</b></div>
                                 <div className="col-md-8 print-value" dir="ltr" style={{ borderColor: detailsBorderColor, width: detailsValuesColumnWidthPercent, padding: "3px" }} >{(props.model.name && props.model?.name_arabic) ? props.model.name + " | " + props.model?.name_arabic : props.model?.name}</div>
                             </div>
-                            <div className="row" dir="ltr" style={{ borderBottom: detailsBorderThickness }} >
-                                <div className="col-md-4 print-label" dir="ltr" style={{ borderRight: detailsBorderThickness, borderColor: detailsBorderColor, width: detailsLabelsColumnWidthPercent, padding: "3px" }} ><b>Account Number | رقم الحساب:</b></div>
+                            <div className="row" dir="ltr" style={{ borderBottom: detailsBorderThickness, marginLeft: "0px", marginRight: "0px" }} >
+                                <div className="col-md-4 print-label" dir="ltr" style={{ borderRight: detailsBorderThickness, borderColor: detailsBorderColor, width: detailsLabelsColumnWidthPercent, padding: "3px 3px 3px 5px" }} ><b>Account Number | رقم الحساب:</b></div>
                                 <div className="col-md-8 print-value" dir="ltr" style={{ borderColor: detailsBorderColor, width: detailsValuesColumnWidthPercent, padding: "3px" }} >
                                     {props.model.number ? props.model.number : ""}
                                 </div>
                             </div>
 
-                            <div className="row" dir="ltr" style={{ borderBottom: detailsBorderThickness }} >
-                                <div className="col-md-4 print-label" dir="ltr" style={{ borderRight: detailsBorderThickness, borderColor: detailsBorderColor, width: detailsLabelsColumnWidthPercent, padding: "3px" }} >Date: | تاريخ:</div>
+                            <div className="row" dir="ltr" style={{ borderBottom: detailsBorderThickness, marginLeft: "0px", marginRight: "0px" }} >
+                                <div className="col-md-4 print-label" dir="ltr" style={{ borderRight: detailsBorderThickness, borderColor: detailsBorderColor, width: detailsLabelsColumnWidthPercent, padding: "3px 3px 3px 5px" }} >Date: | تاريخ:</div>
                                 <div className="col-md-8 print-value" dir="ltr" style={{ borderColor: detailsBorderColor, width: detailsValuesColumnWidthPercent, padding: "3px" }} >
                                     {props.model.dateValue ? format(new Date(props.model.dateValue), "MMM dd yyyy") : ""}
                                     {props.model.fromDateValue && props.model.toDateValue && <>
@@ -217,8 +217,8 @@ const BalanceSheetPrintPreviewContent = forwardRef((props, ref) => {
                                 </div>
                             </div>
                             {props.model.reference_model === "customer" ? <>
-                                <div className="row" dir="ltr" style={{ borderBottom: detailsBorderThickness }} >
-                                    <div className="col-md-4 print-label" dir="ltr" style={{ borderRight: detailsBorderThickness, borderColor: detailsBorderColor, width: detailsLabelsColumnWidthPercent, padding: "3px" }} ><b>Customer Name | اسم العميل:</b></div>
+                                <div className="row" dir="ltr" style={{ borderBottom: detailsBorderThickness, marginLeft: "0px", marginRight: "0px" }} >
+                                    <div className="col-md-4 print-label" dir="ltr" style={{ borderRight: detailsBorderThickness, borderColor: detailsBorderColor, width: detailsLabelsColumnWidthPercent, padding: "3px 3px 3px 5px" }} ><b>Customer Name | اسم العميل:</b></div>
                                     <div className="col-md-8 print-value" dir="ltr" style={{ borderColor: detailsBorderColor, width: detailsValuesColumnWidthPercent, padding: "3px" }} >
                                         {props.model.customer ? props.model.customer.name : ""}
                                         {!props.model.customer && props.model.customerName ? props.model.customerName : ""}
@@ -227,16 +227,16 @@ const BalanceSheetPrintPreviewContent = forwardRef((props, ref) => {
                                     </div>
                                 </div>
 
-                                <div className="row" dir="ltr" style={{ borderBottom: detailsBorderThickness }} >
-                                    <div className="col-md-4 print-label" dir="ltr" style={{ borderRight: detailsBorderThickness, borderColor: detailsBorderColor, width: detailsLabelsColumnWidthPercent, padding: "3px" }} ><b>Customer ID | معرف العميل:</b></div>
+                                <div className="row" dir="ltr" style={{ borderBottom: detailsBorderThickness, marginLeft: "0px", marginRight: "0px" }} >
+                                    <div className="col-md-4 print-label" dir="ltr" style={{ borderRight: detailsBorderThickness, borderColor: detailsBorderColor, width: detailsLabelsColumnWidthPercent, padding: "3px 3px 3px 5px" }} ><b>Customer ID | معرف العميل:</b></div>
                                     <div className="col-md-8 print-value" dir="ltr" style={{ borderColor: detailsBorderColor, width: detailsValuesColumnWidthPercent, padding: "3px" }} >
                                         {props.model.customer?.code ? props.model.customer.code : "N/A"}
 
                                     </div>
                                 </div>
 
-                                <div className="row" dir="ltr" style={{ borderBottom: detailsBorderThickness }} >
-                                    <div className="col-md-4 print-label" dir="ltr" style={{ borderRight: detailsBorderThickness, borderColor: detailsBorderColor, width: detailsLabelsColumnWidthPercent, padding: "3px" }} ><b>Customer VAT  | ضريبة القيمة المضافة للعملاء:</b></div>
+                                <div className="row" dir="ltr" style={{ borderBottom: detailsBorderThickness, marginLeft: "0px", marginRight: "0px" }} >
+                                    <div className="col-md-4 print-label" dir="ltr" style={{ borderRight: detailsBorderThickness, borderColor: detailsBorderColor, width: detailsLabelsColumnWidthPercent, padding: "3px 3px 3px 5px" }} ><b>Customer VAT  | ضريبة القيمة المضافة للعملاء:</b></div>
                                     <div className="col-md-8 print-value" dir="ltr" style={{ borderColor: detailsBorderColor, width: detailsValuesColumnWidthPercent, padding: "3px" }} >
                                         {props.model.customer?.vat_no ? props.model.customer.vat_no : ""}
                                         {!props.model.customer && props.model.vat_no ? props.model.vat_no : ""}
@@ -246,15 +246,15 @@ const BalanceSheetPrintPreviewContent = forwardRef((props, ref) => {
                                     </div>
                                 </div>
 
-                                <div className="row" dir="ltr" style={{ borderBottom: detailsBorderThickness }} >
-                                    <div className="col-md-4 print-label" dir="ltr" style={{ borderRight: detailsBorderThickness, borderColor: detailsBorderColor, width: detailsLabelsColumnWidthPercent, padding: "3px" }} ><b>Customer C.R | رقم تسجيل شركة العميل:</b></div>
+                                <div className="row" dir="ltr" style={{ borderBottom: detailsBorderThickness, marginLeft: "0px", marginRight: "0px" }} >
+                                    <div className="col-md-4 print-label" dir="ltr" style={{ borderRight: detailsBorderThickness, borderColor: detailsBorderColor, width: detailsLabelsColumnWidthPercent, padding: "3px 3px 3px 5px" }} ><b>Customer C.R | رقم تسجيل شركة العميل:</b></div>
                                     <div className="col-md-8 print-value" dir="ltr" style={{ borderColor: detailsBorderColor, width: detailsValuesColumnWidthPercent, padding: "3px" }} >
                                         {props.model.customer?.registration_number ? props.model.customer.registration_number + " | " + convertToArabicNumber(props.model.customer.registration_number) : "N/A"}
                                     </div>
                                 </div>
 
-                                <div className="row" dir="ltr" style={{}} >
-                                    <div className="col-md-4 print-label" dir="ltr" style={{ borderRight: detailsBorderThickness, borderColor: detailsBorderColor, width: detailsLabelsColumnWidthPercent, padding: "3px" }} ><b>Customer Address | عنوان العميل:</b></div>
+                                <div className="row" dir="ltr" style={{ marginLeft: "0px", marginRight: "0px" }} >
+                                    <div className="col-md-4 print-label" dir="ltr" style={{ borderRight: detailsBorderThickness, borderColor: detailsBorderColor, width: detailsLabelsColumnWidthPercent, padding: "3px 3px 3px 5px" }} ><b>Customer Address | عنوان العميل:</b></div>
                                     <div className="col-md-8 print-value" dir="ltr" style={{ borderColor: detailsBorderColor, width: detailsValuesColumnWidthPercent, padding: "3px" }} >
                                         {props.model.address && !props.model.customer ? props.model.address : ""}
 
@@ -286,8 +286,8 @@ const BalanceSheetPrintPreviewContent = forwardRef((props, ref) => {
                                 </div>
                             </> : ""}
                             {props.model.reference_model === "vendor" ? <>
-                                <div className="row" dir="ltr" style={{ borderBottom: detailsBorderThickness }} >
-                                    <div className="col-md-4 print-label" dir="ltr" style={{ borderRight: detailsBorderThickness, width: detailsLabelsColumnWidthPercent, padding: "3px" }} ><b>Vendor Name | اسم العميل:</b></div>
+                                <div className="row" dir="ltr" style={{ borderBottom: detailsBorderThickness, marginLeft: "0px", marginRight: "0px" }} >
+                                    <div className="col-md-4 print-label" dir="ltr" style={{ borderRight: detailsBorderThickness, width: detailsLabelsColumnWidthPercent, padding: "3px 3px 3px 5px" }} ><b>Vendor Name | اسم العميل:</b></div>
                                     <div className="col-md-8 print-value" dir="ltr" style={{ width: detailsValuesColumnWidthPercent, padding: "3px" }} >
                                         {props.model.vendor ? props.model.vendor.name : ""}
                                         {!props.model.vendor && props.model.vendorName ? props.model.vendorName : ""}
@@ -295,16 +295,16 @@ const BalanceSheetPrintPreviewContent = forwardRef((props, ref) => {
                                     </div>
                                 </div>
 
-                                <div className="row" dir="ltr" style={{ borderBottom: detailsBorderThickness }} >
-                                    <div className="col-md-4 print-label" dir="ltr" style={{ borderRight: detailsBorderThickness, width: detailsLabelsColumnWidthPercent, padding: "3px" }} ><b>Vendor ID | معرف البائع:</b></div>
+                                <div className="row" dir="ltr" style={{ borderBottom: detailsBorderThickness, marginLeft: "0px", marginRight: "0px" }} >
+                                    <div className="col-md-4 print-label" dir="ltr" style={{ borderRight: detailsBorderThickness, width: detailsLabelsColumnWidthPercent, padding: "3px 3px 3px 5px" }} ><b>Vendor ID | معرف البائع:</b></div>
                                     <div className="col-md-8 print-value" dir="ltr" style={{ width: detailsValuesColumnWidthPercent, padding: "3px" }} >
                                         {props.model.vendor?.code ? props.model.vendor.code : "N/A"}
 
                                     </div>
                                 </div>
 
-                                <div className="row" dir="ltr" style={{ borderBottom: detailsBorderThickness }} >
-                                    <div className="col-md-4 print-label" dir="ltr" style={{ borderRight: detailsBorderThickness, width: detailsLabelsColumnWidthPercent, padding: "3px" }} ><b>Vendor VAT | ضريبة القيمة المضافة للعملاء:</b></div>
+                                <div className="row" dir="ltr" style={{ borderBottom: detailsBorderThickness, marginLeft: "0px", marginRight: "0px" }} >
+                                    <div className="col-md-4 print-label" dir="ltr" style={{ borderRight: detailsBorderThickness, width: detailsLabelsColumnWidthPercent, padding: "3px 3px 3px 5px" }} ><b>Vendor VAT | ضريبة القيمة المضافة للعملاء:</b></div>
                                     <div className="col-md-8 print-value" dir="ltr" style={{ width: detailsValuesColumnWidthPercent, padding: "3px" }} >
                                         {props.model.vendor?.vat_no ? props.model.vendor.vat_no : ""}
                                         {!props.model.vendor && props.model.vat_no ? props.model.vat_no : ""}
@@ -312,15 +312,15 @@ const BalanceSheetPrintPreviewContent = forwardRef((props, ref) => {
                                     </div>
                                 </div>
 
-                                <div className="row" dir="ltr" style={{ borderBottom: detailsBorderThickness }} >
-                                    <div className="col-md-4 print-label" dir="ltr" style={{ borderRight: detailsBorderThickness, width: detailsLabelsColumnWidthPercent, padding: "3px" }} ><b>Vendor C.R | رقم تسجيل الشركة الموردة:</b></div>
+                                <div className="row" dir="ltr" style={{ borderBottom: detailsBorderThickness, marginLeft: "0px", marginRight: "0px" }} >
+                                    <div className="col-md-4 print-label" dir="ltr" style={{ borderRight: detailsBorderThickness, width: detailsLabelsColumnWidthPercent, padding: "3px 3px 3px 5px" }} ><b>Vendor C.R | رقم تسجيل الشركة الموردة:</b></div>
                                     <div className="col-md-8 print-value" dir="ltr" style={{ width: detailsValuesColumnWidthPercent, padding: "3px" }} >
                                         {props.model.vendor?.registration_number ? props.model.vendor.registration_number : "N/A"}
                                     </div>
                                 </div>
 
-                                <div className="row" dir="ltr" style={{}} >
-                                    <div className="col-md-4 print-label" dir="ltr" style={{ borderRight: detailsBorderThickness, width: detailsLabelsColumnWidthPercent, padding: "3px" }} ><b>Vendor Address | عنوان العميل:</b> </div>
+                                <div className="row" dir="ltr" style={{ marginLeft: "0px", marginRight: "0px" }} >
+                                    <div className="col-md-4 print-label" dir="ltr" style={{ borderRight: detailsBorderThickness, width: detailsLabelsColumnWidthPercent, padding: "3px 3px 3px 5px" }} ><b>Vendor Address | عنوان العميل:</b> </div>
                                     <div className="col-md-8 print-value    " dir="ltr" style={{ width: detailsValuesColumnWidthPercent, padding: "3px" }} >
                                         {props.model.address && !props.model.vendor ? props.model.address : ""}
 
@@ -365,12 +365,12 @@ const BalanceSheetPrintPreviewContent = forwardRef((props, ref) => {
                         </div>
                     </div>
 
-                    <div className="row">
-                        <div className="col">
+                    <div className="row" style={{ marginLeft: "0px", marginRight: "0px" }}>
+                        <div className="col" style={{ paddingLeft: "0px", paddingRight: "0px" }}>
                             <div
                                 className=""
                                 style={{
-                                    overflow: "hidden", outline: "none"
+                                    overflow: "visible", outline: "none"
                                 }}
                                 tabIndex="0"
                             >

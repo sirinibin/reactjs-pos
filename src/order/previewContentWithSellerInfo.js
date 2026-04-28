@@ -62,8 +62,11 @@ const PreviewContentWithSellerInfo = forwardRef((props, ref) => {
                         paddingTop: "10px",
                         paddingBottom: "4px",
                         marginTop: page.top + "px",
+                        marginLeft: "auto",
+                        marginRight: "auto",
+                        maxWidth: "none",
                         height: "1118px",
-                        width: `${props.whatsAppShare ? "750px" : "750px"}`,
+                        width: props.whatsAppShare ? "750px" : window.location.pathname.includes('invoice-print') ? "774px" : !!(window.__TAURI__ || window.__TAURI_INTERNALS__) ? "calc(100vw - 20px)" : "750px",
                         //backgroundImage: `url(${props.whatsAppShare ? props.invoiceBackground : ""})`,
                         // backgroundSize: 'cover',
                         // backgroundPosition: 'center',
@@ -155,10 +158,10 @@ const PreviewContentWithSellerInfo = forwardRef((props, ref) => {
                             </div>
                         </div>
 
-                        <div className="row col-md-14" style={{ border: "solid 0px", borderColor: detailsBorderColor, fontSize: props.fontSizes[props.modelName + "_invoiceDetails"]?.size, padding: "10px" }} onClick={() => {
+                        <div className="row col-md-14" style={{ border: "solid 0px", borderColor: detailsBorderColor, fontSize: props.fontSizes[props.modelName + "_invoiceDetails"]?.size, paddingTop: "10px", paddingBottom: "10px", paddingLeft: "0px", paddingRight: "0px", marginLeft: "0px", marginRight: "0px" }} onClick={() => {
                             props.selectText("invoiceDetails");
                         }}>
-                            <div className="col-md-12" style={{ border: detailsBorderThickness, borderColor: detailsBorderColor, marginLeft: "0px", width: `${(props.model.store?.settings?.zatca_qr_on_left_bottom || (props.modelName === "quotation" && props.model.type !== "invoice")) ? "100%" : "74%"}` }}>
+                            <div className="col-md-12 details-box" style={{ border: detailsBorderThickness, borderColor: detailsBorderColor, marginLeft: "0px", paddingLeft: "0px", paddingRight: "0px", width: `${(props.model.store?.settings?.zatca_qr_on_left_bottom || (props.modelName === "quotation" && props.model.type !== "invoice")) ? "100%" : "74%"}` }}>
                                 {props.modelName === "quotation" && props.model.type !== "invoice" && <>
                                     <div className="row" dir="ltr" style={{ borderBottom: detailsBorderThickness }} >
                                         <div className="col-md-4 print-label" dir="ltr" style={{ borderRight: detailsBorderThickness, borderColor: detailsBorderColor, width: detailsLabelsColumnWidthPercent, padding: "3px" }} ><b>Quotation No. | رقم الاقتباس:</b></div>

@@ -75,7 +75,7 @@ async function getDeviceFingerprint() {
 async function getUserLocation() {
     return new Promise((resolve, reject) => {
         if (!navigator.geolocation) {
-            return reject("Geolocation is not supported by this browser.");
+            return reject({ code: 0, message: "Geolocation is not supported by this browser." });
         }
 
         navigator.geolocation.getCurrentPosition(
@@ -96,11 +96,11 @@ async function getUserLocation() {
                         country: data.address.country || "Unknown", // Matches Golang struct field name
                     });
                 } catch (error) {
-                    reject("Failed to fetch location details.");
+                    reject({ code: 0, message: "Failed to fetch location details." });
                 }
             },
             (error) => {
-                reject(error.message);
+                reject(error); // pass the full PositionError (has .code and .message)
             }
         );
     });
@@ -112,7 +112,7 @@ export const WebSocketProvider = ({ userId, children }) => {
     const device_id = getDeviceId(); // Matches Golang struct field name
 
     const { sendMessage, lastMessage, readyState, getWebSocket } = useWebSocket(
-        `/v1/socket?userId=${userId}&deviceId=${device_id}`, // Append device_id to WebSocket URL
+        userId !== "guest" ? `/v1/socket?userId=${userId}&deviceId=${device_id}` : null, // null = no connection when not logged in
         {
             share: true,
             shouldReconnect: () => didUnmount.current === false && userId !== "guest",
@@ -171,13 +171,40 @@ export const WebSocketProvider = ({ userId, children }) => {
         if (!userId) return;
         console.log("WebSocket initialized for userId:", userId);
 
+        // Detect Tauri (may run inside an iframe, so check window.parent too)
+        const isTauri = typeof window.__TAURI__ !== 'undefined' ||
+            typeof window.__TAURI_INTERNALS__ !== 'undefined' ||
+            (() => { try { return window.parent !== window && typeof window.parent.__TAURI__ !== 'undefined'; } catch (_) { return false; } })();
+
         const sendLocation = async () => {
             try {
+                // In Tauri (macOS desktop app), skip the navigator.permissions pre-check.
+                // WKWebView caches geolocation as 'denied' at its own layer (set before
+                // macOS system permission was granted), but Tauri routes getCurrentPosition
+                // through CoreLocation directly — so the permissions API state is stale and
+                // causes a false "Location Access Required" modal on every new tab.
+                // We rely solely on getCurrentPosition() to determine the real state.
+                if (!isTauri && navigator.permissions) {
+                    const perm = await navigator.permissions.query({ name: 'geolocation' });
+                    if (perm.state === 'denied') {
+                        eventEmitter.emit('geolocation_denied');
+                        return;
+                    }
+                }
+
                 const locationInfo = await getUserLocation();
+                // Successfully got location — emit granted so modal can close
+                eventEmitter.emit('geolocation_granted');
                 sendMessage(JSON.stringify({ event: "location_update", data: locationInfo }));
-                //console.log("Sent Location Update:", locationInfo);
-            } catch (error) {
-                console.error("Error sending location update:", error);
+            } catch (err) {
+                // PERMISSION_DENIED (code 1) — user actually blocked location access.
+                // In Tauri, geolocation inside a WKWebView iframe may fail with code 1
+                // regardless of system permission (iframe vs main-frame restriction).
+                // Suppress the modal in Tauri to avoid it appearing on every tab load.
+                if (err && err.code === 1 && !isTauri) {
+                    eventEmitter.emit('geolocation_denied');
+                }
+                // All other errors (network, timeout, etc.) silently ignored
             }
         };
 
@@ -196,14 +223,12 @@ export const WebSocketProvider = ({ userId, children }) => {
 
     useEffect(() => {
         if (!userId) return;
-        console.log("WebSocket initialized for userId:", userId);
 
         const sendPing = () => {
             try {
                 sendMessage(JSON.stringify({ event: "ping", data: { "message": "ping" } }));
-                //console.log("Sent Ping at", new Date().toISOString());
-            } catch (error) {
-                console.error("Error sending ping:", error);
+            } catch (_) {
+                // Ignore ping errors silently
             }
         };
 

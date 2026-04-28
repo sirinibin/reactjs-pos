@@ -1066,69 +1066,87 @@ const Preview = forwardRef((props, ref) => {
 
 
     const handleDownload = async () => {
-        if (model.store.code === "MBDI") {
-            InvoiceBackground = MBDIInvoiceBackground;
-        } else if (model.store.code === "LGK-SIMULATION" || model.store.code === "LGK" || model.store.code === "PH2") {
-            InvoiceBackground = LGKInvoiceBackground;
-        }
-
-        model.printing = false;
-        setModel({ ...model });
-        const element = printAreaRef.current;
-        if (!element) return;
-
-        const fileName = getFileName();
-        const xmlUrl = `/zatca/xml/${model.code}.xml`;
-
-        // 1. Only download and attach XML if ZATCA Phase 2 and reporting passed
-        let xmlBytes = null;
-        const shouldAttachXml =
-            model.store?.zatca?.phase === "2" &&
-            model.zatca?.qr_code &&
-            model.zatca?.reporting_passed;
-
-        if (shouldAttachXml) {
+        setIsDownloading(true);
+        try {
+            // Detect Tauri first
+            let isInTauri = false;
             try {
-                const xmlResponse = await fetch(xmlUrl);
-                if (!xmlResponse.ok) throw new Error("Failed to fetch XML");
-                xmlBytes = new Uint8Array(await xmlResponse.arrayBuffer());
-            } catch (err) {
-                console.error("Failed to download XML:", err);
-                alert("Failed to download ZATCA XML. PDF will be generated without XML attachment.");
-                xmlBytes = null;
+                isInTauri = !!(window.__TAURI__ || window.__TAURI_INTERNALS__ ||
+                    (window.parent !== window &&
+                        (window.parent.__TAURI__ || window.parent.__TAURI_INTERNALS__)));
+            } catch (_) { /* cross-origin guard */ }
+
+            const fileName = getFileName();
+
+            if (isInTauri) {
+                // Tauri: use Go chromedp PDF generation (correct Arabic text, saves to ~/Downloads)
+                if (model.store?.code === "MBDI") {
+                    InvoiceBackground = MBDIInvoiceBackground;
+                } else if (model.store?.code === "LGK-SIMULATION" || model.store?.code === "LGK" || model.store?.code === "PH2") {
+                    InvoiceBackground = LGKInvoiceBackground;
+                }
+
+                model.printing = false;
+                setModel({ ...model });
+
+                const apiResponse = await fetch('/v1/invoice/pdf', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': localStorage.getItem('access_token'),
+                    },
+                    body: JSON.stringify({
+                        model: model,
+                        modelName: modelName,
+                        fontSizes: fontSizes,
+                        filename: fileName,
+                    }),
+                });
+
+                if (!apiResponse.ok) {
+                    const errData = await apiResponse.json().catch(() => ({}));
+                    throw new Error(
+                        errData?.errors?.chrome ||
+                        errData?.errors?.pdf ||
+                        errData?.errors?.body ||
+                        `HTTP ${apiResponse.status}`
+                    );
+                }
+
+                const savedTo = apiResponse.headers.get('X-Saved-To');
+                const location = savedTo || `~/Downloads/${fileName}.pdf`;
+                setDownloadFlash({ message: `Downloaded to: ${location}`, variant: 'success' });
+                setTimeout(() => setDownloadFlash(null), 6000);
+            } else {
+                // Web browser: use html2pdf() directly
+                const element = printAreaRef.current;
+                if (!element) return;
+
+                const pdfBlob = await html2pdf()
+                    .set({
+                        margin: 0,
+                        filename: `${fileName}.pdf`,
+                        image: { type: 'jpeg', quality: 0.98 },
+                        html2canvas: { scale: 2, useCORS: true },
+                        jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+                    })
+                    .from(element)
+                    .outputPdf('blob');
+
+                const url = URL.createObjectURL(pdfBlob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `${fileName}.pdf`;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
             }
+        } catch (err) {
+            alert('PDF download failed: ' + (err?.message || String(err)));
+        } finally {
+            setIsDownloading(false);
         }
-
-        // 2. Generate PDF as ArrayBuffer
-        const pdfArrayBuffer = await html2pdf()
-            .set({
-                margin: 0,
-                filename: `${fileName}.pdf`,
-                image: { type: 'jpeg', quality: 0.98 },
-                html2canvas: { scale: 2, useCORS: true },
-                jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
-            })
-            .from(element)
-            .outputPdf('arraybuffer');
-
-        // 3. Load PDF with pdf-lib
-        const pdfDoc = await PDFDocument.load(pdfArrayBuffer);
-
-        // 4. Attach XML if available and required
-        if (xmlBytes) {
-            await pdfDoc.attach(xmlBytes, "invoice.xml", {
-                mimeType: "text/xml",
-                description: "ZATCA E-Invoice XML"
-            });
-        }
-
-        // 5. Save the PDF
-        const pdfBytes = await pdfDoc.save();
-        const blob = new Blob([pdfBytes], { type: "application/pdf" });
-        const link = document.createElement("a");
-        link.href = URL.createObjectURL(blob);
-        link.download = `${fileName}.pdf`;
-        link.click();
     };
 
     /*
@@ -1156,39 +1174,94 @@ const Preview = forwardRef((props, ref) => {
 
 
 
-    const handlePrint = useCallback(() => {
-
-        //  alert(getFileName());
-
-
+    const handlePrint = useCallback(async () => {
         setIsProcessing(true);
-        const element = printAreaRef.current;
-        if (!element) return;
 
-        html2pdf().from(element).set({
-            margin: 0,
-            filename: `${getFileName()}.pdf`,
-            image: { type: 'jpeg', quality: 0.98 },
-            html2canvas: { scale: 2, useCORS: true },
-            jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
-        }).outputPdf('bloburl').then(blobUrl => {
-            setIsProcessing(false);
-            const iframe = document.createElement('iframe');
-            iframe.style.display = 'none';
-            iframe.src = blobUrl;
-            document.body.appendChild(iframe);
+        // Detect Tauri — walk up iframe parent chain (same-origin) to find the Tauri API.
+        let tauriRoot2 = null;
+        try {
+            let w = window;
+            while (w) {
+                if (w.__TAURI__?.core?.invoke) { tauriRoot2 = w.__TAURI__; break; }
+                if (w.__TAURI_INTERNALS__?.invoke) { tauriRoot2 = w.__TAURI_INTERNALS__; break; }
+                if (w === w.parent) break;
+                w = w.parent;
+            }
+        } catch (_) { /* cross-origin parent */ }
+        const tauriInvoke = tauriRoot2?.core?.invoke ?? tauriRoot2?.invoke ?? null;
+        const isInTauri = !!tauriInvoke;
 
-            iframe.onload = () => {
-                iframe.contentWindow?.focus();
-                iframe.contentWindow?.print();
-            };
+        try {
+            const fileName = getFileName();
 
-            handleClose();
+            if (isInTauri) {
+                // Tauri: use Go chromedp PDF generation (correct Arabic text), then open for printing
+                const apiResponse = await fetch('/v1/invoice/pdf', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': localStorage.getItem('access_token'),
+                    },
+                    body: JSON.stringify({
+                        model: model,
+                        modelName: modelName,
+                        fontSizes: fontSizesRef.current,
+                        filename: fileName,
+                    }),
+                });
 
-        });
-    }, [getFileName, handleClose]);
+                if (!apiResponse.ok) {
+                    const errData = await apiResponse.json().catch(() => ({}));
+                    throw new Error(
+                        errData?.errors?.chrome ||
+                        errData?.errors?.pdf ||
+                        errData?.errors?.body ||
+                        `HTTP ${apiResponse.status}`
+                    );
+                }
 
+                const pdfBlob = await apiResponse.blob();
+                const arrayBuffer = await pdfBlob.arrayBuffer();
+                const uint8Array = new Uint8Array(arrayBuffer);
+                let binary = '';
+                for (let i = 0; i < uint8Array.length; i++) {
+                    binary += String.fromCharCode(uint8Array[i]);
+                }
+                const base64 = btoa(binary);
 
+                await tauriInvoke('print_pdf', {
+                    dataBase64: base64,
+                    filename: `${fileName}.pdf`,
+                });
+            } else {
+                // Web browser: use html2pdf() and print via hidden iframe
+                const element = printAreaRef.current;
+                if (!element) return;
+
+                const output = await html2pdf().from(element).set({
+                    margin: 0,
+                    filename: `${fileName}.pdf`,
+                    image: { type: 'jpeg', quality: 0.98 },
+                    html2canvas: { scale: 2, useCORS: true },
+                    jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+                }).outputPdf('bloburl');
+
+                const iframe = document.createElement('iframe');
+                iframe.style.display = 'none';
+                iframe.src = output;
+                document.body.appendChild(iframe);
+                iframe.onload = () => {
+                    iframe.contentWindow?.focus();
+                    iframe.contentWindow?.print();
+                };
+            }
+        } catch (e) {
+            alert('Print failed: ' + (e?.message || JSON.stringify(e)));
+        }
+
+        setIsProcessing(false);
+        handleClose();
+    }, [getFileName, handleClose, model, modelName]);
 
     /*
     const handlePrint = async () => {
@@ -1287,10 +1360,63 @@ const Preview = forwardRef((props, ref) => {
         if (!element) return;
 
         const fileName = getFileName();
-        const xmlUrl = `/zatca/xml/${model.code}.xml`;
 
-        // 1. Only download and attach XML if ZATCA Phase 2 and reporting passed
-        let xmlBytes = null;
+        // Detect Tauri
+        let isInTauri = false;
+        try {
+            isInTauri = !!(window.__TAURI__ || window.__TAURI_INTERNALS__ ||
+                (window.parent !== window &&
+                    (window.parent.__TAURI__ || window.parent.__TAURI_INTERNALS__)));
+        } catch (_) { /* cross-origin guard */ }
+
+        // Debug flash: confirm which path we're on
+        setDownloadFlash({
+            message: isInTauri ? '✅ Running in Tauri Desktop App' : '🌐 Running in Web Browser',
+            variant: isInTauri ? 'success' : 'info',
+        });
+        setTimeout(() => setDownloadFlash(null), 5000);
+
+        let pdfBlob;
+
+        if (isInTauri) {
+            // Tauri: use Go chromedp PDF generation (correct Arabic text)
+            const apiResponse = await fetch('/v1/invoice/pdf', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': localStorage.getItem('access_token'),
+                },
+                body: JSON.stringify({
+                    model: model,
+                    modelName: modelName,
+                    fontSizes: fontSizesRef.current,
+                    filename: fileName,
+                }),
+            });
+
+            if (!apiResponse.ok) {
+                const errData = await apiResponse.json().catch(() => ({}));
+                setIsProcessing(false);
+                alert('PDF generation failed: ' + (errData?.errors?.chrome || errData?.errors?.pdf || `HTTP ${apiResponse.status}`));
+                return;
+            }
+
+            pdfBlob = await apiResponse.blob();
+        } else {
+            // Web: use html2pdf()
+            const opt = {
+                margin: 0,
+                filename: `${fileName}.pdf`,
+                image: { type: 'jpeg', quality: 0.98 },
+                html2canvas: { scale: 2, useCORS: true, logging: true },
+                jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+            };
+
+            const pdfArrayBuffer = await html2pdf().from(element).set(opt).outputPdf('arraybuffer');
+            pdfBlob = new Blob([pdfArrayBuffer], { type: "application/pdf" });
+        }
+
+        // Attach ZATCA XML if Phase 2 and reporting passed (both Tauri and Web)
         const shouldAttachXml =
             model.store?.zatca?.phase === "2" &&
             model.zatca?.qr_code &&
@@ -1298,46 +1424,56 @@ const Preview = forwardRef((props, ref) => {
 
         if (shouldAttachXml) {
             try {
+                const xmlUrl = `/zatca/xml/${model.code}.xml`;
                 const xmlResponse = await fetch(xmlUrl);
                 if (!xmlResponse.ok) throw new Error("Failed to fetch XML");
-                xmlBytes = new Uint8Array(await xmlResponse.arrayBuffer());
+                const xmlBytes = new Uint8Array(await xmlResponse.arrayBuffer());
+                const pdfArrayBuffer = await pdfBlob.arrayBuffer();
+                const pdfDoc = await PDFDocument.load(pdfArrayBuffer);
+                await pdfDoc.attach(xmlBytes, "invoice.xml", {
+                    mimeType: "text/xml",
+                    description: "ZATCA E-Invoice XML"
+                });
+                const pdfBytes = await pdfDoc.save();
+                pdfBlob = new Blob([pdfBytes], { type: "application/pdf" });
             } catch (err) {
-                console.error("Failed to download XML:", err);
-                alert("Failed to download ZATCA XML. PDF will be generated without XML attachment.");
-                xmlBytes = null;
+                console.error("Failed to attach ZATCA XML:", err);
             }
         }
 
-        // 2. Generate PDF as ArrayBuffer
-        const opt = {
-            margin: 0,
-            filename: `${fileName}.pdf`,
-            image: { type: 'jpeg', quality: 0.98 },
-            html2canvas: { scale: 2, useCORS: true, logging: true },
-            jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
-        };
-
-        const pdfArrayBuffer = await html2pdf().from(element).set(opt).outputPdf('arraybuffer');
-
-        // 3. Load PDF with pdf-lib
-        const pdfDoc = await PDFDocument.load(pdfArrayBuffer);
-
-        // 4. Attach XML if available and required
-        if (xmlBytes) {
-            await pdfDoc.attach(xmlBytes, "invoice.xml", {
-                mimeType: "text/xml",
-                description: "ZATCA E-Invoice XML"
-            });
+        // Upload: Tauri → filebin.net (public URL), Web → local server
+        let publicUrl = "";
+        if (isInTauri) {
+            try {
+                const binId = `startpos-${Date.now()}`;
+                const safeFileName = `${fileName}.pdf`.replace(/[^a-zA-Z0-9._-]/g, "_");
+                // Use untyped Blob so browser does NOT set Content-Type header,
+                // keeping it a simple CORS request (no preflight needed).
+                const rawBlob = new Blob([await pdfBlob.arrayBuffer()]);
+                const fbResponse = await fetch(`https://filebin.net/${binId}/${safeFileName}`, {
+                    method: "POST",
+                    body: rawBlob,
+                });
+                const fbText = await fbResponse.text();
+                console.log("filebin.net response status:", fbResponse.status, "body:", fbText);
+                setDownloadFlash({
+                    message: `filebin.net HTTP ${fbResponse.status}: ${fbText.slice(0, 200)}`,
+                    variant: (fbResponse.ok || fbResponse.status === 201) ? 'success' : 'danger',
+                });
+                setTimeout(() => setDownloadFlash(null), 10000);
+                if (fbResponse.ok || fbResponse.status === 201) {
+                    publicUrl = `https://filebin.net/${binId}/${safeFileName}`;
+                }
+            } catch (err) {
+                console.error("filebin.net upload failed:", err);
+                setDownloadFlash({ message: `filebin.net upload error: ${err.message}`, variant: 'danger' });
+                setTimeout(() => setDownloadFlash(null), 10000);
+            }
+        } else {
+            const formData = new FormData();
+            formData.append("file", pdfBlob, `${fileName}.pdf`);
+            await fetch("/v1/upload-pdf", { method: "POST", body: formData });
         }
-
-        // 5. Save the PDF as a Blob for upload
-        const pdfBytes = await pdfDoc.save();
-        const pdfBlob = new Blob([pdfBytes], { type: "application/pdf" });
-
-        // 6. Upload to your server
-        const formData = new FormData();
-        formData.append("file", pdfBlob, `${fileName}.pdf`);
-        await fetch("/v1/upload-pdf", { method: "POST", body: formData });
 
         // ...rest of your WhatsApp sharing logic...
         // (No changes needed below this line)
@@ -1351,24 +1487,27 @@ const Preview = forwardRef((props, ref) => {
             whatsAppNo = model.vendor?.phone
         }
 
+        // Use the 0x0.st public URL in Tauri; fall back to local server URL in Web
+        let cacheBuster = `?v=${Date.now()}`;
+        const pdfUrl = (isInTauri && publicUrl)
+            ? publicUrl
+            : `${window.location.origin}/pdfs/${fileName}.pdf${cacheBuster}`;
 
         let message = "";
-        // ...existing code...
-        let cacheBuster = `?v=${Date.now()}`;
         if ((modelName === "quotation" || modelName === "whatsapp_quotation") && model?.type === "invoice") {
-            message = `${t("Hello, here is your Invoice")}:\n${window.location.origin}/pdfs/${fileName}.pdf${cacheBuster}`;
+            message = `${t("Hello, here is your Invoice")}:\n${pdfUrl}`;
         } else if ((modelName === "quotation" || modelName === "whatsapp_quotation") && model?.type === "quotation") {
-            message = `${t("Hello, here is your Quotation")}:\n${window.location.origin}/pdfs/${fileName}.pdf${cacheBuster}`;
+            message = `${t("Hello, here is your Quotation")}:\n${pdfUrl}`;
         } else if (modelName === "delivery_note" || modelName === "whatsapp_delivery_note") {
-            message = `${t("Hello, here is your Delivery Note")}:\n${window.location.origin}/pdfs/${fileName}.pdf${cacheBuster}`;
+            message = `${t("Hello, here is your Delivery Note")}:\n${pdfUrl}`;
         } else if (modelName === "sales_return" || modelName === "whatsapp_sales_return") {
-            message = `${t("Hello, here is your Return Invoice")}:\n${window.location.origin}/pdfs/${fileName}.pdf${cacheBuster}`;
+            message = `${t("Hello, here is your Return Invoice")}:\n${pdfUrl}`;
         } else if (modelName === "quotation_sales_return" || modelName === "whatsapp_quotation_sales_return") {
-            message = `${t("Hello, here is your Return Invoice")}:\n${window.location.origin}/pdfs/${fileName}.pdf${cacheBuster}`;
+            message = `${t("Hello, here is your Return Invoice")}:\n${pdfUrl}`;
         } else if (modelName === "stock_transfer" || modelName === "whatsapp_stock_transfer") {
-            message = `${t("Hello, here is your Stock Transfer")}:\n${window.location.origin}/pdfs/${fileName}.pdf${cacheBuster}`;
+            message = `${t("Hello, here is your Stock Transfer")}:\n${pdfUrl}`;
         } else {
-            message = `${t("Hello, here is your Invoice")}:\n${window.location.origin}/pdfs/${fileName}.pdf${cacheBuster}`;
+            message = `${t("Hello, here is your Invoice")}:\n${pdfUrl}`;
         }
 
         if (timerRef.current) clearTimeout(timerRef.current);
@@ -1457,6 +1596,8 @@ const Preview = forwardRef((props, ref) => {
     }, [getFileName, model, phone, modelName, formatPhoneForWhatsApp]);*/
 
     const [showWhatsAppMessageModal, setShowWhatsAppMessageModal] = useState(false);
+    const [downloadFlash, setDownloadFlash] = useState(null); // { message, variant }
+    const [isDownloading, setIsDownloading] = useState(false);
     /* const handleChoice = ({ type, number, message }) => {
          let whatsappUrl = "";
          if (type === "number" && number) {
@@ -1495,9 +1636,25 @@ const Preview = forwardRef((props, ref) => {
 
         if (timerRef.current) clearTimeout(timerRef.current);
 
-        timerRef.current = setTimeout(() => {
+        timerRef.current = setTimeout(async () => {
             handleClose();
-            window.open(whatsappUrl, "_blank");
+
+            // In Tauri, window.open does not open external URLs — use the shell plugin instead
+            let tauriShell = null;
+            try {
+                let w = window;
+                while (w) {
+                    if (w.__TAURI__?.shell?.open) { tauriShell = w.__TAURI__.shell; break; }
+                    if (w === w.parent) break;
+                    w = w.parent;
+                }
+            } catch (_) { /* cross-origin guard */ }
+
+            if (tauriShell) {
+                await tauriShell.open(whatsappUrl);
+            } else {
+                window.open(whatsappUrl, "_blank");
+            }
         }, 100);
     };
 
@@ -1673,6 +1830,8 @@ const Preview = forwardRef((props, ref) => {
 
 
     let [fontSizes, setFontSizes] = useState(defaultFontSizes);
+    const fontSizesRef = useRef(defaultFontSizes);
+    useEffect(() => { fontSizesRef.current = fontSizes; }, [fontSizes]);
 
     useEffect(() => {
         let storedFontSizes = getFromLocalStorage("fontSizes");
@@ -1897,6 +2056,17 @@ const Preview = forwardRef((props, ref) => {
         />
 
         <Modal show={show} scrollable={true} size="xl" fullscreen onHide={handleClose} animation={false}>
+            {downloadFlash && (
+                <div
+                    className={`alert alert-${downloadFlash.variant} alert-dismissible mb-0 rounded-0`}
+                    role="alert"
+                    style={{ position: 'sticky', top: 0, zIndex: 1060, fontSize: '0.9rem' }}
+                >
+                    <i className="bi bi-download me-2"></i>
+                    {downloadFlash.message}
+                    <button type="button" className="btn-close" onClick={() => setDownloadFlash(null)} aria-label="Close"></button>
+                </div>
+            )}
             <Modal.Header className="d-flex flex-wrap align-items-center justify-content-between">
                 {/* Left: Title */}
                 <div className="flex-grow-1">
@@ -2023,11 +2193,15 @@ const Preview = forwardRef((props, ref) => {
 
                     {/* Print & Close Buttons */}
                     <div className="d-flex align-items-center">
-                        <Button variant="primary" className="d-flex align-items-center gap-2" onClick={(e) => {
+                        <Button variant="primary" className="d-flex align-items-center gap-2" disabled={isDownloading} onClick={(e) => {
                             e.preventDefault();
                             handleDownload()
                         }}>
-                            <i className="bi bi-file-earmark-arrow-down"></i>PDF
+                            {isDownloading ? (
+                                <Spinner as="span" animation="border" size="sm" role="status" aria-hidden={true} />
+                            ) : (
+                                <><i className="bi bi-file-earmark-arrow-down"></i>PDF</>
+                            )}
                         </Button>&nbsp;&nbsp;
 
 
