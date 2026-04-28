@@ -669,35 +669,94 @@ const ReportPreview = forwardRef((props, ref) => {
 
 
 
-    const handlePrint = useCallback(() => {
-        const element = printAreaRef.current;
-        if (!element) return;
+    const handlePrint = useCallback(async () => {
+        // Detect Tauri — walk up iframe parent chain (same-origin) to find the Tauri API.
+        let tauriRoot = null;
+        try {
+            let w = window;
+            while (w) {
+                if (w.__TAURI__?.core?.invoke) { tauriRoot = w.__TAURI__; break; }
+                if (w.__TAURI_INTERNALS__?.invoke) { tauriRoot = w.__TAURI_INTERNALS__; break; }
+                if (w === w.parent) break;
+                w = w.parent;
+            }
+        } catch (_) { /* cross-origin parent */ }
+        const tauriInvoke = tauriRoot?.core?.invoke ?? tauriRoot?.invoke ?? null;
+        const isInTauri = !!tauriInvoke;
 
-        const elementsToHide = element.querySelectorAll('.no-print');
-        elementsToHide.forEach(el => el.style.display = 'none');
+        try {
+            const fileName = getFileName();
 
+            if (isInTauri) {
+                // Tauri: use Go chromedp PDF generation (correct Arabic text), then open for printing
+                const apiResponse = await fetch('/v1/report/pdf', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': localStorage.getItem('access_token'),
+                    },
+                    body: JSON.stringify({
+                        model: model,
+                        modelName: modelName,
+                        fontSizes: fontSizesRef.current,
+                        filename: fileName,
+                    }),
+                });
 
-        html2pdf().from(element).set({
-            margin: 0,
-            filename: `${getFileName()}.pdf`,
-            image: { type: 'jpeg', quality: 0.98 },
-            html2canvas: { scale: 2, useCORS: true },
-            jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
-        }).outputPdf('bloburl').then(blobUrl => {
-            // Restore visibility after PDF is created
-            elementsToHide.forEach(el => el.style.display = '');
+                if (!apiResponse.ok) {
+                    const errData = await apiResponse.json().catch(() => ({}));
+                    throw new Error(
+                        errData?.errors?.chrome ||
+                        errData?.errors?.pdf ||
+                        errData?.errors?.body ||
+                        `HTTP ${apiResponse.status}`
+                    );
+                }
 
-            const iframe = document.createElement('iframe');
-            iframe.style.display = 'none';
-            iframe.src = blobUrl;
-            document.body.appendChild(iframe);
+                const pdfBlob = await apiResponse.blob();
+                const arrayBuffer = await pdfBlob.arrayBuffer();
+                const uint8Array = new Uint8Array(arrayBuffer);
+                let binary = '';
+                for (let i = 0; i < uint8Array.length; i++) {
+                    binary += String.fromCharCode(uint8Array[i]);
+                }
+                const base64 = btoa(binary);
 
-            iframe.onload = () => {
-                iframe.contentWindow?.focus();
-                iframe.contentWindow?.print();
-            };
-        });
-    }, [getFileName]);
+                await tauriInvoke('print_pdf', {
+                    dataBase64: base64,
+                    filename: `${fileName}.pdf`,
+                });
+            } else {
+                // Web browser: use html2pdf() and print via hidden iframe
+                const element = printAreaRef.current;
+                if (!element) return;
+
+                const elementsToHide = element.querySelectorAll('.no-print');
+                elementsToHide.forEach(el => el.style.display = 'none');
+
+                const blobUrl = await html2pdf().from(element).set({
+                    margin: 0,
+                    filename: `${fileName}.pdf`,
+                    image: { type: 'jpeg', quality: 0.98 },
+                    html2canvas: { scale: 2, useCORS: true },
+                    jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+                }).outputPdf('bloburl');
+
+                elementsToHide.forEach(el => el.style.display = '');
+
+                const iframe = document.createElement('iframe');
+                iframe.style.display = 'none';
+                iframe.src = blobUrl;
+                document.body.appendChild(iframe);
+                iframe.onload = () => {
+                    iframe.contentWindow?.focus();
+                    iframe.contentWindow?.print();
+                };
+            }
+        } catch (e) {
+            alert('Print failed: ' + (e?.message || JSON.stringify(e)));
+        }
+    }, [getFileName, model, modelName]);
 
 
 
@@ -1016,6 +1075,11 @@ const ReportPreview = forwardRef((props, ref) => {
 
 
     let [fontSizes, setFontSizes] = useState(defaultFontSizes);
+
+    // fontSizesRef lets handlePrint always read the latest fontSizes without
+    // needing to add it to the useCallback dependency array.
+    const fontSizesRef = useRef(fontSizes);
+    useEffect(() => { fontSizesRef.current = fontSizes; }, [fontSizes]);
 
     useEffect(() => {
         let storedFontSizes = getFromLocalStorage("fontSizes");

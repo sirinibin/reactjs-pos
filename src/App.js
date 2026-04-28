@@ -3,6 +3,7 @@ import Login from './user/login.js';
 import InvoicePrintPage from './order/InvoicePrintPage';
 import ReceiptPrintPage from './customer_deposit/ReceiptPrintPage';
 import PostingPrintPage from './posting/PostingPrintPage';
+import ReportPrintPage from './order/ReportPrintPage';
 import { WebSocketProvider } from "./utils/WebSocketContext.js";
 import {
   BrowserRouter as Router,
@@ -31,6 +32,9 @@ function App() {
           </Route>
           <Route path="/posting-print">
             <PostingPrintPage />
+          </Route>
+          <Route path="/report-print">
+            <ReportPrintPage />
           </Route>
           <Route path="/dashboard/analytics">
             <Dashboard />
