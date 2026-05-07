@@ -226,6 +226,12 @@ const CustomerCreate = forwardRef((props, ref) => {
             formData.vat_percent = null;
         }
 
+        if (formData.credit_limit) {
+            formData.credit_limit = parseFloat(formData.credit_limit);
+        } else {
+            formData.credit_limit = 0.00;
+        }
+
         formData.phone_in_arabic = convertToArabicNumber(formData.phone);
         formData.vat_no_in_arabic = convertToArabicNumber(formData.vat_no);
 
