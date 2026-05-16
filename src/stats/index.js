@@ -610,6 +610,12 @@ const StatsIndex = forwardRef((props, ref) => {
         // setOverallStatsOpen(isOpen);
     };
 
+    const statsFilters = {
+        ...(dateValue ? { 'Date': dateValue } : {}),
+        ...(fromDateValue ? { 'From Date': fromDateValue } : {}),
+        ...(toDateValue ? { 'To Date': toDateValue } : {}),
+    };
+
 
 
     return (
@@ -706,7 +712,7 @@ const StatsIndex = forwardRef((props, ref) => {
                     <div className="col">
                         <span className="text-end">
                             <StatsSummary
-                                title="Overall"
+                                title="Overall Summary"
                                 stats={{
                                     "SALES(with VAT)": (totalSales - totalSalesReturn),
                                     "PURCHASE(with VAT)": (totalPurchase - totalPurchaseReturn),
@@ -754,7 +760,7 @@ const StatsIndex = forwardRef((props, ref) => {
                                 ]}
 
                                 defaultOpen={true}
-
+                                filters={statsFilters}
                                 onToggle={handleOverallSummaryToggle}
                             />
                         </span>
@@ -764,7 +770,7 @@ const StatsIndex = forwardRef((props, ref) => {
                     <div className="col">
                         <span className="text-end">
                             <StatsSummary
-                                title="Sales Stats"
+                                title="Sales Stats Summary"
                                 stats={{
                                     "Sales": totalSales,
                                     "Cash Sales": totalCashSales,
@@ -784,7 +790,7 @@ const StatsIndex = forwardRef((props, ref) => {
                                     //"Return Paid Amount": returnPaidAmount,
                                 }}
                                 defaultOpen={true}
-
+                                filters={statsFilters}
                                 onToggle={handleSummaryToggle}
                             />
                         </span>
@@ -796,7 +802,7 @@ const StatsIndex = forwardRef((props, ref) => {
                     <div className="col">
                         <span className="text-end">
                             <StatsSummary
-                                title="Sales Return Stats"
+                                title="Sales Return Stats Summary"
                                 stats={{
                                     "Sales Return": totalSalesReturn,
                                     "Cash Sales Return": totalCashSalesReturn,
@@ -813,6 +819,7 @@ const StatsIndex = forwardRef((props, ref) => {
                                     "Net Loss Return": salesReturnLoss,
                                 }}
                                 defaultOpen={true}
+                                filters={statsFilters}
                                 onToggle={handleSalesReturnSummaryToggle}
                             />
                         </span>
@@ -825,7 +832,7 @@ const StatsIndex = forwardRef((props, ref) => {
                     <div className="col">
                         <span className="text-end">
                             <StatsSummary
-                                title="Purchase Stats"
+                                title="Purchase Stats Summary"
                                 stats={{
                                     "Cash purchase": totalCashPurchase,
                                     "Credit purchase": totalUnPaidPurchase,
@@ -842,7 +849,7 @@ const StatsIndex = forwardRef((props, ref) => {
                                     // "Return Paid Amount": returnPaidAmount,
                                 }}
                                 defaultOpen={true}
-
+                                filters={statsFilters}
                                 onToggle={handlePurchaseSummaryToggle}
                             />
                         </span>
@@ -856,7 +863,7 @@ const StatsIndex = forwardRef((props, ref) => {
 
                         <span className="text-end">
                             <StatsSummary
-                                title="Purchase Return Stats"
+                                title="Purchase Return Stats Summary"
                                 stats={{
                                     "Cash Purchase Return": totalCashPurchaseReturn,
                                     "Credit Purchase Return": totalUnPaidPurchaseReturn,
@@ -870,6 +877,7 @@ const StatsIndex = forwardRef((props, ref) => {
                                     "Shipping/Handling fees": totalPurchaseReturnShippingHandlingFees,
                                 }}
                                 defaultOpen={true}
+                                filters={statsFilters}
                                 onToggle={handlePurchaseReturnSummaryToggle}
                             />
                         </span>

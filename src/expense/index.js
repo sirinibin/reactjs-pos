@@ -189,6 +189,11 @@ function ExpenseIndex(props) {
 
     function searchByFieldValue(field, value) {
         searchParams[field] = value;
+        setFieldFilters(prev => {
+            const updated = { ...prev };
+            if (value) { updated[field] = value; } else { delete updated[field]; }
+            return updated;
+        });
 
         page = 1;
         setPage(page);
@@ -683,6 +688,7 @@ function ExpenseIndex(props) {
 
     //Stats
     const [statsOpen, setStatsOpen] = useState(false);
+    const [fieldFilters, setFieldFilters] = useState({});
     const handleSummaryToggle = (isOpen) => {
         setStatsOpen(isOpen);
     };
@@ -1081,7 +1087,21 @@ function ExpenseIndex(props) {
                     <div className="col">
                         <span className="text-end">
                             <StatsSummary
-                                title="Expenses"
+                                title="Expenses Summary"
+                                filters={{
+                                    ...(dateValue ? { 'Date': dateValue } : {}),
+                                    ...(fromDateValue ? { 'From Date': fromDateValue } : {}),
+                                    ...(toDateValue ? { 'To Date': toDateValue } : {}),
+                                    ...(selectedExpenseCategories.length > 0 ? { 'Category': selectedExpenseCategories.map(c => c.name).join(', ') } : {}),
+                                    ...Object.fromEntries(
+                                        Object.entries(fieldFilters)
+                                            .filter(([, v]) => v)
+                                            .map(([field, value]) => {
+                                                const col = columns.find(c => c.fieldName === field || c.key === field);
+                                                return [col ? col.label : field, value];
+                                            })
+                                    ),
+                                }}
                                 stats={{
                                     "Total": totalExpenses,
                                     "Cash": totalCashExpenses,

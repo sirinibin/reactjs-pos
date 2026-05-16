@@ -696,7 +696,12 @@ const QuotationSalesReturnHistory = forwardRef((props, ref) => {
                     <div className="col">
                         <span className="text-end">
                             <StatsSummary
-                                title={`Quotation Sales Return History`}
+                                title={`Quotation Sales Return History Summary`}
+                                filters={{
+                                    ...(fromDateValue ? { 'From Date': fromDateValue } : {}),
+                                    ...(toDateValue ? { 'To Date': toDateValue } : {}),
+                                    ...(selectedCustomers.length > 0 ? { 'Customer': selectedCustomers.map(c => c.name).join(', ') } : {}),
+                                }}
                                 stats={{
                                     "Qtn. Sales Return": totalQuotationSalesReturn,
                                     "Net Profit": totalProfit,

@@ -728,7 +728,13 @@ const SalesReturnHistory = forwardRef((props, ref) => {
                     <div className="col">
                         <span className="text-end">
                             <StatsSummary
-                                title="Sales Return History"
+                                title="Sales Return History Summary"
+                                filters={{
+                                    ...(dateValue ? { 'Date': dateValue } : {}),
+                                    ...(fromDateValue ? { 'From Date': fromDateValue } : {}),
+                                    ...(toDateValue ? { 'To Date': toDateValue } : {}),
+                                    ...(selectedCustomers.length > 0 ? { 'Customer': selectedCustomers.map(c => c.name).join(', ') } : {}),
+                                }}
                                 stats={{
                                     "Sales Return": totalSalesReturn,
                                     "Net Profit": totalProfit,

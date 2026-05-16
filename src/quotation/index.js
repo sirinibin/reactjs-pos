@@ -325,6 +325,11 @@ function QuotationIndex(props) {
 
   function searchByFieldValue(field, value, noList) {
     searchParams[field] = value;
+    setFieldFilters(prev => {
+      const updated = { ...prev };
+      if (value) { updated[field] = value; } else { delete updated[field]; }
+      return updated;
+    });
 
     page = 1;
     setPage(page);
@@ -440,6 +445,8 @@ function QuotationIndex(props) {
   const [invoiceTotalSalesReturnSales, setInvoiceTotalSalesReturnSales] = useState(0.00);
 
   let [statsOpen, setStatsOpen] = useState(false);
+  // eslint-disable-next-line no-unused-vars
+  const [fieldFilters, setFieldFilters] = useState({});
 
 
   const list = useCallback(() => {
@@ -1140,7 +1147,21 @@ function QuotationIndex(props) {
           <div className="col">
             <span className="text-end">
               <StatsSummary
-                title="Quotation"
+                title="Quotation Summary"
+                filters={{
+                  ...(dateValue ? { 'Date': dateValue } : {}),
+                  ...(fromDateValue ? { 'From Date': fromDateValue } : {}),
+                  ...(toDateValue ? { 'To Date': toDateValue } : {}),
+                  ...(selectedCustomers.length > 0 ? { 'Customer': selectedCustomers.map(c => c.name).join(', ') } : {}),
+                  ...Object.fromEntries(
+                    Object.entries(fieldFilters)
+                      .filter(([, v]) => v)
+                      .map(([field, value]) => {
+                        const col = columns.find(c => c.fieldName === field || c.key === field);
+                        return [col ? col.label : field, value];
+                      })
+                  ),
+                }}
                 stats={{
                   "Quotation": totalQuotation,
                   "Profit": profit,
@@ -1152,7 +1173,21 @@ function QuotationIndex(props) {
             </span>
             <span className="text-end">
               <StatsSummary
-                title="Qtn. Sales"
+                title="Qtn. Sales Summary"
+                filters={{
+                  ...(dateValue ? { 'Date': dateValue } : {}),
+                  ...(fromDateValue ? { 'From Date': fromDateValue } : {}),
+                  ...(toDateValue ? { 'To Date': toDateValue } : {}),
+                  ...(selectedCustomers.length > 0 ? { 'Customer': selectedCustomers.map(c => c.name).join(', ') } : {}),
+                  ...Object.fromEntries(
+                    Object.entries(fieldFilters)
+                      .filter(([, v]) => v)
+                      .map(([field, value]) => {
+                        const col = columns.find(c => c.fieldName === field || c.key === field);
+                        return [col ? col.label : field, value];
+                      })
+                  ),
+                }}
                 stats={{
                   "Sales": invoiceTotalSales,
                   "Cash Sales": invoiceTotalCashSales,

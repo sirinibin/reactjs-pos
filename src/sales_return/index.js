@@ -75,6 +75,7 @@ const SalesReturnIndex = forwardRef((props, ref) => {
 
     const { lastMessage } = useContext(WebSocketContext);
     let [statsOpen, setStatsOpen] = useState(false);
+    const [fieldFilters, setFieldFilters] = useState({});
 
 
     let [totalSalesReturn, setTotalSalesReturn] = useState(0.00);
@@ -864,6 +865,11 @@ const SalesReturnIndex = forwardRef((props, ref) => {
 
     function searchByFieldValue(field, value) {
         searchParams[field] = value;
+        setFieldFilters(prev => {
+            const updated = { ...prev };
+            if (value) { updated[field] = value; } else { delete updated[field]; }
+            return updated;
+        });
 
         page = 1;
         setPage(page);
@@ -1806,7 +1812,28 @@ const SalesReturnIndex = forwardRef((props, ref) => {
                     <div className="col">
                         <span className="text-end">
                             <StatsSummary
-                                title="Sales Return"
+                                title="Sales Return Summary"
+                                filters={{
+                                    ...(dateValue ? { 'Date': dateValue } : {}),
+                                    ...(fromDateValue ? { 'From Date': fromDateValue } : {}),
+                                    ...(toDateValue ? { 'To Date': toDateValue } : {}),
+                                    ...(createdAtValue ? { 'Created At': createdAtValue } : {}),
+                                    ...(createdAtFromValue ? { 'Created From': createdAtFromValue } : {}),
+                                    ...(createdAtToValue ? { 'Created To': createdAtToValue } : {}),
+                                    ...(selectedCustomers.length > 0 ? { 'Customer': selectedCustomers.map(c => c.name).join(', ') } : {}),
+                                    ...(selectedCreatedByUsers.length > 0 ? { 'Created By': selectedCreatedByUsers.map(u => u.name).join(', ') } : {}),
+                                    ...(selectedPaymentStatusList.length > 0 ? { 'Payment Status': selectedPaymentStatusList.map(s => s.name).join(', ') } : {}),
+                                    ...(selectedPaymentMethodList.length > 0 ? { 'Payment Method': selectedPaymentMethodList.map(m => m.name).join(', ') } : {}),
+                                    ...(selectedCommissionPaymentMethodList.length > 0 ? { 'Commission Method': selectedCommissionPaymentMethodList.map(m => m.name).join(', ') } : {}),
+                                    ...Object.fromEntries(
+                                        Object.entries(fieldFilters)
+                                            .filter(([, v]) => v)
+                                            .map(([field, value]) => {
+                                                const col = columns.find(c => c.fieldName === field || c.key === field);
+                                                return [col ? col.label : field, value];
+                                            })
+                                    ),
+                                }}
                                 stats={{
                                     "Sales Return": totalSalesReturn,
                                     "Cash Sales Return": totalCashSalesReturn,

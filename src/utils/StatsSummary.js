@@ -433,7 +433,7 @@ const StatsSummary = ({ title, stats = {}, statsWithInfo = {}, defaultOpen = fal
     return (
         <div className="mb-3">
             <button className="btn btn-outline-primary mb-2" onClick={handleToggle}>
-                {isOpen ? t(`Hide ${title} Summary`) : t(`Show ${title} Summary`)}
+                {isOpen ? t(`Hide ${title}`) : t(`Show ${title}`)}
             </button>
 
             {(isOpen) && (

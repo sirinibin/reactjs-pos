@@ -372,15 +372,40 @@ const CustomerDepositPreview = forwardRef((props, ref) => {
     const [showWhatsAppMessageModal, setShowWhatsAppMessageModal] = useState(false);
     const handleChoice = ({ type, number, message }) => {
         let whatsappUrl = "";
+
         if (type === "number" && number) {
-            whatsappUrl = `https://wa.me/${number}?text=${encodeURIComponent(message)}`;
+            // Detect if Windows desktop (browser)
+            const isWindows = navigator.userAgent.toLowerCase().includes("windows");
+            if (isWindows) {
+                whatsappUrl = `https://web.whatsapp.com/send?phone=${number}&text=${encodeURIComponent(message)}`;
+            } else {
+                whatsappUrl = `https://wa.me/${number}?text=${encodeURIComponent(message)}`;
+            }
         } else if (type === "contacts") {
             whatsappUrl = `https://wa.me?text=${encodeURIComponent(message)}`;
         }
 
         if (timerRef.current) clearTimeout(timerRef.current);
-        timerRef.current = setTimeout(() => {
-            window.open(whatsappUrl, "_blank");
+
+        timerRef.current = setTimeout(async () => {
+            handleClose();
+
+            // In Tauri, window.open does not open external URLs — use the shell plugin instead
+            let tauriShell = null;
+            try {
+                let w = window;
+                while (w) {
+                    if (w.__TAURI__?.shell?.open) { tauriShell = w.__TAURI__.shell; break; }
+                    if (w === w.parent) break;
+                    w = w.parent;
+                }
+            } catch (_) { /* cross-origin guard */ }
+
+            if (tauriShell) {
+                await tauriShell.open(whatsappUrl);
+            } else {
+                window.open(whatsappUrl, "_blank");
+            }
         }, 100);
 
     };

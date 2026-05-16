@@ -1046,7 +1046,13 @@ const ProductHistory = forwardRef((props, ref) => {
                     <div className="col">
                         <span className="text-end">
                             <StatsSummary
-                                title="Product History"
+                                title="Product History Summary"
+                                filters={{
+                                    ...(dateValue ? { 'Date': dateValue } : {}),
+                                    ...(fromDateValue ? { 'From Date': fromDateValue } : {}),
+                                    ...(toDateValue ? { 'To Date': toDateValue } : {}),
+                                    ...(selectedVendors.length > 0 ? { 'Vendor': selectedVendors.map(v => v.name).join(', ') } : {}),
+                                }}
                                 stats={{
                                     "Sales": totalSales,
                                     "Sales Net Profit": totalSalesProfit,

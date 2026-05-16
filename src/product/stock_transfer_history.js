@@ -1,74 +1,44 @@
-import React, { useState, useRef, forwardRef, useEffect, useMemo, useCallback } from "react";
+import React, { useState, useRef, forwardRef, useImperativeHandle, useEffect, useMemo, useCallback } from "react";
 
 import { format } from "date-fns";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import { Button, Spinner, Modal, Alert } from "react-bootstrap";
 import ReactPaginate from "react-paginate";
-import PurchaseReturnCreate from "../purchase_return/create.js";
-import PurchaseCreate from "../purchase/create.js";
+import StockTransferCreate from "../stock_transfer/create.js";
+import CustomerCreate from "../customer/create.js";
 import { Typeahead } from "react-bootstrap-typeahead";
-import VendorCreate from "./../vendor/create.js";
 import { DragDropContext, Droppable, Draggable } from "react-beautiful-dnd";
-import StatsSummary from "../utils/StatsSummary.js";
 import OverflowTooltip from "../utils/OverflowTooltip.js";
 import Amount from "../utils/amount.js";
-import { trimTo2Decimals } from "../utils/numberUtils";
+import { trimTo2Decimals } from "../utils/numberUtils.js";
+import StatsSummary from "../utils/StatsSummary.js";
+import Draggable2 from "react-draggable";
 
-const PurchaseReturnHistory = forwardRef((props, ref) => {
-    const [statsOpen, setStatsOpen] = useState(false);
-    const [show, setShow] = useState(false);
+const StockTransferHistory = forwardRef((props, ref) => {
+    const dragRef = useRef(null);
 
-    /*
     useImperativeHandle(ref, () => ({
-        open(model, selectedVendors) {
+        open(model, selectedCustomers) {
             setHistoryList([]);
-            setSelectedVendors([]);
-            searchParams["vendor_id"] = "";
+            setSelectedCustomers([]);
+            searchParams["customer_id"] = "";
 
             product = model;
             setProduct({ ...product });
-            if (selectedVendors?.length > 0) {
-                setSelectedVendors(selectedVendors)
-                searchByMultipleValuesField("vendor_id", selectedVendors);
-            } 
+            if (selectedCustomers?.length > 0) {
+                // setSelectedCustomers(selectedCustomers)
+                searchByMultipleValuesField("customer_id", selectedCustomers);
+            }
 
             getStore(localStorage.getItem("store_id"));
-            setShow(true);
+            SetShow(true);
         },
 
-    }));*/
+    }));
 
-    useEffect(() => {
-        setHistoryList([]);
-        setHistoryList([]);
-        setSelectedVendors([]);
-        searchParams["vendor_id"] = "";
+    let [page, setPage] = useState(1);
 
-        setProduct(props.model);
-        if (props.selectedVendors?.length > 0) {
-            setSelectedVendors(props.selectedVendors)
-            searchByMultipleValuesField("vendor_id", props.selectedVendors);
-        }
-
-        getStore(localStorage.getItem("store_id"));
-        setShow(true);
-
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, []);
-
-    useEffect(() => {
-        const handleKeyDown = (e) => {
-            if (e.key === "Escape") {
-                e.preventDefault();
-                e.stopPropagation();
-                setShow(false);
-            }
-        };
-
-        document.addEventListener("keydown", handleKeyDown);
-        return () => document.removeEventListener("keydown", handleKeyDown);
-    }, []);
 
     let [store, setStore] = useState({});
 
@@ -103,66 +73,6 @@ const PurchaseReturnHistory = forwardRef((props, ref) => {
             });
     }
 
-    function searchByMultipleValuesField(field, values) {
-        if (field === "vendor_id") {
-            setSelectedVendors(values);
-        }
-
-        searchParams[field] = Object.values(values)
-            .map(function (model) {
-                return model.id;
-            })
-            .join(",");
-
-        page = 1;
-        setPage(page);
-
-        if (timerRef.current) clearTimeout(timerRef.current);
-        timerRef.current = setTimeout(() => {
-            list();
-        }, 200);
-    }
-
-
-
-    const [vendorOptions, setVendorOptions] = useState([]);
-    const [selectedVendors, setSelectedVendors] = useState([]);
-
-    async function suggestVendors(searchTerm) {
-        console.log("Inside handle suggestVendors");
-
-        var params = {
-            query: searchTerm,
-        };
-
-        if (localStorage.getItem("store_id")) {
-            params.store_id = localStorage.getItem("store_id");
-        }
-
-
-        var queryString = ObjectToSearchQueryParams(params);
-        if (queryString !== "") {
-            queryString = `&${queryString}`;
-        }
-
-        const requestOptions = {
-            method: "GET",
-            headers: {
-                "Content-Type": "application/json",
-                Authorization: localStorage.getItem("access_token"),
-            },
-        };
-
-        let Select = "select=id,additional_keywords,code,vat_no,name,phone,name_in_arabic,phone_in_arabic,search_label";
-        let result = await fetch(
-            `/v1/vendor?${Select}${queryString}`,
-            requestOptions
-        );
-        let data = await result.json();
-
-        setVendorOptions(data.result);
-    }
-
     let [product, setProduct] = useState({});
 
 
@@ -180,7 +90,7 @@ const PurchaseReturnHistory = forwardRef((props, ref) => {
 
     //pagination
     let [pageSize, setPageSize] = useState(5);
-    let [page, setPage] = useState(1);
+
     const [totalPages, setTotalPages] = useState(0);
     const [totalItems, setTotalItems] = useState(1);
     const [currentPageItemsCount, setCurrentPageItemsCount] = useState(0);
@@ -188,6 +98,7 @@ const PurchaseReturnHistory = forwardRef((props, ref) => {
 
 
     //Created At filter
+
 
     //loader flag
     const [isListLoading, setIsListLoading] = useState(false);
@@ -206,13 +117,36 @@ const PurchaseReturnHistory = forwardRef((props, ref) => {
             .join("&");
     }
 
+    // Add this state near line 101 (after other useState declarations)
+    const [inputValues, setInputValues] = useState({});
+
     function searchByFieldValue(field, value) {
+        // ✅ Update input value immediately in separate state (lightweight)
+        setInputValues(prev => ({
+            ...prev,
+            [field]: value
+        }));
+
         searchParams[field] = value;
 
         page = 1;
         setPage(page);
         list();
+
+        // ✅ Clear existing timer
+        if (timerRef.current) {
+            clearTimeout(timerRef.current);
+        }
+
+        // ✅ Debounce the list() call
+        timerRef.current = setTimeout(() => {
+            page = 1;
+            setPage(page);
+            list();
+        }, 800); // Wait 800ms after user stops typing
     }
+
+
 
     function searchByDateField(field, value) {
         if (!value) {
@@ -232,8 +166,6 @@ const PurchaseReturnHistory = forwardRef((props, ref) => {
             value = "";
         }
 
-
-
         if (field === "date_str") {
             setDateValue(value);
             setFromDateValue("");
@@ -252,16 +184,11 @@ const PurchaseReturnHistory = forwardRef((props, ref) => {
             searchParams["date"] = "";
             searchParams[field] = value;
         } else if (field === "created_at") {
-
-
-
             searchParams["created_at_from"] = "";
             searchParams["created_at_to"] = "";
             searchParams[field] = value;
         }
         if (field === "created_at_from") {
-
-
             searchParams["created_at"] = "";
             searchParams[field] = value;
         } else if (field === "created_at_to") {
@@ -277,6 +204,8 @@ const PurchaseReturnHistory = forwardRef((props, ref) => {
         list();
     }
 
+    const [statsOpen, setStatsOpen] = useState(false);
+
     const list = useCallback(() => {
         const requestOptions = {
             method: "GET",
@@ -288,7 +217,7 @@ const PurchaseReturnHistory = forwardRef((props, ref) => {
         let Select = "";
         /*
         let Select =
-            "select=id,store_id,store_name,customer_id,customer_name,order_id,order_code,quantity,";
+            "select=id,store_id,store_name,customer_id,customer_name,stocktransfer_id,stocktransfer_code,quantity,";
             */
         if (localStorage.getItem("store_id")) {
             searchParams.store_id = localStorage.getItem("store_id");
@@ -306,13 +235,11 @@ const PurchaseReturnHistory = forwardRef((props, ref) => {
             searchParams["stats"] = "0";
         }
 
-
         setSearchParams(searchParams);
         let queryParams = ObjectToSearchQueryParams(searchParams);
         if (queryParams !== "") {
             queryParams = "&" + queryParams;
         }
-
 
         const d = new Date();
         let diff = d.getTimezoneOffset();
@@ -323,7 +250,7 @@ const PurchaseReturnHistory = forwardRef((props, ref) => {
 
         setIsListLoading(true);
         fetch(
-            "/v1/purchase-return/history?" +
+            "/v1/stocktransfer/history?" +
             Select +
             queryParams +
             "&sort=" +
@@ -358,13 +285,16 @@ const PurchaseReturnHistory = forwardRef((props, ref) => {
                 setOffset((page - 1) * pageSize);
                 setCurrentPageItemsCount(data.result.length);
 
-                // totalPurchaseReturn = data.meta.total_purchase_return;
-                setTotalPurchaseReturn(data.meta.total_purchase_return);
+                //totalStockTransfer = data.meta.total_stocktransfer;
+                setTotalStockTransfer(data.meta.total_stocktransfer);
 
-                //totalVatReturn = data.meta.total_vat_return;
-                setTotalVatReturn(data.meta.total_vat_return);
+                //totalProfit = data.meta.total_profit;
+                setTotalProfit(data.meta.total_profit);
+                //totalLoss = data.meta.total_loss;
+                setTotalLoss(data.meta.total_loss);
 
-                setTotalQuantity(data.meta.total_quantity);
+                //totalVat = data.meta.total_vat;
+                setTotalVat(data.meta.total_vat);
 
             })
             .catch((error) => {
@@ -373,6 +303,13 @@ const PurchaseReturnHistory = forwardRef((props, ref) => {
                 console.log(error);
             });
     }, [page, pageSize, product, sortField, sortProduct, searchParams, statsOpen]);
+
+
+    useEffect(() => {
+        if (page) {
+            list();
+        }
+    }, [page, list, product]);
 
     function sort(field) {
         sortField = field;
@@ -391,58 +328,129 @@ const PurchaseReturnHistory = forwardRef((props, ref) => {
     function changePage(newPage) {
         page = parseInt(newPage);
         setPage(page);
-        // list();
+        list();
     }
 
+    const [show, SetShow] = useState(false);
+
+    function handleClose() {
+        SetShow(false);
+    };
 
     useEffect(() => {
         if (show) {
             list();
         } else {
             setHistoryList([]);
-            // setSelectedVendors([]);
+            setSelectedCustomers([]);
         }
-    }, [list, show]);
+    }, [show, list]);
 
+    let [totalStockTransfer, setTotalStockTransfer] = useState(0.00);
+    let [totalProfit, setTotalProfit] = useState(0.00);
+    let [totalVat, setTotalVat] = useState(0.00);
+    let [totalLoss, setTotalLoss] = useState(0.00);
 
-    let [totalPurchaseReturn, setTotalPurchaseReturn] = useState(0.00);
-    let [totalVatReturn, setTotalVatReturn] = useState(0.00);
-    let [totalQuantity, setTotalQuantity] = useState(0.00);
+    let [showStockTransferForm, setShowStockTransferForm] = useState(false);
 
-    let [showPurchaseForm, setShowPurchaseForm] = useState(false);
-    let [showPurchaseReturnForm, setShowPurchaseReturnForm] = useState(false);
+    const StockTransferUpdateFormRef = useRef();
 
-    const PurchaseReturnUpdateFormRef = useRef();
-    function openPurchaseReturnUpdateForm(id) {
-        showPurchaseReturnForm = true;
-        setShowPurchaseReturnForm(showPurchaseReturnForm);
+    async function openStockTransferUpdateForm(id) {
+        showStockTransferForm = true;
+        setShowStockTransferForm(showStockTransferForm);
         if (timerRef.current) clearTimeout(timerRef.current);
 
         timerRef.current = setTimeout(() => {
-            PurchaseReturnUpdateFormRef.current.open(id);
+            StockTransferUpdateFormRef.current?.open(id);
         }, 100);
     }
 
-    const PurchaseUpdateFormRef = useRef();
-    function openPurchaseUpdateForm(id) {
-        showPurchaseForm = true;
-        setShowPurchaseForm(showPurchaseForm);
-        if (timerRef.current) clearTimeout(timerRef.current);
 
-        timerRef.current = setTimeout(() => {
-            PurchaseUpdateFormRef.current.open(id);
-        }, 100);
-
-
+    const CustomerUpdateFormRef = useRef();
+    function openCustomerUpdateForm(id) {
+        CustomerUpdateFormRef.current.open(id);
     }
 
+    function searchByMultipleValuesField(field, values) {
+        if (field === "customer_id") {
+            setSelectedCustomers(values);
+        }
 
-    const vendorSearchRef = useRef();
-    const timerRef = useRef(null);
+        searchParams[field] = Object.values(values)
+            .map(function (model) {
+                return model.id;
+            })
+            .join(",");
+
+        //page = 1;
+        //setPage(page);
+
+        // list();
+    }
+
+    const [selectedCustomers, setSelectedCustomers] = useState([]);
+
+    useEffect(() => {
+        setPage(1);
+    }, [searchParams]);
 
     const handleUpdated = () => {
         list();
     };
+
+    const [customerOptions, setCustomerOptions] = useState([]);
+
+
+    async function suggestCustomers(searchTerm) {
+        console.log("Inside handle suggestCustomers");
+
+        var params = {
+            query: searchTerm,
+        };
+
+        if (localStorage.getItem("store_id")) {
+            params.store_id = localStorage.getItem("store_id");
+        }
+
+
+        var queryString = ObjectToSearchQueryParams(params);
+        if (queryString !== "") {
+            queryString = `&${queryString}`;
+        }
+
+        const requestOptions = {
+            method: "GET",
+            headers: {
+                "Content-Type": "application/json",
+                Authorization: localStorage.getItem("access_token"),
+            },
+        };
+
+        let Select = "select=id,code,additional_keywords,vat_no,name,phone,name_in_arabic,phone_in_arabic,search_label";
+        let result = await fetch(
+            `/v1/customer?${Select}${queryString}`,
+            requestOptions
+        );
+        let data = await result.json();
+        setCustomerOptions(data.result);
+    }
+
+
+    const customerSearchRef = useRef();
+    const timerRef = useRef(null);
+
+    useEffect(() => {
+        const handleKeyDown = (e) => {
+            if (e.key === "Escape") {
+                e.preventDefault();
+                e.stopPropagation();
+                SetShow(false);
+            }
+        };
+
+        document.addEventListener("keydown", handleKeyDown);
+        return () => document.removeEventListener("keydown", handleKeyDown);
+    }, []);
 
 
     //Table settings
@@ -451,9 +459,8 @@ const PurchaseReturnHistory = forwardRef((props, ref) => {
 
     const defaultColumns = useMemo(() => [
         { key: "date", label: "Date", fieldName: "date", visible: true },
-        { key: "purchase_return_code", label: "Purchase Return ID", fieldName: "purchase_return_code", visible: true },
-        { key: "purchase_code", label: "Purchase ID", fieldName: "purchase_code", visible: true },
-        { key: "vendor_name", label: "Vendor", fieldName: "vendor_name", visible: true },
+        { key: "stocktransfer_code", label: "StockTransfer ID", fieldName: "stocktransfer_code", visible: true },
+        { key: "customer_name", label: "Customer", fieldName: "customer_name", visible: true },
         { key: "quantity", label: "Qty", fieldName: "quantity", visible: true },
         { key: "warehouse_code", label: "Stock Removed From", fieldName: "warehouse_code", visible: true },
         { key: "unit_price", label: "Unit Price(without VAT)", fieldName: "unit_price", visible: true },
@@ -463,6 +470,8 @@ const PurchaseReturnHistory = forwardRef((props, ref) => {
         { key: "price", label: "Price(without VAT)", fieldName: "price", visible: true },
         { key: "vat_price", label: "VAT", fieldName: "vat_price", visible: true },
         { key: "net_price", label: "Net Price(with VAT)", fieldName: "net_price", visible: true },
+        { key: "profit", label: "Profit", fieldName: "profit", visible: true },
+        { key: "loss", label: "Loss", fieldName: "loss", visible: true },
     ], []);
 
 
@@ -470,7 +479,7 @@ const PurchaseReturnHistory = forwardRef((props, ref) => {
     const [showSettings, setShowSettings] = useState(false);
     // Load settings from localStorage
     useEffect(() => {
-        const saved = localStorage.getItem("purchase_return_history_table_settings");
+        const saved = localStorage.getItem("stocktransfer_history_table_settings");
         if (saved) setColumns(JSON.parse(saved));
 
         let missingOrUpdated = false;
@@ -487,49 +496,46 @@ const PurchaseReturnHistory = forwardRef((props, ref) => {
             }
         }
 
-        /*
-        for (let i = 0; i < saved.length; i++) {
-            const savedCol = defaultColumns.find(col => col.fieldName === saved[i].fieldName);
- 
-            missingOrUpdated = !savedCol || savedCol.label !== saved[i].label || savedCol.key !== saved[i].key;
- 
-            if (missingOrUpdated) {
-                break
-            }
-        }*/
 
         if (missingOrUpdated) {
-            localStorage.setItem("purchase_return_history_table_settings", JSON.stringify(defaultColumns));
+            localStorage.setItem("stocktransfer_history_table_settings", JSON.stringify(defaultColumns));
             setColumns(defaultColumns);
         }
-
-        //2nd
 
     }, [defaultColumns]);
 
     function RestoreDefaultSettings() {
-        localStorage.setItem("purchase_return_history_table_settings", JSON.stringify(defaultColumns));
+        localStorage.setItem("stocktransfer_history_table_settings", JSON.stringify(defaultColumns));
         setColumns(defaultColumns);
 
         setShowSuccess(true);
         setSuccessMessage("Successfully restored to default settings!")
     }
 
+
     const handleToggleColumn = (index) => {
         const updated = [...columns];
         updated[index].visible = !updated[index].visible;
         setColumns(updated);
-        localStorage.setItem("purchase_return_history_table_settings", JSON.stringify(updated));
+        localStorage.setItem("stocktransfer_history_table_settings", JSON.stringify(updated));
     };
+    /*
+    const handleToggleColumn = useCallback((index) => {
+        const updated = [...columns];
+        updated[index].visible = !updated[index].visible;
+        setColumns(updated);
+        localStorage.setItem("stocktransfer_history_table_settings", JSON.stringify(updated));
+    }, [columns]);*/
 
     const onDragEnd = (result) => {
         if (!result.destination) return;
-        const reordered = Array.from(columns);
-        const [moved] = reordered.splice(result.source.index, 1);
-        reordered.splice(result.destination.index, 0, moved);
-        setColumns(reordered);
-        localStorage.setItem("purchase_return_history_table_settings", JSON.stringify(reordered));
+        const restocktransfered = Array.from(columns);
+        const [moved] = restocktransfered.splice(result.source.index, 1);
+        restocktransfered.splice(result.destination.index, 0, moved);
+        setColumns(restocktransfered);
+        localStorage.setItem("stocktransfer_history_table_settings", JSON.stringify(restocktransfered));
     };
+
 
 
     const handleSummaryToggle = (isOpen) => {
@@ -537,14 +543,8 @@ const PurchaseReturnHistory = forwardRef((props, ref) => {
     };
 
 
-    const VendorUpdateFormRef = useRef();
-    function openVendorUpdateForm(id) {
-        VendorUpdateFormRef.current.open(id);
-    }
-
     return (
         <>
-            <VendorCreate ref={VendorUpdateFormRef} />
             {/* ⚙️ Settings Modal */}
             <Modal
                 show={showSettings}
@@ -560,7 +560,7 @@ const PurchaseReturnHistory = forwardRef((props, ref) => {
                             title="Table Settings"
 
                         />
-                        Purchase Return History Settings
+                        StockTransfer History Settings
                     </Modal.Title>
                 </Modal.Header>
                 <Modal.Body>
@@ -645,11 +645,12 @@ const PurchaseReturnHistory = forwardRef((props, ref) => {
                 </Modal.Footer>
             </Modal>
 
-            {showPurchaseReturnForm && <PurchaseReturnCreate ref={PurchaseReturnUpdateFormRef} onUpdated={handleUpdated} />}
-            {showPurchaseForm && <PurchaseCreate ref={PurchaseUpdateFormRef} onUpdated={handleUpdated} />}
-            {/*<Modal
+            {showStockTransferForm && <StockTransferCreate ref={StockTransferUpdateFormRef} onUpdated={handleUpdated} />}
+            <CustomerCreate ref={CustomerUpdateFormRef} />
+            <Modal
                 show={show}
                 size="xl"
+                backdrop="static"
                 onHide={handleClose}
                 animation={false}
                 scrollable={true}
@@ -675,7 +676,7 @@ const PurchaseReturnHistory = forwardRef((props, ref) => {
                 )}
             >
                 <Modal.Header>
-                    <Modal.Title>Purchase Return History of {product.name} {product.name_in_arabic ? " / " + product.name_in_arabic : ""}</Modal.Title>
+                    <Modal.Title>StockTransfer History of {product.name} {product.name_in_arabic ? " / " + product.name_in_arabic : ""}</Modal.Title>
 
                     <div className="col align-self-end text-end">
                         <button
@@ -687,201 +688,252 @@ const PurchaseReturnHistory = forwardRef((props, ref) => {
 
                     </div>
                 </Modal.Header>
-                <Modal.Body>*/}
-            <div className="container-fluid p-0">
-                <div className="row">
-                    <div className="col">
-                        <span className="text-end">
-                            <StatsSummary
-                                title="Purchase Return History Summary"
-                                filters={{
-                                    ...(fromDateValue ? { 'From Date': fromDateValue } : {}),
-                                    ...(toDateValue ? { 'To Date': toDateValue } : {}),
-                                    ...(selectedVendors.length > 0 ? { 'Vendor': selectedVendors.map(v => v.name).join(', ') } : {}),
-                                }}
-                                stats={{
-                                    "Purchase Return": totalPurchaseReturn,
-                                    "VAT Returned": totalVatReturn,
-                                    "Total Quantity": totalQuantity,
-                                }}
-                                onToggle={handleSummaryToggle}
-                            />
-                        </span>
-                    </div>
-                </div>
+                <Modal.Body>
+                    <div className="container-fluid p-0">
+                        <div className="row">
+                            <div className="col">
+                                <span className="text-end">
+                                    <StatsSummary
+                                        title="StockTransfer History Summary"
+                                        filters={{
+                                            ...(fromDateValue ? { 'From Date': fromDateValue } : {}),
+                                            ...(toDateValue ? { 'To Date': toDateValue } : {}),
+                                            ...(selectedCustomers.length > 0 ? { 'Customer': selectedCustomers.map(c => c.name).join(', ') } : {}),
+                                        }}
+                                        stats={{
+                                            "StockTransfer": totalStockTransfer,
+                                            "Net Profit": totalProfit,
+                                            "Total Loss": totalLoss,
+                                            "VAT Collected": totalVat,
+                                        }}
+                                        onToggle={handleSummaryToggle}
+                                    />
+                                </span>
+                            </div>
+                        </div>
 
-                <div className="row">
-                    <div className="col-12">
-                        <div className="card">
-                            {/*
+                        {/*<div className="row">
+
+                            <div className="col">
+                                <h1 className="text-end">
+                                    StockTransfer: <Badge bg="secondary">
+                                        <NumberFormat
+                                            value={totalStockTransfer}
+                                            displayType={"text"}
+                                            thousandSeparator={true}
+                                            suffix={" "}
+                                            renderText={(value, props) => value}
+                                        />
+                                    </Badge>
+                                </h1>
+                                <h1 className="text-end">
+                                    Net Profit: <Badge bg="secondary">
+                                        <NumberFormat
+                                            value={totalProfit}
+                                            displayType={"text"}
+                                            thousandSeparator={true}
+                                            suffix={" "}
+                                            renderText={(value, props) => value}
+                                        />
+                                    </Badge>
+                                </h1>
+                                <h1 className="text-end">
+                                    Loss: <Badge bg="secondary">
+                                        <NumberFormat
+                                            value={totalLoss}
+                                            displayType={"text"}
+                                            thousandSeparator={true}
+                                            suffix={" "}
+                                            renderText={(value, props) => value}
+                                        />
+                                    </Badge>
+                                </h1>
+                                <h1 className="text-end">
+                                    VAT Collected: <Badge bg="secondary">
+                                        <NumberFormat
+                                            value={totalVat.toFixed(2)}
+                                            displayType={"text"}
+                                            thousandSeparator={true}
+                                            suffix={" "}
+                                            renderText={(value, props) => value}
+                                        />
+                                    </Badge>
+                                </h1>
+                            </div>
+                        </div>*/}
+
+                        <div className="row">
+                            <div className="col-12">
+                                <div className="card">
+                                    {/*
   <div   className="card-header">
                         <h5   className="card-title mb-0"></h5>
                     </div>
                     */}
-                            <div className="card-body">
-                                <div className="row">
-                                    {totalItems === 0 && (
-                                        <div className="col">
-                                            <p className="text-start">No PurchaseReturn History to display</p>
-                                        </div>
-                                    )}
-                                </div>
-                                <div className="row" style={{ bproduct: "solid 0px" }}>
-                                    <div className="col text-start" style={{ border: "solid 0px" }}>
-                                        <Button
-                                            onClick={() => {
-                                                setIsRefreshInProcess(true);
-                                                list();
-                                            }}
-                                            variant="primary"
-                                            disabled={isRefreshInProcess}
-                                        >
-                                            {isRefreshInProcess ? (
-                                                <Spinner
-                                                    as="span"
-                                                    animation="bproduct"
-                                                    size="sm"
-                                                    role="status"
-                                                    aria-hidden={true}
-                                                />
-                                            ) : (
-                                                <i className="fa fa-refresh"></i>
+                                    <div className="card-body">
+                                        <div className="row">
+                                            {totalItems === 0 && (
+                                                <div className="col">
+                                                    <p className="text-start">No StockTransfer History to display</p>
+                                                </div>
                                             )}
-                                            <span className="visually-hidden">Loading...</span>
-                                        </Button>
-                                    </div>
-                                    <div className="col text-center">
-                                        {isListLoading && (
-                                            <Spinner animation="grow" variant="primary" />
-                                        )}
-                                    </div>
-                                    <div className="col text-end">
-                                        {totalItems > 0 && (
-                                            <>
-                                                <label className="form-label">Size:&nbsp;</label>
-                                                <select
-                                                    value={pageSize}
-                                                    onChange={(e) => {
-                                                        changePageSize(e.target.value);
+                                        </div>
+                                        <div className="row" style={{ bproduct: "solid 0px" }}>
+                                            <div className="col text-start" style={{ bstocktransfer: "solid 0px" }}>
+                                                <Button
+                                                    onClick={() => {
+                                                        setIsRefreshInProcess(true);
+                                                        list();
                                                     }}
-                                                    className="form-control pull-right"
-                                                    style={{
-                                                        bproduct: "solid 1px",
-                                                        bproductColor: "silver",
-                                                        width: "55px",
+                                                    variant="primary"
+                                                    disabled={isRefreshInProcess}
+                                                >
+                                                    {isRefreshInProcess ? (
+                                                        <Spinner
+                                                            as="span"
+                                                            animation="bproduct"
+                                                            size="sm"
+                                                            role="status"
+                                                            aria-hidden={true}
+                                                        />
+                                                    ) : (
+                                                        <i className="fa fa-refresh"></i>
+                                                    )}
+                                                    <span className="visually-hidden">Loading...</span>
+                                                </Button>
+                                            </div>
+                                            <div className="col text-center">
+                                                {isListLoading && (
+                                                    <Spinner animation="grow" variant="primary" />
+                                                )}
+                                            </div>
+                                            <div className="col text-end">
+                                                {totalItems > 0 && (
+                                                    <>
+                                                        <label className="form-label">Size:&nbsp;</label>
+                                                        <select
+                                                            value={pageSize}
+                                                            onChange={(e) => {
+                                                                changePageSize(e.target.value);
+                                                            }}
+                                                            className="form-control pull-right"
+                                                            style={{
+                                                                bproduct: "solid 1px",
+                                                                bproductColor: "silver",
+                                                                width: "55px",
+                                                            }}
+                                                        >
+                                                            <option value="5">
+                                                                5
+                                                            </option>
+                                                            <option value="10" >
+                                                                10
+                                                            </option>
+                                                            <option value="20">20</option>
+                                                            <option value="40">40</option>
+                                                            <option value="50">50</option>
+                                                            <option value="100">100</option>
+                                                            <option value="200">200</option>
+                                                            <option value="300">300</option>
+                                                            <option value="500">500</option>
+                                                            <option value="1000">1000</option>
+                                                            <option value="1500">1500</option>
+                                                        </select>
+                                                    </>
+                                                )}
+                                            </div>
+                                        </div>
+
+                                        <br />
+                                        <div className="row">
+                                            <div className="col" style={{ bproduct: "solid 0px" }}>
+                                                {totalPages ? <ReactPaginate
+                                                    breakLabel="..."
+                                                    nextLabel="next >"
+                                                    onPageChange={(event) => {
+                                                        changePage(event.selected + 1);
+                                                    }}
+                                                    pageRangeDisplayed={5}
+                                                    pageCount={totalPages}
+                                                    previousLabel="< previous"
+                                                    renderOnZeroPageCount={null}
+                                                    className="pagination  flex-wrap"
+                                                    pageClassName="page-item"
+                                                    pageLinkClassName="page-link"
+                                                    activeClassName="active"
+                                                    previousClassName="page-item"
+                                                    nextClassName="page-item"
+                                                    previousLinkClassName="page-link"
+                                                    nextLinkClassName="page-link"
+                                                    forcePage={page - 1}
+                                                /> : ""}
+                                            </div>
+                                        </div>
+                                        <div className="row">
+                                            <div className="col text-end">
+                                                <button
+                                                    className="btn btn-sm btn-outline-secondary"
+                                                    onClick={() => {
+                                                        setShowSettings(!showSettings);
                                                     }}
                                                 >
-                                                    <option value="5">
-                                                        5
-                                                    </option>
-                                                    <option value="10" >
-                                                        10
-                                                    </option>
-                                                    <option value="20">20</option>
-                                                    <option value="40">40</option>
-                                                    <option value="50">50</option>
-                                                    <option value="100">100</option>
-                                                    <option value="200">200</option>
-                                                    <option value="300">300</option>
-                                                    <option value="500">500</option>
-                                                    <option value="1000">1000</option>
-                                                    <option value="1500">1500</option>
-                                                </select>
-                                            </>
-                                        )}
-                                    </div>
-                                </div>
+                                                    <i
+                                                        className="bi bi-gear-fill"
+                                                        style={{ fontSize: "1.2rem" }}
+                                                        title="Table Settings"
 
-                                <br />
-                                <div className="row">
-                                    <div className="col" style={{ bproduct: "solid 0px" }}>
-                                        {totalPages ? <ReactPaginate
-                                            breakLabel="..."
-                                            nextLabel="next >"
-                                            onPageChange={(event) => {
-                                                changePage(event.selected + 1);
-                                            }}
-                                            pageRangeDisplayed={5}
-                                            pageCount={totalPages}
-                                            previousLabel="< previous"
-                                            renderOnZeroPageCount={null}
-                                            className="pagination  flex-wrap"
-                                            pageClassName="page-item"
-                                            pageLinkClassName="page-link"
-                                            activeClassName="active"
-                                            previousClassName="page-item"
-                                            nextClassName="page-item"
-                                            previousLinkClassName="page-link"
-                                            nextLinkClassName="page-link"
-                                            forcePage={page - 1}
-                                        /> : ""}
-                                    </div>
-                                </div>
-                                <div className="row">
-                                    <div className="col text-end">
-                                        <button
-                                            className="btn btn-sm btn-outline-secondary"
-                                            onClick={() => {
-                                                setShowSettings(!showSettings);
-                                            }}
-                                        >
-                                            <i
-                                                className="bi bi-gear-fill"
-                                                style={{ fontSize: "1.2rem" }}
-                                                title="Table Settings"
-
-                                            />
-                                        </button>
-                                    </div>
-                                </div>
-
-                                <div className="row">
-                                    {totalItems > 0 && (
-                                        <>
-                                            <div className="col text-start">
-                                                <p className="text-start">
-                                                    showing {offset + 1}-{offset + currentPageItemsCount} of{" "}
-                                                    {totalItems}
-                                                </p>
+                                                    />
+                                                </button>
                                             </div>
+                                        </div>
 
-                                            <div className="col text-end">
-                                                <p className="text-end">
-                                                    page {page} of {totalPages}
-                                                </p>
-                                            </div>
-                                        </>
-                                    )}
-                                </div>
-                                <div className="table-responsive" style={{ overflowX: "auto" }}>
-                                    <table className="table table-striped table-sm table-bordered">
-                                        <thead>
-                                            <tr className="text-center">
-                                                {columns.filter(c => c.visible).map((col) => {
-                                                    return (<>
-                                                        {col.key && <th>
-                                                            <b
-                                                                style={{
-                                                                    textDecoration: "underline",
-                                                                    cursor: "pointer",
-                                                                }}
-                                                                onClick={() => {
-                                                                    sort(col.fieldName);
-                                                                }}
-                                                            >
-                                                                {col.label}
-                                                                {sortField === col.fieldName && sortProduct === "-" ? (
-                                                                    <i className="bi bi-sort-alpha-up-alt"></i>
-                                                                ) : null}
-                                                                {sortField === col.fieldName && sortProduct === "" ? (
-                                                                    <i className="bi bi-sort-alpha-up"></i>
-                                                                ) : null}
-                                                            </b>
-                                                        </th>}
-                                                    </>);
-                                                })}
+                                        <div className="row">
+                                            {totalItems > 0 && (
+                                                <>
+                                                    <div className="col text-start">
+                                                        <p className="text-start">
+                                                            showing {offset + 1}-{offset + currentPageItemsCount} of{" "}
+                                                            {totalItems}
+                                                        </p>
+                                                    </div>
 
-                                                {/*<th>
+                                                    <div className="col text-end">
+                                                        <p className="text-end">
+                                                            page {page} of {totalPages}
+                                                        </p>
+                                                    </div>
+                                                </>
+                                            )}
+                                        </div>
+                                        <div className="table-responsive" style={{ overflowX: "auto" }}>
+                                            <table className="table table-striped table-sm table-bstocktransfered">
+                                                <thead>
+                                                    <tr className="text-center">
+                                                        {columns.filter(c => c.visible).map((col) => {
+                                                            return (<>
+                                                                {col.key && <th>
+                                                                    <b
+                                                                        style={{
+                                                                            textDecoration: "underline",
+                                                                            cursor: "pointer",
+                                                                        }}
+                                                                        onClick={() => {
+                                                                            sort(col.fieldName);
+                                                                        }}
+                                                                    >
+                                                                        {col.label}
+                                                                        {sortField === col.fieldName && sortProduct === "-" ? (
+                                                                            <i className="bi bi-sort-alpha-up-alt"></i>
+                                                                        ) : null}
+                                                                        {sortField === col.fieldName && sortProduct === "" ? (
+                                                                            <i className="bi bi-sort-alpha-up"></i>
+                                                                        ) : null}
+                                                                    </b>
+                                                                </th>}
+                                                            </>);
+                                                        })}
+
+                                                        {/*<th>
                                                             <b
                                                                 style={{
                                                                     textDecoration: "underline",
@@ -900,26 +952,6 @@ const PurchaseReturnHistory = forwardRef((props, ref) => {
                                                                 ) : null}
                                                             </b>
                                                         </th>
-
-                                                        {!localStorage.getItem("store_id") ? <th>
-                                                            <b
-                                                                style={{
-                                                                    textDecoration: "underline",
-                                                                    cursor: "pointer",
-                                                                }}
-                                                                onClick={() => {
-                                                                    sort("store_name");
-                                                                }}
-                                                            >
-                                                                Store
-                                                                {sortField === "store_name" && sortProduct === "-" ? (
-                                                                    <i className="bi bi-sort-alpha-up-alt"></i>
-                                                                ) : null}
-                                                                {sortField === "store_name" && sortProduct === "" ? (
-                                                                    <i className="bi bi-sort-alpha-up"></i>
-                                                                ) : null}
-                                                            </b>
-                                                        </th> : ""}
                                                         <th>
                                                             <b
                                                                 style={{
@@ -927,14 +959,14 @@ const PurchaseReturnHistory = forwardRef((props, ref) => {
                                                                     cursor: "pointer",
                                                                 }}
                                                                 onClick={() => {
-                                                                    sort("purchase_return_code");
+                                                                    sort("stocktransfer_code");
                                                                 }}
                                                             >
-                                                                Purchase Return ID
-                                                                {sortField === "purchase_return_code" && sortProduct === "-" ? (
+                                                                StockTransfer ID
+                                                                {sortField === "stocktransfer_code" && sortProduct === "-" ? (
                                                                     <i className="bi bi-sort-alpha-up-alt"></i>
                                                                 ) : null}
-                                                                {sortField === "purchase_return_code" && sortProduct === "" ? (
+                                                                {sortField === "stocktransfer_code" && sortProduct === "" ? (
                                                                     <i className="bi bi-sort-alpha-up"></i>
                                                                 ) : null}
                                                             </b>
@@ -947,34 +979,14 @@ const PurchaseReturnHistory = forwardRef((props, ref) => {
                                                                     cursor: "pointer",
                                                                 }}
                                                                 onClick={() => {
-                                                                    sort("purchase_code");
+                                                                    sort("customer_name");
                                                                 }}
                                                             >
-                                                                Purchase ID
-                                                                {sortField === "purchase_code" && sortProduct === "-" ? (
+                                                                Customer
+                                                                {sortField === "customer_name" && sortProduct === "-" ? (
                                                                     <i className="bi bi-sort-alpha-up-alt"></i>
                                                                 ) : null}
-                                                                {sortField === "purchase_code" && sortProduct === "" ? (
-                                                                    <i className="bi bi-sort-alpha-up"></i>
-                                                                ) : null}
-                                                            </b>
-                                                        </th>
-
-                                                        <th>
-                                                            <b
-                                                                style={{
-                                                                    textDecoration: "underline",
-                                                                    cursor: "pointer",
-                                                                }}
-                                                                onClick={() => {
-                                                                    sort("vendor_name");
-                                                                }}
-                                                            >
-                                                                Vendor
-                                                                {sortField === "vendor_name" && sortProduct === "-" ? (
-                                                                    <i className="bi bi-sort-alpha-up-alt"></i>
-                                                                ) : null}
-                                                                {sortField === "vendor_name" && sortProduct === "" ? (
+                                                                {sortField === "customer_name" && sortProduct === "" ? (
                                                                     <i className="bi bi-sort-alpha-up"></i>
                                                                 ) : null}
                                                             </b>
@@ -1019,7 +1031,6 @@ const PurchaseReturnHistory = forwardRef((props, ref) => {
                                                                 ) : null}
                                                             </b>
                                                         </th>
-
                                                         <th>
                                                             <b
                                                                 style={{
@@ -1039,7 +1050,6 @@ const PurchaseReturnHistory = forwardRef((props, ref) => {
                                                                 ) : null}
                                                             </b>
                                                         </th>
-
                                                         <th>
                                                             <b
                                                                 style={{
@@ -1050,7 +1060,7 @@ const PurchaseReturnHistory = forwardRef((props, ref) => {
                                                                     sort("discount");
                                                                 }}
                                                             >
-                                                                Discount
+                                                                Discount(without VAT)
                                                                 {sortField === "discount" && sortProduct === "-" ? (
                                                                     <i className="bi bi-sort-alpha-up-alt"></i>
                                                                 ) : null}
@@ -1078,9 +1088,7 @@ const PurchaseReturnHistory = forwardRef((props, ref) => {
                                                                 ) : null}
                                                             </b>
                                                         </th>
-
                                                         <th>
-
                                                             <b
                                                                 style={{
                                                                     textDecoration: "underline",
@@ -1090,7 +1098,7 @@ const PurchaseReturnHistory = forwardRef((props, ref) => {
                                                                     sort("price");
                                                                 }}
                                                             >
-                                                                Price
+                                                                Price(without VAT)
                                                                 {sortField === "price" && sortProduct === "-" ? (
                                                                     <i className="bi bi-sort-alpha-up-alt"></i>
                                                                 ) : null}
@@ -1130,7 +1138,7 @@ const PurchaseReturnHistory = forwardRef((props, ref) => {
                                                                     sort("net_price");
                                                                 }}
                                                             >
-                                                                Net Price
+                                                                Net Price(with VAT)
                                                                 {sortField === "net_price" && sortProduct === "-" ? (
                                                                     <i className="bi bi-sort-alpha-up-alt"></i>
                                                                 ) : null}
@@ -1138,75 +1146,198 @@ const PurchaseReturnHistory = forwardRef((props, ref) => {
                                                                     <i className="bi bi-sort-alpha-up"></i>
                                                                 ) : null}
                                                             </b>
+                                                        </th>
+                                                        <th>
+                                                            <b
+                                                                style={{
+                                                                    textDecoration: "underline",
+                                                                    cursor: "pointer",
+                                                                }}
+                                                                onClick={() => {
+                                                                    sort("profit");
+                                                                }}
+                                                            >
+                                                                Profit
+                                                                {sortField === "profit" && sortProduct === "-" ? (
+                                                                    <i className="bi bi-sort-alpha-up-alt"></i>
+                                                                ) : null}
+                                                                {sortField === "profit" && sortProduct === "" ? (
+                                                                    <i className="bi bi-sort-alpha-up"></i>
+                                                                ) : null}
+                                                            </b>
+                                                        </th>
+                                                        <th>
+                                                            <b
+                                                                style={{
+                                                                    textDecoration: "underline",
+                                                                    cursor: "pointer",
+                                                                }}
+                                                                onClick={() => {
+                                                                    sort("loss");
+                                                                }}
+                                                            >
+                                                                Loss
+                                                                {sortField === "loss" && sortProduct === "-" ? (
+                                                                    <i className="bi bi-sort-alpha-up-alt"></i>
+                                                                ) : null}
+                                                                {sortField === "loss" && sortProduct === "" ? (
+                                                                    <i className="bi bi-sort-alpha-up"></i>
+                                                                ) : null}
+                                                            </b>
                                                         </th>*/}
-                                            </tr>
-                                        </thead>
 
-                                        <thead>
-                                            <tr className="text-center">
-                                                {columns.filter(c => c.visible).map((col) => {
-                                                    return (<>
-                                                        {(col.key === "vendor_name") && <th>
-                                                            <Typeahead
-                                                                id="vendor_id"
-                                                                filterBy={['additional_keywords']}
-                                                                labelKey="search_label"
-                                                                onChange={(selectedItems) => {
-                                                                    searchByMultipleValuesField(
-                                                                        "vendor_id",
-                                                                        selectedItems
-                                                                    );
-                                                                }}
-                                                                options={vendorOptions}
-                                                                placeholder="Vendor Name | Mob | VAT # | ID"
-                                                                selected={selectedVendors}
-                                                                highlightOnlyResult={true}
-                                                                ref={vendorSearchRef}
-                                                                onKeyDown={(e) => {
-                                                                    if (e.key === "Escape") {
-                                                                        setVendorOptions([]);
-                                                                        vendorSearchRef.current?.clear();
-                                                                    }
-                                                                }}
-                                                                onInputChange={(searchTerm, e) => {
-                                                                    if (timerRef.current) clearTimeout(timerRef.current);
-                                                                    timerRef.current = setTimeout(() => {
-                                                                        suggestVendors(searchTerm);
-                                                                    }, 100);
-                                                                }}
-                                                                multiple
-                                                            />
+                                                    </tr>
+                                                </thead>
 
-                                                        </th>}
-                                                        {(col.key === "purchase_code" ||
-                                                            col.key === "purchase_return_code" ||
-                                                            col.key === "quantity" ||
-                                                            col.key === "unit_price" ||
-                                                            col.key === "unit_price_with_vat" ||
-                                                            col.key === "discount" ||
-                                                            col.key === "discount_percent" ||
-                                                            col.key === "price" ||
-                                                            col.key === "vat_price" ||
-                                                            col.key === "net_price" ||
-                                                            col.key === "warehouse_code"
-                                                        ) &&
-                                                            <th>
-                                                                <input
-                                                                    type="text"
-                                                                    id={`purchase_return_history_search_by_${col.key}`}
-                                                                    name={`purchase_return_history_search_by_${col.key}`}
-                                                                    onChange={(e) => {
-                                                                        const value = e.target.value;
-                                                                        if (typeof value === "number") {
-                                                                            searchByFieldValue(col.key, parseFloat(e.target.value))
-                                                                        } else if (typeof value === "string") {
-                                                                            searchByFieldValue(col.key, e.target.value)
-                                                                        }
-                                                                    }}
-                                                                    className="form-control"
-                                                                />
-                                                            </th>}
-                                                        {col.key === "date" && <th>
+                                                <thead>
+                                                    <tr className="text-center">
+                                                        {columns.filter(c => c.visible).map((col) => {
+                                                            return (<>
+                                                                {(col.key === "customer_name") && <th>
+                                                                    <Typeahead
+                                                                        id="customer_id"
+                                                                        labelKey="search_label"
+                                                                        filterBy={['additional_keywords']}
+                                                                        onChange={(selectedItems) => {
+                                                                            searchByMultipleValuesField(
+                                                                                "customer_id",
+                                                                                selectedItems
+                                                                            );
+                                                                        }}
+                                                                        options={customerOptions}
+                                                                        placeholder="Customer Name / Mob / VAT # / ID"
+                                                                        selected={selectedCustomers}
+                                                                        highlightOnlyResult={true}
+                                                                        ref={customerSearchRef}
+                                                                        onKeyDown={(e) => {
+                                                                            if (e.key === "Escape") {
+                                                                                setCustomerOptions([]);
+                                                                                customerSearchRef.current?.clear();
+                                                                            }
+                                                                        }}
+                                                                        onInputChange={(searchTerm, e) => {
+
+                                                                            if (timerRef.current) clearTimeout(timerRef.current);
+                                                                            timerRef.current = setTimeout(() => {
+                                                                                suggestCustomers(searchTerm);
+                                                                            }, 100);
+                                                                        }}
+                                                                        multiple
+                                                                    />
+                                                                </th>}
+                                                                {(col.key === "stocktransfer_code" ||
+                                                                    col.key === "quantity" ||
+                                                                    col.key === "unit_price" ||
+                                                                    col.key === "unit_price_with_vat" ||
+                                                                    col.key === "discount" ||
+                                                                    col.key === "discount_percent" ||
+                                                                    col.key === "price" ||
+                                                                    col.key === "vat_price" ||
+                                                                    col.key === "net_price" ||
+                                                                    col.key === "profit" ||
+                                                                    col.key === "loss" ||
+                                                                    col.key === "warehouse_code"
+                                                                ) &&
+                                                                    <th>
+                                                                        <input
+                                                                            type="text"
+                                                                            id={`stocktransfer_history_search_by_${col.key}`}
+                                                                            name={`stocktransfer_history_search_by_${col.key}`}
+                                                                            value={inputValues[col.key] || ""} // ✅ ADD THIS LINE - makes input controlled
+                                                                            onChange={(e) => {
+                                                                                const value = e.target.value;
+                                                                                if (typeof value === "number") {
+                                                                                    searchByFieldValue(col.key, parseFloat(e.target.value))
+                                                                                } else if (typeof value === "string") {
+                                                                                    searchByFieldValue(col.key, e.target.value)
+                                                                                }
+                                                                            }}
+                                                                            className="form-control"
+                                                                        />
+                                                                    </th>}
+                                                                {col.key === "date" && <th>
+                                                                    <div style={{ minWidth: "100px" }}>
+                                                                        <DatePicker
+                                                                            id="date"
+                                                                            value={dateValue}
+                                                                            selected={selectedDate}
+                                                                            className="form-control"
+                                                                            dateFormat="MMM dd yyyy"
+                                                                            isClearable={true}
+                                                                            onChange={(date) => {
+                                                                                if (!date) {
+                                                                                    setDateValue("");
+                                                                                    searchByDateField("date_str", "");
+                                                                                    return;
+                                                                                }
+                                                                                searchByDateField("date_str", date);
+                                                                                selectedDate = date;
+                                                                                setSelectedDate(date);
+
+                                                                            }}
+                                                                        />
+                                                                        <small
+                                                                            style={{
+                                                                                color: "blue",
+                                                                                textDecoration: "underline",
+                                                                                cursor: "pointer",
+                                                                            }}
+                                                                            onClick={(e) =>
+                                                                                setShowDateRange(!showDateRange)
+                                                                            }
+                                                                        >
+                                                                            {showDateRange ? "Less.." : "More.."}
+                                                                        </small>
+                                                                        <br />
+
+                                                                        {showDateRange ? (
+                                                                            <span className="text-left">
+                                                                                From:{" "}
+                                                                                <DatePicker
+                                                                                    id="date_from"
+                                                                                    value={fromDateValue}
+                                                                                    selected={selectedFromDate}
+                                                                                    className="form-control"
+                                                                                    dateFormat="MMM dd yyyy"
+                                                                                    isClearable={true}
+                                                                                    onChange={(date) => {
+                                                                                        if (!date) {
+                                                                                            setFromDateValue("");
+                                                                                            searchByDateField("from_date", "");
+                                                                                            return;
+                                                                                        }
+                                                                                        searchByDateField("from_date", date);
+                                                                                        selectedFromDate = date;
+                                                                                        setSelectedFromDate(date);
+                                                                                    }}
+                                                                                />
+                                                                                To:{" "}
+                                                                                <DatePicker
+                                                                                    id="date_to"
+                                                                                    value={toDateValue}
+                                                                                    selected={selectedToDate}
+                                                                                    isClearable={true}
+                                                                                    className="form-control"
+                                                                                    dateFormat="MMM dd yyyy"
+                                                                                    onChange={(date) => {
+                                                                                        if (!date) {
+                                                                                            setToDateValue("");
+                                                                                            searchByDateField("to_date", "");
+                                                                                            return;
+                                                                                        }
+                                                                                        searchByDateField("to_date", date);
+                                                                                        selectedToDate = date;
+                                                                                        setSelectedToDate(date);
+                                                                                    }}
+                                                                                />
+                                                                            </span>
+                                                                        ) : null}
+                                                                    </div>
+                                                                </th>}
+                                                            </>);
+                                                        })}
+
+                                                        {/*<th>
                                                             <div style={{ minWidth: "100px" }}>
                                                                 <DatePicker
                                                                     id="date"
@@ -1284,136 +1415,43 @@ const PurchaseReturnHistory = forwardRef((props, ref) => {
                                                                     </span>
                                                                 ) : null}
                                                             </div>
-                                                        </th>}
-                                                    </>);
-                                                })}
-
-                                                {/*<th>
-                                                            <div style={{ minWidth: "100px" }}>
-                                                                <DatePicker
-                                                                    id="date"
-                                                                    value={dateValue}
-                                                                    selected={selectedDate}
-                                                                    className="form-control"
-                                                                    dateFormat="MMM dd yyyy"
-                                                                    isClearable={true}
-                                                                    onChange={(date) => {
-                                                                        if (!date) {
-                                                                            setDateValue("");
-                                                                            searchByDateField("date_str", "");
-                                                                            return;
-                                                                        }
-                                                                        searchByDateField("date_str", date);
-                                                                        selectedDate = date;
-                                                                        setSelectedDate(date);
-
-                                                                    }}
-                                                                />
-                                                                <small
-                                                                    style={{
-                                                                        color: "blue",
-                                                                        textDecoration: "underline",
-                                                                        cursor: "pointer",
-                                                                    }}
-                                                                    onClick={(e) =>
-                                                                        setShowDateRange(!showDateRange)
-                                                                    }
-                                                                >
-                                                                    {showDateRange ? "Less.." : "More.."}
-                                                                </small>
-                                                                <br />
-
-                                                                {showDateRange ? (
-                                                                    <span className="text-left">
-                                                                        From:{" "}
-                                                                        <DatePicker
-                                                                            id="date_from"
-                                                                            value={fromDateValue}
-                                                                            selected={selectedFromDate}
-                                                                            className="form-control"
-                                                                            dateFormat="MMM dd yyyy"
-                                                                            isClearable={true}
-                                                                            onChange={(date) => {
-                                                                                if (!date) {
-                                                                                    setFromDateValue("");
-                                                                                    searchByDateField("from_date", "");
-                                                                                    return;
-                                                                                }
-                                                                                searchByDateField("from_date", date);
-                                                                                selectedFromDate = date;
-                                                                                setSelectedFromDate(date);
-                                                                            }}
-                                                                        />
-                                                                        To:{" "}
-                                                                        <DatePicker
-                                                                            id="date_to"
-                                                                            value={toDateValue}
-                                                                            selected={selectedToDate}
-                                                                            isClearable={true}
-                                                                            className="form-control"
-                                                                            dateFormat="MMM dd yyyy"
-                                                                            onChange={(date) => {
-                                                                                if (!date) {
-                                                                                    setToDateValue("");
-                                                                                    searchByDateField("to_date", "");
-                                                                                    return;
-                                                                                }
-                                                                                searchByDateField("to_date", date);
-                                                                                selectedToDate = date;
-                                                                                setSelectedToDate(date);
-                                                                            }}
-                                                                        />
-                                                                    </span>
-                                                                ) : null}
-                                                            </div>
-                                                        </th>
-                                                       
-                                                        <th>
-                                                            <input
-                                                                type="text"
-                                                                id="purchase_return_code"
-                                                                onChange={(e) =>
-                                                                    searchByFieldValue("purchase_return_code", e.target.value)
-                                                                }
-                                                                className="form-control"
-                                                            />
                                                         </th>
                                                         <th>
                                                             <input
                                                                 type="text"
-                                                                id="purchase_code"
+                                                                id="stocktransfer_code"
                                                                 onChange={(e) =>
-                                                                    searchByFieldValue("purchase_code", e.target.value)
+                                                                    searchByFieldValue("stocktransfer_code", e.target.value)
                                                                 }
                                                                 className="form-control"
                                                             />
                                                         </th>
                                                         <th>
                                                             <Typeahead
-                                                                id="vendor_id"
-                                                                filterBy={['additional_keywords']}
+                                                                id="customer_id"
                                                                 labelKey="search_label"
+                                                                filterBy={['additional_keywords']}
                                                                 onChange={(selectedItems) => {
                                                                     searchByMultipleValuesField(
-                                                                        "vendor_id",
+                                                                        "customer_id",
                                                                         selectedItems
                                                                     );
                                                                 }}
-                                                                options={vendorOptions}
-                                                                placeholder="Vendor Name | Mob | VAT # | ID"
-                                                                selected={selectedVendors}
+                                                                options={customerOptions}
+                                                                placeholder="Customer Name / Mob / VAT # / ID"
+                                                                selected={selectedCustomers}
                                                                 highlightOnlyResult={true}
-                                                                ref={vendorSearchRef}
+                                                                ref={customerSearchRef}
                                                                 onKeyDown={(e) => {
                                                                     if (e.key === "Escape") {
-                                                                        setVendorOptions([]);
-                                                                        vendorSearchRef.current?.clear();
+                                                                        setCustomerOptions([]);
+                                                                        customerSearchRef.current?.clear();
                                                                     }
                                                                 }}
                                                                 onInputChange={(searchTerm, e) => {
                                                                     if (timerRef.current) clearTimeout(timerRef.current);
                                                                     timerRef.current = setTimeout(() => {
-                                                                        suggestVendors(searchTerm);
+                                                                        suggestCustomers(searchTerm);
                                                                     }, 100);
                                                                 }}
                                                                 multiple
@@ -1499,66 +1537,82 @@ const PurchaseReturnHistory = forwardRef((props, ref) => {
                                                                 }
                                                                 className="form-control"
                                                             />
+                                                        </th>
+
+                                                        <th>
+                                                            <input
+                                                                type="text"
+                                                                id="profit"
+                                                                onChange={(e) =>
+                                                                    searchByFieldValue("profit", e.target.value)
+                                                                }
+                                                                className="form-control"
+                                                            />
+                                                        </th>
+
+                                                        <th>
+                                                            <input
+                                                                type="text"
+                                                                id="loss"
+                                                                onChange={(e) =>
+                                                                    searchByFieldValue("loss", e.target.value)
+                                                                }
+                                                                className="form-control"
+                                                            />
                                                         </th>*/}
-                                            </tr>
-                                        </thead>
+                                                    </tr>
+                                                </thead>
 
-                                        <tbody className="text-center">
-                                            {historyList &&
-                                                historyList.map((history) => (
-                                                    <tr key={history.id}>
-                                                        {columns.filter(c => c.visible).map((col) => {
-                                                            return (<>
-                                                                {(col.key === "vendor_name") && <td style={{ width: "auto", whiteSpace: "nowrap" }} className="text-start" >
-                                                                    {history.vendor_name && <span style={{ cursor: "pointer", color: "blue" }} onClick={() => {
-                                                                        openVendorUpdateForm(history.vendor_id);
-                                                                    }}><OverflowTooltip value={history.vendor_name + (history.vendor_name_arabic ? " | " + history.vendor_name_arabic : "")} />
-                                                                    </span>}
-                                                                </td>}
-                                                                {(col.key === "purchase_return_code") && <td style={{ width: "auto", whiteSpace: "nowrap" }} className="text-start" >
-                                                                    <span style={{ cursor: "pointer", color: "blue" }} onClick={() => {
-                                                                        openPurchaseReturnUpdateForm(history.purchase_return_id);
-                                                                    }}> {history.purchase_return_code}
-                                                                    </span>
-                                                                </td>}
-                                                                {(col.key === "purchase_code") && <td style={{ width: "auto", whiteSpace: "nowrap" }} className="text-start" >
-                                                                    <span style={{ cursor: "pointer", color: "blue" }} onClick={() => {
-                                                                        openPurchaseUpdateForm(history.purchase_id);
-                                                                    }}> {history.purchase_code}
-                                                                    </span>
-                                                                </td>}
-                                                                {(
-                                                                    col.key === "quantity" ||
-                                                                    col.key === "unit_price" ||
-                                                                    col.key === "unit_price_with_vat" ||
-                                                                    col.key === "discount" ||
-                                                                    col.key === "discount_percent" ||
-                                                                    col.key === "price" ||
-                                                                    col.key === "vat_price" ||
-                                                                    col.key === "net_price" ||
-                                                                    col.key === "profit" ||
-                                                                    col.key === "loss" ||
-                                                                    col.key === "warehouse_code"
+                                                <tbody className="text-center">
+                                                    {historyList &&
+                                                        historyList.map((history) => (
+                                                            <tr key={history.id}>
+                                                                {columns.filter(c => c.visible).map((col) => {
+                                                                    return (<>
+                                                                        {(col.key === "customer_name") && <td style={{ width: "auto", whiteSpace: "nowrap" }} className="text-start" >
+                                                                            {history.customer_name && <span style={{ cursor: "pointer", color: "blue" }} onClick={() => {
+                                                                                openCustomerUpdateForm(history.customer_id);
+                                                                            }}><OverflowTooltip value={history.customer_name + (history.customer_name_arabic ? " | " + history.customer_name_arabic : "")} />
+                                                                            </span>}
+                                                                        </td>}
+                                                                        {(col.key === "stocktransfer_code") && <td style={{ width: "auto", whiteSpace: "nowrap" }} className="text-start" >
+                                                                            <span style={{ cursor: "pointer", color: "blue" }} onClick={() => {
+                                                                                openStockTransferUpdateForm(history.stocktransfer_id);
+                                                                            }}> {history.stocktransfer_code}
+                                                                            </span>
+                                                                        </td>}
+                                                                        {(
+                                                                            col.key === "quantity" ||
+                                                                            col.key === "unit_price" ||
+                                                                            col.key === "unit_price_with_vat" ||
+                                                                            col.key === "discount" ||
+                                                                            col.key === "discount_percent" ||
+                                                                            col.key === "price" ||
+                                                                            col.key === "vat_price" ||
+                                                                            col.key === "net_price" ||
+                                                                            col.key === "profit" ||
+                                                                            col.key === "loss" ||
+                                                                            col.key === "warehouse_code"
 
-                                                                ) &&
-                                                                    <td style={{ width: "auto", whiteSpace: "nowrap" }} >
-                                                                        {col.key === "warehouse_code" ? (
-                                                                            history[col.key] || "Main Store"
-                                                                        ) : (
-                                                                            history[col.key] && typeof history[col.key] === "number" ?
-                                                                                <Amount amount={trimTo2Decimals(history[col.key])} /> : history[col.key]
-                                                                        )
-                                                                        }
-                                                                    </td>}
-                                                                {col.key === "date" && <td style={{ width: "auto", whiteSpace: "nowrap" }}>
-                                                                    {format(
-                                                                        new Date(history.date),
-                                                                        "MMM dd yyyy h:mma"
-                                                                    )}
-                                                                </td>}
-                                                            </>);
-                                                        })}
-                                                        {/*<td>
+                                                                        ) &&
+                                                                            <td style={{ width: "auto", whiteSpace: "nowrap" }} >
+                                                                                {col.key === "warehouse_code" ? (
+                                                                                    history[col.key] || "Main Store"
+                                                                                ) : (
+                                                                                    history[col.key] && typeof history[col.key] === "number" ?
+                                                                                        <Amount amount={trimTo2Decimals(history[col.key])} /> : history[col.key]
+                                                                                )}
+                                                                            </td>}
+                                                                        {col.key === "date" && <td style={{ width: "auto", whiteSpace: "nowrap" }}>
+                                                                            {format(
+                                                                                new Date(history.date),
+                                                                                "MMM dd yyyy h:mma"
+                                                                            )}
+                                                                        </td>}
+                                                                    </>);
+                                                                })}
+
+                                                                {/*<td>
                                                                     {history.date ? format(
                                                                         new Date(history.date),
                                                                         "MMM dd yyyy h:mma"
@@ -1571,8 +1625,8 @@ const PurchaseReturnHistory = forwardRef((props, ref) => {
                                                                     cursor: "pointer",
                                                                 }}
                                                                     onClick={() => {
-                                                                        openPurchaseReturnUpdateForm(history.purchase_return_id);
-                                                                    }}>{history.purchase_return_code}
+                                                                        openStockTransferUpdateForm(history.stocktransfer_id);
+                                                                    }}>{history.stocktransfer_code}
                                                                 </td>
                                                                 <td style={{
                                                                     textDecoration: "underline",
@@ -1580,64 +1634,56 @@ const PurchaseReturnHistory = forwardRef((props, ref) => {
                                                                     cursor: "pointer",
                                                                 }}
                                                                     onClick={() => {
-                                                                        openPurchaseUpdateForm(history.purchase_id);
-                                                                    }}>{history.purchase_code}
-                                                                </td>
-                                                                <td style={{
-                                                                    textDecoration: "underline",
-                                                                    color: "blue",
-                                                                    cursor: "pointer",
-                                                                }}
-                                                                    onClick={() => {
-                                                                        openVendorDetailsView(history.vendor_id);
-                                                                    }}>{history.vendor_name}
+                                                                        openCustomerDetailsView(history.customer_id);
+                                                                    }}>{history.customer_name}
                                                                 </td>
                                                                 <td>{history.quantity}{history.unit ? history.unit : ""}</td>
                                                                 <td>{history.unit_price?.toFixed(2)}</td>
                                                                 <td>{history.unit_price_with_vat?.toFixed(2)}</td>
                                                                 <td>{history.discount?.toFixed(2)}</td>
                                                                 <td>{history.discount_percent?.toFixed(2)}</td>
-                                                                <td>{history.price.toFixed(2) + " "}</td>
-                                                                <td>{history.vat_price.toFixed(2) + "   (" + history.vat_percent.toFixed(2) + "%)"}</td>
-                                                                <td>{history.net_price.toFixed(2) + " "}</td>*/}
+                                                                <td>{history.price ? history.price?.toFixed(2) : ""}</td>
+                                                                <td>{history.vat_price ? history.vat_price?.toFixed(2) + "   (" + history.vat_percent?.toFixed(2) + "%)" : ""}</td>
+                                                                <td>{history.net_price ? history.net_price?.toFixed(2) : ""}</td>
+                                                                <td>{history.profit?.toFixed(2) + " "}</td>
+                                                                <td>{history.loss?.toFixed(2) + " "}</td>*/}
+                                                            </tr>
+                                                        ))}
+                                                </tbody>
+                                            </table>
+                                        </div>
 
-                                                    </tr>
-                                                ))}
-                                        </tbody>
-                                    </table>
+                                        {totalPages ? <ReactPaginate
+                                            breakLabel="..."
+                                            nextLabel="next >"
+                                            onPageChange={(event) => {
+                                                changePage(event.selected + 1);
+                                            }}
+                                            pageRangeDisplayed={5}
+                                            pageCount={totalPages}
+                                            previousLabel="< previous"
+                                            renderOnZeroPageCount={null}
+                                            className="pagination  flex-wrap"
+                                            pageClassName="page-item"
+                                            pageLinkClassName="page-link"
+                                            activeClassName="active"
+                                            previousClassName="page-item"
+                                            nextClassName="page-item"
+                                            previousLinkClassName="page-link"
+                                            nextLinkClassName="page-link"
+                                            forcePage={page - 1}
+                                        /> : ""}
+                                    </div>
                                 </div>
-
-                                {totalPages ? <ReactPaginate
-                                    breakLabel="..."
-                                    nextLabel="next >"
-                                    onPageChange={(event) => {
-                                        changePage(event.selected + 1);
-                                    }}
-                                    pageRangeDisplayed={5}
-                                    pageCount={totalPages}
-                                    previousLabel="< previous"
-                                    renderOnZeroPageCount={null}
-                                    className="pagination  flex-wrap"
-                                    pageClassName="page-item"
-                                    pageLinkClassName="page-link"
-                                    activeClassName="active"
-                                    previousClassName="page-item"
-                                    nextClassName="page-item"
-                                    previousLinkClassName="page-link"
-                                    nextLinkClassName="page-link"
-                                    forcePage={page - 1}
-                                /> : ""}
                             </div>
                         </div>
                     </div>
-                </div>
-            </div>
-            {/*</Modal.Body>
-            </Modal>*/}
+                </Modal.Body>
+            </Modal>
         </>);
 
 
 });
 
-export default PurchaseReturnHistory;
+export default StockTransferHistory;
 

@@ -877,6 +877,11 @@ const OrderIndex = forwardRef((props, ref) => {
 
     function searchByFieldValue(field, value) {
         searchParams[field] = value;
+        setFieldFilters(prev => {
+            const updated = { ...prev };
+            if (value) { updated[field] = value; } else { delete updated[field]; }
+            return updated;
+        });
 
         page = 1;
         setPage(page);
@@ -975,6 +980,7 @@ const OrderIndex = forwardRef((props, ref) => {
 
 
     const [statsOpen, setStatsOpen] = useState(false);
+    const [fieldFilters, setFieldFilters] = useState({});
 
     const list = useCallback(() => {
         setExcelData([]);
@@ -1800,7 +1806,25 @@ const OrderIndex = forwardRef((props, ref) => {
                     <div className="col">
                         <span className="text-end">
                             <StatsSummary
-                                title={'Sales'}
+                                title={'Sales Summary'}
+                                filters={{
+                                    ...(dateValue ? { 'Date': dateValue } : {}),
+                                    ...(fromDateValue ? { 'From Date': fromDateValue } : {}),
+                                    ...(toDateValue ? { 'To Date': toDateValue } : {}),
+                                    ...(createdAtValue ? { 'Created At': createdAtValue } : {}),
+                                    ...(createdAtFromValue ? { 'Created From': createdAtFromValue } : {}),
+                                    ...(createdAtToValue ? { 'Created To': createdAtToValue } : {}),
+                                    ...(selectedCustomers.length > 0 ? { 'Customer': selectedCustomers.map(c => c.name).join(', ') } : {}),
+                                    ...(selectedCreatedByUsers.length > 0 ? { 'Created By': selectedCreatedByUsers.map(u => u.name).join(', ') } : {}),
+                                    ...(selectedPaymentStatusList.length > 0 ? { 'Payment Status': selectedPaymentStatusList.map(s => s.name).join(', ') } : {}),
+                                    ...(selectedPaymentMethodList.length > 0 ? { 'Payment Method': selectedPaymentMethodList.map(m => m.name).join(', ') } : {}),
+                                    ...(selectedCommissionPaymentMethodList.length > 0 ? { 'Commission Method': selectedCommissionPaymentMethodList.map(m => m.name).join(', ') } : {}),
+                                    ...(fieldFilters.code ? { 'ID': fieldFilters.code } : {}),
+                                    ...(fieldFilters.net_total ? { 'Net Total': fieldFilters.net_total } : {}),
+                                    ...(fieldFilters.total_payment_received ? { 'Amount Paid': fieldFilters.total_payment_received } : {}),
+                                    ...(fieldFilters.balance_amount ? { 'Credit Balance': fieldFilters.balance_amount } : {}),
+                                    ...(fieldFilters.customer_name ? { 'Customer Name': fieldFilters.customer_name } : {}),
+                                }}
                                 stats={{
                                     "Sales": totalSales,
                                     "Cash Sales": totalCashSales,

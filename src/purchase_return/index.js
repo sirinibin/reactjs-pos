@@ -546,6 +546,11 @@ function PurchaseReturnIndex(props) {
 
     function searchByFieldValue(field, value) {
         searchParams[field] = value;
+        setFieldFilters(prev => {
+            const updated = { ...prev };
+            if (value) { updated[field] = value; } else { delete updated[field]; }
+            return updated;
+        });
 
         page = 1;
         setPage(page);
@@ -649,6 +654,7 @@ function PurchaseReturnIndex(props) {
     let [totalShippingHandlingFees, setTotalShippingHandlingFees] = useState(0.00);
 
     let [statsOpen, setStatsOpen] = useState(false);
+    const [fieldFilters, setFieldFilters] = useState({});
 
     const list = useCallback(() => {
         setExcelData([]);
@@ -1351,7 +1357,21 @@ function PurchaseReturnIndex(props) {
 
                         <span className="text-end">
                             <StatsSummary
-                                title={t('Purchase Return')}
+                                title={t('Purchase Return Summary')}
+                                filters={{
+                                    ...(dateValue ? { 'Date': dateValue } : {}),
+                                    ...(fromDateValue ? { 'From Date': fromDateValue } : {}),
+                                    ...(toDateValue ? { 'To Date': toDateValue } : {}),
+                                    ...(selectedVendors.length > 0 ? { 'Vendor': selectedVendors.map(v => v.name).join(', ') } : {}),
+                                    ...Object.fromEntries(
+                                        Object.entries(fieldFilters)
+                                            .filter(([, v]) => v)
+                                            .map(([field, value]) => {
+                                                const col = columns.find(c => c.fieldName === field || c.key === field);
+                                                return [col ? col.label : field, value];
+                                            })
+                                    ),
+                                }}
                                 stats={{
                                     [t('Cash Purchase Return')]: totalCashPurchaseReturn,
                                     [t('Credit Purchase Return')]: totalUnPaidPurchaseReturn,

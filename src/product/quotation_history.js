@@ -707,7 +707,13 @@ const QuotationHistory = forwardRef((props, ref) => {
                     <div className="col">
                         <span className="text-end">
                             {selectedType === "quotation" && <StatsSummary
-                                title={`Quotation History`}
+                                title={`Quotation History Summary`}
+                                filters={{
+                                    ...(dateValue ? { 'Date': dateValue } : {}),
+                                    ...(fromDateValue ? { 'From Date': fromDateValue } : {}),
+                                    ...(toDateValue ? { 'To Date': toDateValue } : {}),
+                                    ...(selectedCustomers.length > 0 ? { 'Customer': selectedCustomers.map(c => c.name).join(', ') } : {}),
+                                }}
                                 stats={{
                                     "Quotation": totalQuotation,
                                     "Net Profit": totalProfit,
@@ -718,7 +724,13 @@ const QuotationHistory = forwardRef((props, ref) => {
                                 onToggle={handleSummaryToggle}
                             />}
                             {selectedType === "invoice" && <StatsSummary
-                                title={`Quotation Sales History`}
+                                title={`Quotation Sales History Summary`}
+                                filters={{
+                                    ...(dateValue ? { 'Date': dateValue } : {}),
+                                    ...(fromDateValue ? { 'From Date': fromDateValue } : {}),
+                                    ...(toDateValue ? { 'To Date': toDateValue } : {}),
+                                    ...(selectedCustomers.length > 0 ? { 'Customer': selectedCustomers.map(c => c.name).join(', ') } : {}),
+                                }}
                                 stats={{
                                     "Sales": totalQuotation,
                                     "Net Profit": totalProfit,

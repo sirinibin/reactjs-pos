@@ -622,6 +622,11 @@ function PurchaseIndex(props) {
 
     function searchByFieldValue(field, value) {
         searchParams[field] = value;
+        setFieldFilters(prev => {
+            const updated = { ...prev };
+            if (value) { updated[field] = value; } else { delete updated[field]; }
+            return updated;
+        });
 
         page = 1;
         setPage(page);
@@ -746,6 +751,7 @@ function PurchaseIndex(props) {
 
 
     let [statsOpen, setStatsOpen] = useState(false);
+    const [fieldFilters, setFieldFilters] = useState({});
 
 
     const list = useCallback(() => {
@@ -1373,7 +1379,24 @@ function PurchaseIndex(props) {
                     <div className="col">
                         <span className="text-end">
                             <StatsSummary
-                                title="Purchase"
+                                title="Purchase Summary"
+                                filters={{
+                                    ...(dateValue ? { 'Date': dateValue } : {}),
+                                    ...(fromDateValue ? { 'From Date': fromDateValue } : {}),
+                                    ...(toDateValue ? { 'To Date': toDateValue } : {}),
+                                    ...(selectedVendors.length > 0 ? { 'Vendor': selectedVendors.map(v => v.name).join(', ') } : {}),
+                                    ...(selectedCreatedByUsers.length > 0 ? { 'Created By': selectedCreatedByUsers.map(u => u.name).join(', ') } : {}),
+                                    ...(selectedPaymentStatusList.length > 0 ? { 'Payment Status': selectedPaymentStatusList.map(s => s.name || s.id).join(', ') } : {}),
+                                    ...(selectedPaymentMethodList.length > 0 ? { 'Payment Method': selectedPaymentMethodList.map(m => m.name || m.id).join(', ') } : {}),
+                                    ...Object.fromEntries(
+                                        Object.entries(fieldFilters)
+                                            .filter(([, v]) => v)
+                                            .map(([field, value]) => {
+                                                const col = columns.find(c => c.fieldName === field || c.key === field);
+                                                return [col ? col.label : field, value];
+                                            })
+                                    ),
+                                }}
                                 stats={{
                                     "Cash purchase": totalCashPurchase,
                                     "Credit purchase": totalUnPaidPurchase,

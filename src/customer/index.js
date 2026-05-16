@@ -17,6 +17,8 @@ import CustomerPending from "./../utils/customer_pending.js";
 import { Menu, MenuItem } from "react-bootstrap-typeahead";
 import { highlightWords } from "../utils/search.js";
 import StatsSummary from "../utils/StatsSummary.js";
+import Sales from "../utils/sales.js";
+import SalesReturns from "../utils/salesReturn.js";
 
 
 function CustomerIndex(props) {
@@ -137,6 +139,11 @@ function CustomerIndex(props) {
 
     function searchByFieldValue(field, value) {
         searchParams[field] = value;
+        setFieldFilters(prev => {
+            const updated = { ...prev };
+            if (value) { updated[field] = value; } else { delete updated[field]; }
+            return updated;
+        });
 
         page = 1;
         setPage(page);
@@ -268,7 +275,7 @@ function CustomerIndex(props) {
             },
         };
         let Select =
-            "select=id,code,deleted,search_label,credit_limit,credit_balance,account,name,name_in_arabic,email,phone,vat_no,created_by_name,created_at,stores";
+            "select=id,code,deleted,search_label,credit_limit,credit_balance,account,name,name_in_arabic,email,phone,vat_no,created_by_name,created_at,stores,churn_risk_tier,churn_risk_tier_reason,churn_percent,total_spend,days_since_last_buy,lifetime_value_segment_for_12months,lifetime_value_segment_reason_for_12months,predicted_clv_amount_12months,predicted_avg_order_amount,tenure_days,first_purchase_at,last_purchase_at,retention_1month,retention_3month,retention_6month,retention_12month,retention_24month";
 
         if (localStorage.getItem("store_id")) {
             searchParams.store_id = localStorage.getItem("store_id");
@@ -876,6 +883,22 @@ function CustomerIndex(props) {
 
 
         { key: "delivery_note_count", label: "Delivery Note Count", fieldName: "stores.delivery_note_count", visible: true },
+        { key: "churn_risk_tier", label: "Churn Risk Tier", fieldName: "churn_risk_tier", visible: false },
+        { key: "churn_risk_tier_reason", label: "Churn Risk Reason", fieldName: "churn_risk_tier_reason", visible: true },
+        { key: "churn_percent", label: "Churn %", fieldName: "churn_percent", visible: false },
+        { key: "total_spend", label: "Total Spend (SAR)", fieldName: "total_spend", visible: true },
+        { key: "days_since_last_buy", label: "Days Since Last Buy", fieldName: "days_since_last_buy", visible: false },
+        { key: "predicted_clv_amount_12months", label: "CLV 12m (SAR)", fieldName: "predicted_clv_amount_12months", visible: false },
+        { key: "lifetime_value_segment_for_12months", label: "CLV Segment", fieldName: "lifetime_value_segment_for_12months", visible: false },
+        { key: "lifetime_value_segment_reason_for_12months", label: "CLV Segment Reason", fieldName: "lifetime_value_segment_reason_for_12months", visible: true },
+        { key: "tenure_days", label: "Tenure (Days)", fieldName: "tenure_days", visible: false },
+        { key: "first_purchase_at", label: "First Purchase", fieldName: "first_purchase_at", visible: false },
+        { key: "last_purchase_at", label: "Last Purchase", fieldName: "last_purchase_at", visible: false },
+        { key: "retention_1month", label: "1m Retention", fieldName: "retention_1month", visible: false },
+        { key: "retention_3month", label: "3m Retention", fieldName: "retention_3month", visible: false },
+        { key: "retention_6month", label: "6m Retention", fieldName: "retention_6month", visible: false },
+        { key: "retention_12month", label: "12m Retention", fieldName: "retention_12month", visible: false },
+        { key: "retention_24month", label: "24m Retention", fieldName: "retention_24month", visible: false },
         { key: "created_by_name", label: "Created By", fieldName: "created_by", visible: true },
         { key: "created_at", label: "Created At", fieldName: "created_at", visible: true },
         { key: "actions_end", label: "Actions", fieldName: "actions_end", visible: true },
@@ -953,6 +976,48 @@ function CustomerIndex(props) {
     const [showSuccess, setShowSuccess] = useState(false);
     const [successMessage, setSuccessMessage] = useState(false);
 
+    const [showHistoryModal, setShowHistoryModal] = useState(false);
+    const [historyCustomer, setHistoryCustomer] = useState(null);
+    const [historyData, setHistoryData] = useState({ churn_history: [], clv_history: [] });
+    const [historyLoading, setHistoryLoading] = useState(false);
+    const [historyTab, setHistoryTab] = useState("churn");
+
+    const SalesRef = useRef();
+    function openCustomerSales(customer) {
+        SalesRef.current.open(false, [customer], null);
+    }
+
+    const SalesReturnsRef = useRef();
+    function openCustomerSalesReturns(customer) {
+        SalesReturnsRef.current.open(false, [customer], null);
+    }
+
+    async function openHistoryModal(customerId, customerName) {
+        setHistoryCustomer(customerName);
+        setHistoryData({ churn_history: [], clv_history: [] });
+        setHistoryTab("churn");
+        setHistoryLoading(true);
+        setShowHistoryModal(true);
+        try {
+            const storeId = localStorage.getItem("store_id") || "";
+            const res = await fetch("/v1/customer/" + customerId + "/history?search[store_id]=" + storeId, {
+                method: "GET",
+                headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": localStorage.getItem("access_token"),
+                },
+            });
+            const data = await res.json();
+            if (data.status) {
+                setHistoryData(data.result);
+            }
+        } catch (e) {
+            console.error("Failed to load customer history", e);
+        } finally {
+            setHistoryLoading(false);
+        }
+    }
+
     let [selectedCreatedAtDate, setSelectedCreatedAtDate] = useState(new Date());
     let [selectedCreatedAtFromDate, setSelectedCreatedAtFromDate] = useState(new Date());
     let [selectedCreatedAtToDate, setSelectedCreatedAtToDate] = useState(new Date());
@@ -962,6 +1027,7 @@ function CustomerIndex(props) {
     };
 
     let [statsOpen, setStatsOpen] = useState(false);
+    const [fieldFilters, setFieldFilters] = useState({});
     const handleSummaryToggle = (isOpen) => {
         statsOpen = isOpen
         setStatsOpen(statsOpen)
@@ -1047,6 +1113,18 @@ function CustomerIndex(props) {
                         Close
                     </Button>
                     <Button
+                        variant="outline-secondary"
+                        onClick={() => setColumns(cols => cols.map(c => ({ ...c, visible: false })))}
+                    >
+                        Uncheck All
+                    </Button>
+                    <Button
+                        variant="outline-secondary"
+                        onClick={() => setColumns(cols => cols.map(c => ({ ...c, visible: true })))}
+                    >
+                        Check All
+                    </Button>
+                    <Button
                         variant="primary"
                         onClick={() => {
                             RestoreDefaultSettings();
@@ -1073,7 +1151,111 @@ function CustomerIndex(props) {
                     </Button>
                 </Modal.Footer>
             </Modal>
+            <Modal show={showHistoryModal} onHide={() => setShowHistoryModal(false)} size="xl" centered>
+                <Modal.Header closeButton>
+                    <Modal.Title>Customer History{historyCustomer ? ` — ${historyCustomer}` : ""}</Modal.Title>
+                </Modal.Header>
+                <Modal.Body>
+                    <ul className="nav nav-tabs mb-3">
+                        <li className="nav-item">
+                            <button className={"nav-link" + (historyTab === "churn" ? " active" : "")} onClick={() => setHistoryTab("churn")}>
+                                Churn Risk History
+                            </button>
+                        </li>
+                        <li className="nav-item">
+                            <button className={"nav-link" + (historyTab === "clv" ? " active" : "")} onClick={() => setHistoryTab("clv")}>
+                                CLV History
+                            </button>
+                        </li>
+                    </ul>
+                    {historyLoading && <div className="text-center py-4"><Spinner animation="border" /></div>}
+                    {!historyLoading && historyTab === "churn" && (
+                        <div className="table-responsive">
+                            <table className="table table-sm table-bordered">
+                                <thead className="table-light">
+                                    <tr>
+                                        <th>Date</th>
+                                        <th>Risk Tier</th>
+                                        <th>Churn %</th>
+                                        <th>Total Spend</th>
+                                        <th>Days Since Last Buy</th>
+                                        <th>Reason</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {historyData.churn_history && historyData.churn_history.length > 0 ? historyData.churn_history.map((row, i) => (
+                                        <tr key={i}>
+                                            <td>{row.date ? new Date(row.date).toLocaleDateString() : ""}</td>
+                                            <td>
+                                                <span className={
+                                                    "badge " + (
+                                                        row.risk_tier === "Critical" ? "bg-danger" :
+                                                            row.risk_tier === "High" ? "bg-warning text-dark" :
+                                                                row.risk_tier === "Medium" ? "bg-info" :
+                                                                    row.risk_tier === "Low" ? "bg-success" : "bg-secondary"
+                                                    )
+                                                }>{row.risk_tier || "—"}</span>
+                                            </td>
+                                            <td>{row.churn_percent != null ? row.churn_percent.toFixed(1) + "%" : "—"}</td>
+                                            <td>{row.total_spend != null ? row.total_spend.toFixed(2) : "—"}</td>
+                                            <td>{row.days_since_last_buy != null ? row.days_since_last_buy : "—"}</td>
+                                            <td style={{ fontSize: "0.8em", maxWidth: "220px" }}>{row.risk_tier_reason || "—"}</td>
+                                        </tr>
+                                    )) : (
+                                        <tr><td colSpan={6} className="text-center text-muted">No churn history found</td></tr>
+                                    )}
+                                </tbody>
+                            </table>
+                        </div>
+                    )}
+                    {!historyLoading && historyTab === "clv" && (
+                        <div className="table-responsive">
+                            <table className="table table-sm table-bordered">
+                                <thead className="table-light">
+                                    <tr>
+                                        <th>Date</th>
+                                        <th>CLV Segment</th>
+                                        <th>Predicted CLV 12m</th>
+                                        <th>Avg Order</th>
+                                        <th>Orders Count</th>
+                                        <th>Spend</th>
+                                        <th>Reason</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {historyData.clv_history && historyData.clv_history.length > 0 ? historyData.clv_history.map((row, i) => (
+                                        <tr key={i}>
+                                            <td>{row.date ? new Date(row.date).toLocaleDateString() : ""}</td>
+                                            <td>
+                                                <span className={
+                                                    "badge " + (
+                                                        row.lifetime_value_segment_for_12months === "High Value" ? "bg-success" :
+                                                            row.lifetime_value_segment_for_12months === "Mid Value" ? "bg-primary" :
+                                                                row.lifetime_value_segment_for_12months === "Low Value" ? "bg-warning text-dark" : "bg-secondary"
+                                                    )
+                                                }>{row.lifetime_value_segment_for_12months || "—"}</span>
+                                            </td>
+                                            <td>{row.predicted_clv_amount_12months != null ? row.predicted_clv_amount_12months.toFixed(2) : "—"}</td>
+                                            <td>{row.predicted_avg_order_amount != null ? row.predicted_avg_order_amount.toFixed(2) : "—"}</td>
+                                            <td>{row.history_orders_count != null ? row.history_orders_count : "—"}</td>
+                                            <td>{row.history_spend_amount != null ? row.history_spend_amount.toFixed(2) : "—"}</td>
+                                            <td style={{ fontSize: "0.8em", maxWidth: "220px" }}>{row.lifetime_value_segment_reason_for_12months || "—"}</td>
+                                        </tr>
+                                    )) : (
+                                        <tr><td colSpan={7} className="text-center text-muted">No CLV history found</td></tr>
+                                    )}
+                                </tbody>
+                            </table>
+                        </div>
+                    )}
+                </Modal.Body>
+                <Modal.Footer>
+                    <Button variant="secondary" onClick={() => setShowHistoryModal(false)}>Close</Button>
+                </Modal.Footer>
+            </Modal>
             <PostingIndex ref={AccountBalanceSheetRef} showToastMessage={props.showToastMessage} />
+            <Sales ref={SalesRef} showToastMessage={props.showToastMessage} />
+            <SalesReturns ref={SalesReturnsRef} showToastMessage={props.showToastMessage} />
             <CustomerCreate ref={CreateFormRef} refreshList={list} showToastMessage={props.showToastMessage} openDetailsView={openDetailsView} />
             <CustomerView ref={DetailsViewRef} openUpdateForm={openUpdateForm} openCreateForm={openCreateForm} />
 
@@ -1084,7 +1266,18 @@ function CustomerIndex(props) {
                     <div className="col">
                         <span className="text-end">
                             <StatsSummary
-                                title="Customer Stats"
+                                title="Customer Stats Summary"
+                                filters={{
+                                    ...(selectedCustomers.length > 0 ? { 'Customer': selectedCustomers.map(c => c.name).join(', ') } : {}),
+                                    ...Object.fromEntries(
+                                        Object.entries(fieldFilters)
+                                            .filter(([, v]) => v)
+                                            .map(([field, value]) => {
+                                                const col = columns.find(c => c.fieldName === field || c.key === field);
+                                                return [col ? col.label : field, value];
+                                            })
+                                    ),
+                                }}
                                 stats={{
                                     "Credit Balance": creditBalance,
                                     //Sales
@@ -2300,6 +2493,42 @@ function CustomerIndex(props) {
                                                                     className="form-control"
                                                                 />
                                                             </th>}
+                                                        {col.key === "churn_risk_tier" && <th>
+                                                            <select className="form-control"
+                                                                onChange={(e) => searchByFieldValue("churn_risk_tier", e.target.value)}>
+                                                                <option value="">All Tiers</option>
+                                                                <option value="Critical">Critical</option>
+                                                                <option value="High">High</option>
+                                                                <option value="Medium">Medium</option>
+                                                                <option value="Low">Low</option>
+                                                            </select>
+                                                        </th>}
+                                                        {col.key === "churn_percent" && <th><input className="form-control" type="number" placeholder="Churn %" /></th>}
+                                                        {col.key === "total_spend" && <th><input className="form-control" type="number" placeholder="Total Spend" onChange={(e) => searchByFieldValue("total_spend", e.target.value)} /></th>}
+                                                        {col.key === "churn_risk_tier_reason" && <th><input className="form-control" placeholder="Churn Reason" /></th>}
+                                                        {col.key === "days_since_last_buy" && <th><input className="form-control" type="number" placeholder="Days Since Buy" /></th>}
+                                                        {col.key === "predicted_clv_amount_12months" && <th><input className="form-control" type="number" placeholder="CLV 12m" /></th>}
+                                                        {col.key === "lifetime_value_segment_for_12months" && <th>
+                                                            <select className="form-control"
+                                                                onChange={(e) => searchByFieldValue("lifetime_value_segment_for_12months", e.target.value)}>
+                                                                <option value="">All Segments</option>
+                                                                <option value="High Value">High Value</option>
+                                                                <option value="Mid Value">Mid Value</option>
+                                                                <option value="Low Value">Low Value</option>
+                                                            </select>
+                                                        </th>}
+                                                        {col.key === "tenure_days" && <th><input className="form-control" type="number" placeholder="Tenure Days" /></th>}
+                                                        {col.key === "lifetime_value_segment_reason_for_12months" && <th><input className="form-control" placeholder="CLV Reason" /></th>}
+                                                        {col.key === "first_purchase_at" && <th></th>}
+                                                        {col.key === "last_purchase_at" && <th></th>}
+                                                        {["retention_1month", "retention_3month", "retention_6month", "retention_12month", "retention_24month"].includes(col.key) && <th>
+                                                            <select className="form-control"
+                                                                onChange={(e) => searchByFieldValue(col.key, e.target.value)}>
+                                                                <option value="">All</option>
+                                                                <option value="YES">YES</option>
+                                                                <option value="NO">NO</option>
+                                                            </select>
+                                                        </th>}
                                                         {col.key === "created_by_name" && <th>
                                                             <Typeahead
                                                                 id="created_by"
@@ -2907,6 +3136,24 @@ function CustomerIndex(props) {
                                                                     }}>
                                                                         <i className="bi bi-eye"></i>
                                                                     </Button>
+
+                                                                    <Button className="btn btn-secondary btn-sm" title="View BI History" onClick={() => {
+                                                                        openHistoryModal(customer.id, customer.name);
+                                                                    }}>
+                                                                        <i className="bi bi-clock-history"></i>
+                                                                    </Button>
+
+                                                                    <Button className="btn btn-outline-success btn-sm" title="Sales History" onClick={() => {
+                                                                        openCustomerSales(customer);
+                                                                    }}>
+                                                                        <i className="bi bi-receipt"></i>
+                                                                    </Button>
+
+                                                                    <Button className="btn btn-outline-warning btn-sm" title="Sales Return History" onClick={() => {
+                                                                        openCustomerSalesReturns(customer);
+                                                                    }}>
+                                                                        <i className="bi bi-arrow-return-left"></i>
+                                                                    </Button>
                                                                 </td>}
                                                                 {(col.key === "name") && <td style={{ width: "auto", whiteSpace: "nowrap" }} className="text-start" >
                                                                     <OverflowTooltip value={customer.name + (customer.name_in_arabic ? " | " + customer.name_in_arabic : "")} />
@@ -2999,6 +3246,59 @@ function CustomerIndex(props) {
                                                                             */}
                                                                     </td>}
 
+                                                                {col.key === "churn_risk_tier" && <td style={{ whiteSpace: "nowrap", minWidth: "140px" }}>
+                                                                    {customer.churn_risk_tier && (
+                                                                        <span className={`badge ${customer.churn_risk_tier === "Critical" ? "bg-danger" :
+                                                                            customer.churn_risk_tier === "High" ? "bg-warning" :
+                                                                                customer.churn_risk_tier === "Medium" ? "bg-info" : "bg-success"
+                                                                            }`} title={customer.churn_risk_tier_reason}>
+                                                                            {customer.churn_risk_tier}
+                                                                        </span>
+                                                                    )}
+                                                                </td>}
+                                                                {col.key === "churn_percent" && <td style={{ textAlign: "right" }}>
+                                                                    {customer.churn_percent != null ? customer.churn_percent.toFixed(1) + "%" : ""}
+                                                                </td>}
+                                                                {col.key === "total_spend" && <td style={{ textAlign: "right" }}>
+                                                                    {customer.total_spend != null ? customer.total_spend.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : ""}
+                                                                </td>}
+                                                                {col.key === "churn_risk_tier_reason" && <td style={{ fontSize: "0.8em", maxWidth: "250px" }}>
+                                                                    {customer.churn_risk_tier_reason || ""}
+                                                                </td>}
+                                                                {col.key === "days_since_last_buy" && <td style={{ textAlign: "right" }}>
+                                                                    {customer.days_since_last_buy != null ? customer.days_since_last_buy : ""}
+                                                                </td>}
+                                                                {col.key === "predicted_clv_amount_12months" && <td style={{ textAlign: "right" }}>
+                                                                    {customer.predicted_clv_amount_12months != null ? customer.predicted_clv_amount_12months.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : ""}
+                                                                </td>}
+                                                                {col.key === "lifetime_value_segment_for_12months" && <td style={{ whiteSpace: "nowrap" }}>
+                                                                    {customer.lifetime_value_segment_for_12months && (
+                                                                        <span className={`badge ${customer.lifetime_value_segment_for_12months === "High Value" ? "bg-success" :
+                                                                            customer.lifetime_value_segment_for_12months === "Mid Value" ? "bg-warning" : "bg-secondary"
+                                                                            }`} title={customer.lifetime_value_segment_reason_for_12months}>
+                                                                            {customer.lifetime_value_segment_for_12months}
+                                                                        </span>
+                                                                    )}
+                                                                </td>}
+                                                                {col.key === "tenure_days" && <td style={{ textAlign: "right" }}>
+                                                                    {customer.tenure_days != null ? customer.tenure_days : ""}
+                                                                </td>}
+                                                                {col.key === "lifetime_value_segment_reason_for_12months" && <td style={{ fontSize: "0.8em", maxWidth: "250px" }}>
+                                                                    {customer.lifetime_value_segment_reason_for_12months || ""}
+                                                                </td>}
+                                                                {col.key === "first_purchase_at" && <td style={{ whiteSpace: "nowrap" }}>
+                                                                    {customer.first_purchase_at ? new Date(customer.first_purchase_at).toLocaleDateString() : ""}
+                                                                </td>}
+                                                                {col.key === "last_purchase_at" && <td style={{ whiteSpace: "nowrap" }}>
+                                                                    {customer.last_purchase_at ? new Date(customer.last_purchase_at).toLocaleDateString() : ""}
+                                                                </td>}
+                                                                {["retention_1month", "retention_3month", "retention_6month", "retention_12month", "retention_24month"].includes(col.key) && <td>
+                                                                    {customer[col.key] && (
+                                                                        <span className={`badge ${customer[col.key] === "YES" ? "bg-success" : "bg-secondary"}`}>
+                                                                            {customer[col.key]}
+                                                                        </span>
+                                                                    )}
+                                                                </td>}
                                                                 {col.key === "created_at" && <td style={{ width: "auto", whiteSpace: "nowrap" }}>
                                                                     {format(
                                                                         new Date(customer.created_at),

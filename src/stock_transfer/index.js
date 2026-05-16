@@ -170,6 +170,11 @@ const StockTransferIndex = forwardRef((props, ref) => {
 
     function searchByFieldValue(field, value) {
         searchParams[field] = value;
+        setFieldFilters(prev => {
+            const updated = { ...prev };
+            if (value) { updated[field] = value; } else { delete updated[field]; }
+            return updated;
+        });
 
         page = 1;
         setPage(page);
@@ -260,6 +265,7 @@ const StockTransferIndex = forwardRef((props, ref) => {
 
 
     const [statsOpen, setStatsOpen] = useState(false);
+    const [fieldFilters, setFieldFilters] = useState({});
 
     const list = useCallback(() => {
         const requestOptions = {
@@ -831,7 +837,24 @@ const StockTransferIndex = forwardRef((props, ref) => {
                     <div className="col">
                         <span className="text-end">
                             <StatsSummary
-                                title="StockTransfer"
+                                title="StockTransfer Summary"
+                                filters={{
+                                    ...(dateValue ? { 'Date': dateValue } : {}),
+                                    ...(fromDateValue ? { 'From Date': fromDateValue } : {}),
+                                    ...(toDateValue ? { 'To Date': toDateValue } : {}),
+                                    ...(createdAtValue ? { 'Created At': createdAtValue } : {}),
+                                    ...(createdAtFromValue ? { 'Created From': createdAtFromValue } : {}),
+                                    ...(createdAtToValue ? { 'Created To': createdAtToValue } : {}),
+                                    ...(selectedCreatedByUsers.length > 0 ? { 'Created By': selectedCreatedByUsers.map(u => u.name).join(', ') } : {}),
+                                    ...Object.fromEntries(
+                                        Object.entries(fieldFilters)
+                                            .filter(([, v]) => v)
+                                            .map(([field, value]) => {
+                                                const col = columns.find(c => c.fieldName === field || c.key === field);
+                                                return [col ? col.label : field, value];
+                                            })
+                                    ),
+                                }}
                                 stats={{
                                     "Total Amount": totalStockTransferAmount,
                                     "Total Quantity": totalStockTransferQuantity,

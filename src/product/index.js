@@ -391,7 +391,7 @@ function ProductIndex(props) {
             // Select =
             //"select=id,item_code,ean_12,bar_code,part_number,name,name_in_arabic,category_name,product_stores." + localStorage.getItem("store_id") + ".stock,product_stores." + localStorage.getItem("store_id") + ".purchase_unit_price,product_stores." + localStorage.getItem("store_id") + ".wholesale_unit_price,product_stores." + localStorage.getItem("store_id") + ".retail_unit_price,product_stores." + localStorage.getItem("store_id") + ".store_id";
             Select =
-                "select=id,is_set,deleted,deleted_at,prefix_part_number,brand_name,country_name,item_code,ean_12,bar_code,part_number,name,name_in_arabic,category_name,category_id,created_by_name,created_at,rack,product_stores";
+                "select=id,is_set,deleted,deleted_at,prefix_part_number,brand_name,country_name,item_code,ean_12,bar_code,part_number,name,name_in_arabic,category_name,category_id,created_by_name,created_at,rack,product_stores,sales_velocity_trend,sales_velocity_trend_reason,slop_percent_per_month,momentum_percent_per_3month,avg_monthly_qty,recent_3month_qty,revenue,class,class_reason,abc_tier,xyz_tier,cv,active_months,stocking_strategy";
 
         }
 
@@ -944,6 +944,38 @@ function ProductIndex(props) {
         DeliveryNoteHistoryRef.current.open(model);
     }
 
+    const [showBiHistoryModal, setShowBiHistoryModal] = useState(false);
+    const [biHistoryProduct, setBiHistoryProduct] = useState(null);
+    const [biHistoryData, setBiHistoryData] = useState({ velocity_history: [], abc_xyz_history: [] });
+    const [biHistoryLoading, setBiHistoryLoading] = useState(false);
+    const [biHistoryTab, setBiHistoryTab] = useState("velocity");
+
+    async function openBiHistoryModal(product) {
+        setBiHistoryProduct(product.name);
+        setBiHistoryData({ velocity_history: [], abc_xyz_history: [] });
+        setBiHistoryTab("velocity");
+        setBiHistoryLoading(true);
+        setShowBiHistoryModal(true);
+        try {
+            const storeId = localStorage.getItem("store_id") || "";
+            const res = await fetch("/v1/product/" + product.id + "/bi-history?search[store_id]=" + storeId, {
+                method: "GET",
+                headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": localStorage.getItem("access_token"),
+                },
+            });
+            const data = await res.json();
+            if (data.status) {
+                setBiHistoryData(data.result);
+            }
+        } catch (e) {
+            console.error("Failed to load product BI history", e);
+        } finally {
+            setBiHistoryLoading(false);
+        }
+    }
+
     let [statsOpen, setStatsOpen] = useState(false);
     const handleSummaryToggle = (isOpen) => {
         statsOpen = isOpen
@@ -1383,6 +1415,20 @@ function ProductIndex(props) {
         { key: "quotation_sales_return_quantity", label: "Quotation Sales Return Qty", fieldName: "stores.quotation_sales_return_quantity", visible: true },
         { key: "delivery_note_count", label: "Delivery Note Count", fieldName: "stores.delivery_note_count", visible: true },
         { key: "delivery_note_quantity", label: "Delivery Note Qty", fieldName: "stores.delivery_note_quantity", visible: true },
+        { key: "sales_velocity_trend", label: "Velocity Trend", fieldName: "sales_velocity_trend", visible: true },
+        { key: "sales_velocity_trend_reason", label: "Velocity Reason", fieldName: "sales_velocity_trend_reason", visible: true },
+        { key: "slop_percent_per_month", label: "Slope %/Mo", fieldName: "slop_percent_per_month", visible: true },
+        { key: "momentum_percent_per_3month", label: "Momentum %/3Mo", fieldName: "momentum_percent_per_3month", visible: true },
+        { key: "recent_3month_qty", label: "Recent 3Mo Qty", fieldName: "recent_3month_qty", visible: true },
+        { key: "abc_tier", label: "ABC Tier", fieldName: "abc_tier", visible: false },
+        { key: "xyz_tier", label: "XYZ Tier", fieldName: "xyz_tier", visible: false },
+        { key: "class", label: "ABC-XYZ Class", fieldName: "class", visible: false },
+        { key: "class_reason", label: "Class Reason", fieldName: "class_reason", visible: true },
+        { key: "stocking_strategy", label: "Stocking Strategy", fieldName: "stocking_strategy", visible: false },
+        { key: "revenue", label: "Revenue (SAR)", fieldName: "revenue", visible: false },
+        { key: "avg_monthly_qty", label: "Avg Monthly Qty", fieldName: "avg_monthly_qty", visible: false },
+        { key: "cv", label: "CV (Coefficient of Variation)", fieldName: "cv", visible: true },
+        { key: "active_months", label: "Active Months", fieldName: "active_months", visible: true },
         { key: "created_by", label: "Created By", fieldName: "created_by", visible: true },
         { key: "created_at", label: "Created At", fieldName: "created_at", visible: true },
         { key: "actions_end", label: "Actions", fieldName: "actions_end", visible: true },
@@ -1400,39 +1446,19 @@ function ProductIndex(props) {
             saved = localStorage.getItem("product_table_settings");
         }
 
-        if (saved) setColumns(JSON.parse(saved));
-
-        let missingOrUpdated = false;
-        for (let i = 0; i < defaultColumns.length; i++) {
-            if (!saved)
-                break;
-
-            const savedCol = JSON.parse(saved)?.find(col => col.fieldName === defaultColumns[i].fieldName);
-
-            missingOrUpdated = !savedCol || savedCol.label !== defaultColumns[i].label || savedCol.key !== defaultColumns[i].key;
-
-            if (missingOrUpdated) {
-                break
-            }
-        }
-
-        /*
-        for (let i = 0; i < saved.length; i++) {
-            const savedCol = defaultColumns.find(col => col.fieldName === saved[i].fieldName);
- 
-            missingOrUpdated = !savedCol || savedCol.label !== saved[i].label || savedCol.key !== saved[i].key;
- 
-            if (missingOrUpdated) {
-                break
-            }
-        }*/
-
-        if (missingOrUpdated) {
-            if (enableSelection === true) {
-                localStorage.setItem("select_product_table_settings", JSON.stringify(defaultColumns));
-            } else {
-                localStorage.setItem("product_table_settings", JSON.stringify(defaultColumns));
-            }
+        if (saved) {
+            const savedCols = JSON.parse(saved);
+            // Smart merge: follow defaultColumns order, preserve saved visibility for existing columns,
+            // add new columns (not in saved) with their default visibility
+            const merged = defaultColumns.map(defaultCol => {
+                const savedCol = savedCols.find(col => col.fieldName === defaultCol.fieldName);
+                if (savedCol) {
+                    return { ...defaultCol, visible: savedCol.visible };
+                }
+                return defaultCol;
+            });
+            setColumns(merged);
+        } else {
             setColumns(defaultColumns);
         }
 
@@ -1879,6 +1905,18 @@ function ProductIndex(props) {
                         Close
                     </Button>
                     <Button
+                        variant="outline-secondary"
+                        onClick={() => setColumns(cols => cols.map(c => ({ ...c, visible: false })))}
+                    >
+                        Uncheck All
+                    </Button>
+                    <Button
+                        variant="outline-secondary"
+                        onClick={() => setColumns(cols => cols.map(c => ({ ...c, visible: true })))}
+                    >
+                        Check All
+                    </Button>
+                    <Button
                         variant="primary"
                         onClick={() => {
                             RestoreDefaultSettings();
@@ -1922,6 +1960,137 @@ function ProductIndex(props) {
             <QuotationSalesReturnHistory ref={QuotationSalesReturnHistoryRef} showToastMessage={props.showToastMessage} />
 
             <DeliveryNoteHistory ref={DeliveryNoteHistoryRef} showToastMessage={props.showToastMessage} />
+
+            <Modal show={showBiHistoryModal} onHide={() => setShowBiHistoryModal(false)} size="xl" centered>
+                <Modal.Header closeButton>
+                    <Modal.Title>BI History{biHistoryProduct ? ` — ${biHistoryProduct}` : ""}</Modal.Title>
+                </Modal.Header>
+                <Modal.Body>
+                    <ul className="nav nav-tabs mb-3">
+                        <li className="nav-item">
+                            <button className={"nav-link" + (biHistoryTab === "velocity" ? " active" : "")} onClick={() => setBiHistoryTab("velocity")}>
+                                Sales Velocity Trend
+                            </button>
+                        </li>
+                        <li className="nav-item">
+                            <button className={"nav-link" + (biHistoryTab === "abcxyz" ? " active" : "")} onClick={() => setBiHistoryTab("abcxyz")}>
+                                ABC-XYZ Classification
+                            </button>
+                        </li>
+                    </ul>
+                    {biHistoryLoading && <div className="text-center py-4"><Spinner animation="border" /></div>}
+                    {!biHistoryLoading && biHistoryTab === "velocity" && (
+                        <div className="table-responsive">
+                            <table className="table table-sm table-bordered">
+                                <thead className="table-light">
+                                    <tr>
+                                        <th>Date</th>
+                                        <th>Trend</th>
+                                        <th>Slope %/Mo</th>
+                                        <th>Momentum % / 3Mo</th>
+                                        <th>Avg Mo Qty</th>
+                                        <th>Recent 3Mo Qty</th>
+                                        <th>Revenue</th>
+                                        <th>Reason</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {biHistoryData.velocity_history && biHistoryData.velocity_history.length > 0 ? biHistoryData.velocity_history.map((row, i) => (
+                                        <tr key={i}>
+                                            <td>{row.date ? new Date(row.date).toLocaleDateString() : ""}</td>
+                                            <td>
+                                                <span className={`badge ${row.sales_velocity_trend === "Rising Star" ? "bg-success" :
+                                                    row.sales_velocity_trend === "Growing" ? "bg-primary" :
+                                                        row.sales_velocity_trend === "Stable" ? "bg-secondary" :
+                                                            row.sales_velocity_trend === "Seasonal" ? "bg-info" :
+                                                                row.sales_velocity_trend === "Softening" ? "bg-warning text-dark" : "bg-danger"
+                                                    }`}>{row.sales_velocity_trend || "—"}</span>
+                                            </td>
+                                            <td>{row.slop_percent_per_month != null ? row.slop_percent_per_month.toFixed(1) + "%" : "—"}</td>
+                                            <td>{row.momentum_percent_per_3month != null ? row.momentum_percent_per_3month.toFixed(1) + "%" : "—"}</td>
+                                            <td>{row.avg_monthly_qty != null ? row.avg_monthly_qty.toFixed(1) : "—"}</td>
+                                            <td>{row.recent_3month_qty != null ? row.recent_3month_qty.toFixed(1) : "—"}</td>
+                                            <td>{row.revenue != null ? row.revenue.toFixed(2) : "—"}</td>
+                                            <td style={{ fontSize: "0.8em", maxWidth: "220px" }}>{row.sales_velocity_trend_reason || ""}</td>
+                                        </tr>
+                                    )) : (
+                                        <tr><td colSpan={8} className="text-center text-muted">No velocity history found</td></tr>
+                                    )}
+                                </tbody>
+                            </table>
+                        </div>
+                    )}
+                    {!biHistoryLoading && biHistoryTab === "abcxyz" && (
+                        <div className="table-responsive">
+                            <table className="table table-sm table-bordered">
+                                <thead className="table-light">
+                                    <tr>
+                                        <th>Date</th>
+                                        <th>Class</th>
+                                        <th>Class Reason</th>
+                                        <th>
+                                            ABC Tier
+                                            <OverlayTrigger placement="top" overlay={
+                                                <Tooltip id="abc-tier-history-info">
+                                                    <strong>ABC Tier</strong> classifies products by revenue contribution (Pareto principle):<br />
+                                                    <strong>A</strong> = Top products contributing ~80% of total revenue (high value)<br />
+                                                    <strong>B</strong> = Mid-tier, contributing ~15% of revenue (medium value)<br />
+                                                    <strong>C</strong> = Long-tail items contributing ~5% of revenue (low value)
+                                                </Tooltip>
+                                            }>
+                                                <i className="bi bi-info-circle ms-1 text-muted" style={{ cursor: "pointer", fontSize: "0.85em" }}></i>
+                                            </OverlayTrigger>
+                                        </th>
+                                        <th>
+                                            XYZ Tier
+                                            <OverlayTrigger placement="top" overlay={
+                                                <Tooltip id="xyz-tier-history-info">
+                                                    <strong>XYZ Tier</strong> classifies products by demand predictability:<br />
+                                                    <strong>X</strong> = Consistent, predictable demand (low variability — easy to forecast)<br />
+                                                    <strong>Y</strong> = Moderately variable demand (some fluctuation — harder to forecast)<br />
+                                                    <strong>Z</strong> = Highly unpredictable or sporadic demand (high variability — difficult to plan)
+                                                </Tooltip>
+                                            }>
+                                                <i className="bi bi-info-circle ms-1 text-muted" style={{ cursor: "pointer", fontSize: "0.85em" }}></i>
+                                            </OverlayTrigger>
+                                        </th>
+                                        <th>CV (Coefficient of Variation)</th>
+                                        <th>Active Months</th>
+                                        <th>Stocking Strategy</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {biHistoryData.abc_xyz_history && biHistoryData.abc_xyz_history.length > 0 ? biHistoryData.abc_xyz_history.map((row, i) => (
+                                        <tr key={i}>
+                                            <td>{row.date ? new Date(row.date).toLocaleDateString() : ""}</td>
+                                            <td><span className="badge bg-dark">{row.class || "—"}</span></td>
+                                            <td style={{ fontSize: "0.8em", maxWidth: "220px" }}>{row.class_reason || "—"}</td>
+                                            <td>
+                                                <span className={`badge ${row.abc_tier === "A" ? "bg-success" :
+                                                    row.abc_tier === "B" ? "bg-warning text-dark" : "bg-secondary"
+                                                    }`}>{row.abc_tier || "—"}</span>
+                                            </td>
+                                            <td>
+                                                <span className={`badge ${row.xyz_tier === "X" ? "bg-success" :
+                                                    row.xyz_tier === "Y" ? "bg-warning text-dark" : "bg-danger"
+                                                    }`}>{row.xyz_tier || "—"}</span>
+                                            </td>
+                                            <td>{row.cv != null ? row.cv.toFixed(2) : "—"}</td>
+                                            <td>{row.active_months != null ? row.active_months : "—"}</td>
+                                            <td style={{ fontSize: "0.8em" }}>{row.stocking_strategy || "—"}</td>
+                                        </tr>
+                                    )) : (
+                                        <tr><td colSpan={8} className="text-center text-muted">No ABC-XYZ history found</td></tr>
+                                    )}
+                                </tbody>
+                            </table>
+                        </div>
+                    )}
+                </Modal.Body>
+                <Modal.Footer>
+                    <Button variant="secondary" onClick={() => setShowBiHistoryModal(false)}>Close</Button>
+                </Modal.Footer>
+            </Modal>
 
             <ProductCreate ref={CreateFormRef} refreshList={list} openDetailsView={openDetailsView} showToastMessage={props.showToastMessage} />
             <ProductView ref={DetailsViewRef} openUpdateForm={openUpdateForm} openCreateForm={openCreateForm} showToastMessage={props.showToastMessage} />
@@ -2049,7 +2218,14 @@ function ProductIndex(props) {
                             </div>*/}
 
                             <StatsSummary
-                                title="Products"
+                                title="Products Summary"
+                                filters={{
+                                    ...(createdAtValue ? { 'Date': createdAtValue } : {}),
+                                    ...(createdAtFromValue ? { 'From Date': createdAtFromValue } : {}),
+                                    ...(createdAtToValue ? { 'To Date': createdAtToValue } : {}),
+                                    ...(selectedProductCategories.length > 0 ? { 'Category': selectedProductCategories.map(c => c.name).join(', ') } : {}),
+                                    ...(selectedProductBrands.length > 0 ? { 'Brand': selectedProductBrands.map(b => b.name).join(', ') } : {}),
+                                }}
                                 stats={{
                                     "Stock": stock,
                                     "Retail stock value": retailStockValue,
@@ -2563,6 +2739,30 @@ function ProductIndex(props) {
                                                                     <i className="bi bi-sort-alpha-up"></i>
                                                                 ) : null}
                                                             </b>
+                                                            {col.key === "abc_tier" && (
+                                                                <OverlayTrigger placement="bottom" overlay={
+                                                                    <Tooltip id="abc-tier-info">
+                                                                        <strong>ABC Tier</strong> classifies products by revenue contribution (Pareto principle):<br />
+                                                                        <strong>A</strong> = Top products contributing ~80% of total revenue (high value)<br />
+                                                                        <strong>B</strong> = Mid-tier, contributing ~15% of revenue (medium value)<br />
+                                                                        <strong>C</strong> = Long-tail items contributing ~5% of revenue (low value)
+                                                                    </Tooltip>
+                                                                }>
+                                                                    <i className="bi bi-info-circle ms-1 text-muted" style={{ cursor: "pointer", fontSize: "0.85em" }}></i>
+                                                                </OverlayTrigger>
+                                                            )}
+                                                            {col.key === "xyz_tier" && (
+                                                                <OverlayTrigger placement="bottom" overlay={
+                                                                    <Tooltip id="xyz-tier-info">
+                                                                        <strong>XYZ Tier</strong> classifies products by demand predictability:<br />
+                                                                        <strong>X</strong> = Consistent, predictable demand (low variability — easy to forecast)<br />
+                                                                        <strong>Y</strong> = Moderately variable demand (some fluctuation — harder to forecast)<br />
+                                                                        <strong>Z</strong> = Highly unpredictable or sporadic demand (high variability — difficult to plan)
+                                                                    </Tooltip>
+                                                                }>
+                                                                    <i className="bi bi-info-circle ms-1 text-muted" style={{ cursor: "pointer", fontSize: "0.85em" }}></i>
+                                                                </OverlayTrigger>
+                                                            )}
                                                         </th>}
                                                     </>);
                                                 })}
@@ -3611,6 +3811,64 @@ function ProductIndex(props) {
                                                             />
                                                         </th>}
 
+                                                        {col.key === "sales_velocity_trend" && <th>
+                                                            <select className="form-select form-select-sm"
+                                                                onChange={(e) => searchByFieldValue("sales_velocity_trend", e.target.value)}>
+                                                                <option value="">All</option>
+                                                                <option value="Rising Star">Rising Star</option>
+                                                                <option value="Growing">Growing</option>
+                                                                <option value="Stable">Stable</option>
+                                                                <option value="Seasonal">Seasonal</option>
+                                                                <option value="Softening">Softening</option>
+                                                                <option value="Declining">Declining</option>
+                                                            </select>
+                                                        </th>}
+                                                        {col.key === "abc_tier" && <th>
+                                                            <select className="form-select form-select-sm"
+                                                                onChange={(e) => searchByFieldValue("abc_tier", e.target.value)}>
+                                                                <option value="">All</option>
+                                                                <option value="A">A</option>
+                                                                <option value="B">B</option>
+                                                                <option value="C">C</option>
+                                                            </select>
+                                                        </th>}
+                                                        {col.key === "xyz_tier" && <th>
+                                                            <select className="form-select form-select-sm"
+                                                                onChange={(e) => searchByFieldValue("xyz_tier", e.target.value)}>
+                                                                <option value="">All</option>
+                                                                <option value="X">X</option>
+                                                                <option value="Y">Y</option>
+                                                                <option value="Z">Z</option>
+                                                            </select>
+                                                        </th>}
+                                                        {col.key === "class" && <th>
+                                                            <select className="form-select form-select-sm"
+                                                                onChange={(e) => searchByFieldValue("class", e.target.value)}>
+                                                                <option value="">All</option>
+                                                                <option value="AX">AX</option>
+                                                                <option value="AY">AY</option>
+                                                                <option value="AZ">AZ</option>
+                                                                <option value="BX">BX</option>
+                                                                <option value="BY">BY</option>
+                                                                <option value="BZ">BZ</option>
+                                                                <option value="CX">CX</option>
+                                                                <option value="CY">CY</option>
+                                                                <option value="CZ">CZ</option>
+                                                            </select>
+                                                        </th>}
+                                                        {col.key === "stocking_strategy" && <th>
+                                                            <input type="text" className="form-control" placeholder="Stocking Strategy"
+                                                                onChange={(e) => searchByFieldValue("stocking_strategy", e.target.value)} />
+                                                        </th>}
+                                                        {col.key === "class_reason" && <th><input className="form-control" placeholder="Class Reason" onChange={(e) => searchByFieldValue("class_reason", e.target.value)} /></th>}
+                                                        {col.key === "revenue" && <th><input className="form-control" type="number" placeholder="Revenue" /></th>}
+                                                        {col.key === "avg_monthly_qty" && <th><input className="form-control" type="number" placeholder="Avg Mo Qty" /></th>}
+                                                        {col.key === "cv" && <th><input className="form-control" type="number" placeholder="CV" /></th>}
+                                                        {col.key === "active_months" && <th><input className="form-control" type="number" placeholder="Active Months" /></th>}
+                                                        {col.key === "sales_velocity_trend_reason" && <th><input className="form-control" placeholder="Velocity Reason" onChange={(e) => searchByFieldValue("sales_velocity_trend_reason", e.target.value)} /></th>}
+                                                        {col.key === "slop_percent_per_month" && <th><input className="form-control" type="number" placeholder="Slope %/Mo" /></th>}
+                                                        {col.key === "momentum_percent_per_3month" && <th><input className="form-control" type="number" placeholder="Momentum %/3Mo" /></th>}
+                                                        {col.key === "recent_3month_qty" && <th><input className="form-control" type="number" placeholder="Recent 3Mo Qty" /></th>}
                                                         {col.key === "created_by" && <th>
                                                             <Typeahead
                                                                 id="created_by"
@@ -4489,6 +4747,10 @@ function ProductIndex(props) {
                                                                                     <i className="bi bi-clock-history"></i>&nbsp;
                                                                                     Images ({getShortcut('images')})
                                                                                 </Dropdown.Item>
+                                                                                <Dropdown.Item onClick={() => openBiHistoryModal(product)}>
+                                                                                    <i className="bi bi-graph-up-arrow"></i>&nbsp;
+                                                                                    BI History (Velocity &amp; ABC-XYZ)
+                                                                                </Dropdown.Item>
                                                                             </Dropdown.Menu>
                                                                         </Dropdown>
                                                                     </span>
@@ -4681,6 +4943,66 @@ function ProductIndex(props) {
                                                                     <ul>
                                                                         {product.country_name}
                                                                     </ul>
+                                                                </td>}
+                                                                {col.key === "sales_velocity_trend" && <td style={{ whiteSpace: "nowrap" }}>
+                                                                    {product.sales_velocity_trend && (
+                                                                        <span className={`badge ${product.sales_velocity_trend === "Rising Star" ? "bg-success" :
+                                                                            product.sales_velocity_trend === "Growing" ? "bg-primary" :
+                                                                                product.sales_velocity_trend === "Stable" ? "bg-secondary" :
+                                                                                    product.sales_velocity_trend === "Seasonal" ? "bg-info" :
+                                                                                        product.sales_velocity_trend === "Softening" ? "bg-warning" :
+                                                                                            "bg-danger"
+                                                                            }`} title={product.sales_velocity_trend_reason}>
+                                                                            {product.sales_velocity_trend}
+                                                                        </span>
+                                                                    )}
+                                                                </td>}
+                                                                {col.key === "abc_tier" && <td>
+                                                                    {product.abc_tier && (
+                                                                        <span className={`badge ${product.abc_tier === "A" ? "bg-success" :
+                                                                            product.abc_tier === "B" ? "bg-warning" : "bg-secondary"
+                                                                            }`}>{product.abc_tier}</span>
+                                                                    )}
+                                                                </td>}
+                                                                {col.key === "xyz_tier" && <td>
+                                                                    {product.xyz_tier && (
+                                                                        <span className={`badge ${product.xyz_tier === "X" ? "bg-success" :
+                                                                            product.xyz_tier === "Y" ? "bg-warning" : "bg-danger"
+                                                                            }`}>{product.xyz_tier}</span>
+                                                                    )}
+                                                                </td>}
+                                                                {col.key === "class" && <td>
+                                                                    <strong>{product.class}</strong>
+                                                                </td>}
+                                                                {col.key === "class_reason" && <td style={{ fontSize: "0.8em", maxWidth: "250px" }}>
+                                                                    {product.class_reason || ""}
+                                                                </td>}
+                                                                {col.key === "stocking_strategy" && <td style={{ whiteSpace: "nowrap", fontSize: "0.8em" }}>
+                                                                    {product.stocking_strategy}
+                                                                </td>}
+                                                                {col.key === "revenue" && <td style={{ textAlign: "right" }}>
+                                                                    {product.revenue != null ? product.revenue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : ""}
+                                                                </td>}
+                                                                {col.key === "avg_monthly_qty" && <td style={{ textAlign: "right" }}>
+                                                                    {product.avg_monthly_qty != null ? product.avg_monthly_qty.toFixed(1) : ""}
+                                                                </td>}
+                                                                {col.key === "cv" && <td style={{ textAlign: "right" }}>
+                                                                    {product.cv != null ? product.cv.toFixed(2) : ""}
+                                                                </td>}
+                                                                {col.key === "active_months" && <td style={{ textAlign: "right" }}>
+                                                                    {product.active_months != null ? product.active_months : ""}
+                                                                </td>}
+                                                                {col.key === "sales_velocity_trend_reason" && <td style={{ fontSize: "0.8em", maxWidth: "250px" }}>
+                                                                    {product.sales_velocity_trend_reason || ""}
+                                                                </td>}
+                                                                {col.key === "slop_percent_per_month" && <td style={{ textAlign: "right" }}>
+                                                                    {product.slop_percent_per_month != null ? product.slop_percent_per_month.toFixed(1) + "%" : ""}
+                                                                </td>}
+                                                                {col.key === "momentum_percent_per_3month" && <td style={{ textAlign: "right" }}>
+                                                                    {product.momentum_percent_per_3month != null ? product.momentum_percent_per_3month.toFixed(1) + "%" : ""}
+                                                                </td>}
+                                                                {col.key === "recent_3month_qty" && <td style={{ textAlign: "right" }}>
+                                                                    {product.recent_3month_qty != null ? product.recent_3month_qty.toFixed(1) : ""}
                                                                 </td>}
                                                                 {col.key === "created_by" && <td>
                                                                     {product.created_by_name}

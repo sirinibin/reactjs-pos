@@ -129,6 +129,11 @@ function VendorIndex(props) {
 
     function searchByFieldValue(field, value) {
         searchParams[field] = value;
+        setFieldFilters(prev => {
+            const updated = { ...prev };
+            if (value) { updated[field] = value; } else { delete updated[field]; }
+            return updated;
+        });
 
         page = 1;
         setPage(page);
@@ -195,6 +200,7 @@ function VendorIndex(props) {
     }
 
     let [statsOpen, setStatsOpen] = useState(false);
+    const [fieldFilters, setFieldFilters] = useState({});
     const handleSummaryToggle = (isOpen) => {
         statsOpen = isOpen
         setStatsOpen(statsOpen)
@@ -755,7 +761,18 @@ function VendorIndex(props) {
                     <div className="col">
                         <span className="text-end">
                             <StatsSummary
-                                title="Vendor Stats"
+                                title="Vendor Stats Summary"
+                                filters={{
+                                    ...(selectedVendors.length > 0 ? { 'Vendor': selectedVendors.map(v => v.name).join(', ') } : {}),
+                                    ...Object.fromEntries(
+                                        Object.entries(fieldFilters)
+                                            .filter(([, v]) => v)
+                                            .map(([field, value]) => {
+                                                const col = columns.find(c => c.fieldName === field || c.key === field);
+                                                return [col ? col.label : field, value];
+                                            })
+                                    ),
+                                }}
                                 stats={{
                                     "Credit Balance": creditBalance,
                                     //Purchase
