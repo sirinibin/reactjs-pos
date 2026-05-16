@@ -242,7 +242,7 @@ const StatsSummary = ({ title, stats = {}, statsWithInfo = {}, defaultOpen = fal
             const infoIcons = printArea?.querySelectorAll('.stats-info-icon') || [];
             infoIcons.forEach(el => { el._origDisplay = el.style.display; el.style.display = 'none'; });
 
-            const safeFileName = `${title.replace(/[^a-zA-Z0-9._-]/g, '_')}_Summary.pdf`;
+            const safeFileName = `${title.replace(/[^a-zA-Z0-9._-]/g, '_')}.pdf`;
             const pdfBlob = await html2pdf()
                 .set({
                     margin: [10, 10, 10, 10],
@@ -312,7 +312,7 @@ const StatsSummary = ({ title, stats = {}, statsWithInfo = {}, defaultOpen = fal
 
             // Upload to filebin.net
             const binId = `startpos-${Date.now()}`;
-            const safeFileName = `${title.replace(/[^a-zA-Z0-9._-]/g, '_')}_Summary.pdf`;
+            const safeFileName = `${title.replace(/[^a-zA-Z0-9._-]/g, '_')}.pdf`;
             const rawBlob = new Blob([await pdfBlob.arrayBuffer()]);
             const fbResponse = await fetch(`https://filebin.net/${binId}/${safeFileName}`, {
                 method: 'POST',
