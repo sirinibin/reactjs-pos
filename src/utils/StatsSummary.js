@@ -238,6 +238,10 @@ const StatsSummary = ({ title, stats = {}, statsWithInfo = {}, defaultOpen = fal
             if (printArea) printArea.style.backgroundColor = '#ffffff';
             document.body.style.backgroundColor = '#ffffff';
 
+            // Hide info icons for PDF (UI-only)
+            const infoIcons = printArea?.querySelectorAll('.stats-info-icon') || [];
+            infoIcons.forEach(el => { el._origDisplay = el.style.display; el.style.display = 'none'; });
+
             const safeFileName = `${title.replace(/[^a-zA-Z0-9._-]/g, '_')}_Summary.pdf`;
             const pdfBlob = await html2pdf()
                 .set({
@@ -253,6 +257,7 @@ const StatsSummary = ({ title, stats = {}, statsWithInfo = {}, defaultOpen = fal
             if (header) header.style.display = originalDisplay;
             if (printArea) printArea.style.backgroundColor = originalBg;
             document.body.style.backgroundColor = originalBodyBg;
+            infoIcons.forEach(el => { el.style.display = el._origDisplay; });
 
             const url = URL.createObjectURL(pdfBlob);
             const a = document.createElement('a');
@@ -284,6 +289,10 @@ const StatsSummary = ({ title, stats = {}, statsWithInfo = {}, defaultOpen = fal
             if (printArea) printArea.style.backgroundColor = '#ffffff';
             document.body.style.backgroundColor = '#ffffff';
 
+            // Hide info icons for PDF (UI-only)
+            const infoIconsWA = printArea?.querySelectorAll('.stats-info-icon') || [];
+            infoIconsWA.forEach(el => { el._origDisplay = el.style.display; el.style.display = 'none'; });
+
             const pdfBlob = await html2pdf()
                 .set({
                     margin: [10, 10, 10, 10],
@@ -299,6 +308,7 @@ const StatsSummary = ({ title, stats = {}, statsWithInfo = {}, defaultOpen = fal
             if (header) header.style.display = originalDisplay;
             if (printArea) printArea.style.backgroundColor = originalBg;
             document.body.style.backgroundColor = originalBodyBg;
+            infoIconsWA.forEach(el => { el.style.display = el._origDisplay; });
 
             // Upload to filebin.net
             const binId = `startpos-${Date.now()}`;
