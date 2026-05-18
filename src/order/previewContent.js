@@ -171,7 +171,7 @@ const PreviewContent = forwardRef((props, ref) => {
                                 <div className="no-print" style={{ marginTop: 0, border: "none", height: "32px" }}>
 
                                     <a
-                                        href={`/zatca/xml/${props.model.code}.xml`}
+                                        href={`/zatca${props.modelName === "sales_return" ? "/returns" : ""}/xml/${props.model.code}.xml`}
                                         target="_blank"
                                         rel="noopener noreferrer"
                                         className="no-print"
