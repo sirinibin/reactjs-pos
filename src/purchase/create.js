@@ -567,8 +567,8 @@ const PurchaseCreate = forwardRef((props, ref) => {
 
 
                 // Calculate percentage of occurrence
-                const aPercent = percentOccurrence(words, a);
-                const bPercent = percentOccurrence(words, b);
+                const aPercent = vendorPercentOccurrence(words, a);
+                const bPercent = vendorPercentOccurrence(words, b);
 
                 if (aPercent !== bPercent) {
                     return bPercent - aPercent;
@@ -628,6 +628,31 @@ const PurchaseCreate = forwardRef((props, ref) => {
             product.country_name,
             product.brand_name,
             ...(Array.isArray(product.additional_keywords) ? product.additional_keywords : []),
+        ];
+        const searchable = fields.join(" ").toLowerCase();
+        const searchableWords = searchable.split(/\s+/).filter(Boolean);
+        let totalMatches = 0;
+        words.forEach(word => {
+            if (word) {
+                const regex = new RegExp(`\\b${word.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\b`, 'gi');
+                const matches = searchable.match(regex);
+                totalMatches += matches ? matches.length : 0;
+            }
+        });
+        // Percentage: matches / total words in searchable fields
+        return searchableWords.length > 0 ? (totalMatches / searchableWords.length) : 0;
+    };
+
+
+    // Helper to calculate percentage of occurrence of search words
+    const vendorPercentOccurrence = (words, vendor) => {
+        const fields = [
+            vendor.name,
+            vendor.name_in_arabic,
+            vendor.code,
+            vendor.phone,
+            vendor.phone2,
+            ...(Array.isArray(vendor.additional_keywords) ? vendor.additional_keywords : []),
         ];
         const searchable = fields.join(" ").toLowerCase();
         const searchableWords = searchable.split(/\s+/).filter(Boolean);

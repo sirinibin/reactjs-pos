@@ -298,6 +298,30 @@ const CustomerWithdrawalCreate = forwardRef((props, ref) => {
     let [openVendorSearchResult, setOpenVendorSearchResult] = useState(false);
     let [openCustomerSearchResult, setOpenCustomerSearchResult] = useState(false);
 
+    // Helper to calculate percentage of occurrence of search words
+    const customerPercentOccurrence = (words, customer) => {
+        const fields = [
+            customer.name,
+            customer.name_in_arabic,
+            customer.code,
+            customer.phone,
+            customer.phone2,
+            ...(Array.isArray(customer.additional_keywords) ? customer.additional_keywords : []),
+        ];
+        const searchable = fields.join(" ").toLowerCase();
+        const searchableWords = searchable.split(/\s+/).filter(Boolean);
+        let totalMatches = 0;
+        words.forEach(word => {
+            if (word) {
+                const regex = new RegExp(`\\b${word.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\b`, 'gi');
+                const matches = searchable.match(regex);
+                totalMatches += matches ? matches.length : 0;
+            }
+        });
+        // Percentage: matches / total words in searchable fields
+        return searchableWords.length > 0 ? (totalMatches / searchableWords.length) : 0;
+    };
+
     async function suggestCustomers(searchTerm) {
         console.log("Inside handle suggestCustomers");
         setCustomerOptions([]);
@@ -400,8 +424,8 @@ const CustomerWithdrawalCreate = forwardRef((props, ref) => {
 
 
                 // Calculate percentage of occurrence
-                const aPercent = percentOccurrence(words, a);
-                const bPercent = percentOccurrence(words, b);
+                const aPercent = customerPercentOccurrence(words, a);
+                const bPercent = customerPercentOccurrence(words, b);
 
                 if (aPercent !== bPercent) {
                     return bPercent - aPercent;
@@ -418,6 +442,30 @@ const CustomerWithdrawalCreate = forwardRef((props, ref) => {
         //setIsCustomersLoading(false);
     }
 
+
+    // Helper to calculate percentage of occurrence of search words
+    const vendorPercentOccurrence = (words, vendor) => {
+        const fields = [
+            vendor.name,
+            vendor.name_in_arabic,
+            vendor.code,
+            vendor.phone,
+            vendor.phone2,
+            ...(Array.isArray(vendor.additional_keywords) ? vendor.additional_keywords : []),
+        ];
+        const searchable = fields.join(" ").toLowerCase();
+        const searchableWords = searchable.split(/\s+/).filter(Boolean);
+        let totalMatches = 0;
+        words.forEach(word => {
+            if (word) {
+                const regex = new RegExp(`\\b${word.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\b`, 'gi');
+                const matches = searchable.match(regex);
+                totalMatches += matches ? matches.length : 0;
+            }
+        });
+        // Percentage: matches / total words in searchable fields
+        return searchableWords.length > 0 ? (totalMatches / searchableWords.length) : 0;
+    };
 
     async function suggestVendors(searchTerm) {
         console.log("Inside handle suggestVendors");
@@ -515,8 +563,8 @@ const CustomerWithdrawalCreate = forwardRef((props, ref) => {
 
 
                 // Calculate percentage of occurrence
-                const aPercent = percentOccurrence(words, a);
-                const bPercent = percentOccurrence(words, b);
+                const aPercent = vendorPercentOccurrence(words, a);
+                const bPercent = vendorPercentOccurrence(words, b);
 
                 if (aPercent !== bPercent) {
                     return bPercent - aPercent;
