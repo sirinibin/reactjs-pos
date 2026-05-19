@@ -507,7 +507,7 @@ const PurchaseCreate = forwardRef((props, ref) => {
         let Select = "select=id,credit_balance,credit_limit,additional_keywords,code,use_remarks_in_purchases,remarks,vat_no,name,phone,name_in_arabic,phone_in_arabic,search_label";
         // setIsVendorsLoading(true);
         let result = await fetch(
-            "/v1/vendor?" + Select + queryString,
+            "/v1/vendor?limit=100&" + Select + queryString,
             requestOptions
         );
         let data = await result.json();
@@ -525,7 +525,59 @@ const PurchaseCreate = forwardRef((props, ref) => {
 
         if (data.result) {
             const filtered = data.result.filter((opt) => customVendorFilter(opt, searchTerm));
-            setVendorOptions(filtered);
+
+            const sorted = filtered.sort((a, b) => {
+                const searchPhrase = searchTerm.toLowerCase().replace(/\s+/g, " ").trim();
+
+                const getSearchable = (item) => {
+                    const fields = [
+                        item.code,
+                        item.name,
+                        item.name_in_arabic,
+                        item.phone,
+                        item.phone2,
+                        item.vat_no,
+                        ...(Array.isArray(item.additional_keywords) ? item.additional_keywords : []),
+                    ];
+                    // Normalize: lowercase, collapse spaces, remove punctuation except spaces
+                    return fields.join(" ").toLowerCase().replace(/[^\w\s]/g, " ").replace(/\s+/g, " ").trim();
+                };
+
+                const aSearchable = getSearchable(a);
+                const bSearchable = getSearchable(b);
+
+                // Find index of the phrase in each string
+                const aIndex = aSearchable.indexOf(searchPhrase);
+                const bIndex = bSearchable.indexOf(searchPhrase);
+
+                if (aIndex === 0 && bIndex !== 0) return -1;
+                if (bIndex === 0 && aIndex !== 0) return 1;
+
+                // If both contain the phrase, sort by earliest occurrence
+                if (aIndex !== -1 && bIndex !== -1) {
+                    if (aIndex < bIndex) return -1;
+                    if (bIndex < aIndex) return 1;
+                } else if (aIndex !== -1) {
+                    return -1; // a contains phrase, b does not
+                } else if (bIndex !== -1) {
+                    return 1; // b contains phrase, a does not
+                }
+
+                const words = searchTerm.toLowerCase().split(" ").filter(Boolean);
+
+
+                // Calculate percentage of occurrence
+                const aPercent = percentOccurrence(words, a);
+                const bPercent = percentOccurrence(words, b);
+
+                if (aPercent !== bPercent) {
+                    return bPercent - aPercent;
+                }
+                return 0;
+            });
+
+
+            setVendorOptions(sorted);
         } else {
             setVendorOptions([]);
         }
