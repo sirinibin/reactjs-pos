@@ -1437,6 +1437,8 @@ function ProductIndex(props) {
 
     const [columns, setColumns] = useState(defaultColumns);
     const [showSettings, setShowSettings] = useState(false);
+    const columnsInitialized = useRef(false);
+
     // Load settings from localStorage
     useEffect(() => {
         let saved = "";
@@ -1448,22 +1450,26 @@ function ProductIndex(props) {
 
         if (saved) {
             const savedCols = JSON.parse(saved);
-            // Smart merge: follow defaultColumns order, preserve saved visibility for existing columns,
-            // add new columns (not in saved) with their default visibility
-            const merged = defaultColumns.map(defaultCol => {
-                const savedCol = savedCols.find(col => col.fieldName === defaultCol.fieldName);
-                if (savedCol) {
-                    return { ...defaultCol, visible: savedCol.visible };
+            // Use saved order as base (preserves drag-and-drop reordering),
+            // keep only columns that still exist in defaults,
+            // append any new default columns not yet in saved.
+            const merged = savedCols
+                .map(savedCol => {
+                    const defaultCol = defaultColumns.find(col => col.fieldName === savedCol.fieldName);
+                    return defaultCol ? { ...defaultCol, visible: savedCol.visible } : null;
+                })
+                .filter(Boolean);
+            defaultColumns.forEach(defaultCol => {
+                if (!savedCols.find(s => s.fieldName === defaultCol.fieldName)) {
+                    merged.push(defaultCol);
                 }
-                return defaultCol;
             });
             setColumns(merged);
         } else {
             setColumns(defaultColumns);
         }
 
-        //2nd
-
+        columnsInitialized.current = true;
     }, [defaultColumns, enableSelection]);
 
     function RestoreDefaultSettings() {
@@ -1478,8 +1484,9 @@ function ProductIndex(props) {
         setSuccessMessage("Successfully restored to default settings!")
     }
 
-    // Save column settings to localStorage
+    // Save column settings to localStorage (skip the initial render to avoid overwriting saved settings)
     useEffect(() => {
+        if (!columnsInitialized.current) return;
         if (enableSelection === true) {
             localStorage.setItem("select_product_table_settings", JSON.stringify(columns));
         } else {
