@@ -53,9 +53,17 @@ const DeliveryNoteCreate = forwardRef((props, ref) => {
       formData = {
         vat_percent: 15.0,
         discount: 0.0,
+        discount_with_vat: 0.0,
         discountValue: 0.0,
         discount_percent: 0.0,
+        discount_percent_with_vat: 0.0,
         shipping_handling_fees: 0.00,
+        rounding_amount: 0.00,
+        auto_rounding_amount: false,
+        total: 0.0,
+        total_with_vat: 0.0,
+        vat_price: 0.0,
+        net_total: 0.0,
         is_discount_percent: false,
         date_str: format(new Date(), "MMM dd yyyy"),
         signature_date_str: format(new Date(), "MMM dd yyyy"),
@@ -284,14 +292,23 @@ const DeliveryNoteCreate = forwardRef((props, ref) => {
   //const history = useHistory();
 
   const [isProcessing, setProcessing] = useState(false);
-
+  const recalcRequestRef = useRef(0);
 
   //fields
   let [formData, setFormData] = useState({
     vat_percent: 15.0,
     discount: 0.0,
+    discount_with_vat: 0.0,
     discountValue: 0.0,
     discount_percent: 0.0,
+    discount_percent_with_vat: 0.0,
+    shipping_handling_fees: 0.00,
+    rounding_amount: 0.00,
+    auto_rounding_amount: false,
+    total: 0.0,
+    total_with_vat: 0.0,
+    vat_price: 0.0,
+    net_total: 0.0,
     date_str: format(new Date(), "MMM dd yyyy"),
     signature_date_str: format(new Date(), "MMM dd yyyy"),
     status: "created",
@@ -375,13 +392,21 @@ const DeliveryNoteCreate = forwardRef((props, ref) => {
           date_str: deliverynote.date_str,
           date: deliverynote.date,
           vat_percent: deliverynote.vat_percent,
-          discount: deliverynote.discount,
-          discount_percent: deliverynote.discount_percent,
+          discount: deliverynote.discount || 0,
+          discount_with_vat: deliverynote.discount_with_vat || 0,
+          discount_percent: deliverynote.discount_percent || 0,
+          discount_percent_with_vat: deliverynote.discount_percent_with_vat || 0,
           status: deliverynote.status,
           delivered_by: deliverynote.delivered_by,
           delivered_by_signature_id: deliverynote.delivered_by_signature_id,
           is_discount_percent: deliverynote.is_discount_percent,
-          shipping_handling_fees: deliverynote.shipping_handling_fees,
+          shipping_handling_fees: deliverynote.shipping_handling_fees || 0,
+          rounding_amount: deliverynote.rounding_amount || 0,
+          auto_rounding_amount: deliverynote.auto_rounding_amount || false,
+          total: deliverynote.total || 0,
+          total_with_vat: deliverynote.total_with_vat || 0,
+          vat_price: deliverynote.vat_price || 0,
+          net_total: deliverynote.net_total || 0,
           customer: deliverynote.customer,
           remarks: deliverynote.remarks,
         };
@@ -1060,18 +1085,25 @@ const DeliveryNoteCreate = forwardRef((props, ref) => {
         name_in_arabic: selectedProducts[i].name_in_arabic,
         quantity: parseFloat(selectedProducts[i].quantity),
         unit_price: parseFloat(selectedProducts[i].unit_price) || 0,
+        unit_price_with_vat: parseFloat(selectedProducts[i].unit_price_with_vat) || 0,
+        purchase_unit_price: parseFloat(selectedProducts[i].purchase_unit_price) || 0,
+        purchase_unit_price_with_vat: parseFloat(selectedProducts[i].purchase_unit_price_with_vat) || 0,
         unit_discount: parseFloat(selectedProducts[i].unit_discount) || 0,
-        purchase_unit_price: parseFloat(selectedProducts[i].purchase_unit_price),
+        unit_discount_with_vat: parseFloat(selectedProducts[i].unit_discount_with_vat) || 0,
+        unit_discount_percent: parseFloat(selectedProducts[i].unit_discount_percent) || 0,
+        unit_discount_percent_with_vat: parseFloat(selectedProducts[i].unit_discount_percent_with_vat) || 0,
         unit: selectedProducts[i].unit,
       });
     }
 
-    formData.discount = parseFloat(formData.discount);
-    formData.discount_percent = parseFloat(formData.discount_percent);
+    formData.discount = parseFloat(formData.discount) || 0;
+    formData.discount_with_vat = parseFloat(formData.discount_with_vat) || 0;
+    formData.discount_percent = parseFloat(formData.discount_percent) || 0;
+    formData.discount_percent_with_vat = parseFloat(formData.discount_percent_with_vat) || 0;
     formData.vat_percent = parseFloat(formData.vat_percent);
-    formData.net_total = parseFloat(netTotal);
-    formData.vat_price = parseFloat(vatPrice);
-    formData.total = parseFloat(totalPrice);
+    formData.shipping_handling_fees = parseFloat(formData.shipping_handling_fees) || 0;
+    formData.rounding_amount = parseFloat(formData.rounding_amount) || 0;
+    formData.auto_rounding_amount = formData.auto_rounding_amount || false;
 
     if (localStorage.getItem('store_id')) {
       formData.store_id = localStorage.getItem('store_id');
@@ -1179,7 +1211,9 @@ const DeliveryNoteCreate = forwardRef((props, ref) => {
       product.stores
     );
     product.unit_price = productStore.retail_unit_price ? productStore.retail_unit_price : 0.00;
+    product.unit_price_with_vat = product.unit_price ? parseFloat(trimTo2Decimals(product.unit_price * (1 + (parseFloat(formData.vat_percent || 0) / 100)))) : 0.00;
     product.purchase_unit_price = productStore.purchase_unit_price ? productStore.purchase_unit_price : 0.00;
+    product.purchase_unit_price_with_vat = product.purchase_unit_price ? parseFloat(trimTo2Decimals(product.purchase_unit_price * (1 + (parseFloat(formData.vat_percent || 0) / 100)))) : 0.00;
 
     let alreadyAdded = false;
     let index = -1;
@@ -1219,11 +1253,13 @@ const DeliveryNoteCreate = forwardRef((props, ref) => {
 
       if (product.unit_price) {
         item.unit_price = parseFloat(product.unit_price);
+        item.unit_price_with_vat = parseFloat(product.unit_price_with_vat || 0);
         console.log("item.unit_price:", item.unit_price);
       }
 
       if (product.purchase_unit_price) {
         item.purchase_unit_price = parseFloat(product.purchase_unit_price);
+        item.purchase_unit_price_with_vat = parseFloat(product.purchase_unit_price_with_vat || 0);
         console.log("item.purchase_unit_price", item.purchase_unit_price);
       }
 
@@ -1262,66 +1298,81 @@ const DeliveryNoteCreate = forwardRef((props, ref) => {
 
   let [totalPrice, setTotalPrice] = useState(0.0);
 
-  function findTotalPrice() {
-    totalPrice = 0.00;
-    for (var i = 0; i < selectedProducts.length; i++) {
-      totalPrice +=
-        parseFloat(selectedProducts[i].unit_price) *
-        parseFloat(selectedProducts[i].quantity);
-    }
-    totalPrice = totalPrice.toFixed(2);
-    setTotalPrice(totalPrice);
-  }
-
-  let [vatPrice, setVatPrice] = useState(0.00);
-
-  function findVatPrice() {
-    vatPrice = 0.00;
-    if (totalPrice > 0) {
-      vatPrice = (parseFloat((parseFloat(formData.vat_percent) / 100)) * (parseFloat(totalPrice) + parseFloat(formData.shipping_handling_fees) - parseFloat(formData.discount))).toFixed(2);;
-      console.log("vatPrice:", vatPrice);
-    }
-    setVatPrice(vatPrice);
-  }
-
-  let [netTotal, setNetTotal] = useState(0.00);
-
-  function findNetTotal() {
-    netTotal = 0.00;
-    if (totalPrice > 0) {
-      netTotal = (parseFloat(totalPrice) + parseFloat(formData.shipping_handling_fees) - parseFloat(formData.discount) + parseFloat(vatPrice)).toFixed(2);
-    }
-    setNetTotal(netTotal);
+  function CalCulateLineTotals(index) {
+    selectedProducts[index].line_total = parseFloat(trimTo2Decimals(
+      (selectedProducts[index]?.unit_price - (selectedProducts[index]?.unit_discount || 0)) * selectedProducts[index]?.quantity
+    ));
+    selectedProducts[index].line_total_with_vat = parseFloat(trimTo2Decimals(
+      ((selectedProducts[index]?.unit_price_with_vat || 0) - (selectedProducts[index]?.unit_discount_with_vat || 0)) * selectedProducts[index]?.quantity
+    ));
+    setSelectedProducts([...selectedProducts]);
   }
 
   let [discountPercent, setDiscountPercent] = useState(0.00);
+  let [discountPercentWithVAT, setDiscountPercentWithVAT] = useState(0.00);
 
-  function findDiscountPercent() {
-    if (formData.discount >= 0 && totalPrice > 0) {
-      discountPercent = parseFloat(parseFloat(formData.discount / totalPrice) * 100).toFixed(2);
-      setDiscountPercent(discountPercent);
-      formData.discount_percent = discountPercent;
-      setFormData({ ...formData });
+  async function reCalculate() {
+    const requestId = Date.now();
+    recalcRequestRef.current = requestId;
+
+    if (!formData.discount) formData.discount = 0;
+    if (!formData.discount_with_vat) formData.discount_with_vat = 0;
+    if (!formData.rounding_amount) formData.rounding_amount = 0;
+    if (!formData.shipping_handling_fees) formData.shipping_handling_fees = 0;
+
+    formData.products = [];
+    for (var i = 0; i < selectedProducts.length; i++) {
+      formData.products.push({
+        product_id: selectedProducts[i].product_id,
+        quantity: parseFloat(selectedProducts[i].quantity) || 0,
+        unit_price: parseFloat(selectedProducts[i].unit_price) || 0,
+        unit_price_with_vat: parseFloat(selectedProducts[i].unit_price_with_vat) || 0,
+        purchase_unit_price: parseFloat(selectedProducts[i].purchase_unit_price) || 0,
+        purchase_unit_price_with_vat: parseFloat(selectedProducts[i].purchase_unit_price_with_vat) || 0,
+        unit_discount: parseFloat(selectedProducts[i].unit_discount) || 0,
+        unit_discount_with_vat: parseFloat(selectedProducts[i].unit_discount_with_vat) || 0,
+        unit: selectedProducts[i].unit,
+      });
     }
-  }
 
-  function findDiscount() {
-    if (formData.discount_percent >= 0 && totalPrice > 0) {
-      formData.discount = parseFloat(totalPrice * parseFloat(formData.discount_percent / 100)).toFixed(2);
-      setFormData({ ...formData });
+    const requestOptions = {
+      method: "POST",
+      headers: {
+        Accept: "application/json",
+        "Content-Type": "application/json",
+        Authorization: localStorage.getItem("access_token"),
+      },
+      body: JSON.stringify(formData),
+    };
+
+    try {
+      const result = await fetch("/v1/delivery-note/calculate-net-total", requestOptions);
+      if (!result.ok) return;
+      if (recalcRequestRef.current !== requestId) return;
+      const res = await result.json();
+      if (res.result) {
+        formData.total = res.result.total || 0;
+        formData.total_with_vat = res.result.total_with_vat || 0;
+        formData.vat_price = res.result.vat_price || 0;
+        formData.net_total = res.result.net_total || 0;
+        if (res.result.discount_percent !== undefined) {
+          discountPercent = res.result.discount_percent;
+          setDiscountPercent(discountPercent);
+        }
+        if (res.result.discount_percent_with_vat !== undefined) {
+          discountPercentWithVAT = res.result.discount_percent_with_vat;
+          setDiscountPercentWithVAT(discountPercentWithVAT);
+        }
+        if (formData.auto_rounding_amount && res.result.rounding_amount !== undefined) {
+          formData.rounding_amount = res.result.rounding_amount;
+        }
+        totalPrice = formData.total;
+        setTotalPrice(totalPrice);
+        setFormData({ ...formData });
+      }
+    } catch (e) {
+      console.error("reCalculate error:", e);
     }
-  }
-
-
-  function reCalculate() {
-    findTotalPrice();
-    if (formData.is_discount_percent) {
-      findDiscount();
-    } else {
-      findDiscountPercent();
-    }
-    findVatPrice();
-    findNetTotal();
   }
 
   const CustomerCreateFormRef = useRef();
@@ -1357,9 +1408,6 @@ const DeliveryNoteCreate = forwardRef((props, ref) => {
     let model = {};
     model = JSON.parse(JSON.stringify(formData));
     model.products = selectedProducts;
-    model.net_total = netTotal;
-    model.vat_price = vatPrice;
-    model.total = totalPrice;
 
     //setFormData({ ...formData });
     PreviewRef.current.open(model, undefined, "delivery_note");
@@ -1646,9 +1694,14 @@ const DeliveryNoteCreate = forwardRef((props, ref) => {
     { key: 'name', label: 'Name', visible: true },
     { key: 'info', label: 'Info', visible: true },
     { key: 'qty', label: 'Qty', visible: true },
-    { key: 'unit_price', label: 'Unit Price', visible: true },
-    { key: 'unit_discount', label: 'Discount', visible: true },
-    { key: 'line_total', label: 'Line Total', visible: true },
+    { key: 'unit_price', label: 'Unit Price(without VAT)', visible: true },
+    { key: 'unit_price_with_vat', label: 'Unit Price(with VAT)', visible: false },
+    { key: 'purchase_unit_price', label: 'Purchase Unit Price(without VAT)', visible: false },
+    { key: 'purchase_unit_price_with_vat', label: 'Purchase Unit Price(with VAT)', visible: false },
+    { key: 'unit_discount', label: 'Unit Disc.(without VAT)', visible: true },
+    { key: 'unit_discount_with_vat', label: 'Unit Disc.(with VAT)', visible: false },
+    { key: 'price', label: 'Price(without VAT)', visible: true },
+    { key: 'price_with_vat', label: 'Price(with VAT)', visible: false },
   ];
   const [dnSPColumns, setDnSPColumns] = useState(() => {
     try {
@@ -2462,9 +2515,14 @@ const DeliveryNoteCreate = forwardRef((props, ref) => {
                       if (col.key === 'name') return <th key="name" style={{ width: "50%" }}>Name</th>;
                       if (col.key === 'info') return <th key="info">Info</th>;
                       if (col.key === 'qty') return <th key="qty" style={{ width: "10%" }}>Qty</th>;
-                      if (col.key === 'unit_price' && store.settings?.add_price_details_in_delivery_note) return <th key="unit_price">Unit Price</th>;
-                      if (col.key === 'unit_discount' && store.settings?.add_price_details_in_delivery_note) return <th key="unit_discount">Discount</th>;
-                      if (col.key === 'line_total' && store.settings?.add_price_details_in_delivery_note) return <th key="line_total">Line Total</th>;
+                      if (col.key === 'unit_price' && store.settings?.add_price_details_in_delivery_note) return <th key="unit_price">Unit Price(without VAT)</th>;
+                      if (col.key === 'unit_price_with_vat' && store.settings?.add_price_details_in_delivery_note) return <th key="unit_price_with_vat">Unit Price(with VAT)</th>;
+                      if (col.key === 'purchase_unit_price' && store.settings?.add_price_details_in_delivery_note) return <th key="purchase_unit_price">Purchase Unit Price</th>;
+                      if (col.key === 'purchase_unit_price_with_vat' && store.settings?.add_price_details_in_delivery_note) return <th key="purchase_unit_price_with_vat">Purchase Unit Price(with VAT)</th>;
+                      if (col.key === 'unit_discount' && store.settings?.add_price_details_in_delivery_note) return <th key="unit_discount">Unit Disc.(without VAT)</th>;
+                      if (col.key === 'unit_discount_with_vat' && store.settings?.add_price_details_in_delivery_note) return <th key="unit_discount_with_vat">Unit Disc.(with VAT)</th>;
+                      if (col.key === 'price' && store.settings?.add_price_details_in_delivery_note) return <th key="price">Price(without VAT)</th>;
+                      if (col.key === 'price_with_vat' && store.settings?.add_price_details_in_delivery_note) return <th key="price_with_vat">Price(with VAT)</th>;
                       return null;
                     })}
                   </tr>
@@ -2767,25 +2825,66 @@ const DeliveryNoteCreate = forwardRef((props, ref) => {
                             onWheel={(e) => e.target.blur()}
                             onChange={(e) => {
                               selectedProducts[index].unit_price = parseFloat(e.target.value) || 0;
-                              setSelectedProducts([...selectedProducts]);
+                              selectedProducts[index].unit_price_with_vat = parseFloat(trimTo2Decimals(selectedProducts[index].unit_price * (1 + ((formData.vat_percent || 0) / 100))));
+                              selectedProducts[index].unit_discount_with_vat = parseFloat(trimTo2Decimals((selectedProducts[index].unit_discount || 0) * (1 + ((formData.vat_percent || 0) / 100))));
+                              CalCulateLineTotals(index);
                               reCalculate();
                             }} />
+                        </td>);
+                        if (col.key === 'unit_price_with_vat' && store.settings?.add_price_details_in_delivery_note) return (<td key="unit_price_with_vat" style={{ verticalAlign: 'middle', padding: '0.25rem' }}>
+                          <input type="number"
+                            style={{ minWidth: "60px", maxWidth: "120px" }}
+                            value={product.unit_price_with_vat || 0}
+                            className="form-control"
+                            placeholder="Unit Price(with VAT)"
+                            onWheel={(e) => e.target.blur()}
+                            onChange={(e) => {
+                              selectedProducts[index].unit_price_with_vat = parseFloat(e.target.value) || 0;
+                              selectedProducts[index].unit_price = parseFloat(trimTo2Decimals(selectedProducts[index].unit_price_with_vat / (1 + ((formData.vat_percent || 0) / 100))));
+                              selectedProducts[index].unit_discount_with_vat = parseFloat(trimTo2Decimals((selectedProducts[index].unit_discount || 0) * (1 + ((formData.vat_percent || 0) / 100))));
+                              CalCulateLineTotals(index);
+                              reCalculate();
+                            }} />
+                        </td>);
+                        if (col.key === 'purchase_unit_price' && store.settings?.add_price_details_in_delivery_note) return (<td key="purchase_unit_price" style={{ verticalAlign: 'middle', padding: '0.25rem', textAlign: 'right' }}>
+                          <Amount amount={trimTo2Decimals(product.purchase_unit_price || 0)} />
+                        </td>);
+                        if (col.key === 'purchase_unit_price_with_vat' && store.settings?.add_price_details_in_delivery_note) return (<td key="purchase_unit_price_with_vat" style={{ verticalAlign: 'middle', padding: '0.25rem', textAlign: 'right' }}>
+                          <Amount amount={trimTo2Decimals(product.purchase_unit_price_with_vat || 0)} />
                         </td>);
                         if (col.key === 'unit_discount' && store.settings?.add_price_details_in_delivery_note) return (<td key="unit_discount" style={{ verticalAlign: 'middle', padding: '0.25rem' }}>
                           <input type="number"
                             style={{ minWidth: "60px", maxWidth: "100px" }}
                             value={product.unit_discount || 0}
                             className="form-control"
-                            placeholder="Discount"
+                            placeholder="Disc.(without VAT)"
                             onWheel={(e) => e.target.blur()}
                             onChange={(e) => {
                               selectedProducts[index].unit_discount = parseFloat(e.target.value) || 0;
-                              setSelectedProducts([...selectedProducts]);
+                              selectedProducts[index].unit_discount_with_vat = parseFloat(trimTo2Decimals(selectedProducts[index].unit_discount * (1 + ((formData.vat_percent || 0) / 100))));
+                              CalCulateLineTotals(index);
                               reCalculate();
                             }} />
                         </td>);
-                        if (col.key === 'line_total' && store.settings?.add_price_details_in_delivery_note) return (<td key="line_total" style={{ verticalAlign: 'middle', padding: '0.25rem' }}>
-                          <Amount amount={((parseFloat(product.unit_price || 0) - parseFloat(product.unit_discount || 0)) * parseFloat(product.quantity || 0)).toFixed(2)} />
+                        if (col.key === 'unit_discount_with_vat' && store.settings?.add_price_details_in_delivery_note) return (<td key="unit_discount_with_vat" style={{ verticalAlign: 'middle', padding: '0.25rem' }}>
+                          <input type="number"
+                            style={{ minWidth: "60px", maxWidth: "100px" }}
+                            value={product.unit_discount_with_vat || 0}
+                            className="form-control"
+                            placeholder="Disc.(with VAT)"
+                            onWheel={(e) => e.target.blur()}
+                            onChange={(e) => {
+                              selectedProducts[index].unit_discount_with_vat = parseFloat(e.target.value) || 0;
+                              selectedProducts[index].unit_discount = parseFloat(trimTo2Decimals(selectedProducts[index].unit_discount_with_vat / (1 + ((formData.vat_percent || 0) / 100))));
+                              CalCulateLineTotals(index);
+                              reCalculate();
+                            }} />
+                        </td>);
+                        if (col.key === 'price' && store.settings?.add_price_details_in_delivery_note) return (<td key="price" style={{ verticalAlign: 'middle', padding: '0.25rem', textAlign: 'right' }}>
+                          <Amount amount={trimTo2Decimals(((product.unit_price || 0) - (product.unit_discount || 0)) * (product.quantity || 0))} />
+                        </td>);
+                        if (col.key === 'price_with_vat' && store.settings?.add_price_details_in_delivery_note) return (<td key="price_with_vat" style={{ verticalAlign: 'middle', padding: '0.25rem', textAlign: 'right' }}>
+                          <Amount amount={trimTo2Decimals(((product.unit_price_with_vat || 0) - (product.unit_discount_with_vat || 0)) * (product.quantity || 0))} />
                         </td>);
                         return null;
                       })}
@@ -2796,46 +2895,119 @@ const DeliveryNoteCreate = forwardRef((props, ref) => {
             </div>
 
             {store.settings?.add_price_details_in_delivery_note && (
-              <div className="row g-3 mt-1">
-                <div className="col-md-3">
-                  <label className="form-label">VAT %</label>
-                  <input type="number" className="form-control"
-                    value={formData.vat_percent}
-                    onWheel={(e) => e.target.blur()}
-                    onChange={(e) => {
-                      formData.vat_percent = parseFloat(e.target.value) || 0;
-                      setFormData({ ...formData });
-                      reCalculate();
-                    }} />
-                </div>
-                <div className="col-md-3">
-                  <label className="form-label">Discount</label>
-                  <input type="number" className="form-control"
-                    value={formData.discount}
-                    onWheel={(e) => e.target.blur()}
-                    onChange={(e) => {
-                      formData.discount = parseFloat(e.target.value) || 0;
-                      setFormData({ ...formData });
-                      reCalculate();
-                    }} />
-                </div>
-                <div className="col-md-3">
-                  <label className="form-label">Shipping / Handling</label>
-                  <input type="number" className="form-control"
-                    value={formData.shipping_handling_fees}
-                    onWheel={(e) => e.target.blur()}
-                    onChange={(e) => {
-                      formData.shipping_handling_fees = parseFloat(e.target.value) || 0;
-                      setFormData({ ...formData });
-                      reCalculate();
-                    }} />
-                </div>
-                <div className="col-md-3">
-                  <table className="table table-sm table-bordered text-end mb-0">
+              <div className="row mt-2">
+                <div className="col-12 d-flex justify-content-end">
+                  <table className="table table-sm table-bordered" style={{ maxWidth: "500px" }}>
                     <tbody>
-                      <tr><td>Sub Total</td><td><Amount amount={totalPrice} /></td></tr>
-                      <tr><td>VAT ({formData.vat_percent}%)</td><td><Amount amount={vatPrice} /></td></tr>
-                      <tr><th>Net Total</th><th><Amount amount={netTotal} /></th></tr>
+                      <tr>
+                        <td className="text-end">Total(without VAT)</td>
+                        <td className="text-end" style={{ minWidth: "120px" }}><Amount amount={trimTo2Decimals(formData.total || 0)} /></td>
+                      </tr>
+                      <tr>
+                        <td className="text-end">Total(with VAT)</td>
+                        <td className="text-end"><Amount amount={trimTo2Decimals(formData.total_with_vat || 0)} /></td>
+                      </tr>
+                      <tr>
+                        <td className="text-end">Shipping &amp; Handling Fees</td>
+                        <td>
+                          <input type="number" className="form-control form-control-sm text-end" style={{ minWidth: "100px" }}
+                            value={formData.shipping_handling_fees || 0}
+                            onWheel={(e) => e.target.blur()}
+                            onChange={(e) => {
+                              formData.shipping_handling_fees = parseFloat(e.target.value) || 0;
+                              setFormData({ ...formData });
+                              reCalculate();
+                            }} />
+                        </td>
+                      </tr>
+                      <tr>
+                        <td className="text-end">
+                          Discount(without VAT)
+                          &nbsp;
+                          <span className="text-muted" style={{ fontSize: "0.85em" }}>{discountPercent}%</span>
+                        </td>
+                        <td>
+                          <input type="number" className="form-control form-control-sm text-end" style={{ minWidth: "100px" }}
+                            value={formData.discount || 0}
+                            onWheel={(e) => e.target.blur()}
+                            onChange={(e) => {
+                              formData.discount = parseFloat(e.target.value) || 0;
+                              formData.discount_with_vat = parseFloat(trimTo2Decimals(formData.discount * (1 + ((formData.vat_percent || 0) / 100))));
+                              setFormData({ ...formData });
+                              reCalculate();
+                            }} />
+                        </td>
+                      </tr>
+                      <tr>
+                        <td className="text-end">
+                          Discount(with VAT)
+                          &nbsp;
+                          <span className="text-muted" style={{ fontSize: "0.85em" }}>{discountPercentWithVAT}%</span>
+                        </td>
+                        <td>
+                          <input type="number" className="form-control form-control-sm text-end" style={{ minWidth: "100px" }}
+                            value={formData.discount_with_vat || 0}
+                            onWheel={(e) => e.target.blur()}
+                            onChange={(e) => {
+                              formData.discount_with_vat = parseFloat(e.target.value) || 0;
+                              formData.discount = parseFloat(trimTo2Decimals(formData.discount_with_vat / (1 + ((formData.vat_percent || 0) / 100))));
+                              setFormData({ ...formData });
+                              reCalculate();
+                            }} />
+                        </td>
+                      </tr>
+                      <tr>
+                        <td className="text-end">Total Taxable Amount(without VAT)</td>
+                        <td className="text-end"><Amount amount={trimTo2Decimals((formData.total || 0) + (formData.shipping_handling_fees || 0) - (formData.discount || 0))} /></td>
+                      </tr>
+                      <tr>
+                        <td className="text-end">
+                          VAT &nbsp;
+                          <input type="number" className="form-control form-control-sm d-inline" style={{ width: "60px" }}
+                            value={formData.vat_percent || 0}
+                            onWheel={(e) => e.target.blur()}
+                            onChange={(e) => {
+                              formData.vat_percent = parseFloat(e.target.value) || 0;
+                              setFormData({ ...formData });
+                              reCalculate();
+                            }} />
+                          %
+                        </td>
+                        <td className="text-end"><Amount amount={trimTo2Decimals(formData.vat_price || 0)} /></td>
+                      </tr>
+                      <tr>
+                        <td className="text-end">Net Total(with VAT) Before Rounding</td>
+                        <td className="text-end"><Amount amount={trimTo2Decimals((formData.net_total || 0) - (formData.rounding_amount || 0))} /></td>
+                      </tr>
+                      <tr>
+                        <td className="text-end">
+                          Rounding Amount &nbsp;
+                          <label style={{ fontSize: "0.85em", cursor: "pointer" }}>
+                            <input type="checkbox"
+                              checked={formData.auto_rounding_amount || false}
+                              onChange={(e) => {
+                                formData.auto_rounding_amount = e.target.checked;
+                                setFormData({ ...formData });
+                                reCalculate();
+                              }} /> Auto Calculate
+                          </label>
+                        </td>
+                        <td>
+                          <input type="number" className="form-control form-control-sm text-end" style={{ minWidth: "100px" }}
+                            value={formData.rounding_amount || 0}
+                            disabled={formData.auto_rounding_amount}
+                            onWheel={(e) => e.target.blur()}
+                            onChange={(e) => {
+                              formData.rounding_amount = parseFloat(e.target.value) || 0;
+                              setFormData({ ...formData });
+                              reCalculate();
+                            }} />
+                        </td>
+                      </tr>
+                      <tr>
+                        <th className="text-end">Net Total(with VAT)</th>
+                        <th className="text-end"><Amount amount={trimTo2Decimals(formData.net_total || 0)} /></th>
+                      </tr>
                     </tbody>
                   </table>
                 </div>
