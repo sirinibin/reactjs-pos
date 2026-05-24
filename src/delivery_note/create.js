@@ -1059,7 +1059,8 @@ const DeliveryNoteCreate = forwardRef((props, ref) => {
         name: selectedProducts[i].name,
         name_in_arabic: selectedProducts[i].name_in_arabic,
         quantity: parseFloat(selectedProducts[i].quantity),
-        unit_price: parseFloat(selectedProducts[i].unit_price),
+        unit_price: parseFloat(selectedProducts[i].unit_price) || 0,
+        unit_discount: parseFloat(selectedProducts[i].unit_discount) || 0,
         purchase_unit_price: parseFloat(selectedProducts[i].purchase_unit_price),
         unit: selectedProducts[i].unit,
       });
@@ -1068,6 +1069,9 @@ const DeliveryNoteCreate = forwardRef((props, ref) => {
     formData.discount = parseFloat(formData.discount);
     formData.discount_percent = parseFloat(formData.discount_percent);
     formData.vat_percent = parseFloat(formData.vat_percent);
+    formData.net_total = parseFloat(netTotal);
+    formData.vat_price = parseFloat(vatPrice);
+    formData.total = parseFloat(totalPrice);
 
     if (localStorage.getItem('store_id')) {
       formData.store_id = localStorage.getItem('store_id');
@@ -1642,6 +1646,9 @@ const DeliveryNoteCreate = forwardRef((props, ref) => {
     { key: 'name', label: 'Name', visible: true },
     { key: 'info', label: 'Info', visible: true },
     { key: 'qty', label: 'Qty', visible: true },
+    { key: 'unit_price', label: 'Unit Price', visible: true },
+    { key: 'unit_discount', label: 'Discount', visible: true },
+    { key: 'line_total', label: 'Line Total', visible: true },
   ];
   const [dnSPColumns, setDnSPColumns] = useState(() => {
     try {
@@ -2455,6 +2462,9 @@ const DeliveryNoteCreate = forwardRef((props, ref) => {
                       if (col.key === 'name') return <th key="name" style={{ width: "50%" }}>Name</th>;
                       if (col.key === 'info') return <th key="info">Info</th>;
                       if (col.key === 'qty') return <th key="qty" style={{ width: "10%" }}>Qty</th>;
+                      if (col.key === 'unit_price' && store.settings?.add_price_details_in_delivery_note) return <th key="unit_price">Unit Price</th>;
+                      if (col.key === 'unit_discount' && store.settings?.add_price_details_in_delivery_note) return <th key="unit_discount">Discount</th>;
+                      if (col.key === 'line_total' && store.settings?.add_price_details_in_delivery_note) return <th key="line_total">Line Total</th>;
                       return null;
                     })}
                   </tr>
@@ -2748,6 +2758,35 @@ const DeliveryNoteCreate = forwardRef((props, ref) => {
                             )}
                           </div>
                         </td>);
+                        if (col.key === 'unit_price' && store.settings?.add_price_details_in_delivery_note) return (<td key="unit_price" style={{ verticalAlign: 'middle', padding: '0.25rem' }}>
+                          <input type="number"
+                            style={{ minWidth: "60px", maxWidth: "120px" }}
+                            value={product.unit_price || 0}
+                            className="form-control"
+                            placeholder="Unit Price"
+                            onWheel={(e) => e.target.blur()}
+                            onChange={(e) => {
+                              selectedProducts[index].unit_price = parseFloat(e.target.value) || 0;
+                              setSelectedProducts([...selectedProducts]);
+                              reCalculate();
+                            }} />
+                        </td>);
+                        if (col.key === 'unit_discount' && store.settings?.add_price_details_in_delivery_note) return (<td key="unit_discount" style={{ verticalAlign: 'middle', padding: '0.25rem' }}>
+                          <input type="number"
+                            style={{ minWidth: "60px", maxWidth: "100px" }}
+                            value={product.unit_discount || 0}
+                            className="form-control"
+                            placeholder="Discount"
+                            onWheel={(e) => e.target.blur()}
+                            onChange={(e) => {
+                              selectedProducts[index].unit_discount = parseFloat(e.target.value) || 0;
+                              setSelectedProducts([...selectedProducts]);
+                              reCalculate();
+                            }} />
+                        </td>);
+                        if (col.key === 'line_total' && store.settings?.add_price_details_in_delivery_note) return (<td key="line_total" style={{ verticalAlign: 'middle', padding: '0.25rem' }}>
+                          <Amount amount={((parseFloat(product.unit_price || 0) - parseFloat(product.unit_discount || 0)) * parseFloat(product.quantity || 0)).toFixed(2)} />
+                        </td>);
                         return null;
                       })}
                     </tr>
@@ -2755,6 +2794,53 @@ const DeliveryNoteCreate = forwardRef((props, ref) => {
                 </tbody>
               </table>
             </div>
+
+            {store.settings?.add_price_details_in_delivery_note && (
+              <div className="row g-3 mt-1">
+                <div className="col-md-3">
+                  <label className="form-label">VAT %</label>
+                  <input type="number" className="form-control"
+                    value={formData.vat_percent}
+                    onWheel={(e) => e.target.blur()}
+                    onChange={(e) => {
+                      formData.vat_percent = parseFloat(e.target.value) || 0;
+                      setFormData({ ...formData });
+                      reCalculate();
+                    }} />
+                </div>
+                <div className="col-md-3">
+                  <label className="form-label">Discount</label>
+                  <input type="number" className="form-control"
+                    value={formData.discount}
+                    onWheel={(e) => e.target.blur()}
+                    onChange={(e) => {
+                      formData.discount = parseFloat(e.target.value) || 0;
+                      setFormData({ ...formData });
+                      reCalculate();
+                    }} />
+                </div>
+                <div className="col-md-3">
+                  <label className="form-label">Shipping / Handling</label>
+                  <input type="number" className="form-control"
+                    value={formData.shipping_handling_fees}
+                    onWheel={(e) => e.target.blur()}
+                    onChange={(e) => {
+                      formData.shipping_handling_fees = parseFloat(e.target.value) || 0;
+                      setFormData({ ...formData });
+                      reCalculate();
+                    }} />
+                </div>
+                <div className="col-md-3">
+                  <table className="table table-sm table-bordered text-end mb-0">
+                    <tbody>
+                      <tr><td>Sub Total</td><td><Amount amount={totalPrice} /></td></tr>
+                      <tr><td>VAT ({formData.vat_percent}%)</td><td><Amount amount={vatPrice} /></td></tr>
+                      <tr><th>Net Total</th><th><Amount amount={netTotal} /></th></tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            )}
             <Modal.Footer>
               <Button variant="secondary" onClick={handleClose}>
                 Close
@@ -2776,11 +2862,11 @@ const DeliveryNoteCreate = forwardRef((props, ref) => {
           </form>
         </Modal.Body>
 
-      </Modal>
+      </Modal >
 
 
       {/* DN SP Table Settings Modal */}
-      <Modal show={showDNSPSettings} onHide={() => setShowDNSPSettings(false)} size="md">
+      < Modal show={showDNSPSettings} onHide={() => setShowDNSPSettings(false)} size="md" >
         <Modal.Header closeButton>
           <Modal.Title>Table Settings</Modal.Title>
         </Modal.Header>
@@ -2813,7 +2899,7 @@ const DeliveryNoteCreate = forwardRef((props, ref) => {
           <Button variant="secondary" onClick={restoreDefaultDNSPSettings}>Restore Defaults</Button>
           <Button variant="primary" onClick={() => setShowDNSPSettings(false)}>Close</Button>
         </Modal.Footer>
-      </Modal>
+      </Modal >
 
     </>
   );

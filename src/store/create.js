@@ -4502,6 +4502,28 @@ const StoreCreate = forwardRef((props, ref) => {
                         <div className="col-md-2">
                             <div className="input-group mb-3">
                                 <input type="checkbox"
+                                    value={formData.settings.add_price_details_in_delivery_note}
+                                    checked={formData.settings.add_price_details_in_delivery_note}
+                                    onChange={(e) => {
+                                        errors["add_price_details_in_delivery_note"] = "";
+                                        formData.settings.add_price_details_in_delivery_note = !formData.settings.add_price_details_in_delivery_note;
+                                        setFormData({ ...formData });
+                                    }}
+                                    className=""
+                                    id="add_price_details_in_delivery_note"
+                                /> &nbsp;Add price details in Delivery note
+                            </div>
+                            <label className="form-label"></label>
+                            {errors.add_price_details_in_delivery_note && (
+                                <div style={{ color: "red" }}>
+                                    {errors.add_price_details_in_delivery_note}
+                                </div>
+                            )}
+                        </div>
+
+                        <div className="col-md-2">
+                            <div className="input-group mb-3">
+                                <input type="checkbox"
                                     value={formData.settings.disable_purchases_on_accounts}
                                     checked={formData.settings.disable_purchases_on_accounts}
                                     onChange={(e) => {

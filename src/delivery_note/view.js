@@ -183,6 +183,9 @@ const DeliveryNoteView = forwardRef((props, ref) => {
                                 <th>Part No.</th>
                                 <th>Name</th>
                                 <th>Qty</th>
+                                {model.net_total > 0 && <th>Unit Price</th>}
+                                {model.net_total > 0 && <th>Discount</th>}
+                                {model.net_total > 0 && <th>Line Total</th>}
                             </tr>
                         </thead>
                         <tbody>
@@ -192,11 +195,44 @@ const DeliveryNoteView = forwardRef((props, ref) => {
                                     <td>{product.part_number}</td>
                                     <td>{product.name}{product.name_in_arabic ? " / " + product.name_in_arabic : ""}</td>
                                     <td>{product.quantity}  {product.unit ? product.unit : ""} </td>
+                                    {model.net_total > 0 && <td>{product.unit_price ? product.unit_price.toFixed(2) : "0.00"}</td>}
+                                    {model.net_total > 0 && <td>{product.unit_discount ? product.unit_discount.toFixed(2) : "0.00"}</td>}
+                                    {model.net_total > 0 && <td>{product.unit_price ? ((product.unit_price - (product.unit_discount || 0)) * product.quantity).toFixed(2) : "0.00"}</td>}
                                 </tr>
                             ))}
                         </tbody>
                     </table>
                 </div>
+                {model.net_total > 0 && (
+                    <div className="row justify-content-end">
+                        <div className="col-md-4">
+                            <table className="table table-sm table-bordered">
+                                <tbody>
+                                    <tr>
+                                        <th>Sub Total</th>
+                                        <td>{model.total ? model.total.toFixed(2) : "0.00"}</td>
+                                    </tr>
+                                    {model.discount > 0 && <tr>
+                                        <th>Discount</th>
+                                        <td>{model.discount.toFixed(2)}</td>
+                                    </tr>}
+                                    {model.shipping_handling_fees > 0 && <tr>
+                                        <th>Shipping/Handling</th>
+                                        <td>{model.shipping_handling_fees.toFixed(2)}</td>
+                                    </tr>}
+                                    <tr>
+                                        <th>VAT {model.vat_percent ? "(" + model.vat_percent + "%)" : ""}</th>
+                                        <td>{model.vat_price ? model.vat_price.toFixed(2) : "0.00"}</td>
+                                    </tr>
+                                    <tr>
+                                        <th><strong>Net Total</strong></th>
+                                        <td><strong>{model.net_total.toFixed(2)}</strong></td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                )}
 
                 {/*
                     <form className="row g-3 needs-validation" >
