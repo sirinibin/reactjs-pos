@@ -56,6 +56,7 @@ function PurchaseIndex(props) {
 
 
     let [totalPurchase, setTotalPurchase] = useState(0.00);
+    let [totalAccountedPurchase, setTotalAccountedPurchase] = useState(0.00);
     let [vatPrice, setVatPrice] = useState(0.00);
     let [totalShippingHandlingFees, setTotalShippingHandlingFees] = useState(0.00);
     let [totalDiscount, setTotalDiscount] = useState(0.00);
@@ -823,6 +824,7 @@ function PurchaseIndex(props) {
                 setOffset((page - 1) * pageSize);
                 setCurrentPageItemsCount(data.result.length);
                 setTotalPurchase(data.meta.total_purchase);
+                setTotalAccountedPurchase(data.meta.accounted_purchase || 0);
                 setVatPrice(data.meta.vat_price);
                 setTotalShippingHandlingFees(data.meta.shipping_handling_fees);
                 setTotalDiscount(data.meta.discount);
@@ -1416,7 +1418,7 @@ function PurchaseIndex(props) {
                                     "Cash discount": totalCashDiscount,
                                     "VAT paid": vatPrice,
                                     "Purchase": totalPurchase,
-                                    ...(store.settings?.disable_purchases_on_accounts ? { "Accounted Purchase(with VAT)": totalPurchase } : {}),
+                                    ...(store.settings?.disable_purchases_on_accounts ? { "Accounted Purchase(with VAT)": totalAccountedPurchase } : {}),
                                     "Paid purchase": totalPaidPurchase,
                                     "Purchase discount": totalDiscount,
                                     "Shipping/Handling fees": totalShippingHandlingFees,

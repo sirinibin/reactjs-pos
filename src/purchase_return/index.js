@@ -51,6 +51,7 @@ function PurchaseReturnIndex(props) {
 
 
     let [totalPurchaseReturn, setTotalPurchaseReturn] = useState(0.00);
+    let [totalAccountedPurchaseReturn, setTotalAccountedPurchaseReturn] = useState(0.00);
     let [totalPurchasePurchaseReturn, setTotalPurchasePurchaseReturn] = useState(0.00);
     let [vatPrice, setVatPrice] = useState(0.00);
     let [totalDiscount, setTotalDiscount] = useState(0.00);
@@ -732,6 +733,7 @@ function PurchaseReturnIndex(props) {
                 setOffset((page - 1) * pageSize);
                 setCurrentPageItemsCount(data.result.length);
                 setTotalPurchaseReturn(data.meta.total_purchase_return);
+                setTotalAccountedPurchaseReturn(data.meta.accounted_purchase_return || 0);
                 setTotalPurchasePurchaseReturn(data.meta.purchase_purchase_return);
                 setVatPrice(data.meta.vat_price);
                 setTotalDiscount(data.meta.discount);
@@ -1389,7 +1391,7 @@ function PurchaseReturnIndex(props) {
                                     [t('Cash Discount Return')]: totalCashDiscount,
                                     [t('VAT Return')]: vatPrice,
                                     [t('Purchase Return')]: totalPurchaseReturn,
-                                    ...(store.settings?.disable_purchases_on_accounts ? { [t('Accounted Purchase Return(with VAT)')]: totalPurchaseReturn } : {}),
+                                    ...(store.settings?.disable_purchases_on_accounts ? { [t('Accounted Purchase Return(with VAT)')]: totalAccountedPurchaseReturn } : {}),
                                     [t('Purchase Return paid by purchase')]: totalPurchasePurchaseReturn,
                                     [t('Paid Purchase Return')]: totalPaidPurchaseReturn,
                                     [t('Purchase Discount Return')]: totalDiscount,
