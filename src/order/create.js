@@ -8018,19 +8018,44 @@ const OrderCreate = forwardRef((props, ref) => {
                                                                                             }
                                                                                             {col.key === "unit_price" &&
                                                                                                 <div style={{ ...columnStyle, width: getColumnWidth(col) }}>
-                                                                                                    <Amount amount={trimTo2Decimals(option.sales_unit_price)} />
+                                                                                                    {option.product_stores?.[localStorage.getItem("store_id")]?.retail_unit_price && (
+                                                                                                        <><Amount amount={trimTo2Decimals(option.product_stores?.[localStorage.getItem("store_id")]?.retail_unit_price)} />+</>
+                                                                                                    )}
+                                                                                                    {option.product_stores?.[localStorage.getItem("store_id")]?.retail_unit_price_with_vat && (
+                                                                                                        <>|<Amount amount={trimTo2Decimals(option.product_stores?.[localStorage.getItem("store_id")]?.retail_unit_price_with_vat)} /></>
+                                                                                                    )}
                                                                                                 </div>
                                                                                             }
                                                                                             {col.key === "stock" &&
                                                                                                 <div style={{ ...columnStyle, width: getColumnWidth(col) }}>
-                                                                                                    {option.stock}
+                                                                                                    {(() => {
+                                                                                                        const storeId = localStorage.getItem("store_id");
+                                                                                                        const productStore = option.product_stores?.[storeId];
+                                                                                                        const totalStock = productStore?.stock ?? 0;
+                                                                                                        const warehouseStocks = productStore?.warehouse_stocks ?? {};
+                                                                                                        const warehouseDetails = (() => {
+                                                                                                            let details = [];
+                                                                                                            if (warehouseStocks["main_store"] !== undefined) { details.push(`MS: ${warehouseStocks["main_store"]}`); }
+                                                                                                            Object.entries(warehouseStocks).filter(([key]) => key !== "main_store").forEach(([key, value]) => { details.push(`${key.replace(/^w/, "WH").toUpperCase()}: ${value}`); });
+                                                                                                            return details.join(", ");
+                                                                                                        })();
+                                                                                                        return (<span>{totalStock}{warehouseDetails && store.settings.enable_warehouse_module ? ` (${warehouseDetails})` : ""}</span>);
+                                                                                                    })()}
                                                                                                 </div>
                                                                                             }
                                                                                             {col.key === "photos" &&
                                                                                                 <div style={{ ...columnStyle, width: getColumnWidth(col) }}>
-                                                                                                    {option.photo_url && (
-                                                                                                        <img src={option.photo_url} alt="" style={{ width: "30px", height: "30px", objectFit: "cover" }} />
-                                                                                                    )}
+                                                                                                    <button
+                                                                                                        type="button"
+                                                                                                        className={isActive ? "btn btn-outline-light btn-sm" : "btn btn-outline-primary btn-sm"}
+                                                                                                        onClick={(e) => {
+                                                                                                            e.preventDefault();
+                                                                                                            e.stopPropagation();
+                                                                                                            openProductImages(option.id);
+                                                                                                        }}
+                                                                                                    >
+                                                                                                        <i className="bi bi-images" aria-hidden="true" />
+                                                                                                    </button>
                                                                                                 </div>
                                                                                             }
                                                                                             {col.key === "brand" &&
@@ -8040,7 +8065,12 @@ const OrderCreate = forwardRef((props, ref) => {
                                                                                             }
                                                                                             {col.key === "purchase_price" &&
                                                                                                 <div style={{ ...columnStyle, width: getColumnWidth(col) }}>
-                                                                                                    <Amount amount={trimTo2Decimals(option.purchase_unit_price)} />
+                                                                                                    {option.product_stores?.[localStorage.getItem("store_id")]?.purchase_unit_price && (
+                                                                                                        <><Amount amount={trimTo2Decimals(option.product_stores?.[localStorage.getItem("store_id")]?.purchase_unit_price)} />+</>
+                                                                                                    )}
+                                                                                                    {option.product_stores?.[localStorage.getItem("store_id")]?.purchase_unit_price_with_vat && (
+                                                                                                        <>|<Amount amount={trimTo2Decimals(option.product_stores?.[localStorage.getItem("store_id")]?.purchase_unit_price_with_vat)} /></>
+                                                                                                    )}
                                                                                                 </div>
                                                                                             }
                                                                                             {col.key === "country" &&
