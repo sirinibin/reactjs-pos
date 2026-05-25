@@ -452,7 +452,7 @@ const StatsIndex = forwardRef((props, ref) => {
             .catch((error) => {
                 console.log(error);
             });
-    }, [purchaseStatsOpen, searchParams, store]);
+    }, [purchaseStatsOpen, searchParams]);
 
 
     const handlePurchaseSummaryToggle = (isOpen) => {
@@ -554,7 +554,7 @@ const StatsIndex = forwardRef((props, ref) => {
             .catch((error) => {
                 console.log(error);
             });
-    }, [purchaseReturnStatsOpen, searchParams, store]);
+    }, [purchaseReturnStatsOpen, searchParams]);
 
 
     const handlePurchaseReturnSummaryToggle = (isOpen) => {
