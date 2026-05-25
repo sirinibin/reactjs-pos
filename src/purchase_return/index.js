@@ -1391,7 +1391,7 @@ function PurchaseReturnIndex(props) {
                                     [t('Cash Discount Return')]: totalCashDiscount,
                                     [t('VAT Return')]: vatPrice,
                                     [t('Purchase Return')]: totalPurchaseReturn,
-                                    ...(store.settings?.disable_purchases_on_accounts ? { [t('Accounted Purchase Return(with VAT)')]: totalAccountedPurchaseReturn } : {}),
+                                    ...(store.settings?.disable_purchases_on_accounts ? { [t('Accounted Purchase Return(with VAT)')]: selectedAccountedFilter === "false" ? 0 : (selectedAccountedFilter === "true" ? totalPurchaseReturn : totalAccountedPurchaseReturn) } : {}),
                                     [t('Purchase Return paid by purchase')]: totalPurchasePurchaseReturn,
                                     [t('Paid Purchase Return')]: totalPaidPurchaseReturn,
                                     [t('Purchase Discount Return')]: totalDiscount,

@@ -1418,7 +1418,7 @@ function PurchaseIndex(props) {
                                     "Cash discount": totalCashDiscount,
                                     "VAT paid": vatPrice,
                                     "Purchase": totalPurchase,
-                                    ...(store.settings?.disable_purchases_on_accounts ? { "Accounted Purchase(with VAT)": totalAccountedPurchase } : {}),
+                                    ...(store.settings?.disable_purchases_on_accounts ? { "Accounted Purchase(with VAT)": selectedAccountedFilter === "false" ? 0 : (selectedAccountedFilter === "true" ? totalPurchase : totalAccountedPurchase) } : {}),
                                     "Paid purchase": totalPaidPurchase,
                                     "Purchase discount": totalDiscount,
                                     "Shipping/Handling fees": totalShippingHandlingFees,
