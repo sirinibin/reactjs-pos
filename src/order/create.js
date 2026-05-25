@@ -1041,7 +1041,7 @@ const OrderCreate = forwardRef((props, ref) => {
                     // console.log("form.elements:", form.elements);
                     if (form && form.elements[index + 1]) {
                         //
-                        if (event.target.getAttribute("class").includes("barcode")) {
+                        if ((event.target.getAttribute("class") || "").includes("barcode")) {
                             form.elements[index].focus();
                         } else {
                             form.elements[index + 1].focus();
@@ -1183,7 +1183,7 @@ const OrderCreate = forwardRef((props, ref) => {
             },
         };
 
-        let Select = "select=id,code,credit_limit,credit_balance,additional_keywords,remarks,use_remarks_in_sales,vat_no,name,phone,name_in_arabic,phone_in_arabic,search_label";
+        let Select = "select=id,code,credit_limit,credit_balance,additional_keywords,remarks,use_remarks_in_sales,vat_no,name,phone,name_in_arabic,phone_in_arabic,search_label,stores";
         // setIsCustomersLoading(true);
         let result = await fetch(
             "/v1/customer?limit=100&" + Select + queryString,
@@ -1552,6 +1552,10 @@ const OrderCreate = forwardRef((props, ref) => {
         event.preventDefault();
 
         if (isSubmitting) {
+            return;
+        }
+
+        if (errors.blocked) {
             return;
         }
 
@@ -4251,6 +4255,7 @@ const OrderCreate = forwardRef((props, ref) => {
                                     setErrors(errors);
                                     if (selectedItems.length === 0) {
                                         delete errors.customer_id;
+                                        delete errors.blocked;
                                         //setErrors(errors);
                                         formData.customer_id = "";
                                         formData.customer_name = "";
@@ -4273,6 +4278,19 @@ const OrderCreate = forwardRef((props, ref) => {
                                     setFormData({ ...formData });
                                     setSelectedCustomers(selectedItems);
                                     setOpenCustomerSearchResult(false);
+
+                                    // Warn immediately if this customer has too many unpaid sales
+                                    if (store?.settings?.block_sales_after_pending_count > 0) {
+                                        const storeId = localStorage.getItem("store_id");
+                                        const cs = selectedItems[0]?.stores?.[storeId];
+                                        const pendingCount = (cs?.sales_not_paid_count || 0) + (cs?.sales_paid_partially_count || 0);
+                                        if (pendingCount >= store.settings.block_sales_after_pending_count) {
+                                            errors.blocked = `Customer has ${pendingCount} unpaid sale(s). New sales are blocked until existing sales are paid.`;
+                                        } else {
+                                            delete errors.blocked;
+                                        }
+                                        setErrors({ ...errors });
+                                    }
                                 }}
                                 options={customerOptions}
                                 placeholder={t('Customer Name / Mob / VAT # / ID')}
@@ -4393,6 +4411,11 @@ const OrderCreate = forwardRef((props, ref) => {
                             {errors.customer_id && (
                                 <div style={{ color: "red" }}>
                                     {t(errors.customer_id)}
+                                </div>
+                            )}
+                            {errors.blocked && (
+                                <div style={{ color: "red", marginTop: "4px" }}>
+                                    {errors.blocked}
                                 </div>
                             )}
 

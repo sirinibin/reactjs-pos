@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef, useMemo, forwardRef, useImperativeHandle, useCallback } from "react";
 import Preview from "./../order/preview.js";
-import { Modal, Button } from "react-bootstrap";
+import { Modal, Button, OverlayTrigger, Tooltip } from "react-bootstrap";
 import CustomerCreate from "../customer/create.js";
 import ProductCreate from "../product/create.js";
 import UserCreate from "../user/create.js";
@@ -59,7 +59,7 @@ const DeliveryNoteCreate = forwardRef((props, ref) => {
         discount_percent_with_vat: 0.0,
         shipping_handling_fees: 0.00,
         rounding_amount: 0.00,
-        auto_rounding_amount: false,
+        auto_rounding_amount: true,
         total: 0.0,
         total_with_vat: 0.0,
         vat_price: 0.0,
@@ -181,7 +181,7 @@ const DeliveryNoteCreate = forwardRef((props, ref) => {
 
     let oldQty = 0;
     for (let j = 0; j < oldProducts?.length; j++) {
-      if (oldProducts[j].product_id === selectedProducts[j].product_id) {
+      if (oldProducts[j].product_id === selectedProducts[i].product_id) {
         if (formData.id) {
           oldQty = oldProducts[j].quantity;
         }
@@ -266,12 +266,12 @@ const DeliveryNoteCreate = forwardRef((props, ref) => {
         if (form && event.target) {
           var index = Array.prototype.indexOf.call(form, event.target);
           if (form && form.elements[index + 1]) {
-            if (event.target.getAttribute("class").includes("barcode")) {
+            if ((event.target.getAttribute("class") || "").includes("barcode")) {
               form.elements[index].focus();
-            } else if (event.target.getAttribute("class").includes("productSearch")) {
+            } else if ((event.target.getAttribute("class") || "").includes("productSearch")) {
               //  moveToProductSearch();
               //productSearchRef.current?.focus();
-            } else if (event.target.getAttribute("class").includes("delivery_note_quantity")) {
+            } else if ((event.target.getAttribute("class") || "").includes("delivery_note_quantity")) {
               //console.log("OKKK");
               moveToProductSearch();
             } else {
@@ -305,7 +305,7 @@ const DeliveryNoteCreate = forwardRef((props, ref) => {
     discount_percent_with_vat: 0.0,
     shipping_handling_fees: 0.00,
     rounding_amount: 0.00,
-    auto_rounding_amount: false,
+    auto_rounding_amount: true,
     total: 0.0,
     total_with_vat: 0.0,
     vat_price: 0.0,
@@ -1571,6 +1571,27 @@ const DeliveryNoteCreate = forwardRef((props, ref) => {
   const customerSearchRef = useRef();
   const timerRef = useRef(null);
 
+  const renderTaxableAmountTooltip = (props) => (
+    <Tooltip id="dn-taxable-tooltip" {...props}>
+      Total(without VAT) + Shipping &amp; Handling Fees - Discount(without VAT)<br />
+      ({trimTo2Decimals(formData.total || 0)} + {trimTo2Decimals(formData.shipping_handling_fees || 0)} - {trimTo2Decimals(formData.discount || 0)}) = {trimTo2Decimals((formData.total || 0) + (formData.shipping_handling_fees || 0) - (formData.discount || 0))}
+    </Tooltip>
+  );
+
+  const renderNetTotalBeforeRoundingTooltip = (props) => (
+    <Tooltip id="dn-net-before-rounding-tooltip" {...props}>
+      Total Taxable Amount(without VAT) + VAT Price ({formData.vat_percent || 0}% of Taxable Amount)<br />
+      ({trimTo2Decimals((formData.total || 0) + (formData.shipping_handling_fees || 0) - (formData.discount || 0))} + {trimTo2Decimals(formData.vat_price || 0)}) = {trimTo2Decimals((formData.net_total || 0) - (formData.rounding_amount || 0))}
+    </Tooltip>
+  );
+
+  const renderNetTotalTooltip = (props) => (
+    <Tooltip id="dn-net-total-tooltip" {...props}>
+      Total Taxable Amount(without VAT) + VAT Price ({formData.vat_percent || 0}% of Taxable Amount) {(formData.rounding_amount || 0) >= 0 ? "+ Rounding Amount" : "- Rounding Amount"}<br />
+      ({trimTo2Decimals((formData.total || 0) + (formData.shipping_handling_fees || 0) - (formData.discount || 0))} + {trimTo2Decimals(formData.vat_price || 0)} {(formData.rounding_amount || 0) >= 0 ? "+ " : "- "}{trimTo2Decimals(Math.abs(formData.rounding_amount || 0))}) = {trimTo2Decimals(formData.net_total || 0)}
+    </Tooltip>
+  );
+
   useEffect(() => {
     const handleKeyDown = (e) => {
       if (e.key === "Escape") {
@@ -2260,14 +2281,6 @@ const DeliveryNoteCreate = forwardRef((props, ref) => {
                     setOpenProductSearchResult(false);
                     productSearchRef.current?.clear();
                   }
-
-                  moveToProductSearch();
-
-                  /* if (e.key === "Enter") {
-                     moveToProductSearch();
-                   }*/
-
-
                 }}
                 renderMenu={(results, menuProps, state) => {
                   const searchWords = state.text.toLowerCase().split(" ").filter(Boolean);
@@ -2767,9 +2780,17 @@ const DeliveryNoteCreate = forwardRef((props, ref) => {
                                 onFocus={() => handleFocus(index, `${"delivery_note_quantity_" + index}`)}
                                 onKeyDown={(e) => {
                                   RunKeyActions(e, product);
+                                  if (timerRef.current) clearTimeout(timerRef.current);
 
-                                  if (e.key === "Enter") {
-                                    moveToProductSearch();
+                                  if (e.key === "Backspace") {
+                                    selectedProducts[index].quantity = "";
+                                    setSelectedProducts([...selectedProducts]);
+                                    timerRef.current = setTimeout(() => {
+                                      CalCulateLineTotals(index);
+                                      checkErrors(index);
+                                      checkWarnings(index);
+                                      reCalculate(index);
+                                    }, 100);
                                   }
                                 }}
 
@@ -2847,6 +2868,19 @@ const DeliveryNoteCreate = forwardRef((props, ref) => {
                             className="form-control"
                             placeholder="Unit Price"
                             onWheel={(e) => e.target.blur()}
+                            onKeyDown={(e) => {
+                              if (e.key === "Backspace") {
+                                selectedProducts[index].unit_price = "";
+                                selectedProducts[index].unit_price_with_vat = "";
+                                setSelectedProducts([...selectedProducts]);
+                                CalCulateLineTotals(index);
+                                reCalculate();
+                              } else if (e.key === "Enter" && index === selectedProducts.length - 1) {
+                                e.preventDefault();
+                                e.nativeEvent.stopImmediatePropagation();
+                                productSearchRef.current?.focus();
+                              }
+                            }}
                             onChange={(e) => {
                               if (!e.target.value) {
                                 selectedProducts[index].unit_price = "";
@@ -2868,6 +2902,15 @@ const DeliveryNoteCreate = forwardRef((props, ref) => {
                             className="form-control"
                             placeholder="Unit Price(with VAT)"
                             onWheel={(e) => e.target.blur()}
+                            onKeyDown={(e) => {
+                              if (e.key === "Backspace") {
+                                selectedProducts[index].unit_price_with_vat = "";
+                                selectedProducts[index].unit_price = "";
+                                setSelectedProducts([...selectedProducts]);
+                                CalCulateLineTotals(index);
+                                reCalculate();
+                              }
+                            }}
                             onChange={(e) => {
                               if (!e.target.value) {
                                 selectedProducts[index].unit_price_with_vat = "";
@@ -2889,6 +2932,13 @@ const DeliveryNoteCreate = forwardRef((props, ref) => {
                             className="form-control"
                             placeholder="Purchase Unit Price"
                             onWheel={(e) => e.target.blur()}
+                            onKeyDown={(e) => {
+                              if (e.key === "Backspace") {
+                                selectedProducts[index].purchase_unit_price = "";
+                                selectedProducts[index].purchase_unit_price_with_vat = "";
+                                setSelectedProducts([...selectedProducts]);
+                              }
+                            }}
                             onChange={(e) => {
                               if (!e.target.value) {
                                 selectedProducts[index].purchase_unit_price = "";
@@ -2908,6 +2958,13 @@ const DeliveryNoteCreate = forwardRef((props, ref) => {
                             className="form-control"
                             placeholder="Purchase Unit Price(with VAT)"
                             onWheel={(e) => e.target.blur()}
+                            onKeyDown={(e) => {
+                              if (e.key === "Backspace") {
+                                selectedProducts[index].purchase_unit_price_with_vat = "";
+                                selectedProducts[index].purchase_unit_price = "";
+                                setSelectedProducts([...selectedProducts]);
+                              }
+                            }}
                             onChange={(e) => {
                               if (!e.target.value) {
                                 selectedProducts[index].purchase_unit_price_with_vat = "";
@@ -2927,6 +2984,15 @@ const DeliveryNoteCreate = forwardRef((props, ref) => {
                             className="form-control"
                             placeholder="Disc.(without VAT)"
                             onWheel={(e) => e.target.blur()}
+                            onKeyDown={(e) => {
+                              if (e.key === "Backspace") {
+                                selectedProducts[index].unit_discount = "";
+                                selectedProducts[index].unit_discount_with_vat = "";
+                                setSelectedProducts([...selectedProducts]);
+                                CalCulateLineTotals(index);
+                                reCalculate();
+                              }
+                            }}
                             onChange={(e) => {
                               if (!e.target.value) {
                                 selectedProducts[index].unit_discount = "";
@@ -2947,6 +3013,15 @@ const DeliveryNoteCreate = forwardRef((props, ref) => {
                             className="form-control"
                             placeholder="Disc.(with VAT)"
                             onWheel={(e) => e.target.blur()}
+                            onKeyDown={(e) => {
+                              if (e.key === "Backspace") {
+                                selectedProducts[index].unit_discount_with_vat = "";
+                                selectedProducts[index].unit_discount = "";
+                                setSelectedProducts([...selectedProducts]);
+                                CalCulateLineTotals(index);
+                                reCalculate();
+                              }
+                            }}
                             onChange={(e) => {
                               if (!e.target.value) {
                                 selectedProducts[index].unit_discount_with_vat = "";
@@ -2967,6 +3042,16 @@ const DeliveryNoteCreate = forwardRef((props, ref) => {
                             className="form-control"
                             placeholder="Price(without VAT)"
                             onWheel={(e) => e.target.blur()}
+                            onKeyDown={(e) => {
+                              if (e.key === "Backspace") {
+                                selectedProducts[index].line_total = "";
+                                selectedProducts[index].line_total_with_vat = "";
+                                selectedProducts[index].unit_price = "";
+                                selectedProducts[index].unit_price_with_vat = "";
+                                setSelectedProducts([...selectedProducts]);
+                                reCalculate();
+                              }
+                            }}
                             onChange={(e) => {
                               if (!e.target.value) {
                                 selectedProducts[index].line_total = "";
@@ -2993,6 +3078,16 @@ const DeliveryNoteCreate = forwardRef((props, ref) => {
                             className="form-control"
                             placeholder="Price(with VAT)"
                             onWheel={(e) => e.target.blur()}
+                            onKeyDown={(e) => {
+                              if (e.key === "Backspace") {
+                                selectedProducts[index].line_total_with_vat = "";
+                                selectedProducts[index].line_total = "";
+                                selectedProducts[index].unit_price_with_vat = "";
+                                selectedProducts[index].unit_price = "";
+                                setSelectedProducts([...selectedProducts]);
+                                reCalculate();
+                              }
+                            }}
                             onChange={(e) => {
                               if (!e.target.value) {
                                 selectedProducts[index].line_total_with_vat = "";
@@ -3099,7 +3194,7 @@ const DeliveryNoteCreate = forwardRef((props, ref) => {
                       </td>
                     </tr>
                     <tr>
-                      <td className="text-end">Total Taxable Amount(without VAT)</td>
+                      <td className="text-end">Total Taxable Amount(without VAT) <OverlayTrigger placement="right" overlay={renderTaxableAmountTooltip}><span style={{ textDecoration: 'underline dotted', cursor: 'pointer' }}>ℹ️</span></OverlayTrigger></td>
                       <td className="text-end"><Amount amount={trimTo2Decimals((formData.total || 0) + (formData.shipping_handling_fees || 0) - (formData.discount || 0))} /></td>
                     </tr>
                     <tr>
@@ -3118,7 +3213,7 @@ const DeliveryNoteCreate = forwardRef((props, ref) => {
                       <td className="text-end"><Amount amount={trimTo2Decimals(formData.vat_price || 0)} /></td>
                     </tr>
                     <tr>
-                      <td className="text-end">Net Total(with VAT) Before Rounding</td>
+                      <td className="text-end">Net Total(with VAT) Before Rounding <OverlayTrigger placement="right" overlay={renderNetTotalBeforeRoundingTooltip}><span style={{ textDecoration: 'underline dotted', cursor: 'pointer' }}>ℹ️</span></OverlayTrigger></td>
                       <td className="text-end"><Amount amount={trimTo2Decimals((formData.net_total || 0) - (formData.rounding_amount || 0))} /></td>
                     </tr>
                     <tr>
@@ -3152,7 +3247,7 @@ const DeliveryNoteCreate = forwardRef((props, ref) => {
                       </td>
                     </tr>
                     <tr>
-                      <th className="text-end">Net Total(with VAT)</th>
+                      <th className="text-end">Net Total(with VAT) <OverlayTrigger placement="right" overlay={renderNetTotalTooltip}><span style={{ textDecoration: 'underline dotted', cursor: 'pointer' }}>ℹ️</span></OverlayTrigger></th>
                       <th className="text-end"><Amount amount={trimTo2Decimals(formData.net_total || 0)} /></th>
                     </tr>
                   </tbody>

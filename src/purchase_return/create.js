@@ -204,7 +204,7 @@ const PurchaseReturnedCreate = forwardRef((props, ref) => {
                 if (form && event.target) {
                     var index = Array.prototype.indexOf.call(form, event.target);
                     if (form && form.elements[index + 1]) {
-                        if (event.target.getAttribute("class").includes("barcode")) {
+                        if ((event.target.getAttribute("class") || "").includes("barcode")) {
                             form.elements[index].focus();
                         } else {
                             form.elements[index + 1].focus();
@@ -366,6 +366,7 @@ const PurchaseReturnedCreate = forwardRef((props, ref) => {
                     address: purchaseReturn.address,
                     phone: purchaseReturn.phone,
                     vat_no: purchaseReturn.vat_no,
+                    enable_on_accounts: purchaseReturn.enable_on_accounts,
                 };
 
                 if (!formData.payments_input) {
@@ -524,6 +525,7 @@ const PurchaseReturnedCreate = forwardRef((props, ref) => {
                 formData.payment_status = "paid";
                 formData.payment_method = "";
                 formData.shipping_handling_fees = purchase.shipping_handling_fees;
+                formData.enable_on_accounts = purchase.enable_on_accounts;
 
 
                 //formData.discount = (purchase.discount - purchase.return_discount);
@@ -4569,6 +4571,28 @@ async function reCalculate(productIndex) {
 
 
 
+
+                        {store.settings?.disable_purchases_on_accounts && <div className="col-md-2">
+                            <div className="input-group mb-3">
+                                <input type="checkbox"
+                                    value={formData.enable_on_accounts}
+                                    checked={formData.enable_on_accounts}
+                                    onChange={(e) => {
+                                        errors["enable_on_accounts"] = "";
+                                        formData.enable_on_accounts = !formData.enable_on_accounts;
+                                        setFormData({ ...formData });
+                                    }}
+                                    className=""
+                                    id="enable_on_accounts"
+                                /> &nbsp;Enable On Accounts
+                            </div>
+                            <label className="form-label"></label>
+                            {errors.enable_on_accounts && (
+                                <div style={{ color: "red" }}>
+                                    {errors.enable_on_accounts}
+                                </div>
+                            )}
+                        </div>}
 
                         <Modal.Footer>
                             <Button variant="secondary" onClick={handleClose}>

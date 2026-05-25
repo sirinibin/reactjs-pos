@@ -41,6 +41,7 @@ const StatsSummary = ({ title, stats = {}, statsWithInfo = {}, defaultOpen = fal
                 label: it.label,
                 info: it.info,
                 value: (typeof it.value !== "undefined" ? it.value : (stats[it.label] ?? 0)),
+                colorByValue: it.colorByValue || false,
                 visible: true
             }));
         }
@@ -125,32 +126,46 @@ const StatsSummary = ({ title, stats = {}, statsWithInfo = {}, defaultOpen = fal
 
     const renderInfoTooltip = (info) => (props) => (
         <Tooltip id="label-tooltip" {...props}>
-            {info}
+            <span style={{ whiteSpace: 'pre-line' }}>{info}</span>
         </Tooltip>
     );
 
-    const renderStats = (fields) =>
-        fields.filter(f => f.visible).map((f, index) => {
-            const amount = trimTo2Decimals((typeof stats[f.label] !== "undefined") ? stats[f.label] : (typeof f.value !== "undefined" ? f.value : 0));
+    const renderStats = (fields) => {
+        const normalized = normalizeStatsWithInfo();
+        const infoByLabel = normalized ? Object.fromEntries(normalized.map(n => [n.label, n.info])) : {};
+        const colorByValueLabels = normalized ? new Set(normalized.filter(n => n.colorByValue).map(n => n.label)) : new Set();
+        return fields.filter(f => f.visible).map((f, index) => {
+            const rawValue = (typeof stats[f.label] !== "undefined") ? stats[f.label] : (typeof f.value !== "undefined" ? f.value : 0);
+            const amount = trimTo2Decimals(rawValue);
+            const info = (infoByLabel[f.label] !== undefined) ? infoByLabel[f.label] : f.info;
+            const useColor = colorByValueLabels.has(f.label);
+            const isPositive = useColor && Number(rawValue) >= 0;
             return (
                 <div className="mb-2" key={index}>
                     <div className="d-flex justify-content-between align-items-center">
                         <span>
                             {t(f.label)}
-                            {f.info ? (
-                                <OverlayTrigger placement="right" overlay={renderInfoTooltip(f.info)}>
+                            {info ? (
+                                <OverlayTrigger placement="right" overlay={renderInfoTooltip(info)}>
                                     <span className="stats-info-icon" style={{ textDecoration: 'underline dotted', cursor: 'pointer', marginLeft: '6px' }}>ℹ️</span>
                                 </OverlayTrigger>
                             ) : null}
                             :
                         </span>
-                        <span className="badge bg-secondary">
-                            <Amount amount={amount} />
-                        </span>
+                        {useColor ? (
+                            <span className="badge" style={{ backgroundColor: isPositive ? 'green' : 'red' }}>
+                                {isPositive ? '+' : ''}<Amount amount={amount} />
+                            </span>
+                        ) : (
+                            <span className="badge bg-secondary">
+                                <Amount amount={amount} />
+                            </span>
+                        )}
                     </div>
                 </div>
             );
         });
+    };
 
     const handleDragEnd = (result) => {
         if (!result.destination) return;

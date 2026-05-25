@@ -912,7 +912,7 @@ const StockTransferCreate = forwardRef((props, ref) => {
                     console.log("form.elements:", form.elements);
                     if (form && form.elements[index + 1]) {
                         //
-                        if (event.target.getAttribute("class").includes("barcode")) {
+                        if ((event.target.getAttribute("class") || "").includes("barcode")) {
                             form.elements[index].focus();
                         } else {
                             form.elements[index + 1].focus();

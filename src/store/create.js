@@ -21,6 +21,8 @@ const StoreCreate = forwardRef((props, ref) => {
                 bank_account: {},
                 settings: {
                     invoice: invoiceSettings,
+                    stats_show_overall_summary: false,
+                    stats_show_profit_loss_statement: true,
                 },
                 zatca: {
                     phase: "1",
@@ -241,7 +243,7 @@ const StoreCreate = forwardRef((props, ref) => {
                 if (form && event.target) {
                     var index = Array.prototype.indexOf.call(form, event.target);
                     if (form && form.elements[index + 1]) {
-                        if (event.target.getAttribute("class").includes("barcode")) {
+                        if ((event.target.getAttribute("class") || "").includes("barcode")) {
                             form.elements[index].focus();
                         } else {
                             form.elements[index + 1].focus();
@@ -400,7 +402,9 @@ const StoreCreate = forwardRef((props, ref) => {
 
                 deepFillEmptyStrings(storeData.settings.invoice, invoiceSettings);
 
-
+                if (storeData.settings.stats_show_profit_loss_statement === null || storeData.settings.stats_show_profit_loss_statement === undefined) {
+                    storeData.settings.stats_show_profit_loss_statement = true;
+                }
 
                 storeData.logo = "";
 
@@ -4548,9 +4552,10 @@ const StoreCreate = forwardRef((props, ref) => {
                             <div className="input-group mb-3">
                                 <input type="number"
                                     min="0"
-                                    value={formData.settings.block_sales_after_pending_count ?? 0}
+                                    value={formData.settings.block_sales_after_pending_count || ""}
                                     onChange={(e) => {
-                                        formData.settings.block_sales_after_pending_count = parseInt(e.target.value) || 0;
+                                        const raw = e.target.value;
+                                        formData.settings.block_sales_after_pending_count = raw === "" ? 0 : (parseInt(raw) || 0);
                                         setFormData({ ...formData });
                                     }}
                                     className="form-control"
@@ -4655,6 +4660,38 @@ const StoreCreate = forwardRef((props, ref) => {
                                     {errors.enable_auto_payment_close_on_return}
                                 </div>
                             )}
+                        </div>
+
+                        <div className="col-md-2">
+                            <div className="input-group mb-3">
+                                <input type="checkbox"
+                                    value={formData.settings.stats_show_overall_summary}
+                                    checked={formData.settings.stats_show_overall_summary}
+                                    onChange={(e) => {
+                                        formData.settings.stats_show_overall_summary = !formData.settings.stats_show_overall_summary;
+                                        setFormData({ ...formData });
+                                    }}
+                                    className=""
+                                    id="stats_show_overall_summary"
+                                /> &nbsp;Stats: Show Overall Summary
+                            </div>
+                            <label className="form-label"></label>
+                        </div>
+
+                        <div className="col-md-2">
+                            <div className="input-group mb-3">
+                                <input type="checkbox"
+                                    value={formData.settings.stats_show_profit_loss_statement}
+                                    checked={formData.settings.stats_show_profit_loss_statement}
+                                    onChange={(e) => {
+                                        formData.settings.stats_show_profit_loss_statement = !formData.settings.stats_show_profit_loss_statement;
+                                        setFormData({ ...formData });
+                                    }}
+                                    className=""
+                                    id="stats_show_profit_loss_statement"
+                                /> &nbsp;Stats: Show Profit / Loss Statement
+                            </div>
+                            <label className="form-label"></label>
                         </div>
 
 
