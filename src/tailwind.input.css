@@ -1,3 +1,13 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* ── Bootstrap compatibility ──────────────────────────────────────────────────
+   Tailwind generates .collapse { visibility: collapse } for its visibility
+   utility. Bootstrap uses .navbar-collapse.collapse on the topbar nav, which
+   causes the Language Selector, Notification bell, and Logout to disappear.
+   Override with higher specificity (2 classes > 1 class) AFTER all utilities.
+*/
+.navbar-collapse.collapse {
+  visibility: visible;
+}
