@@ -54,7 +54,35 @@ import SalesReturnCreate from "../sales_return/create.js";
 import CustomerPending from "./../utils/customer_pending.js";
 import Badge from 'react-bootstrap/Badge';
 import { useTranslation } from 'react-i18next';
+import eventEmitter from '../utils/eventEmitter';
 
+function _dnFormatTimeAgo(isoString) {
+    if (!isoString) return '';
+    const now = new Date();
+    const then = new Date(isoString);
+    const diffMs = now - then;
+    if (diffMs < 0) return 'just now';
+    const diffSec = Math.floor(diffMs / 1000);
+    if (diffSec < 60) return diffSec + 's ago';
+    const diffMin = Math.floor(diffSec / 60);
+    if (diffMin < 60) return diffMin + 'm ago';
+    const diffHr = Math.floor(diffMin / 60);
+    if (diffHr < 24) return diffHr + 'h ago';
+    return Math.floor(diffHr / 24) + 'd ago';
+}
+function _dnFormatDateTime(isoString) {
+    if (!isoString) return '';
+    return new Date(isoString).toLocaleString('en-US', {
+        month: 'short', day: 'numeric', year: 'numeric',
+        hour: 'numeric', minute: '2-digit', second: '2-digit', hour12: true,
+    });
+}
+function _getDnDismissedMap() {
+    try { return JSON.parse(localStorage.getItem('dn_dismissed') || '{}'); } catch (_) { return {}; }
+}
+function _saveDnDismissedMap(map) {
+    localStorage.setItem('dn_dismissed', JSON.stringify(map));
+}
 
 const columnStyle = {
     width: '20%',
@@ -3757,6 +3785,89 @@ const OrderCreate = forwardRef((props, ref) => {
         localStorage.setItem('order_form_type', formType);
     }, [formType]);
 
+    // ── Delivery Note Reminder Notifications ─────────────────────────────────
+    const [dnNotifications, setDnNotifications] = useState([]);
+    const [, setDnTick] = useState(0);
+    const dnNotificationsRef = useRef([]);
+
+    function addDnNotification(notif) {
+        const current = dnNotificationsRef.current;
+        if (current.find(n => n.id === notif.id)) return;
+        const stamped = { ...notif, arrived_at: notif.arrived_at || notif.notify_at || new Date().toISOString() };
+        const updated = [...current, stamped];
+        dnNotificationsRef.current = updated;
+        setDnNotifications([...updated]);
+    }
+
+    function dismissDnNotification(id, persist = false) {
+        const notif = dnNotificationsRef.current.find(n => n.id === id);
+        const updated = dnNotificationsRef.current.filter(n => n.id !== id);
+        dnNotificationsRef.current = updated;
+        setDnNotifications([...updated]);
+        if (persist && notif) {
+            const map = _getDnDismissedMap();
+            map[id] = notif.notify_at || '';
+            _saveDnDismissedMap(map);
+        }
+    }
+
+    function openSalesFromDnInForm(notif) {
+        // Already on the sales page — emit directly so index.js loads the DN
+        eventEmitter.emit("create_sales_from_dn", { id: notif.id, code: notif.code });
+    }
+
+    // Fetch active reminders on mount
+    useEffect(() => {
+        const fetchDnReminders = async () => {
+            const storeId = localStorage.getItem("store_id");
+            const token = localStorage.getItem("access_token");
+            if (!storeId || !token) return;
+            try {
+                const res = await fetch(`/v1/delivery-note/reminders?search[store_id]=${storeId}`, {
+                    headers: { Authorization: "Bearer " + token },
+                });
+                const data = await res.json();
+                if (data.status && Array.isArray(data.result)) {
+                    const dismissed = _getDnDismissedMap();
+                    data.result.forEach(dn => {
+                        if (dismissed[dn.id] === (dn.notify_at || '')) return;
+                        addDnNotification({ id: dn.id, code: dn.code, notify_at: dn.notify_at });
+                    });
+                }
+            } catch (_) { }
+        };
+        fetchDnReminders();
+        eventEmitter.on("socket_connection_open", fetchDnReminders);
+        return () => eventEmitter.off("socket_connection_open", fetchDnReminders);
+    }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+    // Real-time reminder push
+    useEffect(() => {
+        const handleReminder = (data) => {
+            if (data && data.id && data.code) {
+                addDnNotification({ id: data.id, code: data.code, notify_at: data.notify_at });
+            }
+        };
+        eventEmitter.on("delivery_note_reminder", handleReminder);
+        return () => eventEmitter.off("delivery_note_reminder", handleReminder);
+    }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+    // Auto-dismiss when the linked sale is created
+    useEffect(() => {
+        const handleLinked = (data) => {
+            if (data && data.delivery_note_id) dismissDnNotification(data.delivery_note_id);
+        };
+        eventEmitter.on("delivery_note_order_linked", handleLinked);
+        return () => eventEmitter.off("delivery_note_order_linked", handleLinked);
+    }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+    // Re-render every 60 s so "time ago" stays current
+    useEffect(() => {
+        const timer = setInterval(() => setDnTick(t => t + 1), 60000);
+        return () => clearInterval(timer);
+    }, []);
+    // ─────────────────────────────────────────────────────────────────────────
+
     const _defaultBillSummaryOrder = ['total_without_vat', 'total_with_vat', 'shipping', 'discount_without_vat', 'discount_with_vat', 'taxable_amount', 'vat', 'net_before_rounding', 'rounding_amount', 'net_total'];
     const _billSummaryFieldLabels = { total_without_vat: 'Total(without VAT)', total_with_vat: 'Total(with VAT)', shipping: 'Shipping & Handling Fees', discount_without_vat: 'Sales Discount(without VAT)', discount_with_vat: 'Sales Discount(with VAT)', taxable_amount: 'Total Taxable Amount(without VAT)', vat: 'VAT', net_before_rounding: 'Net Total(with VAT) Before Rounding', rounding_amount: 'Rounding Amount', net_total: 'Net Total(with VAT)' };
     const [billSummaryVisible, setBillSummaryVisible] = useState(() => {
@@ -4231,6 +4342,41 @@ const OrderCreate = forwardRef((props, ref) => {
                                 <option value="type1">{t("Type 1")} (Classic)</option>
                             </select>
                             &nbsp;&nbsp;
+                            {/* ── DN Reminder Bell ── */}
+                            <Dropdown style={{ display: "inline-block", verticalAlign: "middle" }}>
+                                <Dropdown.Toggle as="span" style={{ cursor: "pointer", position: "relative", display: "inline-block", padding: "0 6px" }} id="dn-bell-t1">
+                                    <i className="bi bi-bell fs-6"></i>
+                                    {dnNotifications.length > 0 && (
+                                        <span style={{ position: "absolute", top: "-4px", right: "1px", background: "red", color: "white", borderRadius: "50%", fontSize: "10px", fontWeight: "bold", minWidth: "16px", height: "16px", display: "flex", alignItems: "center", justifyContent: "center", padding: "0 2px" }}>
+                                            {dnNotifications.length}
+                                        </span>
+                                    )}
+                                </Dropdown.Toggle>
+                                <Dropdown.Menu align="end" style={{ minWidth: "320px", maxHeight: "400px", overflowY: "auto" }}>
+                                    {dnNotifications.length === 0 ? (
+                                        <Dropdown.ItemText className="text-muted small">No pending reminders</Dropdown.ItemText>
+                                    ) : (
+                                        dnNotifications.map(notif => (
+                                            <div key={notif.id} style={{ display: "flex", alignItems: "flex-start", padding: "8px 14px", borderBottom: "1px solid #f0f0f0", gap: "6px" }}>
+                                                <div style={{ flex: 1, cursor: "pointer", minWidth: 0 }} onClick={() => openSalesFromDnInForm(notif)}>
+                                                    <div style={{ fontSize: "13px", lineHeight: "1.4" }}>
+                                                        <i className="bi bi-file-earmark-text text-primary me-2"></i>
+                                                        Create Sales for DN <strong>{notif.code}</strong>
+                                                    </div>
+                                                    {notif.arrived_at && (
+                                                        <div style={{ fontSize: "11px", color: "#888", marginTop: "3px" }}>
+                                                            {_dnFormatDateTime(notif.arrived_at)}
+                                                            <span style={{ marginLeft: "6px", fontWeight: 600, color: "#555" }}>· {_dnFormatTimeAgo(notif.arrived_at)}</span>
+                                                        </div>
+                                                    )}
+                                                </div>
+                                                <button onClick={(e) => { e.stopPropagation(); dismissDnNotification(notif.id, true); }} title="Dismiss" style={{ background: "none", border: "none", cursor: "pointer", color: "#aaa", fontSize: "16px", lineHeight: 1, padding: "0 2px", flexShrink: 0 }}>&times;</button>
+                                            </div>
+                                        ))
+                                    )}
+                                </Dropdown.Menu>
+                            </Dropdown>
+                            &nbsp;&nbsp;
                             <button type="button" className="btn-close" onClick={handleClose} aria-label="Close"></button>
                         </div>
                     </Modal.Header>
@@ -4330,6 +4476,40 @@ const OrderCreate = forwardRef((props, ref) => {
                             <option value="type2">{t("Type 2")} ✦</option>
                             <option value="type1">{t("Type 1")} (Classic)</option>
                         </select>
+                        {/* ── DN Reminder Bell (Type 2) ── */}
+                        <Dropdown>
+                            <Dropdown.Toggle as="span" style={{ cursor: "pointer", position: "relative", display: "inline-flex", alignItems: "center", padding: "0 4px" }} id="dn-bell-t2">
+                                <span className="material-symbols-outlined" style={{ fontSize: "22px", color: "var(--md-sys-color-on-surface-variant, #49454f)" }}>notifications</span>
+                                {dnNotifications.length > 0 && (
+                                    <span style={{ position: "absolute", top: "-2px", right: "0px", background: "red", color: "white", borderRadius: "50%", fontSize: "10px", fontWeight: "bold", minWidth: "16px", height: "16px", display: "flex", alignItems: "center", justifyContent: "center", padding: "0 2px" }}>
+                                        {dnNotifications.length}
+                                    </span>
+                                )}
+                            </Dropdown.Toggle>
+                            <Dropdown.Menu align="end" style={{ minWidth: "320px", maxHeight: "400px", overflowY: "auto" }}>
+                                {dnNotifications.length === 0 ? (
+                                    <Dropdown.ItemText className="text-muted small">No pending reminders</Dropdown.ItemText>
+                                ) : (
+                                    dnNotifications.map(notif => (
+                                        <div key={notif.id} style={{ display: "flex", alignItems: "flex-start", padding: "8px 14px", borderBottom: "1px solid #f0f0f0", gap: "6px" }}>
+                                            <div style={{ flex: 1, cursor: "pointer", minWidth: 0 }} onClick={() => openSalesFromDnInForm(notif)}>
+                                                <div style={{ fontSize: "13px", lineHeight: "1.4" }}>
+                                                    <i className="bi bi-file-earmark-text text-primary me-2"></i>
+                                                    Create Sales for DN <strong>{notif.code}</strong>
+                                                </div>
+                                                {notif.arrived_at && (
+                                                    <div style={{ fontSize: "11px", color: "#888", marginTop: "3px" }}>
+                                                        {_dnFormatDateTime(notif.arrived_at)}
+                                                        <span style={{ marginLeft: "6px", fontWeight: 600, color: "#555" }}>· {_dnFormatTimeAgo(notif.arrived_at)}</span>
+                                                    </div>
+                                                )}
+                                            </div>
+                                            <button onClick={(e) => { e.stopPropagation(); dismissDnNotification(notif.id, true); }} title="Dismiss" style={{ background: "none", border: "none", cursor: "pointer", color: "#aaa", fontSize: "16px", lineHeight: 1, padding: "0 2px", flexShrink: 0 }}>&times;</button>
+                                        </div>
+                                    ))
+                                )}
+                            </Dropdown.Menu>
+                        </Dropdown>
                         <button type="button" className="text-on-surface-variant hover:text-error transition-colors ml-xs border-0 bg-transparent flex items-center justify-center cursor-pointer" onClick={handleClose} title={t("Close")}>
                             <span className="material-symbols-outlined">close</span>
                         </button>
