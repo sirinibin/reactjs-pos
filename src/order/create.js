@@ -4226,7 +4226,7 @@ const OrderCreate = forwardRef((props, ref) => {
                                 {isUpdateForm && !isSubmitting ? t('Update') : !isSubmitting ? t('Create') : ""}
                             </Button>
                             &nbsp;&nbsp;
-                            <select value={formType} onChange={(e) => setFormType(e.target.value)} className="form-select form-select-sm d-inline-block" style={{ width: "auto" }}>
+                            <select value={formType} onChange={(e) => setFormType(e.target.value)} className="form-select form-select-sm d-inline-block" style={{ width: "auto", fontSize: "11px", padding: "2px 24px 2px 6px", height: "26px", lineHeight: "1.2" }}>
                                 <option value="type2">{t("Type 2")} (New)</option>
                                 <option value="type1">{t("Type 1")} (Classic)</option>
                             </select>
