@@ -720,6 +720,7 @@ const OrderIndex = forwardRef((props, ref) => {
     const [totalSalesReturnSales, setTotalSalesReturnSales] = useState(0.00);
     const [totalPurchaseSales, setTotalPurchaseSales] = useState(0.00);
     const [loss, setLoss] = useState(0.00);
+    const [totalDeliveryNote, setTotalDeliveryNote] = useState(0.00);
 
 
     const [commission, setCommission] = useState(0.00);
@@ -1073,6 +1074,7 @@ const OrderIndex = forwardRef((props, ref) => {
                 setTotalBankAccountSales(data.meta.bank_account_sales);
                 setTotalPurchaseSales(data.meta.purchase_sales);
                 setTotalSalesReturnSales(data.meta.sales_return_sales);
+                setTotalDeliveryNote(data.meta.delivery_note_total || 0);
                 //setReturnCount(data.meta.return_count);
                 //setReturnPaidAmount(data.meta.return_amount);
 
@@ -1123,6 +1125,40 @@ const OrderIndex = forwardRef((props, ref) => {
             eventEmitter.off("socket_connection_open", handleSocketOpen); // Cleanup
         };
     }, [list]); // Runs only once when component mounts
+
+    // Listen for notification bell clicks — open sales create form with a delivery note
+    useEffect(() => {
+        const handleCreateFromDN = ({ id: dnId }) => {
+            if (!dnId) return;
+            setShowOrderCreateForm(true);
+            if (timerRef.current) clearTimeout(timerRef.current);
+            timerRef.current = setTimeout(() => {
+                CreateFormRef.current?.openForDeliveryNote(dnId);
+            }, 50);
+        };
+        eventEmitter.on("create_sales_from_dn", handleCreateFromDN);
+        return () => eventEmitter.off("create_sales_from_dn", handleCreateFromDN);
+    }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+    // On mount: check if the Topbar navigated us here for a specific DN
+    useEffect(() => {
+        const pending = localStorage.getItem("pending_sales_from_dn");
+        if (pending) {
+            try {
+                const { id: dnId } = JSON.parse(pending);
+                localStorage.removeItem("pending_sales_from_dn");
+                if (dnId) {
+                    setShowOrderCreateForm(true);
+                    if (timerRef.current) clearTimeout(timerRef.current);
+                    timerRef.current = setTimeout(() => {
+                        CreateFormRef.current?.openForDeliveryNote(dnId);
+                    }, 800);
+                }
+            } catch (_) {
+                localStorage.removeItem("pending_sales_from_dn");
+            }
+        }
+    }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
     function sort(field) {
         sortField = field;
@@ -1843,9 +1879,11 @@ const OrderIndex = forwardRef((props, ref) => {
                                     "Commission": commission,
                                     "Commission Paid By Cash": commissionPaidByCash,
                                     "Commission Paid By Bank": commissionPaidByBank,
+                                    "Delivery Note": totalDeliveryNote,
                                     //"Return Count": returnCount,
                                     //"Return Paid Amount": returnPaidAmount,
                                 }}
+                                statsDefaultVisibility={{ "Delivery Note": false }}
                                 onToggle={handleSummaryToggle}
                             />
                         </span>

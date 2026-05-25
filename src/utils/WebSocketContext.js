@@ -155,6 +155,10 @@ export const WebSocketProvider = ({ userId, children }) => {
                     //console.log("Role Updated:", jsonMessage.data.role);
                 } else if (jsonMessage.event === "pong") {
                     //console.log("Pong received:", jsonMessage.data);
+                } else if (jsonMessage.event === "delivery_note_reminder") {
+                    eventEmitter.emit("delivery_note_reminder", jsonMessage.data);
+                } else if (jsonMessage.event === "delivery_note_order_linked") {
+                    eventEmitter.emit("delivery_note_order_linked", jsonMessage.data);
                 }
             },
             onError: (errorEvent) => {

@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import DeliveryNoteCreate from "./create.js";
 import DeliveryNoteView from "./view.js";
+import OrderCreate from "./../order/create.js";
 
 import { Typeahead } from "react-bootstrap-typeahead";
 import { format } from "date-fns";
@@ -14,6 +15,7 @@ import OrderPreview from "./../order/preview.js"
 import OrderPrint from "./../order/print.js"
 import CustomerCreate from "./../customer/create.js";
 import { DragDropContext, Droppable, Draggable } from "react-beautiful-dnd";
+import StatsSummary from "../utils/StatsSummary.js";
 
 function DeliveryNoteIndex(props) {
   let [enableSelection, setEnableSelection] = useState(false);
@@ -43,8 +45,13 @@ function DeliveryNoteIndex(props) {
   const [createdAtToValue, setCreatedAtToValue] = useState("");
 
   let [totalDeliveryNote, setTotalDeliveryNote] = useState(0.00);
-  let [profit, setProfit] = useState(0.00);
-  let [loss, setLoss] = useState(0.00);
+  let [vatPrice, setVatPrice] = useState(0.00);
+  let [totalDiscount, setTotalDiscount] = useState(0.00);
+  let [totalShippingFees, setTotalShippingFees] = useState(0.00);
+
+  // eslint-disable-next-line no-unused-vars
+  const [statsOpen, setStatsOpen] = useState(false);
+  const statsOpenRef = useRef(false);
 
   //list
   const [deliverynoteList, setDeliveryNoteList] = useState([]);
@@ -302,7 +309,7 @@ function DeliveryNoteIndex(props) {
       },
     };
     let Select =
-      "select=id,code,date,created_by_name,customer_id,customer_name,customer_name_arabic,created_at";
+      "select=id,code,date,created_by_name,customer_id,customer_name,customer_name_arabic,net_total,created_at,order_id,order_code";
     if (localStorage.getItem("store_id")) {
       searchParams.store_id = localStorage.getItem("store_id");
     }
@@ -310,6 +317,12 @@ function DeliveryNoteIndex(props) {
     const d = new Date();
     let diff = d.getTimezoneOffset();
     searchParams["timezone_offset"] = parseFloat(diff / 60);
+
+    if (statsOpenRef.current) {
+      searchParams["stats"] = "1";
+    } else {
+      searchParams["stats"] = "0";
+    }
 
     setSearchParams(searchParams);
     let queryParams = ObjectToSearchQueryParams(searchParams);
@@ -357,12 +370,9 @@ function DeliveryNoteIndex(props) {
 
         totalDeliveryNote = data.meta.total_deliverynote;
         setTotalDeliveryNote(totalDeliveryNote);
-
-        profit = data.meta.profit;
-        setProfit(profit);
-
-        loss = data.meta.loss;
-        setLoss(loss);
+        setVatPrice(data.meta.vat_price || 0);
+        setTotalDiscount(data.meta.discount || 0);
+        setTotalShippingFees(data.meta.shipping_handling_fees || 0);
 
       })
       .catch((error) => {
@@ -482,6 +492,16 @@ function DeliveryNoteIndex(props) {
     CustomerUpdateFormRef.current.open(id);
   }
 
+  let [showOrderCreate, setShowOrderCreate] = useState(false);
+  const SalesUpdateFormRef = useRef();
+  function openSalesUpdateForm(id) {
+    setShowOrderCreate(true);
+    if (timerRef.current) clearTimeout(timerRef.current);
+    timerRef.current = setTimeout(() => {
+      SalesUpdateFormRef.current?.open(id);
+    }, 50);
+  }
+
 
   //Table settings
   const [showSuccess, setShowSuccess] = useState(false);
@@ -494,6 +514,7 @@ function DeliveryNoteIndex(props) {
     { key: "date", label: "Date", fieldName: "date", visible: true },
     { key: "customer", label: "Customer", fieldName: "customer_name", visible: true },
     { key: "net_total", label: "Net Total", fieldName: "net_total", visible: true },
+    { key: "order_code", label: "Sales", fieldName: "order_code", visible: true },
     { key: "created_by", label: "Created By", fieldName: "created_by", visible: true },
     { key: "created_at", label: "Created At", fieldName: "created_at", visible: true },
     { key: "actions_end", label: "Actions", fieldName: "actions_end", visible: true },
@@ -585,6 +606,12 @@ function DeliveryNoteIndex(props) {
     } else {
       localStorage.setItem("delivery_note_table_settings", JSON.stringify(reordered));
     }
+  };
+
+  const handleSummaryToggle = (isOpen) => {
+    statsOpenRef.current = isOpen;
+    setStatsOpen(isOpen);
+    list();
   };
 
   const handleSelected = (selected) => {
@@ -698,6 +725,7 @@ function DeliveryNoteIndex(props) {
         </Modal.Footer>
       </Modal>
       <CustomerCreate ref={CustomerUpdateFormRef} />
+      {showOrderCreate && <OrderCreate ref={SalesUpdateFormRef} />}
       <OrderPrint ref={PrintRef} />
       <Modal show={showPrintTypeSelection} onHide={() => {
         showPrintTypeSelection = false;
@@ -746,6 +774,28 @@ function DeliveryNoteIndex(props) {
       <div className="container-fluid p-0">
         <div className="row">
           <div className="col">
+            <span className="text-end">
+              <StatsSummary
+                title={'Delivery Note Summary'}
+                filters={{
+                  ...(dateValue ? { 'Date': dateValue } : {}),
+                  ...(fromDateValue ? { 'From Date': fromDateValue } : {}),
+                  ...(toDateValue ? { 'To Date': toDateValue } : {}),
+                  ...(createdAtValue ? { 'Created At': createdAtValue } : {}),
+                  ...(createdAtFromValue ? { 'Created From': createdAtFromValue } : {}),
+                  ...(createdAtToValue ? { 'Created To': createdAtToValue } : {}),
+                  ...(selectedCustomers.length > 0 ? { 'Customer': selectedCustomers.map(c => c.name).join(', ') } : {}),
+                  ...(selectedCreatedByUsers.length > 0 ? { 'Created By': selectedCreatedByUsers.map(u => u.name).join(', ') } : {}),
+                }}
+                stats={{
+                  "Total Delivery Note": totalDeliveryNote,
+                  "VAT": vatPrice,
+                  "Discount": totalDiscount,
+                  "Shipping/Handling Fees": totalShippingFees,
+                }}
+                onToggle={handleSummaryToggle}
+              />
+            </span>
           </div>
         </div>
 
@@ -1524,6 +1574,11 @@ function DeliveryNoteIndex(props) {
                                 </td>}
                                 {(col.fieldName === "net_total") && <td style={{ width: "auto", whiteSpace: "nowrap" }}>
                                   {deliverynote.net_total ? deliverynote.net_total.toFixed(2) : "-"}
+                                </td>}
+                                {(col.fieldName === "order_code") && <td style={{ width: "auto", whiteSpace: "nowrap" }}>
+                                  {deliverynote.order_code && <span style={{ cursor: "pointer", color: "blue" }} onClick={() => {
+                                    openSalesUpdateForm(deliverynote.order_id);
+                                  }}>{deliverynote.order_code}</span>}
                                 </td>}
                               </>)
                             })}

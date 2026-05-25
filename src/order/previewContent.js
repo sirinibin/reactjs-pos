@@ -595,7 +595,7 @@ const PreviewContent = forwardRef((props, ref) => {
                                                         <li>Qty</li>
                                                     </ul>
                                                 </th>
-                                                {props.modelName !== "delivery_note" && <>
+                                                {(props.modelName !== "delivery_note" || props.model.store?.settings?.add_price_details_in_delivery_note) && <>
                                                     <th className="per8 text-center" style={{ padding: "0px", width: "8%", borderRight: tableBorderThickness, borderBottom: tableBorderThickness }}>
                                                         <ul
                                                             className="list-unstyled"
@@ -720,7 +720,7 @@ const PreviewContent = forwardRef((props, ref) => {
                                                         </span>}
                                                     </th>
                                                     <td style={{ borderRight: tableBorderThickness, marginRight: "2px" }}>{product.quantity ? product.quantity : ""}  {product.unit ? product.unit : ""}</td>
-                                                    {props.modelName !== "delivery_note" && <>
+                                                    {(props.modelName !== "delivery_note" || props.model.store?.settings?.add_price_details_in_delivery_note) && <>
                                                         <td className="text-end" style={{ borderRight: tableBorderThickness, paddingRight: "3px" }} >
                                                             {product.unit_price ? <Amount amount={trimTo2Decimals(product.unit_price)} /> : ""}
                                                             {product.purchase_unit_price && (props.modelName === "purchase" || props.modelName === "whatsapp_purchase") ? <Amount amount={trimTo2Decimals(product.purchase_unit_price)} /> : ""}
@@ -767,7 +767,7 @@ const PreviewContent = forwardRef((props, ref) => {
                                     </table>
                                     <table className="table-responsive"
                                         style={{ border: tableBorderThickness, width: "100%" }}>
-                                        {props.modelName !== "delivery_note" && <tbody style={{ fontSize: props.fontSizes[props.modelName + "_tableFooter"]?.size }} onClick={() => {
+                                        {(props.modelName !== "delivery_note" || props.model.store?.settings?.add_price_details_in_delivery_note) && <tbody style={{ fontSize: props.fontSizes[props.modelName + "_tableFooter"]?.size }} onClick={() => {
                                             props.selectText("tableFooter");
                                         }} className="clickable-text">
                                             <tr style={{ borderBottom: tableBorderThickness }}>

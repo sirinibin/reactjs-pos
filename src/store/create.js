@@ -4524,6 +4524,45 @@ const StoreCreate = forwardRef((props, ref) => {
                         <div className="col-md-2">
                             <div className="input-group mb-3">
                                 <input type="checkbox"
+                                    value={formData.settings.skip_product_selection_while_delivery_note_import}
+                                    checked={formData.settings.skip_product_selection_while_delivery_note_import}
+                                    onChange={(e) => {
+                                        errors["skip_product_selection_while_delivery_note_import"] = "";
+                                        formData.settings.skip_product_selection_while_delivery_note_import = !formData.settings.skip_product_selection_while_delivery_note_import;
+                                        setFormData({ ...formData });
+                                    }}
+                                    className=""
+                                    id="skip_product_selection_while_delivery_note_import"
+                                /> &nbsp;Skip Product Selection While Delivery Note Import
+                            </div>
+                            <label className="form-label"></label>
+                            {errors.skip_product_selection_while_delivery_note_import && (
+                                <div style={{ color: "red" }}>
+                                    {errors.skip_product_selection_while_delivery_note_import}
+                                </div>
+                            )}
+                        </div>
+
+                        <div className="col-md-3">
+                            <label className="form-label">Block Sales After N Pending (0 = disabled)</label>
+                            <div className="input-group mb-3">
+                                <input type="number"
+                                    min="0"
+                                    value={formData.settings.block_sales_after_pending_count ?? 0}
+                                    onChange={(e) => {
+                                        formData.settings.block_sales_after_pending_count = parseInt(e.target.value) || 0;
+                                        setFormData({ ...formData });
+                                    }}
+                                    className="form-control"
+                                    id="block_sales_after_pending_count"
+                                    placeholder="0"
+                                />
+                            </div>
+                        </div>
+
+                        <div className="col-md-2">
+                            <div className="input-group mb-3">
+                                <input type="checkbox"
                                     value={formData.settings.disable_purchases_on_accounts}
                                     checked={formData.settings.disable_purchases_on_accounts}
                                     onChange={(e) => {

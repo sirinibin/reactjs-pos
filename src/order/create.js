@@ -165,6 +165,13 @@ const OrderCreate = forwardRef((props, ref) => {
             reCalculate();
             setShow(true);
         },
+        async openForDeliveryNote(dnId) {
+            // Open in create mode, then auto-import the delivery note products
+            await this.open();
+            setTimeout(() => {
+                handleSelectedDeliveryNote({ id: dnId });
+            }, 200);
+        },
     }));
 
     async function open(id) {
@@ -2873,9 +2880,36 @@ const OrderCreate = forwardRef((props, ref) => {
     }
 
     const DeliveryNoteRef = useRef();
-    const handleSelectedDeliveryNote = (selectedDeliveryNote) => {
+    const handleSelectedDeliveryNote = async (selectedDeliveryNote) => {
         console.log("Selected DeliveryNots:", selectedDeliveryNote);
-        DeliveryNoteRef.current.open(selectedDeliveryNote.id, "product_selection");
+        if (store?.settings?.skip_product_selection_while_delivery_note_import) {
+            const requestOptions = {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': localStorage.getItem('access_token'),
+                },
+            };
+            let searchParams = {};
+            if (localStorage.getItem("store_id")) {
+                searchParams.store_id = localStorage.getItem("store_id");
+            }
+            let queryParams = ObjectToSearchQueryParams(searchParams);
+            try {
+                const response = await fetch('/v1/delivery-note/' + selectedDeliveryNote.id + '?' + queryParams, requestOptions);
+                const isJson = response.headers.get('content-type')?.includes('application/json');
+                const data = isJson && await response.json();
+                if (!response.ok) return;
+                const dn = data.result;
+                const customers = dn.customer_id ? [{ id: dn.customer_id, name: dn.customer_name, search_label: dn.customer_name || "" }] : [];
+                const dnModel = store?.settings?.add_price_details_in_delivery_note ? dn : undefined;
+                await handleSelectedProducts(dn.products || [], customers, "delivery_note", dn.id, dn.code, dn.remarks, dnModel);
+            } catch (e) {
+                console.log(e);
+            }
+        } else {
+            DeliveryNoteRef.current.open(selectedDeliveryNote.id, "product_selection");
+        }
     };
 
 
@@ -3155,10 +3189,14 @@ const OrderCreate = forwardRef((props, ref) => {
         let addedCount = 0;
         for (var i = 0; i < selected.length; i++) {
             if (modelName === "delivery_note") {
-                // alert("ok")
-                let p = await getProduct(selected[i].product_id);
-                p.quantity = selected[i].quantity;
-                addProduct(p);
+                if (store?.settings?.add_price_details_in_delivery_note) {
+                    // Use prices stored in the delivery note item directly
+                    addProductFromQuotation({ ...selected[i], item_code: selected[i].code });
+                } else {
+                    let p = await getProduct(selected[i].product_id);
+                    p.quantity = selected[i].quantity;
+                    addProduct(p);
+                }
                 addedCount++;
 
             } else if (addProductFromQuotation(selected[i])) {
@@ -3218,6 +3256,8 @@ const OrderCreate = forwardRef((props, ref) => {
             if (modelName === "quotation") {
                 formData.quotation_id = modelID;
                 formData.quotation_code = modelCode;
+            } else if (modelName === "delivery_note") {
+                formData.delivery_note_id = modelID;
             }
         }
         setFormData({ ...formData });

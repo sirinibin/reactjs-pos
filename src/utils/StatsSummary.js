@@ -8,7 +8,7 @@ import { useTranslation } from 'react-i18next';
 import html2pdf from 'html2pdf.js';
 import WhatsAppModal from './WhatsAppModal';
 
-const StatsSummary = ({ title, stats = {}, statsWithInfo = {}, defaultOpen = false, onToggle, filters = {} }) => {
+const StatsSummary = ({ title, stats = {}, statsWithInfo = {}, defaultOpen = false, onToggle, filters = {}, statsDefaultVisibility = {} }) => {
     const { t } = useTranslation();
 
     const [isOpen, setIsOpen] = useState(defaultOpen);
@@ -73,15 +73,23 @@ const StatsSummary = ({ title, stats = {}, statsWithInfo = {}, defaultOpen = fal
             : Object.entries(stats).map(([label, value]) => ({
                 label,
                 value,
-                visible: true
+                visible: statsDefaultVisibility[label] !== undefined ? statsDefaultVisibility[label] : true
             }));
 
         const saved = localStorage.getItem(LOCAL_KEY);
         if (saved) {
             try {
                 const parsed = JSON.parse(saved);
-                setLeftFields(parsed.left || []);
-                setRightFields(parsed.right || []);
+                const savedLeft = parsed.left || [];
+                const savedRight = parsed.right || [];
+                const savedLabels = new Set([...savedLeft, ...savedRight].map(f => f.label));
+                const missing = defaults.filter(d => !savedLabels.has(d.label));
+                const mergedRight = [...savedRight, ...missing];
+                setLeftFields(savedLeft);
+                setRightFields(mergedRight);
+                if (missing.length > 0) {
+                    localStorage.setItem(LOCAL_KEY, JSON.stringify({ left: savedLeft, right: mergedRight }));
+                }
             } catch {
                 const [left, right] = splitStats(defaults);
                 setLeftFields(left);
@@ -96,7 +104,7 @@ const StatsSummary = ({ title, stats = {}, statsWithInfo = {}, defaultOpen = fal
         }
 
         setInitialized(true);
-    }, [LOCAL_KEY, stats, normalizeStatsWithInfo, splitStats]);
+    }, [LOCAL_KEY, stats, normalizeStatsWithInfo, splitStats, statsDefaultVisibility]);
 
     useEffect(() => {
         if (!initialized) {
@@ -373,7 +381,7 @@ const StatsSummary = ({ title, stats = {}, statsWithInfo = {}, defaultOpen = fal
             : Object.entries(stats).map(([label, value]) => ({
                 label,
                 value,
-                visible: true
+                visible: statsDefaultVisibility[label] !== undefined ? statsDefaultVisibility[label] : true
             }));
         const [left, right] = splitStats(defaults);
         setLeftFields(left);
