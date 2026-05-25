@@ -3751,7 +3751,7 @@ const OrderCreate = forwardRef((props, ref) => {
     const [showSuccess, setShowSuccess] = useState(false);
     const [successMessage, setSuccessMessage] = useState(false);
 
-    const [formType, setFormType] = useState(() => localStorage.getItem('order_form_type') || 'type2');
+    const [formType, setFormType] = useState(() => localStorage.getItem('order_form_type') || 'type1');
     useEffect(() => {
         localStorage.setItem('order_form_type', formType);
     }, [formType]);

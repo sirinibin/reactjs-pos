@@ -75,7 +75,7 @@ thead th {
   color: #ecf1ff !important;
 }
 
-.bg-primary {
+#sales_create_form .modal-body.type2-active .bg-primary {
   background-color: #004ac6 !important;
 }
 
@@ -159,19 +159,19 @@ thead th {
   color: #dbe1ff !important;
 }
 
-/* Custom scrollbars */
-::-webkit-scrollbar {
+/* Custom scrollbars — scoped to Type 2 modal only */
+#sales_create_form .modal-body.type2-active ::-webkit-scrollbar {
   width: 4px;
   height: 4px;
 }
-::-webkit-scrollbar-track {
+#sales_create_form .modal-body.type2-active ::-webkit-scrollbar-track {
   background: transparent;
 }
-::-webkit-scrollbar-thumb {
+#sales_create_form .modal-body.type2-active ::-webkit-scrollbar-thumb {
   background: #c3c6d7;
   border-radius: 10px;
 }
-::-webkit-scrollbar-thumb:hover {
+#sales_create_form .modal-body.type2-active ::-webkit-scrollbar-thumb:hover {
   background: #737686;
 }
 
@@ -190,7 +190,9 @@ thead th {
   overflow-y: auto !important;
 }
 
-input, select, textarea {
+#sales_create_form .modal-body.type2-active input,
+#sales_create_form .modal-body.type2-active select,
+#sales_create_form .modal-body.type2-active textarea {
   font-size: 13px !important;
 }
 
