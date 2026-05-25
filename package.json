@@ -65,6 +65,7 @@
     "xlsx-style": "^0.8.13"
   },
   "scripts": {
+    "prebuild": "tailwindcss -i ./src/tailwind.input.css -o ./src/tailwind.generated.css --config ./tailwind.config.js --minify",
     "start": "react-scripts start",
     "build": "react-scripts build",
     "test": "react-scripts test",

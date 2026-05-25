@@ -15,6 +15,7 @@ import { format } from "date-fns";
 import { getDateLocale } from "../i18n/dateLocales";
 import OrderView from "./view.js";
 import "./style.css";
+import "../tailwind.generated.css";
 import { DebounceInput } from 'react-debounce-input';
 //import BarcodeScannerComponent from "react-qr-barcode-scanner";
 //import Quagga from 'quagga';
