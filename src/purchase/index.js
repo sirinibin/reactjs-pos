@@ -713,6 +713,7 @@ function PurchaseIndex(props) {
 
     const [selectedPaymentMethodList, setSelectedPaymentMethodList] = useState([]);
     const [selectedPaymentStatusList, setSelectedPaymentStatusList] = useState([]);
+    const [selectedAccountedFilter, setSelectedAccountedFilter] = useState("");
 
     function searchByMultipleValuesField(field, values, noList) {
         if (field === "created_by") {
@@ -764,7 +765,7 @@ function PurchaseIndex(props) {
             },
         };
         let Select =
-            "select=id,code,date,net_total,return_count,return_amount,cash_discount,discount,vat_price,total,store_id,created_by_name,vendor_id,vendor_name,vendor_name_arabic,vendor_invoice_no,status,created_at,updated_at,net_retail_profit,net_wholesale_profit,total_payment_paid,payments_count,payment_methods,payment_status,balance_amount";
+            "select=id,code,date,net_total,return_count,return_amount,cash_discount,discount,vat_price,total,store_id,created_by_name,vendor_id,vendor_name,vendor_name_arabic,vendor_invoice_no,status,created_at,updated_at,net_retail_profit,net_wholesale_profit,total_payment_paid,payments_count,payment_methods,payment_status,balance_amount,enable_on_accounts";
         if (localStorage.getItem("store_id")) {
             searchParams.store_id = localStorage.getItem("store_id");
         }
@@ -1024,6 +1025,7 @@ function PurchaseIndex(props) {
         { key: "return_paid_amount", label: t("Return Paid Amount"), fieldName: "return_amount", visible: true },
         { key: "created_by", label: t("Created By"), fieldName: "created_by", visible: true },
         { key: "created_at", label: t("Created At"), fieldName: "created_at", visible: true },
+        { key: "enable_on_accounts", label: t("Accounted"), fieldName: "enable_on_accounts", visible: false },
         { key: "actions_end", label: t("Actions"), fieldName: "actions_end", visible: true },
     ], [t]);
 
@@ -1082,6 +1084,14 @@ function PurchaseIndex(props) {
         //2nd
 
     }, [defaultColumns, enableSelection, pendingView]);
+
+    useEffect(() => {
+        setColumns(prev => prev.map(col =>
+            col.key === "enable_on_accounts"
+                ? { ...col, visible: !!store.settings?.disable_purchases_on_accounts }
+                : col
+        ));
+    }, [store]);
 
     function RestoreDefaultSettings() {
         if (enableSelection === true) {
@@ -1406,6 +1416,7 @@ function PurchaseIndex(props) {
                                     "Cash discount": totalCashDiscount,
                                     "VAT paid": vatPrice,
                                     "Purchase": totalPurchase,
+                                    ...(store.settings?.disable_purchases_on_accounts ? { "Accounted Purchase(with VAT)": totalPurchase } : {}),
                                     "Paid purchase": totalPaidPurchase,
                                     "Purchase discount": totalDiscount,
                                     "Shipping/Handling fees": totalShippingHandlingFees,
@@ -1596,6 +1607,7 @@ function PurchaseIndex(props) {
                                                             col.key !== "date" &&
                                                             col.key !== "payment_status" &&
                                                             col.key !== "payment_methods" &&
+                                                            col.key !== "enable_on_accounts" &&
                                                             col.key !== "created_by" &&
                                                             col.key !== "created_at" &&
                                                             col.key !== "actions_end" &&
@@ -1743,6 +1755,21 @@ function PurchaseIndex(props) {
                                                                 highlightOnlyResult={true}
                                                                 multiple
                                                             />
+                                                        </th>}
+                                                        {col.key === "enable_on_accounts" && <th>
+                                                            <select
+                                                                className="form-select form-select-sm"
+                                                                value={selectedAccountedFilter}
+                                                                onChange={(e) => {
+                                                                    const val = e.target.value;
+                                                                    setSelectedAccountedFilter(val);
+                                                                    searchByFieldValue("enable_on_accounts", val);
+                                                                }}
+                                                            >
+                                                                <option value="">ALL</option>
+                                                                <option value="true">YES</option>
+                                                                <option value="false">NO</option>
+                                                            </select>
                                                         </th>}
                                                         {col.key === "vendor" && <th>
                                                             <Typeahead
@@ -2441,6 +2468,11 @@ function PurchaseIndex(props) {
                                                                     }}>
                                                                         {purchase.return_amount}
                                                                     </Button>
+                                                                </td>}
+                                                                {(col.fieldName === "enable_on_accounts") && <td style={{ width: "auto", whiteSpace: "nowrap", textAlign: "center" }}>
+                                                                    {purchase.enable_on_accounts
+                                                                        ? <span className="badge bg-success">YES</span>
+                                                                        : <span className="badge bg-secondary">NO</span>}
                                                                 </td>}
                                                                 {(col.fieldName === "created_by") && <td style={{ width: "auto", whiteSpace: "nowrap" }}>
                                                                     {purchase.created_by_name}
