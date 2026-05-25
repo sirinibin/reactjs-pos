@@ -357,6 +357,7 @@ const StatsIndex = forwardRef((props, ref) => {
 
     //Purchase
     let [totalPurchase, setTotalPurchase] = useState(0.00);
+    let [totalAccountedPurchase, setTotalAccountedPurchase] = useState(0.00);
     let [purchaseVatPrice, setPurchaseVatPrice] = useState(0.00);
     let [totalPurchaseShippingHandlingFees, setTotalPurchaseShippingHandlingFees] = useState(0.00);
     let [totalPurchaseDiscount, setTotalPurchaseDiscount] = useState(0.00);
@@ -408,7 +409,6 @@ const StatsIndex = forwardRef((props, ref) => {
             "/v1/purchase?" +
             Select +
             queryParams +
-            (store.settings?.disable_purchases_on_accounts ? "&search[enable_on_accounts]=true" : "") +
             "&page=1" +
             "&limit=5",
             requestOptions
@@ -431,6 +431,7 @@ const StatsIndex = forwardRef((props, ref) => {
                 //setOffset((page - 1) * pageSize);
                 //setCurrentPageItemsCount(data.result.length);
                 setTotalPurchase(data.meta.total_purchase);
+                setTotalAccountedPurchase(data.meta.accounted_purchase || 0);
                 setPurchaseVatPrice(data.meta.vat_price);
                 setTotalPurchaseShippingHandlingFees(data.meta.shipping_handling_fees);
                 setTotalPurchaseDiscount(data.meta.discount);
@@ -469,6 +470,7 @@ const StatsIndex = forwardRef((props, ref) => {
 
     //Purchase Return
     let [totalPurchaseReturn, setTotalPurchaseReturn] = useState(0.00);
+    let [totalAccountedPurchaseReturn, setTotalAccountedPurchaseReturn] = useState(0.00);
     let [totalPurchasePurchaseReturn, setTotalPurchasePurchaseReturn] = useState(0.00);
     let [purchaseReturnVatPrice, setPurchaseReturnVatPrice] = useState(0.00);
     let [totalPurchaseReturnDiscount, setTotalPurchaseReturnDiscount] = useState(0.00);
@@ -520,7 +522,6 @@ const StatsIndex = forwardRef((props, ref) => {
             "/v1/purchase-return?" +
             Select +
             queryParams +
-            (store.settings?.disable_purchases_on_accounts ? "&search[enable_on_accounts]=true" : "") +
             "&page=1" +
             "&limit=5",
             requestOptions
@@ -539,6 +540,7 @@ const StatsIndex = forwardRef((props, ref) => {
 
 
                 setTotalPurchaseReturn(data.meta.total_purchase_return);
+                setTotalAccountedPurchaseReturn(data.meta.accounted_purchase_return || 0);
                 setTotalPurchasePurchaseReturn(data.meta.purchase_purchase_return);
                 setPurchaseReturnVatPrice(data.meta.vat_price);
                 setTotalPurchaseReturnDiscount(data.meta.discount);
@@ -836,7 +838,7 @@ const StatsIndex = forwardRef((props, ref) => {
     const qtnInvoiceAccounting = store.settings?.quotation_invoice_accounting === true;
     const disablePurchasesOnAccounts = store.settings?.disable_purchases_on_accounts === true;
     const profitLossRevenueNum = (totalSales || 0) - (totalSalesReturn || 0) + (qtnInvoiceAccounting ? (totalQtnSales || 0) - (totalQtnSalesReturn || 0) : 0);
-    const profitLossExpenseNum = (totalExpense || 0) + (totalPurchase || 0) - (totalPurchaseReturn || 0);
+    const profitLossExpenseNum = (totalExpense || 0) + (disablePurchasesOnAccounts ? (totalAccountedPurchase || 0) : (totalPurchase || 0)) - (disablePurchasesOnAccounts ? (totalAccountedPurchaseReturn || 0) : (totalPurchaseReturn || 0));
     const profitLossNum = profitLossRevenueNum - profitLossExpenseNum;
     const vatPercent = store.vat_percent || 15;
     const profitLossVatNum = profitLossNum * vatPercent / (100 + vatPercent);
@@ -955,7 +957,7 @@ const StatsIndex = forwardRef((props, ref) => {
                                     }}
                                     statsWithInfo={[
                                         { label: "Revenue (with VAT)", value: profitLossRevenueNum, info: qtnInvoiceAccounting ? `Sales - Sales Return + Qtn. Sales - Qtn. Sales Return\n= ${trimTo2Decimals(totalSales)} - ${trimTo2Decimals(totalSalesReturn)} + ${trimTo2Decimals(totalQtnSales)} - ${trimTo2Decimals(totalQtnSalesReturn)} = ${trimTo2Decimals(profitLossRevenueNum)}` : `Sales (with VAT) - Sales Return (with VAT)\n= ${trimTo2Decimals(totalSales)} - ${trimTo2Decimals(totalSalesReturn)} = ${trimTo2Decimals(profitLossRevenueNum)}` },
-                                        { label: "Expense (with VAT)", value: profitLossExpenseNum, info: disablePurchasesOnAccounts ? `Expenses + Accounted Purchase(with VAT) - Accounted Purchase Return(with VAT)\n= ${trimTo2Decimals(totalExpense)} + ${trimTo2Decimals(totalPurchase)} - ${trimTo2Decimals(totalPurchaseReturn)} = ${trimTo2Decimals(profitLossExpenseNum)}` : `Expenses + Purchases (with VAT) - Purchase Return (with VAT)\n= ${trimTo2Decimals(totalExpense)} + ${trimTo2Decimals(totalPurchase)} - ${trimTo2Decimals(totalPurchaseReturn)} = ${trimTo2Decimals(profitLossExpenseNum)}` },
+                                        { label: "Expense (with VAT)", value: profitLossExpenseNum, info: disablePurchasesOnAccounts ? `Expenses + Accounted Purchase(with VAT) - Accounted Purchase Return(with VAT)\n= ${trimTo2Decimals(totalExpense)} + ${trimTo2Decimals(totalAccountedPurchase)} - ${trimTo2Decimals(totalAccountedPurchaseReturn)} = ${trimTo2Decimals(profitLossExpenseNum)}` : `Expenses + Purchases (with VAT) - Purchase Return (with VAT)\n= ${trimTo2Decimals(totalExpense)} + ${trimTo2Decimals(totalPurchase)} - ${trimTo2Decimals(totalPurchaseReturn)} = ${trimTo2Decimals(profitLossExpenseNum)}` },
                                         { label: "Profit / Loss (with VAT)", value: profitLossNum, colorByValue: true, info: `Revenue - Expense (with VAT)\n= ${trimTo2Decimals(profitLossRevenueNum)} - ${trimTo2Decimals(profitLossExpenseNum)} = ${trimTo2Decimals(profitLossNum)}` },
                                         { label: `VAT ${vatPercent}%`, value: profitLossVatNum, info: `Profit / Loss (with VAT) × ${vatPercent} / ${100 + vatPercent}\n= ${trimTo2Decimals(profitLossNum)} × ${vatPercent} / ${100 + vatPercent} = ${trimTo2Decimals(profitLossVatNum)}` },
                                         { label: "Profit / Loss (without VAT)", value: profitLossWithoutVATNum, colorByValue: true, info: `Profit / Loss (with VAT) - VAT ${vatPercent}%\n= ${trimTo2Decimals(profitLossNum)} - ${trimTo2Decimals(profitLossVatNum)} = ${trimTo2Decimals(profitLossWithoutVATNum)}` },
@@ -1135,7 +1137,7 @@ const StatsIndex = forwardRef((props, ref) => {
                                     "Cash discount": totalPurchaseCashDiscount,
                                     "VAT paid": purchaseVatPrice,
                                     "Purchase": totalPurchase,
-                                    ...(disablePurchasesOnAccounts ? { "Accounted Purchase(with VAT)": totalPurchase } : {}),
+                                    ...(disablePurchasesOnAccounts ? { "Accounted Purchase(with VAT)": totalAccountedPurchase } : {}),
                                     "Paid purchase": totalPaidPurchase,
                                     "Purchase discount": totalPurchaseDiscount,
                                     "Shipping/Handling fees": totalPurchaseShippingHandlingFees,
@@ -1151,7 +1153,7 @@ const StatsIndex = forwardRef((props, ref) => {
                                     { label: "Cash discount", value: totalPurchaseCashDiscount, info: `Cash discount received on purchases\n= ${trimTo2Decimals(totalPurchaseCashDiscount)}` },
                                     { label: "VAT paid", value: purchaseVatPrice, info: `VAT (15%) paid on purchases\n= ${trimTo2Decimals(purchaseVatPrice)}` },
                                     { label: "Purchase", value: totalPurchase, info: `Total purchase amount (with VAT)\n= ${trimTo2Decimals(totalPurchase)}` },
-                                    ...(disablePurchasesOnAccounts ? [{ label: "Accounted Purchase(with VAT)", value: totalPurchase, info: `Total accounted purchase amount (with VAT)\n= ${trimTo2Decimals(totalPurchase)}` }] : []),
+                                    ...(disablePurchasesOnAccounts ? [{ label: "Accounted Purchase(with VAT)", value: totalAccountedPurchase, info: `Total accounted purchase amount (with VAT)\n= ${trimTo2Decimals(totalAccountedPurchase)}` }] : []),
                                     { label: "Paid purchase", value: totalPaidPurchase, info: `Total paid purchases\n= ${trimTo2Decimals(totalPaidPurchase)}` },
                                     { label: "Purchase discount", value: totalPurchaseDiscount, info: `Total discount on purchases\n= ${trimTo2Decimals(totalPurchaseDiscount)}` },
                                     { label: "Shipping/Handling fees", value: totalPurchaseShippingHandlingFees, info: `Shipping and handling on purchases\n= ${trimTo2Decimals(totalPurchaseShippingHandlingFees)}` },
@@ -1179,7 +1181,7 @@ const StatsIndex = forwardRef((props, ref) => {
                                     "Cash Discount Return": totalPurchaseReturnCashDiscount,
                                     "VAT Return": purchaseReturnVatPrice,
                                     "Purchase Return": totalPurchaseReturn,
-                                    ...(disablePurchasesOnAccounts ? { "Accounted Purchase Return(with VAT)": totalPurchaseReturn } : {}),
+                                    ...(disablePurchasesOnAccounts ? { "Accounted Purchase Return(with VAT)": totalAccountedPurchaseReturn } : {}),
                                     "Purchase Return paid by purchase": totalPurchasePurchaseReturn,
                                     "Paid Purchase Return": totalPaidPurchaseReturn,
                                     "Purchase Discount Return": totalPurchaseReturnDiscount,
@@ -1192,7 +1194,7 @@ const StatsIndex = forwardRef((props, ref) => {
                                     { label: "Cash Discount Return", value: totalPurchaseReturnCashDiscount, info: `Cash discount reversed on purchase returns\n= ${trimTo2Decimals(totalPurchaseReturnCashDiscount)}` },
                                     { label: "VAT Return", value: purchaseReturnVatPrice, info: `VAT (15%) recovered on purchase returns\n= ${trimTo2Decimals(purchaseReturnVatPrice)}` },
                                     { label: "Purchase Return", value: totalPurchaseReturn, info: `Total purchase return amount (with VAT)\n= ${trimTo2Decimals(totalPurchaseReturn)}` },
-                                    ...(disablePurchasesOnAccounts ? [{ label: "Accounted Purchase Return(with VAT)", value: totalPurchaseReturn, info: `Total accounted purchase return amount (with VAT)\n= ${trimTo2Decimals(totalPurchaseReturn)}` }] : []),
+                                    ...(disablePurchasesOnAccounts ? [{ label: "Accounted Purchase Return(with VAT)", value: totalAccountedPurchaseReturn, info: `Total accounted purchase return amount (with VAT)\n= ${trimTo2Decimals(totalAccountedPurchaseReturn)}` }] : []),
                                     { label: "Purchase Return paid by purchase", value: totalPurchasePurchaseReturn, info: `Returns offset against new purchases\n= ${trimTo2Decimals(totalPurchasePurchaseReturn)}` },
                                     { label: "Paid Purchase Return", value: totalPaidPurchaseReturn, info: `Total paid purchase returns\n= ${trimTo2Decimals(totalPaidPurchaseReturn)}` },
                                     { label: "Purchase Discount Return", value: totalPurchaseReturnDiscount, info: `Discount reversed on purchase returns\n= ${trimTo2Decimals(totalPurchaseReturnDiscount)}` },
