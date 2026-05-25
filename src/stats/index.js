@@ -4,7 +4,7 @@ import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import StatsSummary from "../utils/StatsSummary.js";
 import { WebSocketContext } from "../utils/WebSocketContext.js";
-import { OverlayTrigger, Tooltip } from "react-bootstrap";
+
 import { trimTo2Decimals } from "../utils/numberUtils";
 import eventEmitter from "../utils/eventEmitter.js";
 
