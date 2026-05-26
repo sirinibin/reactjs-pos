@@ -94,6 +94,8 @@ const StatsIndex = forwardRef((props, ref) => {
             listPurchase();
             listPurchaseReturn();
             listExpense();
+            listCustomerDeposit();
+            listCustomerWithdrawal();
             return;
         }
 
@@ -131,6 +133,8 @@ const StatsIndex = forwardRef((props, ref) => {
         listPurchase();
         listPurchaseReturn();
         listExpense();
+        listCustomerDeposit();
+        listCustomerWithdrawal();
     }
 
 
