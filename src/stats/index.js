@@ -634,8 +634,63 @@ const StatsIndex = forwardRef((props, ref) => {
 
     //End Expense
 
+    //Receivables (customer deposit)
+    let [totalDeposit, setTotalDeposit] = useState(0.00);
+    let [totalDepositCash, setTotalDepositCash] = useState(0.00);
+    let [totalDepositBank, setTotalDepositBank] = useState(0.00);
+    let [totalDepositPurchaseFund, setTotalDepositPurchaseFund] = useState(0.00);
+    let [totalDepositCustomer, setTotalDepositCustomer] = useState(0.00);
+    let [totalDepositVendor, setTotalDepositVendor] = useState(0.00);
+    const [receivablesStatsOpen, setReceivablesStatsOpen] = useState(true);
+
+    const listCustomerDeposit = useCallback(() => {
+        const requestOptions = {
+            method: "GET",
+            headers: {
+                "Content-Type": "application/json",
+                Authorization: localStorage.getItem("access_token"),
+            },
+        };
+        let Select = "select=id,store_id";
+        if (localStorage.getItem("store_id")) {
+            searchParams.store_id = localStorage.getItem("store_id");
+        }
+        const d = new Date();
+        let diff = d.getTimezoneOffset();
+        searchParams["timezone_offset"] = parseFloat(diff / 60);
+        searchParams["stats"] = receivablesStatsOpen ? "1" : "0";
+        setSearchParams(searchParams);
+        let queryParams = ObjectToSearchQueryParams(searchParams);
+        if (queryParams !== "") {
+            queryParams = "&" + queryParams;
+        }
+        fetch("/v1/customer-deposit?" + Select + queryParams + "&page=1&limit=1", requestOptions)
+            .then(async (response) => {
+                const isJson = response.headers.get("content-type")?.includes("application/json");
+                const data = isJson && (await response.json());
+                if (!response.ok) return Promise.reject(data && data.errors);
+                setTotalDeposit(data.meta.total || 0);
+                setTotalDepositCash(data.meta.cash || 0);
+                setTotalDepositBank(data.meta.bank || 0);
+                setTotalDepositPurchaseFund(data.meta.purchase_fund || 0);
+                setTotalDepositCustomer(data.meta.total_customer || 0);
+                setTotalDepositVendor(data.meta.total_vendor || 0);
+            })
+            .catch((error) => { console.log(error); });
+    }, [receivablesStatsOpen, searchParams]);
+
+    useEffect(() => {
+        if (receivablesStatsOpen) {
+            listCustomerDeposit();
+        }
+    }, [receivablesStatsOpen, listCustomerDeposit]);
+
+    //End Receivables
+
     //Payables (customer withdrawal)
     let [totalWithdrawal, setTotalWithdrawal] = useState(0.00);
+    let [totalWithdrawalCash, setTotalWithdrawalCash] = useState(0.00);
+    let [totalWithdrawalBank, setTotalWithdrawalBank] = useState(0.00);
     let [totalWithdrawalVendor, setTotalWithdrawalVendor] = useState(0.00);
     let [totalWithdrawalCustomer, setTotalWithdrawalCustomer] = useState(0.00);
     const [payablesStatsOpen, setPayablesStatsOpen] = useState(true);
@@ -667,6 +722,8 @@ const StatsIndex = forwardRef((props, ref) => {
                 const data = isJson && (await response.json());
                 if (!response.ok) return Promise.reject(data && data.errors);
                 setTotalWithdrawal(data.meta.total || 0);
+                setTotalWithdrawalCash(data.meta.cash || 0);
+                setTotalWithdrawalBank(data.meta.bank || 0);
                 setTotalWithdrawalVendor(data.meta.total_vendor || 0);
                 setTotalWithdrawalCustomer(data.meta.total_customer || 0);
             })
@@ -883,7 +940,7 @@ const StatsIndex = forwardRef((props, ref) => {
     const handleQuotationSummaryToggle = (isOpen) => { };
     const handleQtnSalesSummaryToggle = (isOpen) => { };
     const handleQtnSalesReturnSummaryToggle = (isOpen) => { };
-    const handleReceivablesSummaryToggle = (isOpen) => { };
+    const handleReceivablesSummaryToggle = (isOpen) => { setReceivablesStatsOpen(isOpen); };
     const handlePayablesSummaryToggle = (isOpen) => { setPayablesStatsOpen(isOpen); };
 
     const qtnInvoiceAccounting = store.settings?.quotation_invoice_accounting === true;
@@ -1547,14 +1604,22 @@ const StatsIndex = forwardRef((props, ref) => {
                                         title="Receivables Summary"
                                         storageKey="stats_receivables_summary"
                                         stats={{
-                                            "Receivable from Customers (Unpaid Sales)": totalUnPaidSales,
-                                            "Receivable from Vendors (Purchase Return)": totalUnPaidPurchaseReturn,
-                                            "Net Receivables": totalUnPaidSales + totalUnPaidPurchaseReturn,
+                                            "Total": totalDeposit,
+                                            "Cash": totalDepositCash,
+                                            "Bank": totalDepositBank,
+                                            "Purchase Fund": totalDepositPurchaseFund,
+                                            "Receivable from Customers (Unpaid Sales)": totalDepositCustomer,
+                                            "Receivable from Vendors (Purchase Return)": totalDepositVendor,
+                                            "Net Receivables": (totalDepositCustomer || 0) + (totalDepositVendor || 0),
                                         }}
                                         statsWithInfo={[
-                                            { label: "Receivable from Customers (Unpaid Sales)", value: totalUnPaidSales, info: `Unpaid / credit sales owed by customers\n= ${trimTo2Decimals(totalUnPaidSales)}` },
-                                            { label: "Receivable from Vendors (Purchase Return)", value: totalUnPaidPurchaseReturn, info: `Purchase returns pending refund from vendors\n= ${trimTo2Decimals(totalUnPaidPurchaseReturn)}` },
-                                            { label: "Net Receivables", value: (totalUnPaidSales || 0) + (totalUnPaidPurchaseReturn || 0), colorByValue: true, info: `Receivable from Customers + Receivable from Vendors\n= ${trimTo2Decimals(totalUnPaidSales)} + ${trimTo2Decimals(totalUnPaidPurchaseReturn)} = ${trimTo2Decimals((totalUnPaidSales || 0) + (totalUnPaidPurchaseReturn || 0))}` },
+                                            { label: "Total", value: totalDeposit, info: `Total receivables\n= ${trimTo2Decimals(totalDeposit)}` },
+                                            { label: "Cash", value: totalDepositCash, info: `Cash receivables\n= ${trimTo2Decimals(totalDepositCash)}` },
+                                            { label: "Bank", value: totalDepositBank, info: `Bank receivables\n= ${trimTo2Decimals(totalDepositBank)}` },
+                                            { label: "Purchase Fund", value: totalDepositPurchaseFund, info: `Purchase fund receivables\n= ${trimTo2Decimals(totalDepositPurchaseFund)}` },
+                                            { label: "Receivable from Customers (Unpaid Sales)", value: totalDepositCustomer, info: `Sum of Net Total where type=customer\n= ${trimTo2Decimals(totalDepositCustomer)}` },
+                                            { label: "Receivable from Vendors (Purchase Return)", value: totalDepositVendor, info: `Sum of Net Total where type=vendor\n= ${trimTo2Decimals(totalDepositVendor)}` },
+                                            { label: "Net Receivables", value: (totalDepositCustomer || 0) + (totalDepositVendor || 0), colorByValue: true, info: `Receivable from Customers + Receivable from Vendors\n= ${trimTo2Decimals(totalDepositCustomer)} + ${trimTo2Decimals(totalDepositVendor)} = ${trimTo2Decimals((totalDepositCustomer || 0) + (totalDepositVendor || 0))}` },
                                         ]}
                                         defaultOpen={true}
                                         filters={statsFilters}
@@ -1572,14 +1637,20 @@ const StatsIndex = forwardRef((props, ref) => {
                                         title="Payables Summary"
                                         storageKey="stats_payables_summary"
                                         stats={{
+                                            "Total": totalWithdrawal,
+                                            "Cash": totalWithdrawalCash,
+                                            "Bank": totalWithdrawalBank,
                                             "Payable to Vendors (Unpaid Purchases)": totalWithdrawalVendor,
                                             "Payable to Customers (Sales Return)": totalWithdrawalCustomer,
-                                            "Net Payables": totalWithdrawal,
+                                            "Net Payables": (totalWithdrawalVendor || 0) + (totalWithdrawalCustomer || 0),
                                         }}
                                         statsWithInfo={[
+                                            { label: "Total", value: totalWithdrawal, info: `Total payables\n= ${trimTo2Decimals(totalWithdrawal)}` },
+                                            { label: "Cash", value: totalWithdrawalCash, info: `Cash payables\n= ${trimTo2Decimals(totalWithdrawalCash)}` },
+                                            { label: "Bank", value: totalWithdrawalBank, info: `Bank payables\n= ${trimTo2Decimals(totalWithdrawalBank)}` },
                                             { label: "Payable to Vendors (Unpaid Purchases)", value: totalWithdrawalVendor, info: `Sum of Net Total where type=vendor\n= ${trimTo2Decimals(totalWithdrawalVendor)}` },
                                             { label: "Payable to Customers (Sales Return)", value: totalWithdrawalCustomer, info: `Sum of Net Total where type=customer\n= ${trimTo2Decimals(totalWithdrawalCustomer)}` },
-                                            { label: "Net Payables", value: totalWithdrawal, info: `Total sum of Net Total\n= ${trimTo2Decimals(totalWithdrawal)}` },
+                                            { label: "Net Payables", value: (totalWithdrawalVendor || 0) + (totalWithdrawalCustomer || 0), info: `Total sum of Net Total\n= ${trimTo2Decimals((totalWithdrawalVendor || 0) + (totalWithdrawalCustomer || 0))}` },
                                         ]}
                                         defaultOpen={true}
                                         filters={statsFilters}
