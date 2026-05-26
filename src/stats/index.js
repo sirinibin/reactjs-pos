@@ -634,6 +634,53 @@ const StatsIndex = forwardRef((props, ref) => {
 
     //End Expense
 
+    //Payables (customer withdrawal)
+    let [totalWithdrawal, setTotalWithdrawal] = useState(0.00);
+    let [totalWithdrawalVendor, setTotalWithdrawalVendor] = useState(0.00);
+    let [totalWithdrawalCustomer, setTotalWithdrawalCustomer] = useState(0.00);
+    const [payablesStatsOpen, setPayablesStatsOpen] = useState(true);
+
+    const listCustomerWithdrawal = useCallback(() => {
+        const requestOptions = {
+            method: "GET",
+            headers: {
+                "Content-Type": "application/json",
+                Authorization: localStorage.getItem("access_token"),
+            },
+        };
+        let Select = "select=id,store_id";
+        if (localStorage.getItem("store_id")) {
+            searchParams.store_id = localStorage.getItem("store_id");
+        }
+        const d = new Date();
+        let diff = d.getTimezoneOffset();
+        searchParams["timezone_offset"] = parseFloat(diff / 60);
+        searchParams["stats"] = payablesStatsOpen ? "1" : "0";
+        setSearchParams(searchParams);
+        let queryParams = ObjectToSearchQueryParams(searchParams);
+        if (queryParams !== "") {
+            queryParams = "&" + queryParams;
+        }
+        fetch("/v1/customer-withdrawal?" + Select + queryParams + "&page=1&limit=1", requestOptions)
+            .then(async (response) => {
+                const isJson = response.headers.get("content-type")?.includes("application/json");
+                const data = isJson && (await response.json());
+                if (!response.ok) return Promise.reject(data && data.errors);
+                setTotalWithdrawal(data.meta.total || 0);
+                setTotalWithdrawalVendor(data.meta.total_vendor || 0);
+                setTotalWithdrawalCustomer(data.meta.total_customer || 0);
+            })
+            .catch((error) => { console.log(error); });
+    }, [payablesStatsOpen, searchParams]);
+
+    useEffect(() => {
+        if (payablesStatsOpen) {
+            listCustomerWithdrawal();
+        }
+    }, [payablesStatsOpen, listCustomerWithdrawal]);
+
+    //End Payables
+
     //Quotation + Qtn. Sales
     let [totalQuotation, setTotalQuotation] = useState(0.00);
     let [quotationProfit, setQuotationProfit] = useState(0.00);
@@ -837,7 +884,7 @@ const StatsIndex = forwardRef((props, ref) => {
     const handleQtnSalesSummaryToggle = (isOpen) => { };
     const handleQtnSalesReturnSummaryToggle = (isOpen) => { };
     const handleReceivablesSummaryToggle = (isOpen) => { };
-    const handlePayablesSummaryToggle = (isOpen) => { };
+    const handlePayablesSummaryToggle = (isOpen) => { setPayablesStatsOpen(isOpen); };
 
     const qtnInvoiceAccounting = store.settings?.quotation_invoice_accounting === true;
     const disablePurchasesOnAccounts = store.settings?.disable_purchases_on_accounts === true;
@@ -1498,6 +1545,7 @@ const StatsIndex = forwardRef((props, ref) => {
                                 <span className="text-end">
                                     <StatsSummary
                                         title="Receivables Summary"
+                                        storageKey="stats_receivables_summary"
                                         stats={{
                                             "Receivable from Customers (Unpaid Sales)": totalUnPaidSales,
                                             "Receivable from Vendors (Purchase Return)": totalUnPaidPurchaseReturn,
@@ -1522,15 +1570,16 @@ const StatsIndex = forwardRef((props, ref) => {
                                 <span className="text-end">
                                     <StatsSummary
                                         title="Payables Summary"
+                                        storageKey="stats_payables_summary"
                                         stats={{
-                                            "Payable to Vendors (Unpaid Purchases)": totalUnPaidPurchase,
-                                            "Payable to Customers (Sales Return)": totalUnPaidSalesReturn,
-                                            "Net Payables": (totalUnPaidPurchase || 0) + (totalUnPaidSalesReturn || 0),
+                                            "Payable to Vendors (Unpaid Purchases)": totalWithdrawalVendor,
+                                            "Payable to Customers (Sales Return)": totalWithdrawalCustomer,
+                                            "Net Payables": totalWithdrawal,
                                         }}
                                         statsWithInfo={[
-                                            { label: "Payable to Vendors (Unpaid Purchases)", value: totalUnPaidPurchase, info: `Unpaid / credit purchases owed to vendors\n= ${trimTo2Decimals(totalUnPaidPurchase)}` },
-                                            { label: "Payable to Customers (Sales Return)", value: totalUnPaidSalesReturn, info: `Sales returns pending refund to customers\n= ${trimTo2Decimals(totalUnPaidSalesReturn)}` },
-                                            { label: "Net Payables", value: (totalUnPaidPurchase || 0) + (totalUnPaidSalesReturn || 0), info: `Payable to Vendors + Payable to Customers\n= ${trimTo2Decimals(totalUnPaidPurchase)} + ${trimTo2Decimals(totalUnPaidSalesReturn)} = ${trimTo2Decimals((totalUnPaidPurchase || 0) + (totalUnPaidSalesReturn || 0))}` },
+                                            { label: "Payable to Vendors (Unpaid Purchases)", value: totalWithdrawalVendor, info: `Sum of Net Total where type=vendor\n= ${trimTo2Decimals(totalWithdrawalVendor)}` },
+                                            { label: "Payable to Customers (Sales Return)", value: totalWithdrawalCustomer, info: `Sum of Net Total where type=customer\n= ${trimTo2Decimals(totalWithdrawalCustomer)}` },
+                                            { label: "Net Payables", value: totalWithdrawal, info: `Total sum of Net Total\n= ${trimTo2Decimals(totalWithdrawal)}` },
                                         ]}
                                         defaultOpen={true}
                                         filters={statsFilters}

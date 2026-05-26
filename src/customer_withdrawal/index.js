@@ -394,6 +394,8 @@ function CustomerWithdrawalIndex(props) {
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [statsOpen]);
 
+    let [totalUnPaidPurchasePay, setTotalUnPaidPurchasePay] = useState(0.00);
+    let [totalUnPaidSalesReturnPay, setTotalUnPaidSalesReturnPay] = useState(0.00);
 
     let [totalPayables, setTotalPayables] = useState(0.00);
     let [totalCashPayables, setTotalCashPayables] = useState(0.00);
@@ -478,6 +480,9 @@ function CustomerWithdrawalIndex(props) {
 
                 totalPayables = data.meta.total;
                 setTotalPayables(totalPayables);
+
+                setTotalUnPaidPurchasePay(data.meta.total_vendor || 0);
+                setTotalUnPaidSalesReturnPay(data.meta.total_customer || 0);
 
                 totalCashPayables = data.meta.cash;
                 setTotalCashPayables(totalCashPayables);
@@ -740,6 +745,9 @@ function CustomerWithdrawalIndex(props) {
                                 "Total": totalPayables,
                                 "Cash": totalCashPayables,
                                 "Bank": totalBankPayables,
+                                "Payable to Vendors (Unpaid Purchases)": totalUnPaidPurchasePay,
+                                "Payable to Customers (Sales Return)": totalUnPaidSalesReturnPay,
+                                "Net Payables": (totalUnPaidPurchasePay || 0) + (totalUnPaidSalesReturnPay || 0),
                             }}
                             onToggle={handleSummaryToggle}
                         />
