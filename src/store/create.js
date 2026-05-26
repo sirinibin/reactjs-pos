@@ -4592,6 +4592,38 @@ const StoreCreate = forwardRef((props, ref) => {
                         <div className="col-md-2">
                             <div className="input-group mb-3">
                                 <input type="checkbox"
+                                    value={formData.settings.enable_notification}
+                                    checked={!!formData.settings.enable_notification}
+                                    onChange={(e) => {
+                                        formData.settings.enable_notification = !formData.settings.enable_notification;
+                                        setFormData({ ...formData });
+                                    }}
+                                    className=""
+                                    id="enable_notification"
+                                /> &nbsp;Enable Notification
+                            </div>
+                            <label className="form-label"></label>
+                        </div>
+
+                        <div className="col-md-2">
+                            <div className="input-group mb-3">
+                                <input type="checkbox"
+                                    value={formData.settings.enable_sales_page_selection}
+                                    checked={!!formData.settings.enable_sales_page_selection}
+                                    onChange={(e) => {
+                                        formData.settings.enable_sales_page_selection = !formData.settings.enable_sales_page_selection;
+                                        setFormData({ ...formData });
+                                    }}
+                                    className=""
+                                    id="enable_sales_page_selection"
+                                /> &nbsp;Enable Sales Page Selection
+                            </div>
+                            <label className="form-label"></label>
+                        </div>
+
+                        <div className="col-md-2">
+                            <div className="input-group mb-3">
+                                <input type="checkbox"
                                     value={formData.settings.enable_auto_sales_payment_close_on_purchase}
                                     checked={formData.settings.enable_auto_sales_payment_close_on_purchase}
                                     onChange={(e) => {

@@ -45,6 +45,25 @@ function Topbar(props) {
     const [notifications, setNotifications] = useState([]);
     const [, setTick] = useState(0); // used to re-render "time ago" every minute
     const notificationsRef = useRef([]);
+    const [storeSettings, setStoreSettings] = useState(() => {
+        try { return JSON.parse(localStorage.getItem('_store_settings_cache') || 'null'); } catch (_) { return null; }
+    });
+
+    // Fetch store settings once on mount (for feature flags like enable_notification)
+    useEffect(() => {
+        const storeId = localStorage.getItem("store_id");
+        const token = localStorage.getItem("access_token");
+        if (!storeId || !token) return;
+        fetch(`/v1/store/${storeId}?select=id,settings`, { headers: { Authorization: "Bearer " + token } })
+            .then(async res => {
+                const data = res.ok && await res.json();
+                if (data && data.result && data.result.settings) {
+                    setStoreSettings(data.result.settings);
+                    localStorage.setItem('_store_settings_cache', JSON.stringify(data.result.settings));
+                }
+            })
+            .catch(() => { });
+    }, []);
 
     function onTrigger(event) {
         props.parentCallback();
@@ -183,89 +202,91 @@ function Topbar(props) {
             <ul className="navbar-nav navbar-align">
 
                 {/* Delivery Note Reminders Bell */}
-                <li className="nav-item dropdown me-2">
-                    <Dropdown>
-                        <Dropdown.Toggle
-                            as="span"
-                            style={{ cursor: "pointer", position: "relative", display: "inline-block", padding: "0 8px" }}
-                            id="dn-notifications-toggle"
-                        >
-                            <i className="bi bi-bell fs-5"></i>
-                            {notifications.length > 0 && (
-                                <span style={{
-                                    position: "absolute",
-                                    top: "-4px",
-                                    right: "2px",
-                                    background: "red",
-                                    color: "white",
-                                    borderRadius: "50%",
-                                    fontSize: "11px",
-                                    fontWeight: "bold",
-                                    minWidth: "18px",
-                                    height: "18px",
-                                    display: "flex",
-                                    alignItems: "center",
-                                    justifyContent: "center",
-                                    padding: "0 3px",
-                                }}>
-                                    {notifications.length}
-                                </span>
-                            )}
-                        </Dropdown.Toggle>
-                        <Dropdown.Menu align="end" style={{ minWidth: "340px", maxHeight: "450px", overflowY: "auto" }}>
-                            {notifications.length === 0 ? (
-                                <Dropdown.ItemText className="text-muted small">No pending reminders</Dropdown.ItemText>
-                            ) : (
-                                notifications.map(notif => (
-                                    <div
-                                        key={notif.id}
-                                        style={{
-                                            display: "flex",
-                                            alignItems: "flex-start",
-                                            padding: "8px 14px",
-                                            borderBottom: "1px solid #f0f0f0",
-                                            gap: "6px",
-                                        }}
-                                    >
+                {storeSettings?.enable_notification === true && (
+                    <li className="nav-item dropdown me-2">
+                        <Dropdown>
+                            <Dropdown.Toggle
+                                as="span"
+                                style={{ cursor: "pointer", position: "relative", display: "inline-block", padding: "0 8px" }}
+                                id="dn-notifications-toggle"
+                            >
+                                <i className="bi bi-bell fs-5"></i>
+                                {notifications.length > 0 && (
+                                    <span style={{
+                                        position: "absolute",
+                                        top: "-4px",
+                                        right: "2px",
+                                        background: "red",
+                                        color: "white",
+                                        borderRadius: "50%",
+                                        fontSize: "11px",
+                                        fontWeight: "bold",
+                                        minWidth: "18px",
+                                        height: "18px",
+                                        display: "flex",
+                                        alignItems: "center",
+                                        justifyContent: "center",
+                                        padding: "0 3px",
+                                    }}>
+                                        {notifications.length}
+                                    </span>
+                                )}
+                            </Dropdown.Toggle>
+                            <Dropdown.Menu align="end" style={{ minWidth: "340px", maxHeight: "450px", overflowY: "auto" }}>
+                                {notifications.length === 0 ? (
+                                    <Dropdown.ItemText className="text-muted small">No pending reminders</Dropdown.ItemText>
+                                ) : (
+                                    notifications.map(notif => (
                                         <div
-                                            style={{ flex: 1, cursor: "pointer", minWidth: 0 }}
-                                            onClick={() => openSalesFromDN(notif)}
-                                        >
-                                            <div style={{ fontSize: "13px", lineHeight: "1.4" }}>
-                                                <i className="bi bi-file-earmark-text text-primary me-2"></i>
-                                                Create Sales For Delivery Note <strong>{notif.code}</strong>
-                                            </div>
-                                            {notif.arrived_at && (
-                                                <div style={{ fontSize: "11px", color: "#888", marginTop: "3px" }}>
-                                                    {formatDateTime(notif.arrived_at)}
-                                                    <span style={{ marginLeft: "6px", fontWeight: 600, color: "#555" }}>
-                                                        · {formatTimeAgo(notif.arrived_at)}
-                                                    </span>
-                                                </div>
-                                            )}
-                                        </div>
-                                        <button
-                                            onClick={(e) => { e.stopPropagation(); dismissNotification(notif.id, true); }}
-                                            title="Dismiss"
+                                            key={notif.id}
                                             style={{
-                                                background: "none",
-                                                border: "none",
-                                                cursor: "pointer",
-                                                color: "#aaa",
-                                                fontSize: "16px",
-                                                lineHeight: 1,
-                                                padding: "0 2px",
-                                                flexShrink: 0,
+                                                display: "flex",
+                                                alignItems: "flex-start",
+                                                padding: "8px 14px",
+                                                borderBottom: "1px solid #f0f0f0",
+                                                gap: "6px",
                                             }}
                                         >
-                                            &times;
-                                        </button>
-                                    </div>
-                                ))
-                            )}
-                        </Dropdown.Menu>
-                    </Dropdown>
-                </li>
+                                            <div
+                                                style={{ flex: 1, cursor: "pointer", minWidth: 0 }}
+                                                onClick={() => openSalesFromDN(notif)}
+                                            >
+                                                <div style={{ fontSize: "13px", lineHeight: "1.4" }}>
+                                                    <i className="bi bi-file-earmark-text text-primary me-2"></i>
+                                                    Create Sales For Delivery Note <strong>{notif.code}</strong>
+                                                </div>
+                                                {notif.arrived_at && (
+                                                    <div style={{ fontSize: "11px", color: "#888", marginTop: "3px" }}>
+                                                        {formatDateTime(notif.arrived_at)}
+                                                        <span style={{ marginLeft: "6px", fontWeight: 600, color: "#555" }}>
+                                                            · {formatTimeAgo(notif.arrived_at)}
+                                                        </span>
+                                                    </div>
+                                                )}
+                                            </div>
+                                            <button
+                                                onClick={(e) => { e.stopPropagation(); dismissNotification(notif.id, true); }}
+                                                title="Dismiss"
+                                                style={{
+                                                    background: "none",
+                                                    border: "none",
+                                                    cursor: "pointer",
+                                                    color: "#aaa",
+                                                    fontSize: "16px",
+                                                    lineHeight: 1,
+                                                    padding: "0 2px",
+                                                    flexShrink: 0,
+                                                }}
+                                            >
+                                                &times;
+                                            </button>
+                                        </div>
+                                    ))
+                                )}
+                            </Dropdown.Menu>
+                        </Dropdown>
+                    </li>
+                )}
 
                 <li className="nav-item dropdown">
                     {/* Language Switcher */}

@@ -3785,6 +3785,13 @@ const OrderCreate = forwardRef((props, ref) => {
         localStorage.setItem('order_form_type', formType);
     }, [formType]);
 
+    // When Enable Sales Page Selection is off, force formType to type1
+    useEffect(() => {
+        if (store.settings && store.settings.enable_sales_page_selection !== true) {
+            setFormType('type1');
+        }
+    }, [store.settings]);
+
     // ── Delivery Note Reminder Notifications ─────────────────────────────────
     const [dnNotifications, setDnNotifications] = useState([]);
     const [, setDnTick] = useState(0);
@@ -4337,45 +4344,48 @@ const OrderCreate = forwardRef((props, ref) => {
                                 {isUpdateForm && !isSubmitting ? t('Update') : !isSubmitting ? t('Create') : ""}
                             </Button>
                             &nbsp;&nbsp;
-                            <select value={formType} onChange={(e) => setFormType(e.target.value)} className="form-select form-select-sm d-inline-block" style={{ width: "auto", fontSize: "11px", padding: "2px 24px 2px 6px", height: "26px", lineHeight: "1.2" }}>
-                                <option value="type2">{t("Type 2")} (New)</option>
-                                <option value="type1">{t("Type 1")} (Classic)</option>
-                            </select>
-                            &nbsp;&nbsp;
+                            {store.settings?.enable_sales_page_selection === true && (
+                                <><select value={formType} onChange={(e) => setFormType(e.target.value)} className="form-select form-select-sm d-inline-block" style={{ width: "auto", fontSize: "11px", padding: "2px 24px 2px 6px", height: "26px", lineHeight: "1.2" }}>
+                                    <option value="type2">{t("Type 2")} (New)</option>
+                                    <option value="type1">{t("Type 1")} (Classic)</option>
+                                </select>&nbsp;&nbsp;</>
+                            )}
                             {/* ── DN Reminder Bell ── */}
-                            <Dropdown style={{ display: "inline-block", verticalAlign: "middle" }}>
-                                <Dropdown.Toggle as="span" style={{ cursor: "pointer", position: "relative", display: "inline-block", padding: "0 6px" }} id="dn-bell-t1">
-                                    <i className="bi bi-bell fs-6"></i>
-                                    {dnNotifications.length > 0 && (
-                                        <span style={{ position: "absolute", top: "-4px", right: "1px", background: "red", color: "white", borderRadius: "50%", fontSize: "10px", fontWeight: "bold", minWidth: "16px", height: "16px", display: "flex", alignItems: "center", justifyContent: "center", padding: "0 2px" }}>
-                                            {dnNotifications.length}
-                                        </span>
-                                    )}
-                                </Dropdown.Toggle>
-                                <Dropdown.Menu align="end" style={{ minWidth: "320px", maxHeight: "400px", overflowY: "auto" }}>
-                                    {dnNotifications.length === 0 ? (
-                                        <Dropdown.ItemText className="text-muted small">No pending reminders</Dropdown.ItemText>
-                                    ) : (
-                                        dnNotifications.map(notif => (
-                                            <div key={notif.id} style={{ display: "flex", alignItems: "flex-start", padding: "8px 14px", borderBottom: "1px solid #f0f0f0", gap: "6px" }}>
-                                                <div style={{ flex: 1, cursor: "pointer", minWidth: 0 }} onClick={() => openSalesFromDnInForm(notif)}>
-                                                    <div style={{ fontSize: "13px", lineHeight: "1.4" }}>
-                                                        <i className="bi bi-file-earmark-text text-primary me-2"></i>
-                                                        Create Sales for DN <strong>{notif.code}</strong>
-                                                    </div>
-                                                    {notif.arrived_at && (
-                                                        <div style={{ fontSize: "11px", color: "#888", marginTop: "3px" }}>
-                                                            {_dnFormatDateTime(notif.arrived_at)}
-                                                            <span style={{ marginLeft: "6px", fontWeight: 600, color: "#555" }}>· {_dnFormatTimeAgo(notif.arrived_at)}</span>
+                            {store.settings?.enable_notification === true && (
+                                <Dropdown style={{ display: "inline-block", verticalAlign: "middle" }}>
+                                    <Dropdown.Toggle as="span" style={{ cursor: "pointer", position: "relative", display: "inline-block", padding: "0 6px" }} id="dn-bell-t1">
+                                        <i className="bi bi-bell fs-6"></i>
+                                        {dnNotifications.length > 0 && (
+                                            <span style={{ position: "absolute", top: "-4px", right: "1px", background: "red", color: "white", borderRadius: "50%", fontSize: "10px", fontWeight: "bold", minWidth: "16px", height: "16px", display: "flex", alignItems: "center", justifyContent: "center", padding: "0 2px" }}>
+                                                {dnNotifications.length}
+                                            </span>
+                                        )}
+                                    </Dropdown.Toggle>
+                                    <Dropdown.Menu align="end" style={{ minWidth: "320px", maxHeight: "400px", overflowY: "auto" }}>
+                                        {dnNotifications.length === 0 ? (
+                                            <Dropdown.ItemText className="text-muted small">No pending reminders</Dropdown.ItemText>
+                                        ) : (
+                                            dnNotifications.map(notif => (
+                                                <div key={notif.id} style={{ display: "flex", alignItems: "flex-start", padding: "8px 14px", borderBottom: "1px solid #f0f0f0", gap: "6px" }}>
+                                                    <div style={{ flex: 1, cursor: "pointer", minWidth: 0 }} onClick={() => openSalesFromDnInForm(notif)}>
+                                                        <div style={{ fontSize: "13px", lineHeight: "1.4" }}>
+                                                            <i className="bi bi-file-earmark-text text-primary me-2"></i>
+                                                            Create Sales for DN <strong>{notif.code}</strong>
                                                         </div>
-                                                    )}
+                                                        {notif.arrived_at && (
+                                                            <div style={{ fontSize: "11px", color: "#888", marginTop: "3px" }}>
+                                                                {_dnFormatDateTime(notif.arrived_at)}
+                                                                <span style={{ marginLeft: "6px", fontWeight: 600, color: "#555" }}>· {_dnFormatTimeAgo(notif.arrived_at)}</span>
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                    <button onClick={(e) => { e.stopPropagation(); dismissDnNotification(notif.id, true); }} title="Dismiss" style={{ background: "none", border: "none", cursor: "pointer", color: "#aaa", fontSize: "16px", lineHeight: 1, padding: "0 2px", flexShrink: 0 }}>&times;</button>
                                                 </div>
-                                                <button onClick={(e) => { e.stopPropagation(); dismissDnNotification(notif.id, true); }} title="Dismiss" style={{ background: "none", border: "none", cursor: "pointer", color: "#aaa", fontSize: "16px", lineHeight: 1, padding: "0 2px", flexShrink: 0 }}>&times;</button>
-                                            </div>
-                                        ))
-                                    )}
-                                </Dropdown.Menu>
-                            </Dropdown>
+                                            ))
+                                        )}
+                                    </Dropdown.Menu>
+                                </Dropdown>
+                            )}
                             &nbsp;&nbsp;
                             <button type="button" className="btn-close" onClick={handleClose} aria-label="Close"></button>
                         </div>
@@ -4466,50 +4476,54 @@ const OrderCreate = forwardRef((props, ref) => {
                             ) : null}
                             {isUpdateForm ? t('Update') : t('Create')}
                         </Button>
-                        <div className="h-5 w-px bg-outline-variant mx-xs"></div>
-                        <select
-                            value={formType}
-                            onChange={(e) => setFormType(e.target.value)}
-                            style={{ fontSize: "12px", padding: "2px 6px", borderRadius: "4px", border: "1px solid var(--md-sys-color-outline-variant, #ccc)", background: "var(--md-sys-color-surface-container, #f5f5f5)", color: "var(--md-sys-color-on-surface, #1c1b1f)", cursor: "pointer" }}
-                            title={t("Form Type")}
-                        >
-                            <option value="type2">{t("Type 2")} ✦</option>
-                            <option value="type1">{t("Type 1")} (Classic)</option>
-                        </select>
+                        {store.settings?.enable_sales_page_selection === true && (
+                            <><div className="h-5 w-px bg-outline-variant mx-xs"></div>
+                                <select
+                                    value={formType}
+                                    onChange={(e) => setFormType(e.target.value)}
+                                    style={{ fontSize: "12px", padding: "2px 6px", borderRadius: "4px", border: "1px solid var(--md-sys-color-outline-variant, #ccc)", background: "var(--md-sys-color-surface-container, #f5f5f5)", color: "var(--md-sys-color-on-surface, #1c1b1f)", cursor: "pointer" }}
+                                    title={t("Form Type")}
+                                >
+                                    <option value="type2">{t("Type 2")} ✦</option>
+                                    <option value="type1">{t("Type 1")} (Classic)</option>
+                                </select></>
+                        )}
                         {/* ── DN Reminder Bell (Type 2) ── */}
-                        <Dropdown>
-                            <Dropdown.Toggle as="span" style={{ cursor: "pointer", position: "relative", display: "inline-flex", alignItems: "center", padding: "0 4px" }} id="dn-bell-t2">
-                                <span className="material-symbols-outlined" style={{ fontSize: "22px", color: "var(--md-sys-color-on-surface-variant, #49454f)" }}>notifications</span>
-                                {dnNotifications.length > 0 && (
-                                    <span style={{ position: "absolute", top: "-2px", right: "0px", background: "red", color: "white", borderRadius: "50%", fontSize: "10px", fontWeight: "bold", minWidth: "16px", height: "16px", display: "flex", alignItems: "center", justifyContent: "center", padding: "0 2px" }}>
-                                        {dnNotifications.length}
-                                    </span>
-                                )}
-                            </Dropdown.Toggle>
-                            <Dropdown.Menu align="end" style={{ minWidth: "320px", maxHeight: "400px", overflowY: "auto" }}>
-                                {dnNotifications.length === 0 ? (
-                                    <Dropdown.ItemText className="text-muted small">No pending reminders</Dropdown.ItemText>
-                                ) : (
-                                    dnNotifications.map(notif => (
-                                        <div key={notif.id} style={{ display: "flex", alignItems: "flex-start", padding: "8px 14px", borderBottom: "1px solid #f0f0f0", gap: "6px" }}>
-                                            <div style={{ flex: 1, cursor: "pointer", minWidth: 0 }} onClick={() => openSalesFromDnInForm(notif)}>
-                                                <div style={{ fontSize: "13px", lineHeight: "1.4" }}>
-                                                    <i className="bi bi-file-earmark-text text-primary me-2"></i>
-                                                    Create Sales for DN <strong>{notif.code}</strong>
-                                                </div>
-                                                {notif.arrived_at && (
-                                                    <div style={{ fontSize: "11px", color: "#888", marginTop: "3px" }}>
-                                                        {_dnFormatDateTime(notif.arrived_at)}
-                                                        <span style={{ marginLeft: "6px", fontWeight: 600, color: "#555" }}>· {_dnFormatTimeAgo(notif.arrived_at)}</span>
+                        {store.settings?.enable_notification === true && (
+                            <Dropdown>
+                                <Dropdown.Toggle as="span" style={{ cursor: "pointer", position: "relative", display: "inline-flex", alignItems: "center", padding: "0 4px" }} id="dn-bell-t2">
+                                    <span className="material-symbols-outlined" style={{ fontSize: "22px", color: "var(--md-sys-color-on-surface-variant, #49454f)" }}>notifications</span>
+                                    {dnNotifications.length > 0 && (
+                                        <span style={{ position: "absolute", top: "-2px", right: "0px", background: "red", color: "white", borderRadius: "50%", fontSize: "10px", fontWeight: "bold", minWidth: "16px", height: "16px", display: "flex", alignItems: "center", justifyContent: "center", padding: "0 2px" }}>
+                                            {dnNotifications.length}
+                                        </span>
+                                    )}
+                                </Dropdown.Toggle>
+                                <Dropdown.Menu align="end" style={{ minWidth: "320px", maxHeight: "400px", overflowY: "auto" }}>
+                                    {dnNotifications.length === 0 ? (
+                                        <Dropdown.ItemText className="text-muted small">No pending reminders</Dropdown.ItemText>
+                                    ) : (
+                                        dnNotifications.map(notif => (
+                                            <div key={notif.id} style={{ display: "flex", alignItems: "flex-start", padding: "8px 14px", borderBottom: "1px solid #f0f0f0", gap: "6px" }}>
+                                                <div style={{ flex: 1, cursor: "pointer", minWidth: 0 }} onClick={() => openSalesFromDnInForm(notif)}>
+                                                    <div style={{ fontSize: "13px", lineHeight: "1.4" }}>
+                                                        <i className="bi bi-file-earmark-text text-primary me-2"></i>
+                                                        Create Sales for DN <strong>{notif.code}</strong>
                                                     </div>
-                                                )}
+                                                    {notif.arrived_at && (
+                                                        <div style={{ fontSize: "11px", color: "#888", marginTop: "3px" }}>
+                                                            {_dnFormatDateTime(notif.arrived_at)}
+                                                            <span style={{ marginLeft: "6px", fontWeight: 600, color: "#555" }}>· {_dnFormatTimeAgo(notif.arrived_at)}</span>
+                                                        </div>
+                                                    )}
+                                                </div>
+                                                <button onClick={(e) => { e.stopPropagation(); dismissDnNotification(notif.id, true); }} title="Dismiss" style={{ background: "none", border: "none", cursor: "pointer", color: "#aaa", fontSize: "16px", lineHeight: 1, padding: "0 2px", flexShrink: 0 }}>&times;</button>
                                             </div>
-                                            <button onClick={(e) => { e.stopPropagation(); dismissDnNotification(notif.id, true); }} title="Dismiss" style={{ background: "none", border: "none", cursor: "pointer", color: "#aaa", fontSize: "16px", lineHeight: 1, padding: "0 2px", flexShrink: 0 }}>&times;</button>
-                                        </div>
-                                    ))
-                                )}
-                            </Dropdown.Menu>
-                        </Dropdown>
+                                        ))
+                                    )}
+                                </Dropdown.Menu>
+                            </Dropdown>
+                        )}
                         <button type="button" className="text-on-surface-variant hover:text-error transition-colors ml-xs border-0 bg-transparent flex items-center justify-center cursor-pointer" onClick={handleClose} title={t("Close")}>
                             <span className="material-symbols-outlined">close</span>
                         </button>

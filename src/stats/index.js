@@ -836,11 +836,15 @@ const StatsIndex = forwardRef((props, ref) => {
     const handleQuotationSummaryToggle = (isOpen) => { };
     const handleQtnSalesSummaryToggle = (isOpen) => { };
     const handleQtnSalesReturnSummaryToggle = (isOpen) => { };
+    const handleReceivablesSummaryToggle = (isOpen) => { };
+    const handlePayablesSummaryToggle = (isOpen) => { };
 
     const qtnInvoiceAccounting = store.settings?.quotation_invoice_accounting === true;
     const disablePurchasesOnAccounts = store.settings?.disable_purchases_on_accounts === true;
     const profitLossRevenueNum = (totalSales || 0) - (totalSalesReturn || 0) + (qtnInvoiceAccounting ? (totalQtnSales || 0) - (totalQtnSalesReturn || 0) : 0);
-    const profitLossExpenseNum = (totalExpense || 0) + (disablePurchasesOnAccounts ? (totalAccountedPurchase || 0) : (totalPurchase || 0)) - (disablePurchasesOnAccounts ? (totalAccountedPurchaseReturn || 0) : (totalPurchaseReturn || 0));
+    const profitLossExpenseNum = (disablePurchasesOnAccounts
+        ? (totalExpense || 0) - (totalExpensePurchaseFund || 0) + (totalAccountedPurchase || 0) - (totalAccountedPurchaseReturn || 0)
+        : (totalExpense || 0) + (totalPurchase || 0) - (totalPurchaseReturn || 0));
     const profitLossNum = profitLossRevenueNum - profitLossExpenseNum;
     const vatPercent = store.vat_percent || 15;
     const profitLossVatNum = profitLossNum * vatPercent / (100 + vatPercent);
@@ -863,6 +867,8 @@ const StatsIndex = forwardRef((props, ref) => {
         { key: "quotation", label: "Quotation Summary", visible: true },
         { key: "qtn_sales", label: "Qtn. Sales Summary", visible: true },
         { key: "qtn_sales_return", label: "Qtn. Sales Return Summary", visible: true },
+        { key: "receivables", label: "Receivables Summary", visible: true },
+        { key: "payables", label: "Payables Summary", visible: true },
     ], []);
     const [sections, setSections] = useState(defaultSections);
     const [showSectionSettings, setShowSectionSettings] = useState(false);
@@ -1086,7 +1092,7 @@ const StatsIndex = forwardRef((props, ref) => {
                                         }}
                                         statsWithInfo={[
                                             { label: "Revenue (with VAT)", value: profitLossRevenueNum, info: qtnInvoiceAccounting ? `Sales - Sales Return + Qtn. Sales - Qtn. Sales Return\n= ${trimTo2Decimals(totalSales)} - ${trimTo2Decimals(totalSalesReturn)} + ${trimTo2Decimals(totalQtnSales)} - ${trimTo2Decimals(totalQtnSalesReturn)} = ${trimTo2Decimals(profitLossRevenueNum)}` : `Sales (with VAT) - Sales Return (with VAT)\n= ${trimTo2Decimals(totalSales)} - ${trimTo2Decimals(totalSalesReturn)} = ${trimTo2Decimals(profitLossRevenueNum)}` },
-                                            { label: "Expense (with VAT)", value: profitLossExpenseNum, info: disablePurchasesOnAccounts ? `Expenses + Accounted Purchase(with VAT) - Accounted Purchase Return(with VAT)\n= ${trimTo2Decimals(totalExpense)} + ${trimTo2Decimals(totalAccountedPurchase)} - ${trimTo2Decimals(totalAccountedPurchaseReturn)} = ${trimTo2Decimals(profitLossExpenseNum)}` : `Expenses + Purchases (with VAT) - Purchase Return (with VAT)\n= ${trimTo2Decimals(totalExpense)} + ${trimTo2Decimals(totalPurchase)} - ${trimTo2Decimals(totalPurchaseReturn)} = ${trimTo2Decimals(profitLossExpenseNum)}` },
+                                            { label: "Expense (with VAT)", value: profitLossExpenseNum, info: disablePurchasesOnAccounts ? `Expenses - Purchase Return Received to Purchase Fund + Accounted Purchase(with VAT) - Accounted Purchase Return(with VAT)\n= ${trimTo2Decimals(totalExpense)} - ${trimTo2Decimals(totalExpensePurchaseFund)} + ${trimTo2Decimals(totalAccountedPurchase)} - ${trimTo2Decimals(totalAccountedPurchaseReturn)} = ${trimTo2Decimals(profitLossExpenseNum)}` : `Expenses + Purchases (with VAT) - Purchase Return (with VAT)\n= ${trimTo2Decimals(totalExpense)} + ${trimTo2Decimals(totalPurchase)} - ${trimTo2Decimals(totalPurchaseReturn)} = ${trimTo2Decimals(profitLossExpenseNum)}` },
                                             { label: "Profit / Loss (with VAT)", value: profitLossNum, colorByValue: true, info: `Revenue - Expense (with VAT)\n= ${trimTo2Decimals(profitLossRevenueNum)} - ${trimTo2Decimals(profitLossExpenseNum)} = ${trimTo2Decimals(profitLossNum)}` },
                                             { label: `VAT ${vatPercent}%`, value: profitLossVatNum, info: `Profit / Loss (with VAT) × ${vatPercent} / ${100 + vatPercent}\n= ${trimTo2Decimals(profitLossNum)} × ${vatPercent} / ${100 + vatPercent} = ${trimTo2Decimals(profitLossVatNum)}` },
                                             { label: "Profit / Loss (without VAT)", value: profitLossWithoutVATNum, colorByValue: true, info: `Profit / Loss (with VAT) - VAT ${vatPercent}%\n= ${trimTo2Decimals(profitLossNum)} - ${trimTo2Decimals(profitLossVatNum)} = ${trimTo2Decimals(profitLossWithoutVATNum)}` },
@@ -1481,6 +1487,54 @@ const StatsIndex = forwardRef((props, ref) => {
                                         defaultOpen={true}
                                         filters={statsFilters}
                                         onToggle={handleQtnSalesReturnSummaryToggle}
+                                    />
+                                </span>
+                            </div>
+                        </div>
+                    )}
+                    {sections.find(s => s.key === "receivables")?.visible !== false && (
+                        <div className="row" style={{ order: sections.findIndex(s => s.key === "receivables") }}>
+                            <div className="col">
+                                <span className="text-end">
+                                    <StatsSummary
+                                        title="Receivables Summary"
+                                        stats={{
+                                            "Receivable from Customers (Unpaid Sales)": totalUnPaidSales,
+                                            "Receivable from Vendors (Purchase Return)": totalUnPaidPurchaseReturn,
+                                            "Net Receivables": totalUnPaidSales + totalUnPaidPurchaseReturn,
+                                        }}
+                                        statsWithInfo={[
+                                            { label: "Receivable from Customers (Unpaid Sales)", value: totalUnPaidSales, info: `Unpaid / credit sales owed by customers\n= ${trimTo2Decimals(totalUnPaidSales)}` },
+                                            { label: "Receivable from Vendors (Purchase Return)", value: totalUnPaidPurchaseReturn, info: `Purchase returns pending refund from vendors\n= ${trimTo2Decimals(totalUnPaidPurchaseReturn)}` },
+                                            { label: "Net Receivables", value: (totalUnPaidSales || 0) + (totalUnPaidPurchaseReturn || 0), colorByValue: true, info: `Receivable from Customers + Receivable from Vendors\n= ${trimTo2Decimals(totalUnPaidSales)} + ${trimTo2Decimals(totalUnPaidPurchaseReturn)} = ${trimTo2Decimals((totalUnPaidSales || 0) + (totalUnPaidPurchaseReturn || 0))}` },
+                                        ]}
+                                        defaultOpen={true}
+                                        filters={statsFilters}
+                                        onToggle={handleReceivablesSummaryToggle}
+                                    />
+                                </span>
+                            </div>
+                        </div>
+                    )}
+                    {sections.find(s => s.key === "payables")?.visible !== false && (
+                        <div className="row" style={{ order: sections.findIndex(s => s.key === "payables") }}>
+                            <div className="col">
+                                <span className="text-end">
+                                    <StatsSummary
+                                        title="Payables Summary"
+                                        stats={{
+                                            "Payable to Vendors (Unpaid Purchases)": totalUnPaidPurchase,
+                                            "Payable to Customers (Sales Return)": totalUnPaidSalesReturn,
+                                            "Net Payables": (totalUnPaidPurchase || 0) + (totalUnPaidSalesReturn || 0),
+                                        }}
+                                        statsWithInfo={[
+                                            { label: "Payable to Vendors (Unpaid Purchases)", value: totalUnPaidPurchase, info: `Unpaid / credit purchases owed to vendors\n= ${trimTo2Decimals(totalUnPaidPurchase)}` },
+                                            { label: "Payable to Customers (Sales Return)", value: totalUnPaidSalesReturn, info: `Sales returns pending refund to customers\n= ${trimTo2Decimals(totalUnPaidSalesReturn)}` },
+                                            { label: "Net Payables", value: (totalUnPaidPurchase || 0) + (totalUnPaidSalesReturn || 0), info: `Payable to Vendors + Payable to Customers\n= ${trimTo2Decimals(totalUnPaidPurchase)} + ${trimTo2Decimals(totalUnPaidSalesReturn)} = ${trimTo2Decimals((totalUnPaidPurchase || 0) + (totalUnPaidSalesReturn || 0))}` },
+                                        ]}
+                                        defaultOpen={true}
+                                        filters={statsFilters}
+                                        onToggle={handlePayablesSummaryToggle}
                                     />
                                 </span>
                             </div>
