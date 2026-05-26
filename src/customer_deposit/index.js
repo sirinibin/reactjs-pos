@@ -391,6 +391,8 @@ function CustomerDepositIndex(props) {
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [statsOpen]);
 
+    let [totalUnPaidSalesRcv, setTotalUnPaidSalesRcv] = useState(0.00);
+    let [totalUnPaidPurchaseReturnRcv, setTotalUnPaidPurchaseReturnRcv] = useState(0.00);
 
     let [totalReceivables, setTotalReceivables] = useState(0.00);
     let [totalCashReceivables, setTotalCashReceivables] = useState(0.00);
@@ -473,6 +475,9 @@ function CustomerDepositIndex(props) {
 
                 totalReceivables = data.meta.total;
                 setTotalReceivables(totalReceivables);
+
+                setTotalUnPaidSalesRcv(data.meta.total_customer || 0);
+                setTotalUnPaidPurchaseReturnRcv(data.meta.total_vendor || 0);
 
                 totalCashReceivables = data.meta.cash;
                 setTotalCashReceivables(totalCashReceivables);
@@ -744,6 +749,9 @@ function CustomerDepositIndex(props) {
                                     "Cash": totalCashReceivables,
                                     "Bank": totalBankReceivables,
                                     "Purchase Fund": totalPurchaseFundReceivables,
+                                    "Receivable from Customers (Unpaid Sales)": totalUnPaidSalesRcv,
+                                    "Receivable from Vendors (Purchase Return)": totalUnPaidPurchaseReturnRcv,
+                                    "Net Receivables": (totalUnPaidSalesRcv || 0) + (totalUnPaidPurchaseReturnRcv || 0),
                                 }}
                                 onToggle={handleSummaryToggle}
                             />

@@ -2203,24 +2203,26 @@ const DeliveryNoteCreate = forwardRef((props, ref) => {
               )}
             </div>
 
-            <div className="col-md-3">
-              <label className="form-label">Notify At (Sales Reminder)</label>
-              <div className="input-group mb-3">
-                <DatePicker
-                  id="notify_at"
-                  selected={formData.notify_at ? new Date(formData.notify_at) : null}
-                  value={formData.notify_at ? format(new Date(formData.notify_at), "MMMM d, yyyy h:mm aa") : null}
-                  className="form-control"
-                  dateFormat="MMMM d, yyyy h:mm aa"
-                  showTimeSelect
-                  timeIntervals="1"
-                  onChange={(value) => {
-                    formData.notify_at = value;
-                    setFormData({ ...formData });
-                  }}
-                />
+            {store.settings?.enable_notification === true && (
+              <div className="col-md-3">
+                <label className="form-label">Notify At (Sales Reminder)</label>
+                <div className="input-group mb-3">
+                  <DatePicker
+                    id="notify_at"
+                    selected={formData.notify_at ? new Date(formData.notify_at) : null}
+                    value={formData.notify_at ? format(new Date(formData.notify_at), "MMMM d, yyyy h:mm aa") : null}
+                    className="form-control"
+                    dateFormat="MMMM d, yyyy h:mm aa"
+                    showTimeSelect
+                    timeIntervals="1"
+                    onChange={(value) => {
+                      formData.notify_at = value;
+                      setFormData({ ...formData });
+                    }}
+                  />
+                </div>
               </div>
-            </div>
+            )}
 
             <div className="col-md-10">
               <label className="form-label">Product*</label>

@@ -8,7 +8,7 @@ import { useTranslation } from 'react-i18next';
 import html2pdf from 'html2pdf.js';
 import WhatsAppModal from './WhatsAppModal';
 
-const StatsSummary = ({ title, stats = {}, statsWithInfo = {}, defaultOpen = false, onToggle, filters = {}, statsDefaultVisibility = {} }) => {
+const StatsSummary = ({ title, stats = {}, statsWithInfo = {}, defaultOpen = false, onToggle, filters = {}, statsDefaultVisibility = {}, storageKey }) => {
     const { t } = useTranslation();
 
     const [isOpen, setIsOpen] = useState(defaultOpen);
@@ -22,7 +22,7 @@ const StatsSummary = ({ title, stats = {}, statsWithInfo = {}, defaultOpen = fal
     const [whatsAppError, setWhatsAppError] = useState("");
     const [isDownloading, setIsDownloading] = useState(false);
 
-    const LOCAL_KEY = useMemo(() => `${title}_stats_summary`, [title]);
+    const LOCAL_KEY = useMemo(() => storageKey ? `${storageKey}_stats_summary` : `${title}_stats_summary`, [storageKey, title]);
     const printAreaRef = useRef(null);
 
     const splitStats = useCallback((statsArr) => {
