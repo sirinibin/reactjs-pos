@@ -358,6 +358,9 @@ const OrderCreate = forwardRef((props, ref) => {
                 store = data.result;
                 setStore(store);
                 formData.vat_percent = parseFloat(store.vat_percent);
+                if (store?.zatca?.phase != "2") {
+                    formData.enable_report_to_zatca = false;
+                }
                 setFormData({ ...formData });
             })
             .catch(error => {
@@ -3628,7 +3631,549 @@ const OrderCreate = forwardRef((props, ref) => {
         openCreateForm();
     }
 
-    //Product Search Settings
+    // Product Search Settings
+
+    // Customer & Order Details settings
+    const [showCustomerDetailsSettings, setShowCustomerDetailsSettings] = useState(false);
+    const defaultCustomerDetailsFields = useMemo(() => [
+        { key: "customer_selection", label: "Customer Selection", visible: true },
+        { key: "barcode_scan", label: "Product Barcode Scan", visible: true },
+        { key: "date", label: "Date", visible: true },
+        { key: "phone", label: "Phone", visible: true },
+        { key: "vat_no", label: "VAT NO.", visible: true },
+        { key: "address", label: "Address", visible: true },
+        { key: "remarks", label: "Remarks", visible: true },
+        { key: "cash_discount", label: "Cash discount", visible: true },
+        { key: "commission", label: "Commission", visible: true },
+        { key: "commission_payment_method", label: "Commission Payment Method", visible: true },
+    ], []);
+    const [customerDetailsFields, setCustomerDetailsFields] = useState(defaultCustomerDetailsFields);
+
+    const handleToggleCustomerDetailsField = (index) => {
+        const updated = [...customerDetailsFields];
+        updated[index].visible = !updated[index].visible;
+        setCustomerDetailsFields(updated);
+        localStorage.setItem("sales_customer_details_settings", JSON.stringify(updated));
+    };
+
+    const onDragEndCustomerDetailsFields = (result) => {
+        if (!result.destination) return;
+        const reordered = Array.from(customerDetailsFields);
+        const [moved] = reordered.splice(result.source.index, 1);
+        reordered.splice(result.destination.index, 0, moved);
+        setCustomerDetailsFields(reordered);
+        localStorage.setItem("sales_customer_details_settings", JSON.stringify(reordered));
+    };
+
+    function RestoreDefaultCustomerDetailsSettings() {
+        const clonedDefaults = defaultCustomerDetailsFields.map(col => ({ ...col }));
+        localStorage.setItem("sales_customer_details_settings", JSON.stringify(clonedDefaults));
+        setCustomerDetailsFields(clonedDefaults);
+        setShowSuccess(true);
+        setSuccessMessage(t("Successfully restored to default settings!"));
+    }
+
+    const renderCustomerDetailField = (field) => {
+        switch (field.key) {
+            case "customer_selection":
+                return (
+                    <div key={field.key}>
+                        <label className="block font-label-md text-on-surface-variant mb-1">{t("Customer Selection")}</label>
+                        <div className="flex gap-1 align-items-center">
+                            <div className="relative flex-1">
+                                <Typeahead
+                                    id="customer_id"
+                                    positionFixed={true}
+                                    filterBy={() => true}
+                                    labelKey="search_label"
+                                    inputProps={{ className: 'form-control bg-surface-bright border border-outline-variant rounded px-sm py-1.5 focus:ring-1 focus:ring-primary focus:border-primary h-[34px] w-full text-body-md' }}
+                                    isLoading={false}
+                                    emptyLabel=""
+                                    clearButton={false}
+                                    open={openCustomerSearchResult}
+                                    onChange={(selectedItems) => {
+                                        delete errors.customer_id;
+                                        setErrors(errors);
+                                        if (selectedItems.length === 0) {
+                                            delete errors.customer_id;
+                                            delete errors.blocked;
+                                            formData.customer_id = "";
+                                            formData.customer_name = "";
+                                            formData.customerName = "";
+                                            setFormData({ ...formData });
+                                            setSelectedCustomers([]);
+                                            setOpenCustomerSearchResult(false);
+                                            return;
+                                        }
+
+                                        formData.customer_id = selectedItems[0].id;
+                                        if (selectedItems[0].use_remarks_in_sales && selectedItems[0].remarks) {
+                                            formData.remarks = selectedItems[0].remarks;
+                                        }
+
+                                        if (selectedItems[0].phone && !formData.phone) {
+                                            formData.phone = selectedItems[0].phone;
+                                        }
+
+                                        setFormData({ ...formData });
+                                        setSelectedCustomers(selectedItems);
+                                        setOpenCustomerSearchResult(false);
+
+                                        if (store?.settings?.block_sales_after_pending_count > 0) {
+                                            const storeId = localStorage.getItem("store_id");
+                                            const cs = selectedItems[0]?.stores?.[storeId];
+                                            const pendingCount = (cs?.sales_not_paid_count || 0) + (cs?.sales_paid_partially_count || 0);
+                                            if (pendingCount >= store.settings.block_sales_after_pending_count) {
+                                                errors.blocked = `Customer has ${pendingCount} unpaid sale(s). New sales are blocked until existing sales are paid.`;
+                                            } else {
+                                                delete errors.blocked;
+                                            }
+                                            setErrors({ ...errors });
+                                        }
+                                    }}
+                                    options={customerOptions}
+                                    placeholder={t('Customer Name / Mob / VAT # / ID')}
+                                    selected={selectedCustomers}
+                                    highlightOnlyResult={true}
+                                    ref={customerSearchRef}
+                                    onKeyDown={(e) => {
+                                        if (e.key === "Escape") {
+                                            delete errors.customer_id;
+                                            formData.customer_id = "";
+                                            formData.customer_name = "";
+                                            formData.customerName = "";
+                                            setFormData({ ...formData });
+                                            setSelectedCustomers([]);
+                                            setCustomerOptions([]);
+                                            setOpenCustomerSearchResult(false);
+                                            customerSearchRef.current?.clear();
+                                        }
+                                    }}
+                                    onInputChange={(searchTerm, e) => {
+                                        if (searchTerm) {
+                                            formData.customerName = searchTerm;
+                                            formData.customer_name = searchTerm;
+                                            setFormData({ ...formData });
+                                        }
+
+                                        if (timerRef.current) clearTimeout(timerRef.current);
+                                        timerRef.current = setTimeout(() => {
+                                            suggestCustomers(searchTerm);
+                                        }, 100);
+                                    }}
+                                    renderMenu={(results, menuProps, state) => {
+                                        return (
+                                            <Menu {...menuProps} style={{ ...menuProps.style, minWidth: '900px', width: 'max-content', maxWidth: '95vw', zIndex: 9999 }}>
+                                                <MenuItem disabled style={{ background: '#f8f9fa' }}>
+                                                    <div style={{ display: 'flex', fontWeight: 'bold', padding: '4px 8px', borderBottom: '1px solid #ddd' }}>
+                                                        <div style={{ width: '10%' }}>{t("ID")}</div>
+                                                        <div style={{ width: '47%' }}>{t("Name")}</div>
+                                                        <div style={{ width: '10%' }}>{t("Phone")}</div>
+                                                        <div style={{ width: '13%' }}>{t("VAT NO.")}</div>
+                                                        <div style={{ width: '10%' }}>{t("Credit Balance")}</div>
+                                                        <div style={{ width: '10%' }}>{t("Credit Limit")}</div>
+                                                    </div>
+                                                </MenuItem>
+                                                {results.map((option, index) => (
+                                                    <MenuItem option={option} position={index} key={index}>
+                                                        <div style={{ display: 'flex', padding: '4px 8px' }}>
+                                                            <div style={{ ...columnStyle, width: '10%' }}>{option.code}</div>
+                                                            <div style={{ ...columnStyle, width: '47%' }}>{option.name} {option.name_in_arabic ? `(${option.name_in_arabic})` : ""}</div>
+                                                            <div style={{ ...columnStyle, width: '10%' }}>{option.phone}</div>
+                                                            <div style={{ ...columnStyle, width: '13%' }}>{option.vat_no}</div>
+                                                            <div style={{ ...columnStyle, width: '10%' }}><Amount amount={trimTo2Decimals(option.credit_balance)} /></div>
+                                                            <div style={{ ...columnStyle, width: '10%' }}><Amount amount={trimTo2Decimals(option.credit_limit)} /></div>
+                                                        </div>
+                                                    </MenuItem>
+                                                ))}
+                                            </Menu>
+                                        );
+                                    }}
+                                />
+                            </div>
+                            <div className="flex gap-xs shrink-0 align-items-center">
+                                {formData.customer_id && (
+                                    <button type="button" className="p-2 bg-surface-container hover:bg-surface-dim border border-outline-variant/30 rounded flex items-center justify-center cursor-pointer" style={{ height: '34px' }} onClick={() => openCustomerUpdateForm(formData.customer_id)}>
+                                        <i className="bi bi-pencil text-on-surface-variant"></i>
+                                    </button>
+                                )}
+                                <button type="button" className="px-2 bg-primary hover:opacity-90 border-0 text-on-primary rounded flex items-center justify-center cursor-pointer" style={{ height: '34px' }} onClick={openCustomerCreateForm}>
+                                    <i className="bi bi-plus-lg text-[18px]"></i>
+                                </button>
+                                <button type="button" className="p-2 bg-surface-container hover:bg-surface-dim border border-outline-variant/30 rounded flex items-center justify-center cursor-pointer" style={{ height: '34px' }} onClick={openCustomers}>
+                                    <i className="bi bi-list text-on-surface-variant"></i>
+                                </button>
+                            </div>
+                        </div>
+                        {errors.customer_id && (
+                            <div style={{ color: "red" }} className="small mt-1">{t(errors.customer_id)}</div>
+                        )}
+                        {errors.blocked && (
+                            <div style={{ color: "red" }} className="small mt-1 fw-semibold">{errors.blocked}</div>
+                        )}
+
+                        {selectedCustomers.length > 0 && formData.customer_id && (
+                            <div className="bg-primary-container/5 border border-primary-container/20 rounded-lg p-sm space-y-1 mt-sm">
+                                <div className="flex justify-between items-center">
+                                    <span className="font-label-sm uppercase tracking-wider text-primary font-bold">{t("Selected Customer")}</span>
+                                    <span className="bg-primary/10 text-primary px-1.5 py-0.5 rounded font-data-mono text-[10px] font-bold">{selectedCustomers[0].code}</span>
+                                </div>
+                                <div className="font-headline-md text-[14px] text-on-surface fw-bold mt-1">{selectedCustomers[0].name_in_arabic ? `${selectedCustomers[0].name} (${selectedCustomers[0].name_in_arabic})` : selectedCustomers[0].name}</div>
+                                <div className="grid grid-cols-2 gap-x-2 gap-y-1 text-label-sm text-on-surface-variant pt-1 border-t border-outline-variant/30 mt-1">
+                                    {selectedCustomers[0].vat_no && (
+                                        <div>
+                                            <span className="opacity-60 block text-[9px] uppercase">{t("VAT NO.")}</span>
+                                            <span className="font-data-mono text-on-surface font-semibold">{selectedCustomers[0].vat_no}</span>
+                                        </div>
+                                    )}
+                                    {selectedCustomers[0].phone && (
+                                        <div>
+                                            <span className="opacity-60 block text-[9px] uppercase">{t("Phone")}</span>
+                                            <span className="font-data-mono text-on-surface font-semibold">{selectedCustomers[0].phone}</span>
+                                        </div>
+                                    )}
+                                    {selectedCustomers[0].credit_balance !== undefined && (
+                                        <div>
+                                            <span className="opacity-60 block text-[9px] uppercase">{t("Credit Balance")}</span>
+                                            <span className="text-primary font-semibold font-data-mono"><Amount amount={trimTo2Decimals(selectedCustomers[0].credit_balance)} /></span>
+                                        </div>
+                                    )}
+                                    {selectedCustomers[0].credit_limit !== undefined && selectedCustomers[0].credit_limit > 0 && (
+                                        <div>
+                                            <span className="opacity-60 block text-[9px] uppercase">{t("Credit Limit")}</span>
+                                            <span className="text-on-surface font-semibold font-data-mono"><Amount amount={trimTo2Decimals(selectedCustomers[0].credit_limit)} /></span>
+                                        </div>
+                                    )}
+                                </div>
+                                <div className="pt-1 flex justify-end">
+                                    <Button variant="btn btn-sm btn-primary py-0 px-2 text-[11px]" onClick={() => openCustomerPending(selectedCustomers[0])}>{t('Pendings')}</Button>
+                                </div>
+                            </div>
+                        )}
+                    </div>
+                );
+            case "barcode_scan":
+                return (
+                    <div key={field.key}>
+                        <label className="block font-label-md text-on-surface-variant mb-1">{t("Product Barcode Scan")}</label>
+                        <div className="relative">
+                            <DebounceInput
+                                minLength={3}
+                                debounceTimeout={100}
+                                placeholder={t('Scan Barcode')}
+                                className="form-control bg-surface-bright border border-outline-variant rounded px-sm py-1.5 focus:ring-1 focus:ring-primary focus:border-primary h-[34px] w-full text-body-md"
+                                value={formData.barcode}
+                                onChange={(event) => getProductByBarCode(event.target.value)}
+                            />
+                            {errors.bar_code && (
+                                <div style={{ color: "red" }} className="small mt-1">{t(errors.bar_code)}</div>
+                            )}
+                        </div>
+                    </div>
+                );
+            case "date":
+                return (
+                    <div key={field.key} className="grid grid-cols-2 gap-sm">
+                        <div className="col-span-2">
+                            <label className="block font-label-md text-on-surface-variant mb-1">{t('Date') + " *"}</label>
+                            <DatePicker
+                                id="date_str"
+                                selected={formData.date_str ? new Date(formData.date_str) : null}
+                                value={formData.date_str ? format(
+                                    new Date(formData.date_str),
+                                    "MMMM d, yyyy h:mm aa",
+                                    { locale: dateLocale }
+                                ) : null}
+                                className="form-control bg-surface-bright border border-outline-variant rounded px-sm py-1.5 h-[34px] w-full text-body-md"
+                                dateFormat="MMMM d, yyyy h:mm aa"
+                                locale={dateLocale}
+                                showTimeSelect
+                                timeIntervals="1"
+                                onChange={(value) => {
+                                    formData.date_str = value;
+                                    setFormData({ ...formData });
+                                }}
+                            />
+                            {errors.date_str && (
+                                <div style={{ color: "red" }} className="small mt-1">{t(errors.date_str)}</div>
+                            )}
+                        </div>
+                    </div>
+                );
+            case "phone":
+                return (
+                    <div key={field.key}>
+                        <label className="block font-label-md text-on-surface-variant mb-1">{t('Phone') + "( 05.. / +966..)"}</label>
+                        <div className="flex gap-1">
+                            <input
+                                id="sales_phone"
+                                name="sales_phone"
+                                value={formData.phone ? formData.phone : ""}
+                                type='string'
+                                onChange={(e) => {
+                                    delete errors["phone"];
+                                    setErrors({ ...errors });
+                                    formData.phone = e.target.value;
+                                    setFormData({ ...formData });
+                                }}
+                                className="form-control bg-surface-bright border border-outline-variant rounded px-sm py-1.5 h-[34px] w-full text-body-md"
+                                placeholder={t('Phone')}
+                            />
+                            <button type="button" className="px-2.5 bg-[#25D366] hover:opacity-90 border-0 text-white rounded flex items-center justify-center cursor-pointer" style={{ height: '34px' }} onClick={sendWhatsAppMessage}>
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="white" viewBox="0 0 16 16">
+                                    <path d="M13.601 2.326A7.875 7.875 0 0 0 8.036 0C3.596 0 0 3.597 0 8.036c0 1.417.37 2.805 1.07 4.03L0 16l3.993-1.05a7.968 7.968 0 0 0 4.043 1.085h.003c4.44 0 8.036-3.596 8.036-8.036 0-2.147-.836-4.166-2.37-5.673ZM8.036 14.6a6.584 6.584 0 0 1-3.35-.92l-.24-.142-2.37.622.63-2.31-.155-.238a6.587 6.587 0 0 1-1.018-3.513c0-3.637 2.96-6.6 6.6-6.6 1.764 0 3.42.69 4.67 1.94a6.56 6.56 0 0 1 1.93 4.668c0 3.637-2.96 6.6-6.6 6.6Zm3.61-4.885c-.198-.1-1.17-.578-1.352-.644-.18-.066-.312-.1-.444.1-.13.197-.51.644-.626.775-.115.13-.23.15-.428.05-.198-.1-.837-.308-1.594-.983-.59-.525-.99-1.174-1.11-1.372-.116-.198-.012-.305.088-.403.09-.09.198-.23.298-.345.1-.115.132-.197.2-.33.065-.13.032-.247-.017-.345-.05-.1-.444-1.07-.61-1.46-.16-.384-.323-.332-.444-.338l-.378-.007c-.13 0-.344.048-.525.23s-.688.672-.688 1.64c0 .967.704 1.9.802 2.03.1.13 1.386 2.116 3.365 2.963.47.203.837.324 1.122.414.472.15.902.13 1.24.08.378-.057 1.17-.48 1.336-.942.165-.462.165-.858.116-.943-.048-.084-.18-.132-.378-.23Z" />
+                                </svg>
+                            </button>
+                        </div>
+                        {errors.phone && (
+                            <div style={{ color: "red" }} className="small mt-1">{t(errors.phone)}</div>
+                        )}
+                    </div>
+                );
+            case "vat_no":
+                return (
+                    <div key={field.key}>
+                        <label className="block font-label-md text-on-surface-variant mb-1">{t('VAT NO.(15 digits)')}</label>
+                        <input
+                            id="sales_vat_no"
+                            name="sales_vat_no"
+                            value={formData.vat_no ? formData.vat_no : ""}
+                            type='string'
+                            onChange={(e) => {
+                                delete errors["vat_no"];
+                                setErrors({ ...errors });
+                                formData.vat_no = e.target.value;
+                                setFormData({ ...formData });
+                            }}
+                            className="form-control bg-surface-bright border border-outline-variant rounded px-sm py-1.5 h-[34px] w-full text-body-md"
+                            placeholder={t('VAT NO.')}
+                        />
+                        {errors.vat_no && (
+                            <div style={{ color: "red" }} className="small mt-1">{t(errors.vat_no)}</div>
+                        )}
+                    </div>
+                );
+            case "address":
+                return (
+                    <div key={field.key}>
+                        <label className="block font-label-md text-on-surface-variant mb-1">{t('Address')}</label>
+                        <textarea
+                            value={formData.address}
+                            onChange={(e) => {
+                                delete errors["address"];
+                                setErrors({ ...errors });
+                                formData.address = e.target.value;
+                                setFormData({ ...formData });
+                            }}
+                            className="form-control bg-surface-bright border border-outline-variant rounded px-sm py-1 w-full text-body-md"
+                            id="address"
+                            rows="2"
+                            placeholder={t('Address')}
+                        />
+                        {errors.address && (
+                            <div style={{ color: "red" }} className="small mt-1">{t(errors.address)}</div>
+                        )}
+                    </div>
+                );
+            case "remarks":
+                return (
+                    <div key={field.key}>
+                        <label className="block font-label-md text-on-surface-variant mb-1">{t('Remarks')}</label>
+                        <textarea
+                            value={formData.remarks}
+                            onChange={(e) => {
+                                delete errors["remarks"];
+                                setErrors({ ...errors });
+                                formData.remarks = e.target.value;
+                                setFormData({ ...formData });
+                            }}
+                            className="form-control bg-surface-bright border border-outline-variant rounded px-sm py-1 w-full text-body-md"
+                            id="remarks"
+                            rows="2"
+                            placeholder={t('Remarks')}
+                        />
+                        {errors.remarks && (
+                            <div style={{ color: "red" }} className="small mt-1">{t(errors.remarks)}</div>
+                        )}
+                    </div>
+                );
+            case "cash_discount":
+                return (
+                    <div key={field.key}>
+                        <label className="block font-label-md text-on-surface-variant mb-1">{t('Cash discount')}</label>
+                        <input
+                            type='number'
+                            ref={cashDiscountRef}
+                            id="sales_cash_discount"
+                            name="sales_cash_discount"
+                            value={cashDiscount}
+                            className="form-control bg-surface-bright border border-outline-variant rounded px-sm py-1 h-[34px] w-full text-body-md"
+                            onChange={(e) => {
+                                delete errors["cash_discount"];
+                                setErrors({ ...errors });
+                                if (!e.target.value) {
+                                    cashDiscount = e.target.value;
+                                    setCashDiscount(cashDiscount);
+                                    if (timerRef.current) clearTimeout(timerRef.current);
+                                    timerRef.current = setTimeout(() => {
+                                        reCalculate();
+                                    }, 100);
+                                    return;
+                                }
+                                cashDiscount = parseFloat(e.target.value);
+                                setCashDiscount(cashDiscount);
+                                if (cashDiscount > 0 && cashDiscount >= formData.net_total) {
+                                    errors["cash_discount"] = t("Cash discount should not be greater than or equal to Net Total: ") + formData.net_total?.toString();
+                                    setErrors({ ...errors });
+                                    return;
+                                }
+                                if (timerRef.current) clearTimeout(timerRef.current);
+                                timerRef.current = setTimeout(() => {
+                                    reCalculate();
+                                }, 100);
+                            }}
+                            onKeyDown={(e) => {
+                                if (timerRef.current) clearTimeout(timerRef.current);
+                                if (e.key === "Backspace") {
+                                    cashDiscount = "";
+                                    setCashDiscount(cashDiscount);
+                                    if (timerRef.current) clearTimeout(timerRef.current);
+                                    timerRef.current = setTimeout(() => {
+                                        reCalculate();
+                                    }, 100);
+                                }
+                            }}
+                            onFocus={() => {
+                                if (timerRef.current) clearTimeout(timerRef.current);
+                                timerRef.current = setTimeout(() => {
+                                    cashDiscountRef.current?.select();
+                                }, 20);
+                            }}
+                        />
+                        {errors.cash_discount && (
+                            <div style={{ color: "red" }} className="small mt-1">
+                                {errors.cash_discount}
+                            </div>
+                        )}
+                    </div>
+                );
+            case "commission":
+                return (
+                    <div key={field.key}>
+                        <label className="block font-label-md text-on-surface-variant mb-1">{t('Commission')}</label>
+                        <input
+                            type='number'
+                            ref={commissionRef}
+                            id="sales_commission"
+                            name="sales_commission"
+                            value={commission}
+                            className="form-control bg-surface-bright border border-outline-variant rounded px-sm py-1 h-[34px] w-full text-body-md"
+                            onChange={(e) => {
+                                delete errors["commission"];
+                                delete errors["commission_payment_method"];
+                                setErrors({ ...errors });
+                                if (!e.target.value) {
+                                    commission = e.target.value;
+                                    setCommission(commission);
+                                    setErrors({ ...errors });
+                                    return;
+                                }
+                                commission = parseFloat(e.target.value);
+                                setCommission(commission);
+                                if (commission > 0 && commission >= formData.net_total) {
+                                    errors["commission"] = t("Commission should not be greater than or equal to Net Total: ") + formData.net_total?.toString();
+                                    setErrors({ ...errors });
+                                    return;
+                                }
+                                if (commission > 0 && !formData.commission_payment_method) {
+                                    errors["commission_payment_method"] = t("Payment method is required");
+                                    setErrors({ ...errors });
+                                }
+                            }}
+                            onKeyDown={(e) => {
+                                if (timerRef.current) clearTimeout(timerRef.current);
+                                if (e.key === "Backspace") {
+                                    commission = "";
+                                    setCommission(commission);
+                                    delete errors["commission"];
+                                    delete errors["commission_payment_method"];
+                                    setErrors({ ...errors });
+                                }
+                            }}
+                            onFocus={() => {
+                                if (timerRef.current) clearTimeout(timerRef.current);
+                                timerRef.current = setTimeout(() => {
+                                    commissionRef.current?.select();
+                                }, 20);
+                            }}
+                        />
+                        {errors.commission && (
+                            <div style={{ color: "red" }} className="small mt-1">
+                                {t(errors.commission)}
+                            </div>
+                        )}
+                    </div>
+                );
+            case "commission_payment_method":
+                return (
+                    <div key={field.key}>
+                        <label className="block font-label-md text-on-surface-variant mb-1">{t('Commission Payment Method')}</label>
+                        <select
+                            value={formData.commission_payment_method}
+                            className="w-full bg-surface-bright border border-outline-variant rounded px-sm py-1 form-control text-body-md h-[34px]"
+                            onChange={(e) => {
+                                delete errors["commission_payment_method"];
+                                setErrors({ ...errors });
+                                if (!e.target.value && commission > 0) {
+                                    errors["commission_payment_method"] = t("Payment method is required");
+                                    setErrors({ ...errors });
+                                    formData.commission_payment_method = "";
+                                    setFormData({ ...formData });
+                                    return;
+                                }
+                                formData.commission_payment_method = e.target.value;
+                                setFormData({ ...formData });
+                            }}
+                        >
+                            <option value="">{t("Select")}</option>
+                            <option value="cash">{t("Cash")}</option>
+                            <option value="debit_card">{t("Debit Card")}</option>
+                            <option value="credit_card">{t("Credit Card")}</option>
+                            <option value="bank_card">{t("Bank Card")}</option>
+                            <option value="bank_transfer">{t("Bank Transfer")}</option>
+                            <option value="bank_cheque">{t("Bank Cheque")}</option>
+                        </select>
+                        {errors["commission_payment_method"] && (
+                            <div style={{ color: "red" }} className="small mt-1">
+                                {t(errors["commission_payment_method"])}
+                            </div>
+                        )}
+                    </div>
+                );
+            default:
+                return null;
+        }
+    };
+
+    useEffect(() => {
+        const saved = localStorage.getItem("sales_customer_details_settings");
+        if (saved) {
+            try {
+                const parsed = JSON.parse(saved);
+                if (Array.isArray(parsed)) {
+                    setCustomerDetailsFields(defaultCustomerDetailsFields.map((defaultField) => {
+                        const savedField = parsed.find((item) => item.key === defaultField.key);
+                        return savedField ? { ...defaultField, visible: savedField.visible } : defaultField;
+                    }));
+                    return;
+                }
+            } catch (_error) {
+                // ignore invalid saved config
+            }
+        }
+        setCustomerDetailsFields(defaultCustomerDetailsFields);
+    }, [defaultCustomerDetailsFields]);
+
     const [showProductSearchSettings, setShowProductSearchSettings] = useState(false);
 
     // Initial column config
@@ -3791,6 +4336,15 @@ const OrderCreate = forwardRef((props, ref) => {
             setFormType('type1');
         }
     }, [store.settings]);
+
+    useEffect(() => {
+        if (formType !== 'type1') {
+            const hasVisible = customerDetailsFields.some((field) => field.visible);
+            if (!hasVisible) {
+                setIsLeftSidebarCollapsed(true);
+            }
+        }
+    }, [formType, customerDetailsFields]);
 
     // ── Delivery Note Reminder Notifications ─────────────────────────────────
     const [dnNotifications, setDnNotifications] = useState([]);
@@ -4212,6 +4766,78 @@ const OrderCreate = forwardRef((props, ref) => {
                 </Modal.Footer>
             </Modal>
 
+            <Modal
+                show={showCustomerDetailsSettings}
+                onHide={() => setShowCustomerDetailsSettings(false)}
+                centered
+                size="lg"
+            >
+                <Modal.Header closeButton>
+                    <Modal.Title>
+                        <i
+                            className="bi bi-gear-fill"
+                            style={{ fontSize: "1.2rem", marginRight: "4px" }}
+                            title={t("Customer & Order Details Settings")}
+                        />
+                        {t("Customer & Order Details Settings")}
+                    </Modal.Title>
+                </Modal.Header>
+                <Modal.Body>
+                    {showCustomerDetailsSettings && (
+                        <>
+                            <p className="mb-3 text-label-sm text-on-surface-variant">
+                                {t("Choose which customer and order details appear in the sidebar, and drag to reorder them.")}
+                            </p>
+                            <DragDropContext onDragEnd={onDragEndCustomerDetailsFields}>
+                                <Droppable droppableId="customerDetailsFields">
+                                    {(provided) => (
+                                        <ul
+                                            className="list-group"
+                                            {...provided.droppableProps}
+                                            ref={provided.innerRef}
+                                        >
+                                            {customerDetailsFields.map((field, index) => (
+                                                <Draggable key={field.key} draggableId={"cdf-" + field.key} index={index}>
+                                                    {(provided) => (
+                                                        <li
+                                                            className="list-group-item d-flex justify-content-between align-items-center"
+                                                            ref={provided.innerRef}
+                                                            {...provided.draggableProps}
+                                                            {...provided.dragHandleProps}
+                                                        >
+                                                            <div>
+                                                                <input
+                                                                    style={{ width: "20px", height: "20px" }}
+                                                                    type="checkbox"
+                                                                    className="form-check-input me-2"
+                                                                    checked={field.visible}
+                                                                    onChange={() => handleToggleCustomerDetailsField(index)}
+                                                                />
+                                                                {t(field.label)}
+                                                            </div>
+                                                            <span style={{ cursor: "grab" }}>☰</span>
+                                                        </li>
+                                                    )}
+                                                </Draggable>
+                                            ))}
+                                            {provided.placeholder}
+                                        </ul>
+                                    )}
+                                </Droppable>
+                            </DragDropContext>
+                        </>
+                    )}
+                </Modal.Body>
+                <Modal.Footer>
+                    <Button variant="secondary" onClick={() => setShowCustomerDetailsSettings(false)}>
+                        {t('Close')}
+                    </Button>
+                    <Button variant="primary" onClick={() => RestoreDefaultCustomerDetailsSettings()}>
+                        {t('Restore to Default')}
+                    </Button>
+                </Modal.Footer>
+            </Modal>
+
             <ProductHistory ref={ProductHistoryRef} showToastMessage={props.showToastMessage} />
             {showOrderPrintPreview && <OrderPrint ref={PrintRef} onPrintClose={handlePrintClose} />}
             {showOrderPreview && <OrderPreview ref={PreviewRef} onPrintClose={handlePrintClose} />}
@@ -4312,7 +4938,7 @@ const OrderCreate = forwardRef((props, ref) => {
                         <Modal.Title>
                             {isUpdateForm ? t("Update Sales") + " #" + formData.code : t("Create New Sales Order")}
                         </Modal.Title>
-                        {!isUpdateForm && <div style={{ marginLeft: "20px" }}>
+                        {!isUpdateForm && store?.zatca?.phase == "2" && <div style={{ marginLeft: "20px" }}>
                             <input type="checkbox" className="form-check-input" id="sales_report_to_zatca" name="report_to_zatca" checked={formData.enable_report_to_zatca} onChange={(e) => {
                                 formData.enable_report_to_zatca = !formData.enable_report_to_zatca;
                                 setFormData({ ...formData });
@@ -4399,7 +5025,7 @@ const OrderCreate = forwardRef((props, ref) => {
                         <h1 className="font-headline-md text-headline-md text-on-surface m-0">
                             {isUpdateForm ? t("Update Sales") + " #" + formData.code : t("New Sales Order")}
                         </h1>
-                        {!isUpdateForm && (
+                        {!isUpdateForm && store?.zatca?.phase == "2" && (
                             <label style={{ display: "flex", alignItems: "center", gap: "6px", marginLeft: "16px", cursor: "pointer" }}>
                                 <input
                                     type="checkbox"
@@ -7515,525 +8141,23 @@ const OrderCreate = forwardRef((props, ref) => {
 
                                     <div className="flex justify-between items-center pb-xs border-b border-outline-variant/30 mb-sm">
                                         <span className="font-label-md uppercase tracking-wider text-on-surface-variant m-0">{t("Customer & Order Details")}</span>
-                                        <button type="button" onClick={() => setIsLeftSidebarCollapsed(true)} className="p-1 hover:bg-surface-variant rounded border-0 bg-transparent text-on-surface-variant flex items-center justify-center cursor-pointer" title={t("Collapse Left Sidebar")}>
-                                            <i className="bi bi-chevron-bar-left text-[18px]"></i>
-                                        </button>
-                                    </div>
-
-                                    {/* Customer Select */}
-                                    <div>
-                                        <label className="block font-label-md text-on-surface-variant mb-1">{t("Customer Selection")}</label>
-                                        <div className="flex gap-1 align-items-center">
-                                            <div className="relative flex-1">
-                                                <Typeahead
-                                                    id="customer_id"
-                                                    positionFixed={true}
-                                                    filterBy={() => true}
-                                                    labelKey="search_label"
-                                                    inputProps={{ className: 'form-control bg-surface-bright border border-outline-variant rounded px-sm py-1.5 focus:ring-1 focus:ring-primary focus:border-primary h-[34px] w-full text-body-md' }}
-                                                    isLoading={false}
-                                                    emptyLabel=""
-                                                    clearButton={false}
-                                                    open={openCustomerSearchResult}
-                                                    onChange={(selectedItems) => {
-                                                        delete errors.customer_id;
-                                                        setErrors(errors);
-                                                        if (selectedItems.length === 0) {
-                                                            delete errors.customer_id;
-                                                            delete errors.blocked;
-                                                            formData.customer_id = "";
-                                                            formData.customer_name = "";
-                                                            formData.customerName = "";
-                                                            setFormData({ ...formData });
-                                                            setSelectedCustomers([]);
-                                                            setOpenCustomerSearchResult(false);
-                                                            return;
-                                                        }
-
-                                                        formData.customer_id = selectedItems[0].id;
-                                                        if (selectedItems[0].use_remarks_in_sales && selectedItems[0].remarks) {
-                                                            formData.remarks = selectedItems[0].remarks;
-                                                        }
-
-                                                        if (selectedItems[0].phone && !formData.phone) {
-                                                            formData.phone = selectedItems[0].phone;
-                                                        }
-
-                                                        setFormData({ ...formData });
-                                                        setSelectedCustomers(selectedItems);
-                                                        setOpenCustomerSearchResult(false);
-
-                                                        // Warn immediately if this customer has too many unpaid sales
-                                                        if (store?.settings?.block_sales_after_pending_count > 0) {
-                                                            const storeId = localStorage.getItem("store_id");
-                                                            const cs = selectedItems[0]?.stores?.[storeId];
-                                                            const pendingCount = (cs?.sales_not_paid_count || 0) + (cs?.sales_paid_partially_count || 0);
-                                                            if (pendingCount >= store.settings.block_sales_after_pending_count) {
-                                                                errors.blocked = `Customer has ${pendingCount} unpaid sale(s). New sales are blocked until existing sales are paid.`;
-                                                            } else {
-                                                                delete errors.blocked;
-                                                            }
-                                                            setErrors({ ...errors });
-                                                        }
-                                                    }}
-                                                    options={customerOptions}
-                                                    placeholder={t('Customer Name / Mob / VAT # / ID')}
-                                                    selected={selectedCustomers}
-                                                    highlightOnlyResult={true}
-                                                    ref={customerSearchRef}
-                                                    onKeyDown={(e) => {
-                                                        if (e.key === "Escape") {
-                                                            delete errors.customer_id;
-                                                            formData.customer_id = "";
-                                                            formData.customer_name = "";
-                                                            formData.customerName = "";
-                                                            setFormData({ ...formData });
-                                                            setSelectedCustomers([]);
-                                                            setCustomerOptions([]);
-                                                            setOpenCustomerSearchResult(false);
-                                                            customerSearchRef.current?.clear();
-                                                        }
-                                                    }}
-                                                    onInputChange={(searchTerm, e) => {
-                                                        if (searchTerm) {
-                                                            formData.customerName = searchTerm;
-                                                            formData.customer_name = searchTerm;
-                                                            setFormData({ ...formData });
-                                                        }
-
-                                                        if (timerRef.current) clearTimeout(timerRef.current);
-                                                        timerRef.current = setTimeout(() => {
-                                                            suggestCustomers(searchTerm);
-                                                        }, 100);
-                                                    }}
-                                                    renderMenu={(results, menuProps, state) => {
-                                                        return (
-                                                            <Menu {...menuProps} style={{ ...menuProps.style, minWidth: '900px', width: 'max-content', maxWidth: '95vw', zIndex: 9999 }}>
-                                                                {/* Header */}
-                                                                <MenuItem disabled style={{ background: '#f8f9fa' }}>
-                                                                    <div style={{ display: 'flex', fontWeight: 'bold', padding: '4px 8px', borderBottom: '1px solid #ddd' }}>
-                                                                        <div style={{ width: '10%' }}>{t("ID")}</div>
-                                                                        <div style={{ width: '47%' }}>{t("Name")}</div>
-                                                                        <div style={{ width: '10%' }}>{t("Phone")}</div>
-                                                                        <div style={{ width: '13%' }}>{t("VAT NO.")}</div>
-                                                                        <div style={{ width: '10%' }}>{t("Credit Balance")}</div>
-                                                                        <div style={{ width: '10%' }}>{t("Credit Limit")}</div>
-                                                                    </div>
-                                                                </MenuItem>
-
-                                                                {/* Rows */}
-                                                                {results.map((option, index) => {
-                                                                    return (
-                                                                        <MenuItem option={option} position={index} key={index}>
-                                                                            <div style={{ display: 'flex', padding: '4px 8px' }}>
-                                                                                <div style={{ ...columnStyle, width: '10%' }}>
-                                                                                    {option.code}
-                                                                                </div>
-                                                                                <div style={{ ...columnStyle, width: '47%' }}>
-                                                                                    {option.name} {option.name_in_arabic ? `(${option.name_in_arabic})` : ""}
-                                                                                </div>
-                                                                                <div style={{ ...columnStyle, width: '10%' }}>
-                                                                                    {option.phone}
-                                                                                </div>
-                                                                                <div style={{ ...columnStyle, width: '13%' }}>
-                                                                                    {option.vat_no}
-                                                                                </div>
-                                                                                <div style={{ ...columnStyle, width: '10%' }}>
-                                                                                    <Amount amount={trimTo2Decimals(option.credit_balance)} />
-                                                                                </div>
-                                                                                <div style={{ ...columnStyle, width: '10%' }}>
-                                                                                    <Amount amount={trimTo2Decimals(option.credit_limit)} />
-                                                                                </div>
-                                                                            </div>
-                                                                        </MenuItem>
-                                                                    );
-                                                                })}
-                                                            </Menu>
-                                                        );
-                                                    }}
-                                                />
-                                            </div>
-                                            <div className="flex gap-xs shrink-0 align-items-center">
-                                                {formData.customer_id && (
-                                                    <button type="button" className="p-2 bg-surface-container hover:bg-surface-dim border border-outline-variant/30 rounded flex items-center justify-center cursor-pointer" style={{ height: '34px' }} onClick={() => openCustomerUpdateForm(formData.customer_id)}>
-                                                        <i className="bi bi-pencil text-on-surface-variant"></i>
-                                                    </button>
-                                                )}
-                                                <button type="button" className="px-2 bg-primary hover:opacity-90 border-0 text-on-primary rounded flex items-center justify-center cursor-pointer" style={{ height: '34px' }} onClick={openCustomerCreateForm}>
-                                                    <i className="bi bi-plus-lg text-[18px]"></i>
-                                                </button>
-                                                <button type="button" className="p-2 bg-surface-container hover:bg-surface-dim border border-outline-variant/30 rounded flex items-center justify-center cursor-pointer" style={{ height: '34px' }} onClick={openCustomers}>
-                                                    <i className="bi bi-list text-on-surface-variant"></i>
-                                                </button>
-                                            </div>
-                                        </div>
-                                        {errors.customer_id && (
-                                            <div style={{ color: "red" }} className="small mt-1">
-                                                {t(errors.customer_id)}
-                                            </div>
-                                        )}
-                                        {errors.blocked && (
-                                            <div style={{ color: "red" }} className="small mt-1 fw-semibold">
-                                                {errors.blocked}
-                                            </div>
-                                        )}
-
-                                        {/* 💳 PROMINENT ACTIVE CUSTOMER DETAILS CARD */}
-                                        {selectedCustomers.length > 0 && formData.customer_id && (
-                                            <div className="bg-primary-container/5 border border-primary-container/20 rounded-lg p-sm space-y-1 mt-sm">
-                                                <div className="flex justify-between items-center">
-                                                    <span className="font-label-sm uppercase tracking-wider text-primary font-bold">{t("Selected Customer")}</span>
-                                                    <span className="bg-primary/10 text-primary px-1.5 py-0.5 rounded font-data-mono text-[10px] font-bold">
-                                                        {selectedCustomers[0].code}
-                                                    </span>
-                                                </div>
-                                                <div className="font-headline-md text-[14px] text-on-surface fw-bold mt-1">
-                                                    {selectedCustomers[0].name_in_arabic ? `${selectedCustomers[0].name} (${selectedCustomers[0].name_in_arabic})` : selectedCustomers[0].name}
-                                                </div>
-                                                <div className="grid grid-cols-2 gap-x-2 gap-y-1 text-label-sm text-on-surface-variant pt-1 border-t border-outline-variant/30 mt-1">
-                                                    {selectedCustomers[0].vat_no && (
-                                                        <div>
-                                                            <span className="opacity-60 block text-[9px] uppercase">{t("VAT NO.")}</span>
-                                                            <span className="font-data-mono text-on-surface font-semibold">{selectedCustomers[0].vat_no}</span>
-                                                        </div>
-                                                    )}
-                                                    {selectedCustomers[0].phone && (
-                                                        <div>
-                                                            <span className="opacity-60 block text-[9px] uppercase">{t("Phone")}</span>
-                                                            <span className="font-data-mono text-on-surface font-semibold">{selectedCustomers[0].phone}</span>
-                                                        </div>
-                                                    )}
-                                                    {selectedCustomers[0].credit_balance !== undefined && (
-                                                        <div>
-                                                            <span className="opacity-60 block text-[9px] uppercase">{t("Credit Balance")}</span>
-                                                            <span className="text-primary font-semibold font-data-mono">
-                                                                <Amount amount={trimTo2Decimals(selectedCustomers[0].credit_balance)} />
-                                                            </span>
-                                                        </div>
-                                                    )}
-                                                    {selectedCustomers[0].credit_limit !== undefined && selectedCustomers[0].credit_limit > 0 && (
-                                                        <div>
-                                                            <span className="opacity-60 block text-[9px] uppercase">{t("Credit Limit")}</span>
-                                                            <span className="text-on-surface font-semibold font-data-mono">
-                                                                <Amount amount={trimTo2Decimals(selectedCustomers[0].credit_limit)} />
-                                                            </span>
-                                                        </div>
-                                                    )}
-                                                </div>
-                                                <div className="pt-1 flex justify-end">
-                                                    <Button variant="btn btn-sm btn-primary py-0 px-2 text-[11px]" onClick={() => openCustomerPending(selectedCustomers[0])}>
-                                                        {t('Pendings')}
-                                                    </Button>
-                                                </div>
-                                            </div>
-                                        )}
-                                    </div>
-
-                                    {/* Barcode scan */}
-                                    <div>
-                                        <label className="block font-label-md text-on-surface-variant mb-1">{t("Product Barcode Scan")}</label>
-                                        <div className="relative">
-                                            <DebounceInput
-                                                minLength={3}
-                                                debounceTimeout={100}
-                                                placeholder={t('Scan Barcode')}
-                                                className="form-control bg-surface-bright border border-outline-variant rounded px-sm py-1.5 focus:ring-1 focus:ring-primary focus:border-primary h-[34px] w-full text-body-md"
-                                                value={formData.barcode}
-                                                onChange={event => getProductByBarCode(event.target.value)}
-                                            />
-                                            {errors.bar_code && (
-                                                <div style={{ color: "red" }} className="small mt-1">
-                                                    {t(errors.bar_code)}
-                                                </div>
-                                            )}
-                                        </div>
-                                    </div>
-
-                                    {/* Order Date */}
-                                    <div className="grid grid-cols-2 gap-sm">
-                                        <div className="col-span-2">
-                                            <label className="block font-label-md text-on-surface-variant mb-1">{t('Date') + " *"}</label>
-                                            <DatePicker
-                                                id="date_str"
-                                                selected={formData.date_str ? new Date(formData.date_str) : null}
-                                                value={formData.date_str ? format(
-                                                    new Date(formData.date_str),
-                                                    "MMMM d, yyyy h:mm aa",
-                                                    { locale: dateLocale }
-                                                ) : null}
-                                                className="form-control bg-surface-bright border border-outline-variant rounded px-sm py-1.5 h-[34px] w-full text-body-md"
-                                                dateFormat="MMMM d, yyyy h:mm aa"
-                                                locale={dateLocale}
-                                                showTimeSelect
-                                                timeIntervals="1"
-                                                onChange={(value) => {
-                                                    formData.date_str = value;
-                                                    setFormData({ ...formData });
-                                                }}
-                                            />
-                                            {errors.date_str && (
-                                                <div style={{ color: "red" }} className="small mt-1">
-                                                    {t(errors.date_str)}
-                                                </div>
-                                            )}
-                                        </div>
-                                    </div>
-
-                                    {/* Phone & WhatsApp */}
-                                    <div>
-                                        <label className="block font-label-md text-on-surface-variant mb-1">{t('Phone') + "( 05.. / +966..)"}</label>
-                                        <div className="flex gap-1">
-                                            <input
-                                                id="sales_phone"
-                                                name="sales_phone"
-                                                value={formData.phone ? formData.phone : ""}
-                                                type='string'
-                                                onChange={(e) => {
-                                                    delete errors["phone"];
-                                                    setErrors({ ...errors });
-                                                    formData.phone = e.target.value;
-                                                    setFormData({ ...formData });
-                                                }}
-                                                className="form-control bg-surface-bright border border-outline-variant rounded px-sm py-1.5 h-[34px] w-full text-body-md"
-                                                placeholder={t('Phone')}
-                                            />
-                                            <button type="button" className="px-2.5 bg-[#25D366] hover:opacity-90 border-0 text-white rounded flex items-center justify-center cursor-pointer" style={{ height: '34px' }} onClick={sendWhatsAppMessage}>
-                                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="white" viewBox="0 0 16 16">
-                                                    <path d="M13.601 2.326A7.875 7.875 0 0 0 8.036 0C3.596 0 0 3.597 0 8.036c0 1.417.37 2.805 1.07 4.03L0 16l3.993-1.05a7.968 7.968 0 0 0 4.043 1.085h.003c4.44 0 8.036-3.596 8.036-8.036 0-2.147-.836-4.166-2.37-5.673ZM8.036 14.6a6.584 6.584 0 0 1-3.35-.92l-.24-.142-2.37.622.63-2.31-.155-.238a6.587 6.587 0 0 1-1.018-3.513c0-3.637 2.96-6.6 6.6-6.6 1.764 0 3.42.69 4.67 1.94a6.56 6.56 0 0 1 1.93 4.668c0 3.637-2.96 6.6-6.6 6.6Zm3.61-4.885c-.198-.1-1.17-.578-1.352-.644-.18-.066-.312-.1-.444.1-.13.197-.51.644-.626.775-.115.13-.23.15-.428.05-.198-.1-.837-.308-1.594-.983-.59-.525-.99-1.174-1.11-1.372-.116-.198-.012-.305.088-.403.09-.09.198-.23.298-.345.1-.115.132-.197.2-.33.065-.13.032-.247-.017-.345-.05-.1-.444-1.07-.61-1.46-.16-.384-.323-.332-.444-.338l-.378-.007c-.13 0-.344.048-.525.23s-.688.672-.688 1.64c0 .967.704 1.9.802 2.03.1.13 1.386 2.116 3.365 2.963.47.203.837.324 1.122.414.472.15.902.13 1.24.08.378-.057 1.17-.48 1.336-.942.165-.462.165-.858.116-.943-.048-.084-.18-.132-.378-.23Z" />
-                                                </svg>
+                                        <div className="flex items-center gap-xs">
+                                            <button type="button" onClick={() => setShowCustomerDetailsSettings(true)} className="p-1 hover:bg-surface-variant rounded border-0 bg-transparent text-on-surface-variant flex items-center justify-center cursor-pointer" title={t("Configure Customer & Order Details")}>
+                                                <i className="bi bi-gear-fill text-[18px]"></i>
+                                            </button>
+                                            <button type="button" onClick={() => setIsLeftSidebarCollapsed(true)} className="p-1 hover:bg-surface-variant rounded border-0 bg-transparent text-on-surface-variant flex items-center justify-center cursor-pointer" title={t("Collapse Left Sidebar")}>
+                                                <i className="bi bi-chevron-bar-left text-[18px]"></i>
                                             </button>
                                         </div>
-                                        {errors.phone && (
-                                            <div style={{ color: "red" }} className="small mt-1">
-                                                {t(errors.phone)}
-                                            </div>
-                                        )}
                                     </div>
 
-                                    {/* VAT No */}
-                                    <div>
-                                        <label className="block font-label-md text-on-surface-variant mb-1">{t('VAT NO.(15 digits)')}</label>
-                                        <input
-                                            id="sales_vat_no"
-                                            name="sales_vat_no"
-                                            value={formData.vat_no ? formData.vat_no : ""}
-                                            type='string'
-                                            onChange={(e) => {
-                                                delete errors["vat_no"];
-                                                setErrors({ ...errors });
-                                                formData.vat_no = e.target.value;
-                                                setFormData({ ...formData });
-                                            }}
-                                            className="form-control bg-surface-bright border border-outline-variant rounded px-sm py-1.5 h-[34px] w-full text-body-md"
-                                            placeholder={t('VAT NO.')}
-                                        />
-                                        {errors.vat_no && (
-                                            <div style={{ color: "red" }} className="small mt-1">
-                                                {t(errors.vat_no)}
-                                            </div>
-                                        )}
-                                    </div>
-
-                                    {/* Address */}
-                                    <div>
-                                        <label className="block font-label-md text-on-surface-variant mb-1">{t('Address')}</label>
-                                        <textarea
-                                            value={formData.address}
-                                            onChange={(e) => {
-                                                delete errors["address"];
-                                                setErrors({ ...errors });
-                                                formData.address = e.target.value;
-                                                setFormData({ ...formData });
-                                            }}
-                                            className="form-control bg-surface-bright border border-outline-variant rounded px-sm py-1 w-full text-body-md"
-                                            id="address"
-                                            rows="2"
-                                            placeholder={t('Address')}
-                                        />
-                                        {errors.address && (
-                                            <div style={{ color: "red" }} className="small mt-1">
-                                                {t(errors.address)}
-                                            </div>
-                                        )}
-                                    </div>
-
-                                    {/* Remarks */}
-                                    <div>
-                                        <label className="block font-label-md text-on-surface-variant mb-1">{t('Remarks')}</label>
-                                        <textarea
-                                            value={formData.remarks}
-                                            onChange={(e) => {
-                                                delete errors["remarks"];
-                                                setErrors({ ...errors });
-                                                formData.remarks = e.target.value;
-                                                setFormData({ ...formData });
-                                            }}
-                                            className="form-control bg-surface-bright border border-outline-variant rounded px-sm py-1 w-full text-body-md"
-                                            id="remarks"
-                                            rows="2"
-                                            placeholder={t('Remarks')}
-                                        />
-                                        {errors.remarks && (
-                                            <div style={{ color: "red" }} className="small mt-1">
-                                                {t(errors.remarks)}
-                                            </div>
-                                        )}
-                                    </div>
-
-                                    {/* Modifiers Grid inside Sidebar */}
-                                    <div className="pt-md border-t border-outline-variant/30 space-y-sm">
-                                        <div className="grid grid-cols-2 gap-sm">
-                                            {/* Cash Discount */}
-                                            <div>
-                                                <label className="block font-label-sm text-on-surface-variant mb-1">{t("Cash discount")}</label>
-                                                <input
-                                                    type='number'
-                                                    ref={cashDiscountRef}
-                                                    id="sales_cash_discount"
-                                                    name="sales_cash_discount"
-                                                    value={cashDiscount}
-                                                    className="form-control bg-surface-bright border border-outline-variant rounded px-sm py-1 h-[34px] w-full text-body-md"
-                                                    onChange={(e) => {
-                                                        delete errors["cash_discount"];
-                                                        setErrors({ ...errors });
-                                                        if (!e.target.value) {
-                                                            cashDiscount = e.target.value;
-                                                            setCashDiscount(cashDiscount);
-                                                            if (timerRef.current) clearTimeout(timerRef.current);
-                                                            timerRef.current = setTimeout(() => {
-                                                                reCalculate();
-                                                            }, 100);
-                                                            return;
-                                                        }
-                                                        cashDiscount = parseFloat(e.target.value);
-                                                        setCashDiscount(cashDiscount);
-                                                        if (cashDiscount > 0 && cashDiscount >= formData.net_total) {
-                                                            errors["cash_discount"] = t("Cash discount should not be greater than or equal to Net Total: ") + formData.net_total?.toString();
-                                                            setErrors({ ...errors });
-                                                            return;
-                                                        }
-                                                        if (timerRef.current) clearTimeout(timerRef.current);
-                                                        timerRef.current = setTimeout(() => {
-                                                            reCalculate();
-                                                        }, 100);
-                                                    }}
-                                                    onKeyDown={(e) => {
-                                                        if (timerRef.current) clearTimeout(timerRef.current);
-                                                        if (e.key === "Backspace") {
-                                                            cashDiscount = "";
-                                                            setCashDiscount(cashDiscount);
-                                                            if (timerRef.current) clearTimeout(timerRef.current);
-                                                            timerRef.current = setTimeout(() => {
-                                                                reCalculate();
-                                                            }, 100);
-                                                        }
-                                                    }}
-                                                    onFocus={() => {
-                                                        if (timerRef.current) clearTimeout(timerRef.current);
-                                                        timerRef.current = setTimeout(() => {
-                                                            cashDiscountRef.current?.select();
-                                                        }, 20);
-                                                    }}
-                                                />
-                                                {errors.cash_discount && (
-                                                    <div style={{ color: "red" }} className="small mt-1">
-                                                        {errors.cash_discount}
-                                                    </div>
-                                                )}
-                                            </div>
-
-                                            {/* Commission */}
-                                            <div>
-                                                <label className="block font-label-sm text-on-surface-variant mb-1">{t("Commission")}</label>
-                                                <input
-                                                    type='number'
-                                                    ref={commissionRef}
-                                                    id="sales_commission"
-                                                    name="sales_commission"
-                                                    value={commission}
-                                                    className="form-control bg-surface-bright border border-outline-variant rounded px-sm py-1 h-[34px] w-full text-body-md"
-                                                    onChange={(e) => {
-                                                        delete errors["commission"];
-                                                        delete errors["commission_payment_method"];
-                                                        setErrors({ ...errors });
-                                                        if (!e.target.value) {
-                                                            commission = e.target.value;
-                                                            setCommission(commission);
-                                                            setErrors({ ...errors });
-                                                            return;
-                                                        }
-                                                        commission = parseFloat(e.target.value);
-                                                        setCommission(commission);
-                                                        if (commission > 0 && commission >= formData.net_total) {
-                                                            errors["commission"] = t("Commission should not be greater than or equal to Net Total: ") + formData.net_total?.toString();
-                                                            setErrors({ ...errors });
-                                                            return;
-                                                        }
-                                                        if (commission > 0 && !formData.commission_payment_method) {
-                                                            errors["commission_payment_method"] = t("Payment method is required");
-                                                            setErrors({ ...errors });
-                                                        }
-                                                    }}
-                                                    onKeyDown={(e) => {
-                                                        if (timerRef.current) clearTimeout(timerRef.current);
-                                                        if (e.key === "Backspace") {
-                                                            commission = "";
-                                                            setCommission(commission);
-                                                            delete errors["commission"];
-                                                            delete errors["commission_payment_method"];
-                                                            setErrors({ ...errors });
-                                                        }
-                                                    }}
-                                                    onFocus={() => {
-                                                        if (timerRef.current) clearTimeout(timerRef.current);
-                                                        timerRef.current = setTimeout(() => {
-                                                            commissionRef.current?.select();
-                                                        }, 20);
-                                                    }}
-                                                />
-                                                {errors.commission && (
-                                                    <div style={{ color: "red" }} className="small mt-1">
-                                                        {t(errors.commission)}
-                                                    </div>
-                                                )}
-                                            </div>
-
-                                            {/* Commission Payment Method (Always visible) */}
-                                            <div>
-                                                <label className="block font-label-sm text-on-surface-variant mb-1">{t("Commission Payment Method")}</label>
-                                                <select
-                                                    value={formData.commission_payment_method}
-                                                    className="w-full bg-surface-bright border border-outline-variant rounded px-sm py-1 form-control text-body-md h-[34px]"
-                                                    onChange={(e) => {
-                                                        delete errors["commission_payment_method"];
-                                                        setErrors({ ...errors });
-                                                        if (!e.target.value && commission > 0) {
-                                                            errors["commission_payment_method"] = t("Payment method is required");
-                                                            setErrors({ ...errors });
-                                                            formData.commission_payment_method = "";
-                                                            setFormData({ ...formData });
-                                                            return;
-                                                        }
-                                                        formData.commission_payment_method = e.target.value;
-                                                        setFormData({ ...formData });
-                                                    }}
-                                                >
-                                                    <option value="">{t("Select")}</option>
-                                                    <option value="cash">{t("Cash")}</option>
-                                                    <option value="debit_card">{t("Debit Card")}</option>
-                                                    <option value="credit_card">{t("Credit Card")}</option>
-                                                    <option value="bank_card">{t("Bank Card")}</option>
-                                                    <option value="bank_transfer">{t("Bank Transfer")}</option>
-                                                    <option value="bank_cheque">{t("Bank Cheque")}</option>
-                                                </select>
-                                                {errors["commission_payment_method"] && (
-                                                    <div style={{ color: "red" }} className="small mt-1">
-                                                        {t(errors["commission_payment_method"])}
-                                                    </div>
-                                                )}
-                                            </div>
+                                    {customerDetailsFields.filter((field) => field.visible).length === 0 ? (
+                                        <div className="rounded-lg border border-dashed border-outline-variant/40 p-sm text-label-md text-on-surface-variant">
+                                            {t("No customer or order fields are active. Open settings to enable fields.")}
                                         </div>
-                                    </div>
+                                    ) : (
+                                        customerDetailsFields.filter((field) => field.visible).map((field) => renderCustomerDetailField(field))
+                                    )}
                                 </aside> {/* Close left sidebar */}
                                 <div className="w-full flex-1 min-w-0 flex flex-col bg-surface overflow-hidden">
 
@@ -10048,7 +10172,7 @@ const OrderCreate = forwardRef((props, ref) => {
                                                             <div className="flex justify-between items-end pt-2">
                                                                 <div>
                                                                     <span style={{ display: "block", fontSize: "11px", fontWeight: 700, letterSpacing: "0.15em", textTransform: "uppercase", color: "rgba(255,255,255,0.55)", marginBottom: "4px", cursor: "help" }} title={`${t("Total Taxable Amount(without VAT)")} + ${t("VAT Price ( {{vatPercent}}% of Taxable Amount)", { vatPercent: formData.vat_percent })} ${roundingAmount > 0 ? "+ " + t("Rounding Amount") : "- " + t("Rounding Amount")} (${trimTo2Decimals(formData.total + shipping - discount)} + ${trimTo2Decimals(formData.vat_price)} ${roundingAmount > 0 ? "+ " : "- "}${trimTo2Decimals(roundingAmount)}) = ${trimTo2Decimals(formData.net_total)}`}>{t("Net Payable")}</span>
-                                                                    <span className="font-data-mono" style={{ fontSize: "52px", fontWeight: 800, lineHeight: 1, color: "#ffffff", letterSpacing: "-2px" }}>{trimTo2Decimals(formData.net_total)}</span>
+                                                                    <span className="font-data-mono" style={{ fontSize: "52px", fontWeight: 800, lineHeight: 1.05, color: "#ffffff", letterSpacing: "0.5px" }}>{trimTo2Decimals(formData.net_total)}</span>
                                                                 </div>
                                                                 <span style={{ fontSize: "15px", fontWeight: 600, color: "rgba(255,255,255,0.45)", marginBottom: "8px", letterSpacing: "0.05em" }}>SAR</span>
                                                             </div>
