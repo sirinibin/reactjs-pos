@@ -74,6 +74,7 @@ const SalesReturnCreate = forwardRef((props, ref) => {
         open(id, orderId) {
             saleReturnID = id;
             setSaleReturnID(id);
+            setIsZatcaLocked(false);
 
             errors = {};
             setErrors({ ...errors });
@@ -346,6 +347,11 @@ const SalesReturnCreate = forwardRef((props, ref) => {
 
                 setFormData({ ...formData });
                 reCalculate();
+
+                if (store?.zatca?.phase === "2" && data.result?.zatca?.reporting_passed) {
+                    setIsZatcaLocked(true);
+                }
+
                 checkWarnings();
                 checkErrors();
             })
@@ -625,6 +631,7 @@ const SalesReturnCreate = forwardRef((props, ref) => {
     //const history = useHistory();
     let [errors, setErrors] = useState({});
     const [isProcessing, setProcessing] = useState(false);
+    const [isZatcaLocked, setIsZatcaLocked] = useState(false);
 
     //fields
     let [formData, setFormData] = useState({
@@ -639,7 +646,7 @@ const SalesReturnCreate = forwardRef((props, ref) => {
         price_type: "retail",
     });
 
-    const isZatcaReported = !!formData?.id && store?.zatca?.phase === "2" && !!formData?.zatca?.reporting_passed;
+    const isZatcaReported = isZatcaLocked;
 
     //Product Auto Suggestion
     let [selectedProducts, setSelectedProducts] = useState(null);
@@ -2068,8 +2075,16 @@ const SalesReturnCreate = forwardRef((props, ref) => {
     }
     useEffect(() => {
         const saved = localStorage.getItem('sales_return_sp_table_settings');
-        if (saved) setSPColumns(JSON.parse(saved));
-    }, []);
+        if (saved) {
+            const savedCols = JSON.parse(saved);
+            const savedKeys = new Set(savedCols.map(c => c.key));
+            const merged = [
+                ...savedCols,
+                ...defaultSPColumns.filter(c => !savedKeys.has(c.key)),
+            ];
+            setSPColumns(merged);
+        }
+    }, [defaultSPColumns]);
     function openReferenceUpdateForm(id, referenceModel) {
         showReferenceUpdateForm = true;
         setShowReferenceUpdateForm(showReferenceUpdateForm);
@@ -3612,7 +3627,7 @@ const SalesReturnCreate = forwardRef((props, ref) => {
                                                                     id={`${"sales_product_line_total_" + index}`}
                                                                     name={`${"sales_product_line_total_" + index}`}
                                                                     onWheel={(e) => e.target.blur()}
-                                                                    value={selectedProducts[index].line_total}
+                                                                    value={parseFloat(trimTo2Decimals(((selectedProducts[index].unit_price || 0) - (selectedProducts[index].unit_discount || 0)) * (selectedProducts[index].quantity || 0))) || ""}
                                                                     className={`form-control text-end ${errors["line_total_" + index] ? 'is-invalid' : ''} ${warnings["line_total_" + index] ? 'border-warning text-warning' : ''}`}
                                                                     placeholder="Line total"
                                                                     ref={(el) => {
@@ -3731,7 +3746,7 @@ const SalesReturnCreate = forwardRef((props, ref) => {
                                                                     id={`${"sales_product_line_total_with_vat" + index}`}
                                                                     name={`${"sales_product_line_total_with_vat" + index}`}
                                                                     onWheel={(e) => e.target.blur()}
-                                                                    value={selectedProducts[index].line_total_with_vat}
+                                                                    value={parseFloat(trimTo2Decimals(((selectedProducts[index].unit_price_with_vat || 0) - (selectedProducts[index].unit_discount_with_vat || 0)) * (selectedProducts[index].quantity || 0))) || ""}
                                                                     className={`form-control text-end ${errors["line_total_with_vat" + index] ? 'is-invalid' : ''} ${warnings["line_total_with_vat" + index] ? 'border-warning text-warning' : ''}`}
                                                                     placeholder="Line total with VAT"
                                                                     ref={(el) => {
