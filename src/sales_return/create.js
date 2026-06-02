@@ -626,7 +626,6 @@ const SalesReturnCreate = forwardRef((props, ref) => {
     let [errors, setErrors] = useState({});
     const [isProcessing, setProcessing] = useState(false);
 
-
     //fields
     let [formData, setFormData] = useState({
         order_id: "",
@@ -640,6 +639,7 @@ const SalesReturnCreate = forwardRef((props, ref) => {
         price_type: "retail",
     });
 
+    const isZatcaReported = !!formData?.id && store?.zatca?.phase === "2" && !!formData?.zatca?.reporting_passed;
 
     //Product Auto Suggestion
     let [selectedProducts, setSelectedProducts] = useState(null);
@@ -2824,6 +2824,7 @@ const SalesReturnCreate = forwardRef((props, ref) => {
                                                                     name={`${"sales_return_product_quantity_" + index}`}
                                                                     className={`form-control text-end ${errors["quantity_" + index] ? 'is-invalid' : warnings["quantity_" + index] ? 'border-warning text-warning' : ''}`}
                                                                     onWheel={(e) => e.target.blur()}
+                                                                    disabled={isZatcaReported}
                                                                     value={product.quantity}
                                                                     placeholder="Quantity"
                                                                     ref={(el) => {
@@ -2964,6 +2965,7 @@ const SalesReturnCreate = forwardRef((props, ref) => {
                                                                     id={`${"sales_return_product_unit_price_" + index}`}
                                                                     name={`${"sales_return_product_unit_price_" + index}`}
                                                                     onWheel={(e) => e.target.blur()}
+                                                                    disabled={isZatcaReported}
                                                                     value={selectedProducts[index].unit_price}
                                                                     className={`form-control text-end ${errors["unit_price_" + index] ? 'is-invalid' : ''} ${warnings["unit_price_" + index] ? 'border-warning text-warning' : ''}`}
                                                                     placeholder="Unit Price(without VAT)"
@@ -3070,6 +3072,7 @@ const SalesReturnCreate = forwardRef((props, ref) => {
                                                                     id={`${"sales_return_product_unit_price_with_vat_" + index}`}
                                                                     name={`${"sales_return_product_unit_price_with_vat_" + index}`}
                                                                     onWheel={(e) => e.target.blur()}
+                                                                    disabled={isZatcaReported}
                                                                     value={selectedProducts[index].unit_price_with_vat}
                                                                     className={`form-control text-end ${errors["unit_price_with_vat_" + index] ? 'is-invalid' : ''} ${warnings["unit_price_with_vat_" + index] ? 'border-warning text-warning' : ''}`}
                                                                     ref={(el) => {
@@ -3300,6 +3303,7 @@ const SalesReturnCreate = forwardRef((props, ref) => {
                                                                     id={`${"sales_return_unit_discount_with_vat_" + index}`}
                                                                     name={`${"sales_return_unit_discount_with_vat_" + index}`}
                                                                     onWheel={(e) => e.target.blur()}
+                                                                    disabled={isZatcaReported}
                                                                     className={`form-control text-end ${errors["unit_discount_with_vat_" + index] ? 'is-invalid' : ''} ${warnings["unit_discount_with_vat_" + index] ? 'border-warning text-warning' : ''}`}
                                                                     value={selectedProducts[index].unit_discount_with_vat}
                                                                     ref={(el) => {
@@ -3879,7 +3883,7 @@ const SalesReturnCreate = forwardRef((props, ref) => {
                                             {t("Shipping & Handling Fees")}
                                         </th>
                                         <td className="text-end">
-                                            <input type="number" id="sales_shipping_fees" name="sales_shipping_fees" onWheel={(e) => e.target.blur()} style={{ width: "150px" }} className="text-start" value={shipping} onChange={(e) => {
+                                            <input type="number" id="sales_shipping_fees" name="sales_shipping_fees" onWheel={(e) => e.target.blur()} disabled={isZatcaReported} style={{ width: "150px" }} className="text-start" value={shipping} onChange={(e) => {
                                                 if (timerRef.current) clearTimeout(timerRef.current);
                                                 delete errors["shipping_handling_fees"];
                                                 setErrors({ ...errors });
@@ -4029,7 +4033,7 @@ const SalesReturnCreate = forwardRef((props, ref) => {
                                             <input type="number"
                                                 id="sales_discount"
                                                 name="sales_discount"
-                                                onWheel={(e) => e.target.blur()} style={{ width: "150px" }}
+                                                onWheel={(e) => e.target.blur()} disabled={isZatcaReported} style={{ width: "150px" }}
                                                 className="text-start"
                                                 value={discount}
                                                 ref={discountRef}
@@ -4217,6 +4221,7 @@ const SalesReturnCreate = forwardRef((props, ref) => {
                                         <td className="text-end">
                                             <input type="number" id="sales_discount" name="sales_discount_with_vat"
                                                 onWheel={(e) => e.target.blur()}
+                                                disabled={isZatcaReported}
                                                 style={{ width: "150px" }}
                                                 className="text-start"
                                                 value={discountWithVAT}
