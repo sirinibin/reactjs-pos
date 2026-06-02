@@ -509,7 +509,7 @@ const OrderCreate = forwardRef((props, ref) => {
                 reCalculate();
                 setFormData({ ...formData });
 
-                if (store?.zatca?.phase === "2" && data.result?.zatca?.reporting_passed) {
+                if (data.result?.zatca?.reporting_passed) {
                     setIsZatcaLocked(true);
                 }
 

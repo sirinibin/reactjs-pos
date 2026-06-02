@@ -348,7 +348,7 @@ const SalesReturnCreate = forwardRef((props, ref) => {
                 setFormData({ ...formData });
                 reCalculate();
 
-                if (store?.zatca?.phase === "2" && data.result?.zatca?.reporting_passed) {
+                if (data.result?.zatca?.reporting_passed) {
                     setIsZatcaLocked(true);
                 }
 
