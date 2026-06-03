@@ -3204,6 +3204,7 @@ const SalesReturnCreate = forwardRef((props, ref) => {
                                                                     id={`${"sales_return_unit_discount_" + index}`}
                                                                     name={`${"sales_return_unit_discount_" + index}`}
                                                                     onWheel={(e) => e.target.blur()}
+                                                                    disabled={isZatcaReported}
                                                                     className={`form-control text-end ${errors["unit_discount_" + index] ? 'is-invalid' : ''} ${warnings["unit_discount_" + index] ? 'border-warning text-warning' : ''}`}
                                                                     value={selectedProducts[index].unit_discount}
                                                                     ref={(el) => {
