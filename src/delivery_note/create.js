@@ -502,7 +502,7 @@ const DeliveryNoteCreate = forwardRef((props, ref) => {
       setTimeout(() => {
         openCustomerSearchResult = false;
         setOpenCustomerSearchResult(false);
-      }, 100);
+      }, 300);
       return;
     }
 
@@ -2038,7 +2038,7 @@ const DeliveryNoteCreate = forwardRef((props, ref) => {
                   if (timerRef.current) clearTimeout(timerRef.current);
                   timerRef.current = setTimeout(() => {
                     suggestCustomers(searchTerm);
-                  }, 100);
+                  }, 350);
                 }}
 
                 renderMenu={(results, menuProps, state) => {

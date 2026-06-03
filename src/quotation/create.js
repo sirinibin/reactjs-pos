@@ -544,6 +544,9 @@ const QuotationCreate = forwardRef((props, ref) => {
 
     console.log("searchTerm:" + searchTerm);
     if (!searchTerm) {
+      setTimeout(() => {
+        setOpenCustomerSearchResult(false);
+      }, 300);
       return;
     }
 
@@ -577,6 +580,12 @@ const QuotationCreate = forwardRef((props, ref) => {
       requestOptions
     );
     let data = await result.json();
+
+    if (!data.result || data.result.length === 0) {
+      setOpenCustomerSearchResult(false);
+      return;
+    }
+    setOpenCustomerSearchResult(true);
 
     const filtered = data.result.filter((opt) => customCustomerFilter(opt, searchTerm));
 
@@ -634,6 +643,7 @@ const QuotationCreate = forwardRef((props, ref) => {
     //setIsCustomersLoading(false);
   }
 
+  let [openCustomerSearchResult, setOpenCustomerSearchResult] = useState(false);
   let [openProductSearchResult, setOpenProductSearchResult] = useState(false);
 
 
@@ -3041,6 +3051,7 @@ async function checkWarning(i) {
                   labelKey="search_label"
                   filterBy={() => true}
                   isLoading={false}
+                  open={openCustomerSearchResult}
                   onChange={(selectedItems) => {
                     delete errors["customer_id"];
                     setErrors(errors);
@@ -3052,11 +3063,13 @@ async function checkWarning(i) {
                       formData.customerName = "";
                       setFormData({ ...formData });
                       setSelectedCustomers([]);
+                      setOpenCustomerSearchResult(false);
                       return;
                     }
                     formData.customer_id = selectedItems[0].id;
                     setFormData({ ...formData });
                     setSelectedCustomers(selectedItems);
+                    setOpenCustomerSearchResult(false);
                   }}
                   options={customerOptions}
                   placeholder="Customer Name / Mob / VAT # / ID"
@@ -3071,6 +3084,7 @@ async function checkWarning(i) {
                       setFormData({ ...formData });
                       setSelectedCustomers([]);
                       setCustomerOptions([]);
+                      setOpenCustomerSearchResult(false);
                       customerSearchRef.current?.clear();
                     }
                   }}
@@ -3084,7 +3098,7 @@ async function checkWarning(i) {
                     if (timerRef.current) clearTimeout(timerRef.current);
                     timerRef.current = setTimeout(() => {
                       suggestCustomers(searchTerm);
-                    }, 100);
+                    }, 350);
                   }}
 
                   renderMenu={(results, menuProps, state) => {

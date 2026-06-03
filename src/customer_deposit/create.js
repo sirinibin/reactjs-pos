@@ -306,7 +306,7 @@ const CustomerDepositCreate = forwardRef((props, ref) => {
         if (!searchTerm) {
             setTimeout(() => {
                 setOpenCustomerSearchResult(false);
-            }, 100);
+            }, 300);
             return;
         }
 
@@ -477,7 +477,7 @@ const CustomerDepositCreate = forwardRef((props, ref) => {
 
             setTimeout(() => {
                 setOpenVendorSearchResult(false);
-            }, 100);
+            }, 300);
             return;
         }
 
@@ -1332,7 +1332,7 @@ const CustomerDepositCreate = forwardRef((props, ref) => {
                                             if (timerRef.current) clearTimeout(timerRef.current);
                                             timerRef.current = setTimeout(() => {
                                                 suggestCustomers(searchTerm);
-                                            }, 100);
+                                            }, 350);
                                         }}
                                         renderMenu={(results, menuProps, state) => {
                                             const searchWords = state.text.toLowerCase().split(" ").filter(Boolean);
@@ -1476,7 +1476,7 @@ const CustomerDepositCreate = forwardRef((props, ref) => {
                                             if (timerRef.current) clearTimeout(timerRef.current);
                                             timerRef.current = setTimeout(() => {
                                                 suggestVendors(searchTerm);
-                                            }, 100);
+                                            }, 350);
                                         }}
                                         renderMenu={(results, menuProps, state) => {
                                             const searchWords = state.text.toLowerCase().split(" ").filter(Boolean);
