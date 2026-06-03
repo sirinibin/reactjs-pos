@@ -36,6 +36,7 @@ function Sidebar(props) {
             'accounts',
             'users',
             // 'signatures'
+            'dashboard',
         ],
     });
 
@@ -171,6 +172,15 @@ function Sidebar(props) {
                     <Link to="/dashboard/quotation_sales_returns" className="sidebar-link">
                         <i className="bi bi-file-earmark-text" />
                         <span className="align-middle">{t("Quotation Sales Returns")}</span>
+                    </Link>
+                </li>
+
+                <li onClick={() => {
+                    toggleActive(appState.tabs[26]);
+                }} className={toggleActiveStyles(appState.tabs[26])} >
+                    <Link to="/dashboard/business-dashboard" className="sidebar-link">
+                        <i className="bi bi-speedometer2" />
+                        <span className="align-middle">{t("Dashboard")}</span>
                     </Link>
                 </li>
 

@@ -36,6 +36,10 @@ function App() {
           <Route path="/report-print">
             <ReportPrintPage />
           </Route>
+          <Route path="/dashboard/business-dashboard">
+            <Dashboard />
+          </Route>
+
           <Route path="/dashboard/analytics">
             <Dashboard />
           </Route>

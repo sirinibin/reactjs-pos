@@ -1196,7 +1196,7 @@ const OrderCreate = forwardRef((props, ref) => {
         if (!searchTerm) {
             setTimeout(() => {
                 setOpenCustomerSearchResult(false);
-            }, 100);
+            }, 300);
             return;
         }
 
@@ -3765,7 +3765,7 @@ const OrderCreate = forwardRef((props, ref) => {
                                         if (timerRef.current) clearTimeout(timerRef.current);
                                         timerRef.current = setTimeout(() => {
                                             suggestCustomers(searchTerm);
-                                        }, 100);
+                                        }, 350);
                                     }}
                                     renderMenu={(results, menuProps, state) => {
                                         return (
@@ -4358,7 +4358,7 @@ const OrderCreate = forwardRef((props, ref) => {
         }
     }, [formType, customerDetailsFields]);
 
-const isZatcaReported = isZatcaLocked;
+    const isZatcaReported = isZatcaLocked;
 
     // ── Delivery Note Reminder Notifications ─────────────────────────────────
     const [dnNotifications, setDnNotifications] = useState([]);
@@ -5302,7 +5302,7 @@ const isZatcaReported = isZatcaLocked;
                                         if (timerRef.current) clearTimeout(timerRef.current);
                                         timerRef.current = setTimeout(() => {
                                             suggestCustomers(searchTerm);
-                                        }, 100);
+                                        }, 350);
                                     }}
                                     renderMenu={(results, menuProps, state) => {
                                         const searchWords = state.text.toLowerCase().split(" ").filter(Boolean);
