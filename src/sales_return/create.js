@@ -138,6 +138,7 @@ const SalesReturnCreate = forwardRef((props, ref) => {
     }));
 
     let [store, setStore] = useState({});
+    const [isZatcaLocked, setIsZatcaLocked] = useState(false);
 
     function getStore(id) {
         console.log("inside get Store");
@@ -348,7 +349,7 @@ const SalesReturnCreate = forwardRef((props, ref) => {
                 setFormData({ ...formData });
                 reCalculate();
 
-                if (data.result?.zatca?.reporting_passed) {
+                if (salesReturn?.zatca?.reporting_passed) {
                     setIsZatcaLocked(true);
                 }
 
@@ -631,7 +632,6 @@ const SalesReturnCreate = forwardRef((props, ref) => {
     //const history = useHistory();
     let [errors, setErrors] = useState({});
     const [isProcessing, setProcessing] = useState(false);
-    const [isZatcaLocked, setIsZatcaLocked] = useState(false);
 
     //fields
     let [formData, setFormData] = useState({
@@ -3627,6 +3627,7 @@ const SalesReturnCreate = forwardRef((props, ref) => {
                                                                     id={`${"sales_product_line_total_" + index}`}
                                                                     name={`${"sales_product_line_total_" + index}`}
                                                                     onWheel={(e) => e.target.blur()}
+                                                                    disabled={isZatcaReported}
                                                                     value={parseFloat(trimTo2Decimals(((selectedProducts[index].unit_price || 0) - (selectedProducts[index].unit_discount || 0)) * (selectedProducts[index].quantity || 0))) || ""}
                                                                     className={`form-control text-end ${errors["line_total_" + index] ? 'is-invalid' : ''} ${warnings["line_total_" + index] ? 'border-warning text-warning' : ''}`}
                                                                     placeholder="Line total"
@@ -3746,6 +3747,7 @@ const SalesReturnCreate = forwardRef((props, ref) => {
                                                                     id={`${"sales_product_line_total_with_vat" + index}`}
                                                                     name={`${"sales_product_line_total_with_vat" + index}`}
                                                                     onWheel={(e) => e.target.blur()}
+                                                                    disabled={isZatcaReported}
                                                                     value={parseFloat(trimTo2Decimals(((selectedProducts[index].unit_price_with_vat || 0) - (selectedProducts[index].unit_discount_with_vat || 0)) * (selectedProducts[index].quantity || 0))) || ""}
                                                                     className={`form-control text-end ${errors["line_total_with_vat" + index] ? 'is-invalid' : ''} ${warnings["line_total_with_vat" + index] ? 'border-warning text-warning' : ''}`}
                                                                     placeholder="Line total with VAT"
