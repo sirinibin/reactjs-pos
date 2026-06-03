@@ -300,6 +300,7 @@ const SalesReturnCreate = forwardRef((props, ref) => {
                     shipping_handling_fees: salesReturn.shipping_handling_fees,
                     customer: salesReturn.customer,
                     commission_payment_method: salesReturn.commission_payment_method,
+                    zatca: salesReturn.zatca,
                 };
 
                 if (!formData.payments_input) {
@@ -646,7 +647,7 @@ const SalesReturnCreate = forwardRef((props, ref) => {
         price_type: "retail",
     });
 
-    const isZatcaReported = isZatcaLocked;
+    const isZatcaReported = isZatcaLocked || !!formData?.zatca?.reporting_passed;
 
     //Product Auto Suggestion
     let [selectedProducts, setSelectedProducts] = useState(null);
