@@ -1234,10 +1234,6 @@ const OrderCreate = forwardRef((props, ref) => {
             return;
         }
 
-        setOpenCustomerSearchResult(true);
-
-
-
         const filtered = data.result.filter((opt) => customCustomerFilter(opt, searchTerm));
 
         const sorted = filtered.sort((a, b) => {
@@ -1291,6 +1287,7 @@ const OrderCreate = forwardRef((props, ref) => {
         });
 
         setCustomerOptions(sorted);
+        setOpenCustomerSearchResult(sorted.length > 0);
         // setIsCustomersLoading(false);
     }
 
