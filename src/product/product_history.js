@@ -457,7 +457,10 @@ const ProductHistory = forwardRef((props, ref) => {
     function changePage(newPage) {
         page = parseInt(newPage);
         setPage(page);
-        list();
+        /*
+        setTimeout(() => {
+            list();
+        }, 300);*/
     }
 
     const [show, setShow] = useState(false);

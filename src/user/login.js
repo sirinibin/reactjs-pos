@@ -2,6 +2,7 @@
 import avatar from './../avatar.jpg';
 import React, { useState, useEffect } from "react";
 import Footer from './../Footer.js';
+import { getLandingPath } from './../sidebar_menu_config';
 
 //import { useHistory } from "react-router-dom";
 
@@ -18,7 +19,7 @@ function Login() {
         if (at) {
             // history.push("/dashboard/quotations");
             //window.location = "/dashboard/analytics";
-            window.location = "/dashboard/sales";
+            window.location = getLandingPath();
         }
     }, []);
 
@@ -86,7 +87,7 @@ function Login() {
 
                 // history.push("/dashboard/analytics");
                 //history.push("/dashboard/sales");
-                window.location = "/dashboard/sales";
+                window.location = getLandingPath();
             })
             .catch(error => {
                 setProcessing(false);

@@ -392,7 +392,7 @@ const SalesReturnHistory = forwardRef((props, ref) => {
     function changePage(newPage) {
         page = parseInt(newPage);
         setPage(page);
-        list();
+        // list();
     }
 
     const [show, setShow] = useState(false);

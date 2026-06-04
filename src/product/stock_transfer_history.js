@@ -328,7 +328,7 @@ const StockTransferHistory = forwardRef((props, ref) => {
     function changePage(newPage) {
         page = parseInt(newPage);
         setPage(page);
-        list();
+        //list();
     }
 
     const [show, SetShow] = useState(false);
