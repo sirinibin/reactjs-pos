@@ -13,21 +13,15 @@ const ACCOUNT_TYPE_LABELS = {
     "": "General",
 };
 
-export function AccountBalancesChart({ accounts }) {
+// accountSummaries: array of { account_type, balance } from /v1/dashboard/accounts
+export function AccountBalancesChart({ accountSummaries }) {
     const data = useMemo(() => {
-        const map = {};
-        accounts.forEach(a => {
-            const type = ACCOUNT_TYPE_LABELS[a.type || ""] || (a.type || "General");
-            if (!map[type]) map[type] = 0;
-            map[type] += Math.abs(a.balance || 0);
-        });
-        const rows = Object.entries(map)
-            .filter(([, v]) => v > 0)
-            .sort((a, b) => b[1] - a[1])
-            .map(([k, v]) => [k, parseFloat(v.toFixed(2))]);
+        const rows = (accountSummaries || [])
+            .filter(a => a.balance > 0)
+            .map(a => [ACCOUNT_TYPE_LABELS[a.account_type || ""] || a.account_type || "General", parseFloat(a.balance.toFixed(2))]);
         if (rows.length === 0) return null;
         return [["Account Type", "Balance (SAR)"], ...rows];
-    }, [accounts]);
+    }, [accountSummaries]);
 
     if (!data) return <p className="text-muted small">No account data</p>;
     return (
@@ -47,20 +41,49 @@ export function AccountBalancesChart({ accounts }) {
     );
 }
 
-export function VendorSpendPieChart({ purchases }) {
+function fmtT(n) {
+    if (!n && n !== 0) return "0.00";
+    return Number(n).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+}
+
+function tooltipHtml(title, titleColor, lines) {
+    const headerStyle  = `font-size:0.8rem;font-weight:700;color:${titleColor};margin-bottom:6px;`;
+    const rowStyle     = "font-size:0.75rem;line-height:1.7;white-space:nowrap;";
+    const dividerStyle = "border-top:1px solid #495057;margin-top:6px;padding-top:6px;";
+    const labelStyle   = "color:#adb5bd;margin-right:4px;";
+
+    let html = `<div style="background:#212529;color:#f8f9fa;padding:10px 14px;border-radius:6px;box-shadow:0 4px 14px rgba(0,0,0,.35);">`;
+    html += `<div style="${headerStyle}">${title}</div>`;
+    lines.forEach(l => {
+        const wrap = l.divider ? dividerStyle : "";
+        const val  = l.bold
+            ? `<strong style="color:${l.color || "#f8f9fa"}">${l.value}</strong>`
+            : `<span style="color:${l.color || "#f8f9fa"}">${l.value}</span>`;
+        html += `<div style="${rowStyle}${wrap}"><span style="${labelStyle}">${l.label}:</span>${val}</div>`;
+    });
+    html += `</div>`;
+    return html;
+}
+
+// vendorSummaries: array of { vendor_name, purchase_amount } from /v1/dashboard/vendors
+export function VendorSpendPieChart({ vendorSummaries }) {
     const data = useMemo(() => {
-        const map = {};
-        purchases.forEach(p => {
-            const name = p.vendor_name || "Unknown";
-            map[name] = (map[name] || 0) + (p.net_total || 0);
+        const entries = (vendorSummaries || []).filter(v => v.purchase_amount > 0);
+        if (entries.length === 0) return null;
+
+        const grandTotal = entries.reduce((s, v) => s + v.purchase_amount, 0);
+        const header = ["Vendor", "Amount (SAR)", { role: "tooltip", type: "string", p: { html: true } }];
+        const rows = entries.map(v => {
+            const pct = grandTotal > 0 ? ((v.purchase_amount / grandTotal) * 100).toFixed(1) : "0.0";
+            const lines = [
+                { label: "Spend",  value: `SAR ${fmtT(v.purchase_amount)}`, bold: true, color: "#36b9cc" },
+                { label: "Share",  value: `${pct}% of total purchase spend` },
+                { divider: true, label: "Formula", value: "Σ net_total across all purchase orders" },
+            ];
+            return [v.vendor_name, parseFloat(v.purchase_amount.toFixed(2)), tooltipHtml(v.vendor_name, "#36b9cc", lines)];
         });
-        const rows = Object.entries(map)
-            .filter(([, v]) => v > 0)
-            .sort((a, b) => b[1] - a[1])
-            .map(([k, v]) => [k, parseFloat(v.toFixed(2))]);
-        if (rows.length === 0) return null;
-        return [["Vendor", "Amount (SAR)"], ...rows];
-    }, [purchases]);
+        return [header, ...rows];
+    }, [vendorSummaries]);
 
     if (!data) return <p className="text-muted small">No purchase data</p>;
     return (
@@ -72,6 +95,7 @@ export function VendorSpendPieChart({ purchases }) {
                 legend: { position: "right" },
                 chartArea: { width: "65%", height: "75%" },
                 pieSliceText: "percentage",
+                tooltip: { isHtml: true },
             }}
             width="100%"
             height="300px"
@@ -79,9 +103,11 @@ export function VendorSpendPieChart({ purchases }) {
     );
 }
 
-// Net Revenue = Sales − Sales Returns  (P&L formula)
+// Net Revenue = Sales − Sales Returns (+ Qtn Invoice Sales − Qtn Returns if flag ON)
 // P&L Expense = Expenses + Purchases − Purchase Returns
-export function PurchaseVsSalesChart({ orders, returns, purchases, purchaseReturns, expenses }) {
+export function PurchaseVsSalesChart({ store, orders, returns, purchases, purchaseReturns, expenses, quotations, quotationSalesReturns }) {
+    const qtnInvoiceAccounting = store?.settings?.quotation_invoice_accounting === true;
+
     const data = useMemo(() => {
         function buildMap(arr, dateFn, valueFn) {
             const map = {};
@@ -98,23 +124,68 @@ export function PurchaseVsSalesChart({ orders, returns, purchases, purchaseRetur
         const purRetMap   = buildMap(purchaseReturns,  p => p.date, p => p.net_total || 0);
         const expenseMap  = buildMap(expenses,         e => e.date, e => e.amount    || 0);
 
+        const quotationInvoices = (quotations || []).filter(q => q.type === "invoice");
+        const qtnInvMap = qtnInvoiceAccounting ? buildMap(quotationInvoices,             q => q.date, q => q.net_total || 0) : {};
+        const qtnRetMap = qtnInvoiceAccounting ? buildMap(quotationSalesReturns || [],   q => q.date, q => q.net_total || 0) : {};
+
         const allKeys = Array.from(new Set([
             ...Object.keys(salesMap), ...Object.keys(returnMap),
             ...Object.keys(purchaseMap), ...Object.keys(purRetMap),
             ...Object.keys(expenseMap),
+            ...(qtnInvoiceAccounting ? [...Object.keys(qtnInvMap), ...Object.keys(qtnRetMap)] : []),
         ])).sort();
 
         if (allKeys.length === 0) return null;
 
+        const header = [
+            "Month",
+            "Net Revenue (SAR)", { role: "tooltip", type: "string", p: { html: true } },
+            "P&L Expense (SAR)", { role: "tooltip", type: "string", p: { html: true } },
+        ];
+
         const rows = allKeys.map(k => {
             const [y, m] = k.split("-");
             const label   = `${MONTH_NAMES[parseInt(m, 10) - 1]} ${y}`;
-            const revenue = (salesMap[k] || 0) - (returnMap[k] || 0);
-            const expense = (expenseMap[k] || 0) + (purchaseMap[k] || 0) - (purRetMap[k] || 0);
-            return [label, parseFloat(revenue.toFixed(2)), parseFloat(expense.toFixed(2))];
+
+            const sales   = salesMap[k]    || 0;
+            const ret     = returnMap[k]   || 0;
+            const qtnInv  = qtnInvMap[k]   || 0;
+            const qtnRet  = qtnRetMap[k]   || 0;
+            const exp     = expenseMap[k]  || 0;
+            const pur     = purchaseMap[k] || 0;
+            const purRet  = purRetMap[k]   || 0;
+
+            const revenue = (sales - ret) + (qtnInvoiceAccounting ? qtnInv - qtnRet : 0);
+            const expense = exp + pur - purRet;
+
+            const revLines = [
+                { label: "Net Revenue",      value: `SAR ${fmtT(revenue)}`, bold: true, color: "#69db7c" },
+                { divider: true, label: "Formula", value: "Sales − Returns" + (qtnInvoiceAccounting ? " + Qtn. Invoice Sales − Qtn. Returns" : "") },
+                { label: "Gross Sales",      value: `SAR ${fmtT(sales)}` },
+                ...(qtnInvoiceAccounting ? [{ label: "Qtn. Invoice Sales", value: `+ SAR ${fmtT(qtnInv)}` }] : []),
+                { label: "Sales Returns",    value: `− SAR ${fmtT(ret)}` },
+                ...(qtnInvoiceAccounting ? [{ label: "Qtn. Returns",       value: `− SAR ${fmtT(qtnRet)}` }] : []),
+            ];
+
+            const expLines = [
+                { label: "Total Expense",    value: `SAR ${fmtT(expense)}`, bold: true, color: "#ffa8a8" },
+                { divider: true, label: "Formula", value: "Expenses + Purchases − Purchase Returns" },
+                { label: "Expenses",         value: `SAR ${fmtT(exp)}` },
+                { label: "Purchases",        value: `+ SAR ${fmtT(pur)}` },
+                { label: "Purchase Returns", value: `− SAR ${fmtT(purRet)}` },
+            ];
+
+            return [
+                label,
+                parseFloat(revenue.toFixed(2)),
+                tooltipHtml(`Net Revenue — ${label}`, "#69db7c", revLines),
+                parseFloat(expense.toFixed(2)),
+                tooltipHtml(`P&L Expense — ${label}`, "#ffa8a8", expLines),
+            ];
         });
-        return [["Month", "Net Revenue (SAR)", "P&L Expense (SAR)"], ...rows];
-    }, [orders, returns, purchases, purchaseReturns, expenses]);
+
+        return [header, ...rows];
+    }, [orders, returns, purchases, purchaseReturns, expenses, quotations, quotationSalesReturns, qtnInvoiceAccounting]);
 
     if (!data) return <p className="text-muted small">No data</p>;
     return (
@@ -128,6 +199,7 @@ export function PurchaseVsSalesChart({ orders, returns, purchases, purchaseRetur
                 vAxis: { title: "SAR" },
                 chartArea: { width: "80%", height: "65%" },
                 pointSize: 4,
+                tooltip: { isHtml: true },
             }}
             width="100%"
             height="320px"

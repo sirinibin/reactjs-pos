@@ -56,6 +56,7 @@ import './dashboard.css'
 import Analytics from './analytics/index.js';
 import StatsIndex from './stats/index.js';
 import BusinessDashboard from './business_dashboard/index.js';
+import SidebarSettings from './sidebar_settings/index.js';
 
 function Dashboard() {
 
@@ -276,6 +277,19 @@ function Dashboard() {
 
         </ToastContainer>
         <Switch>
+
+            <Route path="/dashboard/sidebar-settings">
+                <div className="wrapper">
+                    <Sidebar isSidebarOpen={isSidebarOpen} parentCallback={handleToggle} />
+                    <div className="main">
+                        <Topbar parentCallback={handleToggle} />
+                        <main className="content">
+                            <SidebarSettings />
+                        </main>
+                        <Footer />
+                    </div>
+                </div>
+            </Route>
 
             <Route path="/dashboard/business-dashboard">
                 <div className="wrapper">
