@@ -377,10 +377,6 @@ const CustomerWithdrawalCreate = forwardRef((props, ref) => {
             return;
         }
 
-        openCustomerSearchResult = true;
-        setOpenCustomerSearchResult(true);
-
-
         if (data.result) {
             const filtered = data.result.filter((opt) => customFilter(opt, searchTerm));
             const sorted = filtered.sort((a, b) => {
@@ -435,8 +431,10 @@ const CustomerWithdrawalCreate = forwardRef((props, ref) => {
 
 
             setCustomerOptions(sorted);
+            setOpenCustomerSearchResult(sorted.length > 0);
         } else {
             setCustomerOptions([]);
+            setOpenCustomerSearchResult(false);
         }
 
         //setIsCustomersLoading(false);

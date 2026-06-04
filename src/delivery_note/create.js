@@ -541,12 +541,10 @@ const DeliveryNoteCreate = forwardRef((props, ref) => {
       return;
     }
 
-    openCustomerSearchResult = true;
-    setOpenCustomerSearchResult(true);
-
     const filtered = data.result.filter((opt) => customCustomerFilter(opt, searchTerm));
 
     setCustomerOptions(filtered);
+    setOpenCustomerSearchResult(filtered.length > 0);
     // setIsCustomersLoading(false);
   }
 
