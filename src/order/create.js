@@ -4359,7 +4359,7 @@ const OrderCreate = forwardRef((props, ref) => {
 
     // ── Delivery Note Reminder Notifications ─────────────────────────────────
     const [dnNotifications, setDnNotifications] = useState([]);
-    const [, setDnTick] = useState(0);
+    //const [, setDnTick] = useState(0);
     const dnNotificationsRef = useRef([]);
 
     function addDnNotification(notif) {
@@ -4434,10 +4434,10 @@ const OrderCreate = forwardRef((props, ref) => {
     }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
     // Re-render every 60 s so "time ago" stays current
-    useEffect(() => {
-        const timer = setInterval(() => setDnTick(t => t + 1), 60000);
-        return () => clearInterval(timer);
-    }, []);
+    /*useEffect(() => {
+         const timer = setInterval(() => setDnTick(t => t + 1), 60000);
+         return () => clearInterval(timer);
+     }, []);*/
     // ─────────────────────────────────────────────────────────────────────────
 
     const _defaultBillSummaryOrder = ['total_without_vat', 'total_with_vat', 'shipping', 'discount_without_vat', 'discount_with_vat', 'taxable_amount', 'vat', 'net_before_rounding', 'rounding_amount', 'net_total'];
