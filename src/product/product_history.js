@@ -75,7 +75,7 @@ const ProductHistory = forwardRef((props, ref) => {
             setSelectedVendors(props.selectedVendors)
             searchByMultipleValuesField("vendor_id", props.selectedVendors);
         } else {
-            setShow(true);
+            // setShow(true);
         }
 
         getStore(localStorage.getItem("store_id"));
@@ -465,7 +465,7 @@ const ProductHistory = forwardRef((props, ref) => {
         }, 300);*/
     }
 
-    const [show, setShow] = useState(false);
+    // const [show, setShow] = useState(false);
 
     useEffect(() => {
         list();
@@ -696,7 +696,7 @@ const ProductHistory = forwardRef((props, ref) => {
             if (e.key === "Escape") {
                 e.preventDefault();
                 e.stopPropagation();
-                setShow(false);
+                //  setShow(false);
             }
         };
 
@@ -874,15 +874,16 @@ const ProductHistory = forwardRef((props, ref) => {
             });
     }, []);
 
-    /* useEffect(() => {
-         loadWarehouses();
-     }, [loadWarehouses]);*/
-
     useEffect(() => {
-        if (show) {
-            loadWarehouses();
-        }
-    }, [loadWarehouses, show]);
+        loadWarehouses();
+    }, [loadWarehouses]);
+
+    /*
+   useEffect(() => {
+       if (show) {
+           loadWarehouses();
+       }
+   }, [loadWarehouses, show]);*/
 
 
     // const dragRef = useRef(null);
