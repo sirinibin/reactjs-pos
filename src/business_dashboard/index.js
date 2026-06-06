@@ -838,7 +838,7 @@ export default function BusinessDashboard() {
                             <div className="row">
                                 <div className="col-12">
                                     <ChartCard>
-                                        <PurchaseVsSalesChart store={store} orders={synOrders} returns={synReturns} purchases={synPur} purchaseReturns={synPurRet} expenses={synExpenses} quotations={synQtnInvoices} quotationSalesReturns={synQtnReturns} />
+                                        <PurchaseVsSalesChart store={store} orders={synOrders} returns={synReturns} purchases={synPur} purchaseReturns={synPurRet} expenses={synExpenses} quotations={synQtnInvoices} quotationSalesReturns={synQtnReturns} accountedPurchases={synAcctPur} accountedPurchaseReturns={synAcctPurRet} customerDeposits={synDeposits} />
                                     </ChartCard>
                                 </div>
                             </div>

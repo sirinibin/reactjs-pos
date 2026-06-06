@@ -96,13 +96,13 @@ function ProductIndex(props) {
         }
 
 
-        searchParams["linked_products_of_product_id"] = "";
+        searchParams.current["linked_products_of_product_id"] = "";
 
         if (props.type === "linked_products") {
             if (props.model?.product_id) {
-                searchParams.linked_products_of_product_id = props.model.product_id;
+                searchParams.current.linked_products_of_product_id = props.model.product_id;
             } else if (props.model?.id) {
-                searchParams.linked_products_of_product_id = props.model.id;
+                searchParams.current.linked_products_of_product_id = props.model.id;
             }
         }
 
@@ -144,7 +144,7 @@ function ProductIndex(props) {
     }
 
     //Search params
-    const [searchParams, setSearchParams] = useState({});
+    const searchParams = useRef({});
     let [sortField, setSortField] = useState("created_at");
     let [sortProduct, setSortProduct] = useState("-");
 
@@ -272,7 +272,7 @@ function ProductIndex(props) {
 
 
     function searchByFieldValue(field, value) {
-        searchParams[field] = value;
+        searchParams.current[field] = value;
 
         page = 1;
         setPage(page);
@@ -283,7 +283,7 @@ function ProductIndex(props) {
     function searchByDateField(field, value) {
         if (!value) {
             page = 1;
-            searchParams[field] = "";
+            searchParams.current[field] = "";
             setPage(page);
             list();
             return;
@@ -300,23 +300,23 @@ function ProductIndex(props) {
             setCreatedAtFromValue("");
             setCreatedAtToValue("");
 
-            searchParams["created_at_from"] = "";
-            searchParams["created_at_to"] = "";
-            searchParams[field] = value;
+            searchParams.current["created_at_from"] = "";
+            searchParams.current["created_at_to"] = "";
+            searchParams.current[field] = value;
         }
         if (field === "created_at_from") {
 
             setCreatedAtFromValue(value);
             setCreatedAtValue("");
 
-            searchParams["created_at"] = "";
-            searchParams[field] = value;
+            searchParams.current["created_at"] = "";
+            searchParams.current[field] = value;
         } else if (field === "created_at_to") {
 
             setCreatedAtToValue(value);
             setCreatedAtValue("");
-            searchParams["created_at"] = "";
-            searchParams[field] = value;
+            searchParams.current["created_at"] = "";
+            searchParams.current[field] = value;
         }
 
         page = 1;
@@ -346,7 +346,7 @@ function ProductIndex(props) {
 
         }
 
-        searchParams[field] = Object.values(values)
+        searchParams.current[field] = Object.values(values)
             .map(function (model) {
                 if (model.id) {
                     return model.id;
@@ -397,30 +397,26 @@ function ProductIndex(props) {
 
 
         if (localStorage.getItem("store_id")) {
-            searchParams.store_id = localStorage.getItem("store_id");
+            searchParams.current.store_id = localStorage.getItem("store_id");
         }
 
         if (selectedWarehouse.warehouse_code) {
-            searchParams.warehouse_code = selectedWarehouse.warehouse_code;
+            searchParams.current.warehouse_code = selectedWarehouse.warehouse_code;
         } else {
-            searchParams.warehouse_code = "";
+            searchParams.current.warehouse_code = "";
         }
-
-
-
 
         const d = new Date();
         let diff = d.getTimezoneOffset();
-        searchParams["timezone_offset"] = parseFloat(diff / 60);
+        searchParams.current["timezone_offset"] = parseFloat(diff / 60);
 
         if (statsOpen) {
-            searchParams["stats"] = "1";
+            searchParams.current["stats"] = "1";
         } else {
-            searchParams["stats"] = "0";
+            searchParams.current["stats"] = "0";
         }
 
-        setSearchParams(searchParams);
-        let queryParams = ObjectToSearchQueryParams(searchParams);
+        let queryParams = ObjectToSearchQueryParams(searchParams.current);
         if (queryParams !== "") {
             queryParams = "&" + queryParams;
         }
@@ -1700,14 +1696,13 @@ function ProductIndex(props) {
 
         const d = new Date();
         let diff = d.getTimezoneOffset();
-        searchParams["timezone_offset"] = parseFloat(diff / 60);
+        searchParams.current["timezone_offset"] = parseFloat(diff / 60);
 
         if (localStorage.getItem("store_id")) {
-            searchParams.store_id = localStorage.getItem("store_id");
+            searchParams.current.store_id = localStorage.getItem("store_id");
         }
 
-        setSearchParams(searchParams);
-        let queryParams = ObjectToSearchQueryParams(searchParams);
+        let queryParams = ObjectToSearchQueryParams(searchParams.current);
         if (queryParams !== "") {
             queryParams = "&" + queryParams;
         }
@@ -1739,7 +1734,7 @@ function ProductIndex(props) {
             .catch((error) => {
                 console.log(error);
             });
-    }, [searchParams]);
+    }, []);
 
     useEffect(() => {
         loadWarehouses();

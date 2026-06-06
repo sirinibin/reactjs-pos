@@ -104,9 +104,16 @@ export function VendorSpendPieChart({ vendorSummaries }) {
 }
 
 // Net Revenue = Sales − Sales Returns (+ Qtn Invoice Sales − Qtn Returns if flag ON)
-// P&L Expense = Expenses + Purchases − Purchase Returns
-export function PurchaseVsSalesChart({ store, orders, returns, purchases, purchaseReturns, expenses, quotations, quotationSalesReturns }) {
-    const qtnInvoiceAccounting = store?.settings?.quotation_invoice_accounting === true;
+// Total Expense = disablePurchasesOnAccounts
+//   ? Expenses − DepositPurchaseFund + AccountedPurchases − AccountedPurchaseReturns
+//   : Expenses + Purchases − Purchase Returns
+export function PurchaseVsSalesChart({
+    store, orders, returns, purchases, purchaseReturns, expenses,
+    quotations, quotationSalesReturns,
+    accountedPurchases, accountedPurchaseReturns, customerDeposits,
+}) {
+    const qtnInvoiceAccounting       = store?.settings?.quotation_invoice_accounting === true;
+    const disablePurchasesOnAccounts = store?.settings?.disable_purchases_on_accounts === true;
 
     const data = useMemo(() => {
         function buildMap(arr, dateFn, valueFn) {
@@ -118,21 +125,34 @@ export function PurchaseVsSalesChart({ store, orders, returns, purchases, purcha
             });
             return map;
         }
-        const salesMap    = buildMap(orders,          o => o.date, o => o.net_total || 0);
-        const returnMap   = buildMap(returns,          r => r.date, r => r.net_total || 0);
-        const purchaseMap = buildMap(purchases,        p => p.date, p => p.net_total || 0);
-        const purRetMap   = buildMap(purchaseReturns,  p => p.date, p => p.net_total || 0);
-        const expenseMap  = buildMap(expenses,         e => e.date, e => e.amount    || 0);
+        const salesMap      = buildMap(orders,                   o => o.date, o => o.net_total || 0);
+        const returnMap     = buildMap(returns,                   r => r.date, r => r.net_total || 0);
+        const purchaseMap   = buildMap(purchases,                p => p.date, p => p.net_total || 0);
+        const purRetMap     = buildMap(purchaseReturns,          p => p.date, p => p.net_total || 0);
+        const expenseMap    = buildMap(expenses,                 e => e.date, e => e.amount    || 0);
+        const acctPurMap    = buildMap(accountedPurchases    || [], p => p.date, p => p.net_total || 0);
+        const acctPurRetMap = buildMap(accountedPurchaseReturns || [], p => p.date, p => p.net_total || 0);
+
+        const depositPurchaseFundMap = {};
+        (customerDeposits || []).forEach(d => {
+            const date = new Date(d.date);
+            const key  = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}`;
+            const pf   = (d.payments || [])
+                .filter(p => p.method === "purchase_fund")
+                .reduce((sum, p) => sum + (p.amount || 0), 0);
+            depositPurchaseFundMap[key] = (depositPurchaseFundMap[key] || 0) + pf;
+        });
 
         const quotationInvoices = (quotations || []).filter(q => q.type === "invoice");
-        const qtnInvMap = qtnInvoiceAccounting ? buildMap(quotationInvoices,             q => q.date, q => q.net_total || 0) : {};
-        const qtnRetMap = qtnInvoiceAccounting ? buildMap(quotationSalesReturns || [],   q => q.date, q => q.net_total || 0) : {};
+        const qtnInvMap = qtnInvoiceAccounting ? buildMap(quotationInvoices,           q => q.date, q => q.net_total || 0) : {};
+        const qtnRetMap = qtnInvoiceAccounting ? buildMap(quotationSalesReturns || [], q => q.date, q => q.net_total || 0) : {};
 
         const allKeys = Array.from(new Set([
             ...Object.keys(salesMap), ...Object.keys(returnMap),
             ...Object.keys(purchaseMap), ...Object.keys(purRetMap),
             ...Object.keys(expenseMap),
             ...(qtnInvoiceAccounting ? [...Object.keys(qtnInvMap), ...Object.keys(qtnRetMap)] : []),
+            ...(disablePurchasesOnAccounts ? [...Object.keys(acctPurMap), ...Object.keys(acctPurRetMap), ...Object.keys(depositPurchaseFundMap)] : []),
         ])).sort();
 
         if (allKeys.length === 0) return null;
@@ -140,37 +160,46 @@ export function PurchaseVsSalesChart({ store, orders, returns, purchases, purcha
         const header = [
             "Month",
             "Net Revenue (SAR)", { role: "tooltip", type: "string", p: { html: true } },
-            "P&L Expense (SAR)", { role: "tooltip", type: "string", p: { html: true } },
+            "Total Expense (SAR)", { role: "tooltip", type: "string", p: { html: true } },
         ];
 
         const rows = allKeys.map(k => {
             const [y, m] = k.split("-");
-            const label   = `${MONTH_NAMES[parseInt(m, 10) - 1]} ${y}`;
+            const label      = `${MONTH_NAMES[parseInt(m, 10) - 1]} ${y}`;
 
-            const sales   = salesMap[k]    || 0;
-            const ret     = returnMap[k]   || 0;
-            const qtnInv  = qtnInvMap[k]   || 0;
-            const qtnRet  = qtnRetMap[k]   || 0;
-            const exp     = expenseMap[k]  || 0;
-            const pur     = purchaseMap[k] || 0;
-            const purRet  = purRetMap[k]   || 0;
+            const sales      = salesMap[k]    || 0;
+            const ret        = returnMap[k]   || 0;
+            const qtnInv     = qtnInvMap[k]   || 0;
+            const qtnRet     = qtnRetMap[k]   || 0;
+            const exp        = expenseMap[k]  || 0;
+            const pur        = purchaseMap[k] || 0;
+            const purRet     = purRetMap[k]   || 0;
+            const depFund    = depositPurchaseFundMap[k] || 0;
+            const acctPur    = acctPurMap[k]    || 0;
+            const acctPurRet = acctPurRetMap[k] || 0;
 
             const revenue = (sales - ret) + (qtnInvoiceAccounting ? qtnInv - qtnRet : 0);
-            const expense = exp + pur - purRet;
+            const expense = disablePurchasesOnAccounts
+                ? exp - depFund + acctPur - acctPurRet
+                : exp + pur - purRet;
 
             const revLines = [
                 { label: "Net Revenue",      value: `SAR ${fmtT(revenue)}`, bold: true, color: "#69db7c" },
-                { divider: true, label: "Formula", value: "Sales − Returns" + (qtnInvoiceAccounting ? " + Qtn. Invoice Sales − Qtn. Returns" : "") },
-                { label: "Gross Sales",      value: `SAR ${fmtT(sales)}` },
+                { divider: true, label: "Gross Sales",   value: `SAR ${fmtT(sales)}` },
                 ...(qtnInvoiceAccounting ? [{ label: "Qtn. Invoice Sales", value: `+ SAR ${fmtT(qtnInv)}` }] : []),
                 { label: "Sales Returns",    value: `− SAR ${fmtT(ret)}` },
                 ...(qtnInvoiceAccounting ? [{ label: "Qtn. Returns",       value: `− SAR ${fmtT(qtnRet)}` }] : []),
             ];
 
-            const expLines = [
+            const expLines = disablePurchasesOnAccounts ? [
+                { label: "Total Expense",          value: `SAR ${fmtT(expense)}`, bold: true, color: "#ffa8a8" },
+                { divider: true, label: "Expenses", value: `SAR ${fmtT(exp)}` },
+                { label: "Purchase Return Fund",   value: `− SAR ${fmtT(depFund)}` },
+                { label: "Accounted Purchases",    value: `+ SAR ${fmtT(acctPur)}` },
+                { label: "Accounted Pur. Returns", value: `− SAR ${fmtT(acctPurRet)}` },
+            ] : [
                 { label: "Total Expense",    value: `SAR ${fmtT(expense)}`, bold: true, color: "#ffa8a8" },
-                { divider: true, label: "Formula", value: "Expenses + Purchases − Purchase Returns" },
-                { label: "Expenses",         value: `SAR ${fmtT(exp)}` },
+                { divider: true, label: "Expenses",         value: `SAR ${fmtT(exp)}` },
                 { label: "Purchases",        value: `+ SAR ${fmtT(pur)}` },
                 { label: "Purchase Returns", value: `− SAR ${fmtT(purRet)}` },
             ];
@@ -180,12 +209,14 @@ export function PurchaseVsSalesChart({ store, orders, returns, purchases, purcha
                 parseFloat(revenue.toFixed(2)),
                 tooltipHtml(`Net Revenue — ${label}`, "#69db7c", revLines),
                 parseFloat(expense.toFixed(2)),
-                tooltipHtml(`P&L Expense — ${label}`, "#ffa8a8", expLines),
+                tooltipHtml(`Total Expense — ${label}`, "#ffa8a8", expLines),
             ];
         });
 
         return [header, ...rows];
-    }, [orders, returns, purchases, purchaseReturns, expenses, quotations, quotationSalesReturns, qtnInvoiceAccounting]);
+    }, [orders, returns, purchases, purchaseReturns, expenses, quotations, quotationSalesReturns,
+        accountedPurchases, accountedPurchaseReturns, customerDeposits,
+        qtnInvoiceAccounting, disablePurchasesOnAccounts]);
 
     if (!data) return <p className="text-muted small">No data</p>;
     return (
@@ -193,7 +224,7 @@ export function PurchaseVsSalesChart({ store, orders, returns, purchases, purcha
             chartType="LineChart"
             data={data}
             options={{
-                title: "Monthly Net Revenue vs P&L Expense",
+                title: "Monthly Net Revenue vs Total Expense",
                 colors: ["#1cc88a", "#e74a3b"],
                 legend: { position: "top" },
                 vAxis: { title: "SAR" },

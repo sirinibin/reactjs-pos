@@ -31,10 +31,10 @@ const ProductHistory = forwardRef((props, ref) => {
         open(model, selectedCustomers, selectedVendors) {
             setHistoryList([]);
             setSelectedCustomers([]);
-            searchParams["customer_id"] = "";
+            searchParams.current["customer_id"] = "";
 
             setSelectedVendors([]);
-            searchParams["vendor_id"] = "";
+            searchParams.current["vendor_id"] = "";
 
             product = model;
             setProduct({ ...product });
@@ -54,15 +54,19 @@ const ProductHistory = forwardRef((props, ref) => {
     }));*/
 
 
+    const initDoneRef = useRef(false);
     useEffect(() => {
+        // Guard against React Strict Mode double-invocation
+        if (initDoneRef.current) return;
+        initDoneRef.current = true;
+
         setHistoryList([]);
         setSelectedCustomers([]);
-        searchParams["customer_id"] = "";
+        searchParams.current["customer_id"] = "";
 
         setSelectedVendors([]);
-        searchParams["vendor_id"] = "";
+        searchParams.current["vendor_id"] = "";
 
-        // product = props.model;
         setProduct(props.model);
         if (props.selectedCustomers?.length > 0) {
             setSelectedCustomers(props.selectedCustomers)
@@ -186,7 +190,7 @@ const ProductHistory = forwardRef((props, ref) => {
     const [isRefreshInProcess, setIsRefreshInProcess] = useState(false);
 
     //Search params
-    const [searchParams, setSearchParams] = useState({});
+    const searchParams = useRef({});
     let [sortField, setSortField] = useState("date");
     let [sortProduct, setSortProduct] = useState("-");
 
@@ -199,7 +203,7 @@ const ProductHistory = forwardRef((props, ref) => {
     }
 
     function searchByFieldValue(field, value) {
-        searchParams[field] = value;
+        searchParams.current[field] = value;
 
         page = 1;
         setPage(page);
@@ -210,7 +214,7 @@ const ProductHistory = forwardRef((props, ref) => {
 
     function searchByDateField(field, value) {
         if (!value) {
-            searchParams[field] = "";
+            searchParams.current[field] = "";
             page = 1;
             setPage(page);
             list();
@@ -232,34 +236,30 @@ const ProductHistory = forwardRef((props, ref) => {
             setDateValue(value);
             setFromDateValue("");
             setToDateValue("");
-            searchParams["from_date"] = "";
-            searchParams["to_date"] = "";
-            searchParams[field] = value;
+            searchParams.current["from_date"] = "";
+            searchParams.current["to_date"] = "";
+            searchParams.current[field] = value;
         } else if (field === "from_date") {
             setFromDateValue(value);
             setDateValue("");
-            searchParams["date"] = "";
-            searchParams[field] = value;
+            searchParams.current["date"] = "";
+            searchParams.current[field] = value;
         } else if (field === "to_date") {
             setToDateValue(value);
             setDateValue("");
-            searchParams["date"] = "";
-            searchParams[field] = value;
+            searchParams.current["date"] = "";
+            searchParams.current[field] = value;
         } else if (field === "created_at") {
-            searchParams["created_at_from"] = "";
-            searchParams["created_at_to"] = "";
-            searchParams[field] = value;
+            searchParams.current["created_at_from"] = "";
+            searchParams.current["created_at_to"] = "";
+            searchParams.current[field] = value;
         }
         if (field === "created_at_from") {
-
-
-            searchParams["created_at"] = "";
-            searchParams[field] = value;
+            searchParams.current["created_at"] = "";
+            searchParams.current[field] = value;
         } else if (field === "created_at_to") {
-
-
-            searchParams["created_at"] = "";
-            searchParams[field] = value;
+            searchParams.current["created_at"] = "";
+            searchParams.current[field] = value;
         }
 
         page = 1;
@@ -270,6 +270,9 @@ const ProductHistory = forwardRef((props, ref) => {
 
 
     const list = useCallback(() => {
+        const pid = product?.product_id || product?.id;
+        if (!pid) return; // no product loaded yet, skip
+        console.trace("[ProductHistory] list() called");
         const requestOptions = {
             method: "GET",
             headers: {
@@ -283,37 +286,36 @@ const ProductHistory = forwardRef((props, ref) => {
             "select=id,store_id,store_name,customer_id,customer_name,order_id,order_code,quantity,";
             */
         if (localStorage.getItem("store_id")) {
-            searchParams.store_id = localStorage.getItem("store_id");
+            searchParams.current.store_id = localStorage.getItem("store_id");
         }
 
         if (product.product_id) {
-            searchParams["product_id"] = product.product_id;
+            searchParams.current["product_id"] = product.product_id;
         } else if (product.id) {
-            searchParams["product_id"] = product.id;
+            searchParams.current["product_id"] = product.id;
         }
 
         if (statsOpen) {
-            searchParams["stats"] = "1";
+            searchParams.current["stats"] = "1";
         } else {
-            searchParams["stats"] = "0";
-        }
-
-        setSearchParams(searchParams);
-        let queryParams = ObjectToSearchQueryParams(searchParams);
-        if (queryParams !== "") {
-            queryParams = "&" + queryParams;
+            searchParams.current["stats"] = "0";
         }
 
         const d = new Date();
         let diff = d.getTimezoneOffset();
-        searchParams["timezone_offset"] = parseFloat(diff / 60);
+        searchParams.current["timezone_offset"] = parseFloat(diff / 60);
+
+        let queryParams = ObjectToSearchQueryParams(searchParams.current);
+        if (queryParams !== "") {
+            queryParams = "&" + queryParams;
+        }
 
         // console.log("queryParams:", queryParams);
         //queryParams = encodeURIComponent(queryParams);
 
         setIsListLoading(true);
         fetch(
-            "/v1/product/history/" + searchParams["product_id"] + "?" +
+            "/v1/product/history/" + searchParams.current["product_id"] + "?" +
             Select +
             queryParams +
             "&sort=" +
@@ -438,7 +440,7 @@ const ProductHistory = forwardRef((props, ref) => {
                 setIsRefreshInProcess(false);
                 console.log(error);
             });
-    }, [page, pageSize, product, sortField, sortProduct, searchParams, statsOpen]);
+    }, [page, pageSize, product, sortField, sortProduct, statsOpen]);
 
     function sort(field) {
         sortField = field;
@@ -466,13 +468,8 @@ const ProductHistory = forwardRef((props, ref) => {
     const [show, setShow] = useState(false);
 
     useEffect(() => {
-        if (show) {
-            list();
-        } else {
-            setHistoryList([]);
-            //setSelectedCustomers([]);
-        }
-    }, [list, show]);
+        list();
+    }, [list]);
 
     /* function handleClose() {
          setShow(false);
@@ -633,7 +630,7 @@ const ProductHistory = forwardRef((props, ref) => {
             setSelectedVendors(values);
         }
 
-        searchParams[field] = Object.values(values)
+        searchParams.current[field] = Object.values(values)
             .map(function (model) {
                 return model.id;
             })
@@ -642,14 +639,10 @@ const ProductHistory = forwardRef((props, ref) => {
         page = 1;
         setPage(page);
 
-        if (show === false) {
-            setShow(true);
-        } else {
-            if (timerRef.current) clearTimeout(timerRef.current);
-            timerRef.current = setTimeout(() => {
-                list();
-            }, 200);
-        }
+        if (timerRef.current) clearTimeout(timerRef.current);
+        timerRef.current = setTimeout(() => {
+            list();
+        }, 200);
     }
 
     const handleUpdated = () => {
@@ -828,6 +821,7 @@ const ProductHistory = forwardRef((props, ref) => {
     const [warehouseList, setWarehouseList] = useState([]);
 
     const loadWarehouses = useCallback(() => {
+        console.trace("[ProductHistory] loadWarehouses() called");
         const requestOptions = {
             method: "GET",
             headers: {
@@ -840,14 +834,13 @@ const ProductHistory = forwardRef((props, ref) => {
 
         const d = new Date();
         let diff = d.getTimezoneOffset();
-        searchParams["timezone_offset"] = parseFloat(diff / 60);
+        searchParams.current["timezone_offset"] = parseFloat(diff / 60);
 
         if (localStorage.getItem("store_id")) {
-            searchParams.store_id = localStorage.getItem("store_id");
+            searchParams.current.store_id = localStorage.getItem("store_id");
         }
 
-        setSearchParams(searchParams);
-        let queryParams = ObjectToSearchQueryParams(searchParams);
+        let queryParams = ObjectToSearchQueryParams(searchParams.current);
         if (queryParams !== "") {
             queryParams = "&" + queryParams;
         }
@@ -879,11 +872,18 @@ const ProductHistory = forwardRef((props, ref) => {
             .catch((error) => {
                 console.log(error);
             });
-    }, [searchParams]);
+    }, []);
+
+    /* useEffect(() => {
+         loadWarehouses();
+     }, [loadWarehouses]);*/
 
     useEffect(() => {
-        loadWarehouses();
-    }, [loadWarehouses]);
+        if (show) {
+            loadWarehouses();
+        }
+    }, [loadWarehouses, show]);
+
 
     // const dragRef = useRef(null);
 
