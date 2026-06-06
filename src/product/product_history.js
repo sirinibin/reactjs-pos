@@ -54,6 +54,10 @@ const ProductHistory = forwardRef((props, ref) => {
     }));*/
 
 
+    // Ref always holds the current product so list() doesn't need product in its
+    // useCallback deps — prevents new list identity on every parent re-render.
+    const productRef = useRef({});
+
     const initDoneRef = useRef(false);
     useEffect(() => {
         // Guard against React Strict Mode double-invocation
@@ -67,6 +71,7 @@ const ProductHistory = forwardRef((props, ref) => {
         setSelectedVendors([]);
         searchParams.current["vendor_id"] = "";
 
+        productRef.current = props.model || {};
         setProduct(props.model);
         if (props.selectedCustomers?.length > 0) {
             setSelectedCustomers(props.selectedCustomers)
@@ -270,7 +275,8 @@ const ProductHistory = forwardRef((props, ref) => {
 
 
     const list = useCallback(() => {
-        const pid = product?.product_id || product?.id;
+        const prod = productRef.current;
+        const pid = prod?.product_id || prod?.id;
         if (!pid) return; // no product loaded yet, skip
         console.trace("[ProductHistory] list() called");
         const requestOptions = {
@@ -289,10 +295,10 @@ const ProductHistory = forwardRef((props, ref) => {
             searchParams.current.store_id = localStorage.getItem("store_id");
         }
 
-        if (product.product_id) {
-            searchParams.current["product_id"] = product.product_id;
-        } else if (product.id) {
-            searchParams.current["product_id"] = product.id;
+        if (prod.product_id) {
+            searchParams.current["product_id"] = prod.product_id;
+        } else if (prod.id) {
+            searchParams.current["product_id"] = prod.id;
         }
 
         if (statsOpen) {
@@ -440,7 +446,7 @@ const ProductHistory = forwardRef((props, ref) => {
                 setIsRefreshInProcess(false);
                 console.log(error);
             });
-    }, [page, pageSize, product, sortField, sortProduct, statsOpen]);
+    }, [page, pageSize, sortField, sortProduct, statsOpen]);
 
     function sort(field) {
         sortField = field;
@@ -467,6 +473,17 @@ const ProductHistory = forwardRef((props, ref) => {
 
     // const [show, setShow] = useState(false);
 
+    // Trigger list when product first becomes available (pid goes from falsy → actual id).
+    // Using the primitive pid string prevents re-firing on parent re-renders that pass a
+    // new product object reference with the same underlying id.
+    const pid = product?.product_id || product?.id;
+    useEffect(() => {
+        if (!pid) return;
+        list();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [pid]);
+
+    // Re-fetch when pagination / sort / stats change (list identity changes for these).
     useEffect(() => {
         list();
     }, [list]);
@@ -876,7 +893,7 @@ const ProductHistory = forwardRef((props, ref) => {
 
     useEffect(() => {
         loadWarehouses();
-    }, [loadWarehouses]);
+    }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
     /*
    useEffect(() => {
