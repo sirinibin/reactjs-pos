@@ -1378,6 +1378,7 @@ function ProductIndex(props) {
         { key: "wholesale_unit_price", label: "Wholesale Unit Price", fieldName: "stores.wholesale_unit_price", visible: true },
         { key: "retail_unit_price", label: "Retail Unit Price", fieldName: "stores.retail_unit_price", visible: true },
         { key: "stock", label: "Total Stock", fieldName: "stores.stock", visible: true },
+        { key: "main_store_stock", label: "Main Store Stock", fieldName: "stores.warehouse_stocks.main_store", visible: false },
         // { key: "warehouse_code", label: "Store/Warehouse", fieldName: "warehouse_code", visible: true },
         { key: "set", label: "Set", fieldName: "is_set", visible: true },
         { key: "categories", label: "Categories", fieldName: "category_name", visible: true },
@@ -1865,7 +1866,7 @@ function ProductIndex(props) {
                                             {columns.map((col, index) => {
                                                 return (
                                                     <>
-                                                        {((col.key === "select" && enableSelection) || col.key !== "select") && <Draggable
+                                                        {((col.key === "select" && enableSelection) || col.key !== "select") && (col.key !== "main_store_stock" || store?.settings?.enable_warehouse_module) && <Draggable
                                                             key={col.key}
                                                             draggableId={col.key}
                                                             index={index}
@@ -2712,7 +2713,7 @@ function ProductIndex(props) {
                                     <table className="table table-striped table-sm table-bordered">
                                         <thead>
                                             <tr className="text-center">
-                                                {columns.filter(c => c.visible).map((col) => {
+                                                {columns.filter(c => c.visible && (c.key !== "main_store_stock" || store?.settings?.enable_warehouse_module)).map((col) => {
                                                     return (<>
                                                         {col.key === "deleted" && <th key={col.key}>{col.label}</th>}
                                                         {col.key === "actions" && <th key={col.key}>{col.label}</th>}
@@ -3546,7 +3547,7 @@ function ProductIndex(props) {
 
                                         <thead>
                                             <tr className="text-center">
-                                                {columns.filter(c => c.visible).map((col) => {
+                                                {columns.filter(c => c.visible && (c.key !== "main_store_stock" || store?.settings?.enable_warehouse_module)).map((col) => {
                                                     return (<>
                                                         {(col.key === "deleted") && <th>
                                                             <select
@@ -3673,6 +3674,7 @@ function ProductIndex(props) {
                                                             col.key === "retail_unit_price" ||
                                                             col.key === "rack" ||
                                                             col.key === "stock" ||
+                                                            col.key === "main_store_stock" ||
                                                             col.key === "sales_count" ||
                                                             col.key === "sales" ||
                                                             col.key === "sales_quantity" ||
@@ -4647,7 +4649,7 @@ function ProductIndex(props) {
                                             {productList &&
                                                 productList.map((product) => (
                                                     <tr key={product.id}>
-                                                        {columns.filter(c => c.visible).map((col) => {
+                                                        {columns.filter(c => c.visible && (c.key !== "main_store_stock" || store?.settings?.enable_warehouse_module)).map((col) => {
                                                             return (<>
                                                                 {(col.key === "deleted") && <td>{product.deleted ? "YES" : "NO"}</td>}
                                                                 {(col.key === "select" && enableSelection) && <td style={{ width: "auto", whiteSpace: "nowrap" }}>
@@ -4831,6 +4833,11 @@ function ProductIndex(props) {
                                                                                 </OverlayTrigger>
                                                                             );
                                                                         })()}
+                                                                    </td>
+                                                                }
+                                                                {col.key === "main_store_stock" &&
+                                                                    <td style={{ width: "auto", whiteSpace: "nowrap" }}>
+                                                                        <b>{(product.product_stores?.[localStorage.getItem("store_id")]?.warehouse_stocks?.main_store?.toFixed(2) ?? "")}</b>
                                                                     </td>
                                                                 }
                                                                 {(col.key === "sales" ||
