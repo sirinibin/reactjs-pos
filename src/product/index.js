@@ -551,9 +551,19 @@ function ProductIndex(props) {
     }
 
     function changePage(newPage) {
+        if (timerRef.current) clearTimeout(timerRef.current);
+
+        timerRef.current = setTimeout(() => {
+            page = parseInt(newPage);
+            setPage(page);
+            list(); //load  only documents
+        }, 100);
+
+
+        /*
         page = parseInt(newPage);
         setPage(page);
-        list(); //load  only documents
+        list();*/ //load  only documents
     }
 
     const CreateFormRef = useRef();
