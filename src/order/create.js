@@ -2249,7 +2249,9 @@ const OrderCreate = forwardRef((props, ref) => {
         let alreadyAdded = isProductAdded(product.id);
         let index = getProductIndex(product.id);
 
-        if (!alreadyAdded || product.allow_duplicates) {
+        if (alreadyAdded && !product.allow_duplicates) {
+            selectedProducts[index].quantity = parseFloat(selectedProducts[index].quantity || 0) + qty;
+        } else if (!alreadyAdded || product.allow_duplicates) {
             selectedProducts.push({
                 product_id: product.id,
                 code: product.item_code,
