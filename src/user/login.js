@@ -23,7 +23,7 @@ function Login() {
         }
     }, []);
 
-    function me() {
+    async function me() {
         console.log("inside me");
         const requestOptions = {
             method: 'GET',
@@ -65,7 +65,8 @@ function Login() {
                     if (storeIDs[0]) {
                         await getStore(storeIDs[0]);
                     }
-
+                } else {
+                    await getFirstStore();
                 }
 
                 localStorage.setItem("user_name", data.result.name);
@@ -93,6 +94,37 @@ function Login() {
                 setProcessing(false);
                 setErrors(error);
             });
+    }
+
+    async function getFirstStore() {
+        const requestOptions = {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': localStorage.getItem('access_token'),
+            },
+        };
+
+        await fetch('/v1/store', requestOptions)
+            .then(async response => {
+                const isJson = response.headers.get('content-type')?.includes('application/json');
+                const data = isJson && await response.json();
+
+                if (!response.ok) {
+                    return Promise.reject(data && data.errors);
+                }
+
+                const stores = data.result;
+                if (stores && stores.length > 0) {
+                    const first = stores[0];
+                    localStorage.setItem("store_name", first.name);
+                    localStorage.setItem("store_id", first.id);
+                    if (first.id) {
+                        await getStore(first.id);
+                    }
+                }
+            })
+            .catch(() => {});
     }
 
     async function getStore(id) {
