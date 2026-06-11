@@ -1,4 +1,4 @@
-import React, { useState, useRef, forwardRef, useEffect, useImperativeHandle } from "react";
+import React, { useState, useRef, useCallback, forwardRef, useEffect, useImperativeHandle } from "react";
 import { Modal } from "react-bootstrap";
 import "react-datepicker/dist/react-datepicker.css";
 import Draggable from "react-draggable";
@@ -7,6 +7,27 @@ import ProductIndex from "../product/index.js";
 
 const Products = forwardRef((props, ref) => {
     const dragRef = useRef(null);
+
+    const DraggableDialog = useCallback(({ children, ...dialogProps }) => (
+        <Draggable handle=".modal-header" nodeRef={dragRef} defaultPosition={{ x: 0, y: 0 }}>
+            <div
+                ref={dragRef}
+                {...dialogProps}
+                className={`modal-dialog modal-xl ${dialogProps.className || ""}`}
+                style={{
+                    position: "fixed",
+                    top: "5%",
+                    left: "15%",
+                    margin: "0",
+                    zIndex: 1055,
+                    width: "70%",
+                    maxHeight: "90vh",
+                }}
+            >
+                <div className="modal-content">{children}</div>
+            </div>
+        </Draggable>
+    ), []);
     // let [selectedCustomers, setSelectedCustomers] = useState([]);
     // let [selectedPaymentStatusList, setSelectedPaymentStatusList] = useState([]);
     let [enableSelection, setEnableSelection] = useState(false);
@@ -75,26 +96,7 @@ const Products = forwardRef((props, ref) => {
                 keyboard={false}
                 centered={false}                // ❌ disable auto-centering
                 enforceFocus={false}            // ✅ allow focus outside
-                dialogAs={({ children, ...props }) => (
-                    <Draggable handle=".modal-header" nodeRef={dragRef}>
-                        <div
-                            ref={dragRef}
-                            className="modal-dialog modal-xl"    // ✅ preserve Bootstrap xl class
-                            {...props}
-                            style={{
-                                position: "absolute",
-                                top: "10%",
-                                left: "20%",
-                                transform: "translate(-50%, -50%)",
-                                margin: "0",
-                                zIndex: 1055,
-                                width: "65%",           // Full width inside container
-                            }}
-                        >
-                            <div className="modal-content">{children}</div>
-                        </div>
-                    </Draggable>
-                )}
+                dialogAs={DraggableDialog}
             >
                 <Modal.Header>
                     <Modal.Title>

@@ -23,6 +23,8 @@ import SalesReturns from "../utils/salesReturn.js";
 
 function CustomerIndex(props) {
 
+    let [enableSelection, setEnableSelection] = useState(false);
+
     //list
     const [customerList, setCustomerList] = useState([]);
 
@@ -51,6 +53,11 @@ function CustomerIndex(props) {
 
 
     useEffect(() => {
+        if (props.enableSelection) {
+            setEnableSelection(true);
+        } else {
+            setEnableSelection(false);
+        }
         list();
         getStore(localStorage.getItem("store_id"));
         // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -546,19 +553,27 @@ function CustomerIndex(props) {
         const qWords = q.split(" ");
 
         const fields = [
-            option.code,
-            option.vat_no,
-            option.name,
-            option.name_in_arabic,
-            option.phone,
-            option.search_label,
-            option.phone_in_arabic,
+            option.code            || "",
+            option.vat_no          || "",
+            option.name            || "",
+            option.name_in_arabic  || "",
+            option.phone           || "",
+            option.phone2          || "",
+            option.email           || "",
+            option.search_label    || "",
+            option.phone_in_arabic || "",
             ...(Array.isArray(option.additional_keywords) ? option.additional_keywords : []),
         ];
 
         const searchable = normalize(fields.join(" "));
+        const searchableCompact = fields.join(" ").toLowerCase()
+            .replace(/[^\p{L}\p{N}\s]/gu, "")
+            .replace(/\s+/g, " ").trim();
 
-        return qWords.every((word) => searchable.includes(word));
+        return qWords.every((word) => {
+            const wordCompact = word.replace(/[^\p{L}\p{N}]/gu, "");
+            return searchable.includes(word) || searchableCompact.includes(wordCompact);
+        });
     }, []);
 
 
@@ -608,21 +623,12 @@ function CustomerIndex(props) {
      }*/
 
     async function suggestCustomers(searchTerm) {
-        console.log("Inside handle suggestCustomers");
         setCustomerOptions([]);
 
-        console.log("searchTerm:" + searchTerm);
-        if (!searchTerm) {
-            /*setTimeout(() => {
-                setOpenCustomerSearchResult(false);
-            }, 100);*/
-            return;
-        }
+        searchTerm = searchTerm.replace(/\s+/g, " ").trim();
+        if (!searchTerm) return;
 
-        var params = {
-            query: searchTerm,
-        };
-
+        var params = { query: searchTerm };
         if (localStorage.getItem("store_id")) {
             params.store_id = localStorage.getItem("store_id");
         }
@@ -640,28 +646,17 @@ function CustomerIndex(props) {
             },
         };
 
-        let Select = "select=id,code,credit_limit,credit_balance,additional_keywords,remarks,use_remarks_in_sales,vat_no,name,phone,name_in_arabic,phone_in_arabic,search_label";
-        // setIsCustomersLoading(true);
+        let Select = "select=id,code,credit_limit,credit_balance,additional_keywords,remarks,use_remarks_in_sales,vat_no,name,phone,phone2,email,name_in_arabic,phone_in_arabic,search_label";
         let result = await fetch(
-            "/v1/customer?" + Select + queryString,
+            "/v1/customer?limit=100&" + Select + queryString,
             requestOptions
         );
         let data = await result.json();
 
-        /* if (!data.result || data.result.length === 0) {
-             setOpenCustomerSearchResult(false);
-             return;
-         }
- 
-         setOpenCustomerSearchResult(true);*/
-
-
+        if (!data.result) return;
 
         const filtered = data.result.filter((opt) => customCustomerFilter(opt, searchTerm));
-
-        console.log("iltered:", filtered);
         setCustomerOptions(filtered);
-        // setIsCustomersLoading(false);
     }
 
 
@@ -823,7 +818,14 @@ function CustomerIndex(props) {
 
 
     //Table settings
+    const handleSelected = (customer) => {
+        if (props.onSelectCustomer) {
+            props.onSelectCustomer(customer);
+        }
+    };
+
     const defaultColumns = useMemo(() => [
+        { key: "select", label: "Select", fieldName: "select", visible: true },
         { key: "deleted", label: "Deleted", fieldName: "deleted", visible: true },
         { key: "actions", label: "Actions", fieldName: "actions", visible: true },
         { key: "code", label: "ID", fieldName: "code", visible: true },
@@ -1515,9 +1517,10 @@ function CustomerIndex(props) {
                                             <tr className="text-center">
                                                 {columns.filter(c => c.visible).map((col) => {
                                                     return (<>
+                                                        {col.key === "select" && enableSelection && <th key={col.key}>{col.label}</th>}
                                                         {col.key === "deleted" && <th key={col.key}>{col.label}</th>}
                                                         {col.key === "actions" && <th key={col.key}>{col.label}</th>}
-                                                        {col.key !== "actions" && col.key !== "deleted" && <th>
+                                                        {col.key !== "actions" && col.key !== "deleted" && col.key !== "select" && <th>
                                                             <b
                                                                 style={{
                                                                     textDecoration: "underline",
@@ -2361,6 +2364,7 @@ function CustomerIndex(props) {
                                                                 <option value="1">YES</option>
                                                             </select>
                                                         </th>}
+                                                        {col.key === "select" && enableSelection && <th></th>}
                                                         {(col.key === "actions" || col.key === "actions_end") && <th></th>}
                                                         {(col.key === "name") && <th>
                                                             <Typeahead
@@ -2651,7 +2655,7 @@ function CustomerIndex(props) {
                                                 <th>
                                                     <Typeahead
                                                         id="customer_id"
-                                                        filterBy={['additional_keywords']}
+                                                        filterBy={() => true}
                                                         labelKey="search_label"
                                                         style={{ minWidth: "300px" }}
                                                         onChange={(selectedItems) => {
@@ -3113,6 +3117,11 @@ function CustomerIndex(props) {
                                                     <tr key={customer.id}>
                                                         {columns.filter(c => c.visible).map((col) => {
                                                             return (<>
+                                                                {(col.key === "select" && enableSelection) && <td style={{ width: "auto", whiteSpace: "nowrap" }}>
+                                                                    <Button className="btn btn-success btn-sm" onClick={() => { handleSelected(customer); }}>
+                                                                        Select
+                                                                    </Button>
+                                                                </td>}
                                                                 {(col.key === "deleted") && <td>{customer.deleted ? "YES" : "NO"}</td>}
                                                                 {(col.key === "actions" || col.key === "actions_end") && <td style={{ width: "auto", whiteSpace: "nowrap" }} >
                                                                     {!customer.deleted && <><Button className="btn btn-danger btn-sm" onClick={() => {
