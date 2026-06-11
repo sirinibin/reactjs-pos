@@ -1172,19 +1172,27 @@ const OrderCreate = forwardRef((props, ref) => {
         const qWords = q.split(" ");
 
         const fields = [
-            option.code,
-            option.vat_no,
-            option.name,
-            option.name_in_arabic,
-            option.phone,
-            option.search_label,
-            option.phone_in_arabic,
+            option.code            || "",
+            option.vat_no          || "",
+            option.name            || "",
+            option.name_in_arabic  || "",
+            option.phone           || "",
+            option.phone2          || "",
+            option.email           || "",
+            option.search_label    || "",
+            option.phone_in_arabic || "",
             ...(Array.isArray(option.additional_keywords) ? option.additional_keywords : []),
         ];
 
         const searchable = normalize(fields.join(" "));
+        const searchableCompact = fields.join(" ").toLowerCase()
+            .replace(/[^\p{L}\p{N}\s]/gu, "")
+            .replace(/\s+/g, " ").trim();
 
-        return qWords.every((word) => searchable.includes(word));
+        return qWords.every((word) => {
+            const wordCompact = word.replace(/[^\p{L}\p{N}]/gu, "");
+            return searchable.includes(word) || searchableCompact.includes(wordCompact);
+        });
     }, []);
 
 
@@ -1192,7 +1200,7 @@ const OrderCreate = forwardRef((props, ref) => {
         //console.log("Inside handle suggestCustomers");
         setCustomerOptions([]);
 
-        //console.log("searchTerm:" + searchTerm);
+        searchTerm = searchTerm.replace(/\s+/g, " ").trim();
         if (!searchTerm) {
             setTimeout(() => {
                 setOpenCustomerSearchResult(false);
@@ -1221,7 +1229,7 @@ const OrderCreate = forwardRef((props, ref) => {
             },
         };
 
-        let Select = "select=id,code,credit_limit,credit_balance,additional_keywords,remarks,use_remarks_in_sales,vat_no,name,phone,name_in_arabic,phone_in_arabic,search_label,stores";
+        let Select = "select=id,code,credit_limit,credit_balance,additional_keywords,remarks,use_remarks_in_sales,vat_no,name,phone,phone2,email,name_in_arabic,phone_in_arabic,search_label,stores";
         // setIsCustomersLoading(true);
         let result = await fetch(
             "/v1/customer?limit=100&" + Select + queryString,
@@ -1304,25 +1312,35 @@ const OrderCreate = forwardRef((props, ref) => {
         const q = normalize(query);
         const qWords = q.split(" ");
 
-        let partNoLabel = "";
-        if (option.prefix_part_number) {
-            partNoLabel = option.prefix_part_number + "-" + option.part_number;
-        }
+        const prefixPart = option.prefix_part_number || "";
+        const partNo = option.part_number || "";
+        const partNoLabel = prefixPart && partNo ? prefixPart + "-" + partNo : (prefixPart || partNo);
 
         const fields = [
             partNoLabel,
-            option.prefix_part_number,
-            option.part_number,
-            option.name,
-            option.name_in_arabic,
-            option.country_name,
-            option.brand_name,
+            prefixPart,
+            partNo,
+            option.name            || "",
+            option.name_in_arabic  || "",
+            option.country_name    || "",
+            option.brand_name      || "",
+            option.search_label    || "",
+            option.item_code       || "",
             ...(Array.isArray(option.additional_keywords) ? option.additional_keywords : []),
         ];
 
         const searchable = normalize(fields.join(" "));
+        // Compact: strip special chars so "cna40057" matches "cn-a-40057"
+        const searchableCompact = fields.join(" ").toLowerCase()
+            .replace(/[^\p{L}\p{N}\s]/gu, "")
+            .replace(/\s+/g, " ").trim();
 
-        return qWords.every((word) => searchable.includes(word));
+        return qWords.every((word) => {
+            // Also strip special chars from the query word for compact comparison
+            // so "cn-a40057" (partial hyphen) matches searchableCompact "cna40057"
+            const wordCompact = word.replace(/[^\p{L}\p{N}]/gu, "");
+            return searchable.includes(word) || searchableCompact.includes(wordCompact);
+        });
     }, []);
 
 
@@ -1388,6 +1406,7 @@ const OrderCreate = forwardRef((props, ref) => {
 
         setProductOptions([]);
 
+        searchTerm = searchTerm.replace(/\s+/g, " ").trim();
         if (!searchTerm) {
             setTimeout(() => {
                 setOpenProductSearchResult(false);
