@@ -3582,6 +3582,7 @@ function ProductIndex(props) {
                                                             <Typeahead
                                                                 id="product_search_by_part_no"
                                                                 filterBy={() => true}
+                                                                positionFixed={true}
                                                                 size="lg"
                                                                 ref={productSearchByPartNoRef}
                                                                 labelKey="search_label"
@@ -3625,6 +3626,7 @@ function ProductIndex(props) {
                                                                 id="product_search_by_name"
                                                                 ref={productSearchByNameRef}
                                                                 filterBy={() => true}
+                                                                positionFixed={true}
                                                                 size="lg"
                                                                 labelKey="search_label"
                                                                 emptyLabel="No products found"
@@ -4006,6 +4008,7 @@ function ProductIndex(props) {
                                                     <Typeahead
                                                         id="product_search_by_part_no"
                                                         filterBy={() => true}
+                                                        positionFixed={true}
                                                         size="lg"
                                                         ref={productSearchByPartNoRef}
                                                         labelKey="search_label"
@@ -4051,6 +4054,7 @@ function ProductIndex(props) {
                                                         id="product_search_by_name"
                                                         ref={productSearchByNameRef}
                                                         filterBy={() => true}
+                                                        positionFixed={true}
                                                         size="lg"
                                                         labelKey="search_label"
                                                         emptyLabel="No products found"
