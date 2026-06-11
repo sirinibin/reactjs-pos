@@ -514,7 +514,7 @@ function DeliveryNoteIndex(props) {
     { key: "date", label: "Date", fieldName: "date", visible: true },
     { key: "customer", label: "Customer", fieldName: "customer_name", visible: true },
     { key: "net_total", label: "Net Total", fieldName: "net_total", visible: true },
-    { key: "order_code", label: "Sales", fieldName: "order_code", visible: true },
+    { key: "order_code", label: "Sales ID", fieldName: "order_code", visible: true },
     { key: "created_by", label: "Created By", fieldName: "created_by", visible: true },
     { key: "created_at", label: "Created At", fieldName: "created_at", visible: true },
     { key: "actions_end", label: "Actions", fieldName: "actions_end", visible: true },
