@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useMemo } from "react";
+import React, { useState, useEffect, useRef, useMemo, useCallback } from "react";
 import VendorCreate from "./create.js";
 import VendorView from "./view.js";
 import { DragDropContext, Droppable, Draggable } from "react-beautiful-dnd";
@@ -405,13 +405,40 @@ function VendorIndex(props) {
     //Vendor Auto Suggestion
     const [vendorOptions, setVendorOptions] = useState([]);
     const [selectedVendors, setSelectedVendors] = useState([]);
+
+    const customVendorFilter = useCallback((option, query) => {
+        const normalize = (str) => str?.toLowerCase().replace(/\s+/g, " ").trim() || "";
+        const q = normalize(query);
+        const qWords = q.split(" ");
+        const fields = [
+            option.code            || "",
+            option.vat_no          || "",
+            option.name            || "",
+            option.name_in_arabic  || "",
+            option.phone           || "",
+            option.phone2          || "",
+            option.email           || "",
+            option.search_label    || "",
+            option.phone_in_arabic || "",
+            ...(Array.isArray(option.additional_keywords) ? option.additional_keywords : []),
+        ];
+        const searchable = normalize(fields.join(" "));
+        const searchableCompact = fields.join(" ").toLowerCase()
+            .replace(/[^\p{L}\p{N}\s]/gu, "")
+            .replace(/\s+/g, " ").trim();
+        return qWords.every((word) => {
+            const wordCompact = word.replace(/[^\p{L}\p{N}]/gu, "");
+            return searchable.includes(word) || searchableCompact.includes(wordCompact);
+        });
+    }, []);
+
     async function suggestVendors(searchTerm) {
-        console.log("Inside handle suggestVendors");
+        setVendorOptions([]);
 
-        var params = {
-            query: searchTerm,
-        };
+        searchTerm = searchTerm.replace(/\s+/g, " ").trim();
+        if (!searchTerm) return;
 
+        var params = { query: searchTerm };
         if (localStorage.getItem("store_id")) {
             params.store_id = localStorage.getItem("store_id");
         }
@@ -429,11 +456,14 @@ function VendorIndex(props) {
             },
         };
 
-        let Select = "select=id,additional_keywords,code,vat_no,name,phone,name_in_arabic,phone_in_arabic,search_label";
-        let result = await fetch(`/v1/vendor?${Select}${queryString}`, requestOptions);
+        let Select = "select=id,additional_keywords,code,vat_no,name,phone,phone2,email,name_in_arabic,phone_in_arabic,search_label";
+        let result = await fetch(`/v1/vendor?limit=100&${Select}${queryString}`, requestOptions);
         let data = await result.json();
 
-        setVendorOptions(data.result);
+        if (!data.result) return;
+
+        const filtered = data.result.filter((opt) => customVendorFilter(opt, searchTerm));
+        setVendorOptions(filtered);
     }
 
     const AccountBalanceSheetRef = useRef();
@@ -1623,7 +1653,7 @@ function VendorIndex(props) {
                                                     <Typeahead
                                                         style={{ minWidth: "300px" }}
                                                         id="vendor_id"
-                                                        filterBy={['additional_keywords']}
+                                                        filterBy={() => true}
                                                         labelKey="search_label"
                                                         onChange={(selectedItems) => {
                                                             searchByMultipleValuesField(
