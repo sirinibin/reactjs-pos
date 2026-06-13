@@ -341,16 +341,16 @@ const Customers = forwardRef((props, ref) => {
     const [customerOptions, setCustomerOptions] = useState([]);
     const [selectedCustomers, setSelectedCustomers] = useState([]);
     async function suggestCustomers(searchTerm) {
-        console.log("Inside handle suggestCustomers");
+        searchTerm = searchTerm.replace(/\s+/g, " ").trim();
+        if (!searchTerm) {
+            setCustomerOptions([]);
+            return;
+        }
 
-        var params = {
-            query: searchTerm,
-        };
-
+        var params = { query: searchTerm };
         if (localStorage.getItem("store_id")) {
             params.store_id = localStorage.getItem("store_id");
         }
-
 
         var queryString = ObjectToSearchQueryParams(params);
         if (queryString !== "") {
@@ -365,14 +365,47 @@ const Customers = forwardRef((props, ref) => {
             },
         };
 
-        let Select = "select=id,code,additional_keywords,vat_no,name,phone,name_in_arabic,phone_in_arabic,search_label";
+        let Select = "select=id,code,additional_keywords,vat_no,name,phone,phone2,email,name_in_arabic,phone_in_arabic,search_label";
         let result = await fetch(
-            `/v1/customer?${Select}${queryString}`,
+            `/v1/customer?limit=100&${Select}${queryString}`,
             requestOptions
         );
         let data = await result.json();
 
-        setCustomerOptions(data.result);
+        if (!data.result) {
+            setCustomerOptions([]);
+            return;
+        }
+
+        // Apply same client-side filter as order/create.js to remove false positives
+        const normalize = (str) => str?.toLowerCase().replace(/\s+/g, " ").trim() || "";
+        const q = normalize(searchTerm);
+        const qWords = q.split(" ");
+
+        const filtered = data.result.filter((option) => {
+            const fields = [
+                option.code            || "",
+                option.vat_no          || "",
+                option.name            || "",
+                option.name_in_arabic  || "",
+                option.phone           || "",
+                option.phone2          || "",
+                option.email           || "",
+                option.search_label    || "",
+                option.phone_in_arabic || "",
+                ...(Array.isArray(option.additional_keywords) ? option.additional_keywords : []),
+            ];
+            const searchable = normalize(fields.join(" "));
+            const searchableCompact = fields.join(" ").toLowerCase()
+                .replace(/[^\p{L}\p{N}\s]/gu, "")
+                .replace(/\s+/g, " ").trim();
+            return qWords.every((word) => {
+                const wordCompact = word.replace(/[^\p{L}\p{N}]/gu, "");
+                return searchable.includes(word) || searchableCompact.includes(wordCompact);
+            });
+        });
+
+        setCustomerOptions(filtered);
     }
 
 
@@ -1412,7 +1445,7 @@ const Customers = forwardRef((props, ref) => {
                                                                 <Typeahead
                                                                     id="customer_id"
                                                                     labelKey="search_label"
-                                                                    filterBy={['additional_keywords']}
+                                                                    filterBy={() => true}
                                                                     style={{ minWidth: "300px" }}
                                                                     onChange={(selectedItems) => {
                                                                         searchByMultipleValuesField(
