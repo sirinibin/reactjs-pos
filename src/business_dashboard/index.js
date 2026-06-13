@@ -274,6 +274,8 @@ export default function BusinessDashboard() {
     const [activeTab, setActiveTab] = useState("overview");
     const [loading, setLoading] = useState(true);
     const [refreshKey, setRefreshKey] = useState(0);
+    const [recomputing, setRecomputing] = useState(false);
+    const [recomputeCountdown, setRecomputeCountdown] = useState(0);
 
     // ── Precomputed dashboard state ────────────────────────────────────────────
     const [store, setStore]                         = useState({});
@@ -488,6 +490,39 @@ export default function BusinessDashboard() {
                         title="Refresh dashboard data"
                     >
                         <i className={`bi bi-arrow-clockwise${loading ? " spin" : ""}`} />
+                    </button>
+                    <button
+                        className="btn btn-sm btn-outline-warning"
+                        disabled={recomputing || loading}
+                        title="Recompute all monthly data from scratch (fixes stale cash discount totals)"
+                        onClick={async () => {
+                            if (!storeId) return;
+                            setRecomputing(true);
+                            let secs = 30;
+                            setRecomputeCountdown(secs);
+                            try {
+                                await fetch(`/v1/dashboard/backfill?store_id=${storeId}&months=0`, {
+                                    method: "POST",
+                                    headers: authHeaders(),
+                                });
+                                const interval = setInterval(() => {
+                                    secs -= 1;
+                                    setRecomputeCountdown(secs);
+                                    if (secs <= 0) {
+                                        clearInterval(interval);
+                                        setRecomputing(false);
+                                        setRecomputeCountdown(0);
+                                        setRefreshKey(k => k + 1);
+                                    }
+                                }, 1000);
+                            } catch {
+                                setRecomputing(false);
+                                setRecomputeCountdown(0);
+                            }
+                        }}
+                    >
+                        <i className={`bi bi-database-gear${recomputing ? " spin" : ""}`} />
+                        {recomputing ? ` Recomputing… ${recomputeCountdown}s` : " Recompute"}
                     </button>
                 </div>
             </div>
