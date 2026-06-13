@@ -426,19 +426,18 @@ const Customers = forwardRef((props, ref) => {
                 centered={false}                // ❌ disable auto-centering
                 enforceFocus={false}            // ✅ allow focus outside
                 dialogAs={({ children, ...props }) => (
-                    <Draggable handle=".modal-header" nodeRef={dragRef}>
+                    <Draggable handle=".modal-header" nodeRef={dragRef} defaultPosition={{ x: 0, y: 0 }}>
                         <div
                             ref={dragRef}
-                            className="modal-dialog modal-xl"    // ✅ preserve Bootstrap xl class
+                            className="modal-dialog modal-xl"
                             {...props}
                             style={{
-                                position: "absolute",
-                                top: "10%",
-                                left: "20%",
-                                transform: "translate(-50%, -50%)",
+                                position: "fixed",
+                                top: "5%",
+                                left: "15%",
                                 margin: "0",
                                 zIndex: 1055,
-                                width: "65%",           // Full width inside container
+                                width: "70%",
                             }}
                         >
                             <div className="modal-content">{children}</div>
@@ -1442,35 +1441,17 @@ const Customers = forwardRef((props, ref) => {
                                                                 />
                                                             </th>
                                                             <th>
-                                                                <Typeahead
-                                                                    id="customer_id"
-                                                                    labelKey="search_label"
-                                                                    filterBy={() => true}
-                                                                    style={{ minWidth: "300px" }}
-                                                                    onChange={(selectedItems) => {
-                                                                        searchByMultipleValuesField(
-                                                                            "customer_id",
-                                                                            selectedItems
-                                                                        );
-                                                                    }}
-                                                                    options={customerOptions}
-                                                                    placeholder="Customer Name / Mob / VAT # / ID"
-                                                                    selected={selectedCustomers}
-                                                                    highlightOnlyResult={true}
-                                                                    onInputChange={(searchTerm, e) => {
+                                                                <input
+                                                                    type="text"
+                                                                    placeholder="Name / Phone / VAT / ID"
+                                                                    style={{ minWidth: "200px" }}
+                                                                    onChange={(e) => {
                                                                         if (timerRef.current) clearTimeout(timerRef.current);
                                                                         timerRef.current = setTimeout(() => {
-                                                                            suggestCustomers(searchTerm);
-                                                                        }, 100);
+                                                                            searchByFieldValue("query", e.target.value);
+                                                                        }, 300);
                                                                     }}
-                                                                    ref={customerSearchRef}
-                                                                    onKeyDown={(e) => {
-                                                                        if (e.key === "Escape") {
-                                                                            setCustomerOptions([]);
-                                                                            customerSearchRef.current?.clear();
-                                                                        }
-                                                                    }}
-                                                                    multiple
+                                                                    className="form-control"
                                                                 />
                                                             </th>
                                                             <th>
