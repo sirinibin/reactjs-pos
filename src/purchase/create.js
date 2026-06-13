@@ -451,19 +451,27 @@ const PurchaseCreate = forwardRef((props, ref) => {
         const qWords = q.split(" ");
 
         const fields = [
-            option.code,
-            option.vat_no,
-            option.name,
-            option.name_in_arabic,
-            option.phone,
-            option.search_label,
-            option.phone_in_arabic,
+            option.code            || "",
+            option.vat_no          || "",
+            option.name            || "",
+            option.name_in_arabic  || "",
+            option.phone           || "",
+            option.phone2          || "",
+            option.email           || "",
+            option.search_label    || "",
+            option.phone_in_arabic || "",
             ...(Array.isArray(option.additional_keywords) ? option.additional_keywords : []),
         ];
 
         const searchable = normalize(fields.join(" "));
+        const searchableCompact = fields.join(" ").toLowerCase()
+            .replace(/[^\p{L}\p{N}\s]/gu, "")
+            .replace(/\s+/g, " ").trim();
 
-        return qWords.every((word) => searchable.includes(word));
+        return qWords.every((word) => {
+            const wordCompact = word.replace(/[^\p{L}\p{N}]/gu, "");
+            return searchable.includes(word) || searchableCompact.includes(wordCompact);
+        });
     }, []);
 
 
@@ -504,7 +512,10 @@ const PurchaseCreate = forwardRef((props, ref) => {
             },
         };
 
-        let Select = "select=id,credit_balance,credit_limit,additional_keywords,code,use_remarks_in_purchases,remarks,vat_no,name,phone,name_in_arabic,phone_in_arabic,search_label";
+        searchTerm = searchTerm.replace(/\s+/g, " ").trim();
+        if (!searchTerm) return;
+
+        let Select = "select=id,credit_balance,credit_limit,additional_keywords,code,use_remarks_in_purchases,remarks,vat_no,name,phone,phone2,email,name_in_arabic,phone_in_arabic,search_label";
         // setIsVendorsLoading(true);
         let result = await fetch(
             "/v1/vendor?limit=100&" + Select + queryString,
