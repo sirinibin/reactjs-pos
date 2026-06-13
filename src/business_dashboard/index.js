@@ -350,7 +350,7 @@ export default function BusinessDashboard() {
                 accounts,
                 stock,
             ] = await Promise.all([
-                fetchOne(`/v1/store/${storeId}?select=id,settings,vat_percent`),
+                fetchOne(`/v1/store/${storeId}?select=id,name,branch_name,vat_no,registration_number,address,settings,vat_percent`),
                 fetchDashboard(`/v1/dashboard/monthly?${base}`),
                 fetchDashboard(`/v1/dashboard/products?${base}&limit=10`),
                 fetchDashboard(`/v1/dashboard/customers?${base}&limit=10`),
@@ -696,6 +696,10 @@ export default function BusinessDashboard() {
                                 quotationStats={kpiStats.quotationStats}
                                 qtnSalesReturnStats={kpiStats.qtnSalesReturnStats}
                                 orders={{ length: kpiStats.orderCount }}
+                                filters={{
+                                    ...(appliedFrom ? { 'From': appliedFrom } : {}),
+                                    ...(appliedTo   ? { 'To':   appliedTo   } : {}),
+                                }}
                             />
                             <div className="row mt-4">
                                 <div className="col-lg-6">

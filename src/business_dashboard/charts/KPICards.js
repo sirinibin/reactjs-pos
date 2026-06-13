@@ -1,4 +1,7 @@
-import React, { useState } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
+import WhatsAppModal from '../../utils/WhatsAppModal';
+import { addCommasToInfoValue, stripSarBreakdown } from '../../utils/numberUtils';
+import { generateInfoPdf, safeName } from '../../utils/pdfGenerator';
 
 function fmt(n) {
     if (n === undefined || n === null || isNaN(n)) return "0.00";
@@ -15,54 +18,190 @@ function fmtCompact(n) {
     return `${sign}${abs.toFixed(2)}`;
 }
 
-function InfoTooltip({ lines }) {
+const BG = '#212529';
+const BORDER = '#495057';
+
+function InfoTooltip({ lines, cardTitle, filters, store }) {
     const [show, setShow] = useState(false);
+    const [isDownloading, setIsDownloading] = useState(false);
+    const [isSharingWA, setIsSharingWA] = useState(false);
+    const [showWAModal, setShowWAModal] = useState(false);
+    const [waMessage, setWaMessage] = useState("");
+    const [error, setError] = useState("");
+    const autoCloseRef = useRef(null);
+    const triggerRef = useRef(null);
+    const tooltipRef = useRef(null);
+
+    const clearAutoClose = useCallback(() => {
+        if (autoCloseRef.current) { clearTimeout(autoCloseRef.current); autoCloseRef.current = null; }
+    }, []);
+
+    const startAutoClose = useCallback(() => {
+        clearAutoClose();
+        autoCloseRef.current = setTimeout(() => setShow(false), 5000);
+    }, [clearAutoClose]);
+
+    useEffect(() => {
+        if (show) startAutoClose(); else clearAutoClose();
+        return clearAutoClose;
+    }, [show, startAutoClose, clearAutoClose]);
+
+    useEffect(() => {
+        if (!show) return;
+        const handleDocClick = (e) => {
+            if (triggerRef.current?.contains(e.target)) return;
+            if (tooltipRef.current?.contains(e.target)) return;
+            if (e.target.closest('.modal')) return;
+            setShow(false);
+        };
+        document.addEventListener('mousedown', handleDocClick);
+        return () => document.removeEventListener('mousedown', handleDocClick);
+    }, [show]);
+
+    const handleDownload = async (e) => {
+        e.stopPropagation();
+        setIsDownloading(true); setError("");
+        try {
+            const doc = generateInfoPdf('Dashboard', cardTitle || 'KPI', lines, filters, store);
+            doc.save(`${safeName(`Dashboard_${cardTitle || 'KPI'}`)}.pdf`);
+        } catch (err) { setError(err?.message || 'PDF failed'); }
+        finally { setIsDownloading(false); }
+    };
+
+    const handleWAShare = async (e) => {
+        e.stopPropagation();
+        setIsSharingWA(true); setError("");
+        try {
+            const doc = generateInfoPdf('Dashboard', cardTitle || 'KPI', lines, filters, store);
+            const pdfBlob = doc.output('blob');
+            const binId = `startpos-${Date.now()}`;
+            const fn = `${safeName(`Dashboard_${cardTitle || 'KPI'}`)}.pdf`;
+            const res = await fetch(`https://filebin.net/${binId}/${fn}`, { method: 'POST', body: pdfBlob });
+            if (!res.ok && res.status !== 201) throw new Error(`Upload failed: HTTP ${res.status}`);
+            setWaMessage(`Hello, here is Dashboard — ${cardTitle || ''}:\nhttps://filebin.net/${binId}/${fn}`);
+            setShowWAModal(true);
+        } catch (err) { setError(err?.message || 'Share failed'); }
+        finally { setIsSharingWA(false); }
+    };
+
+    const handleWAChoice = ({ type, number, message }) => {
+        let url = type === 'number' && number
+            ? (() => { let p = number.replace(/\D/g, ''); if (p.startsWith('05')) p = '966' + p.slice(1);
+                return navigator.userAgent.toLowerCase().includes('windows')
+                    ? `https://web.whatsapp.com/send?phone=${p}&text=${encodeURIComponent(message)}`
+                    : `https://wa.me/${p}?text=${encodeURIComponent(message)}`; })()
+            : `https://wa.me?text=${encodeURIComponent(message)}`;
+        window.open(url, '_blank');
+    };
+
+    const descLine = lines && lines[0] && !lines[0].divider && lines[0].bold ? lines[0] : null;
+    const detailLines = descLine ? lines.slice(1) : (lines || []);
+
     return (
-        <span
-            style={{ position: "relative", display: "inline-flex", alignItems: "center", marginLeft: "5px", verticalAlign: "middle" }}
-            onMouseEnter={() => setShow(true)}
-            onMouseLeave={() => setShow(false)}
-        >
-            <i className="bi bi-info-circle-fill" style={{ fontSize: "0.75rem", color: "#adb5bd", cursor: "help" }} />
+        <span style={{ position: "relative", display: "inline-flex", alignItems: "center", marginLeft: "5px", verticalAlign: "middle" }}>
+            <i
+                ref={triggerRef}
+                className="bi bi-info-circle-fill"
+                style={{ fontSize: "0.75rem", color: "#adb5bd", cursor: "pointer" }}
+                onClick={(e) => { e.stopPropagation(); setShow(p => !p); }}
+            />
             {show && (
-                <div style={{
-                    position: "absolute",
-                    top: "130%",
-                    left: "50%",
-                    transform: "translateX(-50%)",
-                    backgroundColor: "#212529",
-                    color: "#f8f9fa",
-                    padding: "9px 13px",
-                    borderRadius: "6px",
-                    fontSize: "0.73rem",
-                    zIndex: 9999,
-                    minWidth: "230px",
-                    maxWidth: "340px",
-                    boxShadow: "0 4px 14px rgba(0,0,0,0.35)",
-                    lineHeight: "1.6",
-                    pointerEvents: "none",
-                    whiteSpace: "nowrap",
-                }}>
-                    {/* Arrow pointing up */}
-                    <div style={{
-                        position: "absolute",
-                        bottom: "100%",
-                        left: "50%",
-                        transform: "translateX(-50%)",
-                        width: 0,
-                        height: 0,
-                        borderLeft: "6px solid transparent",
-                        borderRight: "6px solid transparent",
-                        borderBottom: "6px solid #212529",
-                    }} />
-                    {lines.map((line, i) => (
-                        <div key={i} style={line.divider ? { borderTop: "1px solid #495057", marginTop: "6px", paddingTop: "6px" } : {}}>
-                            {line.label && <span style={{ color: "#adb5bd" }}>{line.label}: </span>}
-                            <span style={{ fontWeight: line.bold ? 600 : 400, color: line.color || "#f8f9fa" }}>{line.value}</span>
+                <div
+                    ref={tooltipRef}
+                    style={{
+                        position: "absolute", top: "130%", left: "50%", transform: "translateX(-50%)",
+                        backgroundColor: BG, color: "#f8f9fa", borderRadius: "6px",
+                        border: `1px solid ${BORDER}`, fontSize: "0.73rem", zIndex: 9999,
+                        minWidth: "260px", maxWidth: "400px",
+                        boxShadow: "0 4px 14px rgba(0,0,0,0.45)", lineHeight: "1.7",
+                    }}
+                    onMouseEnter={clearAutoClose}
+                    onMouseLeave={startAutoClose}
+                    onClick={e => e.stopPropagation()}
+                >
+                    {/* Up arrow */}
+                    <div style={{ position: "absolute", bottom: "100%", left: "50%", transform: "translateX(-50%)",
+                        width: 0, height: 0, borderLeft: "6px solid transparent",
+                        borderRight: "6px solid transparent", borderBottom: `6px solid ${BORDER}` }} />
+
+                    {/* Header */}
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+                        padding: '7px 10px 7px 14px', borderBottom: `1px solid ${BORDER}`,
+                        fontWeight: 700, fontSize: '0.8rem' }}>
+                        <span>Dashboard — {cardTitle || ''}</span>
+                        <button type="button" onClick={(e) => { e.stopPropagation(); setShow(false); }}
+                            style={{ background: 'none', border: 'none', color: '#adb5bd', cursor: 'pointer',
+                                fontSize: '1.1rem', lineHeight: 1, padding: '0 0 0 10px' }} title="Close">×</button>
+                    </div>
+
+                    {/* Date filters */}
+                    {Object.entries(filters || {}).filter(([, v]) => v).length > 0 && (
+                        <div style={{ padding: '5px 14px', borderBottom: `1px solid ${BORDER}`,
+                            fontSize: '0.72rem', color: '#adb5bd', lineHeight: 1.7 }}>
+                            {Object.entries(filters || {}).filter(([, v]) => v).map(([k, v]) => (
+                                <span key={k} style={{ marginRight: '12px' }}>
+                                    {k}: <span style={{ color: '#f8f9fa', fontWeight: 500 }}>{v}</span>
+                                </span>
+                            ))}
                         </div>
-                    ))}
+                    )}
+
+                    {/* Description */}
+                    {descLine && (
+                        <div style={{ padding: '8px 14px', fontWeight: 600, color: descLine.color || '#f8f9fa',
+                            borderBottom: `1px solid ${BORDER}`, fontSize: '0.78rem', lineHeight: 1.5 }}>
+                            {addCommasToInfoValue(descLine.value)}
+                        </div>
+                    )}
+
+                    {/* Detail lines table */}
+                    {detailLines.length > 0 && (
+                        <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.75rem' }}>
+                            <tbody>
+                                {detailLines.map((line, i) => (
+                                    <tr key={i} style={{ lineHeight: 1.7, borderTop: line.divider ? `1px solid ${BORDER}` : 'none' }}>
+                                        <td style={{ padding: line.divider ? '6px 8px 2px 14px' : '1px 8px 1px 14px',
+                                            color: '#adb5bd', whiteSpace: 'nowrap', verticalAlign: 'top', width: '1%' }}>
+                                            {line.label || ''}
+                                        </td>
+                                        <td style={{ padding: line.divider ? '6px 14px 2px 4px' : '1px 14px 1px 4px',
+                                            textAlign: 'right', fontWeight: line.bold ? 700 : 400,
+                                            color: line.color || '#f8f9fa', whiteSpace: 'nowrap',
+                                            fontVariantNumeric: 'tabular-nums' }}>
+                                            {stripSarBreakdown(addCommasToInfoValue(line.value), line.bold)}
+                                        </td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    )}
+
+                    {error && <div style={{ padding: '4px 14px', color: '#f8a5a5', fontSize: '0.72rem' }}>{error}</div>}
+
+                    {/* Action bar */}
+                    <div style={{ display: 'flex', gap: '6px', padding: '7px 14px',
+                        borderTop: `1px solid ${BORDER}`, justifyContent: 'flex-end' }}>
+                        <button onClick={handleDownload} disabled={isDownloading}
+                            style={{ background: 'none', border: `1px solid rgba(255,255,255,0.3)`,
+                                color: '#f8f9fa', borderRadius: '4px', cursor: 'pointer',
+                                fontSize: '0.7rem', padding: '2px 9px' }}>
+                            {isDownloading
+                                ? <span className="spinner-border spinner-border-sm" style={{ width: '0.65rem', height: '0.65rem' }} />
+                                : <><i className="bi bi-file-earmark-arrow-down me-1" />PDF</>}
+                        </button>
+                        <button onClick={handleWAShare} disabled={isSharingWA}
+                            style={{ background: 'none', border: '1px solid #28a745',
+                                color: '#28a745', borderRadius: '4px', cursor: 'pointer',
+                                fontSize: '0.7rem', padding: '2px 9px' }}>
+                            {isSharingWA
+                                ? <span className="spinner-border spinner-border-sm" style={{ width: '0.65rem', height: '0.65rem' }} />
+                                : <><i className="bi bi-whatsapp me-1" />Share</>}
+                        </button>
+                    </div>
                 </div>
             )}
+            <WhatsAppModal show={showWAModal} onClose={() => setShowWAModal(false)}
+                onChoice={handleWAChoice} defaultMessage={waMessage} hideMessage={true} />
         </span>
     );
 }
@@ -108,7 +247,7 @@ function ValueTooltip({ exact, children }) {
     );
 }
 
-function KPICard({ title, tooltip, value, exact, sub2, icon, color }) {
+function KPICard({ title, tooltip, value, exact, sub2, icon, color, filters, store }) {
     return (
         <div className="col-xl-2 col-lg-4 col-md-4 col-sm-6 mb-3">
             <div className="card h-100" style={{ borderLeft: `4px solid ${color}` }}>
@@ -123,7 +262,7 @@ function KPICard({ title, tooltip, value, exact, sub2, icon, color }) {
                             <span style={{ fontSize: "0.65rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.06em", color: "#6c757d", lineHeight: 1.3 }}>
                                 {title}
                             </span>
-                            {tooltip && <InfoTooltip lines={tooltip} />}
+                            {tooltip && <InfoTooltip lines={tooltip} cardTitle={title} filters={filters} store={store} />}
                         </div>
                         <div style={{ fontSize: "0.95rem", fontWeight: 700, whiteSpace: "nowrap" }}>
                             {exact ? <ValueTooltip exact={exact}>{value}</ValueTooltip> : value}
@@ -151,6 +290,7 @@ export default function KPICards({
     quotationStats,
     qtnSalesReturnStats,
     orders,
+    filters,
 }) {
     // ── Store flags — identical to stats/index.js ──────────────────────────
     const qtnInvoiceAccounting = store?.settings?.quotation_invoice_accounting === true;
@@ -206,110 +346,110 @@ export default function KPICards({
 
     const revenueTooltip = [
         { label: "Exact", value: `SAR ${fmt(revenue)}`, bold: true, color: "#74c0fc" },
-        { divider: true, label: "Gross Sales", value: `SAR ${fmt(totalSales)}` },
-        ...(qtnInvoiceAccounting ? [{ label: "Qtn. Sales", value: `+ SAR ${fmt(totalQtnSales)}` }] : []),
-        { label: "Sales Returns", value: `− SAR ${fmt(totalSalesReturn)}` },
-        ...(qtnInvoiceAccounting ? [{ label: "Qtn. Returns", value: `− SAR ${fmt(totalQtnSalesReturn)}` }] : []),
+        { divider: true, label: "Gross Sales", value: `${fmt(totalSales)}` },
+        ...(qtnInvoiceAccounting ? [{ label: "Qtn. Sales", value: `+ ${fmt(totalQtnSales)}` }] : []),
+        { label: "Sales Returns", value: `− ${fmt(totalSalesReturn)}` },
+        ...(qtnInvoiceAccounting ? [{ label: "Qtn. Returns", value: `− ${fmt(totalQtnSalesReturn)}` }] : []),
     ];
 
     const expenseTooltip = disablePurchasesOnAccounts ? [
         { label: "Exact", value: `SAR ${fmt(expenseTotal)}`, bold: true, color: "#ffa8a8" },
-        { divider: true, label: "Expenses", value: `SAR ${fmt(totalExpense)}` },
-        { label: "Purchase Return Fund Rcvd", value: `− SAR ${fmt(totalDepositPurchaseFund)}` },
-        { label: "Accounted Purchases", value: `+ SAR ${fmt(totalAccountedPurchase)}` },
-        { label: "Accounted Pur. Returns", value: `− SAR ${fmt(totalAccountedPurchaseReturn)}` },
-        { label: "Sales Cash Discount", value: `+ SAR ${fmt(totalCashDiscount)}` },
-        { label: "Acct. Pur. Return C.D.", value: `+ SAR ${fmt(totalAccountedPurchaseReturnCashDiscount)}` },
-        { label: "Sales Return Cash Discount", value: `− SAR ${fmt(totalSalesReturnCashDiscount)}` },
-        { label: "Acct. Purchase C.D.", value: `− SAR ${fmt(totalAccountedPurchaseCashDiscount)}` },
+        { divider: true, label: "Expenses", value: `${fmt(totalExpense)}` },
+        { label: "Purchase Return Fund Rcvd", value: `− ${fmt(totalDepositPurchaseFund)}` },
+        { label: "Accounted Purchases", value: `+ ${fmt(totalAccountedPurchase)}` },
+        { label: "Accounted Pur. Returns", value: `− ${fmt(totalAccountedPurchaseReturn)}` },
+        { label: "Sales Cash Discount", value: `+ ${fmt(totalCashDiscount)}` },
+        { label: "Acct. Pur. Return C.D.", value: `+ ${fmt(totalAccountedPurchaseReturnCashDiscount)}` },
+        { label: "Sales Return Cash Discount", value: `− ${fmt(totalSalesReturnCashDiscount)}` },
+        { label: "Acct. Purchase C.D.", value: `− ${fmt(totalAccountedPurchaseCashDiscount)}` },
         ...(qtnInvoiceAccounting ? [
-            { label: "Qtn. Sales Cash Discount", value: `+ SAR ${fmt(qtnSalesCashDiscount)}` },
-            { label: "Qtn. Sales Ret. Cash Discount", value: `− SAR ${fmt(qtnSalesReturnCashDiscount)}` },
+            { label: "Qtn. Sales Cash Discount", value: `+ ${fmt(qtnSalesCashDiscount)}` },
+            { label: "Qtn. Sales Ret. Cash Discount", value: `− ${fmt(qtnSalesReturnCashDiscount)}` },
         ] : []),
     ] : [
         { label: "Exact", value: `SAR ${fmt(expenseTotal)}`, bold: true, color: "#ffa8a8" },
-        { divider: true, label: "Expenses", value: `SAR ${fmt(totalExpense)}` },
-        { label: "Purchases", value: `+ SAR ${fmt(totalPurchase)}` },
-        { label: "Purchase Returns", value: `− SAR ${fmt(totalPurchaseReturn)}` },
-        { label: "Sales Cash Discount", value: `+ SAR ${fmt(totalCashDiscount)}` },
-        { label: "Pur. Return Cash Discount", value: `+ SAR ${fmt(totalPurchaseReturnCashDiscount)}` },
-        { label: "Sales Return Cash Discount", value: `− SAR ${fmt(totalSalesReturnCashDiscount)}` },
-        { label: "Purchase Cash Discount", value: `− SAR ${fmt(totalPurchaseCashDiscount)}` },
+        { divider: true, label: "Expenses", value: `${fmt(totalExpense)}` },
+        { label: "Purchases", value: `+ ${fmt(totalPurchase)}` },
+        { label: "Purchase Returns", value: `− ${fmt(totalPurchaseReturn)}` },
+        { label: "Sales Cash Discount", value: `+ ${fmt(totalCashDiscount)}` },
+        { label: "Pur. Return Cash Discount", value: `+ ${fmt(totalPurchaseReturnCashDiscount)}` },
+        { label: "Sales Return Cash Discount", value: `− ${fmt(totalSalesReturnCashDiscount)}` },
+        { label: "Purchase Cash Discount", value: `− ${fmt(totalPurchaseCashDiscount)}` },
         ...(qtnInvoiceAccounting ? [
-            { label: "Qtn. Sales Cash Discount", value: `+ SAR ${fmt(qtnSalesCashDiscount)}` },
-            { label: "Qtn. Sales Ret. Cash Discount", value: `− SAR ${fmt(qtnSalesReturnCashDiscount)}` },
+            { label: "Qtn. Sales Cash Discount", value: `+ ${fmt(qtnSalesCashDiscount)}` },
+            { label: "Qtn. Sales Ret. Cash Discount", value: `− ${fmt(qtnSalesReturnCashDiscount)}` },
         ] : []),
     ];
 
     const profitTooltip = [
         { label: "Exact (w/ VAT)", value: `SAR ${fmt(Math.abs(profitLoss))}`, bold: true, color: isProfitable ? "#69db7c" : "#ffa8a8" },
         { label: "Exact (w/o VAT)", value: `SAR ${fmt(Math.abs(profitLossWithoutVAT))}`, bold: true },
-        { divider: true, label: "Net Revenue", value: `SAR ${fmt(revenue)}` },
-        { label: "Total Expense", value: `− SAR ${fmt(expenseTotal)}` },
-        { label: `VAT ${vatPercent}%`, value: `SAR ${fmt(profitLossVat)}` },
+        { divider: true, label: "Net Revenue", value: `${fmt(revenue)}` },
+        { label: "Total Expense", value: `− ${fmt(expenseTotal)}` },
+        { label: `VAT ${vatPercent}%`, value: `${fmt(profitLossVat)}` },
     ];
 
     const ordersTooltip = [
         { label: "Total Orders", value: `${totalOrders.toLocaleString()}`, bold: true },
-        { divider: true, label: "Gross Sales", value: `SAR ${fmt(totalSales)}` },
-        { label: "Avg per Order", value: `SAR ${fmt(avgOrderValue)}` },
+        { divider: true, label: "Gross Sales", value: `${fmt(totalSales)}` },
+        { label: "Avg per Order", value: `${fmt(avgOrderValue)}` },
     ];
 
     const avgTooltip = [
         { label: "Exact", value: `SAR ${fmt(avgOrderValue)}`, bold: true, color: "#74c0fc" },
-        { divider: true, label: "Gross Sales", value: `SAR ${fmt(totalSales)}` },
+        { divider: true, label: "Gross Sales", value: `${fmt(totalSales)}` },
         { label: "Orders", value: `÷ ${totalOrders}` },
     ];
 
     const returnTooltip = [
         { label: "Return Rate", value: `${returnRate.toFixed(2)}%`, bold: true, color: "#ffa8a8" },
-        { divider: true, label: "Sales Returns", value: `SAR ${fmt(totalSalesReturn)}` },
-        { label: "Gross Sales", value: `SAR ${fmt(totalSales)}` },
+        { divider: true, label: "Sales Returns", value: `${fmt(totalSalesReturn)}` },
+        { label: "Gross Sales", value: `${fmt(totalSales)}` },
     ];
 
     return (
         <div className="row">
-            <KPICard
+            <KPICard filters={filters} store={store}
                 title="Net Revenue"
                 tooltip={revenueTooltip}
-                value={`SAR ${fmtCompact(revenue)}`}
-                exact={`SAR ${fmt(revenue)}`}
+                value={`${fmtCompact(revenue)}`}
+                exact={`${fmt(revenue)}`}
                 icon="bi bi-currency-dollar"
                 color="#4e73df"
             />
-            <KPICard
+            <KPICard filters={filters} store={store}
                 title="Total Expense"
                 tooltip={expenseTooltip}
-                value={`SAR ${fmtCompact(expenseTotal)}`}
-                exact={`SAR ${fmt(expenseTotal)}`}
+                value={`${fmtCompact(expenseTotal)}`}
+                exact={`${fmt(expenseTotal)}`}
                 icon="bi bi-receipt-cutoff"
                 color="#e74a3b"
             />
-            <KPICard
+            <KPICard filters={filters} store={store}
                 title={isProfitable ? "Net Profit" : "Net Loss"}
                 tooltip={profitTooltip}
-                value={`SAR ${fmtCompact(Math.abs(profitLoss))}`}
-                exact={`SAR ${fmt(Math.abs(profitLoss))} (w/ VAT) · SAR ${fmt(Math.abs(profitLossWithoutVAT))} (w/o VAT)`}
-                sub2={`w/o VAT: SAR ${fmtCompact(Math.abs(profitLossWithoutVAT))}`}
+                value={`${fmtCompact(Math.abs(profitLoss))}`}
+                exact={`${fmt(Math.abs(profitLoss))} (w/ VAT) · ${fmt(Math.abs(profitLossWithoutVAT))} (w/o VAT)`}
+                sub2={`w/o VAT: ${fmtCompact(Math.abs(profitLossWithoutVAT))}`}
                 icon={isProfitable ? "bi bi-graph-up-arrow" : "bi bi-graph-down-arrow"}
                 color={isProfitable ? "#1cc88a" : "#e74a3b"}
             />
-            <KPICard
+            <KPICard filters={filters} store={store}
                 title="Total Orders"
                 tooltip={ordersTooltip}
                 value={totalOrders.toLocaleString()}
                 icon="bi bi-receipt"
-                color="#f6c23e"
+                color="#5c6bc0"
             />
-            <KPICard
+            <KPICard filters={filters} store={store}
                 title="Avg Order Value"
                 tooltip={avgTooltip}
-                value={`SAR ${fmtCompact(avgOrderValue)}`}
-                exact={`SAR ${fmt(avgOrderValue)}`}
+                value={`${fmtCompact(avgOrderValue)}`}
+                exact={`${fmt(avgOrderValue)}`}
                 icon="bi bi-bag"
                 color="#36b9cc"
             />
-            <KPICard
+            <KPICard filters={filters} store={store}
                 title="Return Rate"
                 tooltip={returnTooltip}
                 value={`${returnRate.toFixed(1)}%`}

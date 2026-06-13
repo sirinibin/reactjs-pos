@@ -55,7 +55,7 @@ const StatsIndex = forwardRef((props, ref) => {
             },
         };
 
-        fetch('/v1/store/' + id + "?select=id,name,code,zatca.phase,zatca.connected,settings,vat_percent", requestOptions)
+        fetch('/v1/store/' + id + "?select=id,name,code,branch_name,vat_no,registration_number,address,zatca.phase,zatca.connected,settings,vat_percent", requestOptions)
             .then(async response => {
                 const isJson = response.headers.get('content-type')?.includes('application/json');
                 const data = isJson && await response.json();
@@ -1202,7 +1202,7 @@ const StatsIndex = forwardRef((props, ref) => {
                         <div className="row mt-3" style={{ order: sections.findIndex(s => s.key === "profit_loss") }}>
                             <div className="col">
                                 <span className="text-end">
-                                    <StatsSummary
+                                    <StatsSummary store={store}
                                         title="Profit / Loss Statement"
                                         stats={{
                                             "Revenue (with VAT)": profitLossRevenueNum,
@@ -1214,50 +1214,50 @@ const StatsIndex = forwardRef((props, ref) => {
                                         statsWithInfo={[
                                             { label: "Revenue (with VAT)", value: profitLossRevenueNum, info: [
                                                 { label: "What it is", value: "Total income from all sales after deducting returns", bold: true, color: "#74c0fc" },
-                                                { divider: true, label: "Gross Sales", value: `SAR ${trimTo2Decimals(totalSales)}` },
-                                                ...(qtnInvoiceAccounting ? [{ label: "Qtn. Invoice Sales", value: `+ SAR ${trimTo2Decimals(totalQtnSales)}` }] : []),
-                                                { label: "Sales Returns", value: `− SAR ${trimTo2Decimals(totalSalesReturn)}` },
-                                                ...(qtnInvoiceAccounting ? [{ label: "Qtn. Sales Returns", value: `− SAR ${trimTo2Decimals(totalQtnSalesReturn)}` }] : []),
+                                                { divider: true, label: "Gross Sales", value: `${trimTo2Decimals(totalSales)}` },
+                                                ...(qtnInvoiceAccounting ? [{ label: "Qtn. Invoice Sales", value: `+ ${trimTo2Decimals(totalQtnSales)}` }] : []),
+                                                { label: "Sales Returns", value: `− ${trimTo2Decimals(totalSalesReturn)}` },
+                                                ...(qtnInvoiceAccounting ? [{ label: "Qtn. Sales Returns", value: `− ${trimTo2Decimals(totalQtnSalesReturn)}` }] : []),
                                                 { divider: true, label: "= Net Revenue", value: `SAR ${trimTo2Decimals(profitLossRevenueNum)}`, bold: true, color: "#74c0fc" },
                                             ]},
                                             { label: "Expense (with VAT)", value: profitLossExpenseNum, info: [
                                                 { label: "What it is", value: disablePurchasesOnAccounts ? "Total operating cost — on-account mode (accounted purchases only)" : "Total operating cost including all purchases", bold: true, color: "#ffa8a8" },
-                                                { divider: true, label: "Operating Expenses", value: `SAR ${trimTo2Decimals(totalExpense)}` },
+                                                { divider: true, label: "Operating Expenses", value: `${trimTo2Decimals(totalExpense)}` },
                                                 ...(disablePurchasesOnAccounts ? [
-                                                    { label: "Purchase Return Fund Rcvd", value: `− SAR ${trimTo2Decimals(totalDepositPurchaseFund)}` },
-                                                    { label: "Accounted Purchases", value: `+ SAR ${trimTo2Decimals(totalAccountedPurchase)}` },
-                                                    { label: "Accounted Pur. Returns", value: `− SAR ${trimTo2Decimals(totalAccountedPurchaseReturn)}` },
+                                                    { label: "Purchase Return Fund Rcvd", value: `− ${trimTo2Decimals(totalDepositPurchaseFund)}` },
+                                                    { label: "Accounted Purchases", value: `+ ${trimTo2Decimals(totalAccountedPurchase)}` },
+                                                    { label: "Accounted Pur. Returns", value: `− ${trimTo2Decimals(totalAccountedPurchaseReturn)}` },
                                                 ] : [
-                                                    { label: "Purchases", value: `+ SAR ${trimTo2Decimals(totalPurchase)}` },
-                                                    { label: "Purchase Returns", value: `− SAR ${trimTo2Decimals(totalPurchaseReturn)}` },
+                                                    { label: "Purchases", value: `+ ${trimTo2Decimals(totalPurchase)}` },
+                                                    { label: "Purchase Returns", value: `− ${trimTo2Decimals(totalPurchaseReturn)}` },
                                                 ]),
-                                                { label: "Sales Cash Discount", value: `+ SAR ${trimTo2Decimals(totalCashDiscount)}` },
-                                                { label: disablePurchasesOnAccounts ? "Acct. Pur. Return C.D." : "Pur. Return Cash Discount", value: `+ SAR ${trimTo2Decimals(disablePurchasesOnAccounts ? totalAccountedPurchaseReturnCashDiscount : totalPurchaseReturnCashDiscount)}` },
-                                                { label: "Sales Return Cash Discount", value: `− SAR ${trimTo2Decimals(totalSalesReturnCashDiscount)}` },
-                                                { label: disablePurchasesOnAccounts ? "Acct. Purchase C.D." : "Purchase Cash Discount", value: `− SAR ${trimTo2Decimals(disablePurchasesOnAccounts ? totalAccountedPurchaseCashDiscount : totalPurchaseCashDiscount)}` },
+                                                { label: "Sales Cash Discount", value: `+ ${trimTo2Decimals(totalCashDiscount)}` },
+                                                { label: disablePurchasesOnAccounts ? "Acct. Pur. Return C.D." : "Pur. Return Cash Discount", value: `+ ${trimTo2Decimals(disablePurchasesOnAccounts ? totalAccountedPurchaseReturnCashDiscount : totalPurchaseReturnCashDiscount)}` },
+                                                { label: "Sales Return Cash Discount", value: `− ${trimTo2Decimals(totalSalesReturnCashDiscount)}` },
+                                                { label: disablePurchasesOnAccounts ? "Acct. Purchase C.D." : "Purchase Cash Discount", value: `− ${trimTo2Decimals(disablePurchasesOnAccounts ? totalAccountedPurchaseCashDiscount : totalPurchaseCashDiscount)}` },
                                                 ...(qtnInvoiceAccounting ? [
-                                                    { label: "Qtn. Sales Cash Discount", value: `+ SAR ${trimTo2Decimals(qtnSalesCashDiscount)}` },
-                                                    { label: "Qtn. Sales Ret. Cash Discount", value: `− SAR ${trimTo2Decimals(qtnSalesReturnCashDiscount)}` },
+                                                    { label: "Qtn. Sales Cash Discount", value: `+ ${trimTo2Decimals(qtnSalesCashDiscount)}` },
+                                                    { label: "Qtn. Sales Ret. Cash Discount", value: `− ${trimTo2Decimals(qtnSalesReturnCashDiscount)}` },
                                                 ] : []),
                                                 { divider: true, label: "= Total Expense", value: `SAR ${trimTo2Decimals(profitLossExpenseNum)}`, bold: true, color: "#ffa8a8" },
                                             ]},
                                             { label: "Profit / Loss (with VAT)", value: profitLossNum, colorByValue: true, info: [
                                                 { label: "What it is", value: profitLossNum >= 0 ? "Net earnings after all costs (VAT included)" : "Net deficit after all costs (VAT included)", bold: true, color: profitLossNum >= 0 ? "#69db7c" : "#ffa8a8" },
-                                                { divider: true, label: "Net Revenue", value: `SAR ${trimTo2Decimals(profitLossRevenueNum)}`, color: "#74c0fc" },
-                                                { label: "Total Expense", value: `− SAR ${trimTo2Decimals(profitLossExpenseNum)}`, color: "#ffa8a8" },
+                                                { divider: true, label: "Net Revenue", value: `${trimTo2Decimals(profitLossRevenueNum)}`, color: "#74c0fc" },
+                                                { label: "Total Expense", value: `− ${trimTo2Decimals(profitLossExpenseNum)}`, color: "#ffa8a8" },
                                                 { divider: true, label: profitLossNum >= 0 ? "= Net Profit" : "= Net Loss", value: `SAR ${trimTo2Decimals(profitLossNum)}`, bold: true, color: profitLossNum >= 0 ? "#69db7c" : "#ffa8a8" },
                                             ]},
                                             { label: `VAT ${vatPercent}%`, value: profitLossVatNum, info: [
                                                 { label: "What it is", value: "VAT portion embedded within the Profit / Loss figure", bold: true },
                                                 { label: "Formula", value: `P/L × ${vatPercent} ÷ ${100 + vatPercent}` },
-                                                { divider: true, label: "Profit / Loss", value: `SAR ${trimTo2Decimals(profitLossNum)}` },
+                                                { divider: true, label: "Profit / Loss", value: `${trimTo2Decimals(profitLossNum)}` },
                                                 { label: "VAT Rate", value: `${vatPercent}%` },
                                                 { divider: true, label: "= VAT Amount", value: `SAR ${trimTo2Decimals(profitLossVatNum)}`, bold: true },
                                             ]},
                                             { label: "Profit / Loss (without VAT)", value: profitLossWithoutVATNum, colorByValue: true, info: [
                                                 { label: "What it is", value: profitLossWithoutVATNum >= 0 ? "Net earnings after removing the VAT component" : "Net deficit after removing the VAT component", bold: true, color: profitLossWithoutVATNum >= 0 ? "#69db7c" : "#ffa8a8" },
-                                                { divider: true, label: "P/L (with VAT)", value: `SAR ${trimTo2Decimals(profitLossNum)}` },
-                                                { label: `VAT ${vatPercent}%`, value: `− SAR ${trimTo2Decimals(profitLossVatNum)}` },
+                                                { divider: true, label: "P/L (with VAT)", value: `${trimTo2Decimals(profitLossNum)}` },
+                                                { label: `VAT ${vatPercent}%`, value: `− ${trimTo2Decimals(profitLossVatNum)}` },
                                                 { divider: true, label: "= P/L (ex-VAT)", value: `SAR ${trimTo2Decimals(profitLossWithoutVATNum)}`, bold: true, color: profitLossWithoutVATNum >= 0 ? "#69db7c" : "#ffa8a8" },
                                             ]},
                                         ]}
@@ -1273,7 +1273,7 @@ const StatsIndex = forwardRef((props, ref) => {
                         <div className="row" style={{ order: sections.findIndex(s => s.key === "overall_summary") }}>
                             <div className="col">
                                 <span className="text-end">
-                                    <StatsSummary
+                                    <StatsSummary store={store}
                                         title="Overall Summary"
                                         stats={{
                                             "SALES(with VAT)": (totalSales - totalSalesReturn),
@@ -1288,46 +1288,46 @@ const StatsIndex = forwardRef((props, ref) => {
                                         statsWithInfo={[
                                             { label: "SALES(with VAT)", value: (totalSales - totalSalesReturn), info: [
                                                 { label: "What it is", value: "Net sales revenue after deducting returns (VAT included)", bold: true, color: "#74c0fc" },
-                                                { divider: true, label: "Gross Sales", value: `SAR ${trimTo2Decimals(totalSales)}` },
-                                                { label: "Sales Returns", value: `− SAR ${trimTo2Decimals(totalSalesReturn)}` },
+                                                { divider: true, label: "Gross Sales", value: `${trimTo2Decimals(totalSales)}` },
+                                                { label: "Sales Returns", value: `− ${trimTo2Decimals(totalSalesReturn)}` },
                                                 { divider: true, label: "= Net Sales", value: `SAR ${trimTo2Decimals(totalSales - totalSalesReturn)}`, bold: true, color: "#74c0fc" },
                                             ]},
                                             { label: "PURCHASE(with VAT)", value: (totalPurchase - totalPurchaseReturn), info: [
                                                 { label: "What it is", value: "Net purchase cost after deducting returns (VAT included)", bold: true, color: "#ffa8a8" },
-                                                { divider: true, label: "Gross Purchases", value: `SAR ${trimTo2Decimals(totalPurchase)}` },
-                                                { label: "Purchase Returns", value: `− SAR ${trimTo2Decimals(totalPurchaseReturn)}` },
+                                                { divider: true, label: "Gross Purchases", value: `${trimTo2Decimals(totalPurchase)}` },
+                                                { label: "Purchase Returns", value: `− ${trimTo2Decimals(totalPurchaseReturn)}` },
                                                 { divider: true, label: "= Net Purchases", value: `SAR ${trimTo2Decimals(totalPurchase - totalPurchaseReturn)}`, bold: true, color: "#ffa8a8" },
                                             ]},
                                             { label: "DIFFERENCE(with VAT)", value: ((totalSales - totalSalesReturn) - (totalPurchase - totalPurchaseReturn)), info: [
                                                 { label: "What it is", value: "Net Sales minus Net Purchases — shows gross margin (VAT included)", bold: true },
-                                                { divider: true, label: "Net Sales", value: `SAR ${trimTo2Decimals(totalSales - totalSalesReturn)}`, color: "#74c0fc" },
-                                                { label: "Net Purchases", value: `− SAR ${trimTo2Decimals(totalPurchase - totalPurchaseReturn)}`, color: "#ffa8a8" },
+                                                { divider: true, label: "Net Sales", value: `${trimTo2Decimals(totalSales - totalSalesReturn)}`, color: "#74c0fc" },
+                                                { label: "Net Purchases", value: `− ${trimTo2Decimals(totalPurchase - totalPurchaseReturn)}`, color: "#ffa8a8" },
                                                 { divider: true, label: "= Difference", value: `SAR ${trimTo2Decimals((totalSales - totalSalesReturn) - (totalPurchase - totalPurchaseReturn))}`, bold: true },
                                             ]},
                                             { label: "SALES(without VAT)", value: ((totalSales - vatPrice) - (totalSalesReturn - salesReturnVatPrice)), info: [
                                                 { label: "What it is", value: "Net sales revenue excluding the VAT component", bold: true, color: "#74c0fc" },
-                                                { divider: true, label: "Sales ex-VAT", value: `SAR ${trimTo2Decimals(totalSales - vatPrice)}` },
-                                                { label: "Returns ex-VAT", value: `− SAR ${trimTo2Decimals(totalSalesReturn - salesReturnVatPrice)}` },
+                                                { divider: true, label: "Sales ex-VAT", value: `${trimTo2Decimals(totalSales - vatPrice)}` },
+                                                { label: "Returns ex-VAT", value: `− ${trimTo2Decimals(totalSalesReturn - salesReturnVatPrice)}` },
                                                 { divider: true, label: "= Net Sales ex-VAT", value: `SAR ${trimTo2Decimals((totalSales - vatPrice) - (totalSalesReturn - salesReturnVatPrice))}`, bold: true, color: "#74c0fc" },
                                             ]},
                                             { label: "PURCHASE(without VAT)", value: ((totalPurchase - purchaseVatPrice) - (totalPurchaseReturn - purchaseReturnVatPrice)), info: [
                                                 { label: "What it is", value: "Net purchase cost excluding the VAT component", bold: true, color: "#ffa8a8" },
-                                                { divider: true, label: "Purchases ex-VAT", value: `SAR ${trimTo2Decimals(totalPurchase - purchaseVatPrice)}` },
-                                                { label: "Returns ex-VAT", value: `− SAR ${trimTo2Decimals(totalPurchaseReturn - purchaseReturnVatPrice)}` },
+                                                { divider: true, label: "Purchases ex-VAT", value: `${trimTo2Decimals(totalPurchase - purchaseVatPrice)}` },
+                                                { label: "Returns ex-VAT", value: `− ${trimTo2Decimals(totalPurchaseReturn - purchaseReturnVatPrice)}` },
                                                 { divider: true, label: "= Net Purchases ex-VAT", value: `SAR ${trimTo2Decimals((totalPurchase - purchaseVatPrice) - (totalPurchaseReturn - purchaseReturnVatPrice))}`, bold: true, color: "#ffa8a8" },
                                             ]},
                                             { label: "DIFFERENCE(without VAT)", value: (((totalSales - vatPrice) - (totalSalesReturn - salesReturnVatPrice)) - ((totalPurchase - purchaseVatPrice) - (totalPurchaseReturn - purchaseReturnVatPrice))), info: [
                                                 { label: "What it is", value: "Net Sales minus Net Purchases — gross margin excluding VAT", bold: true },
-                                                { divider: true, label: "Net Sales ex-VAT", value: `SAR ${trimTo2Decimals((totalSales - vatPrice) - (totalSalesReturn - salesReturnVatPrice))}`, color: "#74c0fc" },
-                                                { label: "Net Purchases ex-VAT", value: `− SAR ${trimTo2Decimals((totalPurchase - purchaseVatPrice) - (totalPurchaseReturn - purchaseReturnVatPrice))}`, color: "#ffa8a8" },
+                                                { divider: true, label: "Net Sales ex-VAT", value: `${trimTo2Decimals((totalSales - vatPrice) - (totalSalesReturn - salesReturnVatPrice))}`, color: "#74c0fc" },
+                                                { label: "Net Purchases ex-VAT", value: `− ${trimTo2Decimals((totalPurchase - purchaseVatPrice) - (totalPurchaseReturn - purchaseReturnVatPrice))}`, color: "#ffa8a8" },
                                                 { divider: true, label: "= Difference ex-VAT", value: `SAR ${trimTo2Decimals(((totalSales - vatPrice) - (totalSalesReturn - salesReturnVatPrice)) - ((totalPurchase - purchaseVatPrice) - (totalPurchaseReturn - purchaseReturnVatPrice)))}`, bold: true },
                                             ]},
                                             { label: "VAT", value: ((vatPrice - salesReturnVatPrice) - (purchaseVatPrice - purchaseReturnVatPrice)), info: [
                                                 { label: "What it is", value: "Net VAT position: tax collected on sales minus tax paid on purchases", bold: true },
-                                                { divider: true, label: "Sales VAT collected", value: `SAR ${trimTo2Decimals(vatPrice)}` },
-                                                { label: "Sales Return VAT refunded", value: `− SAR ${trimTo2Decimals(salesReturnVatPrice)}` },
-                                                { label: "Purchase VAT paid", value: `− SAR ${trimTo2Decimals(purchaseVatPrice)}` },
-                                                { label: "Purchase Return VAT recovered", value: `+ SAR ${trimTo2Decimals(purchaseReturnVatPrice)}` },
+                                                { divider: true, label: "Sales VAT collected", value: `${trimTo2Decimals(vatPrice)}` },
+                                                { label: "Sales Return VAT refunded", value: `− ${trimTo2Decimals(salesReturnVatPrice)}` },
+                                                { label: "Purchase VAT paid", value: `− ${trimTo2Decimals(purchaseVatPrice)}` },
+                                                { label: "Purchase Return VAT recovered", value: `+ ${trimTo2Decimals(purchaseReturnVatPrice)}` },
                                                 { divider: true, label: "= Net VAT", value: `SAR ${trimTo2Decimals((vatPrice - salesReturnVatPrice) - (purchaseVatPrice - purchaseReturnVatPrice))}`, bold: true },
                                             ]},
                                         ]}
@@ -1344,7 +1344,7 @@ const StatsIndex = forwardRef((props, ref) => {
                         <div className="row" style={{ order: sections.findIndex(s => s.key === "sales") }}>
                             <div className="col">
                                 <span className="text-end">
-                                    <StatsSummary
+                                    <StatsSummary store={store}
                                         title="Sales Summary"
                                         stats={{
                                             "Sales": totalSales,
@@ -1371,52 +1371,52 @@ const StatsIndex = forwardRef((props, ref) => {
                                             ]},
                                             { label: "Cash Sales", value: totalCashSales, info: [
                                                 { label: "What it is", value: "Sales where the customer paid in cash at point of sale", bold: true },
-                                                { divider: true, label: "Amount", value: `SAR ${trimTo2Decimals(totalCashSales)}` },
+                                                { divider: true, label: "Amount", value: `${trimTo2Decimals(totalCashSales)}` },
                                             ]},
                                             { label: "Credit Sales", value: totalUnPaidSales, info: [
                                                 { label: "What it is", value: "Sales not yet paid — outstanding on customer account", bold: true, color: "#ffa8a8" },
-                                                { divider: true, label: "Amount", value: `SAR ${trimTo2Decimals(totalUnPaidSales)}` },
+                                                { divider: true, label: "Amount", value: `${trimTo2Decimals(totalUnPaidSales)}` },
                                             ]},
                                             { label: "Bank Account Sales", value: totalBankAccountSales, info: [
                                                 { label: "What it is", value: "Sales paid via bank transfer, debit/credit card, or cheque", bold: true },
-                                                { divider: true, label: "Amount", value: `SAR ${trimTo2Decimals(totalBankAccountSales)}` },
+                                                { divider: true, label: "Amount", value: `${trimTo2Decimals(totalBankAccountSales)}` },
                                             ]},
                                             { label: "Sales paid By Sales Return", value: totalSalesReturnSales, info: [
                                                 { label: "What it is", value: "Sales amount offset by customer return credits applied to new orders", bold: true },
-                                                { divider: true, label: "Amount", value: `SAR ${trimTo2Decimals(totalSalesReturnSales)}` },
+                                                { divider: true, label: "Amount", value: `${trimTo2Decimals(totalSalesReturnSales)}` },
                                             ]},
                                             { label: "Sales paid By Purchase", value: totalPurchaseSales, info: [
                                                 { label: "What it is", value: "Sales amount settled using vendor / purchase account funds", bold: true },
-                                                { divider: true, label: "Amount", value: `SAR ${trimTo2Decimals(totalPurchaseSales)}` },
+                                                { divider: true, label: "Amount", value: `${trimTo2Decimals(totalPurchaseSales)}` },
                                             ]},
                                             { label: "Cash Discount", value: totalCashDiscount, info: [
                                                 { label: "What it is", value: "Discount granted to customers for cash or early payment", bold: true },
                                                 { label: "Effect", value: "Reduces receivable — recorded as an expense" },
-                                                { divider: true, label: "Amount", value: `SAR ${trimTo2Decimals(totalCashDiscount)}` },
+                                                { divider: true, label: "Amount", value: `${trimTo2Decimals(totalCashDiscount)}` },
                                             ]},
                                             { label: "VAT Collected", value: vatPrice, info: [
                                                 { label: "What it is", value: `VAT (${vatPercent}%) collected from customers and payable to tax authority`, bold: true },
                                                 { divider: true, label: "VAT Rate", value: `${vatPercent}%` },
-                                                { label: "Amount Collected", value: `SAR ${trimTo2Decimals(vatPrice)}` },
+                                                { label: "Amount Collected", value: `${trimTo2Decimals(vatPrice)}` },
                                             ]},
                                             { label: "Net Profit %", value: netProfit && totalSales ? ((netProfit / totalSales) * 100) : "", info: [
                                                 { label: "What it is", value: "Net profit as a percentage of total sales — profitability indicator", bold: true, color: "#69db7c" },
                                                 { label: "Formula", value: "(Net Profit ÷ Sales) × 100" },
-                                                { divider: true, label: "Net Profit", value: `SAR ${trimTo2Decimals(netProfit)}` },
-                                                { label: "Total Sales", value: `SAR ${trimTo2Decimals(totalSales)}` },
+                                                { divider: true, label: "Net Profit", value: `${trimTo2Decimals(netProfit)}` },
+                                                { label: "Total Sales", value: `${trimTo2Decimals(totalSales)}` },
                                                 { divider: true, label: "= Profit %", value: `${trimTo2Decimals(netProfit && totalSales ? (netProfit / totalSales) * 100 : 0)}%`, bold: true, color: "#69db7c" },
                                             ]},
                                             { label: "Paid Sales", value: totalPaidSales, info: [
                                                 { label: "What it is", value: "Sales where full or partial payment has been received", bold: true },
-                                                { divider: true, label: "Amount", value: `SAR ${trimTo2Decimals(totalPaidSales)}` },
+                                                { divider: true, label: "Amount", value: `${trimTo2Decimals(totalPaidSales)}` },
                                             ]},
                                             { label: "Sales Discount", value: totalDiscount, info: [
                                                 { label: "What it is", value: "Invoice-level or line-item discount applied on sales orders", bold: true },
-                                                { divider: true, label: "Amount", value: `SAR ${trimTo2Decimals(totalDiscount)}` },
+                                                { divider: true, label: "Amount", value: `${trimTo2Decimals(totalDiscount)}` },
                                             ]},
                                             { label: "Shipping/Handling fees", value: totalShippingHandlingFees, info: [
                                                 { label: "What it is", value: "Additional charges billed to customers for delivery or handling", bold: true },
-                                                { divider: true, label: "Amount", value: `SAR ${trimTo2Decimals(totalShippingHandlingFees)}` },
+                                                { divider: true, label: "Amount", value: `${trimTo2Decimals(totalShippingHandlingFees)}` },
                                             ]},
                                             { label: "Net Profit", value: netProfit, info: [
                                                 { label: "What it is", value: "Profit after cost of goods — selling price minus purchase cost", bold: true, color: "#69db7c" },
@@ -1440,7 +1440,7 @@ const StatsIndex = forwardRef((props, ref) => {
 
                             <div className="col">
                                 <span className="text-end">
-                                    <StatsSummary
+                                    <StatsSummary store={store}
                                         title="Sales Return Summary"
                                         stats={{
                                             "Sales Return": totalSalesReturn,
@@ -1464,47 +1464,47 @@ const StatsIndex = forwardRef((props, ref) => {
                                             ]},
                                             { label: "Cash Sales Return", value: totalCashSalesReturn, info: [
                                                 { label: "What it is", value: "Returns where the refund was paid back in cash", bold: true },
-                                                { divider: true, label: "Amount", value: `SAR ${trimTo2Decimals(totalCashSalesReturn)}` },
+                                                { divider: true, label: "Amount", value: `${trimTo2Decimals(totalCashSalesReturn)}` },
                                             ]},
                                             { label: "Credit Sales Return", value: totalUnPaidSalesReturn, info: [
                                                 { label: "What it is", value: "Returns not yet settled — credit remains on customer account", bold: true },
-                                                { divider: true, label: "Amount", value: `SAR ${trimTo2Decimals(totalUnPaidSalesReturn)}` },
+                                                { divider: true, label: "Amount", value: `${trimTo2Decimals(totalUnPaidSalesReturn)}` },
                                             ]},
                                             { label: "Bank Account Sales Return", value: totalBankAccountSalesReturn, info: [
                                                 { label: "What it is", value: "Returns refunded via bank transfer, card, or cheque", bold: true },
-                                                { divider: true, label: "Amount", value: `SAR ${trimTo2Decimals(totalBankAccountSalesReturn)}` },
+                                                { divider: true, label: "Amount", value: `${trimTo2Decimals(totalBankAccountSalesReturn)}` },
                                             ]},
                                             { label: "Sales Return paid by Sales", value: totalSalesSalesReturn, info: [
                                                 { label: "What it is", value: "Return credit applied directly against a new sale for the same customer", bold: true },
-                                                { divider: true, label: "Amount", value: `SAR ${trimTo2Decimals(totalSalesSalesReturn)}` },
+                                                { divider: true, label: "Amount", value: `${trimTo2Decimals(totalSalesSalesReturn)}` },
                                             ]},
                                             { label: "Cash Discount Return", value: totalSalesReturnCashDiscount, info: [
                                                 { label: "What it is", value: "Cash discount previously given on the original sale — reversed on return", bold: true },
-                                                { divider: true, label: "Amount", value: `SAR ${trimTo2Decimals(totalSalesReturnCashDiscount)}` },
+                                                { divider: true, label: "Amount", value: `${trimTo2Decimals(totalSalesReturnCashDiscount)}` },
                                             ]},
                                             { label: "VAT Return", value: salesReturnVatPrice, info: [
                                                 { label: "What it is", value: `VAT (${vatPercent}%) refunded to customers on returned goods`, bold: true },
                                                 { divider: true, label: "VAT Rate", value: `${vatPercent}%` },
-                                                { label: "Amount Refunded", value: `SAR ${trimTo2Decimals(salesReturnVatPrice)}` },
+                                                { label: "Amount Refunded", value: `${trimTo2Decimals(salesReturnVatPrice)}` },
                                             ]},
                                             { label: "Net Profit Return %", value: salesReturnNetProfit && totalSalesReturn ? ((salesReturnNetProfit / totalSalesReturn) * 100) : "", info: [
                                                 { label: "What it is", value: "Profit margin on returned items as a % of total sales returns", bold: true },
                                                 { label: "Formula", value: "(Net Profit Return ÷ Sales Return) × 100" },
-                                                { divider: true, label: "Net Profit Return", value: `SAR ${trimTo2Decimals(salesReturnNetProfit)}` },
-                                                { label: "Total Sales Return", value: `SAR ${trimTo2Decimals(totalSalesReturn)}` },
+                                                { divider: true, label: "Net Profit Return", value: `${trimTo2Decimals(salesReturnNetProfit)}` },
+                                                { label: "Total Sales Return", value: `${trimTo2Decimals(totalSalesReturn)}` },
                                                 { divider: true, label: "= Profit Return %", value: `${trimTo2Decimals(salesReturnNetProfit && totalSalesReturn ? (salesReturnNetProfit / totalSalesReturn) * 100 : 0)}%`, bold: true },
                                             ]},
                                             { label: "Paid Sales Return", value: totalPaidSalesReturn, info: [
                                                 { label: "What it is", value: "Returns where the refund has been fully or partially processed", bold: true },
-                                                { divider: true, label: "Amount", value: `SAR ${trimTo2Decimals(totalPaidSalesReturn)}` },
+                                                { divider: true, label: "Amount", value: `${trimTo2Decimals(totalPaidSalesReturn)}` },
                                             ]},
                                             { label: "Sales Discount Return", value: totalSalesReturnDiscount, info: [
                                                 { label: "What it is", value: "Invoice discount from the original sale that is reversed upon return", bold: true },
-                                                { divider: true, label: "Amount", value: `SAR ${trimTo2Decimals(totalSalesReturnDiscount)}` },
+                                                { divider: true, label: "Amount", value: `${trimTo2Decimals(totalSalesReturnDiscount)}` },
                                             ]},
                                             { label: "Shipping/Handling fees Return", value: totalSalesReturnShippingHandlingFees, info: [
                                                 { label: "What it is", value: "Shipping / handling fees from the original sale reversed on return", bold: true },
-                                                { divider: true, label: "Amount", value: `SAR ${trimTo2Decimals(totalSalesReturnShippingHandlingFees)}` },
+                                                { divider: true, label: "Amount", value: `${trimTo2Decimals(totalSalesReturnShippingHandlingFees)}` },
                                             ]},
                                             { label: "Net Profit Return", value: salesReturnNetProfit, info: [
                                                 { label: "What it is", value: "Profit portion recovered from returned items (cost basis)", bold: true, color: "#69db7c" },
@@ -1529,7 +1529,7 @@ const StatsIndex = forwardRef((props, ref) => {
 
                             <div className="col">
                                 <span className="text-end">
-                                    <StatsSummary
+                                    <StatsSummary store={store}
                                         title="Purchase Summary"
                                         stats={{
                                             "Cash purchase": totalCashPurchase,
@@ -1550,33 +1550,33 @@ const StatsIndex = forwardRef((props, ref) => {
                                         statsWithInfo={[
                                             { label: "Cash purchase", value: totalCashPurchase, info: [
                                                 { label: "What it is", value: "Purchases paid immediately in cash to the supplier", bold: true },
-                                                { divider: true, label: "Amount", value: `SAR ${trimTo2Decimals(totalCashPurchase)}` },
+                                                { divider: true, label: "Amount", value: `${trimTo2Decimals(totalCashPurchase)}` },
                                             ]},
                                             { label: "Credit purchase", value: totalUnPaidPurchase, info: [
                                                 { label: "What it is", value: "Purchases not yet paid — outstanding on vendor account", bold: true, color: "#ffa8a8" },
-                                                { divider: true, label: "Amount", value: `SAR ${trimTo2Decimals(totalUnPaidPurchase)}` },
+                                                { divider: true, label: "Amount", value: `${trimTo2Decimals(totalUnPaidPurchase)}` },
                                             ]},
                                             { label: "Bank account purchase", value: totalBankAccountPurchase, info: [
                                                 { label: "What it is", value: "Purchases paid via bank transfer, card, or cheque", bold: true },
-                                                { divider: true, label: "Amount", value: `SAR ${trimTo2Decimals(totalBankAccountPurchase)}` },
+                                                { divider: true, label: "Amount", value: `${trimTo2Decimals(totalBankAccountPurchase)}` },
                                             ]},
                                             { label: "Purchases paid by sales", value: totalSalesPurchase, info: [
                                                 { label: "What it is", value: "Purchases settled using sales revenue collected from customers", bold: true },
-                                                { divider: true, label: "Amount", value: `SAR ${trimTo2Decimals(totalSalesPurchase)}` },
+                                                { divider: true, label: "Amount", value: `${trimTo2Decimals(totalSalesPurchase)}` },
                                             ]},
                                             { label: "Purchases paid by purchase return", value: totalPurchaseReturnPurchase, info: [
                                                 { label: "What it is", value: "Purchases offset by credits from purchase returns to the same vendor", bold: true },
-                                                { divider: true, label: "Amount", value: `SAR ${trimTo2Decimals(totalPurchaseReturnPurchase)}` },
+                                                { divider: true, label: "Amount", value: `${trimTo2Decimals(totalPurchaseReturnPurchase)}` },
                                             ]},
                                             { label: "Cash discount", value: totalPurchaseCashDiscount, info: [
                                                 { label: "What it is", value: "Discount received from suppliers for early or cash payment", bold: true },
                                                 { label: "Effect", value: "Reduces purchase cost — recorded as income" },
-                                                { divider: true, label: "Amount", value: `SAR ${trimTo2Decimals(totalPurchaseCashDiscount)}` },
+                                                { divider: true, label: "Amount", value: `${trimTo2Decimals(totalPurchaseCashDiscount)}` },
                                             ]},
                                             { label: "VAT paid", value: purchaseVatPrice, info: [
                                                 { label: "What it is", value: `Input VAT (${vatPercent}%) paid to suppliers — reclaimable from tax authority`, bold: true },
                                                 { divider: true, label: "VAT Rate", value: `${vatPercent}%` },
-                                                { label: "Amount Paid", value: `SAR ${trimTo2Decimals(purchaseVatPrice)}` },
+                                                { label: "Amount Paid", value: `${trimTo2Decimals(purchaseVatPrice)}` },
                                             ]},
                                             { label: "Purchase", value: totalPurchase, info: [
                                                 { label: "What it is", value: "Total purchase cost from all suppliers (VAT included)", bold: true, color: "#ffa8a8" },
@@ -1588,15 +1588,15 @@ const StatsIndex = forwardRef((props, ref) => {
                                             ]}] : []),
                                             { label: "Paid purchase", value: totalPaidPurchase, info: [
                                                 { label: "What it is", value: "Purchases where full or partial payment has been made to the supplier", bold: true },
-                                                { divider: true, label: "Amount", value: `SAR ${trimTo2Decimals(totalPaidPurchase)}` },
+                                                { divider: true, label: "Amount", value: `${trimTo2Decimals(totalPaidPurchase)}` },
                                             ]},
                                             { label: "Purchase discount", value: totalPurchaseDiscount, info: [
                                                 { label: "What it is", value: "Invoice-level or line-item discount applied on purchase orders", bold: true },
-                                                { divider: true, label: "Amount", value: `SAR ${trimTo2Decimals(totalPurchaseDiscount)}` },
+                                                { divider: true, label: "Amount", value: `${trimTo2Decimals(totalPurchaseDiscount)}` },
                                             ]},
                                             { label: "Shipping/Handling fees", value: totalPurchaseShippingHandlingFees, info: [
                                                 { label: "What it is", value: "Additional freight or handling charges billed by suppliers", bold: true },
-                                                { divider: true, label: "Amount", value: `SAR ${trimTo2Decimals(totalPurchaseShippingHandlingFees)}` },
+                                                { divider: true, label: "Amount", value: `${trimTo2Decimals(totalPurchaseShippingHandlingFees)}` },
                                             ]},
                                         ]}
                                         defaultOpen={true}
@@ -1614,7 +1614,7 @@ const StatsIndex = forwardRef((props, ref) => {
                             <div className="col">
 
                                 <span className="text-end">
-                                    <StatsSummary
+                                    <StatsSummary store={store}
                                         title="Purchase Return Summary"
                                         stats={{
                                             "Cash Purchase Return": totalCashPurchaseReturn,
@@ -1632,24 +1632,24 @@ const StatsIndex = forwardRef((props, ref) => {
                                         statsWithInfo={[
                                             { label: "Cash Purchase Return", value: totalCashPurchaseReturn, info: [
                                                 { label: "What it is", value: "Purchase returns where the supplier refunded in cash", bold: true },
-                                                { divider: true, label: "Amount", value: `SAR ${trimTo2Decimals(totalCashPurchaseReturn)}` },
+                                                { divider: true, label: "Amount", value: `${trimTo2Decimals(totalCashPurchaseReturn)}` },
                                             ]},
                                             { label: "Credit Purchase Return", value: totalUnPaidPurchaseReturn, info: [
                                                 { label: "What it is", value: "Purchase returns not yet settled — credit outstanding with supplier", bold: true },
-                                                { divider: true, label: "Amount", value: `SAR ${trimTo2Decimals(totalUnPaidPurchaseReturn)}` },
+                                                { divider: true, label: "Amount", value: `${trimTo2Decimals(totalUnPaidPurchaseReturn)}` },
                                             ]},
                                             { label: "Bank Account Purchase Return", value: totalBankAccountPurchaseReturn, info: [
                                                 { label: "What it is", value: "Purchase returns refunded by the supplier via bank transfer or card", bold: true },
-                                                { divider: true, label: "Amount", value: `SAR ${trimTo2Decimals(totalBankAccountPurchaseReturn)}` },
+                                                { divider: true, label: "Amount", value: `${trimTo2Decimals(totalBankAccountPurchaseReturn)}` },
                                             ]},
                                             { label: "Cash Discount Return", value: totalPurchaseReturnCashDiscount, info: [
                                                 { label: "What it is", value: "Cash discount originally received from supplier — reversed when goods are returned", bold: true },
-                                                { divider: true, label: "Amount", value: `SAR ${trimTo2Decimals(totalPurchaseReturnCashDiscount)}` },
+                                                { divider: true, label: "Amount", value: `${trimTo2Decimals(totalPurchaseReturnCashDiscount)}` },
                                             ]},
                                             { label: "VAT Return", value: purchaseReturnVatPrice, info: [
                                                 { label: "What it is", value: `Input VAT (${vatPercent}%) recovered from tax authority on returned purchases`, bold: true },
                                                 { divider: true, label: "VAT Rate", value: `${vatPercent}%` },
-                                                { label: "Amount Recovered", value: `SAR ${trimTo2Decimals(purchaseReturnVatPrice)}` },
+                                                { label: "Amount Recovered", value: `${trimTo2Decimals(purchaseReturnVatPrice)}` },
                                             ]},
                                             { label: "Purchase Return", value: totalPurchaseReturn, info: [
                                                 { label: "What it is", value: "Total value of goods returned to suppliers (VAT included)", bold: true, color: "#74c0fc" },
@@ -1661,19 +1661,19 @@ const StatsIndex = forwardRef((props, ref) => {
                                             ]}] : []),
                                             { label: "Purchase Return paid by purchase", value: totalPurchasePurchaseReturn, info: [
                                                 { label: "What it is", value: "Return credit applied directly against a new purchase from the same supplier", bold: true },
-                                                { divider: true, label: "Amount", value: `SAR ${trimTo2Decimals(totalPurchasePurchaseReturn)}` },
+                                                { divider: true, label: "Amount", value: `${trimTo2Decimals(totalPurchasePurchaseReturn)}` },
                                             ]},
                                             { label: "Paid Purchase Return", value: totalPaidPurchaseReturn, info: [
                                                 { label: "What it is", value: "Purchase returns where the refund has been received or credited", bold: true },
-                                                { divider: true, label: "Amount", value: `SAR ${trimTo2Decimals(totalPaidPurchaseReturn)}` },
+                                                { divider: true, label: "Amount", value: `${trimTo2Decimals(totalPaidPurchaseReturn)}` },
                                             ]},
                                             { label: "Purchase Discount Return", value: totalPurchaseReturnDiscount, info: [
                                                 { label: "What it is", value: "Invoice discount from the original purchase reversed upon return", bold: true },
-                                                { divider: true, label: "Amount", value: `SAR ${trimTo2Decimals(totalPurchaseReturnDiscount)}` },
+                                                { divider: true, label: "Amount", value: `${trimTo2Decimals(totalPurchaseReturnDiscount)}` },
                                             ]},
                                             { label: "Shipping/Handling fees", value: totalPurchaseReturnShippingHandlingFees, info: [
                                                 { label: "What it is", value: "Freight / handling charges from original purchase reversed on return", bold: true },
-                                                { divider: true, label: "Amount", value: `SAR ${trimTo2Decimals(totalPurchaseReturnShippingHandlingFees)}` },
+                                                { divider: true, label: "Amount", value: `${trimTo2Decimals(totalPurchaseReturnShippingHandlingFees)}` },
                                             ]},
                                         ]}
                                         defaultOpen={true}
@@ -1691,7 +1691,7 @@ const StatsIndex = forwardRef((props, ref) => {
                         <div className="row" style={{ order: sections.findIndex(s => s.key === "expense") }}>
                             <div className="col">
                                 <span className="text-end">
-                                    <StatsSummary
+                                    <StatsSummary store={store}
                                         title="Expense Summary"
                                         stats={{
                                             "Total Expense": totalExpense,
@@ -1707,20 +1707,20 @@ const StatsIndex = forwardRef((props, ref) => {
                                             ]},
                                             { label: "Cash Expense", value: totalExpenseCash, info: [
                                                 { label: "What it is", value: "Expenses settled by cash payment", bold: true },
-                                                { divider: true, label: "Amount", value: `SAR ${trimTo2Decimals(totalExpenseCash)}` },
+                                                { divider: true, label: "Amount", value: `${trimTo2Decimals(totalExpenseCash)}` },
                                             ]},
                                             { label: "Bank Expense", value: totalExpenseBank, info: [
                                                 { label: "What it is", value: "Expenses settled via bank transfer, card, or cheque", bold: true },
-                                                { divider: true, label: "Amount", value: `SAR ${trimTo2Decimals(totalExpenseBank)}` },
+                                                { divider: true, label: "Amount", value: `${trimTo2Decimals(totalExpenseBank)}` },
                                             ]},
                                             { label: "Purchase Fund", value: totalExpensePurchaseFund, info: [
                                                 { label: "What it is", value: "Expenses paid from a dedicated purchase / vendor fund balance", bold: true },
-                                                { divider: true, label: "Amount", value: `SAR ${trimTo2Decimals(totalExpensePurchaseFund)}` },
+                                                { divider: true, label: "Amount", value: `${trimTo2Decimals(totalExpensePurchaseFund)}` },
                                             ]},
                                             { label: "VAT Paid", value: totalExpenseVat, info: [
                                                 { label: "What it is", value: `VAT (${vatPercent}%) charged on expense transactions`, bold: true },
                                                 { divider: true, label: "VAT Rate", value: `${vatPercent}%` },
-                                                { label: "Amount", value: `SAR ${trimTo2Decimals(totalExpenseVat)}` },
+                                                { label: "Amount", value: `${trimTo2Decimals(totalExpenseVat)}` },
                                             ]},
                                         ]}
                                         defaultOpen={true}
@@ -1735,7 +1735,7 @@ const StatsIndex = forwardRef((props, ref) => {
                         <div className="row" style={{ order: sections.findIndex(s => s.key === "quotation") }}>
                             <div className="col">
                                 <span className="text-end">
-                                    <StatsSummary
+                                    <StatsSummary store={store}
                                         title="Quotation Summary"
                                         stats={{
                                             "Quotation": totalQuotation,
@@ -1755,8 +1755,8 @@ const StatsIndex = forwardRef((props, ref) => {
                                             { label: "Profit %", value: quotationProfit && totalQuotation ? parseFloat(trimTo2Decimals((quotationProfit / totalQuotation) * 100)) : 0, info: [
                                                 { label: "What it is", value: "Expected profit margin as a percentage of total quotation value", bold: true, color: "#69db7c" },
                                                 { label: "Formula", value: "(Profit ÷ Quotation) × 100" },
-                                                { divider: true, label: "Profit", value: `SAR ${trimTo2Decimals(quotationProfit)}` },
-                                                { label: "Total Quotation", value: `SAR ${trimTo2Decimals(totalQuotation)}` },
+                                                { divider: true, label: "Profit", value: `${trimTo2Decimals(quotationProfit)}` },
+                                                { label: "Total Quotation", value: `${trimTo2Decimals(totalQuotation)}` },
                                                 { divider: true, label: "= Profit %", value: `${trimTo2Decimals(quotationProfit && totalQuotation ? (quotationProfit / totalQuotation) * 100 : 0)}%`, bold: true, color: "#69db7c" },
                                             ]},
                                             { label: "Loss", value: quotationLoss, info: [
@@ -1776,7 +1776,7 @@ const StatsIndex = forwardRef((props, ref) => {
                         <div className="row" style={{ order: sections.findIndex(s => s.key === "qtn_sales") }}>
                             <div className="col">
                                 <span className="text-end">
-                                    <StatsSummary
+                                    <StatsSummary store={store}
                                         title="Qtn. Sales Summary"
                                         stats={{
                                             "Sales": totalQtnSales,
@@ -1800,47 +1800,47 @@ const StatsIndex = forwardRef((props, ref) => {
                                             ]},
                                             { label: "Cash Sales", value: totalQtnSalesCash, info: [
                                                 { label: "What it is", value: "Quotation invoices paid immediately in cash", bold: true },
-                                                { divider: true, label: "Amount", value: `SAR ${trimTo2Decimals(totalQtnSalesCash)}` },
+                                                { divider: true, label: "Amount", value: `${trimTo2Decimals(totalQtnSalesCash)}` },
                                             ]},
                                             { label: "Credit Sales", value: totalQtnSalesUnpaid, info: [
                                                 { label: "What it is", value: "Quotation invoices not yet paid — outstanding on customer account", bold: true, color: "#ffa8a8" },
-                                                { divider: true, label: "Amount", value: `SAR ${trimTo2Decimals(totalQtnSalesUnpaid)}` },
+                                                { divider: true, label: "Amount", value: `${trimTo2Decimals(totalQtnSalesUnpaid)}` },
                                             ]},
                                             { label: "Bank Account Sales", value: totalQtnSalesBankAccount, info: [
                                                 { label: "What it is", value: "Quotation invoices paid via bank transfer, card, or cheque", bold: true },
-                                                { divider: true, label: "Amount", value: `SAR ${trimTo2Decimals(totalQtnSalesBankAccount)}` },
+                                                { divider: true, label: "Amount", value: `${trimTo2Decimals(totalQtnSalesBankAccount)}` },
                                             ]},
                                             { label: "Sales paid by sales return", value: totalQtnSalesReturnSales, info: [
                                                 { label: "What it is", value: "Quotation invoice amount offset by a sales return credit", bold: true },
-                                                { divider: true, label: "Amount", value: `SAR ${trimTo2Decimals(totalQtnSalesReturnSales)}` },
+                                                { divider: true, label: "Amount", value: `${trimTo2Decimals(totalQtnSalesReturnSales)}` },
                                             ]},
                                             { label: "Cash Discount", value: qtnSalesCashDiscount, info: [
                                                 { label: "What it is", value: "Cash discount granted to customers on quotation invoices", bold: true },
-                                                { divider: true, label: "Amount", value: `SAR ${trimTo2Decimals(qtnSalesCashDiscount)}` },
+                                                { divider: true, label: "Amount", value: `${trimTo2Decimals(qtnSalesCashDiscount)}` },
                                             ]},
                                             { label: "VAT Collected", value: qtnSalesVatPrice, info: [
                                                 { label: "What it is", value: `VAT (${vatPercent}%) collected from customers on quotation invoices`, bold: true },
                                                 { divider: true, label: "VAT Rate", value: `${vatPercent}%` },
-                                                { label: "Amount", value: `SAR ${trimTo2Decimals(qtnSalesVatPrice)}` },
+                                                { label: "Amount", value: `${trimTo2Decimals(qtnSalesVatPrice)}` },
                                             ]},
                                             { label: "Net Profit %", value: qtnSalesNetProfit && totalQtnSales ? parseFloat(trimTo2Decimals((qtnSalesNetProfit / totalQtnSales) * 100)) : 0, info: [
                                                 { label: "What it is", value: "Net profit margin on quotation invoices as % of total invoiced value", bold: true, color: "#69db7c" },
                                                 { label: "Formula", value: "(Net Profit ÷ Sales) × 100" },
-                                                { divider: true, label: "Net Profit", value: `SAR ${trimTo2Decimals(qtnSalesNetProfit)}` },
-                                                { label: "Total Sales", value: `SAR ${trimTo2Decimals(totalQtnSales)}` },
+                                                { divider: true, label: "Net Profit", value: `${trimTo2Decimals(qtnSalesNetProfit)}` },
+                                                { label: "Total Sales", value: `${trimTo2Decimals(totalQtnSales)}` },
                                                 { divider: true, label: "= Profit %", value: `${trimTo2Decimals(qtnSalesNetProfit && totalQtnSales ? (qtnSalesNetProfit / totalQtnSales) * 100 : 0)}%`, bold: true, color: "#69db7c" },
                                             ]},
                                             { label: "Paid Sales", value: totalQtnSalesPaid, info: [
                                                 { label: "What it is", value: "Quotation invoices fully or partially paid by the customer", bold: true },
-                                                { divider: true, label: "Amount", value: `SAR ${trimTo2Decimals(totalQtnSalesPaid)}` },
+                                                { divider: true, label: "Amount", value: `${trimTo2Decimals(totalQtnSalesPaid)}` },
                                             ]},
                                             { label: "Sales Discount", value: qtnSalesDiscount, info: [
                                                 { label: "What it is", value: "Invoice or line-item discount applied on quotation invoices", bold: true },
-                                                { divider: true, label: "Amount", value: `SAR ${trimTo2Decimals(qtnSalesDiscount)}` },
+                                                { divider: true, label: "Amount", value: `${trimTo2Decimals(qtnSalesDiscount)}` },
                                             ]},
                                             { label: "Shipping/Handling fees", value: qtnSalesShippingHandlingFees, info: [
                                                 { label: "What it is", value: "Delivery or handling charges billed on quotation invoices", bold: true },
-                                                { divider: true, label: "Amount", value: `SAR ${trimTo2Decimals(qtnSalesShippingHandlingFees)}` },
+                                                { divider: true, label: "Amount", value: `${trimTo2Decimals(qtnSalesShippingHandlingFees)}` },
                                             ]},
                                             { label: "Net Profit", value: qtnSalesNetProfit, colorByValue: true, info: [
                                                 { label: "What it is", value: "Actual profit on quotation invoices after cost of goods", bold: true, color: "#69db7c" },
@@ -1863,7 +1863,7 @@ const StatsIndex = forwardRef((props, ref) => {
                         <div className="row" style={{ order: sections.findIndex(s => s.key === "qtn_sales_return") }}>
                             <div className="col">
                                 <span className="text-end">
-                                    <StatsSummary
+                                    <StatsSummary store={store}
                                         title="Qtn. Sales Return Summary"
                                         stats={{
                                             "Sales Return": totalQtnSalesReturn,
@@ -1887,47 +1887,47 @@ const StatsIndex = forwardRef((props, ref) => {
                                             ]},
                                             { label: "Cash Sales Return", value: totalQtnSalesReturnCash, info: [
                                                 { label: "What it is", value: "Quotation invoice returns refunded in cash", bold: true },
-                                                { divider: true, label: "Amount", value: `SAR ${trimTo2Decimals(totalQtnSalesReturnCash)}` },
+                                                { divider: true, label: "Amount", value: `${trimTo2Decimals(totalQtnSalesReturnCash)}` },
                                             ]},
                                             { label: "Credit Sales Return", value: totalQtnSalesReturnUnpaid, info: [
                                                 { label: "What it is", value: "Quotation returns not yet refunded — credit on customer account", bold: true },
-                                                { divider: true, label: "Amount", value: `SAR ${trimTo2Decimals(totalQtnSalesReturnUnpaid)}` },
+                                                { divider: true, label: "Amount", value: `${trimTo2Decimals(totalQtnSalesReturnUnpaid)}` },
                                             ]},
                                             { label: "Bank Account Sales Return", value: totalQtnSalesReturnBankAccount, info: [
                                                 { label: "What it is", value: "Quotation invoice returns refunded via bank transfer or card", bold: true },
-                                                { divider: true, label: "Amount", value: `SAR ${trimTo2Decimals(totalQtnSalesReturnBankAccount)}` },
+                                                { divider: true, label: "Amount", value: `${trimTo2Decimals(totalQtnSalesReturnBankAccount)}` },
                                             ]},
                                             { label: "Sales Return paid by sales", value: qtnSalesQuotationSalesReturn, info: [
                                                 { label: "What it is", value: "Quotation return credit applied directly against a new invoice", bold: true },
-                                                { divider: true, label: "Amount", value: `SAR ${trimTo2Decimals(qtnSalesQuotationSalesReturn)}` },
+                                                { divider: true, label: "Amount", value: `${trimTo2Decimals(qtnSalesQuotationSalesReturn)}` },
                                             ]},
                                             { label: "Cash Discount Return", value: qtnSalesReturnCashDiscount, info: [
                                                 { label: "What it is", value: "Cash discount from the original quotation invoice reversed on return", bold: true },
-                                                { divider: true, label: "Amount", value: `SAR ${trimTo2Decimals(qtnSalesReturnCashDiscount)}` },
+                                                { divider: true, label: "Amount", value: `${trimTo2Decimals(qtnSalesReturnCashDiscount)}` },
                                             ]},
                                             { label: "VAT Return", value: qtnSalesReturnVatPrice, info: [
                                                 { label: "What it is", value: `VAT (${vatPercent}%) refunded to customers on returned quotation invoices`, bold: true },
                                                 { divider: true, label: "VAT Rate", value: `${vatPercent}%` },
-                                                { label: "Amount Refunded", value: `SAR ${trimTo2Decimals(qtnSalesReturnVatPrice)}` },
+                                                { label: "Amount Refunded", value: `${trimTo2Decimals(qtnSalesReturnVatPrice)}` },
                                             ]},
                                             { label: "Net Profit Return %", value: qtnSalesReturnNetProfit && totalQtnSalesReturn ? parseFloat(trimTo2Decimals((qtnSalesReturnNetProfit / totalQtnSalesReturn) * 100)) : 0, info: [
                                                 { label: "What it is", value: "Profit margin on returned quotation items as % of total returns", bold: true },
                                                 { label: "Formula", value: "(Net Profit Return ÷ Sales Return) × 100" },
-                                                { divider: true, label: "Net Profit Return", value: `SAR ${trimTo2Decimals(qtnSalesReturnNetProfit)}` },
-                                                { label: "Total Sales Return", value: `SAR ${trimTo2Decimals(totalQtnSalesReturn)}` },
+                                                { divider: true, label: "Net Profit Return", value: `${trimTo2Decimals(qtnSalesReturnNetProfit)}` },
+                                                { label: "Total Sales Return", value: `${trimTo2Decimals(totalQtnSalesReturn)}` },
                                                 { divider: true, label: "= Profit Return %", value: `${trimTo2Decimals(qtnSalesReturnNetProfit && totalQtnSalesReturn ? (qtnSalesReturnNetProfit / totalQtnSalesReturn) * 100 : 0)}%`, bold: true },
                                             ]},
                                             { label: "Paid Sales Return", value: totalQtnSalesReturnPaid, info: [
                                                 { label: "What it is", value: "Quotation returns where the refund has been processed", bold: true },
-                                                { divider: true, label: "Amount", value: `SAR ${trimTo2Decimals(totalQtnSalesReturnPaid)}` },
+                                                { divider: true, label: "Amount", value: `${trimTo2Decimals(totalQtnSalesReturnPaid)}` },
                                             ]},
                                             { label: "Sales Discount Return", value: qtnSalesReturnDiscount, info: [
                                                 { label: "What it is", value: "Invoice discount from the original quotation reversed on return", bold: true },
-                                                { divider: true, label: "Amount", value: `SAR ${trimTo2Decimals(qtnSalesReturnDiscount)}` },
+                                                { divider: true, label: "Amount", value: `${trimTo2Decimals(qtnSalesReturnDiscount)}` },
                                             ]},
                                             { label: "Shipping/Handling fees Return", value: qtnSalesReturnShippingHandlingFees, info: [
                                                 { label: "What it is", value: "Shipping / handling fees from the quotation invoice reversed on return", bold: true },
-                                                { divider: true, label: "Amount", value: `SAR ${trimTo2Decimals(qtnSalesReturnShippingHandlingFees)}` },
+                                                { divider: true, label: "Amount", value: `${trimTo2Decimals(qtnSalesReturnShippingHandlingFees)}` },
                                             ]},
                                             { label: "Net Profit Return", value: qtnSalesReturnNetProfit, colorByValue: true, info: [
                                                 { label: "What it is", value: "Profit component recovered from returned quotation items", bold: true, color: "#69db7c" },
@@ -1950,7 +1950,7 @@ const StatsIndex = forwardRef((props, ref) => {
                         <div className="row" style={{ order: sections.findIndex(s => s.key === "receivables") }}>
                             <div className="col">
                                 <span className="text-end">
-                                    <StatsSummary
+                                    <StatsSummary store={store}
                                         title="Receivables Summary"
                                         storageKey="stats_receivables_summary"
                                         stats={{
@@ -1969,28 +1969,28 @@ const StatsIndex = forwardRef((props, ref) => {
                                             ]},
                                             { label: "Cash", value: totalDepositCash, info: [
                                                 { label: "What it is", value: "Deposits received in cash", bold: true },
-                                                { divider: true, label: "Amount", value: `SAR ${trimTo2Decimals(totalDepositCash)}` },
+                                                { divider: true, label: "Amount", value: `${trimTo2Decimals(totalDepositCash)}` },
                                             ]},
                                             { label: "Bank", value: totalDepositBank, info: [
                                                 { label: "What it is", value: "Deposits received via bank transfer or card", bold: true },
-                                                { divider: true, label: "Amount", value: `SAR ${trimTo2Decimals(totalDepositBank)}` },
+                                                { divider: true, label: "Amount", value: `${trimTo2Decimals(totalDepositBank)}` },
                                             ]},
                                             { label: "Purchase Fund", value: totalDepositPurchaseFund, info: [
                                                 { label: "What it is", value: "Deposits earmarked specifically to fund purchases", bold: true },
-                                                { divider: true, label: "Amount", value: `SAR ${trimTo2Decimals(totalDepositPurchaseFund)}` },
+                                                { divider: true, label: "Amount", value: `${trimTo2Decimals(totalDepositPurchaseFund)}` },
                                             ]},
                                             { label: "Receivable from Customers (Unpaid Sales)", value: totalDepositCustomer, info: [
                                                 { label: "What it is", value: "Money owed by customers for sales not yet paid — current accounts receivable", bold: true, color: "#74c0fc" },
-                                                { divider: true, label: "Amount", value: `SAR ${trimTo2Decimals(totalDepositCustomer)}` },
+                                                { divider: true, label: "Amount", value: `${trimTo2Decimals(totalDepositCustomer)}` },
                                             ]},
                                             { label: "Receivable from Vendors (Purchase Return)", value: totalDepositVendor, info: [
                                                 { label: "What it is", value: "Money owed by suppliers for returned goods not yet refunded", bold: true, color: "#74c0fc" },
-                                                { divider: true, label: "Amount", value: `SAR ${trimTo2Decimals(totalDepositVendor)}` },
+                                                { divider: true, label: "Amount", value: `${trimTo2Decimals(totalDepositVendor)}` },
                                             ]},
                                             { label: "Net Receivables", value: (totalDepositCustomer || 0) + (totalDepositVendor || 0), colorByValue: true, info: [
                                                 { label: "What it is", value: "Total money owed to the business — from customers and vendors combined", bold: true, color: "#74c0fc" },
-                                                { divider: true, label: "From Customers (Unpaid Sales)", value: `SAR ${trimTo2Decimals(totalDepositCustomer)}` },
-                                                { label: "From Vendors (Purchase Returns)", value: `+ SAR ${trimTo2Decimals(totalDepositVendor)}` },
+                                                { divider: true, label: "From Customers (Unpaid Sales)", value: `${trimTo2Decimals(totalDepositCustomer)}` },
+                                                { label: "From Vendors (Purchase Returns)", value: `+ ${trimTo2Decimals(totalDepositVendor)}` },
                                                 { divider: true, label: "= Net Receivables", value: `SAR ${trimTo2Decimals((totalDepositCustomer || 0) + (totalDepositVendor || 0))}`, bold: true, color: "#74c0fc" },
                                             ]},
                                         ]}
@@ -2006,7 +2006,7 @@ const StatsIndex = forwardRef((props, ref) => {
                         <div className="row" style={{ order: sections.findIndex(s => s.key === "payables") }}>
                             <div className="col">
                                 <span className="text-end">
-                                    <StatsSummary
+                                    <StatsSummary store={store}
                                         title="Payables Summary"
                                         storageKey="stats_payables_summary"
                                         stats={{
@@ -2024,24 +2024,24 @@ const StatsIndex = forwardRef((props, ref) => {
                                             ]},
                                             { label: "Cash", value: totalWithdrawalCash, info: [
                                                 { label: "What it is", value: "Payables settled in cash", bold: true },
-                                                { divider: true, label: "Amount", value: `SAR ${trimTo2Decimals(totalWithdrawalCash)}` },
+                                                { divider: true, label: "Amount", value: `${trimTo2Decimals(totalWithdrawalCash)}` },
                                             ]},
                                             { label: "Bank", value: totalWithdrawalBank, info: [
                                                 { label: "What it is", value: "Payables settled via bank transfer or card", bold: true },
-                                                { divider: true, label: "Amount", value: `SAR ${trimTo2Decimals(totalWithdrawalBank)}` },
+                                                { divider: true, label: "Amount", value: `${trimTo2Decimals(totalWithdrawalBank)}` },
                                             ]},
                                             { label: "Payable to Vendors (Unpaid Purchases)", value: totalWithdrawalVendor, info: [
                                                 { label: "What it is", value: "Money owed to suppliers for purchases not yet paid — current accounts payable", bold: true, color: "#ffa8a8" },
-                                                { divider: true, label: "Amount", value: `SAR ${trimTo2Decimals(totalWithdrawalVendor)}` },
+                                                { divider: true, label: "Amount", value: `${trimTo2Decimals(totalWithdrawalVendor)}` },
                                             ]},
                                             { label: "Payable to Customers (Sales Return)", value: totalWithdrawalCustomer, info: [
                                                 { label: "What it is", value: "Money owed to customers for approved returns not yet refunded", bold: true, color: "#ffa8a8" },
-                                                { divider: true, label: "Amount", value: `SAR ${trimTo2Decimals(totalWithdrawalCustomer)}` },
+                                                { divider: true, label: "Amount", value: `${trimTo2Decimals(totalWithdrawalCustomer)}` },
                                             ]},
                                             { label: "Net Payables", value: (totalWithdrawalVendor || 0) + (totalWithdrawalCustomer || 0), info: [
                                                 { label: "What it is", value: "Total money the business owes — to vendors and customers combined", bold: true, color: "#ffa8a8" },
-                                                { divider: true, label: "To Vendors (Unpaid Purchases)", value: `SAR ${trimTo2Decimals(totalWithdrawalVendor)}` },
-                                                { label: "To Customers (Sales Returns)", value: `+ SAR ${trimTo2Decimals(totalWithdrawalCustomer)}` },
+                                                { divider: true, label: "To Vendors (Unpaid Purchases)", value: `${trimTo2Decimals(totalWithdrawalVendor)}` },
+                                                { label: "To Customers (Sales Returns)", value: `+ ${trimTo2Decimals(totalWithdrawalCustomer)}` },
                                                 { divider: true, label: "= Net Payables", value: `SAR ${trimTo2Decimals((totalWithdrawalVendor || 0) + (totalWithdrawalCustomer || 0))}`, bold: true, color: "#ffa8a8" },
                                             ]},
                                         ]}

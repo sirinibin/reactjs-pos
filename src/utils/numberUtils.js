@@ -24,4 +24,25 @@ export function trimTo8Decimals(num) {
     return rounded.toFixed(8); // Ensure two decimal digits in string
 }
 
+// Strip "SAR " from non-bold breakdown lines; bold totals keep it.
+// e.g. "− SAR 12,345.67" → "− 12,345.67"   "SAR 552,137.90"(bold) → unchanged
+export function stripSarBreakdown(str, isBold) {
+    if (isBold || typeof str !== 'string') return str;
+    // Match optional leading sign (+, -, Unicode minus −) then "SAR " and remove just "SAR "
+    return str.replace(/^(\s*[+\-−]\s*)?SAR\s+/i, '$1');
+}
 
+// Add comma separators to numbers ≥ 1000 inside tooltip info value strings.
+// Numbers < 1000 and non-numeric text pass through unchanged.
+export function addCommasToInfoValue(str) {
+    if (typeof str !== 'string') return str;
+    return str.replace(/\d+(\.\d+)?/g, (match) => {
+        const n = parseFloat(match);
+        if (isNaN(n) || n < 1000) return match;
+        const decimals = match.includes('.') ? match.split('.')[1].length : 0;
+        return new Intl.NumberFormat('en-US', {
+            minimumFractionDigits: decimals,
+            maximumFractionDigits: decimals,
+        }).format(n);
+    });
+}

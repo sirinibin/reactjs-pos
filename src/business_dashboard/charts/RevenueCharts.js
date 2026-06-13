@@ -160,39 +160,39 @@ export function MonthlyRevenueTrendChart({
             // can verify the value (requirement: "show them even if it is empty")
             const revLines = [
                 { label: "Net Revenue", value: `SAR ${fmtT(revenue)}`, bold: true, color: "#74c0fc" },
-                { divider: true, label: "Gross Sales", value: `SAR ${fmtT(sales)}` },
-                ...(qtnInvoiceAccounting ? [{ label: "Qtn. Invoice Sales", value: `+ SAR ${fmtT(qtnInv)}` }] : []),
-                { label: "Sales Returns", value: `− SAR ${fmtT(ret)}` },
-                ...(qtnInvoiceAccounting ? [{ label: "Qtn. Returns",       value: `− SAR ${fmtT(qtnRet)}` }] : []),
+                { divider: true, label: "Gross Sales", value: `${fmtT(sales)}` },
+                ...(qtnInvoiceAccounting ? [{ label: "Qtn. Invoice Sales", value: `+ ${fmtT(qtnInv)}` }] : []),
+                { label: "Sales Returns", value: `− ${fmtT(ret)}` },
+                ...(qtnInvoiceAccounting ? [{ label: "Qtn. Returns",       value: `− ${fmtT(qtnRet)}` }] : []),
             ];
 
             // ── Expense tooltip ──────────────────────────────────────────────
             const expLines = disablePurchasesOnAccounts ? [
                 { label: "Total Expense", value: `SAR ${fmtT(expense)}`, bold: true, color: "#ffa8a8" },
-                { divider: true, label: "Expenses", value: `SAR ${fmtT(exp)}` },
-                { label: "Purchase Return Fund", value: `− SAR ${fmtT(depFund)}` },
-                { label: "Accounted Purchases", value: `+ SAR ${fmtT(acctPur)}` },
-                { label: "Accounted Pur. Returns", value: `− SAR ${fmtT(acctPurRet)}` },
-                { label: "Sales Cash Discount", value: `+ SAR ${fmtT(salesCD)}` },
-                { label: "Acct. Pur. Return C.D.", value: `+ SAR ${fmtT(acctPurRetCD)}` },
-                { label: "Sales Return Cash Discount", value: `− SAR ${fmtT(salesRetCD)}` },
-                { label: "Acct. Purchase C.D.", value: `− SAR ${fmtT(acctPurCD)}` },
+                { divider: true, label: "Expenses", value: `${fmtT(exp)}` },
+                { label: "Purchase Return Fund", value: `− ${fmtT(depFund)}` },
+                { label: "Accounted Purchases", value: `+ ${fmtT(acctPur)}` },
+                { label: "Accounted Pur. Returns", value: `− ${fmtT(acctPurRet)}` },
+                { label: "Sales Cash Discount", value: `+ ${fmtT(salesCD)}` },
+                { label: "Acct. Pur. Return C.D.", value: `+ ${fmtT(acctPurRetCD)}` },
+                { label: "Sales Return Cash Discount", value: `− ${fmtT(salesRetCD)}` },
+                { label: "Acct. Purchase C.D.", value: `− ${fmtT(acctPurCD)}` },
                 ...(qtnInvoiceAccounting ? [
-                    { label: "Qtn. Sales Cash Discount", value: `+ SAR ${fmtT(qtnInvCD)}` },
-                    { label: "Qtn. Sales Ret. C.D.", value: `− SAR ${fmtT(qtnRetCD)}` },
+                    { label: "Qtn. Sales Cash Discount", value: `+ ${fmtT(qtnInvCD)}` },
+                    { label: "Qtn. Sales Ret. C.D.", value: `− ${fmtT(qtnRetCD)}` },
                 ] : []),
             ] : [
                 { label: "Total Expense", value: `SAR ${fmtT(expense)}`, bold: true, color: "#ffa8a8" },
-                { divider: true, label: "Expenses", value: `SAR ${fmtT(exp)}` },
-                { label: "Purchases", value: `+ SAR ${fmtT(pur)}` },
-                { label: "Purchase Returns", value: `− SAR ${fmtT(purRet)}` },
-                { label: "Sales Cash Discount", value: `+ SAR ${fmtT(salesCD)}` },
-                { label: "Pur. Return Cash Discount", value: `+ SAR ${fmtT(purRetCD)}` },
-                { label: "Sales Return Cash Discount", value: `− SAR ${fmtT(salesRetCD)}` },
-                { label: "Purchase Cash Discount", value: `− SAR ${fmtT(purCD)}` },
+                { divider: true, label: "Expenses", value: `${fmtT(exp)}` },
+                { label: "Purchases", value: `+ ${fmtT(pur)}` },
+                { label: "Purchase Returns", value: `− ${fmtT(purRet)}` },
+                { label: "Sales Cash Discount", value: `+ ${fmtT(salesCD)}` },
+                { label: "Pur. Return Cash Discount", value: `+ ${fmtT(purRetCD)}` },
+                { label: "Sales Return Cash Discount", value: `− ${fmtT(salesRetCD)}` },
+                { label: "Purchase Cash Discount", value: `− ${fmtT(purCD)}` },
                 ...(qtnInvoiceAccounting ? [
-                    { label: "Qtn. Sales Cash Discount", value: `+ SAR ${fmtT(qtnInvCD)}` },
-                    { label: "Qtn. Sales Ret. C.D.", value: `− SAR ${fmtT(qtnRetCD)}` },
+                    { label: "Qtn. Sales Cash Discount", value: `+ ${fmtT(qtnInvCD)}` },
+                    { label: "Qtn. Sales Ret. C.D.", value: `− ${fmtT(qtnRetCD)}` },
                 ] : []),
             ];
 
@@ -202,9 +202,9 @@ export function MonthlyRevenueTrendChart({
             const plLines  = [
                 { label: `${plTitle} (w/ VAT)`,   value: `SAR ${fmtT(Math.abs(profit))}`,           bold: true, color: plColor },
                 { label: `${plTitle} (w/o VAT)`,  value: `SAR ${fmtT(Math.abs(profitWithoutVAT))}`, bold: true },
-                { label: `VAT ${vatPercent}%`,     value: `SAR ${fmtT(Math.abs(profitVat))}` },
-                { divider: true, label: "Net Revenue",   value: `SAR ${fmtT(revenue)}` },
-                { label: "Total Expense",  value: `− SAR ${fmtT(expense)}` },
+                { label: `VAT ${vatPercent}%`,     value: `${fmtT(Math.abs(profitVat))}` },
+                { divider: true, label: "Net Revenue",   value: `${fmtT(revenue)}` },
+                { label: "Total Expense",  value: `− ${fmtT(expense)}` },
             ];
 
             return [
@@ -286,11 +286,11 @@ export function CumulativeRevenueChart({ store, orders, returns, quotations, quo
 
             const tip = tooltipHtml(`Cumulative — ${monthLabel(k)}`, "#74c0fc", [
                 { label: "Cumulative Total",      value: `SAR ${fmtT(cumulative)}`, bold: true, color: "#74c0fc" },
-                { divider: true, label: "Previous Cumulative", value: `SAR ${fmtT(prevCum)}` },
-                { label: "Gross Sales",           value: `+ SAR ${fmtT(sales)}` },
-                ...(qtnInvoiceAccounting ? [{ label: "Qtn. Invoice Sales", value: `+ SAR ${fmtT(qtnInv)}` }] : []),
-                { label: "Sales Returns",         value: `− SAR ${fmtT(ret)}` },
-                ...(qtnInvoiceAccounting ? [{ label: "Qtn. Returns",       value: `− SAR ${fmtT(qtnRet)}` }] : []),
+                { divider: true, label: "Previous Cumulative", value: `${fmtT(prevCum)}` },
+                { label: "Gross Sales",           value: `+ ${fmtT(sales)}` },
+                ...(qtnInvoiceAccounting ? [{ label: "Qtn. Invoice Sales", value: `+ ${fmtT(qtnInv)}` }] : []),
+                { label: "Sales Returns",         value: `− ${fmtT(ret)}` },
+                ...(qtnInvoiceAccounting ? [{ label: "Qtn. Returns",       value: `− ${fmtT(qtnRet)}` }] : []),
                 { label: "This Month Net",        value: `= SAR ${fmtT(monthNet)}`, bold: true,
                   color: monthNet >= 0 ? "#69db7c" : "#ffa8a8" },
             ]);

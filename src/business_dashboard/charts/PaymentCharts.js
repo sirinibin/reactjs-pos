@@ -83,8 +83,8 @@ export function PaymentMethodPieChart({ payments, store, quotations }) {
                 { label: "Amount",   value: `SAR ${fmtT(r.total)}`, bold: true, color: "#f8f9fa" },
                 { label: "Share",    value: `${pct}% of total collected` },
                 { divider: true, label: "Formula", value: `Payments where method = "${r.method}"` },
-                { label: "Sales Payments",          value: `SAR ${fmtT(r.sales)}` },
-                ...(qtnInvoiceAccounting ? [{ label: "Qtn. Invoice Payments", value: `SAR ${fmtT(r.qtn)}` }] : []),
+                { label: "Sales Payments",          value: `${fmtT(r.sales)}` },
+                ...(qtnInvoiceAccounting ? [{ label: "Qtn. Invoice Payments", value: `${fmtT(r.qtn)}` }] : []),
             ];
             return [
                 METHOD_LABELS[r.method] || r.method,
@@ -162,8 +162,8 @@ export function PaymentStatusPieChart({ orders, store, quotations }) {
                 { label: "Amount",  value: `SAR ${fmtT(r.total)}`, bold: true, color: r.color },
                 { label: "Share",   value: `${pct}% of total orders` },
                 { divider: true, label: "Formula", value: `net_total where payment_status = "${r.key}"` },
-                { label: "Sales Orders",      value: `SAR ${fmtT(r.sales)}` },
-                ...(qtnInvoiceAccounting ? [{ label: "Qtn. Invoices", value: `SAR ${fmtT(r.qtn)}` }] : []),
+                { label: "Sales Orders",      value: `${fmtT(r.sales)}` },
+                ...(qtnInvoiceAccounting ? [{ label: "Qtn. Invoices", value: `${fmtT(r.qtn)}` }] : []),
             ];
             return [r.label, parseFloat(r.total.toFixed(2)), tooltipHtml(r.label, r.color, lines)];
         });
@@ -269,8 +269,8 @@ export function CashVsBankTrendChart({ payments, store, quotations }) {
             const cashLines = [
                 { label: "Cash Total", value: `SAR ${fmtT(totalCash)}`, bold: true, color: "#f6c23e" },
                 { divider: true, label: "Formula", value: 'Payments where method = "cash"' },
-                { label: "Sales Payments", value: `SAR ${fmtT(b.cashSales)}` },
-                ...(qtnInvoiceAccounting ? [{ label: "Qtn. Invoice Payments", value: `SAR ${fmtT(b.cashQtn)}` }] : []),
+                { label: "Sales Payments", value: `${fmtT(b.cashSales)}` },
+                ...(qtnInvoiceAccounting ? [{ label: "Qtn. Invoice Payments", value: `${fmtT(b.cashQtn)}` }] : []),
             ];
 
             // Bank/Card tooltip — show method breakdown across all sources
@@ -283,13 +283,13 @@ export function CashVsBankTrendChart({ payments, store, quotations }) {
             const methodBreakdown = Object.entries(combinedMethods)
                 .filter(([, v]) => v > 0)
                 .sort((a, b) => b[1] - a[1])
-                .map(([method, amt]) => ({ label: METHOD_LABELS[method] || method, value: `SAR ${fmtT(amt)}` }));
+                .map(([method, amt]) => ({ label: METHOD_LABELS[method] || method, value: `${fmtT(amt)}` }));
 
             const bankLines = [
                 { label: "Bank/Card Total", value: `SAR ${fmtT(totalBank)}`, bold: true, color: "#4e73df" },
                 { divider: true, label: "Formula", value: "All non-cash payment methods" },
-                { label: "Sales Payments", value: `SAR ${fmtT(b.bankSales)}` },
-                ...(qtnInvoiceAccounting ? [{ label: "Qtn. Invoice Payments", value: `SAR ${fmtT(b.bankQtn)}` }] : []),
+                { label: "Sales Payments", value: `${fmtT(b.bankSales)}` },
+                ...(qtnInvoiceAccounting ? [{ label: "Qtn. Invoice Payments", value: `${fmtT(b.bankQtn)}` }] : []),
                 ...(methodBreakdown.length ? [{ divider: true, label: "By Method", value: "" }] : []),
                 ...methodBreakdown,
             ];
