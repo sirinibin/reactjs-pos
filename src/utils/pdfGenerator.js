@@ -124,51 +124,58 @@ function drawSectionTitle(doc, text, y) {
 }
 
 // ── Column header row ─────────────────────────────────────────────────────────
-function drawColumnHeaders(doc, y) {
+function drawColumnHeaders(doc, y, small = false) {
+    const h  = small ? 5.5 : 7;
+    const fs = small ? 7   : 9;
+    const ty = small ? y + 3.8 : y + 5;
     doc.setFillColor(210, 210, 210);
-    doc.rect(ML, y, CW, 7, 'F');
+    doc.rect(ML, y, CW, h, 'F');
     doc.setFont('helvetica', 'bold');
-    doc.setFontSize(9);
+    doc.setFontSize(fs);
     doc.setTextColor(0, 0, 0);
-    doc.text('DESCRIPTION', ML + 2, y + 5);
-    doc.text('AMOUNT', PAGE_W - MR - 2, y + 5, { align: 'right' });
+    doc.text('DESCRIPTION', ML + 2, ty);
+    doc.text('AMOUNT', PAGE_W - MR - 2, ty, { align: 'right' });
     doc.setDrawColor(0, 0, 0);
     doc.setLineWidth(0.3);
-    doc.line(ML, y + 7, PAGE_W - MR, y + 7);
-    return y + 10;
+    doc.line(ML, y + h, PAGE_W - MR, y + h);
+    return y + h + 3;
 }
 
 // ── Data row ──────────────────────────────────────────────────────────────────
-const ROW_H = 7;
+const ROW_H       = 7;
+const ROW_H_SMALL = 5.5;
 
-function drawRow(doc, label, value, y, isTotal) {
+function drawRow(doc, label, value, y, isTotal, small = false) {
+    const rowH = small ? ROW_H_SMALL : ROW_H;
+    const ty   = small ? y + 3.8     : y + 5;
+
     if (isTotal) {
         doc.setFont('helvetica', 'bold');
-        doc.setFontSize(9.5);
+        doc.setFontSize(small ? 8 : 9.5);
         doc.setTextColor(0, 0, 0);
         doc.setFillColor(240, 240, 240);
-        doc.rect(ML, y, CW, ROW_H, 'F');
+        doc.rect(ML, y, CW, rowH, 'F');
     } else {
         doc.setFont('helvetica', 'normal');
-        doc.setFontSize(9);
+        doc.setFontSize(small ? 7.5 : 9);
         doc.setTextColor(30, 30, 30);
     }
 
     if (label !== undefined && label !== '') {
-        doc.text(S(String(label)) + ':', ML + 2, y + 5);
+        doc.text(S(String(label)) + ':', ML + 2, ty);
     }
 
     if (value !== undefined && value !== null) {
         const valStr = S(stripSarBreakdown(addCommasToInfoValue(String(value)), isTotal));
-        doc.text(valStr, PAGE_W - MR - 2, y + 5, { align: 'right' });
+        doc.text(valStr, PAGE_W - MR - 2, ty, { align: 'right' });
     }
 
     // Thin rule
     doc.setDrawColor(180, 180, 180);
     doc.setLineWidth(0.1);
-    doc.line(ML, y + ROW_H, PAGE_W - MR, y + ROW_H);
+    doc.line(ML, y + rowH, PAGE_W - MR, y + rowH);
 
-    return y + ROW_H;
+    return y + rowH;
 }
 
 // ── Footer on every page ──────────────────────────────────────────────────────
@@ -189,25 +196,26 @@ function drawFooter(doc) {
 }
 
 // ── Render an info breakdown block ────────────────────────────────────────────
-function renderInfoLines(doc, lines, y) {
+function renderInfoLines(doc, lines, y, small = false) {
     if (!Array.isArray(lines) || !lines.length) return y;
 
     const descLine = lines[0] && !lines[0].divider && lines[0].bold ? lines[0] : null;
     const detail   = descLine ? lines.slice(1) : lines;
+    const rowH     = small ? ROW_H_SMALL : ROW_H;
 
     // "What it is" description
     if (descLine && descLine.value) {
         y = guard(doc, y, 12);
         doc.setFont('helvetica', 'italic');
-        doc.setFontSize(8.5);
+        doc.setFontSize(small ? 7 : 8.5);
         doc.setTextColor(60, 60, 60);
         const wrapped = doc.splitTextToSize(S(String(descLine.value)), CW - 4);
-        doc.text(wrapped, ML + 2, y + 4);
-        y += wrapped.length * 5 + 4;
+        doc.text(wrapped, ML + 2, y + (small ? 3 : 4));
+        y += wrapped.length * (small ? 4 : 5) + (small ? 3 : 4);
         doc.setDrawColor(160, 160, 160);
         doc.setLineWidth(0.2);
         doc.line(ML, y, PAGE_W - MR, y);
-        y += 4;
+        y += small ? 3 : 4;
     }
 
     // Detail rows
@@ -219,7 +227,7 @@ function renderInfoLines(doc, lines, y) {
             doc.setDrawColor(160, 160, 160);
             doc.setLineWidth(0.2);
             doc.line(ML, y, PAGE_W - MR, y);
-            y += 3;
+            y += small ? 2 : 3;
             return;
         }
 
@@ -232,11 +240,11 @@ function renderInfoLines(doc, lines, y) {
             doc.setDrawColor(160, 160, 160);
             doc.setLineWidth(0.2);
             doc.line(ML, y, PAGE_W - MR, y);
-            y += 2;
+            y += small ? 1.5 : 2;
         }
 
-        y = guard(doc, y, ROW_H + 1);
-        y = drawRow(doc, line.label, line.value, y, isTotal);
+        y = guard(doc, y, rowH + 1);
+        y = drawRow(doc, line.label, line.value, y, isTotal, small);
     });
 
     return y;
@@ -326,7 +334,7 @@ export function generateSectionPdf(title, visibleStats, infoMap, filters, store)
             y = guard(doc, y, 25);
             y = drawSectionTitle(doc, stat.label, y);
 
-            // Stat headline value
+            // Stat headline value (smaller than main table)
             const raw = stat.value;
             if (raw !== '' && raw !== undefined && raw !== null) {
                 const isPercent = typeof stat.label === 'string' &&
@@ -336,16 +344,16 @@ export function generateSectionPdf(title, visibleStats, infoMap, filters, store)
                     ? `${addCommasToInfoValue(Number(raw).toFixed(2))}%`
                     : `SAR ${addCommasToInfoValue(Number(raw).toFixed(2))}`;
                 doc.setFont('helvetica', 'bold');
-                doc.setFontSize(12);
+                doc.setFontSize(9);
                 doc.setTextColor(0, 0, 0);
                 doc.text(S(valStr), PAGE_W - MR, y + 4, { align: 'right' });
-                y += 10;
+                y += 7;
             }
 
-            // Breakdown
-            y = guard(doc, y, 15);
-            y = drawColumnHeaders(doc, y);
-            y = renderInfoLines(doc, infoMap[stat.label] || [], y);
+            // Breakdown — smaller size than main statement table
+            y = guard(doc, y, 12);
+            y = drawColumnHeaders(doc, y, true);
+            y = renderInfoLines(doc, infoMap[stat.label] || [], y, true);
             y += 6;
         });
     }
