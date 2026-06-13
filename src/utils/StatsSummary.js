@@ -124,11 +124,27 @@ const StatsSummary = ({ title, stats = {}, statsWithInfo = {}, defaultOpen = fal
         if (onToggle) onToggle(!isOpen);
     };
 
-    const renderInfoTooltip = (info) => (props) => (
-        <Tooltip id="label-tooltip" {...props}>
-            <span style={{ whiteSpace: 'pre-line' }}>{info}</span>
-        </Tooltip>
-    );
+    const renderInfoTooltip = (info) => (props) => {
+        const lines = Array.isArray(info) ? info : null;
+        return (
+            <Tooltip id="label-tooltip" {...props} className="stats-wide-tooltip">
+                {lines ? (
+                    <div style={{ textAlign: 'left', fontSize: '0.73rem', lineHeight: '1.75' }}>
+                        {lines.map((line, i) => (
+                            <div key={i} style={line.divider ? { borderTop: '1px solid rgba(255,255,255,0.2)', marginTop: '5px', paddingTop: '5px' } : {}}>
+                                {line.label && <span style={{ color: '#adb5bd' }}>{line.label}: </span>}
+                                <span style={{ fontWeight: line.bold ? 600 : 400, color: line.color || '#f8f9fa' }}>
+                                    {line.value}
+                                </span>
+                            </div>
+                        ))}
+                    </div>
+                ) : (
+                    <span style={{ whiteSpace: 'pre-line' }}>{info}</span>
+                )}
+            </Tooltip>
+        );
+    };
 
     const renderStats = (fields) => {
         const normalized = normalizeStatsWithInfo();
