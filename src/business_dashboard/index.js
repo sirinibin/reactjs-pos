@@ -400,20 +400,21 @@ export default function BusinessDashboard() {
 
     const monthDate = (d) => d.month_str + "-01T12:00:00";
 
-    // Core sales synthetic arrays (date + value)
-    const synOrders     = React.useMemo(() => monthlyData.map(d => ({ date: monthDate(d), net_total: d.sales_amount || 0 })), [monthlyData]);
-    const synReturns    = React.useMemo(() => monthlyData.map(d => ({ date: monthDate(d), net_total: d.sales_return_amount || 0 })), [monthlyData]);
-    const synPur        = React.useMemo(() => monthlyData.map(d => ({ date: monthDate(d), net_total: d.purchase_amount || 0 })), [monthlyData]);
-    const synPurRet     = React.useMemo(() => monthlyData.map(d => ({ date: monthDate(d), net_total: d.purchase_return_amount || 0 })), [monthlyData]);
+    // Core sales synthetic arrays (date + value + cash_discount)
+    const synOrders     = React.useMemo(() => monthlyData.map(d => ({ date: monthDate(d), net_total: d.sales_amount || 0, cash_discount: d.sales_cash_discount || 0 })), [monthlyData]);
+    const synReturns    = React.useMemo(() => monthlyData.map(d => ({ date: monthDate(d), net_total: d.sales_return_amount || 0, cash_discount: d.sales_return_cash_discount || 0 })), [monthlyData]);
+    const synPur        = React.useMemo(() => monthlyData.map(d => ({ date: monthDate(d), net_total: d.purchase_amount || 0, cash_discount: d.purchase_cash_discount || 0 })), [monthlyData]);
+    const synPurRet     = React.useMemo(() => monthlyData.map(d => ({ date: monthDate(d), net_total: d.purchase_return_amount || 0, cash_discount: d.purchase_return_cash_discount || 0 })), [monthlyData]);
     const synExpenses   = React.useMemo(() => monthlyData.map(d => ({ date: monthDate(d), amount:    d.expense_amount || 0 })), [monthlyData]);
-    const synAcctPur    = React.useMemo(() => monthlyData.map(d => ({ date: monthDate(d), net_total: d.accounted_purchase_amount || 0 })), [monthlyData]);
-    const synAcctPurRet = React.useMemo(() => monthlyData.map(d => ({ date: monthDate(d), net_total: d.accounted_purchase_return_amount || 0 })), [monthlyData]);
+    const synAcctPur    = React.useMemo(() => monthlyData.map(d => ({ date: monthDate(d), net_total: d.accounted_purchase_amount || 0, cash_discount: d.accounted_purchase_cash_discount || 0 })), [monthlyData]);
+    const synAcctPurRet = React.useMemo(() => monthlyData.map(d => ({ date: monthDate(d), net_total: d.accounted_purchase_return_amount || 0, cash_discount: d.accounted_purchase_return_cash_discount || 0 })), [monthlyData]);
 
     // Quotation invoice synthetic array
     const synQtnInvoices = React.useMemo(() =>
         monthlyData.map(d => ({
             date: monthDate(d), type: "invoice",
             net_total: d.qtn_invoice_amount || 0,
+            cash_discount: d.qtn_sales_cash_discount || 0,
             payment_status: "paid",
             payments: PAYMENT_METHODS
                 .map(m => ({ method: m, amount: d["qtn_payment_" + m] || 0 }))
@@ -422,7 +423,7 @@ export default function BusinessDashboard() {
     , [monthlyData]);
 
     const synQtnReturns = React.useMemo(() =>
-        monthlyData.map(d => ({ date: monthDate(d), net_total: d.qtn_invoice_return_amount || 0 }))
+        monthlyData.map(d => ({ date: monthDate(d), net_total: d.qtn_invoice_return_amount || 0, cash_discount: d.qtn_sales_return_cash_discount || 0 }))
     , [monthlyData]);
 
     // Customer deposits
