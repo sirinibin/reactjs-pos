@@ -35,6 +35,7 @@ const Customers = forwardRef((props, ref) => {
     useImperativeHandle(ref, () => ({
         open() {
             ResetSearchParams();
+            setNameQuery("");
             list();
             getStore(localStorage.getItem("store_id"));
             SetShow(true);
@@ -340,6 +341,7 @@ const Customers = forwardRef((props, ref) => {
     //Customer Auto Suggestion
     const [customerOptions, setCustomerOptions] = useState([]);
     const [selectedCustomers, setSelectedCustomers] = useState([]);
+    const [nameQuery, setNameQuery] = useState("");
     async function suggestCustomers(searchTerm) {
         searchTerm = searchTerm.replace(/\s+/g, " ").trim();
         if (!searchTerm) {
@@ -1443,12 +1445,15 @@ const Customers = forwardRef((props, ref) => {
                                                             <th>
                                                                 <input
                                                                     type="text"
+                                                                    value={nameQuery}
                                                                     placeholder="Name / Phone / VAT / ID"
                                                                     style={{ minWidth: "200px" }}
                                                                     onChange={(e) => {
+                                                                        const val = e.target.value;
+                                                                        setNameQuery(val);
                                                                         if (timerRef.current) clearTimeout(timerRef.current);
                                                                         timerRef.current = setTimeout(() => {
-                                                                            searchByFieldValue("query", e.target.value);
+                                                                            searchByFieldValue("query", val);
                                                                         }, 300);
                                                                     }}
                                                                     className="form-control"
