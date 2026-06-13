@@ -660,7 +660,6 @@ function ProductIndex(props) {
 
     const [productOptionsByName, setProductOptionsByName] = useState([]);
     let [selectedProductsByName, setSelectedProductsByName] = useState([]);
-    let [openProductSearchResultByName, setOpenProductSearchResultByName] = useState(false);
 
     const customFilter = useCallback((option, query) => {
         const normalize = (str) => str?.toLowerCase().replace(/\s+/g, " ").trim() || "";
@@ -699,9 +698,7 @@ function ProductIndex(props) {
 
         if (!searchTerm) {
             setTimeout(() => {
-                if (searchBy === "name") {
-                    setOpenProductSearchResultByName(false);
-                } else if (searchBy === "part_number") {
+                if (searchBy === "part_number") {
                     setOpenProductSearchResultByPartNo(false);
                 } else if (searchBy === "all") {
                     setOpenProductSearchResult(false);
@@ -761,9 +758,7 @@ function ProductIndex(props) {
         ];
 
         if (!products || products.length === 0) {
-            if (searchBy === "name") {
-                setOpenProductSearchResultByName(false);
-            } else if (searchBy === "part_number") {
+            if (searchBy === "part_number") {
                 setOpenProductSearchResultByPartNo(false);
             } else if (searchBy === "all") {
                 setOpenProductSearchResult(false);
@@ -841,7 +836,6 @@ function ProductIndex(props) {
         });
 
         if (searchBy === "name") {
-            setOpenProductSearchResultByName(true);
             setProductOptionsByName(sorted);
         } else if (searchBy === "part_number") {
             setOpenProductSearchResultByPartNo(true);
