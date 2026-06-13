@@ -455,13 +455,13 @@ export default function BusinessDashboard() {
     const kpiStats = React.useMemo(() => {
         const sum = f => monthlyData.reduce((s, d) => s + (d[f] || 0), 0);
         return {
-            orderStats:          { total_sales:                  sum("sales_amount") },
-            salesReturnStats:    { total_sales_return:           sum("sales_return_amount") },
-            quotationStats:      { invoice_total_sales:          sum("qtn_invoice_amount") },
-            qtnSalesReturnStats: { total_quotation_sales_return: sum("qtn_invoice_return_amount") },
+            orderStats:          { total_sales: sum("sales_amount"), cash_discount: sum("sales_cash_discount") },
+            salesReturnStats:    { total_sales_return: sum("sales_return_amount"), cash_discount: sum("sales_return_cash_discount") },
+            quotationStats:      { invoice_total_sales: sum("qtn_invoice_amount"), invoice_cash_discount: sum("qtn_sales_cash_discount") },
+            qtnSalesReturnStats: { total_quotation_sales_return: sum("qtn_invoice_return_amount"), cash_discount: sum("qtn_sales_return_cash_discount") },
             expenseStats:        { total:                        sum("expense_amount") },
-            purchaseStats:       { total_purchase: sum("purchase_amount"), accounted_purchase: sum("accounted_purchase_amount") },
-            purchaseReturnStats: { total_purchase_return: sum("purchase_return_amount"), accounted_purchase_return: sum("accounted_purchase_return_amount") },
+            purchaseStats:       { total_purchase: sum("purchase_amount"), accounted_purchase: sum("accounted_purchase_amount"), cash_discount: sum("purchase_cash_discount"), accounted_purchase_cash_discount: sum("accounted_purchase_cash_discount") },
+            purchaseReturnStats: { total_purchase_return: sum("purchase_return_amount"), accounted_purchase_return: sum("accounted_purchase_return_amount"), cash_discount: sum("purchase_return_cash_discount"), accounted_purchase_return_cash_discount: sum("accounted_purchase_return_cash_discount") },
             depositStats:        { purchase_fund:                sum("deposit_purchase_fund") },
             orderCount:          monthlyData.reduce((s, d) => s + (d.sales_count || 0), 0),
         };

@@ -169,13 +169,29 @@ export default function KPICards({
     const totalAccountedPurchase      = purchaseStats?.accounted_purchase || 0;
     const totalAccountedPurchaseReturn = purchaseReturnStats?.accounted_purchase_return || 0;
 
-    // ── P&L formula — identical to stats/index.js lines 950-959 ───────────
+    // ── Cash discount totals ───────────────────────────────────────────────
+    const totalCashDiscount                    = orderStats?.cash_discount || 0;
+    const totalSalesReturnCashDiscount         = salesReturnStats?.cash_discount || 0;
+    const totalPurchaseCashDiscount            = purchaseStats?.cash_discount || 0;
+    const totalPurchaseReturnCashDiscount      = purchaseReturnStats?.cash_discount || 0;
+    const totalAccountedPurchaseCashDiscount        = purchaseStats?.accounted_purchase_cash_discount || 0;
+    const totalAccountedPurchaseReturnCashDiscount  = purchaseReturnStats?.accounted_purchase_return_cash_discount || 0;
+    const qtnSalesCashDiscount                 = quotationStats?.invoice_cash_discount || 0;
+    const qtnSalesReturnCashDiscount           = qtnSalesReturnStats?.cash_discount || 0;
+
+    // ── P&L formula — identical to stats/index.js ─────────────────────────
     const revenue = (totalSales - totalSalesReturn)
         + (qtnInvoiceAccounting ? (totalQtnSales - totalQtnSalesReturn) : 0);
 
-    const expenseTotal = disablePurchasesOnAccounts
+    const purchaseCashDiscountAdj       = disablePurchasesOnAccounts ? totalAccountedPurchaseCashDiscount       : totalPurchaseCashDiscount;
+    const purchaseReturnCashDiscountAdj = disablePurchasesOnAccounts ? totalAccountedPurchaseReturnCashDiscount : totalPurchaseReturnCashDiscount;
+    const cashDiscountAdj = totalCashDiscount - totalSalesReturnCashDiscount + purchaseReturnCashDiscountAdj - purchaseCashDiscountAdj
+        + (qtnInvoiceAccounting ? qtnSalesCashDiscount - qtnSalesReturnCashDiscount : 0);
+
+    const expenseTotal = (disablePurchasesOnAccounts
         ? (totalExpense - totalDepositPurchaseFund + totalAccountedPurchase - totalAccountedPurchaseReturn)
-        : (totalExpense + totalPurchase - totalPurchaseReturn);
+        : (totalExpense + totalPurchase - totalPurchaseReturn))
+        + cashDiscountAdj;
 
     const profitLoss           = revenue - expenseTotal;
     const profitLossVat        = profitLoss * vatPercent / (100 + vatPercent);
@@ -202,11 +218,27 @@ export default function KPICards({
         { label: "Purchase Return Fund Rcvd", value: `− SAR ${fmt(totalDepositPurchaseFund)}` },
         { label: "Accounted Purchases", value: `+ SAR ${fmt(totalAccountedPurchase)}` },
         { label: "Accounted Pur. Returns", value: `− SAR ${fmt(totalAccountedPurchaseReturn)}` },
+        { label: "Sales Cash Discount", value: `+ SAR ${fmt(totalCashDiscount)}` },
+        { label: "Acct. Pur. Return C.D.", value: `+ SAR ${fmt(totalAccountedPurchaseReturnCashDiscount)}` },
+        { label: "Sales Return Cash Discount", value: `− SAR ${fmt(totalSalesReturnCashDiscount)}` },
+        { label: "Acct. Purchase C.D.", value: `− SAR ${fmt(totalAccountedPurchaseCashDiscount)}` },
+        ...(qtnInvoiceAccounting ? [
+            { label: "Qtn. Sales Cash Discount", value: `+ SAR ${fmt(qtnSalesCashDiscount)}` },
+            { label: "Qtn. Sales Ret. Cash Discount", value: `− SAR ${fmt(qtnSalesReturnCashDiscount)}` },
+        ] : []),
     ] : [
         { label: "Exact", value: `SAR ${fmt(expenseTotal)}`, bold: true, color: "#ffa8a8" },
         { divider: true, label: "Expenses", value: `SAR ${fmt(totalExpense)}` },
         { label: "Purchases", value: `+ SAR ${fmt(totalPurchase)}` },
         { label: "Purchase Returns", value: `− SAR ${fmt(totalPurchaseReturn)}` },
+        { label: "Sales Cash Discount", value: `+ SAR ${fmt(totalCashDiscount)}` },
+        { label: "Pur. Return Cash Discount", value: `+ SAR ${fmt(totalPurchaseReturnCashDiscount)}` },
+        { label: "Sales Return Cash Discount", value: `− SAR ${fmt(totalSalesReturnCashDiscount)}` },
+        { label: "Purchase Cash Discount", value: `− SAR ${fmt(totalPurchaseCashDiscount)}` },
+        ...(qtnInvoiceAccounting ? [
+            { label: "Qtn. Sales Cash Discount", value: `+ SAR ${fmt(qtnSalesCashDiscount)}` },
+            { label: "Qtn. Sales Ret. Cash Discount", value: `− SAR ${fmt(qtnSalesReturnCashDiscount)}` },
+        ] : []),
     ];
 
     const profitTooltip = [

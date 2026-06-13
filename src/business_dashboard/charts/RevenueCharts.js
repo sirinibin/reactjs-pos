@@ -77,6 +77,16 @@ export function MonthlyRevenueTrendChart({
         const acctPurMap      = buildMap(accountedPurchases,       p => p.date, p => p.net_total || 0);
         const acctPurRetMap   = buildMap(accountedPurchaseReturns, p => p.date, p => p.net_total || 0);
 
+        // Cash discount maps
+        const salesCDMap       = buildMap(orders,                   o => o.date, o => o.cash_discount || 0);
+        const salesRetCDMap    = buildMap(returns,                   r => r.date, r => r.cash_discount || 0);
+        const purCDMap         = buildMap(purchases,                p => p.date, p => p.cash_discount || 0);
+        const purRetCDMap      = buildMap(purchaseReturns,          p => p.date, p => p.cash_discount || 0);
+        const acctPurCDMap     = buildMap(accountedPurchases,       p => p.date, p => p.cash_discount || 0);
+        const acctPurRetCDMap  = buildMap(accountedPurchaseReturns, p => p.date, p => p.cash_discount || 0);
+        const qtnInvCDMap      = buildMap(quotationInvoices,        q => q.date, q => q.cash_discount || 0);
+        const qtnRetCDMap      = buildMap(quotationSalesReturns,    q => q.date, q => q.cash_discount || 0);
+
         // Compute per-month deposit purchase_fund from payments array
         const depositPurchaseFundMap = {};
         (customerDeposits || []).forEach(d => {
@@ -119,11 +129,26 @@ export function MonthlyRevenueTrendChart({
             const acctPur    = acctPurMap[k]    || 0;
             const acctPurRet = acctPurRetMap[k] || 0;
 
+            const salesCD       = salesCDMap[k]      || 0;
+            const salesRetCD    = salesRetCDMap[k]   || 0;
+            const purCD         = purCDMap[k]         || 0;
+            const purRetCD      = purRetCDMap[k]      || 0;
+            const acctPurCD     = acctPurCDMap[k]     || 0;
+            const acctPurRetCD  = acctPurRetCDMap[k]  || 0;
+            const qtnInvCD      = qtnInvCDMap[k]      || 0;
+            const qtnRetCD      = qtnRetCDMap[k]      || 0;
+
             const revenue = (sales - ret) + (qtnInvoiceAccounting ? qtnInv - qtnRet : 0);
 
-            const expense = disablePurchasesOnAccounts
+            const purCDAdj    = disablePurchasesOnAccounts ? acctPurCD    : purCD;
+            const purRetCDAdj = disablePurchasesOnAccounts ? acctPurRetCD : purRetCD;
+            const cashDiscountAdj = salesCD - salesRetCD + purRetCDAdj - purCDAdj
+                + (qtnInvoiceAccounting ? qtnInvCD - qtnRetCD : 0);
+
+            const expense = (disablePurchasesOnAccounts
                 ? exp - depFund + acctPur - acctPurRet
-                : exp + pur - purRet;
+                : exp + pur - purRet)
+                + cashDiscountAdj;
 
             const profit           = revenue - expense;
             const profitVat        = profit * vatPercent / (100 + vatPercent);
@@ -148,11 +173,27 @@ export function MonthlyRevenueTrendChart({
                 { label: "Purchase Return Fund", value: `− SAR ${fmtT(depFund)}` },
                 { label: "Accounted Purchases", value: `+ SAR ${fmtT(acctPur)}` },
                 { label: "Accounted Pur. Returns", value: `− SAR ${fmtT(acctPurRet)}` },
+                { label: "Sales Cash Discount", value: `+ SAR ${fmtT(salesCD)}` },
+                { label: "Acct. Pur. Return C.D.", value: `+ SAR ${fmtT(acctPurRetCD)}` },
+                { label: "Sales Return Cash Discount", value: `− SAR ${fmtT(salesRetCD)}` },
+                { label: "Acct. Purchase C.D.", value: `− SAR ${fmtT(acctPurCD)}` },
+                ...(qtnInvoiceAccounting ? [
+                    { label: "Qtn. Sales Cash Discount", value: `+ SAR ${fmtT(qtnInvCD)}` },
+                    { label: "Qtn. Sales Ret. C.D.", value: `− SAR ${fmtT(qtnRetCD)}` },
+                ] : []),
             ] : [
                 { label: "Total Expense", value: `SAR ${fmtT(expense)}`, bold: true, color: "#ffa8a8" },
                 { divider: true, label: "Expenses", value: `SAR ${fmtT(exp)}` },
                 { label: "Purchases", value: `+ SAR ${fmtT(pur)}` },
                 { label: "Purchase Returns", value: `− SAR ${fmtT(purRet)}` },
+                { label: "Sales Cash Discount", value: `+ SAR ${fmtT(salesCD)}` },
+                { label: "Pur. Return Cash Discount", value: `+ SAR ${fmtT(purRetCD)}` },
+                { label: "Sales Return Cash Discount", value: `− SAR ${fmtT(salesRetCD)}` },
+                { label: "Purchase Cash Discount", value: `− SAR ${fmtT(purCD)}` },
+                ...(qtnInvoiceAccounting ? [
+                    { label: "Qtn. Sales Cash Discount", value: `+ SAR ${fmtT(qtnInvCD)}` },
+                    { label: "Qtn. Sales Ret. C.D.", value: `− SAR ${fmtT(qtnRetCD)}` },
+                ] : []),
             ];
 
             // ── Profit/Loss tooltip ──────────────────────────────────────────
@@ -181,6 +222,8 @@ export function MonthlyRevenueTrendChart({
     }, [orders, returns, purchases, purchaseReturns, expenses,
         quotations, quotationSalesReturns, accountedPurchases, accountedPurchaseReturns,
         customerDeposits, qtnInvoiceAccounting, disablePurchasesOnAccounts, vatPercent]);
+        // Note: cash discount fields (cash_discount on each record) are derived from the same
+        // arrays above, so no additional deps needed.
 
     if (!data) return <p className="text-muted small">No data</p>;
     return (
