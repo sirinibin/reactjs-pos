@@ -29,8 +29,8 @@ const Vendors = forwardRef((props, ref) => {
         <Draggable handle=".modal-header" nodeRef={dragRef} defaultPosition={{ x: 0, y: 0 }}>
             <div
                 ref={dragRef}
-                className="modal-dialog modal-xl"
                 {...dialogProps}
+                className={`modal-dialog modal-xl ${dialogProps.className || ""}`}
                 style={{
                     position: "fixed",
                     top: "5%",
@@ -38,6 +38,7 @@ const Vendors = forwardRef((props, ref) => {
                     margin: "0",
                     zIndex: 1055,
                     width: "70%",
+                    maxHeight: "90vh",
                 }}
             >
                 <div className="modal-content">{children}</div>
