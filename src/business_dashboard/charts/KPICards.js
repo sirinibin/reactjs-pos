@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef, useCallback } from "react";
 import WhatsAppModal from '../../utils/WhatsAppModal';
 import { addCommasToInfoValue, stripSarBreakdown } from '../../utils/numberUtils';
 import { generateInfoPdf, safeName } from '../../utils/pdfGenerator';
+import { uploadPdfForShare } from '../../utils/pdfShare';
 
 function fmt(n) {
     if (n === undefined || n === null || isNaN(n)) return "0.00";
@@ -21,7 +22,7 @@ function fmtCompact(n) {
 const BG = '#212529';
 const BORDER = '#495057';
 
-function InfoTooltip({ lines, cardTitle, filters, store }) {
+function InfoTooltip({ lines, cardTitle, fieldValue, filters, store }) {
     const [show, setShow] = useState(false);
     const [isDownloading, setIsDownloading] = useState(false);
     const [isSharingWA, setIsSharingWA] = useState(false);
@@ -58,12 +59,21 @@ function InfoTooltip({ lines, cardTitle, filters, store }) {
         return () => document.removeEventListener('mousedown', handleDocClick);
     }, [show]);
 
+    const handlePrint = (e) => {
+        e.stopPropagation();
+        try {
+            const doc = generateInfoPdf('', cardTitle || 'KPI', fieldValue, lines, filters, store);
+            doc.autoPrint();
+            doc.output('dataurlnewwindow');
+        } catch (err) { setError(err?.message || 'Print failed'); }
+    };
+
     const handleDownload = async (e) => {
         e.stopPropagation();
         setIsDownloading(true); setError("");
         try {
-            const doc = generateInfoPdf('Dashboard', cardTitle || 'KPI', lines, filters, store);
-            doc.save(`${safeName(`Dashboard_${cardTitle || 'KPI'}`)}.pdf`);
+            const doc = generateInfoPdf('', cardTitle || 'KPI', fieldValue, lines, filters, store);
+            doc.save(`${safeName(cardTitle || 'KPI')}.pdf`);
         } catch (err) { setError(err?.message || 'PDF failed'); }
         finally { setIsDownloading(false); }
     };
@@ -72,15 +82,13 @@ function InfoTooltip({ lines, cardTitle, filters, store }) {
         e.stopPropagation();
         setIsSharingWA(true); setError("");
         try {
-            const doc = generateInfoPdf('Dashboard', cardTitle || 'KPI', lines, filters, store);
+            const doc = generateInfoPdf('', cardTitle || 'KPI', fieldValue, lines, filters, store);
             const pdfBlob = doc.output('blob');
-            const binId = `startpos-${Date.now()}`;
-            const fn = `${safeName(`Dashboard_${cardTitle || 'KPI'}`)}.pdf`;
-            const res = await fetch(`https://filebin.net/${binId}/${fn}`, { method: 'POST', body: pdfBlob });
-            if (!res.ok && res.status !== 201) throw new Error(`Upload failed: HTTP ${res.status}`);
-            setWaMessage(`Hello, here is Dashboard — ${cardTitle || ''}:\nhttps://filebin.net/${binId}/${fn}`);
+            const fn = `${safeName(cardTitle || 'KPI')}.pdf`;
+            const publicUrl = await uploadPdfForShare(pdfBlob, fn);
+            setWaMessage(`Hello, here is ${cardTitle || 'KPI'}:\n${publicUrl}`);
             setShowWAModal(true);
-        } catch (err) { setError(err?.message || 'Share failed'); }
+        } catch (err) { setError(err?.message || 'Failed to upload PDF for sharing'); }
         finally { setIsSharingWA(false); }
     };
 
@@ -181,6 +189,12 @@ function InfoTooltip({ lines, cardTitle, filters, store }) {
                     {/* Action bar */}
                     <div style={{ display: 'flex', gap: '6px', padding: '7px 14px',
                         borderTop: `1px solid ${BORDER}`, justifyContent: 'flex-end' }}>
+                        <button onClick={handlePrint}
+                            style={{ background: 'none', border: '1px solid rgba(255,255,255,0.2)',
+                                color: '#adb5bd', borderRadius: '4px', cursor: 'pointer',
+                                fontSize: '0.7rem', padding: '2px 9px' }}>
+                            <i className="bi bi-printer me-1" />Print
+                        </button>
                         <button onClick={handleDownload} disabled={isDownloading}
                             style={{ background: 'none', border: `1px solid rgba(255,255,255,0.3)`,
                                 color: '#f8f9fa', borderRadius: '4px', cursor: 'pointer',
@@ -247,7 +261,7 @@ function ValueTooltip({ exact, children }) {
     );
 }
 
-function KPICard({ title, tooltip, value, exact, sub2, icon, color, filters, store }) {
+function KPICard({ title, tooltip, fieldValue, value, exact, sub2, icon, color, filters, store }) {
     return (
         <div className="col-xl-2 col-lg-4 col-md-4 col-sm-6 mb-3">
             <div className="card h-100" style={{ borderLeft: `4px solid ${color}` }}>
@@ -262,7 +276,7 @@ function KPICard({ title, tooltip, value, exact, sub2, icon, color, filters, sto
                             <span style={{ fontSize: "0.65rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.06em", color: "#6c757d", lineHeight: 1.3 }}>
                                 {title}
                             </span>
-                            {tooltip && <InfoTooltip lines={tooltip} cardTitle={title} filters={filters} store={store} />}
+                            {tooltip && <InfoTooltip lines={tooltip} cardTitle={title} fieldValue={fieldValue} filters={filters} store={store} />}
                         </div>
                         <div style={{ fontSize: "0.95rem", fontWeight: 700, whiteSpace: "nowrap" }}>
                             {exact ? <ValueTooltip exact={exact}>{value}</ValueTooltip> : value}
@@ -345,66 +359,65 @@ export default function KPICards({
     // ── Tooltip line definitions  (exact numbers shown on hover) ──────────
 
     const revenueTooltip = [
-        { label: "Exact", value: `SAR ${fmt(revenue)}`, bold: true, color: "#74c0fc" },
-        { divider: true, label: "Gross Sales", value: `${fmt(totalSales)}` },
+        { label: "Gross Sales", value: `${fmt(totalSales)}` },
         ...(qtnInvoiceAccounting ? [{ label: "Qtn. Sales", value: `+ ${fmt(totalQtnSales)}` }] : []),
         { label: "Sales Returns", value: `− ${fmt(totalSalesReturn)}` },
         ...(qtnInvoiceAccounting ? [{ label: "Qtn. Returns", value: `− ${fmt(totalQtnSalesReturn)}` }] : []),
+        { divider: true, label: "Net Revenue", value: `SAR ${fmt(revenue)}`, bold: true },
     ];
 
     const expenseTooltip = disablePurchasesOnAccounts ? [
-        { label: "Exact", value: `SAR ${fmt(expenseTotal)}`, bold: true, color: "#ffa8a8" },
-        { divider: true, label: "Expenses", value: `${fmt(totalExpense)}` },
+        { label: "Expenses", value: `${fmt(totalExpense)}` },
         { label: "Purchase Return Fund Rcvd", value: `− ${fmt(totalDepositPurchaseFund)}` },
         { label: "Accounted Purchases", value: `+ ${fmt(totalAccountedPurchase)}` },
         { label: "Accounted Pur. Returns", value: `− ${fmt(totalAccountedPurchaseReturn)}` },
         { label: "Sales Cash Discount", value: `+ ${fmt(totalCashDiscount)}` },
         { label: "Acct. Pur. Return C.D.", value: `+ ${fmt(totalAccountedPurchaseReturnCashDiscount)}` },
-        { label: "Sales Return Cash Discount", value: `− ${fmt(totalSalesReturnCashDiscount)}` },
+        { label: "Sales Return C.D.", value: `− ${fmt(totalSalesReturnCashDiscount)}` },
         { label: "Acct. Purchase C.D.", value: `− ${fmt(totalAccountedPurchaseCashDiscount)}` },
         ...(qtnInvoiceAccounting ? [
-            { label: "Qtn. Sales Cash Discount", value: `+ ${fmt(qtnSalesCashDiscount)}` },
-            { label: "Qtn. Sales Ret. Cash Discount", value: `− ${fmt(qtnSalesReturnCashDiscount)}` },
+            { label: "Qtn. Sales C.D.", value: `+ ${fmt(qtnSalesCashDiscount)}` },
+            { label: "Qtn. Sales Ret. C.D.", value: `− ${fmt(qtnSalesReturnCashDiscount)}` },
         ] : []),
+        { divider: true, label: "Total Expense", value: `SAR ${fmt(expenseTotal)}`, bold: true },
     ] : [
-        { label: "Exact", value: `SAR ${fmt(expenseTotal)}`, bold: true, color: "#ffa8a8" },
-        { divider: true, label: "Expenses", value: `${fmt(totalExpense)}` },
+        { label: "Expenses", value: `${fmt(totalExpense)}` },
         { label: "Purchases", value: `+ ${fmt(totalPurchase)}` },
         { label: "Purchase Returns", value: `− ${fmt(totalPurchaseReturn)}` },
         { label: "Sales Cash Discount", value: `+ ${fmt(totalCashDiscount)}` },
-        { label: "Pur. Return Cash Discount", value: `+ ${fmt(totalPurchaseReturnCashDiscount)}` },
-        { label: "Sales Return Cash Discount", value: `− ${fmt(totalSalesReturnCashDiscount)}` },
-        { label: "Purchase Cash Discount", value: `− ${fmt(totalPurchaseCashDiscount)}` },
+        { label: "Pur. Return C.D.", value: `+ ${fmt(totalPurchaseReturnCashDiscount)}` },
+        { label: "Sales Return C.D.", value: `− ${fmt(totalSalesReturnCashDiscount)}` },
+        { label: "Purchase C.D.", value: `− ${fmt(totalPurchaseCashDiscount)}` },
         ...(qtnInvoiceAccounting ? [
-            { label: "Qtn. Sales Cash Discount", value: `+ ${fmt(qtnSalesCashDiscount)}` },
-            { label: "Qtn. Sales Ret. Cash Discount", value: `− ${fmt(qtnSalesReturnCashDiscount)}` },
+            { label: "Qtn. Sales C.D.", value: `+ ${fmt(qtnSalesCashDiscount)}` },
+            { label: "Qtn. Sales Ret. C.D.", value: `− ${fmt(qtnSalesReturnCashDiscount)}` },
         ] : []),
+        { divider: true, label: "Total Expense", value: `SAR ${fmt(expenseTotal)}`, bold: true },
     ];
 
     const profitTooltip = [
-        { label: "Exact (w/ VAT)", value: `SAR ${fmt(Math.abs(profitLoss))}`, bold: true, color: isProfitable ? "#69db7c" : "#ffa8a8" },
-        { label: "Exact (w/o VAT)", value: `SAR ${fmt(Math.abs(profitLossWithoutVAT))}`, bold: true },
-        { divider: true, label: "Net Revenue", value: `${fmt(revenue)}` },
+        { label: "Net Revenue", value: `${fmt(revenue)}` },
         { label: "Total Expense", value: `− ${fmt(expenseTotal)}` },
         { label: `VAT ${vatPercent}%`, value: `${fmt(profitLossVat)}` },
+        { divider: true, label: isProfitable ? "Net Profit" : "Net Loss", value: `SAR ${fmt(Math.abs(profitLoss))}`, bold: true },
     ];
 
     const ordersTooltip = [
-        { label: "Total Orders", value: `${totalOrders.toLocaleString()}`, bold: true },
-        { divider: true, label: "Gross Sales", value: `${fmt(totalSales)}` },
-        { label: "Avg per Order", value: `${fmt(avgOrderValue)}` },
+        { label: "Gross Sales", value: `SAR ${fmt(totalSales)}` },
+        { label: "Avg per Order", value: `SAR ${fmt(avgOrderValue)}` },
+        { divider: true, label: "Total Orders", value: `${totalOrders.toLocaleString()}`, bold: true },
     ];
 
     const avgTooltip = [
-        { label: "Exact", value: `SAR ${fmt(avgOrderValue)}`, bold: true, color: "#74c0fc" },
-        { divider: true, label: "Gross Sales", value: `${fmt(totalSales)}` },
+        { label: "Gross Sales", value: `SAR ${fmt(totalSales)}` },
         { label: "Orders", value: `÷ ${totalOrders}` },
+        { divider: true, label: "Avg Order Value", value: `SAR ${fmt(avgOrderValue)}`, bold: true },
     ];
 
     const returnTooltip = [
-        { label: "Return Rate", value: `${returnRate.toFixed(2)}%`, bold: true, color: "#ffa8a8" },
-        { divider: true, label: "Sales Returns", value: `${fmt(totalSalesReturn)}` },
-        { label: "Gross Sales", value: `${fmt(totalSales)}` },
+        { label: "Sales Returns", value: `SAR ${fmt(totalSalesReturn)}` },
+        { label: "Gross Sales", value: `SAR ${fmt(totalSales)}` },
+        { divider: true, label: "Return Rate", value: `${returnRate.toFixed(2)}%`, bold: true },
     ];
 
     return (
@@ -412,6 +425,7 @@ export default function KPICards({
             <KPICard filters={filters} store={store}
                 title="Net Revenue"
                 tooltip={revenueTooltip}
+                fieldValue={revenue}
                 value={`${fmtCompact(revenue)}`}
                 exact={`${fmt(revenue)}`}
                 icon="bi bi-currency-dollar"
@@ -420,6 +434,7 @@ export default function KPICards({
             <KPICard filters={filters} store={store}
                 title="Total Expense"
                 tooltip={expenseTooltip}
+                fieldValue={expenseTotal}
                 value={`${fmtCompact(expenseTotal)}`}
                 exact={`${fmt(expenseTotal)}`}
                 icon="bi bi-receipt-cutoff"
@@ -428,6 +443,7 @@ export default function KPICards({
             <KPICard filters={filters} store={store}
                 title={isProfitable ? "Net Profit" : "Net Loss"}
                 tooltip={profitTooltip}
+                fieldValue={Math.abs(profitLoss)}
                 value={`${fmtCompact(Math.abs(profitLoss))}`}
                 exact={`${fmt(Math.abs(profitLoss))} (w/ VAT) · ${fmt(Math.abs(profitLossWithoutVAT))} (w/o VAT)`}
                 sub2={`w/o VAT: ${fmtCompact(Math.abs(profitLossWithoutVAT))}`}
@@ -437,6 +453,7 @@ export default function KPICards({
             <KPICard filters={filters} store={store}
                 title="Total Orders"
                 tooltip={ordersTooltip}
+                fieldValue={`${totalOrders.toLocaleString()} orders`}
                 value={totalOrders.toLocaleString()}
                 icon="bi bi-receipt"
                 color="#5c6bc0"
@@ -444,6 +461,7 @@ export default function KPICards({
             <KPICard filters={filters} store={store}
                 title="Avg Order Value"
                 tooltip={avgTooltip}
+                fieldValue={avgOrderValue}
                 value={`${fmtCompact(avgOrderValue)}`}
                 exact={`${fmt(avgOrderValue)}`}
                 icon="bi bi-bag"
@@ -452,6 +470,7 @@ export default function KPICards({
             <KPICard filters={filters} store={store}
                 title="Return Rate"
                 tooltip={returnTooltip}
+                fieldValue={`${returnRate.toFixed(2)}%`}
                 value={`${returnRate.toFixed(1)}%`}
                 exact={`${returnRate.toFixed(2)}%`}
                 icon="bi bi-arrow-return-left"

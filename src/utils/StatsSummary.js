@@ -7,6 +7,7 @@ import { DragDropContext, Droppable, Draggable } from "react-beautiful-dnd";
 import { useTranslation } from 'react-i18next';
 import WhatsAppModal from './WhatsAppModal';
 import { generateInfoPdf, generateSectionPdf, safeName } from './pdfGenerator';
+import { uploadPdfForShare } from './pdfShare';
 
 
 const StatsSummary = ({ title, stats = {}, statsWithInfo = {}, defaultOpen = false, onToggle, filters = {}, statsDefaultVisibility = {}, storageKey, store = {} }) => {
@@ -35,6 +36,10 @@ const StatsSummary = ({ title, stats = {}, statsWithInfo = {}, defaultOpen = fal
 
     const LOCAL_KEY = useMemo(() => storageKey ? `${storageKey}_stats_summary` : `${title}_stats_summary`, [storageKey, title]);
     const printAreaRef = useRef(null);
+    // Always holds the latest info+value per label, updated every render in renderStats.
+    // Handlers read from here so they never use stale closure values.
+    const currentInfoRef = useRef({});
+    const currentValueRef = useRef({});
 
     // Auto-close tooltip after 5 s when mouse leaves
     const clearAutoClose = useCallback(() => {
@@ -85,6 +90,8 @@ const StatsSummary = ({ title, stats = {}, statsWithInfo = {}, defaultOpen = fal
                 info: it.info,
                 value: (typeof it.value !== "undefined" ? it.value : (stats[it.label] ?? 0)),
                 colorByValue: it.colorByValue || false,
+                noActions: it.noActions || false,
+                bold: it.bold || false,
                 visible: true
             }));
         }
@@ -169,11 +176,14 @@ const StatsSummary = ({ title, stats = {}, statsWithInfo = {}, defaultOpen = fal
 
     const handleTooltipDownload = useCallback(async (field) => {
         if (!field) return;
+        // Always use the freshest info+value from refs (updated every render).
+        const info = currentInfoRef.current[field.label] ?? field.info;
+        const fieldValue = currentValueRef.current[field.label] ?? field.value;
         setDownloadingLabel(field.label);
         setTooltipErrorLabel(null);
         setTooltipErrorMsg("");
         try {
-            const doc = generateInfoPdf(title, field.label, field.info, filters, store);
+            const doc = generateInfoPdf(title, field.label, fieldValue, info, filters, store);
             const safeTitle = safeName(`${title} - ${field.label}`);
             doc.save(`${safeTitle}.pdf`);
         } catch (err) {
@@ -182,26 +192,35 @@ const StatsSummary = ({ title, stats = {}, statsWithInfo = {}, defaultOpen = fal
         } finally {
             setDownloadingLabel(null);
         }
-    }, [title, filters]);
+    }, [title, filters, store]);
+
+    const handleTooltipPrint = useCallback((field) => {
+        if (!field) return;
+        const info = currentInfoRef.current[field.label] ?? field.info;
+        const fieldValue = currentValueRef.current[field.label] ?? field.value;
+        try {
+            const doc = generateInfoPdf(title, field.label, fieldValue, info, filters, store);
+            doc.autoPrint();
+            doc.output('dataurlnewwindow');
+        } catch (err) {
+            setTooltipErrorLabel(field.label);
+            setTooltipErrorMsg(err?.message || 'Failed to print PDF');
+        }
+    }, [title, filters, store]);
 
     const handleTooltipWhatsAppShare = useCallback(async (field) => {
         if (!field) return;
+        const info = currentInfoRef.current[field.label] ?? field.info;
+        const fieldValue = currentValueRef.current[field.label] ?? field.value;
         setSharingWALabel(field.label);
         setTooltipErrorLabel(null);
         setTooltipErrorMsg("");
         try {
-            const doc = generateInfoPdf(title, field.label, field.info, filters, store);
+            const doc = generateInfoPdf(title, field.label, fieldValue, info, filters, store);
             const pdfBlob = doc.output('blob');
-            const binId = `startpos-${Date.now()}`;
             const safeFileName = `${safeName(`${title}_${field.label}`)}.pdf`;
-            const fbResponse = await fetch(`https://filebin.net/${binId}/${safeFileName}`, {
-                method: 'POST',
-                body: pdfBlob,
-            });
-            if (!fbResponse.ok && fbResponse.status !== 201) {
-                throw new Error(`filebin.net upload failed: HTTP ${fbResponse.status}`);
-            }
-            setTooltipWAMessage(`Hello, here is the ${title} — ${field.label}:\nhttps://filebin.net/${binId}/${safeFileName}`);
+            const publicUrl = await uploadPdfForShare(pdfBlob, safeFileName);
+            setTooltipWAMessage(`Hello, here is the ${title} — ${field.label}:\n${publicUrl}`);
             setShowTooltipWAModal(true);
         } catch (err) {
             setTooltipErrorLabel(field.label);
@@ -209,9 +228,9 @@ const StatsSummary = ({ title, stats = {}, statsWithInfo = {}, defaultOpen = fal
         } finally {
             setSharingWALabel(null);
         }
-    }, [title, filters]);
+    }, [title, filters, store]);
 
-    const renderInfoPopover = useCallback((fieldLabel, info) => {
+    const renderInfoPopover = useCallback((fieldLabel, info, noActions = false) => {
         const lines = Array.isArray(info) ? info : null;
         const field = { label: fieldLabel, info };
         const isDown = downloadingLabel === fieldLabel;
@@ -347,6 +366,7 @@ const StatsSummary = ({ title, stats = {}, statsWithInfo = {}, defaultOpen = fal
                     )}
 
                     {/* Action bar */}
+                    {!noActions && (
                     <div style={{
                         display: 'flex',
                         gap: '6px',
@@ -356,6 +376,15 @@ const StatsSummary = ({ title, stats = {}, statsWithInfo = {}, defaultOpen = fal
                         background: BG,
                         borderRadius: '0 0 6px 6px'
                     }}>
+                        <Button
+                            variant="outline-secondary"
+                            size="sm"
+                            style={{ fontSize: '0.7rem', padding: '2px 10px' }}
+                            onClick={() => handleTooltipPrint(field)}
+                            title="Print"
+                        >
+                            <i className="bi bi-printer me-1"></i>Print
+                        </Button>
                         <Button
                             variant="outline-light"
                             size="sm"
@@ -381,21 +410,27 @@ const StatsSummary = ({ title, stats = {}, statsWithInfo = {}, defaultOpen = fal
                                 : <><i className="bi bi-whatsapp me-1"></i>Share</>}
                         </Button>
                     </div>
+                    )}
                 </Popover.Body>
             </Popover>
         );
     }, [title, filters, downloadingLabel, sharingWALabel, tooltipErrorLabel, tooltipErrorMsg,
-        handleTooltipDownload, handleTooltipWhatsAppShare, setOpenInfoLabel, clearAutoClose, startAutoClose]);
+        handleTooltipDownload, handleTooltipPrint, handleTooltipWhatsAppShare, setOpenInfoLabel, clearAutoClose, startAutoClose]);
 
     const renderStats = (fields, placement = 'right') => {
         const normalized = normalizeStatsWithInfo();
         const infoByLabel = normalized ? Object.fromEntries(normalized.map(n => [n.label, n.info])) : {};
         const colorByValueLabels = normalized ? new Set(normalized.filter(n => n.colorByValue).map(n => n.label)) : new Set();
+        const noActionsByLabel = normalized ? new Set(normalized.filter(n => n.noActions).map(n => n.label)) : new Set();
         return fields.filter(f => f.visible).map((f, index) => {
             const rawValue = (typeof stats[f.label] !== "undefined") ? stats[f.label] : (typeof f.value !== "undefined" ? f.value : 0);
             const amount = trimTo2Decimals(rawValue);
             const info = (infoByLabel[f.label] !== undefined) ? infoByLabel[f.label] : f.info;
+            // Keep refs up-to-date so tooltip handlers always use the latest values.
+            currentInfoRef.current[f.label] = info;
+            currentValueRef.current[f.label] = rawValue;
             const useColor = colorByValueLabels.has(f.label);
+            const noActions = noActionsByLabel.has(f.label);
             const isPositive = useColor && Number(rawValue) >= 0;
             return (
                 <div className="mb-2" key={index}>
@@ -406,7 +441,7 @@ const StatsSummary = ({ title, stats = {}, statsWithInfo = {}, defaultOpen = fal
                                 <OverlayTrigger
                                     show={openInfoLabel === f.label}
                                     placement={placement}
-                                    overlay={renderInfoPopover(f.label, info)}
+                                    overlay={renderInfoPopover(f.label, info, noActions)}
                                 >
                                     <span
                                         className="stats-info-icon"
@@ -469,12 +504,16 @@ const StatsSummary = ({ title, stats = {}, statsWithInfo = {}, defaultOpen = fal
         const colorByValueSet = normalized
             ? new Set(normalized.filter(n => n.colorByValue).map(n => n.label))
             : new Set();
+        const boldSet = normalized
+            ? new Set(normalized.filter(n => n.bold).map(n => n.label))
+            : new Set();
         const allVisible = [...leftFields, ...rightFields]
             .filter(f => f.visible)
             .map(f => ({
                 label: f.label,
                 value: typeof stats[f.label] !== 'undefined' ? stats[f.label] : (f.value ?? 0),
                 colorByValue: colorByValueSet.has(f.label),
+                bold: boldSet.has(f.label),
             }));
         return generateSectionPdf(title, allVisible, infoMap, filters, store);
     }, [normalizeStatsWithInfo, leftFields, rightFields, stats, title, filters, store]);
@@ -503,16 +542,9 @@ const StatsSummary = ({ title, stats = {}, statsWithInfo = {}, defaultOpen = fal
         try {
             const doc = buildSectionDoc();
             const pdfBlob = doc.output('blob');
-            const binId = `startpos-${Date.now()}`;
             const safeFileName = `${safeName(title)}.pdf`;
-            const fbResponse = await fetch(`https://filebin.net/${binId}/${safeFileName}`, {
-                method: 'POST',
-                body: pdfBlob,
-            });
-            if (!fbResponse.ok && fbResponse.status !== 201) {
-                throw new Error(`filebin.net upload failed: HTTP ${fbResponse.status}`);
-            }
-            setWhatsAppMessage(`Hello, here is the ${title}:\nhttps://filebin.net/${binId}/${safeFileName}`);
+            const publicUrl = await uploadPdfForShare(pdfBlob, safeFileName);
+            setWhatsAppMessage(`Hello, here is the ${title}:\n${publicUrl}`);
             setShowWhatsAppModal(true);
         } catch (err) {
             setWhatsAppError(err?.message || 'Failed to upload PDF for sharing');

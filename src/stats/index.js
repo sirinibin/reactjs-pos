@@ -1254,7 +1254,7 @@ const StatsIndex = forwardRef((props, ref) => {
                                                 { label: "VAT Rate", value: `${vatPercent}%` },
                                                 { divider: true, label: "= VAT Amount", value: `SAR ${trimTo2Decimals(profitLossVatNum)}`, bold: true },
                                             ]},
-                                            { label: "Profit / Loss (without VAT)", value: profitLossWithoutVATNum, colorByValue: true, info: [
+                                            { label: "Profit / Loss (without VAT)", value: profitLossWithoutVATNum, colorByValue: true, bold: true, info: [
                                                 { label: "What it is", value: profitLossWithoutVATNum >= 0 ? "Net earnings after removing the VAT component" : "Net deficit after removing the VAT component", bold: true, color: profitLossWithoutVATNum >= 0 ? "#69db7c" : "#ffa8a8" },
                                                 { divider: true, label: "P/L (with VAT)", value: `${trimTo2Decimals(profitLossNum)}` },
                                                 { label: `VAT ${vatPercent}%`, value: `− ${trimTo2Decimals(profitLossVatNum)}` },
