@@ -2399,7 +2399,7 @@ function CustomerIndex(props) {
                                                                 multiple
 
                                                                 renderMenu={(results, menuProps, state) => (
-                                                                    <Menu {...menuProps}>
+                                                                    <Menu {...menuProps} style={{ ...menuProps.style, minWidth: '600px' }}>
                                                                         {results.map((option, idx) => (
                                                                             <MenuItem option={option} position={idx} key={option.id}>
                                                                                 <div>

@@ -2,7 +2,8 @@ import React, { useState, useEffect, useRef, useMemo, useCallback } from "react"
 import VendorCreate from "./create.js";
 import VendorView from "./view.js";
 import { DragDropContext, Droppable, Draggable } from "react-beautiful-dnd";
-import { Typeahead } from "react-bootstrap-typeahead";
+import { Typeahead, Menu, MenuItem } from "react-bootstrap-typeahead";
+import { highlightWords } from "../utils/search.js";
 import { format } from "date-fns";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
@@ -1491,6 +1492,32 @@ function VendorIndex(props) {
                                                                     }, 100);
                                                                 }}
                                                                 multiple
+                                                                renderMenu={(results, menuProps, state) => (
+                                                                    <Menu {...menuProps} style={{ ...menuProps.style, minWidth: '600px' }}>
+                                                                        {results.map((option, idx) => (
+                                                                            <MenuItem option={option} position={idx} key={option.id}>
+                                                                                <div>
+                                                                                    {highlightWords(option.search_label, state.text)}
+                                                                                    {option.name_in_arabic && (
+                                                                                        <span style={{ color: "#888", marginLeft: 8 }}>
+                                                                                            {highlightWords(option.name_in_arabic, state.text)}
+                                                                                        </span>
+                                                                                    )}
+                                                                                    {option.phone && (
+                                                                                        <span style={{ color: "#888", marginLeft: 8 }}>
+                                                                                            {highlightWords(option.phone, state.text)}
+                                                                                        </span>
+                                                                                    )}
+                                                                                    {option.vat_no && (
+                                                                                        <span style={{ color: "#888", marginLeft: 8 }}>
+                                                                                            {highlightWords(option.vat_no, state.text)}
+                                                                                        </span>
+                                                                                    )}
+                                                                                </div>
+                                                                            </MenuItem>
+                                                                        ))}
+                                                                    </Menu>
+                                                                )}
                                                             />
                                                         </th>}
                                                         {(col.key === "code" ||
@@ -1679,6 +1706,32 @@ function VendorIndex(props) {
                                                             }, 100);
                                                         }}
                                                         multiple
+                                                        renderMenu={(results, menuProps, state) => (
+                                                            <Menu {...menuProps} style={{ ...menuProps.style, minWidth: '600px' }}>
+                                                                {results.map((option, idx) => (
+                                                                    <MenuItem option={option} position={idx} key={option.id}>
+                                                                        <div>
+                                                                            {highlightWords(option.search_label, state.text)}
+                                                                            {option.name_in_arabic && (
+                                                                                <span style={{ color: "#888", marginLeft: 8 }}>
+                                                                                    {highlightWords(option.name_in_arabic, state.text)}
+                                                                                </span>
+                                                                            )}
+                                                                            {option.phone && (
+                                                                                <span style={{ color: "#888", marginLeft: 8 }}>
+                                                                                    {highlightWords(option.phone, state.text)}
+                                                                                </span>
+                                                                            )}
+                                                                            {option.vat_no && (
+                                                                                <span style={{ color: "#888", marginLeft: 8 }}>
+                                                                                    {highlightWords(option.vat_no, state.text)}
+                                                                                </span>
+                                                                            )}
+                                                                        </div>
+                                                                    </MenuItem>
+                                                                ))}
+                                                            </Menu>
+                                                        )}
                                                     />
                                                 </th>
                                                 <th>
