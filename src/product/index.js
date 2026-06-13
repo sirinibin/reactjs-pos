@@ -3583,6 +3583,7 @@ function ProductIndex(props) {
                                                                 id="product_search_by_part_no"
                                                                 filterBy={() => true}
                                                                 positionFixed={true}
+                                                                popperOptions={{ modifiers: [{ name: 'preventOverflow', enabled: false }] }}
                                                                 size="lg"
                                                                 ref={productSearchByPartNoRef}
                                                                 labelKey="search_label"
@@ -3626,31 +3627,22 @@ function ProductIndex(props) {
                                                                 id="product_search_by_name"
                                                                 ref={productSearchByNameRef}
                                                                 filterBy={() => true}
-                                                                positionFixed={true}
-                                                                size="lg"
+                                                                style={{ minWidth: "300px" }}
                                                                 labelKey="search_label"
                                                                 emptyLabel="No products found"
                                                                 clearButton={true}
-                                                                open={openProductSearchResultByName}
-                                                                isLoading={false}
                                                                 onKeyDown={(e) => {
                                                                     if (e.key === "Escape") {
                                                                         setProductOptionsByName([]);
-                                                                        setOpenProductSearchResultByName(false);
                                                                         productSearchByNameRef.current?.clear();
                                                                     }
                                                                 }}
                                                                 onChange={(selectedItems) => {
-
                                                                     searchByMultipleValuesField(
                                                                         "product_id",
                                                                         selectedItems,
                                                                         "name"
                                                                     );
-
-                                                                    // addProduct(selectedItems[0]);
-
-                                                                    setOpenProductSearchResultByName(false);
                                                                 }}
                                                                 options={productOptionsByName}
                                                                 selected={selectedProductsByName}
@@ -3663,8 +3655,23 @@ function ProductIndex(props) {
                                                                     }, 400);
                                                                 }}
                                                                 ignoreDiacritics={true}
-
                                                                 multiple
+                                                                renderMenu={(results, menuProps, state) => (
+                                                                    <Menu {...menuProps} style={{ ...menuProps.style, minWidth: '600px' }}>
+                                                                        {results.map((option, idx) => (
+                                                                            <MenuItem option={option} position={idx} key={option.id}>
+                                                                                <div>
+                                                                                    {highlightWords(option.search_label, state.text)}
+                                                                                    {option.name_in_arabic && (
+                                                                                        <span style={{ color: "#888", marginLeft: 8 }}>
+                                                                                            {highlightWords(option.name_in_arabic, state.text)}
+                                                                                        </span>
+                                                                                    )}
+                                                                                </div>
+                                                                            </MenuItem>
+                                                                        ))}
+                                                                    </Menu>
+                                                                )}
                                                             />
                                                         </th>}
                                                         {(col.key === "barcode") && <th>
@@ -4009,6 +4016,7 @@ function ProductIndex(props) {
                                                         id="product_search_by_part_no"
                                                         filterBy={() => true}
                                                         positionFixed={true}
+                                                        popperOptions={{ modifiers: [{ name: 'preventOverflow', enabled: false }] }}
                                                         size="lg"
                                                         ref={productSearchByPartNoRef}
                                                         labelKey="search_label"
@@ -4054,31 +4062,22 @@ function ProductIndex(props) {
                                                         id="product_search_by_name"
                                                         ref={productSearchByNameRef}
                                                         filterBy={() => true}
-                                                        positionFixed={true}
-                                                        size="lg"
+                                                        style={{ minWidth: "300px" }}
                                                         labelKey="search_label"
                                                         emptyLabel="No products found"
                                                         clearButton={true}
-                                                        open={openProductSearchResultByName}
-                                                        isLoading={false}
                                                         onKeyDown={(e) => {
                                                             if (e.key === "Escape") {
                                                                 setProductOptionsByName([]);
-                                                                setOpenProductSearchResultByName(false);
                                                                 productSearchByNameRef.current?.clear();
                                                             }
                                                         }}
                                                         onChange={(selectedItems) => {
-
                                                             searchByMultipleValuesField(
                                                                 "product_id",
                                                                 selectedItems,
                                                                 "name"
                                                             );
-
-                                                            // addProduct(selectedItems[0]);
-
-                                                            setOpenProductSearchResultByName(false);
                                                         }}
                                                         options={productOptionsByName}
                                                         selected={selectedProductsByName}
@@ -4091,8 +4090,23 @@ function ProductIndex(props) {
                                                             }, 100);
                                                         }}
                                                         ignoreDiacritics={true}
-
                                                         multiple
+                                                        renderMenu={(results, menuProps, state) => (
+                                                            <Menu {...menuProps} style={{ ...menuProps.style, minWidth: '600px' }}>
+                                                                {results.map((option, idx) => (
+                                                                    <MenuItem option={option} position={idx} key={option.id}>
+                                                                        <div>
+                                                                            {highlightWords(option.search_label, state.text)}
+                                                                            {option.name_in_arabic && (
+                                                                                <span style={{ color: "#888", marginLeft: 8 }}>
+                                                                                    {highlightWords(option.name_in_arabic, state.text)}
+                                                                                </span>
+                                                                            )}
+                                                                        </div>
+                                                                    </MenuItem>
+                                                                ))}
+                                                            </Menu>
+                                                        )}
                                                     />
                                                 </th>
                                                 <th>
