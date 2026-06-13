@@ -23,6 +23,8 @@ import SalesReturns from "../utils/salesReturn.js";
 
 function CustomerIndex(props) {
 
+    let [enableSelection, setEnableSelection] = useState(false);
+
     //list
     const [customerList, setCustomerList] = useState([]);
 
@@ -51,6 +53,11 @@ function CustomerIndex(props) {
 
 
     useEffect(() => {
+        if (props.enableSelection) {
+            setEnableSelection(true);
+        } else {
+            setEnableSelection(false);
+        }
         list();
         getStore(localStorage.getItem("store_id"));
         // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -811,7 +818,14 @@ function CustomerIndex(props) {
 
 
     //Table settings
+    const handleSelected = (customer) => {
+        if (props.onSelectCustomer) {
+            props.onSelectCustomer(customer);
+        }
+    };
+
     const defaultColumns = useMemo(() => [
+        { key: "select", label: "Select", fieldName: "select", visible: true },
         { key: "deleted", label: "Deleted", fieldName: "deleted", visible: true },
         { key: "actions", label: "Actions", fieldName: "actions", visible: true },
         { key: "code", label: "ID", fieldName: "code", visible: true },
@@ -1503,9 +1517,10 @@ function CustomerIndex(props) {
                                             <tr className="text-center">
                                                 {columns.filter(c => c.visible).map((col) => {
                                                     return (<>
+                                                        {col.key === "select" && enableSelection && <th key={col.key}>{col.label}</th>}
                                                         {col.key === "deleted" && <th key={col.key}>{col.label}</th>}
                                                         {col.key === "actions" && <th key={col.key}>{col.label}</th>}
-                                                        {col.key !== "actions" && col.key !== "deleted" && <th>
+                                                        {col.key !== "actions" && col.key !== "deleted" && col.key !== "select" && <th>
                                                             <b
                                                                 style={{
                                                                     textDecoration: "underline",
@@ -2349,6 +2364,7 @@ function CustomerIndex(props) {
                                                                 <option value="1">YES</option>
                                                             </select>
                                                         </th>}
+                                                        {col.key === "select" && enableSelection && <th></th>}
                                                         {(col.key === "actions" || col.key === "actions_end") && <th></th>}
                                                         {(col.key === "name") && <th>
                                                             <Typeahead
@@ -3101,6 +3117,11 @@ function CustomerIndex(props) {
                                                     <tr key={customer.id}>
                                                         {columns.filter(c => c.visible).map((col) => {
                                                             return (<>
+                                                                {(col.key === "select" && enableSelection) && <td style={{ width: "auto", whiteSpace: "nowrap" }}>
+                                                                    <Button className="btn btn-success btn-sm" onClick={() => { handleSelected(customer); }}>
+                                                                        Select
+                                                                    </Button>
+                                                                </td>}
                                                                 {(col.key === "deleted") && <td>{customer.deleted ? "YES" : "NO"}</td>}
                                                                 {(col.key === "actions" || col.key === "actions_end") && <td style={{ width: "auto", whiteSpace: "nowrap" }} >
                                                                     {!customer.deleted && <><Button className="btn btn-danger btn-sm" onClick={() => {
