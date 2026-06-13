@@ -1,14 +1,15 @@
 // ...existing code...
 import React, { useEffect, useState, useCallback, useMemo, useRef } from "react";
 import Amount from "./amount.js";
-import { trimTo2Decimals } from "./numberUtils";
-import { Modal, Button, OverlayTrigger, Tooltip } from "react-bootstrap";
+import { trimTo2Decimals, addCommasToInfoValue, stripSarBreakdown } from "./numberUtils";
+import { Modal, Button, OverlayTrigger, Popover } from "react-bootstrap";
 import { DragDropContext, Droppable, Draggable } from "react-beautiful-dnd";
 import { useTranslation } from 'react-i18next';
-import html2pdf from 'html2pdf.js';
 import WhatsAppModal from './WhatsAppModal';
+import { generateInfoPdf, generateSectionPdf, safeName } from './pdfGenerator';
 
-const StatsSummary = ({ title, stats = {}, statsWithInfo = {}, defaultOpen = false, onToggle, filters = {}, statsDefaultVisibility = {}, storageKey }) => {
+
+const StatsSummary = ({ title, stats = {}, statsWithInfo = {}, defaultOpen = false, onToggle, filters = {}, statsDefaultVisibility = {}, storageKey, store = {} }) => {
     const { t } = useTranslation();
 
     const [isOpen, setIsOpen] = useState(defaultOpen);
@@ -22,8 +23,50 @@ const StatsSummary = ({ title, stats = {}, statsWithInfo = {}, defaultOpen = fal
     const [whatsAppError, setWhatsAppError] = useState("");
     const [isDownloading, setIsDownloading] = useState(false);
 
+    // Per-tooltip popover state
+    const [openInfoLabel, setOpenInfoLabel] = useState(null);
+    const autoCloseTimerRef = useRef(null);
+    const [downloadingLabel, setDownloadingLabel] = useState(null);
+    const [sharingWALabel, setSharingWALabel] = useState(null);
+    const [tooltipErrorLabel, setTooltipErrorLabel] = useState(null);
+    const [tooltipErrorMsg, setTooltipErrorMsg] = useState("");
+    const [showTooltipWAModal, setShowTooltipWAModal] = useState(false);
+    const [tooltipWAMessage, setTooltipWAMessage] = useState("");
+
     const LOCAL_KEY = useMemo(() => storageKey ? `${storageKey}_stats_summary` : `${title}_stats_summary`, [storageKey, title]);
     const printAreaRef = useRef(null);
+
+    // Auto-close tooltip after 5 s when mouse leaves
+    const clearAutoClose = useCallback(() => {
+        if (autoCloseTimerRef.current) {
+            clearTimeout(autoCloseTimerRef.current);
+            autoCloseTimerRef.current = null;
+        }
+    }, []);
+
+    const startAutoClose = useCallback(() => {
+        clearAutoClose();
+        autoCloseTimerRef.current = setTimeout(() => setOpenInfoLabel(null), 5000);
+    }, [clearAutoClose]);
+
+    useEffect(() => {
+        if (openInfoLabel) startAutoClose();
+        else clearAutoClose();
+        return clearAutoClose;
+    }, [openInfoLabel, startAutoClose, clearAutoClose]);
+
+    // Click outside any popover → close
+    useEffect(() => {
+        const handleDocClick = (e) => {
+            if (!e.target.closest('.popover') &&
+                !e.target.closest('.stats-info-icon') &&
+                !e.target.closest('.modal')) {
+                setOpenInfoLabel(null);
+            }
+        };
+        document.addEventListener('mousedown', handleDocClick);
+        return () => document.removeEventListener('mousedown', handleDocClick);
+    }, []);
 
     const splitStats = useCallback((statsArr) => {
         const mid = Math.ceil(statsArr.length / 2);
@@ -124,29 +167,227 @@ const StatsSummary = ({ title, stats = {}, statsWithInfo = {}, defaultOpen = fal
         if (onToggle) onToggle(!isOpen);
     };
 
-    const renderInfoTooltip = (info) => (props) => {
-        const lines = Array.isArray(info) ? info : null;
-        return (
-            <Tooltip id="label-tooltip" {...props} className="stats-wide-tooltip">
-                {lines ? (
-                    <div style={{ textAlign: 'left', fontSize: '0.73rem', lineHeight: '1.75' }}>
-                        {lines.map((line, i) => (
-                            <div key={i} style={line.divider ? { borderTop: '1px solid rgba(255,255,255,0.2)', marginTop: '5px', paddingTop: '5px' } : {}}>
-                                {line.label && <span style={{ color: '#adb5bd' }}>{line.label}: </span>}
-                                <span style={{ fontWeight: line.bold ? 600 : 400, color: line.color || '#f8f9fa' }}>
-                                    {line.value}
-                                </span>
-                            </div>
-                        ))}
-                    </div>
-                ) : (
-                    <span style={{ whiteSpace: 'pre-line' }}>{info}</span>
-                )}
-            </Tooltip>
-        );
-    };
+    const handleTooltipDownload = useCallback(async (field) => {
+        if (!field) return;
+        setDownloadingLabel(field.label);
+        setTooltipErrorLabel(null);
+        setTooltipErrorMsg("");
+        try {
+            const doc = generateInfoPdf(title, field.label, field.info, filters, store);
+            const safeTitle = safeName(`${title} - ${field.label}`);
+            doc.save(`${safeTitle}.pdf`);
+        } catch (err) {
+            setTooltipErrorLabel(field.label);
+            setTooltipErrorMsg(err?.message || 'Failed to generate PDF');
+        } finally {
+            setDownloadingLabel(null);
+        }
+    }, [title, filters]);
 
-    const renderStats = (fields) => {
+    const handleTooltipWhatsAppShare = useCallback(async (field) => {
+        if (!field) return;
+        setSharingWALabel(field.label);
+        setTooltipErrorLabel(null);
+        setTooltipErrorMsg("");
+        try {
+            const doc = generateInfoPdf(title, field.label, field.info, filters, store);
+            const pdfBlob = doc.output('blob');
+            const binId = `startpos-${Date.now()}`;
+            const safeFileName = `${safeName(`${title}_${field.label}`)}.pdf`;
+            const fbResponse = await fetch(`https://filebin.net/${binId}/${safeFileName}`, {
+                method: 'POST',
+                body: pdfBlob,
+            });
+            if (!fbResponse.ok && fbResponse.status !== 201) {
+                throw new Error(`filebin.net upload failed: HTTP ${fbResponse.status}`);
+            }
+            setTooltipWAMessage(`Hello, here is the ${title} — ${field.label}:\nhttps://filebin.net/${binId}/${safeFileName}`);
+            setShowTooltipWAModal(true);
+        } catch (err) {
+            setTooltipErrorLabel(field.label);
+            setTooltipErrorMsg(err?.message || 'Failed to upload PDF for sharing');
+        } finally {
+            setSharingWALabel(null);
+        }
+    }, [title, filters]);
+
+    const renderInfoPopover = useCallback((fieldLabel, info) => {
+        const lines = Array.isArray(info) ? info : null;
+        const field = { label: fieldLabel, info };
+        const isDown = downloadingLabel === fieldLabel;
+        const isSharingWA = sharingWALabel === fieldLabel;
+        const hasError = tooltipErrorLabel === fieldLabel;
+
+        // Separate the first "description" line (What it is) from calculation lines
+        const descLine = lines && lines[0] && !lines[0].divider && lines[0].bold ? lines[0] : null;
+        const detailLines = descLine ? lines.slice(1) : (lines || []);
+
+        // Dashboard-matching dark theme colours
+        const BG      = '#212529';
+        const BORDER  = '#495057';
+        const DIVIDER = '#495057';
+
+        return (
+            <Popover
+                id={`popover-${fieldLabel}`}
+                style={{
+                    maxWidth: '400px',
+                    minWidth: '260px',
+                    background: BG,
+                    border: `1px solid ${BORDER}`,
+                    boxShadow: '0 4px 14px rgba(0,0,0,.45)',
+                    borderRadius: '6px',
+                    color: '#f8f9fa'
+                }}
+            >
+                <Popover.Header style={{
+                    background: BG,
+                    borderBottom: `1px solid ${BORDER}`,
+                    color: '#f8f9fa',
+                    fontSize: '0.8rem',
+                    fontWeight: 700,
+                    padding: '7px 10px 7px 14px',
+                    borderRadius: '6px 6px 0 0',
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'center'
+                }}>
+                    <span>{title} — {fieldLabel}</span>
+                    <button
+                        type="button"
+                        onClick={(e) => { e.stopPropagation(); setOpenInfoLabel(null); }}
+                        style={{ background: 'none', border: 'none', color: '#adb5bd', cursor: 'pointer', fontSize: '1.1rem', lineHeight: 1, padding: '0 0 0 10px' }}
+                        title="Close"
+                    >×</button>
+                </Popover.Header>
+                <Popover.Body
+                    style={{ padding: '0', background: BG, borderRadius: '0 0 6px 6px' }}
+                    onClick={e => e.stopPropagation()}
+                    onMouseEnter={clearAutoClose}
+                    onMouseLeave={startAutoClose}
+                >
+                    {/* Active date filters */}
+                    {Object.entries(filters).filter(([, v]) => v !== undefined && v !== null && v !== '').length > 0 && (
+                        <div style={{
+                            padding: '5px 14px',
+                            borderBottom: `1px solid ${BORDER}`,
+                            fontSize: '0.72rem',
+                            color: '#adb5bd',
+                            lineHeight: 1.7
+                        }}>
+                            {Object.entries(filters)
+                                .filter(([, v]) => v !== undefined && v !== null && v !== '')
+                                .map(([k, v]) => (
+                                    <span key={k} style={{ marginRight: '12px' }}>
+                                        {k}: <span style={{ color: '#f8f9fa', fontWeight: 500 }}>{v}</span>
+                                    </span>
+                                ))}
+                        </div>
+                    )}
+                    {/* "What it is" description block */}
+                    {descLine && (
+                        <div style={{
+                            padding: '8px 14px',
+                            fontSize: '0.78rem',
+                            fontWeight: 600,
+                            color: descLine.color || '#f8f9fa',
+                            borderBottom: `1px solid ${DIVIDER}`,
+                            lineHeight: 1.5
+                        }}>
+                            {addCommasToInfoValue(descLine.value)}
+                        </div>
+                    )}
+
+                    {/* Calculation breakdown — table for perfect column alignment */}
+                    {detailLines.length > 0 && (
+                        <table style={{
+                            width: '100%',
+                            borderCollapse: 'collapse',
+                            fontSize: '0.75rem'
+                        }}>
+                            <tbody>
+                                {detailLines.map((line, i) => (
+                                    <tr key={i} style={{
+                                        lineHeight: 1.7,
+                                        borderTop: line.divider ? `1px solid ${DIVIDER}` : 'none'
+                                    }}>
+                                        <td style={{
+                                            padding: line.divider ? '6px 8px 2px 14px' : '1px 8px 1px 14px',
+                                            color: '#adb5bd',
+                                            whiteSpace: 'nowrap',
+                                            verticalAlign: 'top',
+                                            width: '1%'
+                                        }}>
+                                            {line.label || ''}
+                                        </td>
+                                        <td style={{
+                                            padding: line.divider ? '6px 14px 2px 4px' : '1px 14px 1px 4px',
+                                            textAlign: 'right',
+                                            fontWeight: line.bold ? 700 : 400,
+                                            color: line.color || '#f8f9fa',
+                                            whiteSpace: 'nowrap',
+                                            fontVariantNumeric: 'tabular-nums'
+                                        }}>
+                                            {stripSarBreakdown(addCommasToInfoValue(line.value), line.bold)}
+                                        </td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    )}
+
+                    {!lines && (
+                        <div style={{ padding: '8px 14px', fontSize: '0.75rem', whiteSpace: 'pre-line', color: '#f8f9fa' }}>
+                            {info}
+                        </div>
+                    )}
+
+                    {hasError && (
+                        <div style={{ padding: '4px 14px', color: '#f8a5a5', fontSize: '0.72rem' }}>{tooltipErrorMsg}</div>
+                    )}
+
+                    {/* Action bar */}
+                    <div style={{
+                        display: 'flex',
+                        gap: '6px',
+                        padding: '7px 14px',
+                        borderTop: `1px solid ${DIVIDER}`,
+                        justifyContent: 'flex-end',
+                        background: BG,
+                        borderRadius: '0 0 6px 6px'
+                    }}>
+                        <Button
+                            variant="outline-light"
+                            size="sm"
+                            style={{ fontSize: '0.7rem', padding: '2px 10px' }}
+                            onClick={() => handleTooltipDownload(field)}
+                            disabled={isDown}
+                            title="Download PDF"
+                        >
+                            {isDown
+                                ? <span className="spinner-border spinner-border-sm" style={{ width: '0.7rem', height: '0.7rem' }}></span>
+                                : <><i className="bi bi-file-earmark-arrow-down me-1"></i>PDF</>}
+                        </Button>
+                        <Button
+                            variant="outline-success"
+                            size="sm"
+                            style={{ fontSize: '0.7rem', padding: '2px 10px' }}
+                            onClick={() => handleTooltipWhatsAppShare(field)}
+                            disabled={isSharingWA}
+                            title="Share via WhatsApp"
+                        >
+                            {isSharingWA
+                                ? <span className="spinner-border spinner-border-sm" style={{ width: '0.7rem', height: '0.7rem' }}></span>
+                                : <><i className="bi bi-whatsapp me-1"></i>Share</>}
+                        </Button>
+                    </div>
+                </Popover.Body>
+            </Popover>
+        );
+    }, [title, filters, downloadingLabel, sharingWALabel, tooltipErrorLabel, tooltipErrorMsg,
+        handleTooltipDownload, handleTooltipWhatsAppShare, setOpenInfoLabel, clearAutoClose, startAutoClose]);
+
+    const renderStats = (fields, placement = 'right') => {
         const normalized = normalizeStatsWithInfo();
         const infoByLabel = normalized ? Object.fromEntries(normalized.map(n => [n.label, n.info])) : {};
         const colorByValueLabels = normalized ? new Set(normalized.filter(n => n.colorByValue).map(n => n.label)) : new Set();
@@ -162,8 +403,20 @@ const StatsSummary = ({ title, stats = {}, statsWithInfo = {}, defaultOpen = fal
                         <span>
                             {t(f.label)}
                             {info ? (
-                                <OverlayTrigger placement="right" overlay={renderInfoTooltip(info)}>
-                                    <span className="stats-info-icon" style={{ textDecoration: 'underline dotted', cursor: 'pointer', marginLeft: '6px' }}>ℹ️</span>
+                                <OverlayTrigger
+                                    show={openInfoLabel === f.label}
+                                    placement={placement}
+                                    overlay={renderInfoPopover(f.label, info)}
+                                >
+                                    <span
+                                        className="stats-info-icon"
+                                        style={{ textDecoration: 'underline dotted', cursor: 'pointer', marginLeft: '6px' }}
+                                        title="Click for details"
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            setOpenInfoLabel(prev => prev === f.label ? null : f.label);
+                                        }}
+                                    >ℹ️</span>
                                 </OverlayTrigger>
                             ) : null}
                             :
@@ -208,104 +461,35 @@ const StatsSummary = ({ title, stats = {}, statsWithInfo = {}, defaultOpen = fal
         }
     };
 
+    const buildSectionDoc = useCallback(() => {
+        const normalized = normalizeStatsWithInfo();
+        const infoMap = normalized
+            ? Object.fromEntries(normalized.filter(n => n.info).map(n => [n.label, n.info]))
+            : {};
+        const colorByValueSet = normalized
+            ? new Set(normalized.filter(n => n.colorByValue).map(n => n.label))
+            : new Set();
+        const allVisible = [...leftFields, ...rightFields]
+            .filter(f => f.visible)
+            .map(f => ({
+                label: f.label,
+                value: typeof stats[f.label] !== 'undefined' ? stats[f.label] : (f.value ?? 0),
+                colorByValue: colorByValueSet.has(f.label),
+            }));
+        return generateSectionPdf(title, allVisible, infoMap, filters, store);
+    }, [normalizeStatsWithInfo, leftFields, rightFields, stats, title, filters, store]);
+
     const handlePrint = () => {
-        const styleId = 'stats-summary-print-style';
-        let style = document.getElementById(styleId);
-        if (!style) {
-            style = document.createElement('style');
-            style.id = styleId;
-            document.head.appendChild(style);
-        }
-        style.innerHTML = `
-            @media print {
-                @page { size: A4; margin: 0; }
-                body { background: white !important; }
-                body > *:not(#stats-summary-print-wrapper) { display: none !important; }
-                #stats-summary-print-wrapper {
-                    display: block !important;
-                    margin: 0 !important;
-                    padding: 25px 25px 15mm 25px !important;
-                    background: white !important;
-                    min-height: 100vh !important;
-                }
-                #stats-summary-print-area {
-                    border: 1px solid #999 !important;
-                    border-radius: 4px !important;
-                    background: white !important;
-                    padding: 12px !important;
-                    margin: 0 !important;
-                }
-                .stats-print-header { display: block !important; }
-                .stats-info-icon { display: none !important; }
-            }
-        `;
-
-        // Move print area to body to guarantee it starts at the very top
-        const printArea = printAreaRef.current;
-        const originalParent = printArea.parentNode;
-        const originalNextSibling = printArea.nextSibling;
-
-        const wrapper = document.createElement('div');
-        wrapper.id = 'stats-summary-print-wrapper';
-        document.body.appendChild(wrapper);
-        wrapper.appendChild(printArea);
-
-        const cleanup = () => {
-            // Restore original position
-            if (originalNextSibling) {
-                originalParent.insertBefore(printArea, originalNextSibling);
-            } else {
-                originalParent.appendChild(printArea);
-            }
-            wrapper.remove();
-            style.innerHTML = '';
-            window.removeEventListener('afterprint', cleanup);
-        };
-        window.addEventListener('afterprint', cleanup);
-        window.print();
+        const doc = buildSectionDoc();
+        doc.autoPrint();
+        doc.output('dataurlnewwindow');
     };
 
     const handleDownload = async () => {
         setIsDownloading(true);
         try {
-            const printArea = printAreaRef.current;
-            const header = printArea?.querySelector('.stats-print-header');
-            const originalDisplay = header ? header.style.display : '';
-            const originalBg = printArea ? printArea.style.backgroundColor : '';
-            const originalBodyBg = document.body.style.backgroundColor;
-            if (header) header.style.display = 'block';
-            if (printArea) printArea.style.backgroundColor = '#ffffff';
-            document.body.style.backgroundColor = '#ffffff';
-
-            // Hide info icons for PDF (UI-only)
-            const infoIcons = printArea?.querySelectorAll('.stats-info-icon') || [];
-            infoIcons.forEach(el => { el._origDisplay = el.style.display; el.style.display = 'none'; });
-
-            const safeFileName = `${title.replace(/[^a-zA-Z0-9._-]/g, '_')}.pdf`;
-            const pdfBlob = await html2pdf()
-                .set({
-                    margin: [10, 10, 10, 10],
-                    filename: safeFileName,
-                    image: { type: 'jpeg', quality: 0.98 },
-                    html2canvas: { scale: 2, useCORS: true, backgroundColor: '#ffffff' },
-                    jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
-                })
-                .from(printArea)
-                .outputPdf('blob');
-
-            if (header) header.style.display = originalDisplay;
-            if (printArea) printArea.style.backgroundColor = originalBg;
-            document.body.style.backgroundColor = originalBodyBg;
-            infoIcons.forEach(el => { el.style.display = el._origDisplay; });
-
-            const url = URL.createObjectURL(pdfBlob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = safeFileName;
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
-            URL.revokeObjectURL(url);
+            const doc = buildSectionDoc();
+            doc.save(`${safeName(title)}.pdf`);
         } catch (err) {
             setWhatsAppError(err?.message || 'Failed to generate PDF');
         } finally {
@@ -313,57 +497,22 @@ const StatsSummary = ({ title, stats = {}, statsWithInfo = {}, defaultOpen = fal
         }
     };
 
-    // Step 1: Upload PDF to filebin.net, then open the WhatsApp modal with the message pre-filled
     const handleWhatsAppShare = async () => {
         setIsSharingWhatsApp(true);
         setWhatsAppError("");
         try {
-            // Temporarily show the print header and force white background for PDF generation
-            const printArea = printAreaRef.current;
-            const header = printArea?.querySelector('.stats-print-header');
-            const originalDisplay = header ? header.style.display : '';
-            const originalBg = printArea ? printArea.style.backgroundColor : '';
-            const originalBodyBg = document.body.style.backgroundColor;
-            if (header) header.style.display = 'block';
-            if (printArea) printArea.style.backgroundColor = '#ffffff';
-            document.body.style.backgroundColor = '#ffffff';
-
-            // Hide info icons for PDF (UI-only)
-            const infoIconsWA = printArea?.querySelectorAll('.stats-info-icon') || [];
-            infoIconsWA.forEach(el => { el._origDisplay = el.style.display; el.style.display = 'none'; });
-
-            const pdfBlob = await html2pdf()
-                .set({
-                    margin: [10, 10, 10, 10],
-                    filename: `${title}.pdf`,
-                    image: { type: 'jpeg', quality: 0.98 },
-                    html2canvas: { scale: 2, useCORS: true, backgroundColor: '#ffffff' },
-                    jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
-                })
-                .from(printArea)
-                .outputPdf('blob');
-
-            // Restore original styles
-            if (header) header.style.display = originalDisplay;
-            if (printArea) printArea.style.backgroundColor = originalBg;
-            document.body.style.backgroundColor = originalBodyBg;
-            infoIconsWA.forEach(el => { el.style.display = el._origDisplay; });
-
-            // Upload to filebin.net
+            const doc = buildSectionDoc();
+            const pdfBlob = doc.output('blob');
             const binId = `startpos-${Date.now()}`;
-            const safeFileName = `${title.replace(/[^a-zA-Z0-9._-]/g, '_')}.pdf`;
-            const rawBlob = new Blob([await pdfBlob.arrayBuffer()]);
+            const safeFileName = `${safeName(title)}.pdf`;
             const fbResponse = await fetch(`https://filebin.net/${binId}/${safeFileName}`, {
                 method: 'POST',
-                body: rawBlob,
+                body: pdfBlob,
             });
-
             if (!fbResponse.ok && fbResponse.status !== 201) {
                 throw new Error(`filebin.net upload failed: HTTP ${fbResponse.status}`);
             }
-
-            const publicUrl = `https://filebin.net/${binId}/${safeFileName}`;
-            setWhatsAppMessage(`Hello, here is the ${title}:\n${publicUrl}`);
+            setWhatsAppMessage(`Hello, here is the ${title}:\nhttps://filebin.net/${binId}/${safeFileName}`);
             setShowWhatsAppModal(true);
         } catch (err) {
             setWhatsAppError(err?.message || 'Failed to upload PDF for sharing');
@@ -557,8 +706,8 @@ const StatsSummary = ({ title, stats = {}, statsWithInfo = {}, defaultOpen = fal
                             <hr style={{ borderTop: '2px solid #333', marginBottom: '14px' }} />
                         </div>
                         <div className="row">
-                            <div className="col-md-6">{renderStats(leftFields)}</div>
-                            <div className="col-md-6">{renderStats(rightFields)}</div>
+                            <div className="col-md-6">{renderStats(leftFields, 'right')}</div>
+                            <div className="col-md-6">{renderStats(rightFields, 'left')}</div>
                         </div>
                     </div>
                 </>
@@ -576,6 +725,14 @@ const StatsSummary = ({ title, stats = {}, statsWithInfo = {}, defaultOpen = fal
             {whatsAppError && (
                 <div className="alert alert-danger py-2 mt-2">{whatsAppError}</div>
             )}
+
+            <WhatsAppModal
+                show={showTooltipWAModal}
+                onClose={() => setShowTooltipWAModal(false)}
+                onChoice={handleWhatsAppChoice}
+                defaultMessage={tooltipWAMessage}
+                hideMessage={true}
+            />
         </div>
     );
 };

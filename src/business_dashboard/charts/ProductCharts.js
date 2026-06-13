@@ -40,8 +40,8 @@ export function TopProductsChart({ productSummaries, store }) {
             const lines = [
                 { label: "Revenue",      value: `SAR ${fmtT(r.total_revenue)}`, bold: true, color: "#74c0fc" },
                 { divider: true, label: "Formula", value: "Σ (unit_price × quantity)" },
-                { label: "Sales Orders", value: `SAR ${fmtT(r.sales_revenue)}` },
-                ...(qtnInvoiceAccounting ? [{ label: "Qtn. Invoice Orders", value: `SAR ${fmtT(r.qtn_revenue || 0)}` }] : []),
+                { label: "Sales Orders", value: `${fmtT(r.sales_revenue)}` },
+                ...(qtnInvoiceAccounting ? [{ label: "Qtn. Invoice Orders", value: `${fmtT(r.qtn_revenue || 0)}` }] : []),
             ];
             return [r.product_name, parseFloat((r.total_revenue || 0).toFixed(2)), tooltipHtml(r.product_name, "#74c0fc", lines)];
         });
@@ -82,7 +82,7 @@ export function CategoryRevenuePieChart({ categorySummaries }) {
                 { label: "Revenue", value: `SAR ${fmtT(c.sales)}`, bold: true, color: "#74c0fc" },
                 { label: "Share",   value: `${pct}% of category revenue` },
                 { divider: true, label: "Formula", value: "product_stores.sales (server-aggregated)" },
-                { label: "Profit",  value: `SAR ${fmtT(c.profit)}` },
+                { label: "Profit",  value: `${fmtT(c.profit)}` },
                 { label: "Margin",  value: c.sales > 0 ? `${((c.profit / c.sales) * 100).toFixed(1)}%` : "—" },
             ];
             return [c.category_name, parseFloat(c.sales.toFixed(2)), tooltipHtml(c.category_name, "#74c0fc", lines)];
@@ -123,8 +123,8 @@ export function CategoryMarginChart({ categorySummaries }) {
             const lines = [
                 { label: "Margin",  value: `${c.margin}%`, bold: true, color: "#1cc88a" },
                 { divider: true, label: "Formula", value: "(sales_profit ÷ sales) × 100" },
-                { label: "Revenue", value: `SAR ${fmtT(c.sales)}` },
-                { label: "Profit",  value: `SAR ${fmtT(c.profit)}` },
+                { label: "Revenue", value: `${fmtT(c.sales)}` },
+                { label: "Profit",  value: `${fmtT(c.profit)}` },
                 { label: "Source",  value: "server-aggregated (product_stores)" },
             ];
             return [c.category_name, c.margin, tooltipHtml(c.category_name, "#1cc88a", lines)];

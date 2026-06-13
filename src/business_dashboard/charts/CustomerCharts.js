@@ -39,8 +39,8 @@ export function TopCustomersChart({ customerSummaries, store }) {
             const lines = [
                 { label: "Total Revenue",  value: `SAR ${fmtT(r.total_amount)}`, bold: true, color: "#74c0fc" },
                 { divider: true, label: "Formula", value: "Sum of net_total across all orders" },
-                { label: "Sales Orders",   value: `SAR ${fmtT(r.sales_amount)}` },
-                ...(qtnInvoiceAccounting ? [{ label: "Qtn. Invoice Orders", value: `SAR ${fmtT(r.qtn_amount || 0)}` }] : []),
+                { label: "Sales Orders",   value: `${fmtT(r.sales_amount)}` },
+                ...(qtnInvoiceAccounting ? [{ label: "Qtn. Invoice Orders", value: `${fmtT(r.qtn_amount || 0)}` }] : []),
             ];
             return [r.customer_name, parseFloat((r.total_amount || 0).toFixed(2)), tooltipHtml(r.customer_name, "#74c0fc", lines)];
         });

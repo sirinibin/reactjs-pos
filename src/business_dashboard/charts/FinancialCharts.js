@@ -185,23 +185,23 @@ export function PurchaseVsSalesChart({
 
             const revLines = [
                 { label: "Net Revenue",      value: `SAR ${fmtT(revenue)}`, bold: true, color: "#69db7c" },
-                { divider: true, label: "Gross Sales",   value: `SAR ${fmtT(sales)}` },
-                ...(qtnInvoiceAccounting ? [{ label: "Qtn. Invoice Sales", value: `+ SAR ${fmtT(qtnInv)}` }] : []),
-                { label: "Sales Returns",    value: `− SAR ${fmtT(ret)}` },
-                ...(qtnInvoiceAccounting ? [{ label: "Qtn. Returns",       value: `− SAR ${fmtT(qtnRet)}` }] : []),
+                { divider: true, label: "Gross Sales",   value: `${fmtT(sales)}` },
+                ...(qtnInvoiceAccounting ? [{ label: "Qtn. Invoice Sales", value: `+ ${fmtT(qtnInv)}` }] : []),
+                { label: "Sales Returns",    value: `− ${fmtT(ret)}` },
+                ...(qtnInvoiceAccounting ? [{ label: "Qtn. Returns",       value: `− ${fmtT(qtnRet)}` }] : []),
             ];
 
             const expLines = disablePurchasesOnAccounts ? [
                 { label: "Total Expense",          value: `SAR ${fmtT(expense)}`, bold: true, color: "#ffa8a8" },
-                { divider: true, label: "Expenses", value: `SAR ${fmtT(exp)}` },
-                { label: "Purchase Return Fund",   value: `− SAR ${fmtT(depFund)}` },
-                { label: "Accounted Purchases",    value: `+ SAR ${fmtT(acctPur)}` },
-                { label: "Accounted Pur. Returns", value: `− SAR ${fmtT(acctPurRet)}` },
+                { divider: true, label: "Expenses", value: `${fmtT(exp)}` },
+                { label: "Purchase Return Fund",   value: `− ${fmtT(depFund)}` },
+                { label: "Accounted Purchases",    value: `+ ${fmtT(acctPur)}` },
+                { label: "Accounted Pur. Returns", value: `− ${fmtT(acctPurRet)}` },
             ] : [
                 { label: "Total Expense",    value: `SAR ${fmtT(expense)}`, bold: true, color: "#ffa8a8" },
-                { divider: true, label: "Expenses",         value: `SAR ${fmtT(exp)}` },
-                { label: "Purchases",        value: `+ SAR ${fmtT(pur)}` },
-                { label: "Purchase Returns", value: `− SAR ${fmtT(purRet)}` },
+                { divider: true, label: "Expenses",         value: `${fmtT(exp)}` },
+                { label: "Purchases",        value: `+ ${fmtT(pur)}` },
+                { label: "Purchase Returns", value: `− ${fmtT(purRet)}` },
             ];
 
             return [
