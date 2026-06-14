@@ -970,6 +970,10 @@ const StatsIndex = forwardRef((props, ref) => {
     const vatPercent = store.vat_percent || 15;
     const profitLossVatNum = profitLossNum * vatPercent / (100 + vatPercent);
     const profitLossWithoutVATNum = profitLossNum - profitLossVatNum;
+    const profitLossRevenueVatNum = profitLossRevenueNum * vatPercent / (100 + vatPercent);
+    const profitLossRevenueWithoutVATNum = profitLossRevenueNum - profitLossRevenueVatNum;
+    const profitLossExpenseVatNum = profitLossExpenseNum * vatPercent / (100 + vatPercent);
+    const profitLossExpenseWithoutVATNum = profitLossExpenseNum - profitLossExpenseVatNum;
 
     const statsFilters = {
         ...(dateValue ? { 'Date': dateValue } : {}),
@@ -1205,22 +1209,23 @@ const StatsIndex = forwardRef((props, ref) => {
                                     <StatsSummary store={store}
                                         title="Profit / Loss Statement"
                                         stats={{
-                                            "Revenue (with VAT)": profitLossRevenueNum,
-                                            "Expense (with VAT)": profitLossExpenseNum,
-                                            "Profit / Loss (with VAT)": profitLossNum,
+                                            "Revenue": profitLossRevenueNum,
+                                            "Expense": profitLossExpenseNum,
+                                            "Profit / Loss": profitLossNum,
                                             [`VAT ${vatPercent}%`]: profitLossVatNum,
-                                            "Profit / Loss (without VAT)": profitLossWithoutVATNum,
                                         }}
                                         statsWithInfo={[
-                                            { label: "Revenue (with VAT)", value: profitLossRevenueNum, info: [
+                                            { label: "Revenue", value: profitLossRevenueNum, sub: `w/o VAT: ${trimTo2Decimals(profitLossRevenueWithoutVATNum)}`, info: [
                                                 { label: "What it is", value: "Total income from all sales after deducting returns", bold: true, color: "#74c0fc" },
                                                 { divider: true, label: "Gross Sales", value: `${trimTo2Decimals(totalSales)}` },
                                                 ...(qtnInvoiceAccounting ? [{ label: "Qtn. Invoice Sales", value: `+ ${trimTo2Decimals(totalQtnSales)}` }] : []),
                                                 { label: "Sales Returns", value: `− ${trimTo2Decimals(totalSalesReturn)}` },
                                                 ...(qtnInvoiceAccounting ? [{ label: "Qtn. Sales Returns", value: `− ${trimTo2Decimals(totalQtnSalesReturn)}` }] : []),
-                                                { divider: true, label: "= Net Revenue", value: `SAR ${trimTo2Decimals(profitLossRevenueNum)}`, bold: true, color: "#74c0fc" },
+                                                { divider: true, label: "= Revenue (with VAT)", value: `SAR ${trimTo2Decimals(profitLossRevenueNum)}`, bold: true, color: "#74c0fc" },
+                                                { label: `VAT ${vatPercent}%`, value: `− ${trimTo2Decimals(profitLossRevenueVatNum)}` },
+                                                { divider: true, label: "= Revenue (without VAT)", value: `SAR ${trimTo2Decimals(profitLossRevenueWithoutVATNum)}`, bold: true, color: "#74c0fc" },
                                             ]},
-                                            { label: "Expense (with VAT)", value: profitLossExpenseNum, info: [
+                                            { label: "Expense", value: profitLossExpenseNum, sub: `w/o VAT: ${trimTo2Decimals(profitLossExpenseWithoutVATNum)}`, info: [
                                                 { label: "What it is", value: disablePurchasesOnAccounts ? "Total operating cost — on-account mode (accounted purchases only)" : "Total operating cost including all purchases", bold: true, color: "#ffa8a8" },
                                                 { divider: true, label: "Operating Expenses", value: `${trimTo2Decimals(totalExpense)}` },
                                                 ...(disablePurchasesOnAccounts ? [
@@ -1239,13 +1244,17 @@ const StatsIndex = forwardRef((props, ref) => {
                                                     { label: "Qtn. Sales Cash Discount", value: `+ ${trimTo2Decimals(qtnSalesCashDiscount)}` },
                                                     { label: "Qtn. Sales Ret. Cash Discount", value: `− ${trimTo2Decimals(qtnSalesReturnCashDiscount)}` },
                                                 ] : []),
-                                                { divider: true, label: "= Total Expense", value: `SAR ${trimTo2Decimals(profitLossExpenseNum)}`, bold: true, color: "#ffa8a8" },
+                                                { divider: true, label: "= Expense (with VAT)", value: `SAR ${trimTo2Decimals(profitLossExpenseNum)}`, bold: true, color: "#ffa8a8" },
+                                                { label: `VAT ${vatPercent}%`, value: `− ${trimTo2Decimals(profitLossExpenseVatNum)}` },
+                                                { divider: true, label: "= Expense (without VAT)", value: `SAR ${trimTo2Decimals(profitLossExpenseWithoutVATNum)}`, bold: true, color: "#ffa8a8" },
                                             ]},
-                                            { label: "Profit / Loss (with VAT)", value: profitLossNum, colorByValue: true, info: [
+                                            { label: "Profit / Loss", value: profitLossNum, colorByValue: true, sub: `w/o VAT: ${trimTo2Decimals(profitLossWithoutVATNum)}`, info: [
                                                 { label: "What it is", value: profitLossNum >= 0 ? "Net earnings after all costs (VAT included)" : "Net deficit after all costs (VAT included)", bold: true, color: profitLossNum >= 0 ? "#69db7c" : "#ffa8a8" },
                                                 { divider: true, label: "Net Revenue", value: `${trimTo2Decimals(profitLossRevenueNum)}`, color: "#74c0fc" },
                                                 { label: "Total Expense", value: `− ${trimTo2Decimals(profitLossExpenseNum)}`, color: "#ffa8a8" },
-                                                { divider: true, label: profitLossNum >= 0 ? "= Net Profit" : "= Net Loss", value: `SAR ${trimTo2Decimals(profitLossNum)}`, bold: true, color: profitLossNum >= 0 ? "#69db7c" : "#ffa8a8" },
+                                                { divider: true, label: profitLossNum >= 0 ? "= Profit (with VAT)" : "= Loss (with VAT)", value: `SAR ${trimTo2Decimals(profitLossNum)}`, bold: true, color: profitLossNum >= 0 ? "#69db7c" : "#ffa8a8" },
+                                                { label: `VAT ${vatPercent}%`, value: `− ${trimTo2Decimals(profitLossVatNum)}` },
+                                                { divider: true, label: profitLossNum >= 0 ? "= Profit (without VAT)" : "= Loss (without VAT)", value: `SAR ${trimTo2Decimals(profitLossWithoutVATNum)}`, bold: true, color: profitLossNum >= 0 ? "#69db7c" : "#ffa8a8" },
                                             ]},
                                             { label: `VAT ${vatPercent}%`, value: profitLossVatNum, info: [
                                                 { label: "What it is", value: "VAT portion embedded within the Profit / Loss figure", bold: true },
@@ -1253,12 +1262,6 @@ const StatsIndex = forwardRef((props, ref) => {
                                                 { divider: true, label: "Profit / Loss", value: `${trimTo2Decimals(profitLossNum)}` },
                                                 { label: "VAT Rate", value: `${vatPercent}%` },
                                                 { divider: true, label: "= VAT Amount", value: `SAR ${trimTo2Decimals(profitLossVatNum)}`, bold: true },
-                                            ]},
-                                            { label: "Profit / Loss (without VAT)", value: profitLossWithoutVATNum, colorByValue: true, bold: true, info: [
-                                                { label: "What it is", value: profitLossWithoutVATNum >= 0 ? "Net earnings after removing the VAT component" : "Net deficit after removing the VAT component", bold: true, color: profitLossWithoutVATNum >= 0 ? "#69db7c" : "#ffa8a8" },
-                                                { divider: true, label: "P/L (with VAT)", value: `${trimTo2Decimals(profitLossNum)}` },
-                                                { label: `VAT ${vatPercent}%`, value: `− ${trimTo2Decimals(profitLossVatNum)}` },
-                                                { divider: true, label: "= P/L (ex-VAT)", value: `SAR ${trimTo2Decimals(profitLossWithoutVATNum)}`, bold: true, color: profitLossWithoutVATNum >= 0 ? "#69db7c" : "#ffa8a8" },
                                             ]},
                                         ]}
                                         defaultOpen={true}

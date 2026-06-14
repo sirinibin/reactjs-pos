@@ -92,6 +92,7 @@ const StatsSummary = ({ title, stats = {}, statsWithInfo = {}, defaultOpen = fal
                 colorByValue: it.colorByValue || false,
                 noActions: it.noActions || false,
                 bold: it.bold || false,
+                sub: it.sub || null,
                 visible: true
             }));
         }
@@ -422,6 +423,7 @@ const StatsSummary = ({ title, stats = {}, statsWithInfo = {}, defaultOpen = fal
         const infoByLabel = normalized ? Object.fromEntries(normalized.map(n => [n.label, n.info])) : {};
         const colorByValueLabels = normalized ? new Set(normalized.filter(n => n.colorByValue).map(n => n.label)) : new Set();
         const noActionsByLabel = normalized ? new Set(normalized.filter(n => n.noActions).map(n => n.label)) : new Set();
+        const subByLabel = normalized ? Object.fromEntries(normalized.filter(n => n.sub).map(n => [n.label, n.sub])) : {};
         return fields.filter(f => f.visible).map((f, index) => {
             const rawValue = (typeof stats[f.label] !== "undefined") ? stats[f.label] : (typeof f.value !== "undefined" ? f.value : 0);
             const amount = trimTo2Decimals(rawValue);
@@ -432,6 +434,7 @@ const StatsSummary = ({ title, stats = {}, statsWithInfo = {}, defaultOpen = fal
             const useColor = colorByValueLabels.has(f.label);
             const noActions = noActionsByLabel.has(f.label);
             const isPositive = useColor && Number(rawValue) >= 0;
+            const sub = subByLabel[f.label];
             return (
                 <div className="mb-2" key={index}>
                     <div className="d-flex justify-content-between align-items-start">
@@ -456,15 +459,22 @@ const StatsSummary = ({ title, stats = {}, statsWithInfo = {}, defaultOpen = fal
                             ) : null}
                             :
                         </span>
-                        {useColor ? (
-                            <span className="badge" style={{ backgroundColor: isPositive ? 'green' : 'red' }}>
-                                {isPositive ? '+' : ''}<Amount amount={amount} />
-                            </span>
-                        ) : (
-                            <span className="badge bg-secondary">
-                                <Amount amount={amount} />
-                            </span>
-                        )}
+                        <div style={{ textAlign: 'right' }}>
+                            {useColor ? (
+                                <span className="badge" style={{ backgroundColor: isPositive ? 'green' : 'red' }}>
+                                    {isPositive ? '+' : ''}<Amount amount={amount} />
+                                </span>
+                            ) : (
+                                <span className="badge bg-secondary">
+                                    <Amount amount={amount} />
+                                </span>
+                            )}
+                            {sub && (
+                                <div style={{ fontSize: '0.72rem', color: '#6c757d', marginTop: '2px' }}>
+                                    {sub}
+                                </div>
+                            )}
+                        </div>
                     </div>
                 </div>
             );
