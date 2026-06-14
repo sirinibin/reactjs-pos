@@ -2192,7 +2192,7 @@ function ProductIndex(props) {
                             ))}
                         </select>
                     </div>
-                    {localStorage.getItem("user_role") === "Admin" && <div className="col-auto" style={{ paddingLeft: "8px" }}>
+                    {false && localStorage.getItem("user_role") === "Admin" && <div className="col-auto" style={{ paddingLeft: "8px" }}>
                         <button
                             className="btn btn-sm btn-outline-warning"
                             title="Copy legacy Rack/Location values into Main Store rack for all products"
