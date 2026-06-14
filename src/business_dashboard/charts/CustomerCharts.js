@@ -34,7 +34,7 @@ export function TopCustomersChart({ customerSummaries, store, filters }) {
             return [r.customer_name, parseFloat(total.toFixed(2)), tooltipHtml(r.customer_name, "#74c0fc", lines, store, filters)];
         });
         return [header, ...rows];
-    }, [customerSummaries, qtnInvoiceAccounting, vatPercent]);
+    }, [customerSummaries, qtnInvoiceAccounting, vatPercent, store, filters]);
 
     if (!data) return <p className="text-muted small">No customer data</p>;
     return (
@@ -73,7 +73,7 @@ export function OutstandingReceivablesChart({ outstandingSummaries, store, filte
         });
 
         return [header, ...rows];
-    }, [outstandingSummaries]);
+    }, [outstandingSummaries, store, filters]);
 
     if (!data) return <p className="text-muted small">No outstanding balances</p>;
     return (

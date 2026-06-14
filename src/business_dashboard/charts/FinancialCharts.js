@@ -71,7 +71,7 @@ export function VendorSpendPieChart({ vendorSummaries, store, filters }) {
             return [v.vendor_name, parseFloat(v.purchase_amount.toFixed(2)), tooltipHtml(v.vendor_name, "#36b9cc", lines, store, filters)];
         });
         return [header, ...rows];
-    }, [vendorSummaries, vatPercent]);
+    }, [vendorSummaries, vatPercent, store, filters]);
 
     if (!data) return <p className="text-muted small">No purchase data</p>;
     return (
@@ -216,7 +216,7 @@ export function PurchaseVsSalesChart({
         return [header, ...rows];
     }, [orders, returns, purchases, purchaseReturns, expenses, quotations, quotationSalesReturns,
         accountedPurchases, accountedPurchaseReturns, customerDeposits,
-        qtnInvoiceAccounting, disablePurchasesOnAccounts, vatPercent]);
+        qtnInvoiceAccounting, disablePurchasesOnAccounts, vatPercent, store, filters]);
 
     if (!data) return <p className="text-muted small">No data</p>;
     return (

@@ -35,7 +35,7 @@ export function TopProductsChart({ productSummaries, store, filters }) {
             return [r.product_name, parseFloat(rev.toFixed(2)), tooltipHtml(r.product_name, "#74c0fc", lines, store, filters)];
         });
         return [header, ...rows];
-    }, [productSummaries, qtnInvoiceAccounting, vatPercent]);
+    }, [productSummaries, qtnInvoiceAccounting, vatPercent, store, filters]);
 
     if (!data) return <p className="text-muted small">No product sales data</p>;
     return (
@@ -85,7 +85,7 @@ export function CategoryRevenuePieChart({ categorySummaries, store, filters }) {
             return [c.category_name, parseFloat(c.sales.toFixed(2)), tooltipHtml(c.category_name, "#74c0fc", lines, store, filters)];
         });
         return [header, ...rows];
-    }, [categorySummaries, vatPercent]);
+    }, [categorySummaries, vatPercent, store, filters]);
 
     if (!data) return <p className="text-muted small">No category data</p>;
     return (
@@ -134,7 +134,7 @@ export function CategoryMarginChart({ categorySummaries, store, filters }) {
             return [c.category_name, c.margin, tooltipHtml(c.category_name, "#1cc88a", lines, store, filters)];
         });
         return [header, ...rows];
-    }, [categorySummaries, vatPercent]);
+    }, [categorySummaries, vatPercent, store, filters]);
 
     if (!data) return <p className="text-muted small">No margin data</p>;
     return (
@@ -179,7 +179,7 @@ export function StockHealthChart({ stockSummary, store, filters }) {
         });
 
         return [header, ...rows];
-    }, [stockSummary]);
+    }, [stockSummary, store, filters]);
 
     if (!data) return <p className="text-muted small">No product data</p>;
     return (

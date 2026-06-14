@@ -77,7 +77,7 @@ export function PaymentMethodPieChart({ payments, store, filters, quotations }) 
         });
 
         return [header, ...rows];
-    }, [payments, quotations, qtnInvoiceAccounting]);
+    }, [payments, quotations, qtnInvoiceAccounting, store, filters]);
 
     if (!data) return <p className="text-muted small">No payment data</p>;
     return (
@@ -152,7 +152,7 @@ export function PaymentStatusPieChart({ orders, store, filters, quotations }) {
         });
 
         return [header, ...rows];
-    }, [orders, quotations, qtnInvoiceAccounting]);
+    }, [orders, quotations, qtnInvoiceAccounting, store, filters]);
 
     if (!data) return <p className="text-muted small">No order data</p>;
     return (
@@ -287,7 +287,7 @@ export function CashVsBankTrendChart({ payments, store, filters, quotations }) {
         });
 
         return [header, ...rows];
-    }, [payments, quotations, qtnInvoiceAccounting]);
+    }, [payments, quotations, qtnInvoiceAccounting, store, filters]);
 
     if (!data) return <p className="text-muted small">No data</p>;
     return (

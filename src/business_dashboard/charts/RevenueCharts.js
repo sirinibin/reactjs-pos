@@ -213,7 +213,7 @@ export function MonthlyRevenueTrendChart({
         return [header, ...rows];
     }, [orders, returns, purchases, purchaseReturns, expenses,
         quotations, quotationSalesReturns, accountedPurchases, accountedPurchaseReturns,
-        customerDeposits, qtnInvoiceAccounting, disablePurchasesOnAccounts, vatPercent]);
+        customerDeposits, qtnInvoiceAccounting, disablePurchasesOnAccounts, vatPercent, store, filters]);
         // Note: cash discount fields (cash_discount on each record) are derived from the same
         // arrays above, so no additional deps needed.
 
@@ -299,7 +299,7 @@ export function CumulativeRevenueChart({ store, filters, orders, returns, quotat
         });
 
         return [header, ...rows];
-    }, [orders, returns, quotations, quotationSalesReturns, qtnInvoiceAccounting, vatPercent]);
+    }, [orders, returns, quotations, quotationSalesReturns, qtnInvoiceAccounting, vatPercent, store, filters]);
 
     if (!data) return <p className="text-muted small">No data</p>;
     return (
@@ -345,7 +345,7 @@ export function Last30DaysSalesChart({ orders, store, filters }) {
             return [monthLabel(k), parseFloat(sales.toFixed(2)), tip];
         });
         return [header, ...rows];
-    }, [orders, vatPercent]);
+    }, [orders, vatPercent, store, filters]);
 
     if (!data) return <p className="text-muted small">No sales data</p>;
     return (
@@ -401,7 +401,7 @@ export function SalesVsReturnsChart({ orders, returns, store, filters }) {
             return [monthLabel(k), parseFloat(sales.toFixed(2)), salesTooltip, parseFloat(ret.toFixed(2)), retTooltip];
         });
         return [header, ...rows];
-    }, [orders, returns, vatPercent]);
+    }, [orders, returns, vatPercent, store, filters]);
 
     if (!data) return <p className="text-muted small">No data</p>;
     return (
