@@ -1,6 +1,6 @@
 import React, { useMemo } from "react";
 import { Chart } from "react-google-charts";
-import { tooltipHtml } from './chartTooltipSetup';
+import { tooltipHtml, onChartSelect } from './chartTooltipSetup';
 
 const MONTH_NAMES = ["Jan", "Feb", "Mar", "Apr", "May", "Jun",
     "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
@@ -89,8 +89,9 @@ export function PaymentMethodPieChart({ payments, store, filters, quotations }) 
                 legend: { position: "right" },
                 chartArea: { width: "70%", height: "75%" },
                 pieSliceText: "percentage",
-                tooltip: { isHtml: true },
+                tooltip: { isHtml: true, trigger: 'selection' },
             }}
+            chartEvents={[{ eventName: 'select', callback: onChartSelect }]}
             width="100%"
             height="320px"
         />
@@ -166,8 +167,9 @@ export function PaymentStatusPieChart({ orders, store, filters, quotations }) {
                 chartArea: { width: "70%", height: "75%" },
                 pieHole: 0.4,
                 pieSliceText: "percentage",
-                tooltip: { isHtml: true },
+                tooltip: { isHtml: true, trigger: 'selection' },
             }}
+            chartEvents={[{ eventName: 'select', callback: onChartSelect }]}
             width="100%"
             height="320px"
         />
@@ -301,8 +303,9 @@ export function CashVsBankTrendChart({ payments, store, filters, quotations }) {
                 vAxis: { title: "SAR" },
                 chartArea: { width: "80%", height: "65%" },
                 isStacked: true,
-                tooltip: { isHtml: true },
+                tooltip: { isHtml: true, trigger: 'selection' },
             }}
+            chartEvents={[{ eventName: 'select', callback: onChartSelect }]}
             width="100%"
             height="320px"
         />

@@ -1,6 +1,6 @@
 import React, { useMemo } from "react";
 import { Chart } from "react-google-charts";
-import { tooltipHtml } from './chartTooltipSetup';
+import { tooltipHtml, onChartSelect } from './chartTooltipSetup';
 
 const MONTH_NAMES = ["Jan", "Feb", "Mar", "Apr", "May", "Jun",
     "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
@@ -36,6 +36,7 @@ export function AccountBalancesChart({ accountSummaries }) {
                 vAxis: { title: "SAR" },
                 chartArea: { width: "75%", height: "65%" },
             }}
+            chartEvents={[{ eventName: 'select', callback: onChartSelect }]}
             width="100%"
             height="300px"
         />
@@ -83,8 +84,9 @@ export function VendorSpendPieChart({ vendorSummaries, store, filters }) {
                 legend: { position: "right" },
                 chartArea: { width: "65%", height: "75%" },
                 pieSliceText: "percentage",
-                tooltip: { isHtml: true },
+                tooltip: { isHtml: true, trigger: 'selection' },
             }}
+            chartEvents={[{ eventName: 'select', callback: onChartSelect }]}
             width="100%"
             height="300px"
         />
@@ -230,8 +232,9 @@ export function PurchaseVsSalesChart({
                 vAxis: { title: "SAR" },
                 chartArea: { width: "80%", height: "65%" },
                 pointSize: 4,
-                tooltip: { isHtml: true },
+                tooltip: { isHtml: true, trigger: 'selection' },
             }}
+            chartEvents={[{ eventName: 'select', callback: onChartSelect }]}
             width="100%"
             height="320px"
         />

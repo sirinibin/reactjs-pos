@@ -1,6 +1,6 @@
 import React, { useMemo } from "react";
 import { Chart } from "react-google-charts";
-import { tooltipHtml } from './chartTooltipSetup';
+import { tooltipHtml, onChartSelect } from './chartTooltipSetup';
 
 function fmtT(n) {
     if (!n && n !== 0) return "0.00";
@@ -47,8 +47,9 @@ export function TopCustomersChart({ customerSummaries, store, filters }) {
                 legend: { position: "none" },
                 hAxis: { title: "SAR" },
                 chartArea: { width: "60%", height: "80%" },
-                tooltip: { isHtml: true },
+                tooltip: { isHtml: true, trigger: 'selection' },
             }}
+            chartEvents={[{ eventName: 'select', callback: onChartSelect }]}
             width="100%"
             height="340px"
         />
@@ -86,8 +87,9 @@ export function OutstandingReceivablesChart({ outstandingSummaries, store, filte
                 legend: { position: "none" },
                 hAxis: { title: "SAR" },
                 chartArea: { width: "60%", height: "80%" },
-                tooltip: { isHtml: true },
+                tooltip: { isHtml: true, trigger: 'selection' },
             }}
+            chartEvents={[{ eventName: 'select', callback: onChartSelect }]}
             width="100%"
             height="320px"
         />

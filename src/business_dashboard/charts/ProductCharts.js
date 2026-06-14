@@ -1,6 +1,6 @@
 import React, { useMemo } from "react";
 import { Chart } from "react-google-charts";
-import { tooltipHtml } from './chartTooltipSetup';
+import { tooltipHtml, onChartSelect } from './chartTooltipSetup';
 
 function fmtT(n) {
     if (!n && n !== 0) return "0.00";
@@ -48,8 +48,9 @@ export function TopProductsChart({ productSummaries, store, filters }) {
                 legend: { position: "none" },
                 hAxis: { title: "SAR" },
                 chartArea: { width: "65%", height: "80%" },
-                tooltip: { isHtml: true },
+                tooltip: { isHtml: true, trigger: 'selection' },
             }}
+            chartEvents={[{ eventName: 'select', callback: onChartSelect }]}
             width="100%"
             height="360px"
         />
@@ -97,8 +98,9 @@ export function CategoryRevenuePieChart({ categorySummaries, store, filters }) {
                 legend: { position: "right" },
                 chartArea: { width: "60%", height: "75%" },
                 pieSliceText: "percentage",
-                tooltip: { isHtml: true },
+                tooltip: { isHtml: true, trigger: 'selection' },
             }}
+            chartEvents={[{ eventName: 'select', callback: onChartSelect }]}
             width="100%"
             height="340px"
         />
@@ -147,8 +149,9 @@ export function CategoryMarginChart({ categorySummaries, store, filters }) {
                 legend: { position: "none" },
                 hAxis: { title: "Margin %", minValue: 0 },
                 chartArea: { width: "65%", height: "80%" },
-                tooltip: { isHtml: true },
+                tooltip: { isHtml: true, trigger: 'selection' },
             }}
+            chartEvents={[{ eventName: 'select', callback: onChartSelect }]}
             width="100%"
             height="340px"
         />
@@ -193,8 +196,9 @@ export function StockHealthChart({ stockSummary, store, filters }) {
                 chartArea: { width: "65%", height: "75%" },
                 pieHole: 0.4,
                 pieSliceText: "value",
-                tooltip: { isHtml: true },
+                tooltip: { isHtml: true, trigger: 'selection' },
             }}
+            chartEvents={[{ eventName: 'select', callback: onChartSelect }]}
             width="100%"
             height="300px"
         />

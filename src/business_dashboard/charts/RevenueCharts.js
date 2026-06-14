@@ -1,6 +1,6 @@
 import React, { useMemo } from "react";
 import { Chart } from "react-google-charts";
-import { tooltipHtml } from './chartTooltipSetup';
+import { tooltipHtml, onChartSelect } from './chartTooltipSetup';
 
 const MONTH_NAMES = ["Jan", "Feb", "Mar", "Apr", "May", "Jun",
     "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
@@ -233,8 +233,9 @@ export function MonthlyRevenueTrendChart({
                 legend: { position: "top" },
                 vAxis: { title: "SAR" },
                 chartArea: { width: "78%", height: "62%" },
-                tooltip: { isHtml: true },
+                tooltip: { isHtml: true, trigger: 'selection' },
             }}
+            chartEvents={[{ eventName: 'select', callback: onChartSelect }]}
             width="100%"
             height="340px"
         />
@@ -313,8 +314,9 @@ export function CumulativeRevenueChart({ store, filters, orders, returns, quotat
                 vAxis: { title: "SAR" },
                 chartArea: { width: "80%", height: "65%" },
                 areaOpacity: 0.3,
-                tooltip: { isHtml: true },
+                tooltip: { isHtml: true, trigger: 'selection' },
             }}
+            chartEvents={[{ eventName: 'select', callback: onChartSelect }]}
             width="100%"
             height="300px"
         />
@@ -358,8 +360,9 @@ export function Last30DaysSalesChart({ orders, store, filters }) {
                 legend: { position: "none" },
                 vAxis: { title: "SAR" },
                 chartArea: { width: "80%", height: "65%" },
-                tooltip: { isHtml: true },
+                tooltip: { isHtml: true, trigger: 'selection' },
             }}
+            chartEvents={[{ eventName: 'select', callback: onChartSelect }]}
             width="100%"
             height="300px"
         />
@@ -414,8 +417,9 @@ export function SalesVsReturnsChart({ orders, returns, store, filters }) {
                 legend: { position: "top" },
                 vAxis: { title: "SAR" },
                 chartArea: { width: "80%", height: "65%" },
-                tooltip: { isHtml: true },
+                tooltip: { isHtml: true, trigger: 'selection' },
             }}
+            chartEvents={[{ eventName: 'select', callback: onChartSelect }]}
             width="100%"
             height="320px"
         />
