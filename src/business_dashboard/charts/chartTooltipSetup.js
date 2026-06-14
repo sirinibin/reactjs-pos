@@ -15,89 +15,80 @@ function storeData(data) {
 if (typeof window !== 'undefined' && !window.__cttReady) {
     window.__cttReady = true;
 
-    // Fix pie-chart tooltip vibration: Google Charts makes the tooltip container
-    // interactive (pointer-events:auto) when isHtml:true, which causes hover-state
-    // thrashing. Override the container to none, then restore auto only on our
-    // named action/close elements.
+    // ── Global CSS ──────────────────────────────────────────────────────────
+    // 1. pointer-events:none on the tooltip container stops pie-chart vibration
+    //    (the hover-detection loop Google Charts creates when isHtml:true).
+    // 2. .__ctt_pinned keeps the tooltip visible via CSS !important — this
+    //    beats Google Charts' inline el.style.display='none' without any fight.
+    // 3. .ctt-action restores pointer-events so buttons are clickable.
     if (!document.getElementById('__ctt_style')) {
         const s = document.createElement('style');
         s.id = '__ctt_style';
         s.textContent = [
             '.google-visualization-tooltip { pointer-events: none !important; }',
+            '.google-visualization-tooltip.__ctt_pinned {',
+            '  display: block !important;',
+            '  visibility: visible !important;',
+            '  opacity: 1 !important;',
+            '}',
             '.ctt-action { pointer-events: auto !important; }',
         ].join('\n');
         document.head.appendChild(s);
     }
 
-    // ── Sticky tooltip logic ────────────────────────────────────────────────
-    // Google Charts hides the tooltip the moment the mouse leaves a data point.
-    // We use a MutationObserver to intercept that hide and keep the tooltip
-    // visible for 5 s, giving the user time to reach the action buttons.
+    // ── Sticky-tooltip state ────────────────────────────────────────────────
+    let _pinEl = null;   // currently-pinned tooltip element
 
-    let _stickyEl   = null;   // the tooltip element currently being kept alive
-    let _allowed    = false;  // true → Google Charts is allowed to hide it
-    let _patching   = false;  // re-entrancy guard
+    function pinTooltip(el) {
+        if (_pinEl && _pinEl !== el) unpinTooltip(_pinEl);
+        _pinEl = el;
+        el.classList.add('__ctt_pinned');
+        clearTimeout(window.__cttTimer);
+        window.__cttTimer = setTimeout(() => unpinTooltip(el), 5000);
+    }
 
-    function allowHide() {
-        _allowed = true;
-        if (_stickyEl) { _stickyEl.style.display = 'none'; }
-        _stickyEl = null;
+    function unpinTooltip(el) {
+        if (el) el.classList.remove('__ctt_pinned');
+        if (_pinEl === el) _pinEl = null;
         clearTimeout(window.__cttTimer);
     }
 
-    function keepAlive(el) {
-        _allowed  = false;
-        _stickyEl = el;
-        clearTimeout(window.__cttTimer);
-        window.__cttTimer = setTimeout(allowHide, 5000);
-    }
-
-    // Observe the whole document for tooltip style changes
+    // Use MutationObserver only for DETECTION (not to fight back).
+    // When Google Charts makes the tooltip visible, we pin it with the CSS class.
+    // After that, Google Charts' own el.style.display='none' is overridden by CSS.
     const _obs = new MutationObserver(muts => {
-        if (_patching) return;
         for (const m of muts) {
+            if (m.type !== 'attributes') continue;
             const el = m.target;
             if (!el.classList?.contains('google-visualization-tooltip')) continue;
-            if (m.type !== 'attributes' || m.attributeName !== 'style') continue;
-
-            if (el.style.display === 'none') {
-                if (!_allowed && _stickyEl === el) {
-                    // Prevent Google Charts from hiding — restore visible
-                    _patching = true;
-                    el.style.display = 'block';
-                    _patching = false;
-                }
-            } else {
-                // Tooltip just became visible (new hover)
-                keepAlive(el);
-            }
+            if (m.attributeName !== 'style') continue;
+            // Tooltip just became visible → pin it for 5 s
+            if (el.style.display !== 'none') pinTooltip(el);
         }
     });
-    // Single observe call — calling observe() twice on the same target replaces
-    // the first registration, so all needed options must be in one call.
     _obs.observe(document.body, {
         subtree:         true,
-        childList:       true,   // catches element recreation
         attributes:      true,
         attributeFilter: ['style'],
     });
 
     window.__cttClose = () => {
-        clearTimeout(window.__cttTimer);
-        allowHide();
+        if (_pinEl) unpinTooltip(_pinEl);
     };
 
-    // Action-bar mouse events: reset 5 s timer while user is in the buttons area
+    // Action-bar mouse events: keep pinned while user is in the buttons area
     window.__cttEnter = () => {
-        clearTimeout(window.__cttTimer);
-        _allowed = false;
+        clearTimeout(window.__cttTimer);   // cancel countdown while hovering buttons
     };
     window.__cttLeave = () => {
         clearTimeout(window.__cttTimer);
-        window.__cttTimer = setTimeout(allowHide, 5000);
+        if (_pinEl) {
+            const el = _pinEl;
+            window.__cttTimer = setTimeout(() => unpinTooltip(el), 5000);
+        }
     };
 
-    // Click outside the tooltip → close immediately
+    // Click outside the tooltip → unpin immediately
     document.addEventListener('mousedown', e => {
         if (!e.target.closest('.google-visualization-tooltip')) {
             window.__cttClose();
