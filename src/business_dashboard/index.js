@@ -458,8 +458,8 @@ export default function BusinessDashboard() {
     const kpiStats = React.useMemo(() => {
         const sum = f => monthlyData.reduce((s, d) => s + (d[f] || 0), 0);
         return {
-            orderStats:          { total_sales: sum("sales_amount"), cash_discount: sum("sales_cash_discount") },
-            salesReturnStats:    { total_sales_return: sum("sales_return_amount"), cash_discount: sum("sales_return_cash_discount") },
+            orderStats:          { total_sales: sum("sales_amount"), cash_discount: sum("sales_cash_discount"), commission: sum("sales_commission") },
+            salesReturnStats:    { total_sales_return: sum("sales_return_amount"), cash_discount: sum("sales_return_cash_discount"), commission: sum("sales_return_commission") },
             quotationStats:      { invoice_total_sales: sum("qtn_invoice_amount"), invoice_cash_discount: sum("qtn_sales_cash_discount") },
             qtnSalesReturnStats: { total_quotation_sales_return: sum("qtn_invoice_return_amount"), cash_discount: sum("qtn_sales_return_cash_discount") },
             expenseStats:        { total:                        sum("expense_amount") },

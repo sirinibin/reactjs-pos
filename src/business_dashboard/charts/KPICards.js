@@ -323,6 +323,10 @@ export default function KPICards({
     const totalAccountedPurchase      = purchaseStats?.accounted_purchase || 0;
     const totalAccountedPurchaseReturn = purchaseReturnStats?.accounted_purchase_return || 0;
 
+    // ── Commission totals ─────────────────────────────────────────────────
+    const totalSalesCommission       = orderStats?.commission || 0;
+    const totalSalesReturnCommission = salesReturnStats?.commission || 0;
+
     // ── Cash discount totals ───────────────────────────────────────────────
     const totalCashDiscount                    = orderStats?.cash_discount || 0;
     const totalSalesReturnCashDiscount         = salesReturnStats?.cash_discount || 0;
@@ -342,10 +346,11 @@ export default function KPICards({
     const cashDiscountAdj = totalCashDiscount - totalSalesReturnCashDiscount + purchaseReturnCashDiscountAdj - purchaseCashDiscountAdj
         + (qtnInvoiceAccounting ? qtnSalesCashDiscount - qtnSalesReturnCashDiscount : 0);
 
+    const commissionAdj = totalSalesCommission - totalSalesReturnCommission;
     const expenseTotal = (disablePurchasesOnAccounts
         ? (totalExpense - totalDepositPurchaseFund + totalAccountedPurchase - totalAccountedPurchaseReturn)
         : (totalExpense + totalPurchase - totalPurchaseReturn))
-        + cashDiscountAdj;
+        + cashDiscountAdj + commissionAdj;
 
     const revenueVat        = revenue * vatPercent / (100 + vatPercent);
     const revenueWithoutVAT = revenue - revenueVat;
@@ -387,6 +392,8 @@ export default function KPICards({
             { label: "Qtn. Sales C.D.", value: `+ ${fmt(qtnSalesCashDiscount)}` },
             { label: "Qtn. Sales Ret. C.D.", value: `− ${fmt(qtnSalesReturnCashDiscount)}` },
         ] : []),
+        { label: "Sales Commission", value: `+ ${fmt(totalSalesCommission)}` },
+        { label: "Sales Return Commission", value: `− ${fmt(totalSalesReturnCommission)}` },
         { divider: true, label: "Total Expense (with VAT)", value: `SAR ${fmt(expenseTotal)}`, bold: true },
         { label: `VAT ${vatPercent}%`, value: `− ${fmt(expenseVat)}` },
         { divider: true, label: "Total Expense (without VAT)", value: `SAR ${fmt(expenseWithoutVAT)}`, bold: true },
@@ -402,6 +409,8 @@ export default function KPICards({
             { label: "Qtn. Sales C.D.", value: `+ ${fmt(qtnSalesCashDiscount)}` },
             { label: "Qtn. Sales Ret. C.D.", value: `− ${fmt(qtnSalesReturnCashDiscount)}` },
         ] : []),
+        { label: "Sales Commission", value: `+ ${fmt(totalSalesCommission)}` },
+        { label: "Sales Return Commission", value: `− ${fmt(totalSalesReturnCommission)}` },
         { divider: true, label: "Total Expense (with VAT)", value: `SAR ${fmt(expenseTotal)}`, bold: true },
         { label: `VAT ${vatPercent}%`, value: `− ${fmt(expenseVat)}` },
         { divider: true, label: "Total Expense (without VAT)", value: `SAR ${fmt(expenseWithoutVAT)}`, bold: true },

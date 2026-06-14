@@ -156,6 +156,7 @@ const StatsIndex = forwardRef((props, ref) => {
     const [totalSalesReturnSales, setTotalSalesReturnSales] = useState(0.00);
     const [totalPurchaseSales, setTotalPurchaseSales] = useState(0.00);
     const [loss, setLoss] = useState(0.00);
+    const [totalSalesCommission, setTotalSalesCommission] = useState(0.00);
 
     const [statsOpen, setStatsOpen] = useState(true);
 
@@ -228,6 +229,7 @@ const StatsIndex = forwardRef((props, ref) => {
                 setTotalBankAccountSales(data.meta.bank_account_sales);
                 setTotalPurchaseSales(data.meta.purchase_sales);
                 setTotalSalesReturnSales(data.meta.sales_return_sales);
+                setTotalSalesCommission(data.meta.commission || 0);
                 //setReturnCount(data.meta.return_count);
                 //setReturnPaidAmount(data.meta.return_amount);
 
@@ -268,6 +270,7 @@ const StatsIndex = forwardRef((props, ref) => {
 
     let [salesReturnNetProfit, setSalesReturnNetProfit] = useState(0.00);
     let [salesReturnLoss, setSalesReturnLoss] = useState(0.00);
+    let [totalSalesReturnCommission, setTotalSalesReturnCommission] = useState(0.00);
 
     const [salesReturnStatsOpen, setSalesReturnStatsOpen] = useState(true);
 
@@ -342,6 +345,7 @@ const StatsIndex = forwardRef((props, ref) => {
                 setTotalCashSalesReturn(data.meta.cash_sales_return);
                 setTotalBankAccountSalesReturn(data.meta.bank_account_sales_return);
                 setTotalSalesSalesReturn(data.meta.sales_sales_return);
+                setTotalSalesReturnCommission(data.meta.commission || 0);
                 //setReturnCount(data.meta.return_count);
                 //setReturnPaidAmount(data.meta.return_amount);
 
@@ -962,10 +966,11 @@ const StatsIndex = forwardRef((props, ref) => {
     const purchaseReturnCashDiscountAdjustment = disablePurchasesOnAccounts ? (totalAccountedPurchaseReturnCashDiscount || 0) : (totalPurchaseReturnCashDiscount || 0);
     const cashDiscountExpenseAdj = (totalCashDiscount || 0) - (totalSalesReturnCashDiscount || 0) + (purchaseReturnCashDiscountAdjustment) - (purchaseCashDiscountAdjustment)
         + (qtnInvoiceAccounting ? (qtnSalesCashDiscount || 0) - (qtnSalesReturnCashDiscount || 0) : 0);
+    const commissionExpenseAdj = (totalSalesCommission || 0) - (totalSalesReturnCommission || 0);
     const profitLossExpenseNum = (disablePurchasesOnAccounts
         ? (totalExpense || 0) - (totalDepositPurchaseFund || 0) + (totalAccountedPurchase || 0) - (totalAccountedPurchaseReturn || 0)
         : (totalExpense || 0) + (totalPurchase || 0) - (totalPurchaseReturn || 0))
-        + cashDiscountExpenseAdj;
+        + cashDiscountExpenseAdj + commissionExpenseAdj;
     const profitLossNum = profitLossRevenueNum - profitLossExpenseNum;
     const vatPercent = store.vat_percent || 15;
     const profitLossVatNum = profitLossNum * vatPercent / (100 + vatPercent);
@@ -1244,6 +1249,8 @@ const StatsIndex = forwardRef((props, ref) => {
                                                     { label: "Qtn. Sales Cash Discount", value: `+ ${trimTo2Decimals(qtnSalesCashDiscount)}` },
                                                     { label: "Qtn. Sales Ret. Cash Discount", value: `− ${trimTo2Decimals(qtnSalesReturnCashDiscount)}` },
                                                 ] : []),
+                                                { label: "Sales Commission", value: `+ ${trimTo2Decimals(totalSalesCommission)}` },
+                                                { label: "Sales Return Commission", value: `− ${trimTo2Decimals(totalSalesReturnCommission)}` },
                                                 { divider: true, label: "= Expense (with VAT)", value: `SAR ${trimTo2Decimals(profitLossExpenseNum)}`, bold: true, color: "#ffa8a8" },
                                                 { label: `VAT ${vatPercent}%`, value: `− ${trimTo2Decimals(profitLossExpenseVatNum)}` },
                                                 { divider: true, label: "= Expense (without VAT)", value: `SAR ${trimTo2Decimals(profitLossExpenseWithoutVATNum)}`, bold: true, color: "#ffa8a8" },
