@@ -37,21 +37,22 @@ function fmtT(n) {
 }
 
 function tooltipHtml(title, titleColor, lines) {
-    const headerStyle = `font-size:0.8rem;font-weight:700;color:${titleColor};margin-bottom:6px;`;
-    const rowStyle    = "font-size:0.75rem;line-height:1.7;white-space:nowrap;";
-    const dividerStyle = "border-top:1px solid #495057;margin-top:6px;padding-top:6px;";
-    const labelStyle  = "color:#adb5bd;margin-right:4px;";
-
-    let html = `<div style="background:#212529;color:#f8f9fa;padding:10px 14px;border-radius:6px;box-shadow:0 4px 14px rgba(0,0,0,.35);">`;
-    html += `<div style="${headerStyle}">${title}</div>`;
+    const D = '#495057';
+    let html = `<div style="background:#212529;color:#f8f9fa;padding:10px 14px;border-radius:6px;box-shadow:0 4px 14px rgba(0,0,0,.35);min-width:220px;">`;
+    html += `<div style="font-size:0.8rem;font-weight:700;color:${titleColor};margin-bottom:6px;border-bottom:1px solid ${D};padding-bottom:6px;">${title}</div>`;
+    html += `<table style="width:100%;border-collapse:collapse;font-size:0.75rem;"><tbody>`;
     lines.forEach(l => {
-        const wrap = l.divider ? dividerStyle : "";
-        const val  = l.bold
-            ? `<strong style="color:${l.color || "#f8f9fa"}">${l.value}</strong>`
-            : `<span style="color:${l.color || "#f8f9fa"}">${l.value}</span>`;
-        html += `<div style="${rowStyle}${wrap}"><span style="${labelStyle}">${l.label}:</span>${val}</div>`;
+        const bt    = l.divider ? `border-top:1px solid ${D};` : '';
+        const pt    = l.divider ? '6px' : '1px';
+        const pb    = l.divider ? '2px' : '1px';
+        const fw    = l.bold ? 'font-weight:700;' : '';
+        const color = l.color || '#f8f9fa';
+        html += `<tr style="${bt}">`;
+        html += `<td style="color:#adb5bd;white-space:nowrap;padding:${pt} 12px ${pb} 0;vertical-align:top;">${l.label || ''}</td>`;
+        html += `<td style="text-align:right;white-space:nowrap;${fw}color:${color};padding:${pt} 0 ${pb} 0;">${l.value}</td>`;
+        html += `</tr>`;
     });
-    html += `</div>`;
+    html += `</tbody></table></div>`;
     return html;
 }
 
@@ -162,47 +163,47 @@ export function MonthlyRevenueTrendChart({
 
             // ── Revenue tooltip ──────────────────────────────────────────────
             const revLines = [
-                { label: "Net Revenue (with VAT)", value: `SAR ${fmtT(revenue)}`, bold: true, color: "#74c0fc" },
-                { label: `VAT ${vatPercent}%`, value: `− ${fmtT(revenueVat)}` },
-                { label: "Net Revenue (without VAT)", value: `SAR ${fmtT(revenueWithoutVAT)}`, bold: true, color: "#74c0fc" },
-                { divider: true, label: "Gross Sales", value: `${fmtT(sales)}` },
+                { label: "Gross Sales", value: `${fmtT(sales)}` },
                 ...(qtnInvoiceAccounting ? [{ label: "Qtn. Invoice Sales", value: `+ ${fmtT(qtnInv)}` }] : []),
                 { label: "Sales Returns", value: `− ${fmtT(ret)}` },
                 ...(qtnInvoiceAccounting ? [{ label: "Qtn. Returns",       value: `− ${fmtT(qtnRet)}` }] : []),
+                { divider: true, label: "Net Revenue (with VAT)",    value: `SAR ${fmtT(revenue)}`, bold: true, color: "#74c0fc" },
+                { label: `VAT ${vatPercent}%`,                        value: `− ${fmtT(revenueVat)}` },
+                { divider: true, label: "Net Revenue (without VAT)", value: `SAR ${fmtT(revenueWithoutVAT)}`, bold: true, color: "#74c0fc" },
             ];
 
             // ── Expense tooltip ──────────────────────────────────────────────
             const expLines = disablePurchasesOnAccounts ? [
-                { label: "Total Expense (with VAT)", value: `SAR ${fmtT(expense)}`, bold: true, color: "#ffa8a8" },
-                { label: `VAT ${vatPercent}%`, value: `− ${fmtT(expenseVat)}` },
-                { label: "Total Expense (without VAT)", value: `SAR ${fmtT(expenseWithoutVAT)}`, bold: true, color: "#ffa8a8" },
-                { divider: true, label: "Expenses", value: `${fmtT(exp)}` },
-                { label: "Purchase Return Fund", value: `− ${fmtT(depFund)}` },
-                { label: "Accounted Purchases", value: `+ ${fmtT(acctPur)}` },
-                { label: "Accounted Pur. Returns", value: `− ${fmtT(acctPurRet)}` },
-                { label: "Sales Cash Discount", value: `+ ${fmtT(salesCD)}` },
-                { label: "Acct. Pur. Return C.D.", value: `+ ${fmtT(acctPurRetCD)}` },
-                { label: "Sales Return Cash Discount", value: `− ${fmtT(salesRetCD)}` },
-                { label: "Acct. Purchase C.D.", value: `− ${fmtT(acctPurCD)}` },
+                { label: "Expenses",                     value: `${fmtT(exp)}` },
+                { label: "Purchase Return Fund",         value: `− ${fmtT(depFund)}` },
+                { label: "Accounted Purchases",          value: `+ ${fmtT(acctPur)}` },
+                { label: "Accounted Pur. Returns",       value: `− ${fmtT(acctPurRet)}` },
+                { label: "Sales Cash Discount",          value: `+ ${fmtT(salesCD)}` },
+                { label: "Acct. Pur. Return C.D.",       value: `+ ${fmtT(acctPurRetCD)}` },
+                { label: "Sales Return Cash Discount",   value: `− ${fmtT(salesRetCD)}` },
+                { label: "Acct. Purchase C.D.",          value: `− ${fmtT(acctPurCD)}` },
                 ...(qtnInvoiceAccounting ? [
                     { label: "Qtn. Sales Cash Discount", value: `+ ${fmtT(qtnInvCD)}` },
-                    { label: "Qtn. Sales Ret. C.D.", value: `− ${fmtT(qtnRetCD)}` },
+                    { label: "Qtn. Sales Ret. C.D.",     value: `− ${fmtT(qtnRetCD)}` },
                 ] : []),
+                { divider: true, label: "Total Expense (with VAT)",    value: `SAR ${fmtT(expense)}`, bold: true, color: "#ffa8a8" },
+                { label: `VAT ${vatPercent}%`,                          value: `− ${fmtT(expenseVat)}` },
+                { divider: true, label: "Total Expense (without VAT)", value: `SAR ${fmtT(expenseWithoutVAT)}`, bold: true, color: "#ffa8a8" },
             ] : [
-                { label: "Total Expense (with VAT)", value: `SAR ${fmtT(expense)}`, bold: true, color: "#ffa8a8" },
-                { label: `VAT ${vatPercent}%`, value: `− ${fmtT(expenseVat)}` },
-                { label: "Total Expense (without VAT)", value: `SAR ${fmtT(expenseWithoutVAT)}`, bold: true, color: "#ffa8a8" },
-                { divider: true, label: "Expenses", value: `${fmtT(exp)}` },
-                { label: "Purchases", value: `+ ${fmtT(pur)}` },
-                { label: "Purchase Returns", value: `− ${fmtT(purRet)}` },
-                { label: "Sales Cash Discount", value: `+ ${fmtT(salesCD)}` },
-                { label: "Pur. Return Cash Discount", value: `+ ${fmtT(purRetCD)}` },
-                { label: "Sales Return Cash Discount", value: `− ${fmtT(salesRetCD)}` },
-                { label: "Purchase Cash Discount", value: `− ${fmtT(purCD)}` },
+                { label: "Expenses",                     value: `${fmtT(exp)}` },
+                { label: "Purchases",                    value: `+ ${fmtT(pur)}` },
+                { label: "Purchase Returns",             value: `− ${fmtT(purRet)}` },
+                { label: "Sales Cash Discount",          value: `+ ${fmtT(salesCD)}` },
+                { label: "Pur. Return Cash Discount",    value: `+ ${fmtT(purRetCD)}` },
+                { label: "Sales Return Cash Discount",   value: `− ${fmtT(salesRetCD)}` },
+                { label: "Purchase Cash Discount",       value: `− ${fmtT(purCD)}` },
                 ...(qtnInvoiceAccounting ? [
                     { label: "Qtn. Sales Cash Discount", value: `+ ${fmtT(qtnInvCD)}` },
-                    { label: "Qtn. Sales Ret. C.D.", value: `− ${fmtT(qtnRetCD)}` },
+                    { label: "Qtn. Sales Ret. C.D.",     value: `− ${fmtT(qtnRetCD)}` },
                 ] : []),
+                { divider: true, label: "Total Expense (with VAT)",    value: `SAR ${fmtT(expense)}`, bold: true, color: "#ffa8a8" },
+                { label: `VAT ${vatPercent}%`,                          value: `− ${fmtT(expenseVat)}` },
+                { divider: true, label: "Total Expense (without VAT)", value: `SAR ${fmtT(expenseWithoutVAT)}`, bold: true, color: "#ffa8a8" },
             ];
 
             // ── Profit/Loss tooltip ──────────────────────────────────────────
@@ -298,24 +299,25 @@ export function CumulativeRevenueChart({ store, orders, returns, quotations, quo
             const cumulativeWithoutVAT = cumulative - cumulativeVat;
             const monthNetVat          = monthNet * vatPercent / (100 + vatPercent);
             const monthNetWithoutVAT   = monthNet - monthNetVat;
+            const mnColor              = monthNet >= 0 ? "#69db7c" : "#ffa8a8";
             const tip = tooltipHtml(`Cumulative — ${monthLabel(k)}`, "#74c0fc", [
-                { label: "Cumulative (with VAT)",    value: `SAR ${fmtT(cumulative)}`, bold: true, color: "#74c0fc" },
-                { label: `VAT ${vatPercent}%`,       value: `− ${fmtT(cumulativeVat)}` },
-                { label: "Cumulative (without VAT)", value: `SAR ${fmtT(cumulativeWithoutVAT)}`, bold: true, color: "#74c0fc" },
-                { divider: true, label: "Previous Cumulative", value: `${fmtT(prevCum)}` },
+                { label: "Previous Cumulative",      value: `${fmtT(prevCum)}` },
                 { label: "Gross Sales",              value: `+ ${fmtT(sales)}` },
                 ...(qtnInvoiceAccounting ? [{ label: "Qtn. Invoice Sales", value: `+ ${fmtT(qtnInv)}` }] : []),
                 { label: "Sales Returns",            value: `− ${fmtT(ret)}` },
                 ...(qtnInvoiceAccounting ? [{ label: "Qtn. Returns",       value: `− ${fmtT(qtnRet)}` }] : []),
-                { label: "This Month Net (w/ VAT)",  value: `= SAR ${fmtT(monthNet)}`, bold: true, color: monthNet >= 0 ? "#69db7c" : "#ffa8a8" },
-                { label: "This Month Net (w/o VAT)", value: `= SAR ${fmtT(monthNetWithoutVAT)}`, bold: true },
+                { label: "This Month Net (w/ VAT)",  value: `SAR ${fmtT(monthNet)}`, bold: true, color: mnColor },
+                { label: "This Month Net (w/o VAT)", value: `SAR ${fmtT(monthNetWithoutVAT)}` },
+                { divider: true, label: "Cumulative (with VAT)",    value: `SAR ${fmtT(cumulative)}`, bold: true, color: "#74c0fc" },
+                { label: `VAT ${vatPercent}%`,                       value: `− ${fmtT(cumulativeVat)}` },
+                { divider: true, label: "Cumulative (without VAT)", value: `SAR ${fmtT(cumulativeWithoutVAT)}`, bold: true, color: "#74c0fc" },
             ]);
 
             return [monthLabel(k), parseFloat(cumulative.toFixed(2)), tip];
         });
 
         return [header, ...rows];
-    }, [orders, returns, quotations, quotationSalesReturns, qtnInvoiceAccounting]);
+    }, [orders, returns, quotations, quotationSalesReturns, qtnInvoiceAccounting, vatPercent]);
 
     if (!data) return <p className="text-muted small">No data</p>;
     return (
@@ -356,7 +358,7 @@ export function Last30DaysSalesChart({ orders, store }) {
             const tip = tooltipHtml(`${monthLabel(k)}`, "#36b9cc", [
                 { label: "Gross Sales (with VAT)",    value: `SAR ${fmtT(sales)}`, bold: true, color: "#36b9cc" },
                 { label: `VAT ${vatPercent}%`,        value: `− ${fmtT(salesVat)}` },
-                { label: "Gross Sales (without VAT)", value: `SAR ${fmtT(salesWithoutVAT)}`, bold: true },
+                { divider: true, label: "Gross Sales (without VAT)", value: `SAR ${fmtT(salesWithoutVAT)}`, bold: true },
             ]);
             return [monthLabel(k), parseFloat(sales.toFixed(2)), tip];
         });
@@ -407,12 +409,12 @@ export function SalesVsReturnsChart({ orders, returns, store }) {
             const salesTooltip = tooltipHtml(`Sales — ${monthLabel(k)}`, "#1cc88a", [
                 { label: "Gross Sales (with VAT)",    value: `SAR ${fmtT(sales)}`, bold: true, color: "#1cc88a" },
                 { label: `VAT ${vatPercent}%`,        value: `− ${fmtT(salesVat)}` },
-                { label: "Gross Sales (without VAT)", value: `SAR ${fmtT(salesWithoutVAT)}`, bold: true },
+                { divider: true, label: "Gross Sales (without VAT)", value: `SAR ${fmtT(salesWithoutVAT)}`, bold: true },
             ]);
             const retTooltip = tooltipHtml(`Returns — ${monthLabel(k)}`, "#e74a3b", [
                 { label: "Returns (with VAT)",    value: `SAR ${fmtT(ret)}`, bold: true, color: "#e74a3b" },
                 { label: `VAT ${vatPercent}%`,    value: `− ${fmtT(retVat)}` },
-                { label: "Returns (without VAT)", value: `SAR ${fmtT(retWithoutVAT)}`, bold: true },
+                { divider: true, label: "Returns (without VAT)", value: `SAR ${fmtT(retWithoutVAT)}`, bold: true },
             ]);
             return [monthLabel(k), parseFloat(sales.toFixed(2)), salesTooltip, parseFloat(ret.toFixed(2)), retTooltip];
         });

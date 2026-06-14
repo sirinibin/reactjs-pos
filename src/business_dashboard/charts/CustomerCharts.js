@@ -7,21 +7,22 @@ function fmtT(n) {
 }
 
 function tooltipHtml(title, titleColor, lines) {
-    const headerStyle  = `font-size:0.8rem;font-weight:700;color:${titleColor};margin-bottom:6px;`;
-    const rowStyle     = "font-size:0.75rem;line-height:1.7;white-space:nowrap;";
-    const dividerStyle = "border-top:1px solid #495057;margin-top:6px;padding-top:6px;";
-    const labelStyle   = "color:#adb5bd;margin-right:4px;";
-
-    let html = `<div style="background:#212529;color:#f8f9fa;padding:10px 14px;border-radius:6px;box-shadow:0 4px 14px rgba(0,0,0,.35);">`;
-    html += `<div style="${headerStyle}">${title}</div>`;
+    const D = '#495057';
+    let html = `<div style="background:#212529;color:#f8f9fa;padding:10px 14px;border-radius:6px;box-shadow:0 4px 14px rgba(0,0,0,.35);min-width:220px;">`;
+    html += `<div style="font-size:0.8rem;font-weight:700;color:${titleColor};margin-bottom:6px;border-bottom:1px solid ${D};padding-bottom:6px;">${title}</div>`;
+    html += `<table style="width:100%;border-collapse:collapse;font-size:0.75rem;"><tbody>`;
     lines.forEach(l => {
-        const wrap = l.divider ? dividerStyle : "";
-        const val  = l.bold
-            ? `<strong style="color:${l.color || "#f8f9fa"}">${l.value}</strong>`
-            : `<span style="color:${l.color || "#f8f9fa"}">${l.value}</span>`;
-        html += `<div style="${rowStyle}${wrap}"><span style="${labelStyle}">${l.label}:</span>${val}</div>`;
+        const bt    = l.divider ? `border-top:1px solid ${D};` : '';
+        const pt    = l.divider ? '6px' : '1px';
+        const pb    = l.divider ? '2px' : '1px';
+        const fw    = l.bold ? 'font-weight:700;' : '';
+        const color = l.color || '#f8f9fa';
+        html += `<tr style="${bt}">`;
+        html += `<td style="color:#adb5bd;white-space:nowrap;padding:${pt} 12px ${pb} 0;vertical-align:top;">${l.label || ''}</td>`;
+        html += `<td style="text-align:right;white-space:nowrap;${fw}color:${color};padding:${pt} 0 ${pb} 0;">${l.value}</td>`;
+        html += `</tr>`;
     });
-    html += `</div>`;
+    html += `</tbody></table></div>`;
     return html;
 }
 
@@ -41,12 +42,12 @@ export function TopCustomersChart({ customerSummaries, store }) {
             const revVat          = total * vatPercent / (100 + vatPercent);
             const revWithoutVAT   = total - revVat;
             const lines = [
-                { label: "Total Revenue (with VAT)",    value: `SAR ${fmtT(total)}`, bold: true, color: "#74c0fc" },
-                { label: `VAT ${vatPercent}%`,          value: `− ${fmtT(revVat)}` },
-                { label: "Total Revenue (without VAT)", value: `SAR ${fmtT(revWithoutVAT)}`, bold: true },
-                { divider: true, label: "Formula",      value: "Sum of net_total across all orders" },
-                { label: "Sales Orders",                value: `${fmtT(r.sales_amount)}` },
+                { label: "Formula",      value: "Sum of net_total across all orders" },
+                { label: "Sales Orders", value: `${fmtT(r.sales_amount)}` },
                 ...(qtnInvoiceAccounting ? [{ label: "Qtn. Invoice Orders", value: `${fmtT(r.qtn_amount || 0)}` }] : []),
+                { divider: true, label: "Total Revenue (with VAT)",    value: `SAR ${fmtT(total)}`, bold: true, color: "#74c0fc" },
+                { label: `VAT ${vatPercent}%`,                          value: `− ${fmtT(revVat)}` },
+                { divider: true, label: "Total Revenue (without VAT)", value: `SAR ${fmtT(revWithoutVAT)}`, bold: true },
             ];
             return [r.customer_name, parseFloat(total.toFixed(2)), tooltipHtml(r.customer_name, "#74c0fc", lines)];
         });

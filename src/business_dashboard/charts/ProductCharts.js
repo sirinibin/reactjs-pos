@@ -7,21 +7,22 @@ function fmtT(n) {
 }
 
 function tooltipHtml(title, titleColor, lines) {
-    const headerStyle  = `font-size:0.8rem;font-weight:700;color:${titleColor};margin-bottom:6px;`;
-    const rowStyle     = "font-size:0.75rem;line-height:1.7;white-space:nowrap;";
-    const dividerStyle = "border-top:1px solid #495057;margin-top:6px;padding-top:6px;";
-    const labelStyle   = "color:#adb5bd;margin-right:4px;";
-
-    let html = `<div style="background:#212529;color:#f8f9fa;padding:10px 14px;border-radius:6px;box-shadow:0 4px 14px rgba(0,0,0,.35);">`;
-    html += `<div style="${headerStyle}">${title}</div>`;
+    const D = '#495057';
+    let html = `<div style="background:#212529;color:#f8f9fa;padding:10px 14px;border-radius:6px;box-shadow:0 4px 14px rgba(0,0,0,.35);min-width:220px;">`;
+    html += `<div style="font-size:0.8rem;font-weight:700;color:${titleColor};margin-bottom:6px;border-bottom:1px solid ${D};padding-bottom:6px;">${title}</div>`;
+    html += `<table style="width:100%;border-collapse:collapse;font-size:0.75rem;"><tbody>`;
     lines.forEach(l => {
-        const wrap = l.divider ? dividerStyle : "";
-        const val  = l.bold
-            ? `<strong style="color:${l.color || "#f8f9fa"}">${l.value}</strong>`
-            : `<span style="color:${l.color || "#f8f9fa"}">${l.value}</span>`;
-        html += `<div style="${rowStyle}${wrap}"><span style="${labelStyle}">${l.label}:</span>${val}</div>`;
+        const bt    = l.divider ? `border-top:1px solid ${D};` : '';
+        const pt    = l.divider ? '6px' : '1px';
+        const pb    = l.divider ? '2px' : '1px';
+        const fw    = l.bold ? 'font-weight:700;' : '';
+        const color = l.color || '#f8f9fa';
+        html += `<tr style="${bt}">`;
+        html += `<td style="color:#adb5bd;white-space:nowrap;padding:${pt} 12px ${pb} 0;vertical-align:top;">${l.label || ''}</td>`;
+        html += `<td style="text-align:right;white-space:nowrap;${fw}color:${color};padding:${pt} 0 ${pb} 0;">${l.value}</td>`;
+        html += `</tr>`;
     });
-    html += `</div>`;
+    html += `</tbody></table></div>`;
     return html;
 }
 
@@ -42,12 +43,12 @@ export function TopProductsChart({ productSummaries, store }) {
             const revVat          = rev * vatPercent / (100 + vatPercent);
             const revWithoutVAT   = rev - revVat;
             const lines = [
-                { label: "Revenue (with VAT)",    value: `SAR ${fmtT(rev)}`, bold: true, color: "#74c0fc" },
-                { label: `VAT ${vatPercent}%`,    value: `− ${fmtT(revVat)}` },
-                { label: "Revenue (without VAT)", value: `SAR ${fmtT(revWithoutVAT)}`, bold: true },
-                { divider: true, label: "Formula", value: "Σ (unit_price × quantity)" },
-                { label: "Sales Orders", value: `${fmtT(r.sales_revenue)}` },
+                { label: "Formula",               value: "Σ (unit_price × quantity)" },
+                { label: "Sales Orders",          value: `${fmtT(r.sales_revenue)}` },
                 ...(qtnInvoiceAccounting ? [{ label: "Qtn. Invoice Orders", value: `${fmtT(r.qtn_revenue || 0)}` }] : []),
+                { divider: true, label: "Revenue (with VAT)",    value: `SAR ${fmtT(rev)}`, bold: true, color: "#74c0fc" },
+                { label: `VAT ${vatPercent}%`,                    value: `− ${fmtT(revVat)}` },
+                { divider: true, label: "Revenue (without VAT)", value: `SAR ${fmtT(revWithoutVAT)}`, bold: true, color: "#74c0fc" },
             ];
             return [r.product_name, parseFloat(rev.toFixed(2)), tooltipHtml(r.product_name, "#74c0fc", lines)];
         });
@@ -90,14 +91,14 @@ export function CategoryRevenuePieChart({ categorySummaries, store }) {
             const profitVat       = c.profit * vatPercent / (100 + vatPercent);
             const profitWithoutVAT = c.profit - profitVat;
             const lines = [
-                { label: "Revenue (with VAT)",    value: `SAR ${fmtT(c.sales)}`, bold: true, color: "#74c0fc" },
-                { label: `VAT ${vatPercent}%`,    value: `− ${fmtT(revVat)}` },
-                { label: "Revenue (without VAT)", value: `SAR ${fmtT(revWithoutVAT)}`, bold: true },
-                { divider: true, label: "Share",  value: `${pct}% of category revenue` },
-                { label: "Formula",               value: "product_stores.sales (server-aggregated)" },
-                { label: "Profit (with VAT)",     value: `${fmtT(c.profit)}` },
-                { label: "Profit (without VAT)",  value: `${fmtT(profitWithoutVAT)}` },
-                { label: "Margin",                value: c.sales > 0 ? `${((c.profit / c.sales) * 100).toFixed(1)}%` : "—" },
+                { label: "Share",                value: `${pct}% of category revenue` },
+                { label: "Formula",              value: "product_stores.sales (server-aggregated)" },
+                { label: "Profit (with VAT)",    value: `${fmtT(c.profit)}` },
+                { label: "Profit (without VAT)", value: `${fmtT(profitWithoutVAT)}` },
+                { label: "Margin",               value: c.sales > 0 ? `${((c.profit / c.sales) * 100).toFixed(1)}%` : "—" },
+                { divider: true, label: "Revenue (with VAT)",    value: `SAR ${fmtT(c.sales)}`, bold: true, color: "#74c0fc" },
+                { label: `VAT ${vatPercent}%`,                    value: `− ${fmtT(revVat)}` },
+                { divider: true, label: "Revenue (without VAT)", value: `SAR ${fmtT(revWithoutVAT)}`, bold: true, color: "#74c0fc" },
             ];
             return [c.category_name, parseFloat(c.sales.toFixed(2)), tooltipHtml(c.category_name, "#74c0fc", lines)];
         });
@@ -140,13 +141,13 @@ export function CategoryMarginChart({ categorySummaries, store }) {
             const profitVat        = c.profit * vatPercent / (100 + vatPercent);
             const profitWithoutVAT = c.profit - profitVat;
             const lines = [
-                { label: "Margin",                value: `${c.margin}%`, bold: true, color: "#1cc88a" },
-                { divider: true, label: "Formula", value: "(sales_profit ÷ sales) × 100" },
+                { label: "Formula",               value: "(sales_profit ÷ sales) × 100" },
                 { label: "Revenue (with VAT)",    value: `${fmtT(c.sales)}` },
                 { label: "Revenue (without VAT)", value: `${fmtT(revWithoutVAT)}` },
                 { label: "Profit (with VAT)",     value: `${fmtT(c.profit)}` },
                 { label: "Profit (without VAT)",  value: `${fmtT(profitWithoutVAT)}` },
                 { label: "Source",                value: "server-aggregated (product_stores)" },
+                { divider: true, label: "Margin", value: `${c.margin}%`, bold: true, color: "#1cc88a" },
             ];
             return [c.category_name, c.margin, tooltipHtml(c.category_name, "#1cc88a", lines)];
         });

@@ -47,21 +47,22 @@ function fmtT(n) {
 }
 
 function tooltipHtml(title, titleColor, lines) {
-    const headerStyle  = `font-size:0.8rem;font-weight:700;color:${titleColor};margin-bottom:6px;`;
-    const rowStyle     = "font-size:0.75rem;line-height:1.7;white-space:nowrap;";
-    const dividerStyle = "border-top:1px solid #495057;margin-top:6px;padding-top:6px;";
-    const labelStyle   = "color:#adb5bd;margin-right:4px;";
-
-    let html = `<div style="background:#212529;color:#f8f9fa;padding:10px 14px;border-radius:6px;box-shadow:0 4px 14px rgba(0,0,0,.35);">`;
-    html += `<div style="${headerStyle}">${title}</div>`;
+    const D = '#495057';
+    let html = `<div style="background:#212529;color:#f8f9fa;padding:10px 14px;border-radius:6px;box-shadow:0 4px 14px rgba(0,0,0,.35);min-width:220px;">`;
+    html += `<div style="font-size:0.8rem;font-weight:700;color:${titleColor};margin-bottom:6px;border-bottom:1px solid ${D};padding-bottom:6px;">${title}</div>`;
+    html += `<table style="width:100%;border-collapse:collapse;font-size:0.75rem;"><tbody>`;
     lines.forEach(l => {
-        const wrap = l.divider ? dividerStyle : "";
-        const val  = l.bold
-            ? `<strong style="color:${l.color || "#f8f9fa"}">${l.value}</strong>`
-            : `<span style="color:${l.color || "#f8f9fa"}">${l.value}</span>`;
-        html += `<div style="${rowStyle}${wrap}"><span style="${labelStyle}">${l.label}:</span>${val}</div>`;
+        const bt    = l.divider ? `border-top:1px solid ${D};` : '';
+        const pt    = l.divider ? '6px' : '1px';
+        const pb    = l.divider ? '2px' : '1px';
+        const fw    = l.bold ? 'font-weight:700;' : '';
+        const color = l.color || '#f8f9fa';
+        html += `<tr style="${bt}">`;
+        html += `<td style="color:#adb5bd;white-space:nowrap;padding:${pt} 12px ${pb} 0;vertical-align:top;">${l.label || ''}</td>`;
+        html += `<td style="text-align:right;white-space:nowrap;${fw}color:${color};padding:${pt} 0 ${pb} 0;">${l.value}</td>`;
+        html += `</tr>`;
     });
-    html += `</div>`;
+    html += `</tbody></table></div>`;
     return html;
 }
 
@@ -79,11 +80,11 @@ export function VendorSpendPieChart({ vendorSummaries, store }) {
             const spendVat         = v.purchase_amount * vatPercent / (100 + vatPercent);
             const spendWithoutVAT  = v.purchase_amount - spendVat;
             const lines = [
-                { label: "Spend (with VAT)",    value: `SAR ${fmtT(v.purchase_amount)}`, bold: true, color: "#36b9cc" },
-                { label: `VAT ${vatPercent}%`,  value: `− ${fmtT(spendVat)}` },
-                { label: "Spend (without VAT)", value: `SAR ${fmtT(spendWithoutVAT)}`, bold: true },
-                { divider: true, label: "Share", value: `${pct}% of total purchase spend` },
-                { label: "Formula",              value: "Σ net_total across all purchase orders" },
+                { label: "Share",   value: `${pct}% of total purchase spend` },
+                { label: "Formula", value: "Σ net_total across all purchase orders" },
+                { divider: true, label: "Spend (with VAT)",    value: `SAR ${fmtT(v.purchase_amount)}`, bold: true, color: "#36b9cc" },
+                { label: `VAT ${vatPercent}%`,                  value: `− ${fmtT(spendVat)}` },
+                { divider: true, label: "Spend (without VAT)", value: `SAR ${fmtT(spendWithoutVAT)}`, bold: true },
             ];
             return [v.vendor_name, parseFloat(v.purchase_amount.toFixed(2)), tooltipHtml(v.vendor_name, "#36b9cc", lines)];
         });
@@ -195,30 +196,30 @@ export function PurchaseVsSalesChart({
             const expenseWithoutVAT = expense - expenseVat;
 
             const revLines = [
-                { label: "Net Revenue (with VAT)",    value: `SAR ${fmtT(revenue)}`, bold: true, color: "#69db7c" },
-                { label: `VAT ${vatPercent}%`,        value: `− ${fmtT(revenueVat)}` },
-                { label: "Net Revenue (without VAT)", value: `SAR ${fmtT(revenueWithoutVAT)}`, bold: true },
-                { divider: true, label: "Gross Sales", value: `${fmtT(sales)}` },
+                { label: "Gross Sales",  value: `${fmtT(sales)}` },
                 ...(qtnInvoiceAccounting ? [{ label: "Qtn. Invoice Sales", value: `+ ${fmtT(qtnInv)}` }] : []),
-                { label: "Sales Returns",              value: `− ${fmtT(ret)}` },
+                { label: "Sales Returns", value: `− ${fmtT(ret)}` },
                 ...(qtnInvoiceAccounting ? [{ label: "Qtn. Returns",       value: `− ${fmtT(qtnRet)}` }] : []),
+                { divider: true, label: "Net Revenue (with VAT)",    value: `SAR ${fmtT(revenue)}`, bold: true, color: "#69db7c" },
+                { label: `VAT ${vatPercent}%`,                        value: `− ${fmtT(revenueVat)}` },
+                { divider: true, label: "Net Revenue (without VAT)", value: `SAR ${fmtT(revenueWithoutVAT)}`, bold: true },
             ];
 
             const expLines = disablePurchasesOnAccounts ? [
-                { label: "Total Expense (with VAT)",    value: `SAR ${fmtT(expense)}`, bold: true, color: "#ffa8a8" },
-                { label: `VAT ${vatPercent}%`,          value: `− ${fmtT(expenseVat)}` },
-                { label: "Total Expense (without VAT)", value: `SAR ${fmtT(expenseWithoutVAT)}`, bold: true },
-                { divider: true, label: "Expenses",     value: `${fmtT(exp)}` },
-                { label: "Purchase Return Fund",        value: `− ${fmtT(depFund)}` },
-                { label: "Accounted Purchases",         value: `+ ${fmtT(acctPur)}` },
-                { label: "Accounted Pur. Returns",      value: `− ${fmtT(acctPurRet)}` },
+                { label: "Expenses",             value: `${fmtT(exp)}` },
+                { label: "Purchase Return Fund", value: `− ${fmtT(depFund)}` },
+                { label: "Accounted Purchases",  value: `+ ${fmtT(acctPur)}` },
+                { label: "Accounted Pur. Returns", value: `− ${fmtT(acctPurRet)}` },
+                { divider: true, label: "Total Expense (with VAT)",    value: `SAR ${fmtT(expense)}`, bold: true, color: "#ffa8a8" },
+                { label: `VAT ${vatPercent}%`,                          value: `− ${fmtT(expenseVat)}` },
+                { divider: true, label: "Total Expense (without VAT)", value: `SAR ${fmtT(expenseWithoutVAT)}`, bold: true },
             ] : [
-                { label: "Total Expense (with VAT)",    value: `SAR ${fmtT(expense)}`, bold: true, color: "#ffa8a8" },
-                { label: `VAT ${vatPercent}%`,          value: `− ${fmtT(expenseVat)}` },
-                { label: "Total Expense (without VAT)", value: `SAR ${fmtT(expenseWithoutVAT)}`, bold: true },
-                { divider: true, label: "Expenses",     value: `${fmtT(exp)}` },
-                { label: "Purchases",                   value: `+ ${fmtT(pur)}` },
-                { label: "Purchase Returns",            value: `− ${fmtT(purRet)}` },
+                { label: "Expenses",         value: `${fmtT(exp)}` },
+                { label: "Purchases",        value: `+ ${fmtT(pur)}` },
+                { label: "Purchase Returns", value: `− ${fmtT(purRet)}` },
+                { divider: true, label: "Total Expense (with VAT)",    value: `SAR ${fmtT(expense)}`, bold: true, color: "#ffa8a8" },
+                { label: `VAT ${vatPercent}%`,                          value: `− ${fmtT(expenseVat)}` },
+                { divider: true, label: "Total Expense (without VAT)", value: `SAR ${fmtT(expenseWithoutVAT)}`, bold: true },
             ];
 
             return [
