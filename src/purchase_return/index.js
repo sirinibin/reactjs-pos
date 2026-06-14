@@ -24,12 +24,16 @@ import OrderPreview from "./../order/preview.js";
 import OrderPrint from "./../order/print.js";
 import ReactExport from 'react-data-export';
 import VendorCreate from "./../vendor/create.js";
+import { useTranslation } from 'react-i18next';
+import { getDateLocale } from "../i18n/dateLocales";
 
 const ExcelFile = ReactExport.ExcelFile;
 const ExcelSheet = ReactExport.ExcelFile.ExcelSheet;
 
 
 function PurchaseReturnIndex(props) {
+    const { t, i18n } = useTranslation('common');
+    const dateLocale = useMemo(() => getDateLocale(i18n.language), [i18n.language]);
     let [enableSelection, setEnableSelection] = useState(true);
     let [pendingView, setPendingView] = useState(false);
 
@@ -47,6 +51,7 @@ function PurchaseReturnIndex(props) {
 
 
     let [totalPurchaseReturn, setTotalPurchaseReturn] = useState(0.00);
+    let [totalAccountedPurchaseReturn, setTotalAccountedPurchaseReturn] = useState(0.00);
     let [totalPurchasePurchaseReturn, setTotalPurchasePurchaseReturn] = useState(0.00);
     let [vatPrice, setVatPrice] = useState(0.00);
     let [totalDiscount, setTotalDiscount] = useState(0.00);
@@ -55,7 +60,7 @@ function PurchaseReturnIndex(props) {
     const [purchasereturnList, setPurchaseReturnList] = useState([]);
 
     //pagination
-    const [pageSize, setPageSize] = useState(20);
+    const [pageSize, setPageSize] = useState(() => parseInt(localStorage.getItem('purchase_return_pageSize') || '10'));
     let [page, setPage] = useState(1);
     const [totalPages, setTotalPages] = useState(0);
     const [totalItems, setTotalItems] = useState(1);
@@ -167,7 +172,8 @@ function PurchaseReturnIndex(props) {
         for (var i = 0; i < allPurchaseReturns.length; i++) {
             let date = format(
                 new Date(allPurchaseReturns[i].date),
-                "dd-MMM-yyyy"
+                "dd-MMM-yyyy",
+                { locale: dateLocale }
             );
             if (!groupedByDate[date]) {
                 groupedByDate[date] = [];
@@ -292,7 +298,8 @@ function PurchaseReturnIndex(props) {
         } else if (searchParams["from_date"]) {
             purchaseReturnReportFileName += " - From " + searchParams["from_date"] + " to " + format(
                 new Date(),
-                "dd-MMM-yyyy"
+                "dd-MMM-yyyy",
+                { locale: dateLocale }
             );
         } else if (searchParams["to_date"]) {
             purchaseReturnReportFileName += " - Upto " + searchParams["to_date"];
@@ -540,6 +547,11 @@ function PurchaseReturnIndex(props) {
 
     function searchByFieldValue(field, value) {
         searchParams[field] = value;
+        setFieldFilters(prev => {
+            const updated = { ...prev };
+            if (value) { updated[field] = value; } else { delete updated[field]; }
+            return updated;
+        });
 
         page = 1;
         setPage(page);
@@ -559,20 +571,22 @@ function PurchaseReturnIndex(props) {
         d = new Date(d.toUTCString());
 
         value = format(d, "MMM dd yyyy");
+        let valueWithLocale = format(d, "MMM dd yyyy", { locale: dateLocale });
+
         if (field === "date_str") {
-            setDateValue(value);
+            setDateValue(valueWithLocale);
             setFromDateValue("");
             setToDateValue("");
             searchParams["from_date"] = "";
             searchParams["to_date"] = "";
             searchParams[field] = value;
         } else if (field === "from_date") {
-            setFromDateValue(value);
+            setFromDateValue(valueWithLocale);
             setDateValue("");
             searchParams["date"] = "";
             searchParams[field] = value;
         } else if (field === "to_date") {
-            setToDateValue(value);
+            setToDateValue(valueWithLocale);
             setDateValue("");
             searchParams["date"] = "";
             searchParams[field] = value;
@@ -604,6 +618,7 @@ function PurchaseReturnIndex(props) {
 
     const [selectedPaymentMethodList, setSelectedPaymentMethodList] = useState([]);
     const [selectedPaymentStatusList, setSelectedPaymentStatusList] = useState([]);
+    const [selectedAccountedFilter, setSelectedAccountedFilter] = useState("");
 
     function searchByMultipleValuesField(field, values, noList) {
         if (field === "created_by") {
@@ -618,6 +633,10 @@ function PurchaseReturnIndex(props) {
 
         searchParams[field] = Object.values(values)
             .map(function (model) {
+                if (model.name === "UNKNOWN VENDOR") {
+                    return "unknown_vendor";
+                }
+
                 return model.id;
             })
             .join(",");
@@ -637,6 +656,7 @@ function PurchaseReturnIndex(props) {
     let [totalShippingHandlingFees, setTotalShippingHandlingFees] = useState(0.00);
 
     let [statsOpen, setStatsOpen] = useState(false);
+    const [fieldFilters, setFieldFilters] = useState({});
 
     const list = useCallback(() => {
         setExcelData([]);
@@ -648,7 +668,7 @@ function PurchaseReturnIndex(props) {
             },
         };
         let Select =
-            "select=id,code,purchase_code,vat_price,cash_discount,purchase_id,date,net_total,created_by_name,vendor_name,vendor_name_arabic,vendor_id,vendor_invoice_no,status,created_at,total_payment_paid,payments_count,payment_methods,payment_status,balance_amount,store_id";
+            "select=id,code,purchase_code,vat_price,cash_discount,purchase_id,date,net_total,created_by_name,vendor_name,vendor_name_arabic,vendor_id,vendor_invoice_no,status,created_at,total_payment_paid,payments_count,payment_methods,payment_status,balance_amount,store_id,enable_on_accounts";
         if (localStorage.getItem("store_id")) {
             searchParams.store_id = localStorage.getItem("store_id");
         }
@@ -713,6 +733,7 @@ function PurchaseReturnIndex(props) {
                 setOffset((page - 1) * pageSize);
                 setCurrentPageItemsCount(data.result.length);
                 setTotalPurchaseReturn(data.meta.total_purchase_return);
+                setTotalAccountedPurchaseReturn(data.meta.accounted_purchase_return || 0);
                 setTotalPurchasePurchaseReturn(data.meta.purchase_purchase_return);
                 setVatPrice(data.meta.vat_price);
                 setTotalDiscount(data.meta.discount);
@@ -786,6 +807,7 @@ function PurchaseReturnIndex(props) {
 
 
     function changePageSize(size) {
+        localStorage.setItem('purchase_return_pageSize', size);
         setPageSize(parseInt(size));
     }
 
@@ -971,25 +993,26 @@ function PurchaseReturnIndex(props) {
     const [successMessage, setSuccessMessage] = useState(false);
 
     const defaultColumns = useMemo(() => [
-        { key: "actions", label: "Actions", fieldName: "actions", visible: true },
-        { key: "select", label: "Select", fieldName: "select", visible: true },
-        { key: "id", label: "Purchase Return ID", fieldName: "code", visible: true },
-        { key: "date", label: "Date", fieldName: "date", visible: true },
-        { key: "vendor", label: "Vendor", fieldName: "vendor_name", visible: true },
-        { key: "net_total", label: "Net Total", fieldName: "net_total", visible: true },
-        { key: "amount_paid", label: "Amount Paid", fieldName: "total_payment_paid", visible: true },
-        { key: "credit_balance", label: "Credit Balance", fieldName: "balance_amount", visible: true },
-        { key: "purchase_code", label: "Purchase ID", fieldName: "purchase_code", visible: true },
-        { key: "cash_discount", label: "Cash Discount", fieldName: "cash_discount", visible: true },
-        { key: "vendor_invoice_no", label: "Vendor Return Invoice No.", fieldName: "vendor_invoice_no", visible: true },
-        { key: "payment_status", label: "Payment Status", fieldName: "payment_status", visible: true },
-        { key: "payment_methods", label: "Payment Methods", fieldName: "payment_methods", visible: true },
-        { key: "discount", label: "Purchase Return Discount", fieldName: "discount", visible: true },
-        { key: "vat_price", label: "VAT", fieldName: "vat_price", visible: true },
-        { key: "created_by", label: "Created By", fieldName: "created_by", visible: true },
-        { key: "created_at", label: "Created At", fieldName: "created_at", visible: true },
-        { key: "actions_end", label: "Actions", fieldName: "actions_end", visible: true },
-    ], []);
+        { key: "actions", label: t("Actions"), fieldName: "actions", visible: true },
+        { key: "select", label: t("Select"), fieldName: "select", visible: true },
+        { key: "id", label: t("Purchase Return ID"), fieldName: "code", visible: true },
+        { key: "date", label: t("Date"), fieldName: "date", visible: true },
+        { key: "vendor", label: t("Vendor"), fieldName: "vendor_name", visible: true },
+        { key: "net_total", label: t("Net Total"), fieldName: "net_total", visible: true },
+        { key: "amount_paid", label: t("Amount Paid"), fieldName: "total_payment_paid", visible: true },
+        { key: "credit_balance", label: t("Credit Balance"), fieldName: "balance_amount", visible: true },
+        { key: "purchase_code", label: t("Purchase ID"), fieldName: "purchase_code", visible: true },
+        { key: "cash_discount", label: t("Cash Discount"), fieldName: "cash_discount", visible: true },
+        { key: "vendor_invoice_no", label: t("Vendor Return Invoice No."), fieldName: "vendor_invoice_no", visible: true },
+        { key: "payment_status", label: t("Payment Status"), fieldName: "payment_status", visible: true },
+        { key: "payment_methods", label: t("Payment Methods"), fieldName: "payment_methods", visible: true },
+        { key: "discount", label: t("Purchase Return Discount"), fieldName: "discount", visible: true },
+        { key: "vat_price", label: t("VAT"), fieldName: "vat_price", visible: true },
+        { key: "created_by", label: t("Created By"), fieldName: "created_by", visible: true },
+        { key: "created_at", label: t("Created At"), fieldName: "created_at", visible: true },
+        { key: "enable_on_accounts", label: t("Accounted"), fieldName: "enable_on_accounts", visible: false },
+        { key: "actions_end", label: t("Actions"), fieldName: "actions_end", visible: true },
+    ], [t]);
 
 
     const [columns, setColumns] = useState(defaultColumns);
@@ -1046,6 +1069,14 @@ function PurchaseReturnIndex(props) {
         //2nd
 
     }, [defaultColumns, enableSelection, pendingView]);
+
+    useEffect(() => {
+        setColumns(prev => prev.map(col =>
+            col.key === "enable_on_accounts"
+                ? { ...col, visible: !!store.settings?.disable_purchases_on_accounts }
+                : col
+        ));
+    }, [store]);
 
     function RestoreDefaultSettings() {
         if (enableSelection === true) {
@@ -1185,7 +1216,7 @@ function PurchaseReturnIndex(props) {
                 setShowPrintTypeSelection(showPrintTypeSelection);
             }} centered>
                 <Modal.Header closeButton>
-                    <Modal.Title>Select Print Type</Modal.Title>
+                    <Modal.Title>{t('Select Print Type')}</Modal.Title>
                 </Modal.Header>
                 <Modal.Body className="d-flex justify-content-around">
                     <Button variant="secondary" ref={printButtonRef} onClick={() => {
@@ -1199,7 +1230,7 @@ function PurchaseReturnIndex(props) {
                             }, 100);
                         }
                     }}>
-                        <i className="bi bi-printer"></i> Print
+                        <i className="bi bi-printer"></i> {t('Print')}
                     </Button>
 
                     <Button variant="primary" ref={printA4ButtonRef} onClick={() => {
@@ -1215,7 +1246,7 @@ function PurchaseReturnIndex(props) {
                             }
                         }}
                     >
-                        <i className="bi bi-printer"></i> Print A4 Invoice
+                        <i className="bi bi-printer"></i> {t('Print A4 Invoice')}
                     </Button>
                 </Modal.Body>
             </Modal>
@@ -1232,16 +1263,16 @@ function PurchaseReturnIndex(props) {
                         <i
                             className="bi bi-gear-fill"
                             style={{ fontSize: "1.2rem", marginRight: "4px" }}
-                            title="Table Settings"
+                            title={t('Table Settings')}
                         />
-                        Purchase Return Settings
+                        {t('Purchase Return Settings')}
                     </Modal.Title>
                 </Modal.Header>
                 <Modal.Body>
                     {/* Column Settings */}
                     {showSettings && (
                         <>
-                            <h6 className="mb-2">Customize Columns</h6>
+                            <h6 className="mb-2">{t('Customize Columns')}</h6>
                             <DragDropContext onDragEnd={onDragEnd}>
                                 <Droppable droppableId="columns">
                                     {(provided) => (
@@ -1292,7 +1323,7 @@ function PurchaseReturnIndex(props) {
                 </Modal.Body>
                 <Modal.Footer>
                     <Button variant="secondary" onClick={() => setShowSettings(false)}>
-                        Close
+                        {t('Close')}
                     </Button>
                     <Button
                         variant="primary"
@@ -1302,14 +1333,14 @@ function PurchaseReturnIndex(props) {
                             //setShowSettings(false);
                         }}
                     >
-                        Restore to Default
+                        {t('Restore to Default')}
                     </Button>
                 </Modal.Footer>
             </Modal>
 
             <Modal show={showSuccess} onHide={() => setShowSuccess(false)} centered>
                 <Modal.Header closeButton>
-                    <Modal.Title>Success</Modal.Title>
+                    <Modal.Title>{t('Success')}</Modal.Title>
                 </Modal.Header>
                 <Modal.Body>
                     <Alert variant="success">
@@ -1318,7 +1349,7 @@ function PurchaseReturnIndex(props) {
                 </Modal.Body>
                 <Modal.Footer>
                     <Button variant="secondary" onClick={() => setShowSuccess(false)}>
-                        Close
+                        {t('Close')}
                     </Button>
                 </Modal.Footer>
             </Modal>
@@ -1338,18 +1369,33 @@ function PurchaseReturnIndex(props) {
 
                         <span className="text-end">
                             <StatsSummary
-                                title="Purchase Return"
+                                title={t('Purchase Return Summary')}
+                                filters={{
+                                    ...(dateValue ? { 'Date': dateValue } : {}),
+                                    ...(fromDateValue ? { 'From Date': fromDateValue } : {}),
+                                    ...(toDateValue ? { 'To Date': toDateValue } : {}),
+                                    ...(selectedVendors.length > 0 ? { 'Vendor': selectedVendors.map(v => v.name).join(', ') } : {}),
+                                    ...Object.fromEntries(
+                                        Object.entries(fieldFilters)
+                                            .filter(([, v]) => v)
+                                            .map(([field, value]) => {
+                                                const col = columns.find(c => c.fieldName === field || c.key === field);
+                                                return [col ? col.label : field, value];
+                                            })
+                                    ),
+                                }}
                                 stats={{
-                                    "Cash Purchase Return": totalCashPurchaseReturn,
-                                    "Credit Purchase Return": totalUnPaidPurchaseReturn,
-                                    "Bank Account Purchase Return": totalBankAccountPurchaseReturn,
-                                    "Cash Discount Return": totalCashDiscount,
-                                    "VAT Return": vatPrice,
-                                    "Purchase Return": totalPurchaseReturn,
-                                    "Purchase Return paid by purchase": totalPurchasePurchaseReturn,
-                                    "Paid Purchase Return": totalPaidPurchaseReturn,
-                                    "Purchase Discount Return": totalDiscount,
-                                    "Shipping/Handling fees": totalShippingHandlingFees,
+                                    [t('Cash Purchase Return')]: totalCashPurchaseReturn,
+                                    [t('Credit Purchase Return')]: totalUnPaidPurchaseReturn,
+                                    [t('Bank Account Purchase Return')]: totalBankAccountPurchaseReturn,
+                                    [t('Cash Discount Return')]: totalCashDiscount,
+                                    [t('VAT Return')]: vatPrice,
+                                    [t('Purchase Return')]: totalPurchaseReturn,
+                                    ...(store.settings?.disable_purchases_on_accounts ? { [t('Accounted Purchase Return(with VAT)')]: selectedAccountedFilter === "false" ? 0 : (selectedAccountedFilter === "true" ? totalPurchaseReturn : totalAccountedPurchaseReturn) } : {}),
+                                    [t('Purchase Return paid by purchase')]: totalPurchasePurchaseReturn,
+                                    [t('Paid Purchase Return')]: totalPaidPurchaseReturn,
+                                    [t('Purchase Discount Return')]: totalDiscount,
+                                    [t('Shipping/Handling fees')]: totalShippingHandlingFees,
                                 }}
 
                                 onToggle={handleSummaryToggle}
@@ -1363,21 +1409,21 @@ function PurchaseReturnIndex(props) {
 
                 <div className="row">
                     <div className="col">
-                        <h1 className="h3">Purchase Returns</h1>
+                        <h1 className="h3">{t('Purchase Returns')}</h1>
                     </div>
 
                     <div className="col text-end">
                         <Button variant="primary" onClick={() => {
                             openReportPreview();
-                        }} style={{ marginRight: "8px" }} className="btn btn-primary mb-3">
+                        }} style={{ marginRight: "8px" }} className="btn btn-primary mb-1">
                             <i className="bi bi-printer"></i>&nbsp;
-                            Print Report
+                            {t('Print Report')}
                         </Button>
-                        <ExcelFile filename={purchaseReturnReportFileName} element={excelData.length > 0 ? <Button variant="success" className="btn btn-primary mb-3 success" >Download Purchase Return Report</Button> : ""}>
+                        <ExcelFile filename={purchaseReturnReportFileName} element={excelData.length > 0 ? <Button variant="success" className="btn btn-primary mb-1 success" >{t('Download Purchase Return Report')}</Button> : ""}>
                             <ExcelSheet dataSet={excelData} name={purchaseReturnReportFileName} />
                         </ExcelFile>
 
-                        {excelData.length === 0 ? <Button variant="primary" className="btn btn-primary mb-3" onClick={getAllPurchaseReturns} >{fettingAllRecordsInProgress ? "Preparing.." : "Purchase Return Report"}</Button> : ""}
+                        {excelData.length === 0 ? <Button variant="primary" className="btn btn-primary mb-1" onClick={getAllPurchaseReturns} >{fettingAllRecordsInProgress ? t('Preparing..') : t('Purchase Return Report')}</Button> : ""}
                         &nbsp;&nbsp;
 
                         {/*<div className="col text-end">
@@ -1395,12 +1441,12 @@ function PurchaseReturnIndex(props) {
                         <Button
                             hide={true}
                             variant="primary"
-                            className="btn btn-primary mb-3"
+                            className="btn btn-primary mb-1"
                             onClick={() => {
                                 openPurchases();
                             }}
                         >
-                            <i className="bi bi-plus-lg"></i> Create
+                            <i className="bi bi-plus-lg"></i> {t('Create')}
                         </Button>
                     </div>
                 </div>
@@ -1413,89 +1459,58 @@ function PurchaseReturnIndex(props) {
                         <h5   className="card-title mb-0"></h5>
                     </div>
                     */}
-                            <div className="card-body">
+                            <div className="card-body p-2">
                                 <div className="row">
                                     {totalItems === 0 && (
                                         <div className="col">
-                                            <p className="text-start">No Purchase Returns to display</p>
+                                            <p className="text-start">{t('No Purchase Returns to display')}</p>
                                         </div>
                                     )}
                                 </div>
-                                <div className="row" style={{ border: "solid 0px" }}>
-                                    <div className="col text-start" style={{ border: "solid 0px" }}>
-                                        <Button
-                                            onClick={() => {
-                                                setIsRefreshInProcess(true);
-                                                list();
-                                            }}
-                                            variant="primary"
-                                            disabled={isRefreshInProcess}
-                                        >
-                                            {isRefreshInProcess ? (
-                                                <Spinner
-                                                    as="span"
-                                                    animation="border"
-                                                    size="sm"
-                                                    role="status"
-                                                    aria-hidden={true}
-                                                />
-                                            ) : (
-                                                <i className="fa fa-refresh"></i>
-                                            )}
-                                            <span className="visually-hidden">Loading...</span>
-                                        </Button>
-                                    </div>
-                                    <div className="col text-center">
-                                        {isListLoading && (
-                                            <Spinner animation="grow" variant="primary" />
+                                <div style={{ display: "flex", alignItems: "center", gap: "8px", flexWrap: "wrap", marginBottom: "8px" }}>
+                                    <Button
+                                        onClick={() => { setIsRefreshInProcess(true); list(); }}
+                                        variant="primary"
+                                        disabled={isRefreshInProcess}
+                                    >
+                                        {isRefreshInProcess ? (
+                                            <Spinner as="span" animation="border" size="sm" role="status" aria-hidden={true} />
+                                        ) : (
+                                            <i className="fa fa-refresh"></i>
                                         )}
-                                    </div>
-                                    <div className="col text-end">
-                                        {totalItems > 0 && (
-                                            <>
-                                                <label className="form-label">Size:&nbsp;</label>
-                                                <select
-                                                    value={pageSize}
-                                                    onChange={(e) => {
-                                                        changePageSize(e.target.value);
-                                                    }}
-                                                    className="form-control pull-right"
-                                                    style={{
-                                                        border: "solid 1px",
-                                                        borderColor: "silver",
-                                                        width: "55px",
-                                                    }}
-                                                >
-                                                    <option value="5">
-                                                        5
-                                                    </option>
-                                                    <option value="10">
-                                                        10
-                                                    </option>
-                                                    <option value="20">20</option>
-                                                    <option value="40">40</option>
-                                                    <option value="50">50</option>
-                                                    <option value="100">100</option>
-                                                </select>
-                                            </>
-                                        )}
-                                    </div>
-                                </div>
+                                        <span className="visually-hidden">{t('Loading...')}</span>
+                                    </Button>
 
-                                <br />
-                                <div className="row">
-                                    <div className="col" style={{ border: "solid 0px" }}>
+                                    {totalItems > 0 && (
+                                        <>
+                                            <label className="form-label mb-0">{t('Size')}:&nbsp;</label>
+                                            <select
+                                                value={pageSize}
+                                                onChange={(e) => { changePageSize(e.target.value); }}
+                                                className="form-control"
+                                                style={{ border: "solid 1px", borderColor: "silver", width: "55px" }}
+                                            >
+                                                <option value="5">5</option>
+                                                <option value="10">10</option>
+                                                <option value="20">20</option>
+                                                <option value="40">40</option>
+                                                <option value="50">50</option>
+                                                <option value="100">100</option>
+                                            </select>
+                                        </>
+                                    )}
+
+                                    <div className="w-100" style={{ overflowX: "auto" }}>
                                         {totalPages ? <ReactPaginate
                                             breakLabel="..."
                                             nextLabel="next >"
-                                            onPageChange={(event) => {
-                                                changePage(event.selected + 1);
-                                            }}
-                                            pageRangeDisplayed={5}
+                                            onPageChange={(event) => { changePage(event.selected + 1); }}
+                                            pageRangeDisplayed={3}
+                                            marginPagesDisplayed={1}
                                             pageCount={totalPages}
-                                            previousLabel="< previous"
+                                            previousLabel="< prev"
                                             renderOnZeroPageCount={null}
-                                            className="pagination  flex-wrap"
+                                            className="pagination flex-wrap mb-0"
                                             pageClassName="page-item"
                                             pageLinkClassName="page-link"
                                             activeClassName="active"
@@ -1506,46 +1521,40 @@ function PurchaseReturnIndex(props) {
                                             forcePage={page - 1}
                                         /> : ""}
                                     </div>
-                                </div>
-                                <div className="row">
-                                    <div className="col text-end">
-                                        <button
-                                            className="btn btn-sm btn-outline-secondary"
-                                            onClick={() => {
-                                                setShowSettings(!showSettings);
-                                            }}
-                                        >
-                                            <i
-                                                className="bi bi-gear-fill"
-                                                style={{ fontSize: "1.2rem" }}
-                                                title="Table Settings"
 
-                                            />
-                                        </button>
-                                    </div>
-                                </div>
-
-                                <div className="row">
                                     {totalItems > 0 && (
-                                        <>
-                                            <div className="col text-start">
-                                                <p className="text-start">
-                                                    showing {offset + 1}-{offset + currentPageItemsCount} of{" "}
-                                                    {totalItems}
-                                                </p>
-                                            </div>
-
-                                            <div className="col text-end">
-                                                <p className="text-end">
-                                                    page {page} of {totalPages}
-                                                </p>
-                                            </div>
-                                        </>
+                                        <span className="text-muted small">
+                                            showing {offset + 1}-{offset + currentPageItemsCount} of {totalItems}
+                                            &nbsp;|&nbsp;page {page} of {totalPages}
+                                        </span>
                                     )}
+
+                                    <button
+                                        className="btn btn-sm btn-outline-secondary ms-auto"
+                                        onClick={() => { setShowSettings(!showSettings); }}
+                                    >
+                                        <i className="bi bi-gear-fill" style={{ fontSize: "1.2rem" }} title="Table Settings" />
+                                    </button>
                                 </div>
 
 
-                                <div className="table-responsive" style={{ overflowX: "auto", overflowY: "auto", maxHeight: "500px" }}>
+                                <div className="table-responsive" style={{ position: "relative", overflowX: "auto", overflowY: "auto", minHeight: "200px" }} ref={(el) => {
+                                    if (!el) return;
+                                    const fit = () => {
+                                        const top = el.getBoundingClientRect().top;
+                                        el.style.height = Math.max(200, window.innerHeight - top - 16) + "px";
+                                    };
+                                    fit();
+                                    if (!el._fitListenerAdded) {
+                                        el._fitListenerAdded = true;
+                                        window.addEventListener("resize", fit);
+                                    }
+                                }}>
+                                    {isListLoading && (
+                                        <div style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0, display: "flex", alignItems: "center", justifyContent: "center", zIndex: 10, background: "rgba(255,255,255,0.5)" }}>
+                                            <Spinner animation="grow" variant="primary" style={{ width: "3rem", height: "3rem" }} />
+                                        </div>
+                                    )}
                                     <table className="table table-striped table-sm table-bordered">
                                         <thead>
                                             <tr className="text-center">
@@ -1844,6 +1853,7 @@ function PurchaseReturnIndex(props) {
                                                             col.key !== "date" &&
                                                             col.key !== "payment_status" &&
                                                             col.key !== "payment_methods" &&
+                                                            col.key !== "enable_on_accounts" &&
                                                             col.key !== "created_by" &&
                                                             col.key !== "created_at" &&
                                                             col.key !== "actions_end" &&
@@ -1870,7 +1880,7 @@ function PurchaseReturnIndex(props) {
                                                                     );
                                                                 }}
                                                                 options={paymentMethodOptions}
-                                                                placeholder="Select payment methods"
+                                                                placeholder={t("Select payment methods")}
                                                                 selected={selectedPaymentMethodList}
                                                                 highlightOnlyResult={true}
                                                                 multiple
@@ -1888,7 +1898,7 @@ function PurchaseReturnIndex(props) {
                                                                     );
                                                                 }}
                                                                 options={userOptions}
-                                                                placeholder="Select Users"
+                                                                placeholder={t("Select Users")}
                                                                 selected={selectedCreatedByUsers}
                                                                 highlightOnlyResult={true}
                                                                 onInputChange={(searchTerm, e) => {
@@ -1904,6 +1914,7 @@ function PurchaseReturnIndex(props) {
                                                                 selected={selectedCreatedAtDate}
                                                                 className="form-control"
                                                                 dateFormat="MMM dd yyyy"
+                                                                locale={dateLocale}
                                                                 isClearable={true}
                                                                 onChange={(date) => {
                                                                     if (!date) {
@@ -1927,7 +1938,7 @@ function PurchaseReturnIndex(props) {
                                                                     setShowCreatedAtDateRange(!showCreatedAtDateRange)
                                                                 }
                                                             >
-                                                                {showCreatedAtDateRange ? "Less.." : "More.."}
+                                                                {showCreatedAtDateRange ? t('Less..') : t('More..')}
                                                             </small>
                                                             <br />
                                                             {showCreatedAtDateRange ? (
@@ -1939,6 +1950,7 @@ function PurchaseReturnIndex(props) {
                                                                         selected={selectedCreatedAtFromDate}
                                                                         className="form-control"
                                                                         dateFormat="MMM dd yyyy"
+                                                                        locale={dateLocale}
                                                                         isClearable={true}
                                                                         onChange={(date) => {
                                                                             if (!date) {
@@ -1958,6 +1970,7 @@ function PurchaseReturnIndex(props) {
                                                                         selected={selectedCreatedAtToDate}
                                                                         className="form-control"
                                                                         dateFormat="MMM dd yyyy"
+                                                                        locale={dateLocale}
                                                                         isClearable={true}
                                                                         onChange={(date) => {
                                                                             if (!date) {
@@ -1984,11 +1997,26 @@ function PurchaseReturnIndex(props) {
                                                                     );
                                                                 }}
                                                                 options={paymentStatusOptions}
-                                                                placeholder="Select Payment Status"
+                                                                placeholder={t("Select Payment Status")}
                                                                 selected={selectedPaymentStatusList}
                                                                 highlightOnlyResult={true}
                                                                 multiple
                                                             />
+                                                        </th>}
+                                                        {col.key === "enable_on_accounts" && <th>
+                                                            <select
+                                                                className="form-select form-select-sm"
+                                                                value={selectedAccountedFilter}
+                                                                onChange={(e) => {
+                                                                    const val = e.target.value;
+                                                                    setSelectedAccountedFilter(val);
+                                                                    searchByFieldValue("enable_on_accounts", val);
+                                                                }}
+                                                            >
+                                                                <option value="">ALL</option>
+                                                                <option value="true">YES</option>
+                                                                <option value="false">NO</option>
+                                                            </select>
                                                         </th>}
                                                         {col.key === "vendor" && <th>
                                                             <Typeahead
@@ -2003,7 +2031,7 @@ function PurchaseReturnIndex(props) {
                                                                     );
                                                                 }}
                                                                 options={vendorOptions}
-                                                                placeholder="Vendor Name / Mob / VAT # / ID"
+                                                                placeholder={t("Vendor Name / Mob / VAT # / ID")}
                                                                 selected={selectedVendors}
                                                                 highlightOnlyResult={true}
                                                                 onInputChange={(searchTerm, e) => {
@@ -2030,6 +2058,7 @@ function PurchaseReturnIndex(props) {
                                                                     selected={selectedDate}
                                                                     className="form-control"
                                                                     dateFormat="MMM dd yyyy"
+                                                                    locale={dateLocale}
                                                                     isClearable={true}
                                                                     onChange={(date) => {
                                                                         if (!date) {
@@ -2051,7 +2080,7 @@ function PurchaseReturnIndex(props) {
                                                                     }}
                                                                     onClick={(e) => setShowDateRange(!showDateRange)}
                                                                 >
-                                                                    {showDateRange ? "Less.." : "More.."}
+                                                                    {showDateRange ? t('Less..') : t('More..')}
                                                                 </small>
                                                                 <br />
 
@@ -2064,6 +2093,7 @@ function PurchaseReturnIndex(props) {
                                                                             selected={selectedFromDate}
                                                                             className="form-control"
                                                                             dateFormat="MMM dd yyyy"
+                                                                            locale={dateLocale}
                                                                             isClearable={true}
                                                                             onChange={(date) => {
                                                                                 if (!date) {
@@ -2083,6 +2113,7 @@ function PurchaseReturnIndex(props) {
                                                                             selected={selectedToDate}
                                                                             className="form-control"
                                                                             dateFormat="MMM dd yyyy"
+                                                                            locale={dateLocale}
                                                                             isClearable={true}
                                                                             onChange={(date) => {
                                                                                 if (!date) {
@@ -2122,6 +2153,7 @@ function PurchaseReturnIndex(props) {
                                                             selected={selectedDate}
                                                             className="form-control"
                                                             dateFormat="MMM dd yyyy"
+                                                            locale={dateLocale}
                                                             isClearable={true}
                                                             onChange={(date) => {
                                                                 if (!date) {
@@ -2142,7 +2174,7 @@ function PurchaseReturnIndex(props) {
                                                             }}
                                                             onClick={(e) => setShowDateRange(!showDateRange)}
                                                         >
-                                                            {showDateRange ? "Less.." : "More.."}
+                                                            {showDateRange ? t('Less..') : t('More..')}
                                                         </small>
                                                         <br />
 
@@ -2155,6 +2187,7 @@ function PurchaseReturnIndex(props) {
                                                                     selected={selectedFromDate}
                                                                     className="form-control"
                                                                     dateFormat="MMM dd yyyy"
+                                                                    locale={dateLocale}
                                                                     isClearable={true}
                                                                     onChange={(date) => {
                                                                         if (!date) {
@@ -2174,6 +2207,7 @@ function PurchaseReturnIndex(props) {
                                                                     selected={selectedToDate}
                                                                     className="form-control"
                                                                     dateFormat="MMM dd yyyy"
+                                                                    locale={dateLocale}
                                                                     isClearable={true}
                                                                     onChange={(date) => {
                                                                         if (!date) {
@@ -2204,7 +2238,7 @@ function PurchaseReturnIndex(props) {
                                                             );
                                                         }}
                                                         options={vendorOptions}
-                                                        placeholder="Vendor Name / Mob / VAT # / ID"
+                                                        placeholder={t("Vendor Name / Mob / VAT # / ID")}
                                                         selected={selectedVendors}
                                                         highlightOnlyResult={true}
                                                         ref={vendorSearchRef}
@@ -2305,7 +2339,7 @@ function PurchaseReturnIndex(props) {
                                                             );
                                                         }}
                                                         options={paymentStatusOptions}
-                                                        placeholder="Select Payment Status"
+                                                        placeholder={t("Select Payment Status")}
                                                         selected={selectedPaymentStatusList}
                                                         highlightOnlyResult={true}
                                                         multiple
@@ -2323,7 +2357,7 @@ function PurchaseReturnIndex(props) {
                                                             );
                                                         }}
                                                         options={paymentMethodOptions}
-                                                        placeholder="Select payment methods"
+                                                        placeholder={t("Select payment methods")}
                                                         selected={selectedPaymentMethodList}
                                                         highlightOnlyResult={true}
                                                         multiple
@@ -2341,7 +2375,7 @@ function PurchaseReturnIndex(props) {
                                                             );
                                                         }}
                                                         options={userOptions}
-                                                        placeholder="Select Users"
+                                                        placeholder={t("Select Users")}
                                                         selected={selectedCreatedByUsers}
                                                         highlightOnlyResult={true}
                                                         onInputChange={(searchTerm, e) => {
@@ -2357,6 +2391,7 @@ function PurchaseReturnIndex(props) {
                                                         selected={selectedCreatedAtDate}
                                                         className="form-control"
                                                         dateFormat="MMM dd yyyy"
+                                                        locale={dateLocale}
                                                         isClearable={true}
                                                         onChange={(date) => {
                                                             if (!date) {
@@ -2379,7 +2414,7 @@ function PurchaseReturnIndex(props) {
                                                             setShowCreatedAtDateRange(!showCreatedAtDateRange)
                                                         }
                                                     >
-                                                        {showCreatedAtDateRange ? "Less.." : "More.."}
+                                                        {showCreatedAtDateRange ? t('Less..') : t('More..')}
                                                     </small>
                                                     <br />
 
@@ -2392,6 +2427,7 @@ function PurchaseReturnIndex(props) {
                                                                 selected={selectedCreatedAtFromDate}
                                                                 className="form-control"
                                                                 dateFormat="MMM dd yyyy"
+                                                                locale={dateLocale}
                                                                 isClearable={true}
                                                                 onChange={(date) => {
                                                                     if (!date) {
@@ -2411,6 +2447,7 @@ function PurchaseReturnIndex(props) {
                                                                 selected={selectedCreatedAtToDate}
                                                                 className="form-control"
                                                                 dateFormat="MMM dd yyyy"
+                                                                locale={dateLocale}
                                                                 isClearable={true}
                                                                 onChange={(date) => {
                                                                     if (!date) {
@@ -2478,7 +2515,7 @@ function PurchaseReturnIndex(props) {
                                                                     {purchaseReturn.vendor_invoice_no}
                                                                 </td>}
                                                                 {(col.fieldName === "date" || col.fieldName === "created_at") && <td style={{ width: "auto", whiteSpace: "nowrap" }}>
-                                                                    {format(new Date(purchaseReturn[col.key]), "MMM dd yyyy h:mma")}
+                                                                    {format(new Date(purchaseReturn[col.key]), "MMM dd yyyy h:mma", { locale: dateLocale })}
                                                                 </td>}
                                                                 {(col.fieldName === "vendor_name") && <td style={{ width: "auto", whiteSpace: "nowrap" }}>
                                                                     {purchaseReturn.vendor_name && <span style={{ cursor: "pointer", color: "blue" }} onClick={() => {
@@ -2530,6 +2567,11 @@ function PurchaseReturnIndex(props) {
                                                                 {(col.fieldName === "discount") && <td style={{ width: "auto", whiteSpace: "nowrap" }}>
                                                                     {trimTo2Decimals(purchaseReturn.discount)}
                                                                 </td>}
+                                                                {(col.fieldName === "enable_on_accounts") && <td style={{ width: "auto", whiteSpace: "nowrap", textAlign: "center" }}>
+                                                                    {purchaseReturn.enable_on_accounts
+                                                                        ? <span className="badge bg-success">YES</span>
+                                                                        : <span className="badge bg-secondary">NO</span>}
+                                                                </td>}
                                                                 {(col.fieldName === "created_by") && <td style={{ width: "auto", whiteSpace: "nowrap" }}>
                                                                     {purchaseReturn.created_by_name}
                                                                 </td>}
@@ -2575,7 +2617,8 @@ function PurchaseReturnIndex(props) {
                                                         <td style={{ width: "auto", whiteSpace: "nowrap" }} >
                                                             {format(
                                                                 new Date(purchasereturn.date),
-                                                                "MMM dd yyyy h:mma"
+                                                                "MMM dd yyyy h:mma",
+                                                                { locale: dateLocale }
                                                             )}
                                                         </td>
 
@@ -2625,7 +2668,8 @@ function PurchaseReturnIndex(props) {
                                                         <td style={{ width: "auto", whiteSpace: "nowrap" }} >
                                                             {format(
                                                                 new Date(purchasereturn.created_at),
-                                                                "MMM dd yyyy h:mma"
+                                                                "MMM dd yyyy h:mma",
+                                                                { locale: dateLocale }
                                                             )}
                                                         </td>
                                                         <td style={{ width: "auto", whiteSpace: "nowrap" }} >
@@ -2649,26 +2693,6 @@ function PurchaseReturnIndex(props) {
                                     </table>
                                 </div>
 
-                                {totalPages ? <ReactPaginate
-                                    breakLabel="..."
-                                    nextLabel="next >"
-                                    onPageChange={(event) => {
-                                        changePage(event.selected + 1);
-                                    }}
-                                    pageRangeDisplayed={5}
-                                    pageCount={totalPages}
-                                    previousLabel="< previous"
-                                    renderOnZeroPageCount={null}
-                                    className="pagination  flex-wrap"
-                                    pageClassName="page-item"
-                                    pageLinkClassName="page-link"
-                                    activeClassName="active"
-                                    previousClassName="page-item"
-                                    nextClassName="page-item"
-                                    previousLinkClassName="page-link"
-                                    nextLinkClassName="page-link"
-                                    forcePage={page - 1}
-                                /> : ""}
                             </div>
                         </div>
                     </div>

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useContext, useCallback, useMemo } from "react";
+import React, { useState, useEffect, useRef, forwardRef, useContext, useCallback, useMemo } from "react";
 import SalesReturnCreate from "./create.js";
 import SalesReturnView from "./view.js";
 
@@ -28,7 +28,9 @@ import OrderPrint from './../order/print.js';
 import { DragDropContext, Droppable, Draggable } from "react-beautiful-dnd";
 import CustomerCreate from "./../customer/create.js";
 import OrderCreate from "./../order/create.js";
-
+import { useTranslation } from 'react-i18next';
+import { getDateLocale } from "../i18n/dateLocales";
+import { confirm } from 'react-bootstrap-confirmation';
 
 const ExcelFile = ReactExport.ExcelFile;
 const ExcelSheet = ReactExport.ExcelFile.ExcelSheet;
@@ -52,7 +54,11 @@ const TimeAgo = ({ date }) => {
     return <span>{formatDistanceToNowStrict(new Date(date), { locale: shortLocale })} ago</span>;
 };
 
-function SalesReturnIndex(props) {
+//function SalesReturnIndex(props) {
+const SalesReturnIndex = forwardRef((props, ref) => {
+    const { t, i18n } = useTranslation('common');
+    const dateLocale = useMemo(() => getDateLocale(i18n.language), [i18n.language]);
+
     let [enableSelection, setEnableSelection] = useState(false);
     let [pendingView, setPendingView] = useState(false);
 
@@ -69,6 +75,7 @@ function SalesReturnIndex(props) {
 
     const { lastMessage } = useContext(WebSocketContext);
     let [statsOpen, setStatsOpen] = useState(false);
+    const [fieldFilters, setFieldFilters] = useState({});
 
 
     let [totalSalesReturn, setTotalSalesReturn] = useState(0.00);
@@ -90,7 +97,7 @@ function SalesReturnIndex(props) {
     const [salesreturnList, setSalesReturnList] = useState([]);
 
     //pagination
-    let [pageSize, setPageSize] = useState(20);
+    let [pageSize, setPageSize] = useState(() => parseInt(localStorage.getItem('sales_return_pageSize') || '10'));
     let [page, setPage] = useState(1);
     const [totalPages, setTotalPages] = useState(0);
     const [totalItems, setTotalItems] = useState(1);
@@ -163,6 +170,7 @@ function SalesReturnIndex(props) {
     const [successMessage, setSuccessMessage] = useState(false);
 
     let [reportingInProgress, setReportingInProgress] = useState(false);
+    let [deleted, setDeleted] = useState(false);
 
     let [errors, setErrors] = useState({});
     function ReportInvoiceToZatca(id, index) {
@@ -216,11 +224,11 @@ function SalesReturnIndex(props) {
                 salesreturnList[index].zatca.reportingInProgress = false;
                 setSalesReturnList([...salesreturnList]);
 
-                console.log("Response:");
-                console.log(data);
-                if (props.showToastMessage) props.showToastMessage("Invoice reported successfully to Zatca!", "success");
+                //console.log("Response:");
+                //console.log(data);
+                if (props.showToastMessage) props.showToastMessage(t("Successfully Reported to Zatca!"), "success");
                 setShowSuccess(true);
-                setSuccessMessage("Successfully Reported to Zatca!")
+                setSuccessMessage(t("Successfully Reported to Zatca!"))
                 list();
             })
             .catch((error) => {
@@ -229,12 +237,12 @@ function SalesReturnIndex(props) {
                 salesreturnList[index].zatca.reportingInProgress = false;
                 setSalesReturnList([...salesreturnList]);
                 setShowErrors(true);
-                console.log("Inside catch");
-                console.log(error);
+                //console.log("Inside catch");
+                //console.log(error);
                 setErrors({ ...error });
                 // setErrors({ ...error });
-                console.error("There was an error!", error);
-                if (props.showToastMessage) props.showToastMessage("Invoice reporting to Zatca failed!", "danger");
+                //console.error("There was an error!", error);
+                if (props.showToastMessage) props.showToastMessage(t("Invoice reporting to Zatca failed!"), "danger");
                 list();
             });
     }
@@ -281,12 +289,13 @@ function SalesReturnIndex(props) {
     let [fettingAllRecordsInProgress, setFettingAllRecordsInProgress] = useState(false);
 
     function prepareExcelData() {
-        console.log("Inside prepareExcelData()");
+        //console.log("Inside prepareExcelData()");
         var groupedByDate = [];
         for (var i = 0; i < allSalesReturns.length; i++) {
             let date = format(
                 new Date(allSalesReturns[i].date),
-                "dd-MMM-yyyy"
+                "dd-MMM-yyyy",
+                { locale: dateLocale }
             );
             if (!groupedByDate[date]) {
                 groupedByDate[date] = [];
@@ -296,20 +305,20 @@ function SalesReturnIndex(props) {
 
         }
 
-        console.log("groupedByDate:", groupedByDate);
+        //console.log("groupedByDate:", groupedByDate);
 
         excelData = [{
             columns: [
-                { title: "Description", width: { wch: 50 } },//pixels width 
-                { title: "Quantity", width: { wpx: 90 } },//char width 
-                { title: "Unit", width: { wpx: 90 } },
-                { title: "Rate", width: { wpx: 90 } },
-                { title: "Gross", width: { wpx: 90 } },
-                { title: "Disc %", width: { wpx: 90 } },
-                { title: "Disc", width: { wpx: 90 } },
-                { title: "Tax %", width: { wpx: 90 } },
-                { title: "Tax Amount", width: { wpx: 180 } },
-                { title: "Net Amount", width: { wpx: 90 } },
+                { title: t("Description"), width: { wch: 50 } },//pixels width 
+                { title: t("Quantity"), width: { wpx: 90 } },//char width 
+                { title: t("Unit"), width: { wpx: 90 } },
+                { title: t("Rate"), width: { wpx: 90 } },
+                { title: t("Gross"), width: { wpx: 90 } },
+                { title: t("Disc %"), width: { wpx: 90 } },
+                { title: t("Disc"), width: { wpx: 90 } },
+                { title: t("Tax %"), width: { wpx: 90 } },
+                { title: t("Tax Amount"), width: { wpx: 180 } },
+                { title: t("Net Amount"), width: { wpx: 90 } },
             ],
             data: [],
         }];
@@ -322,7 +331,7 @@ function SalesReturnIndex(props) {
         let invoiceCount = 0;
         for (let returnDate in groupedByDate) {
 
-            console.log("returnDate:", returnDate);
+            //console.log("returnDate:", returnDate);
             excelData[0].data.push([{ value: "Inv Date: " + returnDate }]);
 
             let dayTotalBeforeVAT = 0.00;
@@ -401,7 +410,7 @@ function SalesReturnIndex(props) {
                     { value: "", },
                     { value: "", },
                     {
-                        value: "Shipping/Handling Fees",
+                        value: t("Shipping/Handling Fees"),
                     }, {
                         value: trimTo2Decimals(salesReturn.shipping_handling_fees),
                     },
@@ -417,7 +426,7 @@ function SalesReturnIndex(props) {
                     { value: "", },
                     { value: "", },
                     {
-                        value: "Discount",
+                        value: t("Discount"),
                     }, {
                         value: trimTo2Decimals(salesReturn.discount),
                     },
@@ -433,7 +442,7 @@ function SalesReturnIndex(props) {
                     { value: "", },
                     { value: "", },
                     {
-                        value: "Total Amount After Discount",
+                        value: t("Total Amount After Discount"),
                     }, {
                         value: trimTo2Decimals(totalAmountAfterDiscount),
                     },
@@ -449,7 +458,7 @@ function SalesReturnIndex(props) {
                     { value: "", },
                     { value: "", },
                     {
-                        value: "Total Amount Before VAT",
+                        value: t("Total Amount Before VAT"),
                     }, {
                         value: trimTo2Decimals(totalAmountBeforeVat),
                     },
@@ -466,7 +475,7 @@ function SalesReturnIndex(props) {
                     { value: "", },
                     { value: "", },
                     {
-                        value: "VAT Amount",
+                        value: t("VAT Amount"),
                     }, {
                         value: trimTo2Decimals(salesReturn.vat_price),
                     },
@@ -484,7 +493,7 @@ function SalesReturnIndex(props) {
                     { value: "", },
                     { value: "", },
                     {
-                        value: "Total Amount After VAT",
+                        value: t("Total Amount After VAT"),
                     }, {
                         value: trimTo2Decimals(totalAmountAfterVat),
                     },
@@ -506,7 +515,7 @@ function SalesReturnIndex(props) {
                 { value: "", },
                 { value: "", },
                 {
-                    value: "Day Total Before VAT",
+                    value: t("Day Total Before VAT"),
                 }, {
                     value: trimTo2Decimals(dayTotalBeforeVAT),
                 },
@@ -522,7 +531,7 @@ function SalesReturnIndex(props) {
                 { value: "", },
                 { value: "", },
                 {
-                    value: "Day VAT",
+                    value: t("Day VAT"),
                 }, {
                     value: trimTo2Decimals(dayVAT),
                 },
@@ -538,7 +547,7 @@ function SalesReturnIndex(props) {
                 { value: "", },
                 { value: "", },
                 {
-                    value: "Day Total After VAT",
+                    value: t("Day Total After VAT"),
                 }, {
                     value: trimTo2Decimals(dayTotalAfterVAT),
                 },
@@ -580,7 +589,7 @@ function SalesReturnIndex(props) {
             { value: "", },
             { value: "", },
             {
-                value: "Total Amount Before VAT",
+                value: t("Total Amount Before VAT"),
             }, {
                 value: trimTo2Decimals(totalAmountBeforeVAT),
             },
@@ -596,7 +605,7 @@ function SalesReturnIndex(props) {
             { value: "", },
             { value: "", },
             {
-                value: "Total VAT",
+                value: t("Total VAT"),
             }, {
                 value: trimTo2Decimals(totalVAT),
             },
@@ -612,7 +621,7 @@ function SalesReturnIndex(props) {
             { value: "", },
             { value: "", },
             {
-                value: "Total Amount After VAT",
+                value: t("Total Amount After VAT"),
             }, {
                 value: trimTo2Decimals(totalAmountAfterVAT),
             },
@@ -621,7 +630,7 @@ function SalesReturnIndex(props) {
 
         setExcelData(excelData);
 
-        console.log("excelData:", excelData);
+        //console.log("excelData:", excelData);
     }
 
     function makeSalesReturnReportFilename() {
@@ -631,7 +640,8 @@ function SalesReturnIndex(props) {
         } else if (searchParams["from_date"]) {
             salesReturnReportFileName += " - From " + searchParams["from_date"] + " to " + format(
                 new Date(),
-                "dd-MMM-yyyy"
+                "dd-MMM-yyyy",
+                { locale: dateLocale }
             );
         } else if (searchParams["to_date"]) {
             salesReturnReportFileName += " - Upto " + searchParams["to_date"];
@@ -650,7 +660,7 @@ function SalesReturnIndex(props) {
             },
         };
         let Select =
-            "select=id,code,date,total,net_total,discount_percent,discount,products,customer_name,created_at,vat_price,loss,net_profit";
+            "select=id,code,date,total,net_total,discount_percent,discount,products,customer_name,created_at,vat_price,loss,net_profit,deleted";
 
         if (localStorage.getItem("store_id")) {
             searchParams.store_id = localStorage.getItem("store_id");
@@ -709,9 +719,6 @@ function SalesReturnIndex(props) {
                         return [];
                     }
 
-
-
-
                     return data.result;
 
 
@@ -732,7 +739,7 @@ function SalesReturnIndex(props) {
         allSalesReturns = salesReturns;
         setAllSalesReturns(salesReturns);
 
-        console.log("allSalesReturns:", allSalesReturns);
+        //console.log("allSalesReturns:", allSalesReturns);
         prepareExcelData();
         fettingAllRecordsInProgress = false;
         setFettingAllRecordsInProgress(false);
@@ -778,10 +785,10 @@ function SalesReturnIndex(props) {
 
 
     async function suggestCustomers(searchTerm) {
-        console.log("Inside handle suggestCustomers");
+        //console.log("Inside handle suggestCustomers");
         setCustomerOptions([]);
 
-        console.log("searchTerm:" + searchTerm);
+        //console.log("searchTerm:" + searchTerm);
         if (!searchTerm) {
             return;
         }
@@ -822,7 +829,7 @@ function SalesReturnIndex(props) {
     }
 
     async function suggestUsers(searchTerm) {
-        console.log("Inside handle suggestUsers");
+        //console.log("Inside handle suggestUsers");
         setCustomerOptions([]);
 
         console.log("searchTerm:" + searchTerm);
@@ -858,6 +865,11 @@ function SalesReturnIndex(props) {
 
     function searchByFieldValue(field, value) {
         searchParams[field] = value;
+        setFieldFilters(prev => {
+            const updated = { ...prev };
+            if (value) { updated[field] = value; } else { delete updated[field]; }
+            return updated;
+        });
 
         page = 1;
         setPage(page);
@@ -877,26 +889,27 @@ function SalesReturnIndex(props) {
         d = new Date(d.toUTCString());
 
         value = format(d, "MMM dd yyyy");
+        let valueWithLocale = format(d, "MMM dd yyyy", { locale: dateLocale });
 
         if (field === "date_str") {
-            setDateValue(value);
+            setDateValue(valueWithLocale);
             setFromDateValue("");
             setToDateValue("");
             searchParams["from_date"] = "";
             searchParams["to_date"] = "";
             searchParams[field] = value;
         } else if (field === "from_date") {
-            setFromDateValue(value);
+            setFromDateValue(valueWithLocale);
             setDateValue("");
             searchParams["date"] = "";
             searchParams[field] = value;
         } else if (field === "to_date") {
-            setToDateValue(value);
+            setToDateValue(valueWithLocale);
             setDateValue("");
             searchParams["date"] = "";
             searchParams[field] = value;
         } else if (field === "created_at") {
-            setCreatedAtValue(value);
+            setCreatedAtValue(valueWithLocale);
             setCreatedAtFromValue("");
             setCreatedAtToValue("");
             searchParams["created_at_from"] = "";
@@ -904,12 +917,12 @@ function SalesReturnIndex(props) {
             searchParams[field] = value;
         }
         if (field === "created_at_from") {
-            setCreatedAtFromValue(value);
+            setCreatedAtFromValue(valueWithLocale);
             setCreatedAtValue("");
             searchParams["created_at"] = "";
             searchParams[field] = value;
         } else if (field === "created_at_to") {
-            setCreatedAtToValue(value);
+            setCreatedAtToValue(valueWithLocale);
             setCreatedAtValue("");
             searchParams["created_at"] = "";
             searchParams[field] = value;
@@ -948,6 +961,13 @@ function SalesReturnIndex(props) {
         }
     }
 
+
+
+
+    /*function changePageSize(size) {
+        setPageSize(parseInt(size));
+    }*/
+
     const list = useCallback(() => {
         setExcelData([]);
 
@@ -959,7 +979,7 @@ function SalesReturnIndex(props) {
             },
         };
         let Select =
-            "select=commission,commission_payment_method,zatca.compliance_check_last_failed_at,zatca.reporting_passed,zatca.compliance_passed,zatca.reporting_passed_at,zatca.compliane_check_passed_at,zatca.reporting_last_failed_at,zatca.reporting_failed_count,zatca.compliance_check_failed_count,id,code,date,net_total,created_by_name,customer_id,customer_name,customer_name_arabic,status,created_at,net_profit,net_loss,cash_discount,discount,order_code,order_id,total_payment_paid,payments_count,payment_methods,payment_status,balance_amount,store_id";
+            "select=commission,deleted,commission_payment_method,zatca.compliance_check_last_failed_at,zatca.reporting_passed,zatca.compliance_passed,zatca.reporting_passed_at,zatca.compliane_check_passed_at,zatca.reporting_last_failed_at,zatca.reporting_failed_count,zatca.compliance_check_failed_count,id,code,date,net_total,created_by_name,customer_id,customer_name,customer_name_arabic,status,created_at,net_profit,net_loss,cash_discount,discount,order_code,order_id,total_payment_paid,payments_count,payment_methods,payment_status,balance_amount,store_id";
         if (localStorage.getItem("store_id")) {
             searchParams.store_id = localStorage.getItem("store_id");
         }
@@ -1048,6 +1068,18 @@ function SalesReturnIndex(props) {
     }, [sortSalesReturn, sortField, page, pageSize, statsOpen, searchParams, props.order]);
 
     useEffect(() => {
+        list();
+        /*
+        const timer = setTimeout(() => {
+            list();
+        }, 300);
+
+        // Cleanup to avoid memory leaks
+        return () => clearTimeout(timer);
+        */
+    }, [pageSize, list]);
+
+    useEffect(() => {
         if (statsOpen) {
             list();  // Call list() whenever statsOpen changes to true
         }
@@ -1057,7 +1089,7 @@ function SalesReturnIndex(props) {
     useEffect(() => {
         if (lastMessage) {
             const jsonMessage = JSON.parse(lastMessage.data);
-            console.log("Received Message in User list:", jsonMessage);
+            // console.log("Received Message in User list:", jsonMessage);
             if (jsonMessage.event === "sales_return_updated") {
                 list();
             }
@@ -1067,7 +1099,7 @@ function SalesReturnIndex(props) {
     useEffect(() => {
         const handleSocketOpen = () => {
             //console.log("WebSocket Opened in sales list");
-            list();
+            // list();
         };
 
         eventEmitter.on("socket_connection_open", handleSocketOpen);
@@ -1084,22 +1116,6 @@ function SalesReturnIndex(props) {
         setSortSalesReturn(sortSalesReturn);
         list();
     }
-
-    useEffect(() => {
-        const timer = setTimeout(() => {
-            list();
-        }, 300);
-
-        // Cleanup to avoid memory leaks
-        return () => clearTimeout(timer);
-    }, [pageSize, list]);
-
-
-    function changePageSize(size) {
-        setPageSize(parseInt(size));
-    }
-
-
 
     function changePage(newPage) {
         page = parseInt(newPage);
@@ -1246,6 +1262,70 @@ function SalesReturnIndex(props) {
 
     let [showSalesReturnCreateForm, setShowSalesReturnCreateForm] = useState(false);
     const CreateFormRef = useRef();
+    function restoreSalesReturn(id) {
+        const requestOptions = {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                Authorization: localStorage.getItem("access_token"),
+            },
+        };
+        let searchParams = {};
+        if (localStorage.getItem("store_id")) {
+            searchParams.store_id = localStorage.getItem("store_id");
+        }
+        let queryParams = ObjectToSearchQueryParams(searchParams);
+        fetch("/v1/sales-return/restore/" + id + "?" + queryParams, requestOptions)
+            .then(async (response) => {
+                const isJson = response.headers.get("content-type")?.includes("application/json");
+                const data = isJson && (await response.json());
+                if (!response.ok) {
+                    const error = data && data.errors;
+                    return Promise.reject(error);
+                }
+                if (props.showToastMessage) props.showToastMessage(t("Sales return restored successfully!"), "success");
+                list();
+            })
+            .catch((error) => { console.log(error); });
+    }
+
+    function deleteSalesReturn(id) {
+        const requestOptions = {
+            method: "DELETE",
+            headers: {
+                "Content-Type": "application/json",
+                Authorization: localStorage.getItem("access_token"),
+            },
+        };
+        let searchParams = {};
+        if (localStorage.getItem("store_id")) {
+            searchParams.store_id = localStorage.getItem("store_id");
+        }
+        let queryParams = ObjectToSearchQueryParams(searchParams);
+        fetch("/v1/sales-return/" + id + "?" + queryParams, requestOptions)
+            .then(async (response) => {
+                const isJson = response.headers.get("content-type")?.includes("application/json");
+                const data = isJson && (await response.json());
+                if (!response.ok) {
+                    const error = data && data.errors;
+                    return Promise.reject(error);
+                }
+                if (props.showToastMessage) props.showToastMessage(t("Sales return deleted successfully!"), "success");
+                list();
+            })
+            .catch((error) => { console.log(error); });
+    }
+
+    const confirmDelete = async (id) => {
+        const result = await confirm(t('Are you sure, you want to delete this sales return?'));
+        if (result) { deleteSalesReturn(id); }
+    };
+
+    const confirmRestore = async (id) => {
+        const result = await confirm(t('Are you sure, you want to restore this sales return?'));
+        if (result) { restoreSalesReturn(id); }
+    };
+
     function openUpdateForm(id, orderID) {
         setShowSalesReturnCreateForm(true);
         if (timerRef.current) clearTimeout(timerRef.current);
@@ -1297,7 +1377,6 @@ function SalesReturnIndex(props) {
     const openPreview = useCallback((salesReturn) => {
         setShowOrderPreview(true);
         setShowPrintTypeSelection(false);
-
 
         if (timerRef.current) clearTimeout(timerRef.current);
 
@@ -1370,28 +1449,29 @@ function SalesReturnIndex(props) {
     //Table settings
 
     const defaultColumns = useMemo(() => [
-        { key: "actions", label: "Actions", fieldName: "actions", visible: true },
-        { key: "select", label: "Select", fieldName: "select", visible: true },
-        { key: "id", label: "Return ID", fieldName: "code", visible: true },
-        { key: "order_code", label: "Sales ID", fieldName: "order_code", visible: true },
-        { key: "date", label: "Date", fieldName: "date", visible: true },
-        { key: "customer", label: "Customer", fieldName: "customer_name", visible: true },
-        { key: "net_total", label: "Net Total", fieldName: "net_total", visible: true },
-        { key: "total_payment_paid", label: "Amount Paid", fieldName: "total_payment_paid", visible: true },
-        { key: "credit_balance", label: "Credit Balance", fieldName: "balance_amount", visible: true },
-        { key: "reported_to_zatca", label: "Reported to Zatca", fieldName: "zatca.reporting_passed", visible: true },
-        { key: "payment_status", label: "Payment Status", fieldName: "payment_status", visible: true },
-        { key: "payment_methods", label: "Payment Methods", fieldName: "payment_methods", visible: true },
-        { key: "cash_discount", label: "Cash Discount", fieldName: "cash_discount", visible: true },
-        { key: "commission", label: "Commission", fieldName: "commission", visible: true },
-        { key: "commission_payment_method", label: "Commission Payment Method", fieldName: "commission_payment_method", visible: true },
-        { key: "discount", label: "Discount", fieldName: "discount", visible: true },
-        { key: "net_profit", label: "Net Profit", fieldName: "net_profit", visible: true },
-        { key: "net_loss", label: "Net Loss", fieldName: "net_loss", visible: true },
-        { key: "created_by", label: "Created By", fieldName: "created_by", visible: true },
-        { key: "created_at", label: "Created At", fieldName: "created_at", visible: true },
-        { key: "actions_end", label: "Actions", fieldName: "actions_end", visible: true },
-    ], []);
+        { key: "deleted", label: t("Deleted"), fieldName: "deleted", visible: localStorage.getItem('user_role') === "Admin" },
+        { key: "actions", label: t("Actions"), fieldName: "actions", visible: true },
+        { key: "select", label: t("Select"), fieldName: "select", visible: true },
+        { key: "id", label: t("Return ID"), fieldName: "code", visible: true },
+        { key: "order_code", label: t("Sales ID"), fieldName: "order_code", visible: true },
+        { key: "date", label: t("Date"), fieldName: "date", visible: true },
+        { key: "customer", label: t("Customer"), fieldName: "customer_name", visible: true },
+        { key: "net_total", label: t("Net Total"), fieldName: "net_total", visible: true },
+        { key: "total_payment_paid", label: t("Amount Paid"), fieldName: "total_payment_paid", visible: true },
+        { key: "credit_balance", label: t("Credit Balance"), fieldName: "balance_amount", visible: true },
+        { key: "reported_to_zatca", label: t("Reported to Zatca"), fieldName: "zatca.reporting_passed", visible: true },
+        { key: "payment_status", label: t("Payment Status"), fieldName: "payment_status", visible: true },
+        { key: "payment_methods", label: t("Payment Methods"), fieldName: "payment_methods", visible: true },
+        { key: "cash_discount", label: t("Cash Discount"), fieldName: "cash_discount", visible: true },
+        { key: "commission", label: t("Commission"), fieldName: "commission", visible: true },
+        { key: "commission_payment_method", label: t("Commission Payment Method"), fieldName: "commission_payment_method", visible: true },
+        { key: "discount", label: t("Discount"), fieldName: "discount", visible: true },
+        { key: "net_profit", label: t("Net Profit"), fieldName: "net_profit", visible: true },
+        { key: "net_loss", label: t("Net Loss"), fieldName: "net_loss", visible: true },
+        { key: "created_by", label: t("Created By"), fieldName: "created_by", visible: true },
+        { key: "created_at", label: t("Created At"), fieldName: "created_at", visible: true },
+        { key: "actions_end", label: t("Actions"), fieldName: "actions_end", visible: true },
+    ], [t]);
 
 
     const [columns, setColumns] = useState(defaultColumns);
@@ -1407,7 +1487,12 @@ function SalesReturnIndex(props) {
             saved = localStorage.getItem("sales_return_table_settings");
         }
 
-        if (saved) setColumns(JSON.parse(saved));
+        if (saved) {
+            const parsed = JSON.parse(saved).map(col =>
+                col.key === 'deleted' ? { ...col, visible: localStorage.getItem('user_role') === 'Admin' ? col.visible : false } : col
+            );
+            setColumns(parsed);
+        }
 
         let missingOrUpdated = false;
         for (let i = 0; i < defaultColumns.length; i++) {
@@ -1460,7 +1545,7 @@ function SalesReturnIndex(props) {
         setColumns(defaultColumns);
 
         setShowSuccess(true);
-        setSuccessMessage("Successfully restored to default settings!")
+        setSuccessMessage(t("Successfully restored to default settings!"))
     }
 
     // Save column settings to localStorage
@@ -1552,14 +1637,14 @@ function SalesReturnIndex(props) {
                             title="Table Settings"
 
                         />
-                        Sales Return Settings
+                        {t("Sales Return Settings")}
                     </Modal.Title>
                 </Modal.Header>
                 <Modal.Body>
                     {/* Column Settings */}
                     {showSettings && (
                         <>
-                            <h6 className="mb-2">Customize Columns</h6>
+                            <h6 className="mb-2">{t("Customize Columns")}</h6>
                             <DragDropContext onDragEnd={onDragEnd}>
                                 <Droppable droppableId="columns">
                                     {(provided) => (
@@ -1571,7 +1656,7 @@ function SalesReturnIndex(props) {
                                             {columns.map((col, index) => {
                                                 return (
                                                     <>
-                                                        {((col.key === "select" && enableSelection) || col.key !== "select") && <Draggable
+                                                        {((col.key === "select" && enableSelection) || col.key !== "select") && (col.key !== "deleted" || localStorage.getItem('user_role') === "Admin") && <Draggable
                                                             key={col.key}
                                                             draggableId={col.key}
                                                             index={index}
@@ -1610,7 +1695,7 @@ function SalesReturnIndex(props) {
                 </Modal.Body>
                 <Modal.Footer>
                     <Button variant="secondary" onClick={() => setShowSettings(false)}>
-                        Close
+                        {t("Close")}
                     </Button>
                     <Button
                         variant="primary"
@@ -1618,7 +1703,7 @@ function SalesReturnIndex(props) {
                             RestoreDefaultSettings();
                         }}
                     >
-                        Restore to Default
+                        {t("Restore to Default")}
                     </Button>
                 </Modal.Footer>
             </Modal>
@@ -1629,7 +1714,7 @@ function SalesReturnIndex(props) {
                 setShowPrintTypeSelection(showPrintTypeSelection);
             }} centered>
                 <Modal.Header closeButton>
-                    <Modal.Title>Select Print Type</Modal.Title>
+                    <Modal.Title>{t("Select Print Type")}</Modal.Title>
                 </Modal.Header>
                 <Modal.Body className="d-flex justify-content-around">
                     <Button variant="secondary" ref={printButtonRef} onClick={() => {
@@ -1643,7 +1728,7 @@ function SalesReturnIndex(props) {
                             }, 100);
                         }
                     }}>
-                        <i className="bi bi-printer"></i> Print
+                        <i className="bi bi-printer"></i> {t("Print")}
                     </Button>
 
                     <Button variant="primary" ref={printA4ButtonRef} onClick={() => {
@@ -1659,7 +1744,7 @@ function SalesReturnIndex(props) {
                             }
                         }}
                     >
-                        <i className="bi bi-printer"></i> Print A4 Invoice
+                        <i className="bi bi-printer"></i> {t("Print A4 Invoice")}
                     </Button>
                 </Modal.Body>
             </Modal>
@@ -1675,11 +1760,11 @@ function SalesReturnIndex(props) {
             {/* Error Modal */}
             <Modal show={showErrors} onHide={() => setShowErrors(false)} centered>
                 <Modal.Header closeButton>
-                    <Modal.Title>Error</Modal.Title>
+                    <Modal.Title>{t("Error")}</Modal.Title>
                 </Modal.Header>
                 <Modal.Body>
                     <Alert variant="danger">
-                        ❌ Oops! Something went wrong. Please try again later.
+                        ❌ {t("Oops! Something went wrong. Please try again later")}
                     </Alert>
                     {Object.keys(errors).length > 0 ?
                         <div>
@@ -1688,9 +1773,9 @@ function SalesReturnIndex(props) {
                                 {errors && Object.keys(errors).map((key, index) => {
                                     console.log("Key", key);
                                     if (Array.isArray(errors[key])) {
-                                        return (errors[key][0] ? <li style={{ color: "red" }}>{errors[key]}</li> : "");
+                                        return (errors[key][0] ? <li style={{ color: "red" }}>{t(errors[key])}</li> : "");
                                     } else {
-                                        return (errors[key] ? <li style={{ color: "red" }}>{errors[key]}</li> : "");
+                                        return (errors[key] ? <li style={{ color: "red" }}>{t(errors[key])}</li> : "");
                                     }
 
                                 })}
@@ -1698,14 +1783,14 @@ function SalesReturnIndex(props) {
                 </Modal.Body>
                 <Modal.Footer>
                     <Button variant="secondary" onClick={() => setShowErrors(false)}>
-                        Close
+                        {t("Close")}
                     </Button>
                 </Modal.Footer>
             </Modal>
 
             <Modal show={showSuccess} onHide={() => setShowSuccess(false)} centered>
                 <Modal.Header closeButton>
-                    <Modal.Title>Success</Modal.Title>
+                    <Modal.Title>{t("Success")}</Modal.Title>
                 </Modal.Header>
                 <Modal.Body>
                     <Alert variant="success">
@@ -1714,7 +1799,7 @@ function SalesReturnIndex(props) {
                 </Modal.Body>
                 <Modal.Footer>
                     <Button variant="secondary" onClick={() => setShowSuccess(false)}>
-                        Close
+                        {t("Close")}
                     </Button>
                 </Modal.Footer>
             </Modal>
@@ -1727,7 +1812,28 @@ function SalesReturnIndex(props) {
                     <div className="col">
                         <span className="text-end">
                             <StatsSummary
-                                title="Sales Return"
+                                title="Sales Return Summary"
+                                filters={{
+                                    ...(dateValue ? { 'Date': dateValue } : {}),
+                                    ...(fromDateValue ? { 'From Date': fromDateValue } : {}),
+                                    ...(toDateValue ? { 'To Date': toDateValue } : {}),
+                                    ...(createdAtValue ? { 'Created At': createdAtValue } : {}),
+                                    ...(createdAtFromValue ? { 'Created From': createdAtFromValue } : {}),
+                                    ...(createdAtToValue ? { 'Created To': createdAtToValue } : {}),
+                                    ...(selectedCustomers.length > 0 ? { 'Customer': selectedCustomers.map(c => c.name).join(', ') } : {}),
+                                    ...(selectedCreatedByUsers.length > 0 ? { 'Created By': selectedCreatedByUsers.map(u => u.name).join(', ') } : {}),
+                                    ...(selectedPaymentStatusList.length > 0 ? { 'Payment Status': selectedPaymentStatusList.map(s => s.name).join(', ') } : {}),
+                                    ...(selectedPaymentMethodList.length > 0 ? { 'Payment Method': selectedPaymentMethodList.map(m => m.name).join(', ') } : {}),
+                                    ...(selectedCommissionPaymentMethodList.length > 0 ? { 'Commission Method': selectedCommissionPaymentMethodList.map(m => m.name).join(', ') } : {}),
+                                    ...Object.fromEntries(
+                                        Object.entries(fieldFilters)
+                                            .filter(([, v]) => v)
+                                            .map(([field, value]) => {
+                                                const col = columns.find(c => c.fieldName === field || c.key === field);
+                                                return [col ? col.label : field, value];
+                                            })
+                                    ),
+                                }}
                                 stats={{
                                     "Sales Return": totalSalesReturn,
                                     "Cash Sales Return": totalCashSalesReturn,
@@ -1755,22 +1861,22 @@ function SalesReturnIndex(props) {
 
                 <div className="row">
                     <div className="col">
-                        <h1 className="h3">Sales Returns</h1>
+                        <h1 className="h3">{t("Sales Returns")}</h1>
                     </div>
 
                     <div className="col text-end">
                         <Button variant="primary" onClick={() => {
                             openReportPreview();
-                        }} style={{ marginRight: "8px" }} className="btn btn-primary mb-3">
+                        }} style={{ marginRight: "8px" }} className="btn btn-primary mb-1">
                             <i className="bi bi-printer"></i>&nbsp;
-                            Print Report
+                            {t("Print Report")}
                         </Button>
 
-                        <ExcelFile filename={salesReturnReportFileName} element={excelData.length > 0 ? <Button variant="success" className="btn btn-primary mb-3 success" >Download Sales Return Report</Button> : ""}>
+                        <ExcelFile filename={salesReturnReportFileName} element={excelData.length > 0 ? <Button variant="success" className="btn btn-primary mb-1 success" > {t("Download Sales Return Report")}</Button> : ""}>
                             <ExcelSheet dataSet={excelData} name={salesReturnReportFileName} />
                         </ExcelFile>
 
-                        {excelData.length === 0 ? <Button variant="primary" className="btn btn-primary mb-3" onClick={getAllSalesReturns} >{fettingAllRecordsInProgress ? "Preparing.." : "Sales Return Report"}</Button> : ""}
+                        {excelData.length === 0 ? <Button variant="primary" className="btn btn-primary mb-1" onClick={getAllSalesReturns} >{fettingAllRecordsInProgress ? t("Preparing..") : t("Sales Return Report")}</Button> : ""}
                         &nbsp;&nbsp;
 
 
@@ -1789,10 +1895,10 @@ function SalesReturnIndex(props) {
                         <Button
                             hide={true}
                             variant="primary"
-                            className="btn btn-primary mb-3"
+                            className="btn btn-primary mb-1"
                             onClick={openSales}
                         >
-                            <i className="bi bi-plus-lg"></i> Create
+                            <i className="bi bi-plus-lg"></i> {t("Create")}
                         </Button>
 
                     </div>
@@ -1806,140 +1912,102 @@ function SalesReturnIndex(props) {
                         <h5   className="card-title mb-0"></h5>
                     </div>
                     */}
-                            <div className="card-body">
+                            <div className="card-body p-2">
                                 <div className="row">
                                     {totalItems === 0 && (
                                         <div className="col">
-                                            <p className="text-start">No Sales Returns to display</p>
+                                            <p className="text-start">{t("No Sales Returns to display")}</p>
                                         </div>
                                     )}
                                 </div>
-                                <div className="row" style={{ bsalesreturn: "solid 0px" }}>
-                                    <div className="col text-start" style={{ bsalesreturn: "solid 0px" }}>
-                                        <Button
-                                            onClick={() => {
-                                                setIsRefreshInProcess(true);
-                                                list();
-                                            }}
-                                            variant="primary"
-                                            disabled={isRefreshInProcess}
-                                        >
-                                            {isRefreshInProcess ? (
-                                                <Spinner
-                                                    as="span"
-                                                    animation="bsalesreturn"
-                                                    size="sm"
-                                                    role="status"
-                                                    aria-hidden={true}
-                                                />
-                                            ) : (
-                                                <i className="fa fa-refresh"></i>
-                                            )}
-                                            <span className="visually-hidden">Loading...</span>
-                                        </Button>
-                                    </div>
-                                    <div className="col text-center">
-                                        {isListLoading && (
-                                            <Spinner animation="grow" variant="primary" />
+                                <div className="d-flex align-items-center gap-2 flex-wrap mb-2">
+                                    <Button
+                                        onClick={() => { setIsRefreshInProcess(true); list(); }}
+                                        variant="primary"
+                                        disabled={isRefreshInProcess}
+                                    >
+                                        {isRefreshInProcess ? (
+                                            <Spinner as="span" animation="border" size="sm" role="status" aria-hidden={true} />
+                                        ) : (
+                                            <i className="fa fa-refresh"></i>
                                         )}
-                                    </div>
-                                    <div className="col text-end">
+                                        <span className="visually-hidden">{t("Loading...")}</span>
+                                    </Button>
+
+                                    <>
+                                        <label className="form-label mb-0">{t("Size")}:&nbsp;</label>
+                                        <select
+                                            value={pageSize}
+                                            onChange={(e) => { localStorage.setItem('sales_return_pageSize', e.target.value); setPageSize(parseInt(e.target.value)); }}
+                                            className="form-control"
+                                            style={{ border: "solid 1px", borderColor: "silver", width: "55px" }}
+                                        >
+                                            <option value="5">5</option>
+                                            <option value="10">10</option>
+                                            <option value="20">20</option>
+                                            <option value="40">40</option>
+                                            <option value="50">50</option>
+                                            <option value="100">100</option>
+                                        </select>
+                                    </>
+
+                                    <button
+                                        className="btn btn-sm btn-outline-secondary ms-auto"
+                                        onClick={() => { setShowSettings(!showSettings); }}
+                                    >
+                                        <i className="bi bi-gear-fill" style={{ fontSize: "1.2rem" }} title={t("Table Settings")} />
+                                    </button>
+
+                                    <div className="w-100 d-flex align-items-center flex-wrap gap-2">
+                                        <div style={{ flex: "1 1 auto", minWidth: 0, overflowX: "auto" }}>
+                                            {totalPages ? <ReactPaginate
+                                                breakLabel="..."
+                                                nextLabel={t("next >")}
+                                                onPageChange={(event) => { changePage(event.selected + 1); }}
+                                                pageRangeDisplayed={3}
+                                                marginPagesDisplayed={1}
+                                                pageCount={totalPages}
+                                                previousLabel={t("< prev")}
+                                                renderOnZeroPageCount={null}
+                                                className="pagination flex-wrap mb-0"
+                                                pageClassName="page-item"
+                                                pageLinkClassName="page-link"
+                                                activeClassName="active"
+                                                previousClassName="page-item"
+                                                nextClassName="page-item"
+                                                previousLinkClassName="page-link"
+                                                nextLinkClassName="page-link"
+                                                forcePage={page - 1}
+                                            /> : ""}
+                                        </div>
+
                                         {totalItems > 0 && (
-                                            <>
-                                                <label className="form-label">Size:&nbsp;</label>
-                                                <select
-                                                    value={pageSize}
-                                                    onChange={(e) => {
-                                                        changePageSize(e.target.value);
-                                                    }}
-                                                    className="form-control pull-right"
-                                                    style={{
-                                                        bsalesreturn: "solid 1px",
-                                                        bsalesreturnColor: "silver",
-                                                        width: "55px",
-                                                    }}
-                                                >
-                                                    <option value="5">
-                                                        5
-                                                    </option>
-                                                    <option value="10">
-                                                        10
-                                                    </option>
-                                                    <option value="20">20</option>
-                                                    <option value="40">40</option>
-                                                    <option value="50">50</option>
-                                                    <option value="100">100</option>
-                                                </select>
-                                            </>
+                                            <span className="text-muted small">
+                                                {t("Showing {{from}}-{{to}} of {{totalItems}}", { from: (offset + 1), to: (offset + currentPageItemsCount), totalItems: totalItems })}
+                                                &nbsp;|&nbsp;
+                                                {t("Page {{page}} of {{totalPages}}", { page: page, totalPages: totalPages })}
+                                            </span>
                                         )}
                                     </div>
                                 </div>
 
-                                <br />
-                                <div className="row">
-                                    <div className="col" style={{ bsalesreturn: "solid 0px" }}>
-
-                                        {totalPages ? < ReactPaginate
-                                            breakLabel="..."
-                                            nextLabel="next >"
-                                            onPageChange={(event) => {
-                                                changePage(event.selected + 1);
-                                            }}
-                                            pageRangeDisplayed={5}
-                                            pageCount={totalPages}
-                                            previousLabel="< previous"
-                                            renderOnZeroPageCount={null}
-                                            className="pagination  flex-wrap"
-                                            pageClassName="page-item"
-                                            pageLinkClassName="page-link"
-                                            activeClassName="active"
-                                            previousClassName="page-item"
-                                            nextClassName="page-item"
-                                            previousLinkClassName="page-link"
-                                            nextLinkClassName="page-link"
-                                            forcePage={page - 1}
-                                        /> : ""}
-                                    </div>
-                                </div>
-
-                                <div className="row">
-                                    <div className="col text-end">
-                                        <button
-                                            className="btn btn-sm btn-outline-secondary"
-                                            onClick={() => {
-                                                setShowSettings(!showSettings);
-                                            }}
-                                        >
-                                            <i
-                                                className="bi bi-gear-fill"
-                                                style={{ fontSize: "1.2rem" }}
-                                                title="Table Settings"
-
-                                            />
-                                        </button>
-                                    </div>
-                                </div>
-
-                                <div className="row">
-                                    {totalItems > 0 && (
-                                        <>
-                                            <div className="col text-start">
-                                                <p className="text-start">
-                                                    showing {offset + 1}-{offset + currentPageItemsCount} of{" "}
-                                                    {totalItems}
-                                                </p>
-                                            </div>
-
-                                            <div className="col text-end">
-                                                <p className="text-end">
-                                                    page {page} of {totalPages}
-                                                </p>
-                                            </div>
-                                        </>
+                                <div className="table-responsive" style={{ position: "relative", overflowX: "auto", overflowY: "auto", minHeight: "200px" }} ref={(el) => {
+                                    if (!el) return;
+                                    const fit = () => {
+                                        const top = el.getBoundingClientRect().top;
+                                        el.style.height = Math.max(200, window.innerHeight - top - 16) + "px";
+                                    };
+                                    fit();
+                                    if (!el._fitListenerAdded) {
+                                        el._fitListenerAdded = true;
+                                        window.addEventListener("resize", fit);
+                                    }
+                                }}>
+                                    {isListLoading && (
+                                        <div style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0, display: "flex", alignItems: "center", justifyContent: "center", zIndex: 10, background: "rgba(255,255,255,0.5)" }}>
+                                            <Spinner animation="grow" variant="primary" style={{ width: "3rem", height: "3rem" }} />
+                                        </div>
                                     )}
-                                </div>
-
-                                <div className="table-responsive" style={{ overflowX: "auto", overflowY: "auto", maxHeight: "500px" }}>
                                     <table className="table table-striped table-sm table-bordered">
                                         <thead>
                                             <tr className="text-center">
@@ -1966,7 +2034,7 @@ function SalesReturnIndex(props) {
                                                                 ) : null}
                                                             </b>
                                                         </th>}
-                                                        {col.key !== "actions" && col.key !== "select" && col.key !== "zatca.reporting_passed" && <th>
+                                                        {col.key !== "actions" && col.key !== "select" && col.key !== "zatca.reporting_passed" && (col.key !== "deleted" || localStorage.getItem('user_role') === "Admin") && <th>
                                                             <b
                                                                 style={{
                                                                     textDecoration: "underline",
@@ -1987,307 +2055,6 @@ function SalesReturnIndex(props) {
                                                         </th>}
                                                     </>);
                                                 })}
-
-                                                {/*<th>Actions</th>
-                                                <th>
-                                                    <b
-                                                        style={{
-                                                            textDecoration: "underline",
-                                                            cursor: "pointer",
-                                                        }}
-                                                        onClick={() => {
-                                                            sort("code");
-                                                        }}
-                                                    >
-                                                        Sales Return ID
-                                                        {sortField === "code" && sortSalesReturn === "-" ? (
-                                                            <i className="bi bi-sort-alpha-up-alt"></i>
-                                                        ) : null}
-                                                        {sortField === "code" && sortSalesReturn === "" ? (
-                                                            <i className="bi bi-sort-alpha-up"></i>
-                                                        ) : null}
-                                                    </b>
-                                                </th>
-
-                                                <th>
-                                                    <b
-                                                        style={{
-                                                            textDecoration: "underline",
-                                                            cursor: "pointer",
-                                                        }}
-                                                        onClick={() => {
-                                                            sort("date");
-                                                        }}
-                                                    >
-                                                        Date
-                                                        {sortField === "date" && sortSalesReturn === "-" ? (
-                                                            <i className="bi bi-sort-down"></i>
-                                                        ) : null}
-                                                        {sortField === "date" && sortSalesReturn === "" ? (
-                                                            <i className="bi bi-sort-up"></i>
-                                                        ) : null}
-                                                    </b>
-                                                </th>
-                                                <th>
-                                                    <b
-                                                        style={{
-                                                            textDecoration: "underline",
-                                                            cursor: "pointer",
-                                                        }}
-                                                        onClick={() => {
-                                                            sort("customer_name");
-                                                        }}
-                                                    >
-                                                        Customer
-                                                        {sortField === "customer_name" &&
-                                                            sortSalesReturn === "-" ? (
-                                                            <i className="bi bi-sort-alpha-up-alt"></i>
-                                                        ) : null}
-                                                        {sortField === "customer_name" && sortSalesReturn === "" ? (
-                                                            <i className="bi bi-sort-alpha-up"></i>
-                                                        ) : null}
-                                                    </b>
-                                                </th>
-                                                <th>
-                                                    <b
-                                                        style={{
-                                                            textDecoration: "underline",
-                                                            cursor: "pointer",
-                                                        }}
-                                                        onClick={() => {
-                                                            sort("net_total");
-                                                        }}
-                                                    >
-                                                        Net Total
-                                                        {sortField === "net_total" && sortSalesReturn === "-" ? (
-                                                            <i className="bi bi-sort-numeric-down"></i>
-                                                        ) : null}
-                                                        {sortField === "net_total" && sortSalesReturn === "" ? (
-                                                            <i className="bi bi-sort-numeric-up"></i>
-                                                        ) : null}
-                                                    </b>
-                                                </th>
-
-                                                <th>
-                                                    <b
-                                                        style={{
-                                                            textDecoration: "underline",
-                                                            cursor: "pointer",
-                                                        }}
-                                                        onClick={() => {
-                                                            sort("total_payment_paid");
-                                                        }}
-                                                    >
-                                                        Amount paid
-                                                        {sortField === "total_payment_paid" && sortOrder === "-" ? (
-                                                            <i className="bi bi-sort-numeric-down"></i>
-                                                        ) : null}
-                                                        {sortField === "total_payment_paid" && sortOrder === "" ? (
-                                                            <i className="bi bi-sort-numeric-up"></i>
-                                                        ) : null}
-                                                    </b>
-                                                </th>
-                                                <th>
-                                                    <b
-                                                        style={{
-                                                            textDecoration: "underline",
-                                                            cursor: "pointer",
-                                                        }}
-                                                        onClick={() => {
-                                                            sort("balance_amount");
-                                                        }}
-                                                    >
-                                                        Credit Balance
-                                                        {sortField === "balance_amount" && sortOrder === "-" ? (
-                                                            <i className="bi bi-sort-numeric-down"></i>
-                                                        ) : null}
-                                                        {sortField === "balance_amount" && sortOrder === "" ? (
-                                                            <i className="bi bi-sort-numeric-up"></i>
-                                                        ) : null}
-                                                    </b>
-                                                </th>
-                                                <th>
-                                                    <b
-                                                        style={{
-                                                            textDecoration: "underline",
-                                                            cursor: "pointer",
-                                                        }}
-                                                        onClick={() => {
-                                                            sort("order_code");
-                                                        }}
-                                                    >
-                                                        Sales ID
-                                                        {sortField === "order_code" && sortSalesReturn === "-" ? (
-                                                            <i className="bi bi-sort-alpha-up-alt"></i>
-                                                        ) : null}
-                                                        {sortField === "order_code" && sortSalesReturn === "" ? (
-                                                            <i className="bi bi-sort-alpha-up"></i>
-                                                        ) : null}
-                                                    </b>
-                                                </th>
-
-                                               
-                                                {store.zatca?.phase === "2" && store.zatca?.connected ? <th>
-                                                    <b
-                                                        style={{
-                                                            textDecoration: "underline",
-                                                            cursor: "pointer",
-                                                        }}
-                                                        onClick={() => {
-                                                            sort("zatca.reporting_passed");
-                                                        }}
-                                                    >
-                                                        Reported to Zatca
-                                                        {sortField === "zatca.reporting_passed" && sortOrder === "-" ? (
-                                                            <i className="bi bi-sort-alpha-up-alt"></i>
-                                                        ) : null}
-                                                        {sortField === "zatca.reporting_passed" && sortOrder === "" ? (
-                                                            <i className="bi bi-sort-alpha-up"></i>
-                                                        ) : null}
-                                                    </b>
-                                                </th> : ""}
-                                                <th>
-                                                    <b
-                                                        style={{
-                                                            textDecoration: "underline",
-                                                            cursor: "pointer",
-                                                        }}
-                                                        onClick={() => {
-                                                            sort("payment_status");
-                                                        }}
-                                                    >
-                                                        Payment Status
-                                                        {sortField === "payment_status" && sortOrder === "-" ? (
-                                                            <i className="bi bi-sort-alpha-up-alt"></i>
-                                                        ) : null}
-                                                        {sortField === "payment_status" && sortOrder === "" ? (
-                                                            <i className="bi bi-sort-alpha-up"></i>
-                                                        ) : null}
-                                                    </b>
-                                                </th>
-                                                <th>
-                                                    <b
-                                                        style={{
-                                                            textDecoration: "underline",
-                                                            cursor: "pointer",
-                                                        }}
-                                                        onClick={() => {
-                                                            sort("payment_methods");
-                                                        }}
-                                                    >
-                                                        Payment Methods
-                                                        {sortField === "payment_methods" && sortOrder === "-" ? (
-                                                            <i className="bi bi-sort-alpha-up-alt"></i>
-                                                        ) : null}
-                                                        {sortField === "payment_methods" && sortOrder === "" ? (
-                                                            <i className="bi bi-sort-alpha-up"></i>
-                                                        ) : null}
-                                                    </b>
-                                                </th>
-
-
-                                                <th>
-                                                    <b
-                                                        style={{
-                                                            textDecoration: "underline",
-                                                            cursor: "pointer",
-                                                        }}
-                                                        onClick={() => {
-                                                            sort("cash_discount");
-                                                        }}
-                                                    >
-                                                        Cash Discount
-                                                        {sortField === "cash_discount" && sortOrder === "-" ? (
-                                                            <i className="bi bi-sort-numeric-down"></i>
-                                                        ) : null}
-                                                        {sortField === "cash_discount" && sortOrder === "" ? (
-                                                            <i className="bi bi-sort-numeric-up"></i>
-                                                        ) : null}
-                                                    </b>
-                                                </th>
-
-
-                                                <th>
-                                                    <b
-                                                        style={{
-                                                            textDecoration: "underline",
-                                                            cursor: "pointer",
-                                                        }}
-                                                        onClick={() => {
-                                                            sort("net_profit");
-                                                        }}
-                                                    >
-                                                        Net Profit
-                                                        {sortField === "net_profit" && sortSalesReturn === "-" ? (
-                                                            <i className="bi bi-sort-numeric-down"></i>
-                                                        ) : null}
-                                                        {sortField === "net_profit" && sortSalesReturn === "" ? (
-                                                            <i className="bi bi-sort-numeric-up"></i>
-                                                        ) : null}
-                                                    </b>
-                                                </th>
-                                                <th>
-                                                    <b
-                                                        style={{
-                                                            textDecoration: "underline",
-                                                            cursor: "pointer",
-                                                        }}
-                                                        onClick={() => {
-                                                            sort("net_loss");
-                                                        }}
-                                                    >
-                                                        Net Loss
-                                                        {sortField === "net_loss" && sortSalesReturn === "-" ? (
-                                                            <i className="bi bi-sort-numeric-down"></i>
-                                                        ) : null}
-                                                        {sortField === "net_loss" && sortSalesReturn === "" ? (
-                                                            <i className="bi bi-sort-numeric-up"></i>
-                                                        ) : null}
-                                                    </b>
-                                                </th>
-
-
-
-
-                                                <th>
-                                                    <b
-                                                        style={{
-                                                            textDecoration: "underline",
-                                                            cursor: "pointer",
-                                                        }}
-                                                        onClick={() => {
-                                                            sort("created_by");
-                                                        }}
-                                                    >
-                                                        Created By
-                                                        {sortField === "created_by" && sortSalesReturn === "-" ? (
-                                                            <i className="bi bi-sort-alpha-up-alt"></i>
-                                                        ) : null}
-                                                        {sortField === "created_by" && sortSalesReturn === "" ? (
-                                                            <i className="bi bi-sort-alpha-up"></i>
-                                                        ) : null}
-                                                    </b>
-                                                </th>
-                                                <th>
-                                                    <b
-                                                        style={{
-                                                            textDecoration: "underline",
-                                                            cursor: "pointer",
-                                                        }}
-                                                        onClick={() => {
-                                                            sort("created_at");
-                                                        }}
-                                                    >
-                                                        Created At
-                                                        {sortField === "created_at" && sortSalesReturn === "-" ? (
-                                                            <i className="bi bi-sort-down"></i>
-                                                        ) : null}
-                                                        {sortField === "created_at" && sortSalesReturn === "" ? (
-                                                            <i className="bi bi-sort-up"></i>
-                                                        ) : null}
-                                                    </b>
-                                                </th>
-                                                <th>Actions</th>*/}
                                             </tr>
                                         </thead>
 
@@ -2297,8 +2064,26 @@ function SalesReturnIndex(props) {
                                                     return (<>
                                                         {(col.key === "actions" || col.key === "actions_end") && <th></th>}
                                                         {col.key === "select" && enableSelection && <th></th>}
+                                                        {col.key === "deleted" && localStorage.getItem('user_role') === "Admin" && <th>
+                                                            <select
+                                                                onChange={(e) => {
+                                                                    searchByFieldValue("deleted", e.target.value);
+                                                                    if (e.target.value === "1") {
+                                                                        deleted = true;
+                                                                        setDeleted(deleted);
+                                                                    } else {
+                                                                        deleted = false;
+                                                                        setDeleted(deleted);
+                                                                    }
+                                                                }}
+                                                            >
+                                                                <option value="0">NO</option>
+                                                                <option value="1">YES</option>
+                                                            </select>
+                                                        </th>}
                                                         {col.key !== "actions" &&
                                                             col.key !== "select" &&
+                                                            col.key !== "deleted" &&
                                                             col.key !== "date" &&
                                                             col.key !== "zatca.reporting_passed" &&
                                                             col.key !== "payment_status" &&
@@ -2329,7 +2114,7 @@ function SalesReturnIndex(props) {
                                                                     );
                                                                 }}
                                                                 options={paymentMethodOptions}
-                                                                placeholder="Select payment methods"
+                                                                placeholder={t("Select payment methods")}
                                                                 selected={selectedPaymentMethodList}
                                                                 highlightOnlyResult={true}
                                                                 multiple
@@ -2348,7 +2133,7 @@ function SalesReturnIndex(props) {
                                                                     );
                                                                 }}
                                                                 options={commissionPaymentMethodOptions}
-                                                                placeholder="Select payment methods"
+                                                                placeholder={t("Select payment methods")}
                                                                 selected={selectedCommissionPaymentMethodList}
                                                                 highlightOnlyResult={true}
                                                                 multiple
@@ -2366,7 +2151,7 @@ function SalesReturnIndex(props) {
                                                                     );
                                                                 }}
                                                                 options={userOptions}
-                                                                placeholder="Select Users"
+                                                                placeholder={t("Select Users")}
                                                                 selected={selectedCreatedByUsers}
                                                                 highlightOnlyResult={true}
                                                                 onInputChange={(searchTerm, e) => {
@@ -2382,6 +2167,7 @@ function SalesReturnIndex(props) {
                                                                 selected={selectedCreatedAtDate}
                                                                 className="form-control"
                                                                 dateFormat="MMM dd yyyy"
+                                                                locale={dateLocale}
                                                                 isClearable={true}
                                                                 onChange={(date) => {
                                                                     if (!date) {
@@ -2405,19 +2191,20 @@ function SalesReturnIndex(props) {
                                                                     setShowCreatedAtDateRange(!showCreatedAtDateRange)
                                                                 }
                                                             >
-                                                                {showCreatedAtDateRange ? "Less.." : "More.."}
+                                                                {showCreatedAtDateRange ? t("Less..") : t("More..")}
                                                             </small>
                                                             <br />
 
                                                             {showCreatedAtDateRange ? (
                                                                 <span className="text-left">
-                                                                    From:{" "}
+                                                                    {t("From")}:{" "}
                                                                     <DatePicker
                                                                         id="created_at_from"
                                                                         value={createdAtFromValue}
                                                                         selected={selectedCreatedAtFromDate}
                                                                         className="form-control"
                                                                         dateFormat="MMM dd yyyy"
+                                                                        locale={dateLocale}
                                                                         isClearable={true}
                                                                         onChange={(date) => {
                                                                             if (!date) {
@@ -2430,13 +2217,14 @@ function SalesReturnIndex(props) {
                                                                             setSelectedCreatedAtFromDate(date);
                                                                         }}
                                                                     />
-                                                                    To:{" "}
+                                                                    {t("To")}:{" "}
                                                                     <DatePicker
                                                                         id="created_at_to"
                                                                         value={createdAtToValue}
                                                                         selected={selectedCreatedAtToDate}
                                                                         className="form-control"
                                                                         dateFormat="MMM dd yyyy"
+                                                                        locale={dateLocale}
                                                                         isClearable={true}
                                                                         onChange={(date) => {
                                                                             if (!date) {
@@ -2463,7 +2251,7 @@ function SalesReturnIndex(props) {
                                                                     );
                                                                 }}
                                                                 options={paymentStatusOptions}
-                                                                placeholder="Select Payment Status"
+                                                                placeholder={t("Select Payment Status")}
                                                                 selected={selectedPaymentStatusList}
                                                                 highlightOnlyResult={true}
                                                                 multiple
@@ -2475,11 +2263,11 @@ function SalesReturnIndex(props) {
                                                                     searchByFieldValue("zatca.reporting_passed", e.target.value);
                                                                 }}
                                                             >
-                                                                <option value="" SELECTED>Select</option>
-                                                                <option value="reported">REPORTED</option>
-                                                                <option value="compliance_failed">COMPLIANCE FAILED</option>
-                                                                <option value="reporting_failed">REPORTING FAILED</option>
-                                                                <option value="not_reported">NOT REPORTED</option>
+                                                                <option value="" SELECTED>{t("Select")}</option>
+                                                                <option value="reported">{t("REPORTED")}</option>
+                                                                <option value="compliance_failed">{t("COMPLIANCE FAILED")}</option>
+                                                                <option value="reporting_failed">{t("REPORTING FAILED")}</option>
+                                                                <option value="not_reported">{t("NOT REPORTED")}</option>
                                                             </select>
                                                         </th>}
                                                         {col.key === "customer" && <th>
@@ -2495,7 +2283,7 @@ function SalesReturnIndex(props) {
                                                                     );
                                                                 }}
                                                                 options={customerOptions}
-                                                                placeholder="Customer Name / Mob / VAT # / ID"
+                                                                placeholder={t("Customer Name / Mob / VAT # / ID")}
                                                                 selected={selectedCustomers}
                                                                 highlightOnlyResult={true}
                                                                 onInputChange={(searchTerm, e) => {
@@ -2522,6 +2310,7 @@ function SalesReturnIndex(props) {
                                                                     selected={selectedDate}
                                                                     className="form-control"
                                                                     dateFormat="MMM dd yyyy"
+                                                                    locale={dateLocale}
                                                                     isClearable={true}
                                                                     onChange={(date) => {
                                                                         if (!date) {
@@ -2551,13 +2340,14 @@ function SalesReturnIndex(props) {
 
                                                                 {showDateRange ? (
                                                                     <span className="text-left">
-                                                                        From:{" "}
+                                                                        {t("From:")}{" "}
                                                                         <DatePicker
                                                                             id="from_date"
                                                                             value={fromDateValue}
                                                                             selected={selectedFromDate}
                                                                             className="form-control"
                                                                             dateFormat="MMM dd yyyy"
+                                                                            locale={dateLocale}
                                                                             isClearable={true}
                                                                             onChange={(date) => {
                                                                                 if (!date) {
@@ -2570,13 +2360,14 @@ function SalesReturnIndex(props) {
                                                                                 setSelectedFromDate(date);
                                                                             }}
                                                                         />
-                                                                        To:{" "}
+                                                                        {t("To")}:{" "}
                                                                         <DatePicker
                                                                             id="to_date"
                                                                             value={toDateValue}
                                                                             selected={selectedToDate}
                                                                             className="form-control"
                                                                             dateFormat="MMM dd yyyy"
+                                                                            locale={dateLocale}
                                                                             isClearable={true}
                                                                             onChange={(date) => {
                                                                                 if (!date) {
@@ -2595,358 +2386,6 @@ function SalesReturnIndex(props) {
                                                         </th>}
                                                     </>);
                                                 })}
-                                                {/* <th></th>
-                                                <th>
-                                                    <input
-                                                        type="text"
-                                                        id="sales_return_code"
-                                                        name="sales_return_code"
-                                                        onChange={(e) =>
-                                                            searchByFieldValue("code", e.target.value)
-                                                        }
-                                                        className="form-control"
-                                                    />
-                                                </th>
-
-                                                <th>
-                                                    <div style={{ minWidth: "125px" }}>
-                                                        <DatePicker
-                                                            id="date_str"
-                                                            value={dateValue}
-                                                            selected={selectedDate}
-                                                            className="form-control"
-                                                            dateFormat="MMM dd yyyy"
-                                                            isClearable={true}
-                                                            onChange={(date) => {
-                                                                if (!date) {
-                                                                    setDateValue("");
-                                                                    searchByDateField("date_str", "");
-                                                                    return;
-                                                                }
-                                                                searchByDateField("date_str", date);
-                                                                selectedDate = date;
-                                                                setSelectedDate(date);
-                                                            }}
-                                                        />
-                                                        <small
-                                                            style={{
-                                                                color: "blue",
-                                                                textDecoration: "underline",
-                                                                cursor: "pointer",
-                                                            }}
-                                                            onClick={(e) => setShowDateRange(!showDateRange)}
-                                                        >
-                                                            {showDateRange ? "Less.." : "More.."}
-                                                        </small>
-                                                        <br />
-
-                                                        {showDateRange ? (
-                                                            <span className="text-left">
-                                                                From:{" "}
-                                                                <DatePicker
-                                                                    id="from_date"
-                                                                    value={fromDateValue}
-                                                                    selected={selectedFromDate}
-                                                                    className="form-control"
-                                                                    dateFormat="MMM dd yyyy"
-                                                                    isClearable={true}
-                                                                    onChange={(date) => {
-                                                                        if (!date) {
-                                                                            setFromDateValue("");
-                                                                            searchByDateField("from_date", "");
-                                                                            return;
-                                                                        }
-                                                                        searchByDateField("from_date", date);
-                                                                        selectedFromDate = date;
-                                                                        setSelectedFromDate(date);
-                                                                    }}
-                                                                />
-                                                                To:{" "}
-                                                                <DatePicker
-                                                                    id="to_date"
-                                                                    value={toDateValue}
-                                                                    selected={selectedToDate}
-                                                                    className="form-control"
-                                                                    dateFormat="MMM dd yyyy"
-                                                                    isClearable={true}
-                                                                    onChange={(date) => {
-                                                                        if (!date) {
-                                                                            setToDateValue("");
-                                                                            searchByDateField("to_date", "");
-                                                                            return;
-                                                                        }
-                                                                        searchByDateField("to_date", date);
-                                                                        selectedToDate = date;
-                                                                        setSelectedToDate(date);
-                                                                    }}
-                                                                />
-                                                            </span>
-                                                        ) : null}
-                                                    </div>
-                                                </th>
-                                                <th>
-                                                    <Typeahead
-                                                        id="customer_id"
-                                                        filterBy={['additional_keywords']}
-                                                        labelKey="search_label"
-                                                        style={{ minWidth: "300px" }}
-                                                        onChange={(selectedItems) => {
-                                                            searchByMultipleValuesField(
-                                                                "customer_id",
-                                                                selectedItems
-                                                            );
-                                                        }}
-                                                        options={customerOptions}
-                                                        placeholder="Customer Name / Mob / VAT # / ID"
-                                                        selected={selectedCustomers}
-                                                        highlightOnlyResult={true}
-                                                        onInputChange={(searchTerm, e) => {
-                                                            if (timerRef.current) clearTimeout(timerRef.current);
-                                                            timerRef.current = setTimeout(() => {
-                                                                suggestCustomers(searchTerm);
-                                                            }, 100);
-                                                        }}
-                                                        ref={customerSearchRef}
-                                                        onKeyDown={(e) => {
-                                                            if (e.key === "Escape") {
-                                                                formData.customer_id = "";
-                                                                formData.customer_name = "";
-                                                                setFormData({ ...formData });
-                                                                setCustomerOptions([]);
-                                                                customerSearchRef.current?.clear();
-                                                            }
-                                                        }}
-                                                        multiple
-                                                    />
-                                                </th>
-                                                <th>
-                                                    <input
-                                                        type="text"
-                                                        id="sales_return_net_total"
-                                                        name="sales_return_net_total"
-                                                        onChange={(e) =>
-                                                            searchByFieldValue("net_total", e.target.value)
-                                                        }
-                                                        className="form-control"
-                                                    />
-                                                </th>
-
-                                                <th>
-                                                    <input
-                                                        type="text"
-                                                        id="sales_return_total_payment_paid"
-                                                        name="sales_return_total_payment_paid"
-                                                        onChange={(e) =>
-                                                            searchByFieldValue("total_payment_paid", e.target.value)
-                                                        }
-                                                        className="form-control"
-                                                    />
-                                                </th>
-                                                <th>
-                                                    <input
-                                                        type="text"
-                                                        id="sales_return_balance_amount"
-                                                        name="sales_return_balance_amount"
-                                                        onChange={(e) =>
-                                                            searchByFieldValue("balance_amount", e.target.value)
-                                                        }
-                                                        className="form-control"
-                                                    />
-                                                </th>
-                                                <th>
-                                                    <input
-                                                        type="text"
-                                                        id="sales_return_order_code"
-                                                        name="sales_return_order_code"
-                                                        onChange={(e) =>
-                                                            searchByFieldValue("order_code", e.target.value)
-                                                        }
-                                                        className="form-control"
-                                                    />
-                                                </th>
-
-                                               
-                                                {store.zatca?.phase === "2" && store.zatca?.connected ? <th>
-                                                    <select
-                                                        onChange={(e) => {
-                                                            searchByFieldValue("zatca.reporting_passed", e.target.value);
-                                                        }}
-                                                    >
-                                                        <option value="" SELECTED>Select</option>
-                                                        <option value="reported">REPORTED</option>
-                                                        <option value="compliance_failed">COMPLIANCE FAILED</option>
-                                                        <option value="reporting_failed">REPORTING FAILED</option>
-                                                        <option value="not_reported">NOT REPORTED</option>
-                                                    </select>
-                                                </th> : ""}
-                                                <th>
-                                                    <Typeahead
-                                                        id="payment_status"
-
-                                                        labelKey="name"
-                                                        onChange={(selectedItems) => {
-                                                            searchByMultipleValuesField(
-                                                                "payment_status",
-                                                                selectedItems
-                                                            );
-                                                        }}
-                                                        options={paymentStatusOptions}
-                                                        placeholder="Select Payment Status"
-                                                        selected={selectedPaymentStatusList}
-                                                        highlightOnlyResult={true}
-                                                        multiple
-                                                    />
-                                                </th>
-                                                <th>
-                                                    <Typeahead
-                                                        id="payment_methods"
-
-                                                        labelKey="name"
-                                                        onChange={(selectedItems) => {
-                                                            searchByMultipleValuesField(
-                                                                "payment_methods",
-                                                                selectedItems
-                                                            );
-                                                        }}
-                                                        options={paymentMethodOptions}
-                                                        placeholder="Select payment methods"
-                                                        selected={selectedPaymentMethodList}
-                                                        highlightOnlyResult={true}
-                                                        multiple
-                                                    />
-                                                </th>
-
-                                                <th>
-                                                    <input
-                                                        type="text"
-                                                        id="sales_return_cash_discount"
-                                                        name="sales_return_cash_discount"
-                                                        onChange={(e) =>
-                                                            searchByFieldValue("cash_discount", e.target.value)
-                                                        }
-                                                        className="form-control"
-                                                    />
-                                                </th>
-                                                <th>
-                                                    <input
-                                                        type="text"
-                                                        id="sales_return_net_profit"
-                                                        name="sales_return_net_profit"
-                                                        onChange={(e) =>
-                                                            searchByFieldValue("net_profit", e.target.value)
-                                                        }
-                                                        className="form-control"
-                                                    />
-                                                </th>
-                                                <th>
-                                                    <input
-                                                        type="text"
-                                                        id="sales_return_net_loss"
-                                                        name="sales_return_net_loss"
-                                                        onChange={(e) =>
-                                                            searchByFieldValue("net_loss", e.target.value)
-                                                        }
-                                                        className="form-control"
-                                                    />
-                                                </th>
-                                                <th>
-                                                    <Typeahead
-                                                        id="created_by"
-                                                        labelKey="name"
-
-                                                        onChange={(selectedItems) => {
-                                                            searchByMultipleValuesField(
-                                                                "created_by",
-                                                                selectedItems
-                                                            );
-                                                        }}
-                                                        options={userOptions}
-                                                        placeholder="Select Users"
-                                                        selected={selectedCreatedByUsers}
-                                                        highlightOnlyResult={true}
-                                                        onInputChange={(searchTerm, e) => {
-                                                            suggestUsers(searchTerm);
-                                                        }}
-                                                        multiple
-                                                    />
-                                                </th>
-                                                <th>
-                                                    <DatePicker
-                                                        id="created_at"
-                                                        value={createdAtValue}
-                                                        selected={selectedCreatedAtDate}
-                                                        className="form-control"
-                                                        dateFormat="MMM dd yyyy"
-                                                        isClearable={true}
-                                                        onChange={(date) => {
-                                                            if (!date) {
-                                                                setCreatedAtValue("");
-                                                                searchByDateField("created_at", "");
-                                                                return;
-                                                            }
-                                                            searchByDateField("created_at", date);
-                                                            selectedCreatedAtDate = date;
-                                                            setSelectedCreatedAtDate(date);
-                                                        }}
-                                                    />
-                                                    <small
-                                                        style={{
-                                                            color: "blue",
-                                                            textDecoration: "underline",
-                                                            cursor: "pointer",
-                                                        }}
-                                                        onClick={(e) =>
-                                                            setShowCreatedAtDateRange(!showCreatedAtDateRange)
-                                                        }
-                                                    >
-                                                        {showCreatedAtDateRange ? "Less.." : "More.."}
-                                                    </small>
-                                                    <br />
-
-                                                    {showCreatedAtDateRange ? (
-                                                        <span className="text-left">
-                                                            From:{" "}
-                                                            <DatePicker
-                                                                id="created_at_from"
-                                                                value={createdAtFromValue}
-                                                                selected={selectedCreatedAtFromDate}
-                                                                className="form-control"
-                                                                dateFormat="MMM dd yyyy"
-                                                                isClearable={true}
-                                                                onChange={(date) => {
-                                                                    if (!date) {
-                                                                        setCreatedAtFromValue("");
-                                                                        searchByDateField("created_at_from", "");
-                                                                        return;
-                                                                    }
-                                                                    searchByDateField("created_at_from", date);
-                                                                    selectedCreatedAtFromDate = date;
-                                                                    setSelectedCreatedAtFromDate(date);
-                                                                }}
-                                                            />
-                                                            To:{" "}
-                                                            <DatePicker
-                                                                id="created_at_to"
-                                                                value={createdAtToValue}
-                                                                selected={selectedCreatedAtToDate}
-                                                                className="form-control"
-                                                                dateFormat="MMM dd yyyy"
-                                                                isClearable={true}
-                                                                onChange={(date) => {
-                                                                    if (!date) {
-                                                                        setCreatedAtToValue("");
-                                                                        searchByDateField("created_at_to", "");
-                                                                        return;
-                                                                    }
-                                                                    searchByDateField("created_at_to", date);
-                                                                    selectedCreatedAtToDate = date;
-                                                                    setSelectedCreatedAtToDate(date);
-                                                                }}
-                                                            />
-                                                        </span>
-                                                    ) : null}
-                                                </th>
-                                                <th></th>*/}
                                             </tr>
                                         </thead>
 
@@ -2956,7 +2395,18 @@ function SalesReturnIndex(props) {
                                                     <tr key={index}>
                                                         {columns.filter(c => c.visible).map((col) => {
                                                             return (<>
+                                                                {(col.key === "deleted") && localStorage.getItem('user_role') === "Admin" && <td>{salesReturn.deleted ? "YES" : "NO"}</td>}
                                                                 {(col.key === "actions" || col.key === "actions_end") && <td style={{ width: "auto", whiteSpace: "nowrap" }}>
+                                                                    {localStorage.getItem('user_role') === "Admin" && !salesReturn.deleted && <><Button className="btn btn-danger btn-sm" onClick={() => {
+                                                                        confirmDelete(salesReturn.id);
+                                                                    }}>
+                                                                        <i className="bi bi-trash"></i>
+                                                                    </Button>&nbsp;</>}
+                                                                    {localStorage.getItem('user_role') === "Admin" && salesReturn.deleted && <><Button className="btn btn-success btn-sm" onClick={() => {
+                                                                        confirmRestore(salesReturn.id);
+                                                                    }}>
+                                                                        <i className="bi bi-arrow-counterclockwise"></i>
+                                                                    </Button>&nbsp;</>}
                                                                     <Button className="btn btn-light btn-sm" onClick={() => {
                                                                         openUpdateForm(salesReturn.id);
                                                                     }}>
@@ -2986,7 +2436,7 @@ function SalesReturnIndex(props) {
                                                                     <Button className="btn btn-success btn-sm" onClick={() => {
                                                                         handleSelected(salesReturn);
                                                                     }}>
-                                                                        Select
+                                                                        {t("Select")}
                                                                     </Button>
                                                                 </td>}
                                                                 {(col.fieldName === "code") && <td style={{ width: "auto", whiteSpace: "nowrap" }}>
@@ -3002,7 +2452,7 @@ function SalesReturnIndex(props) {
 
                                                                 </td>}
                                                                 {(col.fieldName === "date" || col.fieldName === "created_at") && <td style={{ width: "auto", whiteSpace: "nowrap" }}>
-                                                                    {format(new Date(salesReturn[col.key]), "MMM dd yyyy h:mma")}
+                                                                    {format(new Date(salesReturn[col.key]), "MMM dd yyyy h:mma", { locale: dateLocale })}
                                                                 </td>}
                                                                 {(col.fieldName === "customer_name") && <td style={{ width: "auto", whiteSpace: "nowrap" }}>
                                                                     {salesReturn.customer_name && <span style={{ cursor: "pointer", color: "blue" }} onClick={() => {
@@ -3025,26 +2475,26 @@ function SalesReturnIndex(props) {
                                                                 </td>}
                                                                 {(col.fieldName === "zatca.reporting_passed" && store.zatca?.phase === "2" && store.zatca?.connected) && <td style={{ width: "auto", whiteSpace: "nowrap" }}>
                                                                     {!salesReturn.zatca?.compliance_passed && !salesReturn.zatca?.reporting_passed && salesReturn.zatca?.compliance_check_failed_count > 0 ? <span className="badge bg-danger">
-                                                                        Compliance check failed
+                                                                        {t("Compliance check failed")}
                                                                         {!salesReturn.zatca.compliance_passed && salesReturn.zatca.compliance_check_last_failed_at ? <span>&nbsp;<TimeAgo date={salesReturn.zatca.compliance_check_last_failed_at} />&nbsp;</span> : ""}
                                                                         &nbsp;</span> : ""}
                                                                     {!salesReturn.zatca?.reporting_passed && salesReturn.zatca?.reporting_failed_count > 0 ? <span> <span className="badge bg-danger">
-                                                                        Reporting failed
+                                                                        {t("Reporting failed")}
                                                                         {!salesReturn.zatca.reporting_passed && salesReturn.zatca.reporting_last_failed_at ? <span><TimeAgo date={salesReturn.zatca.reporting_last_failed_at} />&nbsp;</span> : ""}
                                                                     </span> &nbsp;</span> : ""}
                                                                     {salesReturn.zatca?.reporting_passed ? <span>&nbsp;<span className="badge bg-success">
-                                                                        Reported
+                                                                        {t("Reported")}
                                                                         {salesReturn.zatca.reporting_passed && salesReturn.zatca.reporting_passed_at ? <span>&nbsp;<TimeAgo date={salesReturn.zatca.reporting_passed_at} />&nbsp;</span> : ""}
                                                                         &nbsp;</span></span> : ""}
 
                                                                     {!salesReturn.zatca?.reporting_passed && !salesReturn.zatca?.compliance_passed && !salesReturn.zatca?.reporting_failed_count && !salesReturn.zatca?.compliance_check_failed_count ? <span className="badge bg-warning">
-                                                                        Not Reported
+                                                                        {t("Not Reported")}
                                                                         &nbsp;</span> : ""}
                                                                     {!salesReturn.zatca.reporting_passed ? <span> &nbsp; <Button disabled={reportingInProgress} style={{ marginTop: "3px" }} className="btn btn btn-sm" onClick={() => {
                                                                         ReportInvoiceToZatca(salesReturn.id, index);
                                                                     }}>
                                                                         {!salesReturn.zatca?.reportingInProgress && (salesReturn.zatca?.reporting_failed_count > 0 || salesReturn.zatca?.compliance_check_failed_count > 0) ? <i class="bi bi-bootstrap-reboot"></i> : ""}
-                                                                        {!salesReturn.zatca?.reportingInProgress && (!salesReturn.zatca?.reporting_failed_count > 0 && !salesReturn.zatca?.compliance_check_failed_count) ? <span class="bi-arrow-right-circle">&nbsp;Report</span> : ""}
+                                                                        {!salesReturn.zatca?.reportingInProgress && (!salesReturn.zatca?.reporting_failed_count > 0 && !salesReturn.zatca?.compliance_check_failed_count) ? <span class="bi-arrow-right-circle">&nbsp;{t("Report")}</span> : ""}
                                                                         {salesReturn.zatca?.reportingInProgress ? <Spinner
                                                                             as="span"
                                                                             animation="border"
@@ -3054,8 +2504,26 @@ function SalesReturnIndex(props) {
                                                                         /> : ""}
                                                                     </Button></span> : ""}
                                                                     {salesReturn.zatca?.reporting_passed ? <span>&nbsp;
-                                                                        <Button onClick={() => {
-                                                                            window.open("/zatca/returns/xml/" + salesReturn.code + ".xml", "_blank");
+                                                                        <Button onClick={async () => {
+                                                                            const url = "/zatca/returns/xml/" + salesReturn.code + ".xml";
+                                                                            const filename = salesReturn.code + ".xml";
+                                                                            if (window.__TAURI__) {
+                                                                                try {
+                                                                                    const invoke = window.__TAURI__.core.invoke;
+                                                                                    const savedPath = await invoke("save_xml_file", { url: "http://localhost:2003" + url, filename });
+                                                                                    if (props.showToastMessage) props.showToastMessage("File saved to " + savedPath, "success");
+                                                                                } catch (e) {
+                                                                                    if (props.showToastMessage) props.showToastMessage("Download failed: " + e, "danger");
+                                                                                }
+                                                                            } else {
+                                                                                fetch(url).then(r => r.blob()).then(blob => {
+                                                                                    const a = document.createElement("a");
+                                                                                    a.href = URL.createObjectURL(blob);
+                                                                                    a.download = filename;
+                                                                                    a.click();
+                                                                                    URL.revokeObjectURL(a.href);
+                                                                                });
+                                                                            }
                                                                         }}><i class="bi bi-filetype-xml"></i> XML
                                                                         </Button>
                                                                     </span> : ""}
@@ -3063,21 +2531,21 @@ function SalesReturnIndex(props) {
                                                                 {(col.fieldName === "payment_status") && <td style={{ width: "auto", whiteSpace: "nowrap" }}>
                                                                     {salesReturn.payment_status === "paid" ?
                                                                         <span className="badge bg-success">
-                                                                            Paid
+                                                                            {t("Paid")}
                                                                         </span> : ""}
                                                                     {salesReturn.payment_status === "paid_partially" ?
                                                                         <span className="badge bg-warning">
-                                                                            Paid Partially
+                                                                            {t("Paid Partially")}
                                                                         </span> : ""}
                                                                     {salesReturn.payment_status === "not_paid" ?
                                                                         <span className="badge bg-danger">
-                                                                            Not Paid
+                                                                            {t("Not Paid")}
                                                                         </span> : ""}
                                                                 </td>}
                                                                 {(col.fieldName === "payment_methods") && <td style={{ width: "auto", whiteSpace: "nowrap" }}>
                                                                     {salesReturn.payment_methods &&
                                                                         salesReturn.payment_methods.map((name) => (
-                                                                            <span className="badge bg-info">{name}</span>
+                                                                            <span className="badge bg-info">{t(name)}</span>
                                                                         ))}
                                                                 </td>}
                                                                 {(col.fieldName === "cash_discount") && <td style={{ width: "auto", whiteSpace: "nowrap" }}>
@@ -3087,7 +2555,7 @@ function SalesReturnIndex(props) {
                                                                     {salesReturn.commission && <Amount amount={trimTo2Decimals(salesReturn.commission)} />}
                                                                 </td>}
                                                                 {(col.fieldName === "commission_payment_method") && <td style={{ width: "auto", whiteSpace: "nowrap" }}>
-                                                                    {salesReturn.commission_payment_method && <span className="badge bg-info">{salesReturn.commission_payment_method}</span>}
+                                                                    {salesReturn.commission_payment_method && <span className="badge bg-info">{t(salesReturn.commission_payment_method)}</span>}
                                                                 </td>}
                                                                 {(col.fieldName === "discount") && <td style={{ width: "auto", whiteSpace: "nowrap" }}>
                                                                     {trimTo2Decimals(salesReturn.discount)}
@@ -3103,178 +2571,12 @@ function SalesReturnIndex(props) {
                                                                 </td>}
                                                             </>)
                                                         })}
-                                                        {/* <td style={{ width: "auto", whiteSpace: "nowrap" }} >
-                                                            <Button className="btn btn-light btn-sm" onClick={() => {
-                                                                openUpdateForm(salesreturn.id, salesreturn.order_id);
-                                                            }}>
-                                                                <i className="bi bi-pencil"></i>
-                                                            </Button>
-
-
-                                                            <Button className="btn btn-primary btn-sm" onClick={() => {
-                                                                openDetailsView(salesreturn.id);
-                                                            }}>
-                                                                <i className="bi bi-eye"></i>
-                                                            </Button>
-                                                            &nbsp;
-
-                                                            <Button className="btn btn-primary btn-sm" onClick={() => {
-                                                                // openPreview(salesreturn);
-                                                                openPrintTypeSelection(salesreturn);
-                                                            }}>
-                                                                <i className="bi bi-printer"></i>
-                                                            </Button>
-                                                            &nbsp;
-                                                            <Button className={`btn btn-success btn-sm`} style={{}} onClick={() => {
-                                                                sendWhatsAppMessage(salesreturn);
-                                                            }}>
-                                                                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="white" viewBox="0 0 16 16">
-                                                                    <path d="M13.601 2.326A7.875 7.875 0 0 0 8.036 0C3.596 0 0 3.597 0 8.036c0 1.417.37 2.805 1.07 4.03L0 16l3.993-1.05a7.968 7.968 0 0 0 4.043 1.085h.003c4.44 0 8.036-3.596 8.036-8.036 0-2.147-.836-4.166-2.37-5.673ZM8.036 14.6a6.584 6.584 0 0 1-3.35-.92l-.24-.142-2.37.622.63-2.31-.155-.238a6.587 6.587 0 0 1-1.018-3.513c0-3.637 2.96-6.6 6.6-6.6 1.764 0 3.42.69 4.67 1.94a6.56 6.56 0 0 1 1.93 4.668c0 3.637-2.96 6.6-6.6 6.6Zm3.61-4.885c-.198-.1-1.17-.578-1.352-.644-.18-.066-.312-.1-.444.1-.13.197-.51.644-.626.775-.115.13-.23.15-.428.05-.198-.1-.837-.308-1.594-.983-.59-.525-.99-1.174-1.11-1.372-.116-.198-.012-.305.088-.403.09-.09.198-.23.298-.345.1-.115.132-.197.2-.33.065-.13.032-.247-.017-.345-.05-.1-.444-1.07-.61-1.46-.16-.384-.323-.332-.444-.338l-.378-.007c-.13 0-.344.048-.525.23s-.688.672-.688 1.64c0 .967.704 1.9.802 2.03.1.13 1.386 2.116 3.365 2.963.47.203.837.324 1.122.414.472.15.902.13 1.24.08.378-.057 1.17-.48 1.336-.942.165-.462.165-.858.116-.943-.048-.084-.18-.132-.378-.23Z" />
-                                                                </svg>
-                                                            </Button>
-                                                            &nbsp;
-                                                        </td>
-                                                        <td style={{ width: "auto", whiteSpace: "nowrap" }} >{salesreturn.code}</td>
-
-                                                        <td style={{ width: "auto", whiteSpace: "nowrap" }} >
-                                                            {format(
-                                                                new Date(salesreturn.date),
-                                                                "MMM dd yyyy h:mma"
-                                                            )}
-                                                        </td>
-                                                        <td className="text-start" style={{ width: "auto", whiteSpace: "nowrap" }} >
-                                                            <OverflowTooltip value={salesreturn.customer_name} />
-                                                        </td>
-                                                        <td> <Amount amount={salesreturn.net_total} /> </td>
-                                                        <td>
-
-                                                            <Button variant="link" onClick={() => {
-                                                                openPaymentsDialogue(salesreturn);
-                                                            }}>
-                                                                <Amount amount={trimTo2Decimals(salesreturn.total_payment_paid)} />
-                                                            </Button>
-
-                                                        </td>
-                                                        <td> <Amount amount={trimTo2Decimals(salesreturn.balance_amount)} /></td>
-                                                        <td style={{ width: "auto", whiteSpace: "nowrap" }} >{salesreturn.order_code}</td>
-
-                                                        {store.zatca?.phase === "2" && store.zatca?.connected ? <td style={{ width: "auto", whiteSpace: "nowrap" }}>
-
-                                                            {!salesreturn.zatca?.compliance_passed && salesreturn.zatca?.compliance_check_failed_count > 0 ? <span className="badge bg-danger">
-                                                                Compliance check failed
-                                                                {!salesreturn.zatca.compliance_passed && salesreturn.zatca.compliance_check_last_failed_at ? <span>&nbsp;<TimeAgo date={salesreturn.zatca.compliance_check_last_failed_at} />&nbsp;</span> : ""}
-                                                                &nbsp;</span> : ""}
-
-                                                            {!salesreturn.zatca?.reporting_passed && salesreturn.zatca?.reporting_failed_count > 0 ? <span> <span className="badge bg-danger">
-                                                                Reporting failed
-                                                                {!salesreturn.zatca.reporting_passed && salesreturn.zatca.reporting_last_failed_at ? <span><TimeAgo date={salesreturn.zatca.reporting_last_failed_at} />&nbsp;</span> : ""}
-                                                            </span> &nbsp;</span> : ""}
-
-                                                            {salesreturn.zatca?.reporting_passed ? <span>&nbsp;<span className="badge bg-success">
-                                                                Reported
-                                                                {salesreturn.zatca.reporting_passed && salesreturn.zatca.reporting_passed_at ? <span>&nbsp;<TimeAgo date={salesreturn.zatca.reporting_passed_at} />&nbsp;</span> : ""}
-                                                                &nbsp;</span></span> : ""}
-
-                                                            {!salesreturn.zatca?.reporting_passed && !salesreturn.zatca?.compliance_passed && !salesreturn.zatca?.reporting_failed_count && !salesreturn.zatca?.compliance_check_failed_count ? <span className="badge bg-warning">
-                                                                Not Reported
-                                                                &nbsp;</span> : ""}
-
-                                                            {!salesreturn.zatca.reporting_passed ? <span> &nbsp; <Button disabled={reportingInProgress} style={{ marginTop: "3px" }} className="btn btn btn-sm" onClick={() => {
-                                                                ReportInvoiceToZatca(salesreturn.id, index);
-                                                            }}>
-
-                                                                {!salesreturn.zatca?.reportingInProgress && (salesreturn.zatca?.reporting_failed_count > 0 || salesreturn.zatca?.compliance_check_failed_count > 0) ? <i class="bi bi-bootstrap-reboot"></i> : ""}
-                                                                {!salesreturn.zatca?.reportingInProgress && (!salesreturn.zatca?.reporting_failed_count > 0 && !salesreturn.zatca?.compliance_check_failed_count) ? <span class="bi-arrow-right-circle">&nbsp;Report</span> : ""}
-                                                                {salesreturn.zatca?.reportingInProgress ? <Spinner
-                                                                    as="span"
-                                                                    animation="border"
-                                                                    size="sm"
-                                                                    role="status"
-                                                                    aria-hidden={true}
-                                                                /> : ""}
-                                                            </Button></span> : ""}
-                                                            {salesreturn.zatca?.reporting_passed ? <span>&nbsp;
-
-                                                                <Button onClick={() => {
-                                                                    window.open("/zatca/returns/xml/" + salesreturn.code + ".xml", "_blank");
-                                                                }}><i class="bi bi-filetype-xml"></i> XML
-                                                                </Button>
-                                                            </span> : ""}
-                                                        </td> : ""}
-                                                      
-                                                        <td>
-                                                            {salesreturn.payment_status === "paid" ?
-                                                                <span className="badge bg-success">
-                                                                    Paid
-                                                                </span> : ""}
-                                                            {salesreturn.payment_status === "paid_partially" ?
-                                                                <span className="badge bg-warning">
-                                                                    Paid Partially
-                                                                </span> : ""}
-                                                            {salesreturn.payment_status === "not_paid" ?
-                                                                <span className="badge bg-danger">
-                                                                    Not Paid
-                                                                </span> : ""}
-                                                        </td>
-                                                        <td>
-
-                                                            {salesreturn.payment_methods &&
-                                                                salesreturn.payment_methods.map((name) => (
-                                                                    <span className="badge bg-info">{name}</span>
-                                                                ))}
-
-                                                        </td>
-                                                        <td>{trimTo2Decimals(salesreturn.cash_discount)}</td>
-                                                        <td> <Amount amount={trimTo2Decimals(salesreturn.net_profit)} /> </td>
-                                                        <td> <Amount amount={trimTo2Decimals(salesreturn.net_loss)} />  </td>
-                                                        <td style={{ width: "auto", whiteSpace: "nowrap" }} >{salesreturn.created_by_name}</td>
-
-                                                        <td style={{ width: "auto", whiteSpace: "nowrap" }} >
-                                                            {format(
-                                                                new Date(salesreturn.created_at),
-                                                                "MMM dd yyyy h:mma"
-                                                            )}
-                                                        </td>
-                                                        <td style={{ width: "auto", whiteSpace: "nowrap" }} >
-                                                            <Button className="btn btn-light btn-sm" onClick={() => {
-                                                                openUpdateForm(salesreturn.id);
-                                                            }}>
-                                                                <i className="bi bi-pencil"></i>
-                                                            </Button>
-
-
-                                                            <Button className="btn btn-primary btn-sm" onClick={() => {
-                                                                openDetailsView(salesreturn.id);
-                                                            }}>
-                                                                <i className="bi bi-eye"></i>
-                                                            </Button>
-                                                        </td>*/}
                                                     </tr>
                                                 ))}
                                         </tbody>
                                     </table>
                                 </div>
 
-                                {totalPages ? <ReactPaginate
-                                    breakLabel="..."
-                                    nextLabel="next >"
-                                    onPageChange={(event) => {
-                                        changePage(event.selected + 1);
-                                    }}
-                                    pageRangeDisplayed={5}
-                                    pageCount={totalPages}
-                                    previousLabel="< previous"
-                                    renderOnZeroPageCount={null}
-                                    className="pagination  flex-wrap"
-                                    pageClassName="page-item"
-                                    pageLinkClassName="page-link"
-                                    activeClassName="active"
-                                    previousClassName="page-item"
-                                    nextClassName="page-item"
-                                    previousLinkClassName="page-link"
-                                    nextLinkClassName="page-link"
-                                    forcePage={page - 1}
-                                /> : ""}
                             </div>
                         </div>
                     </div>
@@ -3283,14 +2585,14 @@ function SalesReturnIndex(props) {
 
             <Modal show={showSalesReturnPaymentHistory} size="lg" onHide={handlePaymentHistoryClose} animation={false} scrollable={true}>
                 <Modal.Header>
-                    <Modal.Title>Payment history of Sales Return #{selectedSalesReturn.code}</Modal.Title>
+                    <Modal.Title>{t("Payment history of Sales Return")} #{selectedSalesReturn.code}</Modal.Title>
 
                     <div className="col align-self-end text-end">
                         <button
                             type="button"
                             className="btn-close"
                             onClick={handlePaymentHistoryClose}
-                            aria-label="Close"
+                            aria-label={t("Close")}
                         ></button>
 
                     </div>
@@ -3301,6 +2603,6 @@ function SalesReturnIndex(props) {
             </Modal>
         </>
     );
-}
+});
 
 export default SalesReturnIndex;

@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import DeliveryNoteCreate from "./create.js";
 import DeliveryNoteView from "./view.js";
+import OrderCreate from "./../order/create.js";
 
 import { Typeahead } from "react-bootstrap-typeahead";
 import { format } from "date-fns";
@@ -14,6 +15,7 @@ import OrderPreview from "./../order/preview.js"
 import OrderPrint from "./../order/print.js"
 import CustomerCreate from "./../customer/create.js";
 import { DragDropContext, Droppable, Draggable } from "react-beautiful-dnd";
+import StatsSummary from "../utils/StatsSummary.js";
 
 function DeliveryNoteIndex(props) {
   let [enableSelection, setEnableSelection] = useState(false);
@@ -43,14 +45,19 @@ function DeliveryNoteIndex(props) {
   const [createdAtToValue, setCreatedAtToValue] = useState("");
 
   let [totalDeliveryNote, setTotalDeliveryNote] = useState(0.00);
-  let [profit, setProfit] = useState(0.00);
-  let [loss, setLoss] = useState(0.00);
+  let [vatPrice, setVatPrice] = useState(0.00);
+  let [totalDiscount, setTotalDiscount] = useState(0.00);
+  let [totalShippingFees, setTotalShippingFees] = useState(0.00);
+
+  // eslint-disable-next-line no-unused-vars
+  const [statsOpen, setStatsOpen] = useState(false);
+  const statsOpenRef = useRef(false);
 
   //list
   const [deliverynoteList, setDeliveryNoteList] = useState([]);
 
   //pagination
-  let [pageSize, setPageSize] = useState(20);
+  let [pageSize, setPageSize] = useState(() => parseInt(localStorage.getItem('delivery_note_pageSize') || '10'));
   let [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(0);
   let [totalItems, setTotalItems] = useState(0);
@@ -302,7 +309,7 @@ function DeliveryNoteIndex(props) {
       },
     };
     let Select =
-      "select=id,code,date,created_by_name,customer_id,customer_name,customer_name_arabic,created_at";
+      "select=id,code,date,created_by_name,customer_id,customer_name,customer_name_arabic,net_total,created_at,order_id,order_code";
     if (localStorage.getItem("store_id")) {
       searchParams.store_id = localStorage.getItem("store_id");
     }
@@ -310,6 +317,12 @@ function DeliveryNoteIndex(props) {
     const d = new Date();
     let diff = d.getTimezoneOffset();
     searchParams["timezone_offset"] = parseFloat(diff / 60);
+
+    if (statsOpenRef.current) {
+      searchParams["stats"] = "1";
+    } else {
+      searchParams["stats"] = "0";
+    }
 
     setSearchParams(searchParams);
     let queryParams = ObjectToSearchQueryParams(searchParams);
@@ -357,12 +370,9 @@ function DeliveryNoteIndex(props) {
 
         totalDeliveryNote = data.meta.total_deliverynote;
         setTotalDeliveryNote(totalDeliveryNote);
-
-        profit = data.meta.profit;
-        setProfit(profit);
-
-        loss = data.meta.loss;
-        setLoss(loss);
+        setVatPrice(data.meta.vat_price || 0);
+        setTotalDiscount(data.meta.discount || 0);
+        setTotalShippingFees(data.meta.shipping_handling_fees || 0);
 
       })
       .catch((error) => {
@@ -382,6 +392,7 @@ function DeliveryNoteIndex(props) {
 
   function changePageSize(size) {
     pageSize = parseInt(size);
+    localStorage.setItem('delivery_note_pageSize', size);
     setPageSize(pageSize);
     list();
   }
@@ -481,6 +492,16 @@ function DeliveryNoteIndex(props) {
     CustomerUpdateFormRef.current.open(id);
   }
 
+  let [showOrderCreate, setShowOrderCreate] = useState(false);
+  const SalesUpdateFormRef = useRef();
+  function openSalesUpdateForm(id) {
+    setShowOrderCreate(true);
+    if (timerRef.current) clearTimeout(timerRef.current);
+    timerRef.current = setTimeout(() => {
+      SalesUpdateFormRef.current?.open(id);
+    }, 50);
+  }
+
 
   //Table settings
   const [showSuccess, setShowSuccess] = useState(false);
@@ -492,6 +513,8 @@ function DeliveryNoteIndex(props) {
     { key: "id", label: "ID", fieldName: "code", visible: true },
     { key: "date", label: "Date", fieldName: "date", visible: true },
     { key: "customer", label: "Customer", fieldName: "customer_name", visible: true },
+    { key: "net_total", label: "Net Total", fieldName: "net_total", visible: true },
+    { key: "order_code", label: "Sales ID", fieldName: "order_code", visible: true },
     { key: "created_by", label: "Created By", fieldName: "created_by", visible: true },
     { key: "created_at", label: "Created At", fieldName: "created_at", visible: true },
     { key: "actions_end", label: "Actions", fieldName: "actions_end", visible: true },
@@ -583,6 +606,12 @@ function DeliveryNoteIndex(props) {
     } else {
       localStorage.setItem("delivery_note_table_settings", JSON.stringify(reordered));
     }
+  };
+
+  const handleSummaryToggle = (isOpen) => {
+    statsOpenRef.current = isOpen;
+    setStatsOpen(isOpen);
+    list();
   };
 
   const handleSelected = (selected) => {
@@ -696,6 +725,7 @@ function DeliveryNoteIndex(props) {
         </Modal.Footer>
       </Modal>
       <CustomerCreate ref={CustomerUpdateFormRef} />
+      {showOrderCreate && <OrderCreate ref={SalesUpdateFormRef} />}
       <OrderPrint ref={PrintRef} />
       <Modal show={showPrintTypeSelection} onHide={() => {
         showPrintTypeSelection = false;
@@ -744,6 +774,28 @@ function DeliveryNoteIndex(props) {
       <div className="container-fluid p-0">
         <div className="row">
           <div className="col">
+            <span className="text-end">
+              <StatsSummary
+                title={'Delivery Note Summary'}
+                filters={{
+                  ...(dateValue ? { 'Date': dateValue } : {}),
+                  ...(fromDateValue ? { 'From Date': fromDateValue } : {}),
+                  ...(toDateValue ? { 'To Date': toDateValue } : {}),
+                  ...(createdAtValue ? { 'Created At': createdAtValue } : {}),
+                  ...(createdAtFromValue ? { 'Created From': createdAtFromValue } : {}),
+                  ...(createdAtToValue ? { 'Created To': createdAtToValue } : {}),
+                  ...(selectedCustomers.length > 0 ? { 'Customer': selectedCustomers.map(c => c.name).join(', ') } : {}),
+                  ...(selectedCreatedByUsers.length > 0 ? { 'Created By': selectedCreatedByUsers.map(u => u.name).join(', ') } : {}),
+                }}
+                stats={{
+                  "Total Delivery Note": totalDeliveryNote,
+                  "VAT": vatPrice,
+                  "Discount": totalDiscount,
+                  "Shipping/Handling Fees": totalShippingFees,
+                }}
+                onToggle={handleSummaryToggle}
+              />
+            </span>
           </div>
         </div>
 
@@ -756,7 +808,7 @@ function DeliveryNoteIndex(props) {
 
             <Button variant="primary" onClick={() => {
               openReportPreview();
-            }} style={{ marginRight: "8px" }} className="btn btn-primary mb-3">
+            }} style={{ marginRight: "8px" }} className="btn btn-primary mb-1">
               <i className="bi bi-printer"></i>&nbsp;
               Print Report
             </Button>
@@ -764,7 +816,7 @@ function DeliveryNoteIndex(props) {
             <Button
               hide={true.toString()}
               variant="primary"
-              className="btn btn-primary mb-3"
+              className="btn btn-primary mb-1"
               onClick={openCreateForm}
             >
               <i className="bi bi-plus-lg"></i> Create
@@ -780,7 +832,7 @@ function DeliveryNoteIndex(props) {
                         <h5   className="card-title mb-0"></h5>
                     </div>
                     */}
-              <div className="card-body">
+              <div className="card-body p-2">
                 <div className="row">
                   {totalItems === 0 && (
                     <div className="col">
@@ -788,81 +840,50 @@ function DeliveryNoteIndex(props) {
                     </div>
                   )}
                 </div>
-                <div className="row" style={{ border: "solid 0px" }}>
-                  <div className="col text-start" style={{ border: "solid 0px" }}>
-                    <Button
-                      onClick={() => {
-                        setIsRefreshInProcess(true);
-                        list();
-                      }}
-                      variant="primary"
-                      disabled={isRefreshInProcess}
-                    >
-                      {isRefreshInProcess ? (
-                        <Spinner
-                          as="span"
-                          animation="border"
-                          size="sm"
-                          role="status"
-                          aria-hidden="true"
-                        />
-                      ) : (
-                        <i className="fa fa-refresh"></i>
-                      )}
-                      <span className="visually-hidden">Loading...</span>
-                    </Button>
-                  </div>
-                  <div className="col text-center">
-                    {isListLoading && (
-                      <Spinner animation="grow" variant="primary" />
+                <div style={{ display: "flex", alignItems: "center", gap: "8px", flexWrap: "wrap", marginBottom: "8px" }}>
+                  <Button
+                    onClick={() => { setIsRefreshInProcess(true); list(); }}
+                    variant="primary"
+                    disabled={isRefreshInProcess}
+                  >
+                    {isRefreshInProcess ? (
+                      <Spinner as="span" animation="border" size="sm" role="status" aria-hidden="true" />
+                    ) : (
+                      <i className="fa fa-refresh"></i>
                     )}
-                  </div>
-                  <div className="col text-end">
-                    {totalItems > 0 && (
-                      <>
-                        <label className="form-label">Size:&nbsp;</label>
-                        <select
-                          value={pageSize}
-                          onChange={(e) => {
-                            changePageSize(e.target.value);
-                          }}
-                          className="form-control pull-right"
-                          style={{
-                            border: "solid 1px",
-                            borderColor: "silver",
-                            width: "55px",
-                          }}
-                        >
-                          <option value="5">
-                            5
-                          </option>
-                          <option value="10">
-                            10
-                          </option>
-                          <option value="20">20</option>
-                          <option value="40">40</option>
-                          <option value="50">50</option>
-                          <option value="100">100</option>
-                        </select>
-                      </>
-                    )}
-                  </div>
-                </div>
+                    <span className="visually-hidden">Loading...</span>
+                  </Button>
 
-                <br />
-                <div className="row">
-                  <div className="col" style={{ border: "solid 0px" }}>
+                  {totalItems > 0 && (
+                    <>
+                      <label className="form-label mb-0">Size:&nbsp;</label>
+                      <select
+                        value={pageSize}
+                        onChange={(e) => { changePageSize(e.target.value); }}
+                        className="form-control"
+                        style={{ border: "solid 1px", borderColor: "silver", width: "55px" }}
+                      >
+                        <option value="5">5</option>
+                        <option value="10">10</option>
+                        <option value="20">20</option>
+                        <option value="40">40</option>
+                        <option value="50">50</option>
+                        <option value="100">100</option>
+                      </select>
+                    </>
+                  )}
+
+                  <div className="w-100" style={{ overflowX: "auto" }}>
                     {totalPages ? <ReactPaginate
                       breakLabel="..."
                       nextLabel="next >"
-                      onPageChange={(event) => {
-                        changePage(event.selected + 1);
-                      }}
-                      pageRangeDisplayed={5}
+                      onPageChange={(event) => { changePage(event.selected + 1); }}
+                      pageRangeDisplayed={3}
+                      marginPagesDisplayed={1}
                       pageCount={totalPages}
-                      previousLabel="< previous"
+                      previousLabel="< prev"
                       renderOnZeroPageCount={null}
-                      className="pagination  flex-wrap"
+                      className="pagination flex-wrap mb-0"
                       pageClassName="page-item"
                       pageLinkClassName="page-link"
                       activeClassName="active"
@@ -873,45 +894,38 @@ function DeliveryNoteIndex(props) {
                       forcePage={page - 1}
                     /> : ""}
                   </div>
-                </div>
 
-                <div className="row">
-                  <div className="col text-end">
-                    <button
-                      className="btn btn-sm btn-outline-secondary"
-                      onClick={() => {
-                        setShowSettings(!showSettings);
-                      }}
-                    >
-                      <i
-                        className="bi bi-gear-fill"
-                        style={{ fontSize: "1.2rem" }}
-                        title="Table Settings"
-                      />
-                    </button>
-                  </div>
-                </div>
-
-
-                <div className="row">
                   {totalItems > 0 && (
-                    <>
-                      <div className="col text-start">
-                        <p className="text-start">
-                          showing {offset + 1}-{offset + currentPageItemsCount} of{" "}
-                          {totalItems}
-                        </p>
-                      </div>
-
-                      <div className="col text-end">
-                        <p className="text-end">
-                          page {page} of {totalPages}
-                        </p>
-                      </div>
-                    </>
+                    <span className="text-muted small">
+                      showing {offset + 1}-{offset + currentPageItemsCount} of {totalItems}
+                      &nbsp;|&nbsp;page {page} of {totalPages}
+                    </span>
                   )}
+
+                  <button
+                    className="btn btn-sm btn-outline-secondary ms-auto"
+                    onClick={() => { setShowSettings(!showSettings); }}
+                  >
+                    <i className="bi bi-gear-fill" style={{ fontSize: "1.2rem" }} title="Table Settings" />
+                  </button>
                 </div>
-                <div className="table-responsive" style={{ overflowX: "auto", overflowY: "auto", maxHeight: "500px" }}>
+                <div className="table-responsive" style={{ position: "relative", overflowX: "auto", overflowY: "auto", minHeight: "200px" }} ref={(el) => {
+                  if (!el) return;
+                  const fit = () => {
+                    const top = el.getBoundingClientRect().top;
+                    el.style.height = Math.max(200, window.innerHeight - top - 16) + "px";
+                  };
+                  fit();
+                  if (!el._fitListenerAdded) {
+                    el._fitListenerAdded = true;
+                    window.addEventListener("resize", fit);
+                  }
+                }}>
+                  {isListLoading && (
+                    <div style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0, display: "flex", alignItems: "center", justifyContent: "center", zIndex: 10, background: "rgba(255,255,255,0.5)" }}>
+                      <Spinner animation="grow" variant="primary" style={{ width: "3rem", height: "3rem" }} />
+                    </div>
+                  )}
                   <table className="table table-striped table-bordered table-sm">
                     <thead>
                       <tr className="text-center">
@@ -1527,7 +1541,7 @@ function DeliveryNoteIndex(props) {
                                   </Button>
                                   &nbsp;
 
-                                  <Button className={`btn ${!deliverynote.customer_name && !deliverynote.phone ? "btn-secondary" : "btn-success"} btn-sm`} disabled={!deliverynote.customer_name && !deliverynote.phone} style={{}} onClick={() => {
+                                  <Button className="btn btn-success btn-sm" style={{}} onClick={() => {
                                     sendWhatsAppMessage(deliverynote);
                                   }}>
                                     <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="white" viewBox="0 0 16 16">
@@ -1558,6 +1572,14 @@ function DeliveryNoteIndex(props) {
                                 {(col.fieldName === "created_by") && <td style={{ width: "auto", whiteSpace: "nowrap" }}>
                                   {deliverynote.created_by_name}
                                 </td>}
+                                {(col.fieldName === "net_total") && <td style={{ width: "auto", whiteSpace: "nowrap" }}>
+                                  {deliverynote.net_total ? deliverynote.net_total.toFixed(2) : "-"}
+                                </td>}
+                                {(col.fieldName === "order_code") && <td style={{ width: "auto", whiteSpace: "nowrap" }}>
+                                  {deliverynote.order_code && <span style={{ cursor: "pointer", color: "blue" }} onClick={() => {
+                                    openSalesUpdateForm(deliverynote.order_id);
+                                  }}>{deliverynote.order_code}</span>}
+                                </td>}
                               </>)
                             })}
 
@@ -1582,7 +1604,7 @@ function DeliveryNoteIndex(props) {
                               </Button>
                               &nbsp;
 
-                              <Button className={`btn ${!deliverynote.customer_name && !deliverynote.phone ? "btn-secondary" : "btn-success"} btn-sm`} disabled={!deliverynote.customer_name && !deliverynote.phone} style={{}} onClick={() => {
+                              <Button className="btn btn-success btn-sm" style={{}} onClick={() => {
                                 sendWhatsAppMessage(deliverynote);
                               }}>
                                 <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="white" viewBox="0 0 16 16">
@@ -1644,26 +1666,6 @@ function DeliveryNoteIndex(props) {
                   </table>
                 </div>
 
-                {totalPages ? <ReactPaginate
-                  breakLabel="..."
-                  nextLabel="next >"
-                  onPageChange={(event) => {
-                    changePage(event.selected + 1);
-                  }}
-                  pageRangeDisplayed={5}
-                  pageCount={totalPages}
-                  previousLabel="< previous"
-                  renderOnZeroPageCount={null}
-                  className="pagination  flex-wrap"
-                  pageClassName="page-item"
-                  pageLinkClassName="page-link"
-                  activeClassName="active"
-                  previousClassName="page-item"
-                  nextClassName="page-item"
-                  previousLinkClassName="page-link"
-                  nextLinkClassName="page-link"
-                  forcePage={page - 1}
-                /> : ""}
               </div>
             </div>
           </div>

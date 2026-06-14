@@ -57,6 +57,7 @@ function ExpenseIndex(props) {
     //Created By Expense Auto Suggestion
     const [categoryOptions, setCategoryOptions] = useState([]);
     const [selectedExpenseCategories, setSelectedExpenseCategories] = useState([]);
+    const [selectedExcludeExpenseCategories, setSelectedExcludeExpenseCategories] = useState([]);
 
 
     useEffect(() => {
@@ -188,6 +189,11 @@ function ExpenseIndex(props) {
 
     function searchByFieldValue(field, value) {
         searchParams[field] = value;
+        setFieldFilters(prev => {
+            const updated = { ...prev };
+            if (value) { updated[field] = value; } else { delete updated[field]; }
+            return updated;
+        });
 
         page = 1;
         setPage(page);
@@ -256,8 +262,12 @@ function ExpenseIndex(props) {
             setSelectedCreatedByUsers(values);
         } else if (field === "category_id") {
             setSelectedExpenseCategories(values);
+        } else if (field === "exclude_category_id") {
+            setSelectedExcludeExpenseCategories(values);
         } else if (field === "payment_method") {
             setSelectedPaymentMethodList(values);
+        } else if (field === "exclude_payment_method") {
+            setSelectedExcludePaymentMethodList(values);
         } else if (field === "vendor_id") {
             setSelectedVendors(values);
         }
@@ -521,7 +531,7 @@ function ExpenseIndex(props) {
 
 
         //list();
-        getStore(localStorage.getItem("store_id"));
+        //getStore(localStorage.getItem("store_id"));
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
@@ -529,6 +539,8 @@ function ExpenseIndex(props) {
     const [userOptions, setUserOptions] = useState([]);
     const [selectedCreatedByUsers, setSelectedCreatedByUsers] = useState([]);
     const [selectedPaymentMethodList, setSelectedPaymentMethodList] = useState([]);
+    const [selectedExcludePaymentMethodList, setSelectedExcludePaymentMethodList] = useState([]);
+
     const paymentMethodOptions = [
         {
             id: "cash",
@@ -676,12 +688,17 @@ function ExpenseIndex(props) {
 
     //Stats
     const [statsOpen, setStatsOpen] = useState(false);
+    const [fieldFilters, setFieldFilters] = useState({});
     const handleSummaryToggle = (isOpen) => {
         setStatsOpen(isOpen);
     };
 
+
+
     useEffect(() => {
-        list();
+        if (statsOpen) {
+            list();  // Call list() whenever statsOpen changes to true
+        }
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [statsOpen]);
 
@@ -715,6 +732,8 @@ function ExpenseIndex(props) {
                 { title: "الرقم التسلسلي - S/L No.", width: { wch: 18 }, style: { fill: { patternType: "solid", fgColor: { rgb: "FFCCEEFF" } }, font: { vertAlign: true, bold: true }, alignment: { horizontal: "center", vertical: "center" } } },//pixels width 
                 { title: "تاريخ الفاتورة - Date of Invoice", width: { wch: 25 }, style: { fill: { patternType: "solid", fgColor: { rgb: "FFCCEEFF" } }, font: { vertAlign: true, bold: true }, alignment: { horizontal: "center", vertical: "center" } } },//pixels width
                 { title: "رقم الفاتورة - Invoice Number", width: { wch: 50 }, style: { fill: { patternType: "solid", fgColor: { rgb: "FFCCEEFF" } }, font: { vertAlign: true, bold: true }, alignment: { horizontal: "center", vertical: "center" } } },//pixels width
+                { title: "وصف - Description", width: { wch: 25 }, style: { fill: { patternType: "solid", fgColor: { rgb: "FFCCEEFF" } }, font: { vertAlign: true, bold: true }, alignment: { horizontal: "center", vertical: "center" } } },//pixels width
+                { title: "فئة - Category", width: { wch: 25 }, style: { fill: { patternType: "solid", fgColor: { rgb: "FFCCEEFF" } }, font: { vertAlign: true, bold: true }, alignment: { horizontal: "center", vertical: "center" } } },//pixels 
                 { title: "اسم المورد بالعربية - Supplier Name", width: { wch: 90 }, style: { fill: { patternType: "solid", fgColor: { rgb: "FFCCEEFF" } }, font: { vertAlign: true, bold: true }, alignment: { horizontal: "center", vertical: "center" } } },//pixels width
                 { title: "الرقمالضريبيللمورد - Supplier VAT No", width: { wch: 30 }, style: { fill: { patternType: "solid", fgColor: { rgb: "FFCCEEFF" } }, font: { vertAlign: true, bold: true }, alignment: { horizontal: "center", vertical: "center" } } },//pixels width
                 { title: "المبلغ قبل الضريبة - Amount Before VAT", width: { wch: 30 }, style: { fill: { patternType: "solid", fgColor: { rgb: "FFCCEEFF" } }, font: { vertAlign: true, bold: true }, alignment: { horizontal: "center", vertical: "center" } } },//pixels width
@@ -763,6 +782,8 @@ function ExpenseIndex(props) {
                     { value: invoiceCount, style: { alignment: { horizontal: "center" } } },
                     { value: expenseDate, style: { alignment: { horizontal: "center" } } },
                     { value: invoiceNo, style: { alignment: { horizontal: "center" } } },
+                    { value: expense.description ? expense.description : "", style: { alignment: { horizontal: "center" } } },
+                    { value: expense.category_name[0] ? expense.category_name[0] : "", style: { alignment: { horizontal: "center" } } },
                     { value: expense.vendor_name ? (expense.vendor_name + (expense.vendor_name_arabic ? " | " + expense.vendor_name_arabic : "")) : "" },
                     { value: supplierVatNo ? supplierVatNo : "", style: { alignment: { horizontal: "center" } } },
                     { value: amountBeforeVAT.toFixed(2), style: { alignment: { horizontal: "right" } } },
@@ -784,9 +805,13 @@ function ExpenseIndex(props) {
             { value: "", },
             { value: "", },
             { value: "", },
+            { value: "", },
+            { value: "", },
         ]);
 
         excelData[0].data.push([
+            { value: "", },
+            { value: "", },
             { value: "", },
             { value: "", },
             { value: "", },
@@ -1062,7 +1087,21 @@ function ExpenseIndex(props) {
                     <div className="col">
                         <span className="text-end">
                             <StatsSummary
-                                title="Expenses"
+                                title="Expenses Summary"
+                                filters={{
+                                    ...(dateValue ? { 'Date': dateValue } : {}),
+                                    ...(fromDateValue ? { 'From Date': fromDateValue } : {}),
+                                    ...(toDateValue ? { 'To Date': toDateValue } : {}),
+                                    ...(selectedExpenseCategories.length > 0 ? { 'Category': selectedExpenseCategories.map(c => c.name).join(', ') } : {}),
+                                    ...Object.fromEntries(
+                                        Object.entries(fieldFilters)
+                                            .filter(([, v]) => v)
+                                            .map(([field, value]) => {
+                                                const col = columns.find(c => c.fieldName === field || c.key === field);
+                                                return [col ? col.label : field, value];
+                                            })
+                                    ),
+                                }}
                                 stats={{
                                     "Total": totalExpenses,
                                     "Cash": totalCashExpenses,
@@ -1085,17 +1124,17 @@ function ExpenseIndex(props) {
 
                     <div className="col text-end">
 
-                        <ExcelFile filename={expenseReportFileName} element={excelData.length > 0 ? <Button variant="success" className="btn btn-primary mb-3 success" >Download Expense Report</Button> : ""}>
+                        <ExcelFile filename={expenseReportFileName} element={excelData.length > 0 ? <Button variant="success" className="btn btn-primary mb-1 success" >Download Expense Report</Button> : ""}>
                             <ExcelSheet dataSet={excelData} name={expenseReportFileName} />
                         </ExcelFile>
 
-                        {excelData.length === 0 ? <Button variant="primary" className="btn btn-primary mb-3" onClick={getAllExpenses} >{fettingAllRecordsInProgress ? "Preparing.." : "Expense Report"}</Button> : ""}
+                        {excelData.length === 0 ? <Button variant="primary" className="btn btn-primary mb-1" onClick={getAllExpenses} >{fettingAllRecordsInProgress ? "Preparing.." : "Expense Report"}</Button> : ""}
                         &nbsp;&nbsp;
 
                         <Button
                             hide={true.toString()}
                             variant="primary"
-                            className="btn btn-primary mb-3"
+                            className="btn btn-primary mb-1"
                             onClick={openCreateForm}
                         >
                             <i className="bi bi-plus-lg"></i> Create
@@ -1114,7 +1153,7 @@ function ExpenseIndex(props) {
                         <h5   className="card-title mb-0"></h5>
                     </div>
                     */}
-                            <div className="card-body">
+                            <div className="card-body p-2">
                                 <div className="row">
                                     {totalItems === 0 && (
                                         <div className="col">
@@ -1122,86 +1161,66 @@ function ExpenseIndex(props) {
                                         </div>
                                     )}
                                 </div>
-                                <div className="row" style={{ bexpense: "solid 0px" }}>
-                                    <div className="col text-start" style={{ border: "solid 0px" }}>
-                                        <Button
-                                            onClick={() => {
-                                                setIsRefreshInProcess(true);
-                                                list();
-                                            }}
-                                            variant="primary"
-                                            disabled={isRefreshInProcess}
-                                        >
-                                            {isRefreshInProcess ? (
-                                                <Spinner
-                                                    as="span"
-                                                    animation="bexpense"
-                                                    size="sm"
-                                                    role="status"
-                                                    aria-hidden={true}
-                                                />
-                                            ) : (
-                                                <i className="fa fa-refresh"></i>
-                                            )}
-                                            <span className="visually-hidden">Loading...</span>
-                                        </Button>
-                                    </div>
-                                    <div className="col text-center">
-                                        {isListLoading && (
-                                            <Spinner animation="grow" variant="primary" />
+                                <div style={{ display: "flex", alignItems: "center", gap: "8px", flexWrap: "wrap", marginBottom: "8px" }}>
+                                    <Button
+                                        onClick={() => {
+                                            setIsRefreshInProcess(true);
+                                            list();
+                                        }}
+                                        variant="primary"
+                                        disabled={isRefreshInProcess}
+                                    >
+                                        {isRefreshInProcess ? (
+                                            <Spinner
+                                                as="span"
+                                                animation="border"
+                                                size="sm"
+                                                role="status"
+                                                aria-hidden={true}
+                                            />
+                                        ) : (
+                                            <i className="fa fa-refresh"></i>
                                         )}
-                                    </div>
-                                    <div className="col text-end">
-                                        {totalItems > 0 && (
-                                            <>
-                                                <label className="form-label">Size:&nbsp;</label>
-                                                <select
-                                                    value={pageSize}
-                                                    onChange={(e) => {
-                                                        changePageSize(e.target.value);
-                                                    }}
-                                                    className="form-control pull-right"
-                                                    style={{
-                                                        bexpense: "solid 1px",
-                                                        bexpenseColor: "silver",
-                                                        width: "55px",
-                                                    }}
-                                                >
-                                                    <option value="5">
-                                                        5
-                                                    </option>
-                                                    <option value="10" >
-                                                        10
-                                                    </option>
-                                                    <option value="20">20</option>
-                                                    <option value="40">40</option>
-                                                    <option value="50">50</option>
-                                                    <option value="100">100</option>
-                                                    <option value="200">200</option>
-                                                    <option value="300">300</option>
-                                                    <option value="500">500</option>
-                                                    <option value="1000">1000</option>
-                                                    <option value="1500">1500</option>
-                                                </select>
-                                            </>
-                                        )}
-                                    </div>
-                                </div>
-
-                                <br />
-                                <div className="row">
-                                    <div className="col" style={{ bexpense: "solid 0px" }}>
+                                        <span className="visually-hidden">Loading...</span>
+                                    </Button>
+                                    {totalItems > 0 && (
+                                        <>
+                                            <label className="form-label mb-0">Size:&nbsp;</label>
+                                            <select
+                                                value={pageSize}
+                                                onChange={(e) => {
+                                                    changePageSize(e.target.value);
+                                                }}
+                                                className="form-control"
+                                                style={{ width: "55px" }}
+                                            >
+                                                <option value="5">5</option>
+                                                <option value="10">10</option>
+                                                <option value="20">20</option>
+                                                <option value="40">40</option>
+                                                <option value="50">50</option>
+                                                <option value="100">100</option>
+                                                <option value="200">200</option>
+                                                <option value="300">300</option>
+                                                <option value="500">500</option>
+                                                <option value="1000">1000</option>
+                                                <option value="1500">1500</option>
+                                            </select>
+                                        </>
+                                    )}
+                                    <div className="w-100" style={{ overflowX: "auto" }}>
                                         {totalPages ? <ReactPaginate
                                             breakLabel="..."
                                             nextLabel="next >"
                                             onPageChange={(event) => {
                                                 changePage(event.selected + 1);
                                             }}
-                                            pageRangeDisplayed={5}
+                                            pageRangeDisplayed={3}
+                                            marginPagesDisplayed={1}
                                             pageCount={totalPages}
-                                            previousLabel="< previous"
+                                            previousLabel="< prev"
                                             renderOnZeroPageCount={null}
-                                            className="pagination  flex-wrap"
+                                            className="pagination flex-wrap mb-0"
                                             pageClassName="page-item"
                                             pageLinkClassName="page-link"
                                             activeClassName="active"
@@ -1212,44 +1231,43 @@ function ExpenseIndex(props) {
                                             forcePage={page - 1}
                                         /> : ""}
                                     </div>
-                                </div>
-                                <div className="row">
-                                    <div className="col text-end">
-                                        <button
-                                            className="btn btn-sm btn-outline-secondary"
-                                            onClick={() => {
-                                                setShowSettings(!showSettings);
-                                            }}
-                                        >
-                                            <i
-                                                className="bi bi-gear-fill"
-                                                style={{ fontSize: "1.2rem" }}
-                                                title="Table Settings"
-
-                                            />
-                                        </button>
-                                    </div>
-                                </div>
-
-                                <div className="row">
                                     {totalItems > 0 && (
-                                        <>
-                                            <div className="col text-start">
-                                                <p className="text-start">
-                                                    showing {offset + 1}-{offset + currentPageItemsCount} of{" "}
-                                                    {totalItems}
-                                                </p>
-                                            </div>
-
-                                            <div className="col text-end">
-                                                <p className="text-end">
-                                                    page {page} of {totalPages}
-                                                </p>
-                                            </div>
-                                        </>
+                                        <span className="text-muted small">
+                                            showing {offset + 1}-{offset + currentPageItemsCount} of {totalItems} &nbsp;|&nbsp; page {page} of {totalPages}
+                                        </span>
                                     )}
+                                    <button
+                                        className="btn btn-sm btn-outline-secondary"
+                                        onClick={() => {
+                                            setShowSettings(!showSettings);
+                                        }}
+                                    >
+                                        <i
+                                            className="bi bi-gear-fill"
+                                            style={{ fontSize: "1.2rem" }}
+                                            title="Table Settings"
+                                        />
+                                    </button>
                                 </div>
-                                <div className="table-responsive" style={{ overflowX: "auto", overflowY: "auto", maxHeight: "500px" }}>
+                                <div className="table-responsive" style={{ position: "relative", overflowX: "auto", overflowY: "auto", minHeight: "200px" }}
+                                    ref={(el) => {
+                                        if (!el) return;
+                                        const fit = () => {
+                                            const top = el.getBoundingClientRect().top;
+                                            el.style.height = Math.max(200, window.innerHeight - top - 16) + "px";
+                                        };
+                                        fit();
+                                        if (!el._fitListenerAdded) {
+                                            el._fitListenerAdded = true;
+                                            window.addEventListener("resize", fit);
+                                        }
+                                    }}
+                                >
+                                    {isListLoading && (
+                                        <div style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0, display: "flex", alignItems: "center", justifyContent: "center", zIndex: 10, background: "rgba(255,255,255,0.5)" }}>
+                                            <Spinner animation="grow" variant="primary" style={{ width: "3rem", height: "3rem" }} />
+                                        </div>
+                                    )}
                                     <table className="table table-striped table-sm table-bordered">
                                         <thead>
                                             <tr className="text-center">
@@ -1432,7 +1450,7 @@ function ExpenseIndex(props) {
                                                             col.key !== "select" &&
                                                             col.key !== "date" &&
                                                             col.key !== "payment_method" &&
-                                                            col.key !== "category_name" &&
+                                                            col.key !== "category" &&
                                                             col.key !== "created_by" &&
                                                             col.key !== "created_at" &&
                                                             col.key !== "actions_end" &&
@@ -1446,9 +1464,10 @@ function ExpenseIndex(props) {
                                                                 }
                                                                 className="form-control"
                                                             /></th>}
-                                                        {col.key === "category_name" && <th>
+                                                        {(col.fieldName === "category_name") && <th>
                                                             <Typeahead
                                                                 id="category_id"
+
                                                                 labelKey="name"
                                                                 onChange={(selectedItems) => {
                                                                     searchByMultipleValuesField(
@@ -1472,7 +1491,35 @@ function ExpenseIndex(props) {
                                                                 }}
                                                                 multiple
                                                             />
+                                                            Excl.
+                                                            <Typeahead
+                                                                id="exclude_category_id"
+
+                                                                labelKey="name"
+                                                                onChange={(selectedItems) => {
+                                                                    searchByMultipleValuesField(
+                                                                        "exclude_category_id",
+                                                                        selectedItems
+                                                                    );
+                                                                }}
+                                                                options={categoryOptions}
+                                                                placeholder="Select Excl. Categories"
+                                                                selected={selectedExcludeExpenseCategories}
+                                                                highlightOnlyResult={true}
+                                                                onInputChange={(searchTerm, e) => {
+                                                                    suggestCategories(searchTerm);
+                                                                }}
+                                                                ref={categorySearchRef}
+                                                                onKeyDown={(e) => {
+                                                                    if (e.key === "Escape") {
+                                                                        setCategoryOptions([]);
+                                                                        categorySearchRef.current?.clear();
+                                                                    }
+                                                                }}
+                                                                multiple
+                                                            />
                                                         </th>}
+
                                                         {col.key === "vendor" && <th>
                                                             <Typeahead
                                                                 id="vendor_id"
@@ -1518,6 +1565,22 @@ function ExpenseIndex(props) {
                                                                 options={paymentMethodOptions}
                                                                 placeholder="Select payment method"
                                                                 selected={selectedPaymentMethodList}
+                                                                highlightOnlyResult={true}
+                                                                multiple
+                                                            />
+                                                            Excl.
+                                                            <Typeahead
+                                                                id="exclude_payment_method"
+                                                                labelKey="name"
+                                                                onChange={(selectedItems) => {
+                                                                    searchByMultipleValuesField(
+                                                                        "exclude_payment_method",
+                                                                        selectedItems
+                                                                    );
+                                                                }}
+                                                                options={paymentMethodOptions}
+                                                                placeholder="Select Excl. payment method"
+                                                                selected={selectedExcludePaymentMethodList}
                                                                 highlightOnlyResult={true}
                                                                 multiple
                                                             />
@@ -2047,26 +2110,6 @@ function ExpenseIndex(props) {
                                     </table>
                                 </div>
 
-                                {totalPages ? <ReactPaginate
-                                    breakLabel="..."
-                                    nextLabel="next >"
-                                    onPageChange={(event) => {
-                                        changePage(event.selected + 1);
-                                    }}
-                                    pageRangeDisplayed={5}
-                                    pageCount={totalPages}
-                                    previousLabel="< previous"
-                                    renderOnZeroPageCount={null}
-                                    className="pagination  flex-wrap"
-                                    pageClassName="page-item"
-                                    pageLinkClassName="page-link"
-                                    activeClassName="active"
-                                    previousClassName="page-item"
-                                    nextClassName="page-item"
-                                    previousLinkClassName="page-link"
-                                    nextLinkClassName="page-link"
-                                    forcePage={page - 1}
-                                /> : ""}
                             </div>
                         </div>
                     </div>

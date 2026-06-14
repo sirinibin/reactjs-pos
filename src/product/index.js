@@ -11,16 +11,15 @@ import "react-datepicker/dist/react-datepicker.css";
 //import { Button, Spinner, Badge, Tooltip, OverlayTrigger } from "react-bootstrap";
 import { Button, Spinner, Modal, Alert } from "react-bootstrap";
 import ReactPaginate from "react-paginate";
-import SalesHistory from "./sales_history.js";
-import ProductHistory from "./product_history.js";
-import SalesReturnHistory from "./sales_return_history.js";
+import SalesHistory from "../utils/product_sales_history.js";
+import SalesReturnHistory from "./../utils/product_sales_return_history.js";
 
-import PurchaseHistory from "./purchase_history.js";
-import PurchaseReturnHistory from "./purchase_return_history.js";
+import PurchaseHistory from "./../utils/product_purchase_history.js";
+import PurchaseReturnHistory from "./../utils/product_purchase_return_history.js";
 
-import QuotationHistory from "./quotation_history.js";
-import QuotationSalesReturnHistory from "./quotation_sales_return_history.js";
-import DeliveryNoteHistory from "./delivery_note_history.js";
+import QuotationHistory from "./../utils/product_quotation_history.js";
+import QuotationSalesReturnHistory from "./../utils/product_quotation_sales_return_history.js";
+import DeliveryNoteHistory from "./../utils/product_delivery_note_history.js";
 import OverflowTooltip from "../utils/OverflowTooltip.js";
 import Dropdown from 'react-bootstrap/Dropdown';
 import StatsSummary from "../utils/StatsSummary.js";
@@ -31,6 +30,8 @@ import { highlightWords } from "../utils/search.js";
 import ImageViewerModal from './../utils/ImageViewerModal';
 import Products from "../utils/products.js";
 import { DragDropContext, Droppable, Draggable } from "react-beautiful-dnd";
+import { OverlayTrigger, Tooltip } from "react-bootstrap";
+import ProductHistory from "../utils/product_history.js";
 
 const columnStyle = {
     width: '20%',
@@ -55,7 +56,7 @@ function ProductIndex(props) {
     const [productList, setProductList] = useState([]);
 
     //pagination
-    let [pageSize, setPageSize] = useState(20);
+    let [pageSize, setPageSize] = useState(() => parseInt(localStorage.getItem('product_pageSize') || '10'));
     let [page, setPage] = useState(1);
     const [totalPages, setTotalPages] = useState(0);
     const [totalItems, setTotalItems] = useState(1);
@@ -95,13 +96,13 @@ function ProductIndex(props) {
         }
 
 
-        searchParams["linked_products_of_product_id"] = "";
+        searchParams.current["linked_products_of_product_id"] = "";
 
         if (props.type === "linked_products") {
             if (props.model?.product_id) {
-                searchParams.linked_products_of_product_id = props.model.product_id;
+                searchParams.current.linked_products_of_product_id = props.model.product_id;
             } else if (props.model?.id) {
-                searchParams.linked_products_of_product_id = props.model.id;
+                searchParams.current.linked_products_of_product_id = props.model.id;
             }
         }
 
@@ -143,14 +144,14 @@ function ProductIndex(props) {
     }
 
     //Search params
-    const [searchParams, setSearchParams] = useState({});
+    const searchParams = useRef({});
     let [sortField, setSortField] = useState("created_at");
     let [sortProduct, setSortProduct] = useState("-");
 
     function ObjectToSearchQueryParams(object) {
         return Object.keys(object)
             .map(function (key) {
-                return `search[${key}]=` + object[key];
+                return `search[${key}]=` + encodeURIComponent(object[key]);
             })
             .join("&");
     }
@@ -271,7 +272,7 @@ function ProductIndex(props) {
 
 
     function searchByFieldValue(field, value) {
-        searchParams[field] = value;
+        searchParams.current[field] = value;
 
         page = 1;
         setPage(page);
@@ -282,7 +283,7 @@ function ProductIndex(props) {
     function searchByDateField(field, value) {
         if (!value) {
             page = 1;
-            searchParams[field] = "";
+            searchParams.current[field] = "";
             setPage(page);
             list();
             return;
@@ -299,23 +300,23 @@ function ProductIndex(props) {
             setCreatedAtFromValue("");
             setCreatedAtToValue("");
 
-            searchParams["created_at_from"] = "";
-            searchParams["created_at_to"] = "";
-            searchParams[field] = value;
+            searchParams.current["created_at_from"] = "";
+            searchParams.current["created_at_to"] = "";
+            searchParams.current[field] = value;
         }
         if (field === "created_at_from") {
 
             setCreatedAtFromValue(value);
             setCreatedAtValue("");
 
-            searchParams["created_at"] = "";
-            searchParams[field] = value;
+            searchParams.current["created_at"] = "";
+            searchParams.current[field] = value;
         } else if (field === "created_at_to") {
 
             setCreatedAtToValue(value);
             setCreatedAtValue("");
-            searchParams["created_at"] = "";
-            searchParams[field] = value;
+            searchParams.current["created_at"] = "";
+            searchParams.current[field] = value;
         }
 
         page = 1;
@@ -345,7 +346,7 @@ function ProductIndex(props) {
 
         }
 
-        searchParams[field] = Object.values(values)
+        searchParams.current[field] = Object.values(values)
             .map(function (model) {
                 if (model.id) {
                     return model.id;
@@ -390,34 +391,32 @@ function ProductIndex(props) {
             // Select =
             //"select=id,item_code,ean_12,bar_code,part_number,name,name_in_arabic,category_name,product_stores." + localStorage.getItem("store_id") + ".stock,product_stores." + localStorage.getItem("store_id") + ".purchase_unit_price,product_stores." + localStorage.getItem("store_id") + ".wholesale_unit_price,product_stores." + localStorage.getItem("store_id") + ".retail_unit_price,product_stores." + localStorage.getItem("store_id") + ".store_id";
             Select =
-                "select=id,is_set,deleted,deleted_at,prefix_part_number,brand_name,country_name,item_code,ean_12,bar_code,part_number,name,name_in_arabic,category_name,category_id,created_by_name,created_at,rack,product_stores";
+                "select=id,is_set,deleted,deleted_at,prefix_part_number,brand_name,country_name,item_code,ean_12,bar_code,part_number,name,name_in_arabic,category_name,category_id,created_by_name,created_at,rack,product_stores,sales_velocity_trend,sales_velocity_trend_reason,slop_percent_per_month,momentum_percent_per_3month,avg_monthly_qty,recent_3month_qty,revenue,class,class_reason,abc_tier,xyz_tier,cv,active_months,stocking_strategy";
 
-        } else {
-            Select =
-                "select=id,is_set,deleted,deleted_at,prefix_part_number,brand_name,country_name,item_code,ean_12,bar_code,part_number,name,name_in_arabic,category_name,category_id,created_by_name,created_at,rack,product_stores";
-
-
-            //Select =
-            //   "select=id,item_code,ean_12,bar_code,part_number,name,name_in_arabic,category_name,product_stores";
         }
 
 
         if (localStorage.getItem("store_id")) {
-            searchParams.store_id = localStorage.getItem("store_id");
+            searchParams.current.store_id = localStorage.getItem("store_id");
+        }
+
+        if (selectedWarehouse.warehouse_code) {
+            searchParams.current.warehouse_code = selectedWarehouse.warehouse_code;
+        } else {
+            searchParams.current.warehouse_code = "";
         }
 
         const d = new Date();
         let diff = d.getTimezoneOffset();
-        searchParams["timezone_offset"] = parseFloat(diff / 60);
+        searchParams.current["timezone_offset"] = parseFloat(diff / 60);
 
         if (statsOpen) {
-            searchParams["stats"] = "1";
+            searchParams.current["stats"] = "1";
         } else {
-            searchParams["stats"] = "0";
+            searchParams.current["stats"] = "0";
         }
 
-        setSearchParams(searchParams);
-        let queryParams = ObjectToSearchQueryParams(searchParams);
+        let queryParams = ObjectToSearchQueryParams(searchParams.current);
         if (queryParams !== "") {
             queryParams = "&" + queryParams;
         }
@@ -498,6 +497,45 @@ function ProductIndex(props) {
     }
 
     function sort(field) {
+        if (selectedWarehouse.warehouse_code) {
+            if (field === "stores.stock") {
+                field = "stores.warehouse_stocks." + selectedWarehouse.warehouse_code;
+            } else if (field === "stores.sales_count") {
+                field = "stores.product_warehouses." + selectedWarehouse.warehouse_code + ".sales_count";
+            } else if (field === "stores.sales_quantity") {
+                field = "stores.product_warehouses." + selectedWarehouse.warehouse_code + ".sales_quantity";
+            } else if (field === "stores.sales") {
+                field = "stores.product_warehouses." + selectedWarehouse.warehouse_code + ".sales";
+            } else if (field === "stores.sales_profit") {
+                field = "stores.product_warehouses." + selectedWarehouse.warehouse_code + ".sales_profit";
+            } else if (field === "stores.sales_loss") {
+                field = "stores.product_warehouses." + selectedWarehouse.warehouse_code + ".sales_loss";
+            } else if (field === "stores.sales_return_count") {
+                field = "stores.product_warehouses." + selectedWarehouse.warehouse_code + ".sales_return_count";
+            } else if (field === "stores.sales_return_quantity") {
+                field = "stores.product_warehouses." + selectedWarehouse.warehouse_code + ".sales_return_quantity";
+            } else if (field === "stores.sales_return") {
+                field = "stores.product_warehouses." + selectedWarehouse.warehouse_code + ".sales_return";
+            } else if (field === "stores.sales_return_profit") {
+                field = "stores.product_warehouses." + selectedWarehouse.warehouse_code + ".sales_return_profit";
+            } else if (field === "stores.sales_return_loss") {
+                field = "stores.product_warehouses." + selectedWarehouse.warehouse_code + ".sales_return_loss";
+            } else if (field === "stores.purchase_return_count") {
+                field = "stores.product_warehouses." + selectedWarehouse.warehouse_code + ".purchase_return_count";
+            } else if (field === "stores.purchase_return_quantity") {
+                field = "stores.product_warehouses." + selectedWarehouse.warehouse_code + ".purchase_return_quantity";
+            } else if (field === "stores.purchase_return") {
+                field = "stores.product_warehouses." + selectedWarehouse.warehouse_code + ".purchase_return";
+            } else if (field === "stores.purchase_count") {
+                field = "stores.product_warehouses." + selectedWarehouse.warehouse_code + ".purchase_count";
+            } else if (field === "stores.purchase_quantity") {
+                field = "stores.product_warehouses." + selectedWarehouse.warehouse_code + ".purchase_quantity";
+            } else if (field === "stores.purchase") {
+                field = "stores.product_warehouses." + selectedWarehouse.warehouse_code + ".purchase";
+            }
+        }
+
+
         sortField = field;
         setSortField(sortField);
         sortProduct = sortProduct === "-" ? "" : "-";
@@ -507,14 +545,25 @@ function ProductIndex(props) {
 
     function changePageSize(size) {
         pageSize = parseInt(size);
+        localStorage.setItem('product_pageSize', size);
         setPageSize(pageSize);
         list(); //load  only documents
     }
 
     function changePage(newPage) {
+        if (timerRef.current) clearTimeout(timerRef.current);
+
+        timerRef.current = setTimeout(() => {
+            page = parseInt(newPage);
+            setPage(page);
+            list(); //load  only documents
+        }, 100);
+
+
+        /*
         page = parseInt(newPage);
         setPage(page);
-        list(); //load  only documents
+        list();*/ //load  only documents
     }
 
     const CreateFormRef = useRef();
@@ -611,7 +660,6 @@ function ProductIndex(props) {
 
     const [productOptionsByName, setProductOptionsByName] = useState([]);
     let [selectedProductsByName, setSelectedProductsByName] = useState([]);
-    let [openProductSearchResultByName, setOpenProductSearchResultByName] = useState(false);
 
     const customFilter = useCallback((option, query) => {
         const normalize = (str) => str?.toLowerCase().replace(/\s+/g, " ").trim() || "";
@@ -650,9 +698,7 @@ function ProductIndex(props) {
 
         if (!searchTerm) {
             setTimeout(() => {
-                if (searchBy === "name") {
-                    setOpenProductSearchResultByName(false);
-                } else if (searchBy === "part_number") {
+                if (searchBy === "part_number") {
                     setOpenProductSearchResultByPartNo(false);
                 } else if (searchBy === "all") {
                     setOpenProductSearchResult(false);
@@ -682,35 +728,37 @@ function ProductIndex(props) {
             },
         };
 
-        let Select = `select=id,rack,additional_keywords,search_label,set.name,item_code,prefix_part_number,country_name,brand_name,part_number,name,unit,name_in_arabic,product_stores.${localStorage.getItem('store_id')}.purchase_unit_price,product_stores.${localStorage.getItem('store_id')}.purchase_unit_price_with_vat,product_stores.${localStorage.getItem('store_id')}.retail_unit_price,product_stores.${localStorage.getItem('store_id')}.retail_unit_price_with_vat,product_stores.${localStorage.getItem('store_id')}.stock`;
+        let Select = `select=id,rack,additional_keywords,search_label,set.name,item_code,prefix_part_number,country_name,brand_name,part_number,name,unit,name_in_arabic,product_stores.${localStorage.getItem('store_id')}.purchase_unit_price,product_stores.${localStorage.getItem('store_id')}.purchase_unit_price_with_vat,product_stores.${localStorage.getItem('store_id')}.retail_unit_price,product_stores.${localStorage.getItem('store_id')}.retail_unit_price_with_vat,product_stores.${localStorage.getItem('store_id')}.stock,product_stores.${localStorage.getItem('store_id')}.warehouse_stocks`;
 
         // Fetch page 1 and page 2 in parallel
         const urls = [
             `/v1/product?${Select}${queryString}&limit=200&page=1&sort=-country_name`,
-            `/v1/product?${Select}${queryString}&limit=200&page=2&sort=-country_name`
+            `/v1/product?${Select}${queryString}&limit=200&page=2&sort=-country_name`,
+            `/v1/product?${Select}${queryString}&limit=200&page=3&sort=-country_name`
         ];
 
-        const [result1, result2] = await Promise.all([
+        const [result1, result2, result3] = await Promise.all([
             fetch(urls[0], requestOptions),
-            fetch(urls[1], requestOptions)
+            fetch(urls[1], requestOptions),
+            fetch(urls[2], requestOptions)
         ]);
 
         const data1 = await result1.json();
         const data2 = await result2.json();
+        const data3 = await result3.json();
 
         // Only update if this is the latest request
         if (latestRequestRef.current !== requestId) return;
 
-        // Combine results from both pages
+        // Combine results from all three pages
         let products = [
             ...(data1.result || []),
-            ...(data2.result || [])
+            ...(data2.result || []),
+            ...(data3.result || [])
         ];
 
         if (!products || products.length === 0) {
-            if (searchBy === "name") {
-                setOpenProductSearchResultByName(false);
-            } else if (searchBy === "part_number") {
+            if (searchBy === "part_number") {
                 setOpenProductSearchResultByPartNo(false);
             } else if (searchBy === "all") {
                 setOpenProductSearchResult(false);
@@ -734,6 +782,49 @@ function ProductIndex(props) {
                 return 1;
             }
 
+            //
+            const searchPhrase = searchTerm.toLowerCase().replace(/\s+/g, " ").trim();
+
+            //const searchPhrase = searchTerm.toLowerCase().trim();
+
+            const getSearchable = (item) => {
+                let partNoLabel = item.prefix_part_number ? item.prefix_part_number + "-" + item.part_number : "";
+                const fields = [
+                    partNoLabel,
+                    //item.prefix_part_number,
+                    //item.part_number,
+                    item.name,
+                    item.name_in_arabic,
+                    item.country_name,
+                    item.brand_name,
+                    ...(Array.isArray(item.additional_keywords) ? item.additional_keywords : []),
+                ];
+                // Normalize: lowercase, collapse spaces, remove punctuation except spaces
+                return fields.join(" ").toLowerCase().replace(/[^\w\s]/g, " ").replace(/\s+/g, " ").trim();
+            };
+
+            const aSearchable = getSearchable(a);
+            const bSearchable = getSearchable(b);
+
+            // Find index of the phrase in each string
+            const aIndex = aSearchable.indexOf(searchPhrase);
+            const bIndex = bSearchable.indexOf(searchPhrase);
+
+            if (aIndex === 0 && bIndex !== 0) return -1;
+            if (bIndex === 0 && aIndex !== 0) return 1;
+
+            // If both contain the phrase, sort by earliest occurrence
+            if (aIndex !== -1 && bIndex !== -1) {
+                //if (aIndex !== bIndex) return aIndex - bIndex;
+                if (aIndex < bIndex) return -1;
+                if (bIndex < aIndex) return 1;
+                //return aIndex - bIndex;
+            } else if (aIndex !== -1) {
+                return -1; // a contains phrase, b does not
+            } else if (bIndex !== -1) {
+                return 1; // b contains phrase, a does not
+            }
+
             const words = searchTerm.toLowerCase().split(" ").filter(Boolean);
             const aPercent = percentOccurrence(words, a);
             const bPercent = percentOccurrence(words, b);
@@ -745,7 +836,6 @@ function ProductIndex(props) {
         });
 
         if (searchBy === "name") {
-            setOpenProductSearchResultByName(true);
             setProductOptionsByName(sorted);
         } else if (searchBy === "part_number") {
             setOpenProductSearchResultByPartNo(true);
@@ -805,6 +895,7 @@ function ProductIndex(props) {
     }
 
     const ProductHistoryRef = useRef();
+
     function openProductHistory(model) {
         ProductHistoryRef.current.open(model);
     }
@@ -832,8 +923,8 @@ function ProductIndex(props) {
 
 
     const QuotationHistoryRef = useRef();
-    function openQuotationHistory(model) {
-        QuotationHistoryRef.current.open(model, [], "quotation");
+    function openQuotationHistory(model, type) {
+        QuotationHistoryRef.current.open(model, [], type);
     }
 
     function openQuotationSalesHistory(model) {
@@ -851,6 +942,38 @@ function ProductIndex(props) {
     const DeliveryNoteHistoryRef = useRef();
     function openDeliveryNoteHistory(model) {
         DeliveryNoteHistoryRef.current.open(model);
+    }
+
+    const [showBiHistoryModal, setShowBiHistoryModal] = useState(false);
+    const [biHistoryProduct, setBiHistoryProduct] = useState(null);
+    const [biHistoryData, setBiHistoryData] = useState({ velocity_history: [], abc_xyz_history: [] });
+    const [biHistoryLoading, setBiHistoryLoading] = useState(false);
+    const [biHistoryTab, setBiHistoryTab] = useState("velocity");
+
+    async function openBiHistoryModal(product) {
+        setBiHistoryProduct(product.name);
+        setBiHistoryData({ velocity_history: [], abc_xyz_history: [] });
+        setBiHistoryTab("velocity");
+        setBiHistoryLoading(true);
+        setShowBiHistoryModal(true);
+        try {
+            const storeId = localStorage.getItem("store_id") || "";
+            const res = await fetch("/v1/product/" + product.id + "/bi-history?search[store_id]=" + storeId, {
+                method: "GET",
+                headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": localStorage.getItem("access_token"),
+                },
+            });
+            const data = await res.json();
+            if (data.status) {
+                setBiHistoryData(data.result);
+            }
+        } catch (e) {
+            console.error("Failed to load product BI history", e);
+        } finally {
+            setBiHistoryLoading(false);
+        }
     }
 
     let [statsOpen, setStatsOpen] = useState(false);
@@ -1077,9 +1200,9 @@ function ProductIndex(props) {
             salesReturnHistory: "F9",
             purchaseHistory: "F6",
             purchaseReturnHistory: "F8",
-            deliveryNoteHistory: "F3",
+            deliveryNoteHistory: "Ctrl + Shift + P",
             quotationHistory: "F2",
-            quotationSalesHistory: "Ctrl + Shift + P",
+            quotationSalesHistory: "F3",
             quotationSalesReturnHistory: "Ctrl + Shift + Z",
             images: "Ctrl + Shift + F",
         },
@@ -1127,11 +1250,11 @@ function ProductIndex(props) {
             } else if (event.key === "F8") {
                 openPurchaseReturnHistory(product);
             } else if (event.key === "F3") {
-                openDeliveryNoteHistory(product);
+                openQuotationSalesHistory(product);
             } else if (event.key === "F2") {
                 openQuotationHistory(product);
             } else if (isCmdOrCtrl && event.shiftKey && event.key.toLowerCase() === 'p') {
-                openQuotationSalesHistory(product);
+                openDeliveryNoteHistory(product);
             } else if (isCmdOrCtrl && event.shiftKey && event.key.toLowerCase() === 'z') {
                 openQuotationSalesReturnHistory(product);
             } else if (isCmdOrCtrl && event.shiftKey && event.key.toLowerCase() === 'f') {
@@ -1154,7 +1277,7 @@ function ProductIndex(props) {
             } else if (event.key === "F3") {
                 openDeliveryNoteHistory(product);
             } else if (event.key === "F2") {
-                openQuotationHistory(product);
+                openQuotationHistory(product, "quotation");
             } else if (isCmdOrCtrl && event.shiftKey && event.key.toLowerCase() === '7') {
                 openQuotationSalesHistory(product);
             } else if (isCmdOrCtrl && event.shiftKey && event.key.toLowerCase() === '8') {
@@ -1258,7 +1381,9 @@ function ProductIndex(props) {
         { key: "purchase_unit_price", label: "Purchase Unit Price", fieldName: "stores.purchase_unit_price", visible: true },
         { key: "wholesale_unit_price", label: "Wholesale Unit Price", fieldName: "stores.wholesale_unit_price", visible: true },
         { key: "retail_unit_price", label: "Retail Unit Price", fieldName: "stores.retail_unit_price", visible: true },
-        { key: "stock", label: "Stock", fieldName: "stores.stock", visible: true },
+        { key: "stock", label: "Total Stock", fieldName: "stores.stock", visible: true },
+        { key: "main_store_stock", label: "Main Store Stock", fieldName: "stores.warehouse_stocks.main_store", visible: false },
+        // { key: "warehouse_code", label: "Store/Warehouse", fieldName: "warehouse_code", visible: true },
         { key: "set", label: "Set", fieldName: "is_set", visible: true },
         { key: "categories", label: "Categories", fieldName: "category_name", visible: true },
         { key: "brand", label: "Brands", fieldName: "brand_name", visible: true },
@@ -1291,6 +1416,20 @@ function ProductIndex(props) {
         { key: "quotation_sales_return_quantity", label: "Quotation Sales Return Qty", fieldName: "stores.quotation_sales_return_quantity", visible: true },
         { key: "delivery_note_count", label: "Delivery Note Count", fieldName: "stores.delivery_note_count", visible: true },
         { key: "delivery_note_quantity", label: "Delivery Note Qty", fieldName: "stores.delivery_note_quantity", visible: true },
+        { key: "sales_velocity_trend", label: "Velocity Trend", fieldName: "sales_velocity_trend", visible: true },
+        { key: "sales_velocity_trend_reason", label: "Velocity Reason", fieldName: "sales_velocity_trend_reason", visible: true },
+        { key: "slop_percent_per_month", label: "Slope %/Mo", fieldName: "slop_percent_per_month", visible: true },
+        { key: "momentum_percent_per_3month", label: "Momentum %/3Mo", fieldName: "momentum_percent_per_3month", visible: true },
+        { key: "recent_3month_qty", label: "Recent 3Mo Qty", fieldName: "recent_3month_qty", visible: true },
+        { key: "abc_tier", label: "ABC Tier", fieldName: "abc_tier", visible: false },
+        { key: "xyz_tier", label: "XYZ Tier", fieldName: "xyz_tier", visible: false },
+        { key: "class", label: "ABC-XYZ Class", fieldName: "class", visible: false },
+        { key: "class_reason", label: "Class Reason", fieldName: "class_reason", visible: true },
+        { key: "stocking_strategy", label: "Stocking Strategy", fieldName: "stocking_strategy", visible: false },
+        { key: "revenue", label: "Revenue (SAR)", fieldName: "revenue", visible: false },
+        { key: "avg_monthly_qty", label: "Avg Monthly Qty", fieldName: "avg_monthly_qty", visible: false },
+        { key: "cv", label: "CV (Coefficient of Variation)", fieldName: "cv", visible: true },
+        { key: "active_months", label: "Active Months", fieldName: "active_months", visible: true },
         { key: "created_by", label: "Created By", fieldName: "created_by", visible: true },
         { key: "created_at", label: "Created At", fieldName: "created_at", visible: true },
         { key: "actions_end", label: "Actions", fieldName: "actions_end", visible: true },
@@ -1299,6 +1438,8 @@ function ProductIndex(props) {
 
     const [columns, setColumns] = useState(defaultColumns);
     const [showSettings, setShowSettings] = useState(false);
+    const columnsInitialized = useRef(false);
+
     // Load settings from localStorage
     useEffect(() => {
         let saved = "";
@@ -1308,44 +1449,28 @@ function ProductIndex(props) {
             saved = localStorage.getItem("product_table_settings");
         }
 
-        if (saved) setColumns(JSON.parse(saved));
-
-        let missingOrUpdated = false;
-        for (let i = 0; i < defaultColumns.length; i++) {
-            if (!saved)
-                break;
-
-            const savedCol = JSON.parse(saved)?.find(col => col.fieldName === defaultColumns[i].fieldName);
-
-            missingOrUpdated = !savedCol || savedCol.label !== defaultColumns[i].label || savedCol.key !== defaultColumns[i].key;
-
-            if (missingOrUpdated) {
-                break
-            }
-        }
-
-        /*
-        for (let i = 0; i < saved.length; i++) {
-            const savedCol = defaultColumns.find(col => col.fieldName === saved[i].fieldName);
- 
-            missingOrUpdated = !savedCol || savedCol.label !== saved[i].label || savedCol.key !== saved[i].key;
- 
-            if (missingOrUpdated) {
-                break
-            }
-        }*/
-
-        if (missingOrUpdated) {
-            if (enableSelection === true) {
-                localStorage.setItem("select_product_table_settings", JSON.stringify(defaultColumns));
-            } else {
-                localStorage.setItem("product_table_settings", JSON.stringify(defaultColumns));
-            }
+        if (saved) {
+            const savedCols = JSON.parse(saved);
+            // Use saved order as base (preserves drag-and-drop reordering),
+            // keep only columns that still exist in defaults,
+            // append any new default columns not yet in saved.
+            const merged = savedCols
+                .map(savedCol => {
+                    const defaultCol = defaultColumns.find(col => col.fieldName === savedCol.fieldName);
+                    return defaultCol ? { ...defaultCol, visible: savedCol.visible } : null;
+                })
+                .filter(Boolean);
+            defaultColumns.forEach(defaultCol => {
+                if (!savedCols.find(s => s.fieldName === defaultCol.fieldName)) {
+                    merged.push(defaultCol);
+                }
+            });
+            setColumns(merged);
+        } else {
             setColumns(defaultColumns);
         }
 
-        //2nd
-
+        columnsInitialized.current = true;
     }, [defaultColumns, enableSelection]);
 
     function RestoreDefaultSettings() {
@@ -1360,8 +1485,9 @@ function ProductIndex(props) {
         setSuccessMessage("Successfully restored to default settings!")
     }
 
-    // Save column settings to localStorage
+    // Save column settings to localStorage (skip the initial render to avoid overwriting saved settings)
     useEffect(() => {
+        if (!columnsInitialized.current) return;
         if (enableSelection === true) {
             localStorage.setItem("select_product_table_settings", JSON.stringify(columns));
         } else {
@@ -1407,12 +1533,12 @@ function ProductIndex(props) {
         { key: "select", label: "Select", fieldName: "select", width: 3, visible: true },
         { key: "part_number", label: "Part Number", fieldName: "part_number", width: 12, visible: true },
         { key: "name", label: "Name", fieldName: "name", width: 26, visible: true },
-        { key: "unit_price", label: "S.Unit Price", fieldName: "unit_price", width: 12, visible: true },
-        { key: "stock", label: "Stock", fieldName: "stock", width: 5, visible: true },
+        { key: "unit_price", label: "S.Unit Price", fieldName: "unit_price", width: 10, visible: true },
+        { key: "stock", label: "Stock", fieldName: "stock", width: 13, visible: true },
         { key: "photos", label: "Photos", fieldName: "photos", width: 5, visible: true },
-        { key: "brand", label: "Brand", fieldName: "brand", width: 10, visible: true },
-        { key: "purchase_price", label: "P.Unit Price", fieldName: "purchase_price", width: 12, visible: true },
-        { key: "country", label: "Country", fieldName: "country", width: 10, visible: true },
+        { key: "brand", label: "Brand", fieldName: "brand", width: 8, visible: true },
+        { key: "purchase_price", label: "P.Unit Price", fieldName: "purchase_price", width: 10, visible: true },
+        { key: "country", label: "Country", fieldName: "country", width: 8, visible: true },
         { key: "rack", label: "Rack", fieldName: "rack", width: 5, visible: true },
     ], []);
 
@@ -1560,6 +1686,66 @@ function ProductIndex(props) {
         // handleClose();
     };
 
+    const [warehouseList, setWarehouseList] = useState([]);
+
+    const loadWarehouses = useCallback(() => {
+        const requestOptions = {
+            method: "GET",
+            headers: {
+                "Content-Type": "application/json",
+                Authorization: localStorage.getItem("access_token"),
+            },
+        };
+        let Select =
+            "select=id,name,code,created_by_name,created_at";
+
+        const d = new Date();
+        let diff = d.getTimezoneOffset();
+        searchParams.current["timezone_offset"] = parseFloat(diff / 60);
+
+        if (localStorage.getItem("store_id")) {
+            searchParams.current.store_id = localStorage.getItem("store_id");
+        }
+
+        let queryParams = ObjectToSearchQueryParams(searchParams.current);
+        if (queryParams !== "") {
+            queryParams = "&" + queryParams;
+        }
+
+        fetch(
+            "/v1/warehouse?" +
+            Select +
+            queryParams +
+            "&sort=name" +
+            "&page=1" +
+            "&limit=100",
+            requestOptions
+        )
+            .then(async (response) => {
+                const isJson = response.headers
+                    .get("content-type")
+                    ?.includes("application/json");
+                const data = isJson && (await response.json());
+
+                // check for error response
+                if (!response.ok) {
+                    const error = data && data.errors;
+                    return Promise.reject(error);
+                }
+
+
+                setWarehouseList(data.result);
+            })
+            .catch((error) => {
+                console.log(error);
+            });
+    }, []);
+
+    useEffect(() => {
+        loadWarehouses();
+    }, [loadWarehouses]);
+
+    let [selectedWarehouse, setSelectedWarehouse] = useState({});
 
     return (
         <>
@@ -1684,7 +1870,7 @@ function ProductIndex(props) {
                                             {columns.map((col, index) => {
                                                 return (
                                                     <>
-                                                        {((col.key === "select" && enableSelection) || col.key !== "select") && <Draggable
+                                                        {((col.key === "select" && enableSelection) || col.key !== "select") && (col.key !== "main_store_stock" || store?.settings?.enable_warehouse_module) && <Draggable
                                                             key={col.key}
                                                             draggableId={col.key}
                                                             index={index}
@@ -1726,6 +1912,18 @@ function ProductIndex(props) {
                         Close
                     </Button>
                     <Button
+                        variant="outline-secondary"
+                        onClick={() => setColumns(cols => cols.map(c => ({ ...c, visible: false })))}
+                    >
+                        Uncheck All
+                    </Button>
+                    <Button
+                        variant="outline-secondary"
+                        onClick={() => setColumns(cols => cols.map(c => ({ ...c, visible: true })))}
+                    >
+                        Check All
+                    </Button>
+                    <Button
                         variant="primary"
                         onClick={() => {
                             RestoreDefaultSettings();
@@ -1737,8 +1935,6 @@ function ProductIndex(props) {
                     </Button>
                 </Modal.Footer>
             </Modal>
-
-
             <Modal show={showSuccess} onHide={() => setShowSuccess(false)} centered>
                 <Modal.Header closeButton>
                     <Modal.Title>Success</Modal.Title>
@@ -1772,17 +1968,271 @@ function ProductIndex(props) {
 
             <DeliveryNoteHistory ref={DeliveryNoteHistoryRef} showToastMessage={props.showToastMessage} />
 
+            <Modal show={showBiHistoryModal} onHide={() => setShowBiHistoryModal(false)} size="xl" centered>
+                <Modal.Header closeButton>
+                    <Modal.Title>BI History{biHistoryProduct ? ` — ${biHistoryProduct}` : ""}</Modal.Title>
+                </Modal.Header>
+                <Modal.Body>
+                    <ul className="nav nav-tabs mb-3">
+                        <li className="nav-item">
+                            <button className={"nav-link" + (biHistoryTab === "velocity" ? " active" : "")} onClick={() => setBiHistoryTab("velocity")}>
+                                Sales Velocity Trend
+                            </button>
+                        </li>
+                        <li className="nav-item">
+                            <button className={"nav-link" + (biHistoryTab === "abcxyz" ? " active" : "")} onClick={() => setBiHistoryTab("abcxyz")}>
+                                ABC-XYZ Classification
+                            </button>
+                        </li>
+                    </ul>
+                    {biHistoryLoading && <div className="text-center py-4"><Spinner animation="border" /></div>}
+                    {!biHistoryLoading && biHistoryTab === "velocity" && (
+                        <div className="table-responsive">
+                            <table className="table table-sm table-bordered">
+                                <thead className="table-light">
+                                    <tr>
+                                        <th>Date</th>
+                                        <th>Trend</th>
+                                        <th>Slope %/Mo</th>
+                                        <th>Momentum % / 3Mo</th>
+                                        <th>Avg Mo Qty</th>
+                                        <th>Recent 3Mo Qty</th>
+                                        <th>Revenue</th>
+                                        <th>Reason</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {biHistoryData.velocity_history && biHistoryData.velocity_history.length > 0 ? biHistoryData.velocity_history.map((row, i) => (
+                                        <tr key={i}>
+                                            <td>{row.date ? new Date(row.date).toLocaleDateString() : ""}</td>
+                                            <td>
+                                                <span className={`badge ${row.sales_velocity_trend === "Rising Star" ? "bg-success" :
+                                                    row.sales_velocity_trend === "Growing" ? "bg-primary" :
+                                                        row.sales_velocity_trend === "Stable" ? "bg-secondary" :
+                                                            row.sales_velocity_trend === "Seasonal" ? "bg-info" :
+                                                                row.sales_velocity_trend === "Softening" ? "bg-warning text-dark" : "bg-danger"
+                                                    }`}>{row.sales_velocity_trend || "—"}</span>
+                                            </td>
+                                            <td>{row.slop_percent_per_month != null ? row.slop_percent_per_month.toFixed(1) + "%" : "—"}</td>
+                                            <td>{row.momentum_percent_per_3month != null ? row.momentum_percent_per_3month.toFixed(1) + "%" : "—"}</td>
+                                            <td>{row.avg_monthly_qty != null ? row.avg_monthly_qty.toFixed(1) : "—"}</td>
+                                            <td>{row.recent_3month_qty != null ? row.recent_3month_qty.toFixed(1) : "—"}</td>
+                                            <td>{row.revenue != null ? row.revenue.toFixed(2) : "—"}</td>
+                                            <td style={{ fontSize: "0.8em", maxWidth: "220px" }}>{row.sales_velocity_trend_reason || ""}</td>
+                                        </tr>
+                                    )) : (
+                                        <tr><td colSpan={8} className="text-center text-muted">No velocity history found</td></tr>
+                                    )}
+                                </tbody>
+                            </table>
+                        </div>
+                    )}
+                    {!biHistoryLoading && biHistoryTab === "abcxyz" && (
+                        <div className="table-responsive">
+                            <table className="table table-sm table-bordered">
+                                <thead className="table-light">
+                                    <tr>
+                                        <th>Date</th>
+                                        <th>Class</th>
+                                        <th>Class Reason</th>
+                                        <th>
+                                            ABC Tier
+                                            <OverlayTrigger placement="top" overlay={
+                                                <Tooltip id="abc-tier-history-info">
+                                                    <strong>ABC Tier</strong> classifies products by revenue contribution (Pareto principle):<br />
+                                                    <strong>A</strong> = Top products contributing ~80% of total revenue (high value)<br />
+                                                    <strong>B</strong> = Mid-tier, contributing ~15% of revenue (medium value)<br />
+                                                    <strong>C</strong> = Long-tail items contributing ~5% of revenue (low value)
+                                                </Tooltip>
+                                            }>
+                                                <i className="bi bi-info-circle ms-1 text-muted" style={{ cursor: "pointer", fontSize: "0.85em" }}></i>
+                                            </OverlayTrigger>
+                                        </th>
+                                        <th>
+                                            XYZ Tier
+                                            <OverlayTrigger placement="top" overlay={
+                                                <Tooltip id="xyz-tier-history-info">
+                                                    <strong>XYZ Tier</strong> classifies products by demand predictability:<br />
+                                                    <strong>X</strong> = Consistent, predictable demand (low variability — easy to forecast)<br />
+                                                    <strong>Y</strong> = Moderately variable demand (some fluctuation — harder to forecast)<br />
+                                                    <strong>Z</strong> = Highly unpredictable or sporadic demand (high variability — difficult to plan)
+                                                </Tooltip>
+                                            }>
+                                                <i className="bi bi-info-circle ms-1 text-muted" style={{ cursor: "pointer", fontSize: "0.85em" }}></i>
+                                            </OverlayTrigger>
+                                        </th>
+                                        <th>CV (Coefficient of Variation)</th>
+                                        <th>Active Months</th>
+                                        <th>Stocking Strategy</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {biHistoryData.abc_xyz_history && biHistoryData.abc_xyz_history.length > 0 ? biHistoryData.abc_xyz_history.map((row, i) => (
+                                        <tr key={i}>
+                                            <td>{row.date ? new Date(row.date).toLocaleDateString() : ""}</td>
+                                            <td><span className="badge bg-dark">{row.class || "—"}</span></td>
+                                            <td style={{ fontSize: "0.8em", maxWidth: "220px" }}>{row.class_reason || "—"}</td>
+                                            <td>
+                                                <span className={`badge ${row.abc_tier === "A" ? "bg-success" :
+                                                    row.abc_tier === "B" ? "bg-warning text-dark" : "bg-secondary"
+                                                    }`}>{row.abc_tier || "—"}</span>
+                                            </td>
+                                            <td>
+                                                <span className={`badge ${row.xyz_tier === "X" ? "bg-success" :
+                                                    row.xyz_tier === "Y" ? "bg-warning text-dark" : "bg-danger"
+                                                    }`}>{row.xyz_tier || "—"}</span>
+                                            </td>
+                                            <td>{row.cv != null ? row.cv.toFixed(2) : "—"}</td>
+                                            <td>{row.active_months != null ? row.active_months : "—"}</td>
+                                            <td style={{ fontSize: "0.8em" }}>{row.stocking_strategy || "—"}</td>
+                                        </tr>
+                                    )) : (
+                                        <tr><td colSpan={8} className="text-center text-muted">No ABC-XYZ history found</td></tr>
+                                    )}
+                                </tbody>
+                            </table>
+                        </div>
+                    )}
+                </Modal.Body>
+                <Modal.Footer>
+                    <Button variant="secondary" onClick={() => setShowBiHistoryModal(false)}>Close</Button>
+                </Modal.Footer>
+            </Modal>
+
             <ProductCreate ref={CreateFormRef} refreshList={list} openDetailsView={openDetailsView} showToastMessage={props.showToastMessage} />
             <ProductView ref={DetailsViewRef} openUpdateForm={openUpdateForm} openCreateForm={openCreateForm} showToastMessage={props.showToastMessage} />
             <ProductJson ref={ProductJsonDialogRef} />
-
             <div className="container-fluid p-0">
+
+                {store?.settings?.enable_warehouse_module && <div className="row align-items-center" style={{
+                    marginTop: "-8px",
+                    flexWrap: "nowrap",
+                    gap: "4px",
+                    alignItems: "center",
+                }}>
+                    <div className="col-auto" style={{
+                        paddingRight: "4px",
+                        marginBottom: "0px",
+                        minWidth: "120px",
+                        fontSize: "1rem",
+                        display: "flex",
+                        alignItems: "center",
+                    }}>
+                        <label htmlFor="warehouse_id" style={{
+                            fontWeight: "bold",
+                            marginRight: "4px",
+                            marginBottom: "0px",
+                            whiteSpace: "nowrap",
+                        }}>
+                            Store/Warehouse:
+                        </label>
+                    </div>
+                    <div className="col-auto" style={{
+                        paddingLeft: "0px",
+                        minWidth: "120px",
+                    }}>
+                        <select
+                            id="warehouse_id"
+                            name="warehouse_id"
+                            className="form-control"
+                            style={{
+                                marginBottom: "0px",
+                                paddingTop: "2px",
+                                paddingBottom: "2px",
+                                fontSize: "1rem",
+                                minWidth: "120px",
+                            }}
+                            value={
+                                selectedWarehouse.warehouse_id
+                                    ? selectedWarehouse.warehouse_id
+                                    : selectedWarehouse.warehouse_code === "main_store"
+                                        ? "main_store"
+                                        : ""
+                            }
+                            onChange={(e) => {
+                                const selectedValue = e.target.value;
+                                if (selectedValue === "") {
+                                    selectedWarehouse.warehouse_id = null;
+                                    selectedWarehouse.warehouse_code = "";
+                                } else if (selectedValue === "main_store") {
+                                    selectedWarehouse.warehouse_id = null;
+                                    selectedWarehouse.warehouse_code = "main_store";
+                                } else {
+                                    const wh = warehouseList.find(w => w.id === selectedValue);
+                                    if (wh) {
+                                        selectedWarehouse.warehouse_id = wh.id;
+                                        selectedWarehouse.warehouse_code = wh.code;
+                                    }
+                                }
+
+                                //  alert(selectedWarehouse.warehouse_code)
+
+                                // setSelectedWarehouse(selectedWarehouse);
+
+                                setSelectedWarehouse({ ...selectedWarehouse });
+                                list();
+
+                            }}
+                        >
+                            <option value="">All</option>
+                            <option value="main_store">Main Store</option>
+                            {warehouseList.map((warehouse) => (
+                                <option key={warehouse.id} value={warehouse.id}>
+                                    {warehouse.name} ({warehouse.code})
+                                </option>
+                            ))}
+                        </select>
+                    </div>
+                </div>}
 
                 <div className="row">
                     <div className="col">
                         <span className="text-end">
+                            {/* Warehouse/Store
+                            <div className="">
+                                <select
+                                    id={`from_warehouse_id`}
+                                    name={`from_warehouse_id`}
+                                    className="form-control"
+                                    value={selectedWarehouse.warehouse_id || "main_store"}
+                                    onChange={(e) => {
+                                        const selectedValue = e.target.value;
+
+                                        if (selectedValue === "main_store") {
+                                            selectedWarehouse.warehouse_id = null;
+                                            selectedWarehouse.warehouse_code = "";
+                                        } else {
+                                            const selectedWarehouse = warehouseList.find(w => w.id === selectedValue);
+                                            if (selectedWarehouse) {
+                                                selectedWarehouse.warehouse_id = selectedWarehouse.id;
+                                                selectedWarehouse.warehouse_code = selectedWarehouse.code;
+                                            }
+                                        }
+
+                                        setSelectedWarehouse({ ...selectedWarehouse });
+                                        //setFormData({ ...formData });
+                                        //checkWarnings();
+                                    }}
+                                >
+                                    <option value="main_store">Main Store</option>
+                                    {warehouseList.map((warehouse) => (
+                                        <option key={warehouse.id} value={warehouse.id}>
+                                            {warehouse.name} ({warehouse.code})
+                                        </option>
+                                    ))}
+                                </select>
+
+                            </div>*/}
+
                             <StatsSummary
-                                title="Products"
+                                title="Products Summary"
+                                filters={{
+                                    ...(createdAtValue ? { 'Date': createdAtValue } : {}),
+                                    ...(createdAtFromValue ? { 'From Date': createdAtFromValue } : {}),
+                                    ...(createdAtToValue ? { 'To Date': createdAtToValue } : {}),
+                                    ...(selectedProductCategories.length > 0 ? { 'Category': selectedProductCategories.map(c => c.name).join(', ') } : {}),
+                                    ...(selectedProductBrands.length > 0 ? { 'Brand': selectedProductBrands.map(b => b.name).join(', ') } : {}),
+                                }}
                                 stats={{
                                     "Stock": stock,
                                     "Retail stock value": retailStockValue,
@@ -1797,7 +2247,7 @@ function ProductIndex(props) {
                             />
                         </span>
                     </div>
-                </div>
+                </div >
 
                 <div className="row">
                     <div className="col">
@@ -1805,12 +2255,11 @@ function ProductIndex(props) {
                     </div>
 
 
-
                     <div className="col text-end">
                         <Button
                             hide={true.toString()}
                             variant="primary"
-                            className="btn btn-primary mb-3"
+                            className="btn btn-primary mb-1"
                             onClick={openCreateForm}
                         >
                             <i className="bi bi-plus-lg"></i> Create
@@ -1843,80 +2292,52 @@ function ProductIndex(props) {
                         <h5   className="card-title mb-0"></h5>
                     </div>
                     */}
-                            <div className="card-body">
+                            <div className="card-body p-2">
                                 <div className="row">
                                     {totalItems === 0 && (
                                         <div className="col">
-                                            <p className="text-start">No Product Categories to display</p>
+                                            <p className="text-start">No Producs to display</p>
                                         </div>
                                     )}
                                 </div>
-                                <div className="row" style={{ bproduct: "solid 0px" }}>
-                                    <div className="col text-start" style={{ bproduct: "solid 0px" }}>
-                                        <Button
-                                            onClick={() => {
-                                                setIsRefreshInProcess(true);
-                                                list(); //load  only documents
-                                            }}
-                                            variant="primary"
-                                            disabled={isRefreshInProcess}
-                                        >
-                                            {isRefreshInProcess ? (
-                                                <Spinner
-                                                    as="span"
-                                                    animation="border"
-                                                    size="sm"
-                                                    role="status"
-                                                    aria-hidden={true}
-                                                />
-                                            ) : (
-                                                <i className="fa fa-refresh"></i>
-                                            )}
-                                            <span className="visually-hidden">Loading...</span>
-                                        </Button>
-                                    </div>
-                                    <div className="col text-center">
-                                        {isListLoading && (
-                                            <Spinner animation="grow" variant="primary" />
+                                <div style={{ display: "flex", alignItems: "center", gap: "8px", flexWrap: "wrap", marginBottom: "8px" }}>
+                                    <Button
+                                        onClick={() => { setIsRefreshInProcess(true); list(); }}
+                                        variant="primary"
+                                        disabled={isRefreshInProcess}
+                                    >
+                                        {isRefreshInProcess ? (
+                                            <Spinner as="span" animation="border" size="sm" role="status" aria-hidden={true} />
+                                        ) : (
+                                            <i className="fa fa-refresh"></i>
                                         )}
-                                    </div>
-                                    <div className="col text-end">
-                                        {totalItems > 0 && (
-                                            <>
-                                                <label className="form-label">Size:&nbsp;</label>
-                                                <select
-                                                    value={pageSize}
-                                                    onChange={(e) => {
-                                                        changePageSize(e.target.value);
-                                                    }}
-                                                    className="form-control pull-right"
-                                                    style={{
-                                                        bproduct: "solid 1px",
-                                                        bproductColor: "silver",
-                                                        width: "55px",
-                                                    }}
-                                                >
-                                                    <option value="5">
-                                                        5
-                                                    </option>
-                                                    <option value="10" >
-                                                        10
-                                                    </option>
-                                                    <option value="20">20</option>
-                                                    <option value="40">40</option>
-                                                    <option value="50">50</option>
-                                                    <option value="100">100</option>
-                                                    <option value="200">200</option>
-                                                    <option value="300">300</option>
-                                                    <option value="500">500</option>
-                                                    <option value="1000">1000</option>
-                                                    <option value="1500">1500</option>
-                                                </select>
-                                            </>
-                                        )}
-                                    </div>
+                                        <span className="visually-hidden">Loading...</span>
+                                    </Button>
+
+                                    {totalItems > 0 && (
+                                        <>
+                                            <label className="form-label mb-0">Size:&nbsp;</label>
+                                            <select
+                                                value={pageSize}
+                                                onChange={(e) => { changePageSize(e.target.value); }}
+                                                className="form-control"
+                                                style={{ border: "solid 1px", borderColor: "silver", width: "55px" }}
+                                            >
+                                                <option value="5">5</option>
+                                                <option value="10">10</option>
+                                                <option value="20">20</option>
+                                                <option value="40">40</option>
+                                                <option value="50">50</option>
+                                                <option value="100">100</option>
+                                                <option value="200">200</option>
+                                                <option value="300">300</option>
+                                                <option value="500">500</option>
+                                                <option value="1000">1000</option>
+                                                <option value="1500">1500</option>
+                                            </select>
+                                        </>
+                                    )}
                                 </div>
-                                <br />
 
                                 <div className="row">
                                     <div className="col-md-12">
@@ -2144,7 +2565,35 @@ function ProductIndex(props) {
                                                                                 }
                                                                                 {col.key === "stock" &&
                                                                                     <div style={{ ...columnStyle, width: getColumnWidth(col) }}>
-                                                                                        {option.product_stores?.[localStorage.getItem("store_id")]?.stock ?? ''}
+                                                                                        {(() => {
+                                                                                            const storeId = localStorage.getItem("store_id");
+                                                                                            const productStore = option.product_stores?.[storeId];
+                                                                                            const totalStock = productStore?.stock ?? 0;
+                                                                                            const warehouseStocks = productStore?.warehouse_stocks ?? {};
+
+                                                                                            // Build warehouse stock details string
+                                                                                            const warehouseDetails = (() => {
+                                                                                                // Always show MS first
+                                                                                                let details = [];
+                                                                                                if (warehouseStocks["main_store"] !== undefined) {
+                                                                                                    details.push(`MS: ${warehouseStocks["main_store"]}`);
+                                                                                                }
+                                                                                                Object.entries(warehouseStocks)
+                                                                                                    .filter(([key]) => key !== "main_store")
+                                                                                                    .forEach(([key, value]) => {
+                                                                                                        details.push(`${key.replace(/^w/, "WH").toUpperCase()}: ${value}`);
+                                                                                                    });
+                                                                                                return details.join(", ");
+                                                                                            })();
+
+                                                                                            // Final display string
+                                                                                            return (
+                                                                                                <span>
+                                                                                                    {totalStock}
+                                                                                                    {warehouseDetails && store.settings.enable_warehouse_module ? ` (${warehouseDetails})` : ""}
+                                                                                                </span>
+                                                                                            );
+                                                                                        })()}
                                                                                     </div>
                                                                                 }
                                                                                 {col.key === "photos" &&
@@ -2204,20 +2653,18 @@ function ProductIndex(props) {
                                     </div>
                                 </div>
 
-                                <br />
-                                <div className="row">
-                                    <div className="col" style={{ bproduct: "solid 0px" }}>
+                                <div style={{ display: "flex", alignItems: "center", gap: "8px", flexWrap: "wrap", marginBottom: "8px" }}>
+                                    <div className="w-100" style={{ overflowX: "auto" }}>
                                         {totalPages ? <ReactPaginate
                                             breakLabel="..."
                                             nextLabel="next >"
-                                            onPageChange={(event) => {
-                                                changePage(event.selected + 1);
-                                            }}
-                                            pageRangeDisplayed={5}
+                                            onPageChange={(event) => { changePage(event.selected + 1); }}
+                                            pageRangeDisplayed={3}
+                                            marginPagesDisplayed={1}
                                             pageCount={totalPages}
-                                            previousLabel="< previous"
+                                            previousLabel="< prev"
                                             renderOnZeroPageCount={null}
-                                            className="pagination  flex-wrap"
+                                            className="pagination flex-wrap mb-0"
                                             pageClassName="page-item"
                                             pageLinkClassName="page-link"
                                             activeClassName="active"
@@ -2228,51 +2675,49 @@ function ProductIndex(props) {
                                             forcePage={page - 1}
                                         /> : ""}
                                     </div>
-                                </div>
-                                <div className="row">
-                                    <div className="col text-end">
-                                        <button
-                                            className="btn btn-sm btn-outline-secondary"
-                                            onClick={() => {
-                                                setShowSettings(!showSettings);
-                                            }}
-                                        >
-                                            <i
-                                                className="bi bi-gear-fill"
-                                                style={{ fontSize: "1.2rem" }}
-                                                title="Table Settings"
 
-                                            />
-                                        </button>
-                                    </div>
-                                </div>
 
-                                <div className="row">
+
                                     {totalItems > 0 && (
-                                        <>
-                                            <div className="col text-start">
-                                                <p className="text-start">
-                                                    showing {offset + 1}-{offset + currentPageItemsCount} of{" "}
-                                                    {totalItems}
-                                                </p>
-                                                {enableSelection && <Button className="btn btn-success btn-sm" onClick={handleSendSelected}>
-                                                    Select {choosenProducts.length} products
-                                                </Button>}
-                                            </div>
-
-                                            <div className="col text-end">
-                                                <p className="text-end">
-                                                    page {page} of {totalPages}
-                                                </p>
-                                            </div>
-                                        </>
+                                        <span className="text-muted small">
+                                            showing {offset + 1}-{offset + currentPageItemsCount} of {totalItems}
+                                            &nbsp;|&nbsp;page {page} of {totalPages}
+                                        </span>
                                     )}
+
+                                    {totalItems > 0 && enableSelection && (
+                                        <Button className="btn btn-success btn-sm" onClick={handleSendSelected}>
+                                            Select {choosenProducts.length} products
+                                        </Button>
+                                    )}
+                                    <button
+                                        className="btn btn-sm btn-outline-secondary ms-auto"
+                                        onClick={() => { setShowSettings(!showSettings); }}
+                                    >
+                                        <i className="bi bi-gear-fill" style={{ fontSize: "1.2rem" }} title="Table Settings" />
+                                    </button>
                                 </div>
-                                <div className="table-responsive" style={{ overflowX: "auto", overflowY: "auto", minHeight: "500px", maxHeight: "500px" }}>
+                                <div className="table-responsive" style={{ position: "relative", overflowX: "auto", overflowY: "auto", minHeight: "200px" }} ref={(el) => {
+                                    if (!el) return;
+                                    const fit = () => {
+                                        const top = el.getBoundingClientRect().top;
+                                        el.style.height = Math.max(200, window.innerHeight - top - 16) + "px";
+                                    };
+                                    fit();
+                                    if (!el._fitListenerAdded) {
+                                        el._fitListenerAdded = true;
+                                        window.addEventListener("resize", fit);
+                                    }
+                                }}>
+                                    {isListLoading && (
+                                        <div style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0, display: "flex", alignItems: "center", justifyContent: "center", zIndex: 10, background: "rgba(255,255,255,0.5)" }}>
+                                            <Spinner animation="grow" variant="primary" style={{ width: "3rem", height: "3rem" }} />
+                                        </div>
+                                    )}
                                     <table className="table table-striped table-sm table-bordered">
                                         <thead>
                                             <tr className="text-center">
-                                                {columns.filter(c => c.visible).map((col) => {
+                                                {columns.filter(c => c.visible && (c.key !== "main_store_stock" || store?.settings?.enable_warehouse_module)).map((col) => {
                                                     return (<>
                                                         {col.key === "deleted" && <th key={col.key}>{col.label}</th>}
                                                         {col.key === "actions" && <th key={col.key}>{col.label}</th>}
@@ -2301,6 +2746,30 @@ function ProductIndex(props) {
                                                                     <i className="bi bi-sort-alpha-up"></i>
                                                                 ) : null}
                                                             </b>
+                                                            {col.key === "abc_tier" && (
+                                                                <OverlayTrigger placement="bottom" overlay={
+                                                                    <Tooltip id="abc-tier-info">
+                                                                        <strong>ABC Tier</strong> classifies products by revenue contribution (Pareto principle):<br />
+                                                                        <strong>A</strong> = Top products contributing ~80% of total revenue (high value)<br />
+                                                                        <strong>B</strong> = Mid-tier, contributing ~15% of revenue (medium value)<br />
+                                                                        <strong>C</strong> = Long-tail items contributing ~5% of revenue (low value)
+                                                                    </Tooltip>
+                                                                }>
+                                                                    <i className="bi bi-info-circle ms-1 text-muted" style={{ cursor: "pointer", fontSize: "0.85em" }}></i>
+                                                                </OverlayTrigger>
+                                                            )}
+                                                            {col.key === "xyz_tier" && (
+                                                                <OverlayTrigger placement="bottom" overlay={
+                                                                    <Tooltip id="xyz-tier-info">
+                                                                        <strong>XYZ Tier</strong> classifies products by demand predictability:<br />
+                                                                        <strong>X</strong> = Consistent, predictable demand (low variability — easy to forecast)<br />
+                                                                        <strong>Y</strong> = Moderately variable demand (some fluctuation — harder to forecast)<br />
+                                                                        <strong>Z</strong> = Highly unpredictable or sporadic demand (high variability — difficult to plan)
+                                                                    </Tooltip>
+                                                                }>
+                                                                    <i className="bi bi-info-circle ms-1 text-muted" style={{ cursor: "pointer", fontSize: "0.85em" }}></i>
+                                                                </OverlayTrigger>
+                                                            )}
                                                         </th>}
                                                     </>);
                                                 })}
@@ -3082,7 +3551,7 @@ function ProductIndex(props) {
 
                                         <thead>
                                             <tr className="text-center">
-                                                {columns.filter(c => c.visible).map((col) => {
+                                                {columns.filter(c => c.visible && (c.key !== "main_store_stock" || store?.settings?.enable_warehouse_module)).map((col) => {
                                                     return (<>
                                                         {(col.key === "deleted") && <th>
                                                             <select
@@ -3107,6 +3576,8 @@ function ProductIndex(props) {
                                                             <Typeahead
                                                                 id="product_search_by_part_no"
                                                                 filterBy={() => true}
+                                                                positionFixed={true}
+                                                                popperOptions={{ modifiers: [{ name: 'preventOverflow', enabled: false }] }}
                                                                 size="lg"
                                                                 ref={productSearchByPartNoRef}
                                                                 labelKey="search_label"
@@ -3150,30 +3621,22 @@ function ProductIndex(props) {
                                                                 id="product_search_by_name"
                                                                 ref={productSearchByNameRef}
                                                                 filterBy={() => true}
-                                                                size="lg"
+                                                                style={{ minWidth: "300px" }}
                                                                 labelKey="search_label"
                                                                 emptyLabel="No products found"
                                                                 clearButton={true}
-                                                                open={openProductSearchResultByName}
-                                                                isLoading={false}
                                                                 onKeyDown={(e) => {
                                                                     if (e.key === "Escape") {
                                                                         setProductOptionsByName([]);
-                                                                        setOpenProductSearchResultByName(false);
                                                                         productSearchByNameRef.current?.clear();
                                                                     }
                                                                 }}
                                                                 onChange={(selectedItems) => {
-
                                                                     searchByMultipleValuesField(
                                                                         "product_id",
                                                                         selectedItems,
                                                                         "name"
                                                                     );
-
-                                                                    // addProduct(selectedItems[0]);
-
-                                                                    setOpenProductSearchResultByName(false);
                                                                 }}
                                                                 options={productOptionsByName}
                                                                 selected={selectedProductsByName}
@@ -3186,8 +3649,23 @@ function ProductIndex(props) {
                                                                     }, 400);
                                                                 }}
                                                                 ignoreDiacritics={true}
-
                                                                 multiple
+                                                                renderMenu={(results, menuProps, state) => (
+                                                                    <Menu {...menuProps} style={{ ...menuProps.style, minWidth: '600px' }}>
+                                                                        {results.map((option, idx) => (
+                                                                            <MenuItem option={option} position={idx} key={option.id}>
+                                                                                <div>
+                                                                                    {highlightWords(option.search_label, state.text)}
+                                                                                    {option.name_in_arabic && (
+                                                                                        <span style={{ color: "#888", marginLeft: 8 }}>
+                                                                                            {highlightWords(option.name_in_arabic, state.text)}
+                                                                                        </span>
+                                                                                    )}
+                                                                                </div>
+                                                                            </MenuItem>
+                                                                        ))}
+                                                                    </Menu>
+                                                                )}
                                                             />
                                                         </th>}
                                                         {(col.key === "barcode") && <th>
@@ -3209,6 +3687,7 @@ function ProductIndex(props) {
                                                             col.key === "retail_unit_price" ||
                                                             col.key === "rack" ||
                                                             col.key === "stock" ||
+                                                            col.key === "main_store_stock" ||
                                                             col.key === "sales_count" ||
                                                             col.key === "sales" ||
                                                             col.key === "sales_quantity" ||
@@ -3349,6 +3828,64 @@ function ProductIndex(props) {
                                                             />
                                                         </th>}
 
+                                                        {col.key === "sales_velocity_trend" && <th>
+                                                            <select className="form-select form-select-sm"
+                                                                onChange={(e) => searchByFieldValue("sales_velocity_trend", e.target.value)}>
+                                                                <option value="">All</option>
+                                                                <option value="Rising Star">Rising Star</option>
+                                                                <option value="Growing">Growing</option>
+                                                                <option value="Stable">Stable</option>
+                                                                <option value="Seasonal">Seasonal</option>
+                                                                <option value="Softening">Softening</option>
+                                                                <option value="Declining">Declining</option>
+                                                            </select>
+                                                        </th>}
+                                                        {col.key === "abc_tier" && <th>
+                                                            <select className="form-select form-select-sm"
+                                                                onChange={(e) => searchByFieldValue("abc_tier", e.target.value)}>
+                                                                <option value="">All</option>
+                                                                <option value="A">A</option>
+                                                                <option value="B">B</option>
+                                                                <option value="C">C</option>
+                                                            </select>
+                                                        </th>}
+                                                        {col.key === "xyz_tier" && <th>
+                                                            <select className="form-select form-select-sm"
+                                                                onChange={(e) => searchByFieldValue("xyz_tier", e.target.value)}>
+                                                                <option value="">All</option>
+                                                                <option value="X">X</option>
+                                                                <option value="Y">Y</option>
+                                                                <option value="Z">Z</option>
+                                                            </select>
+                                                        </th>}
+                                                        {col.key === "class" && <th>
+                                                            <select className="form-select form-select-sm"
+                                                                onChange={(e) => searchByFieldValue("class", e.target.value)}>
+                                                                <option value="">All</option>
+                                                                <option value="AX">AX</option>
+                                                                <option value="AY">AY</option>
+                                                                <option value="AZ">AZ</option>
+                                                                <option value="BX">BX</option>
+                                                                <option value="BY">BY</option>
+                                                                <option value="BZ">BZ</option>
+                                                                <option value="CX">CX</option>
+                                                                <option value="CY">CY</option>
+                                                                <option value="CZ">CZ</option>
+                                                            </select>
+                                                        </th>}
+                                                        {col.key === "stocking_strategy" && <th>
+                                                            <input type="text" className="form-control" placeholder="Stocking Strategy"
+                                                                onChange={(e) => searchByFieldValue("stocking_strategy", e.target.value)} />
+                                                        </th>}
+                                                        {col.key === "class_reason" && <th><input className="form-control" placeholder="Class Reason" onChange={(e) => searchByFieldValue("class_reason", e.target.value)} /></th>}
+                                                        {col.key === "revenue" && <th><input className="form-control" type="number" placeholder="Revenue" /></th>}
+                                                        {col.key === "avg_monthly_qty" && <th><input className="form-control" type="number" placeholder="Avg Mo Qty" /></th>}
+                                                        {col.key === "cv" && <th><input className="form-control" type="number" placeholder="CV" /></th>}
+                                                        {col.key === "active_months" && <th><input className="form-control" type="number" placeholder="Active Months" /></th>}
+                                                        {col.key === "sales_velocity_trend_reason" && <th><input className="form-control" placeholder="Velocity Reason" onChange={(e) => searchByFieldValue("sales_velocity_trend_reason", e.target.value)} /></th>}
+                                                        {col.key === "slop_percent_per_month" && <th><input className="form-control" type="number" placeholder="Slope %/Mo" /></th>}
+                                                        {col.key === "momentum_percent_per_3month" && <th><input className="form-control" type="number" placeholder="Momentum %/3Mo" /></th>}
+                                                        {col.key === "recent_3month_qty" && <th><input className="form-control" type="number" placeholder="Recent 3Mo Qty" /></th>}
                                                         {col.key === "created_by" && <th>
                                                             <Typeahead
                                                                 id="created_by"
@@ -3472,6 +4009,8 @@ function ProductIndex(props) {
                                                     <Typeahead
                                                         id="product_search_by_part_no"
                                                         filterBy={() => true}
+                                                        positionFixed={true}
+                                                        popperOptions={{ modifiers: [{ name: 'preventOverflow', enabled: false }] }}
                                                         size="lg"
                                                         ref={productSearchByPartNoRef}
                                                         labelKey="search_label"
@@ -3517,30 +4056,22 @@ function ProductIndex(props) {
                                                         id="product_search_by_name"
                                                         ref={productSearchByNameRef}
                                                         filterBy={() => true}
-                                                        size="lg"
+                                                        style={{ minWidth: "300px" }}
                                                         labelKey="search_label"
                                                         emptyLabel="No products found"
                                                         clearButton={true}
-                                                        open={openProductSearchResultByName}
-                                                        isLoading={false}
                                                         onKeyDown={(e) => {
                                                             if (e.key === "Escape") {
                                                                 setProductOptionsByName([]);
-                                                                setOpenProductSearchResultByName(false);
                                                                 productSearchByNameRef.current?.clear();
                                                             }
                                                         }}
                                                         onChange={(selectedItems) => {
-
                                                             searchByMultipleValuesField(
                                                                 "product_id",
                                                                 selectedItems,
                                                                 "name"
                                                             );
-
-                                                            // addProduct(selectedItems[0]);
-
-                                                            setOpenProductSearchResultByName(false);
                                                         }}
                                                         options={productOptionsByName}
                                                         selected={selectedProductsByName}
@@ -3553,8 +4084,23 @@ function ProductIndex(props) {
                                                             }, 100);
                                                         }}
                                                         ignoreDiacritics={true}
-
                                                         multiple
+                                                        renderMenu={(results, menuProps, state) => (
+                                                            <Menu {...menuProps} style={{ ...menuProps.style, minWidth: '600px' }}>
+                                                                {results.map((option, idx) => (
+                                                                    <MenuItem option={option} position={idx} key={option.id}>
+                                                                        <div>
+                                                                            {highlightWords(option.search_label, state.text)}
+                                                                            {option.name_in_arabic && (
+                                                                                <span style={{ color: "#888", marginLeft: 8 }}>
+                                                                                    {highlightWords(option.name_in_arabic, state.text)}
+                                                                                </span>
+                                                                            )}
+                                                                        </div>
+                                                                    </MenuItem>
+                                                                ))}
+                                                            </Menu>
+                                                        )}
                                                     />
                                                 </th>
                                                 <th>
@@ -4125,7 +4671,7 @@ function ProductIndex(props) {
                                             {productList &&
                                                 productList.map((product) => (
                                                     <tr key={product.id}>
-                                                        {columns.filter(c => c.visible).map((col) => {
+                                                        {columns.filter(c => c.visible && (c.key !== "main_store_stock" || store?.settings?.enable_warehouse_module)).map((col) => {
                                                             return (<>
                                                                 {(col.key === "deleted") && <td>{product.deleted ? "YES" : "NO"}</td>}
                                                                 {(col.key === "select" && enableSelection) && <td style={{ width: "auto", whiteSpace: "nowrap" }}>
@@ -4208,7 +4754,7 @@ function ProductIndex(props) {
                                                                                     Delivery Note History ({getShortcut('deliveryNoteHistory')})
                                                                                 </Dropdown.Item>
 
-                                                                                <Dropdown.Item onClick={() => openQuotationHistory(product)}>
+                                                                                <Dropdown.Item onClick={() => openQuotationHistory(product, "quotation")}>
                                                                                     <i className="bi bi-clock-history"></i>&nbsp;
                                                                                     Quotation History ({getShortcut('quotationHistory')})
                                                                                 </Dropdown.Item>
@@ -4227,6 +4773,10 @@ function ProductIndex(props) {
                                                                                     <i className="bi bi-clock-history"></i>&nbsp;
                                                                                     Images ({getShortcut('images')})
                                                                                 </Dropdown.Item>
+                                                                                <Dropdown.Item onClick={() => openBiHistoryModal(product)}>
+                                                                                    <i className="bi bi-graph-up-arrow"></i>&nbsp;
+                                                                                    BI History (Velocity &amp; ABC-XYZ)
+                                                                                </Dropdown.Item>
                                                                             </Dropdown.Menu>
                                                                         </Dropdown>
                                                                     </span>
@@ -4238,14 +4788,82 @@ function ProductIndex(props) {
                                                                 {(col.key === "barcode" || col.key === "rack") && <td style={{ width: "auto", whiteSpace: "nowrap" }} >
                                                                     {product[col.fieldName]}
                                                                 </td>}
-
-
                                                                 {(col.key === "purchase_unit_price" ||
                                                                     col.key === "wholesale_unit_price" ||
                                                                     col.key === "retail_unit_price" ||
-                                                                    col.key === "stock" ||
+                                                                    col.key === "delivery_note_count" ||
+                                                                    col.key === "delivery_note_quantity"
+                                                                ) &&
+                                                                    <td>
+                                                                        <b>
+                                                                            {product.product_stores[localStorage.getItem("store_id")] ? product.product_stores[localStorage.getItem("store_id")][col.key]?.toFixed(2) : ""}
+                                                                        </b>
+                                                                    </td>}
+                                                                {col.key === "stock" &&
+                                                                    <td style={{ width: "auto", whiteSpace: "nowrap" }}>
+                                                                        {(() => {
+                                                                            const storeId = localStorage.getItem("store_id");
+                                                                            const productStore = product.product_stores?.[storeId];
+
+                                                                            //selectedWarehouse.warehouse_code
+                                                                            const totalStock = productStore?.stock ?? 0;
+                                                                            let warehouseStocks = productStore?.warehouse_stocks;
+                                                                            if (!warehouseStocks) {
+                                                                                warehouseStocks = { "main_store": totalStock };
+                                                                            }
+
+                                                                            for (const wh of warehouseList) {
+                                                                                if (!warehouseStocks.hasOwnProperty(wh.code)) {
+                                                                                    warehouseStocks[wh.code] = 0;
+                                                                                }
+                                                                            }
+
+                                                                            // Always show Main Store first, then others
+                                                                            const orderedEntries = [];
+                                                                            if (warehouseStocks?.hasOwnProperty("main_store")) {
+                                                                                orderedEntries.push(["main_store", warehouseStocks["main_store"]]);
+                                                                            }
+
+                                                                            if (warehouseStocks)
+                                                                                Object.entries(warehouseStocks).forEach(([key, value]) => {
+                                                                                    if (key !== "main_store") {
+                                                                                        orderedEntries.push([key, value]);
+                                                                                    }
+                                                                                });
+
+                                                                            const details = orderedEntries
+                                                                                .map(([key, value]) => {
+                                                                                    let name = key === "main_store" ? "Main Store" : key.replace(/^wh/, "WH").toUpperCase();
+                                                                                    return `${name}: ${value}`;
+                                                                                })
+                                                                                .join(", ");
+
+                                                                            return (
+                                                                                <OverlayTrigger
+                                                                                    placement="top"
+                                                                                    overlay={
+                                                                                        <Tooltip id={`stock-tooltip-${product.id}`}>
+                                                                                            ({details})
+
+                                                                                        </Tooltip>
+                                                                                    }
+                                                                                >
+                                                                                    <span style={{ cursor: "pointer", textDecoration: "underline dotted" }}>
+                                                                                        <b>{selectedWarehouse.warehouse_code ? warehouseStocks[selectedWarehouse.warehouse_code] : ""}</b>
+                                                                                        <b>{!selectedWarehouse.warehouse_code ? totalStock : ""}</b>
+                                                                                    </span>
+                                                                                </OverlayTrigger>
+                                                                            );
+                                                                        })()}
+                                                                    </td>
+                                                                }
+                                                                {col.key === "main_store_stock" &&
+                                                                    <td style={{ width: "auto", whiteSpace: "nowrap" }}>
+                                                                        <b>{(product.product_stores?.[localStorage.getItem("store_id")]?.warehouse_stocks?.main_store?.toFixed(2) ?? "")}</b>
+                                                                    </td>
+                                                                }
+                                                                {(col.key === "sales" ||
                                                                     col.key === "sales_count" ||
-                                                                    col.key === "sales" ||
                                                                     col.key === "sales_quantity" ||
                                                                     col.key === "sales_profit" ||
                                                                     col.key === "sales_loss" ||
@@ -4268,16 +4886,74 @@ function ProductIndex(props) {
                                                                     col.key === "quotation_sales_quantity" ||
                                                                     col.key === "quotation_sales_return_count" ||
                                                                     col.key === "quotation_sales_return" ||
-                                                                    col.key === "quotation_sales_return_quantity" ||
-                                                                    col.key === "delivery_note_count" ||
-                                                                    col.key === "delivery_note_quantity"
+                                                                    col.key === "quotation_sales_return_quantity"
                                                                 ) &&
-                                                                    <td>
-                                                                        <b>
-                                                                            {product.product_stores[localStorage.getItem("store_id")][col.key]?.toFixed(2)}
-                                                                        </b>
-                                                                    </td>}
+                                                                    <td style={{ width: "auto", whiteSpace: "nowrap" }}>
+                                                                        {(() => {
+                                                                            const storeId = localStorage.getItem("store_id");
+                                                                            const productStore = product.product_stores?.[storeId] ? product.product_stores?.[storeId] : {};
 
+                                                                            //selectedWarehouse.warehouse_code
+                                                                            const totalValue = productStore[col.key] ? productStore[col.key] : 0;
+                                                                            let productWarehouses = productStore?.product_warehouses;
+                                                                            if (!productWarehouses) {
+                                                                                productWarehouses = { "main_store": totalValue };
+                                                                            }
+
+                                                                            for (const wh of warehouseList) {
+                                                                                if (!wh.code)
+                                                                                    continue;
+
+                                                                                if (!productWarehouses.hasOwnProperty(wh.code)) {
+                                                                                    if (!productWarehouses[wh.code]) {
+                                                                                        productWarehouses[wh.code] = { [col.key]: 0 };
+                                                                                    } else {
+                                                                                        productWarehouses[wh.code][col.key] = 0;
+                                                                                    }
+                                                                                }
+                                                                            }
+
+                                                                            // Always show Main Store first, then others
+                                                                            const orderedEntries = [];
+                                                                            if (productWarehouses?.hasOwnProperty("main_store")) {
+                                                                                orderedEntries.push(["main_store", productWarehouses["main_store"][col.key] ? productWarehouses["main_store"][col.key] : 0]);
+                                                                            }
+
+                                                                            if (productWarehouses)
+                                                                                Object.entries(productWarehouses).forEach(([key, value]) => {
+                                                                                    if (key !== "main_store" && key && value) {
+                                                                                        //  console.log("key:" + key + ", field:" + col.key + ", V:" + value[col.key] + ",P.no:" + product.part_number);
+                                                                                        orderedEntries.push([key, value[col.key] ? value[col.key] : 0]);
+                                                                                    }
+                                                                                });
+
+                                                                            const details = orderedEntries
+                                                                                .map(([key, value]) => {
+                                                                                    let name = key === "main_store" ? "Main Store" : key.replace(/^wh/, "WH").toUpperCase();
+
+                                                                                    return `${name}: ${value ? value : 0}`;
+                                                                                })
+                                                                                .join(", ");
+
+                                                                            return (
+                                                                                <OverlayTrigger
+                                                                                    placement="top"
+                                                                                    overlay={
+                                                                                        <Tooltip id={`stock-tooltip-${product.id}`}>
+                                                                                            ({details})
+
+                                                                                        </Tooltip>
+                                                                                    }
+                                                                                >
+                                                                                    <span style={{ cursor: "pointer", textDecoration: "underline dotted" }}>
+                                                                                        <b>{selectedWarehouse.warehouse_code ? (productWarehouses[selectedWarehouse.warehouse_code]?.[col.key] ?? 0) : ""}</b>
+                                                                                        <b>{!selectedWarehouse.warehouse_code ? totalValue : ""}</b>
+                                                                                    </span>
+                                                                                </OverlayTrigger>
+                                                                            );
+                                                                        })()}
+                                                                    </td>
+                                                                }
                                                                 {(col.fieldName === "is_set") && <td style={{ width: "auto", whiteSpace: "nowrap" }} >
                                                                     {product.is_set ? "YES" : "NO"}
                                                                 </td>}
@@ -4298,6 +4974,66 @@ function ProductIndex(props) {
                                                                     <ul>
                                                                         {product.country_name}
                                                                     </ul>
+                                                                </td>}
+                                                                {col.key === "sales_velocity_trend" && <td style={{ whiteSpace: "nowrap" }}>
+                                                                    {product.sales_velocity_trend && (
+                                                                        <span className={`badge ${product.sales_velocity_trend === "Rising Star" ? "bg-success" :
+                                                                            product.sales_velocity_trend === "Growing" ? "bg-primary" :
+                                                                                product.sales_velocity_trend === "Stable" ? "bg-secondary" :
+                                                                                    product.sales_velocity_trend === "Seasonal" ? "bg-info" :
+                                                                                        product.sales_velocity_trend === "Softening" ? "bg-warning" :
+                                                                                            "bg-danger"
+                                                                            }`} title={product.sales_velocity_trend_reason}>
+                                                                            {product.sales_velocity_trend}
+                                                                        </span>
+                                                                    )}
+                                                                </td>}
+                                                                {col.key === "abc_tier" && <td>
+                                                                    {product.abc_tier && (
+                                                                        <span className={`badge ${product.abc_tier === "A" ? "bg-success" :
+                                                                            product.abc_tier === "B" ? "bg-warning" : "bg-secondary"
+                                                                            }`}>{product.abc_tier}</span>
+                                                                    )}
+                                                                </td>}
+                                                                {col.key === "xyz_tier" && <td>
+                                                                    {product.xyz_tier && (
+                                                                        <span className={`badge ${product.xyz_tier === "X" ? "bg-success" :
+                                                                            product.xyz_tier === "Y" ? "bg-warning" : "bg-danger"
+                                                                            }`}>{product.xyz_tier}</span>
+                                                                    )}
+                                                                </td>}
+                                                                {col.key === "class" && <td>
+                                                                    <strong>{product.class}</strong>
+                                                                </td>}
+                                                                {col.key === "class_reason" && <td style={{ fontSize: "0.8em", maxWidth: "250px" }}>
+                                                                    {product.class_reason || ""}
+                                                                </td>}
+                                                                {col.key === "stocking_strategy" && <td style={{ whiteSpace: "nowrap", fontSize: "0.8em" }}>
+                                                                    {product.stocking_strategy}
+                                                                </td>}
+                                                                {col.key === "revenue" && <td style={{ textAlign: "right" }}>
+                                                                    {product.revenue != null ? product.revenue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : ""}
+                                                                </td>}
+                                                                {col.key === "avg_monthly_qty" && <td style={{ textAlign: "right" }}>
+                                                                    {product.avg_monthly_qty != null ? product.avg_monthly_qty.toFixed(1) : ""}
+                                                                </td>}
+                                                                {col.key === "cv" && <td style={{ textAlign: "right" }}>
+                                                                    {product.cv != null ? product.cv.toFixed(2) : ""}
+                                                                </td>}
+                                                                {col.key === "active_months" && <td style={{ textAlign: "right" }}>
+                                                                    {product.active_months != null ? product.active_months : ""}
+                                                                </td>}
+                                                                {col.key === "sales_velocity_trend_reason" && <td style={{ fontSize: "0.8em", maxWidth: "250px" }}>
+                                                                    {product.sales_velocity_trend_reason || ""}
+                                                                </td>}
+                                                                {col.key === "slop_percent_per_month" && <td style={{ textAlign: "right" }}>
+                                                                    {product.slop_percent_per_month != null ? product.slop_percent_per_month.toFixed(1) + "%" : ""}
+                                                                </td>}
+                                                                {col.key === "momentum_percent_per_3month" && <td style={{ textAlign: "right" }}>
+                                                                    {product.momentum_percent_per_3month != null ? product.momentum_percent_per_3month.toFixed(1) + "%" : ""}
+                                                                </td>}
+                                                                {col.key === "recent_3month_qty" && <td style={{ textAlign: "right" }}>
+                                                                    {product.recent_3month_qty != null ? product.recent_3month_qty.toFixed(1) : ""}
                                                                 </td>}
                                                                 {col.key === "created_by" && <td>
                                                                     {product.created_by_name}
@@ -4797,31 +5533,11 @@ function ProductIndex(props) {
                                     </table>
                                 </div>
 
-                                {totalPages ? <ReactPaginate
-                                    breakLabel="..."
-                                    nextLabel="next >"
-                                    onPageChange={(event) => {
-                                        changePage(event.selected + 1);
-                                    }}
-                                    pageRangeDisplayed={5}
-                                    pageCount={totalPages}
-                                    previousLabel="< previous"
-                                    renderOnZeroPageCount={null}
-                                    className="pagination  flex-wrap"
-                                    pageClassName="page-item"
-                                    pageLinkClassName="page-link"
-                                    activeClassName="active"
-                                    previousClassName="page-item"
-                                    nextClassName="page-item"
-                                    previousLinkClassName="page-link"
-                                    nextLinkClassName="page-link"
-                                    forcePage={page - 1}
-                                /> : ""}
                             </div>
                         </div>
                     </div>
                 </div>
-            </div>
+            </div >
         </>
     );
 }

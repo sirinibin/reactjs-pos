@@ -10,7 +10,7 @@ import { QRCodeSVG } from "qrcode.react";
 
 const PreviewContentWithSellerInfo = forwardRef((props, ref) => {
 
-    let persianDigits = "۰۱۲۳۴۵۶۷۸۹";
+    let persianDigits = "۰۱۲۳٤۵۶۷۸۹";
     let persianMap = persianDigits.split("");
 
 
@@ -62,8 +62,11 @@ const PreviewContentWithSellerInfo = forwardRef((props, ref) => {
                         paddingTop: "10px",
                         paddingBottom: "4px",
                         marginTop: page.top + "px",
+                        marginLeft: "auto",
+                        marginRight: "auto",
+                        maxWidth: "none",
                         height: "1118px",
-                        width: `${props.whatsAppShare ? "750px" : "750px"}`,
+                        width: props.whatsAppShare ? "750px" : window.location.pathname.includes('invoice-print') ? "774px" : !!(window.__TAURI__ || window.__TAURI_INTERNALS__) ? "calc(100vw - 20px)" : "750px",
                         //backgroundImage: `url(${props.whatsAppShare ? props.invoiceBackground : ""})`,
                         // backgroundSize: 'cover',
                         // backgroundPosition: 'center',
@@ -155,10 +158,10 @@ const PreviewContentWithSellerInfo = forwardRef((props, ref) => {
                             </div>
                         </div>
 
-                        <div className="row col-md-14" style={{ border: "solid 0px", borderColor: detailsBorderColor, fontSize: props.fontSizes[props.modelName + "_invoiceDetails"]?.size, padding: "10px" }} onClick={() => {
+                        <div className="row col-md-14" style={{ border: "solid 0px", borderColor: detailsBorderColor, fontSize: props.fontSizes[props.modelName + "_invoiceDetails"]?.size, paddingTop: "10px", paddingBottom: "10px", paddingLeft: "0px", paddingRight: "0px", marginLeft: "0px", marginRight: "0px" }} onClick={() => {
                             props.selectText("invoiceDetails");
                         }}>
-                            <div className="col-md-12" style={{ border: detailsBorderThickness, borderColor: detailsBorderColor, marginLeft: "0px", width: `${(props.model.store?.settings?.zatca_qr_on_left_bottom || (props.modelName === "quotation" && props.model.type !== "invoice")) ? "100%" : "74%"}` }}>
+                            <div className="col-md-12 details-box" style={{ border: detailsBorderThickness, borderColor: detailsBorderColor, marginLeft: "0px", paddingLeft: "0px", paddingRight: "0px", width: `${(props.model.store?.settings?.zatca_qr_on_left_bottom || (props.modelName === "quotation" && props.model.type !== "invoice")) ? "100%" : "74%"}` }}>
                                 {props.modelName === "quotation" && props.model.type !== "invoice" && <>
                                     <div className="row" dir="ltr" style={{ borderBottom: detailsBorderThickness }} >
                                         <div className="col-md-4 print-label" dir="ltr" style={{ borderRight: detailsBorderThickness, borderColor: detailsBorderColor, width: detailsLabelsColumnWidthPercent, padding: "3px" }} ><b>Quotation No. | رقم الاقتباس:</b></div>
@@ -615,6 +618,7 @@ const PreviewContentWithSellerInfo = forwardRef((props, ref) => {
                                             {props.model.vendor ? props.model.vendor.name : ""}
                                             {!props.model.vendor && props.model.vendorName ? props.model.vendorName : ""}
                                             {!props.model.vendorName && !props.model.vendor ? "N/A" : ""}
+                                            {props.model.vendor?.name_in_arabic ? "  " + props.model.vendor.name_in_arabic : ""}
                                         </div>
                                     </div>
 
@@ -795,7 +799,7 @@ const PreviewContentWithSellerInfo = forwardRef((props, ref) => {
                                                         <li>Qty</li>
                                                     </ul>
                                                 </th>
-                                                {props.modelName !== "delivery_note" && <>
+                                                {(props.modelName !== "delivery_note" || props.model.store?.settings?.add_price_details_in_delivery_note) && <>
                                                     <th className="per8 text-center" style={{ padding: "0px", width: "8%", borderRight: tableBorderThickness, borderBottom: tableBorderThickness }}>
                                                         <ul
                                                             className="list-unstyled"
@@ -920,7 +924,7 @@ const PreviewContentWithSellerInfo = forwardRef((props, ref) => {
                                                         </span>}
                                                     </th>
                                                     <td style={{ borderRight: tableBorderThickness, marginRight: "2px" }}>{product.quantity ? product.quantity : ""}  {product.unit ? product.unit : ""}</td>
-                                                    {props.modelName !== "delivery_note" && <>
+                                                    {(props.modelName !== "delivery_note" || props.model.store?.settings?.add_price_details_in_delivery_note) && <>
                                                         <td className="text-end" style={{ borderRight: tableBorderThickness, paddingRight: "3px" }} >
                                                             {product.unit_price ? <Amount amount={trimTo2Decimals(product.unit_price)} /> : ""}
                                                             {product.purchase_unit_price && props.modelName === "purchase" ? <Amount amount={trimTo2Decimals(product.purchase_unit_price)} /> : ""}
@@ -951,11 +955,23 @@ const PreviewContentWithSellerInfo = forwardRef((props, ref) => {
                                                     </>}
                                                 </tr>
                                             ))}
+                                            {pageIndex === props.model.pages.length - 1 && (
+                                                <tr>
+                                                    <td></td>
+                                                    <td></td>
+                                                    <th style={{ borderLeft: tableBorderThickness, textAlign: "right" }}>Total Quantity | <span dir="rtl">الكمية الإجمالية</span>:</th>
+                                                    <td style={{ borderRight: tableBorderThickness, borderLeft: tableBorderThickness, fontWeight: "bold", background: "#f6f6f6", textAlign: "center" }}>
+                                                        {props.model.total_quantity}
+                                                    </td>
+                                                    {/* If you have more columns, add <td></td> for each, or adjust as needed */}
+                                                </tr>
+                                            )
+                                            }
                                         </tbody>
                                     </table>
                                     {props.model.pages.length === (pageIndex + 1) && <table className="table-responsive"
                                         style={{ border: tableBorderThickness, width: "100%" }}>
-                                        {props.modelName !== "delivery_note" && <tbody style={{ fontSize: props.fontSizes[props.modelName + "_tableFooter"]?.size }} onClick={() => {
+                                        {(props.modelName !== "delivery_note" || props.model.store?.settings?.add_price_details_in_delivery_note) && <tbody style={{ fontSize: props.fontSizes[props.modelName + "_tableFooter"]?.size }} onClick={() => {
                                             props.selectText("tableFooter");
                                         }} className="clickable-text">
                                             <tr style={{ borderBottom: tableBorderThickness }}>
@@ -1061,7 +1077,7 @@ const PreviewContentWithSellerInfo = forwardRef((props, ref) => {
 
                                                 </th>
                                                 <td className="text-end" colSpan="1" style={{ width: "10%", paddingRight: "3px" }}>
-                                                    <span className="icon-saudi_riyal print-table-value">
+                                                    <span className={props.model.store.settings.show_currency_symbol ? "icon-saudi_riyal print-table-value" : "print-table-value"} >
                                                         <Amount amount={trimTo2Decimals(props.model.net_total)} />
                                                     </span>
                                                 </td>

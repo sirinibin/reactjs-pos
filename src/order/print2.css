@@ -1,7 +1,6 @@
 #print-area {
     width: 100%;
-    min-height: 100vh;
-    overflow: visible;
+    overflow: hidden;
   }
 
 
@@ -34,8 +33,11 @@
       height: 1058px;
       padding: 0px; /* Optional inner padding */
       box-sizing: border-box;
-      page-break-after: always;
       overflow: hidden;
+    }
+
+    .container:not(:last-child) {
+      page-break-after: always;
     }
   
     /* Optional: avoid text cutoff */

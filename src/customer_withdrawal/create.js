@@ -108,7 +108,7 @@ const CustomerWithdrawalCreate = forwardRef((props, ref) => {
                 if (form && event.target) {
                     var index = Array.prototype.indexOf.call(form, event.target);
                     if (form && form.elements[index + 1]) {
-                        if (event.target.getAttribute("class").includes("description")) {
+                        if ((event.target.getAttribute("class") || "").includes("description")) {
                             form.elements[index].focus();
                             form.elements[index].value += '\r\n';
                         } else {
@@ -298,6 +298,30 @@ const CustomerWithdrawalCreate = forwardRef((props, ref) => {
     let [openVendorSearchResult, setOpenVendorSearchResult] = useState(false);
     let [openCustomerSearchResult, setOpenCustomerSearchResult] = useState(false);
 
+    // Helper to calculate percentage of occurrence of search words
+    const customerPercentOccurrence = (words, customer) => {
+        const fields = [
+            customer.name,
+            customer.name_in_arabic,
+            customer.code,
+            customer.phone,
+            customer.phone2,
+            ...(Array.isArray(customer.additional_keywords) ? customer.additional_keywords : []),
+        ];
+        const searchable = fields.join(" ").toLowerCase();
+        const searchableWords = searchable.split(/\s+/).filter(Boolean);
+        let totalMatches = 0;
+        words.forEach(word => {
+            if (word) {
+                const regex = new RegExp(`\\b${word.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\b`, 'gi');
+                const matches = searchable.match(regex);
+                totalMatches += matches ? matches.length : 0;
+            }
+        });
+        // Percentage: matches / total words in searchable fields
+        return searchableWords.length > 0 ? (totalMatches / searchableWords.length) : 0;
+    };
+
     async function suggestCustomers(searchTerm) {
         console.log("Inside handle suggestCustomers");
         setCustomerOptions([]);
@@ -309,7 +333,7 @@ const CustomerWithdrawalCreate = forwardRef((props, ref) => {
             setTimeout(() => {
                 openCustomerSearchResult = false;
                 setOpenCustomerSearchResult(false);
-            }, 100);
+            }, 300);
             return;
         }
 
@@ -342,7 +366,7 @@ const CustomerWithdrawalCreate = forwardRef((props, ref) => {
         let Select = "select=id,credit_balance,credit_limit,additional_keywords,code,vat_no,name,phone,name_in_arabic,phone_in_arabic,search_label";
         // setIsCustomersLoading(true);
         let result = await fetch(
-            "/v1/customer?" + Select + queryString,
+            "/v1/customer?limit=100&" + Select + queryString,
             requestOptions
         );
         let data = await result.json();
@@ -353,20 +377,93 @@ const CustomerWithdrawalCreate = forwardRef((props, ref) => {
             return;
         }
 
-        openCustomerSearchResult = true;
-        setOpenCustomerSearchResult(true);
-
-
         if (data.result) {
             const filtered = data.result.filter((opt) => customFilter(opt, searchTerm));
-            setCustomerOptions(filtered);
+            const sorted = filtered.sort((a, b) => {
+                const searchPhrase = searchTerm.toLowerCase().replace(/\s+/g, " ").trim();
+
+                const getSearchable = (item) => {
+                    const fields = [
+                        item.code,
+                        item.name,
+                        item.name_in_arabic,
+                        item.phone,
+                        item.phone2,
+                        item.vat_no,
+                        ...(Array.isArray(item.additional_keywords) ? item.additional_keywords : []),
+                    ];
+                    // Normalize: lowercase, collapse spaces, remove punctuation except spaces
+                    return fields.join(" ").toLowerCase().replace(/[^\w\s]/g, " ").replace(/\s+/g, " ").trim();
+                };
+
+                const aSearchable = getSearchable(a);
+                const bSearchable = getSearchable(b);
+
+                // Find index of the phrase in each string
+                const aIndex = aSearchable.indexOf(searchPhrase);
+                const bIndex = bSearchable.indexOf(searchPhrase);
+
+                if (aIndex === 0 && bIndex !== 0) return -1;
+                if (bIndex === 0 && aIndex !== 0) return 1;
+
+                // If both contain the phrase, sort by earliest occurrence
+                if (aIndex !== -1 && bIndex !== -1) {
+                    if (aIndex < bIndex) return -1;
+                    if (bIndex < aIndex) return 1;
+                } else if (aIndex !== -1) {
+                    return -1; // a contains phrase, b does not
+                } else if (bIndex !== -1) {
+                    return 1; // b contains phrase, a does not
+                }
+
+                const words = searchTerm.toLowerCase().split(" ").filter(Boolean);
+
+
+                // Calculate percentage of occurrence
+                const aPercent = customerPercentOccurrence(words, a);
+                const bPercent = customerPercentOccurrence(words, b);
+
+                if (aPercent !== bPercent) {
+                    return bPercent - aPercent;
+                }
+                return 0;
+            });
+
+
+            setCustomerOptions(sorted);
+            setOpenCustomerSearchResult(sorted.length > 0);
         } else {
             setCustomerOptions([]);
+            setOpenCustomerSearchResult(false);
         }
 
         //setIsCustomersLoading(false);
     }
 
+
+    // Helper to calculate percentage of occurrence of search words
+    const vendorPercentOccurrence = (words, vendor) => {
+        const fields = [
+            vendor.name,
+            vendor.name_in_arabic,
+            vendor.code,
+            vendor.phone,
+            vendor.phone2,
+            ...(Array.isArray(vendor.additional_keywords) ? vendor.additional_keywords : []),
+        ];
+        const searchable = fields.join(" ").toLowerCase();
+        const searchableWords = searchable.split(/\s+/).filter(Boolean);
+        let totalMatches = 0;
+        words.forEach(word => {
+            if (word) {
+                const regex = new RegExp(`\\b${word.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\b`, 'gi');
+                const matches = searchable.match(regex);
+                totalMatches += matches ? matches.length : 0;
+            }
+        });
+        // Percentage: matches / total words in searchable fields
+        return searchableWords.length > 0 ? (totalMatches / searchableWords.length) : 0;
+    };
 
     async function suggestVendors(searchTerm) {
         console.log("Inside handle suggestVendors");
@@ -378,7 +475,7 @@ const CustomerWithdrawalCreate = forwardRef((props, ref) => {
             setTimeout(() => {
                 openVendorSearchResult = false;
                 setOpenVendorSearchResult(false);
-            }, 100);
+            }, 300);
 
             return;
         }
@@ -407,7 +504,7 @@ const CustomerWithdrawalCreate = forwardRef((props, ref) => {
         let Select = "select=id,credit_balance,credit_limit,additional_keywords,code,vat_no,name,phone,name_in_arabic,phone_in_arabic,search_label";
         // setIsCustomersLoading(true);
         let result = await fetch(
-            "/v1/vendor?" + Select + queryString,
+            "/v1/vendor?limit=100&" + Select + queryString,
             requestOptions
         );
         let data = await result.json();
@@ -423,7 +520,58 @@ const CustomerWithdrawalCreate = forwardRef((props, ref) => {
 
         if (data.result) {
             const filtered = data.result.filter((opt) => customVendorFilter(opt, searchTerm));
-            setVendorOptions(filtered);
+            const sorted = filtered.sort((a, b) => {
+                const searchPhrase = searchTerm.toLowerCase().replace(/\s+/g, " ").trim();
+
+                const getSearchable = (item) => {
+                    const fields = [
+                        item.code,
+                        item.name,
+                        item.name_in_arabic,
+                        item.phone,
+                        item.phone2,
+                        item.vat_no,
+                        ...(Array.isArray(item.additional_keywords) ? item.additional_keywords : []),
+                    ];
+                    // Normalize: lowercase, collapse spaces, remove punctuation except spaces
+                    return fields.join(" ").toLowerCase().replace(/[^\w\s]/g, " ").replace(/\s+/g, " ").trim();
+                };
+
+                const aSearchable = getSearchable(a);
+                const bSearchable = getSearchable(b);
+
+                // Find index of the phrase in each string
+                const aIndex = aSearchable.indexOf(searchPhrase);
+                const bIndex = bSearchable.indexOf(searchPhrase);
+
+                if (aIndex === 0 && bIndex !== 0) return -1;
+                if (bIndex === 0 && aIndex !== 0) return 1;
+
+                // If both contain the phrase, sort by earliest occurrence
+                if (aIndex !== -1 && bIndex !== -1) {
+                    if (aIndex < bIndex) return -1;
+                    if (bIndex < aIndex) return 1;
+                } else if (aIndex !== -1) {
+                    return -1; // a contains phrase, b does not
+                } else if (bIndex !== -1) {
+                    return 1; // b contains phrase, a does not
+                }
+
+                const words = searchTerm.toLowerCase().split(" ").filter(Boolean);
+
+
+                // Calculate percentage of occurrence
+                const aPercent = vendorPercentOccurrence(words, a);
+                const bPercent = vendorPercentOccurrence(words, b);
+
+                if (aPercent !== bPercent) {
+                    return bPercent - aPercent;
+                }
+                return 0;
+            });
+
+
+            setVendorOptions(sorted);
         } else {
             setVendorOptions([]);
         }
@@ -432,6 +580,10 @@ const CustomerWithdrawalCreate = forwardRef((props, ref) => {
     }
 
     function handleCreate(event) {
+        if (isProcessing) {
+            return;
+        }
+
         event.preventDefault();
         console.log("Inside handle Create");
         if (!validatePaymentAmounts()) {
@@ -595,19 +747,30 @@ const CustomerWithdrawalCreate = forwardRef((props, ref) => {
         return true;
     }
 
+
     let [totalPaymentAmount, setTotalPaymentAmount] = useState(0.00);
+    let [totalDiscountAmount, setTotalDiscountAmount] = useState(0.00);
+    let [netTotalPaymentAmount, setNetTotalPaymentAmount] = useState(0.00);
 
     function findTotalPayments() {
         console.log("Inisde findTotalPayments")
         let totalPayment = 0.00;
+        let totalDiscountAmount = 0.00;
         for (var i = 0; i < formData.payments?.length; i++) {
             if (formData.payments[i].amount && !formData.payments[i].deleted) {
-                totalPayment += (formData.payments[i].amount - formData.payments[i].discount);
+                // totalPayment += (formData.payments[i].amount - formData.payments[i].discount);
+                totalPayment += (formData.payments[i].amount);
+                totalDiscountAmount += formData.payments[i].discount;
             }
         }
 
         totalPaymentAmount = parseFloat(trimTo2Decimals(totalPayment));
+        netTotalPaymentAmount = totalPaymentAmount - parseFloat(trimTo2Decimals(totalDiscountAmount));
+        netTotalPaymentAmount = parseFloat(trimTo2Decimals(netTotalPaymentAmount));
+
         setTotalPaymentAmount(totalPaymentAmount);
+        setTotalDiscountAmount(totalDiscountAmount);
+        setNetTotalPaymentAmount(netTotalPaymentAmount);
         return totalPayment;
     }
 
@@ -1175,7 +1338,7 @@ const CustomerWithdrawalCreate = forwardRef((props, ref) => {
                                             if (timerRef.current) clearTimeout(timerRef.current);
                                             timerRef.current = setTimeout(() => {
                                                 suggestCustomers(searchTerm);
-                                            }, 100);
+                                            }, 350);
                                         }}
 
                                         renderMenu={(results, menuProps, state) => {
@@ -1319,7 +1482,7 @@ const CustomerWithdrawalCreate = forwardRef((props, ref) => {
                                             if (timerRef.current) clearTimeout(timerRef.current);
                                             timerRef.current = setTimeout(() => {
                                                 suggestVendors(searchTerm);
-                                            }, 100);
+                                            }, 350);
                                         }}
 
                                         renderMenu={(results, menuProps, state) => {
@@ -1795,8 +1958,9 @@ const CustomerWithdrawalCreate = forwardRef((props, ref) => {
                                             ))}
                                         <tr>
                                             <td className="text-end">
-                                                <b>Net Total</b>
+                                                <b>Total</b>
                                             </td>
+
                                             <td><b style={{ marginLeft: "14px" }}>{trimTo2Decimals(totalPaymentAmount)}</b>
                                                 {errors["total_payment"] && (
                                                     <div style={{ color: "red" }}>
@@ -1804,7 +1968,39 @@ const CustomerWithdrawalCreate = forwardRef((props, ref) => {
                                                     </div>
                                                 )}
                                             </td>
-                                            <td colSpan={5}>
+                                            <td colSpan={6}>
+
+                                            </td>
+
+                                        </tr>
+                                        <tr>
+                                            <td className="text-end">
+                                                <b>Total Discount</b>
+                                            </td>
+
+                                            <td><b style={{ marginLeft: "14px" }}>{trimTo2Decimals(totalDiscountAmount)}</b>
+                                                {errors["total_discount"] && (
+                                                    <div style={{ color: "red" }}>
+                                                        {errors["total_discount"]}
+                                                    </div>
+                                                )}
+                                            </td>
+                                            <td colSpan={6}>
+                                            </td>
+
+                                        </tr>
+                                        <tr>
+                                            <td className="text-end">
+                                                <b>Net Total</b>
+                                            </td>
+                                            <td><b style={{ marginLeft: "14px" }}>{trimTo2Decimals(netTotalPaymentAmount)}</b>
+                                                {errors["net_total_payment"] && (
+                                                    <div style={{ color: "red" }}>
+                                                        {errors["net_total_payment"]}
+                                                    </div>
+                                                )}
+                                            </td>
+                                            <td colSpan={6}>
 
                                             </td>
 

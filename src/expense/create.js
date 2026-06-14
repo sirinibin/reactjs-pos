@@ -27,6 +27,9 @@ const ExpenseCreate = forwardRef((props, ref) => {
     useImperativeHandle(ref, () => ({
         open(id) {
 
+            selectedVendors = [];
+            setSelectedVendors(selectedVendors);
+
 
             selectedCategories = [];
             setSelectedCategories(selectedCategories);
@@ -91,7 +94,7 @@ const ExpenseCreate = forwardRef((props, ref) => {
                 if (form && event.target) {
                     var index = Array.prototype.indexOf.call(form, event.target);
                     if (form && form.elements[index + 1]) {
-                        if (event.target.getAttribute("class").includes("description")) {
+                        if ((event.target.getAttribute("class") || "").includes("description")) {
                             form.elements[index].focus();
                             form.elements[index].value += '\r\n';
                         } else {

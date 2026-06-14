@@ -21,6 +21,8 @@ const StoreCreate = forwardRef((props, ref) => {
                 bank_account: {},
                 settings: {
                     invoice: invoiceSettings,
+                    stats_show_overall_summary: false,
+                    stats_show_profit_loss_statement: true,
                 },
                 zatca: {
                     phase: "1",
@@ -30,6 +32,11 @@ const StoreCreate = forwardRef((props, ref) => {
                 branch_name: "",
                 code: "",
                 vat_percent: 15.00,
+                stock_transfer_serial_number: {
+                    prefix: "ST-TR",
+                    start_from_count: 1,
+                    padding_count: 3
+                },
                 sales_serial_number: {
                     prefix: "S-INV",
                     start_from_count: 1,
@@ -155,6 +162,7 @@ const StoreCreate = forwardRef((props, ref) => {
         },
         quotation_title: "QUOTATION | اقتباس",
         delivery_note_title: "DELIVERY NOTE | مذكرة التسليم",
+        stock_transfer_title: "STOCK TRANSFER | نقل الأسهم",
         payable_title: "PAYMENT RECEIPT (PAYABLE / REFUND) | إيصال الدفع (مستحق الدفع / مسترد)",
         receivable_title: "PAYMENT RECEIPT (RECEIVABLE) | إيصال الدفع (مستحق القبض)",
         phase1: {
@@ -235,7 +243,7 @@ const StoreCreate = forwardRef((props, ref) => {
                 if (form && event.target) {
                     var index = Array.prototype.indexOf.call(form, event.target);
                     if (form && form.elements[index + 1]) {
-                        if (event.target.getAttribute("class").includes("barcode")) {
+                        if ((event.target.getAttribute("class") || "").includes("barcode")) {
                             form.elements[index].focus();
                         } else {
                             form.elements[index + 1].focus();
@@ -274,6 +282,11 @@ const StoreCreate = forwardRef((props, ref) => {
         branch_name: "",
         vat_percent: 15.00,
         business_category: "Supply Activities",
+        stock_transfer_serial_number: {
+            prefix: "ST-TR",
+            start_from_count: 1,
+            padding_count: 3
+        },
         sales_serial_number: {
             prefix: "S-INV",
             start_from_count: 1,
@@ -389,7 +402,9 @@ const StoreCreate = forwardRef((props, ref) => {
 
                 deepFillEmptyStrings(storeData.settings.invoice, invoiceSettings);
 
-
+                if (storeData.settings.stats_show_profit_loss_statement === null || storeData.settings.stats_show_profit_loss_statement === undefined) {
+                    storeData.settings.stats_show_profit_loss_statement = true;
+                }
 
                 storeData.logo = "";
 
@@ -1047,36 +1062,11 @@ const StoreCreate = forwardRef((props, ref) => {
                                         if (!formData.id) {
                                             if (formData.code) {
                                                 formData.sales_serial_number.prefix = formData.sales_serial_number.prefix.replace("-" + formData.code.toUpperCase(), "");
-                                                // formData.sales_serial_number.prefix = formData.sales_serial_number.prefix.replace(formData.code.toUpperCase(), "-");
 
-                                                // formData.sales_return_serial_number.prefix = formData.sales_return_serial_number.prefix.replace("-" + formData.code.toUpperCase(), "");
-
-
-                                                //formData.sales_return_serial_number.prefix = formData.sales_return_serial_number.prefix.replace(formData.code.toUpperCase(), "-");
-
-                                                //formData.purchase_serial_number.prefix = formData.purchase_serial_number.prefix.replace("-" + formData.code.toUpperCase(), "");
-                                                //  formData.purchase_serial_number.prefix = formData.purchase_serial_number.prefix.replace(formData.code.toUpperCase(), "-");
-
-                                                //formData.purchase_return_serial_number.prefix = formData.purchase_return_serial_number.prefix.replace("-" + formData.code.toUpperCase(), "");
-                                                // formData.purchase_return_serial_number.prefix = formData.purchase_return_serial_number.prefix.replace(formData.code.toUpperCase(), "-");
-
-                                                // formData.quotation_serial_number.prefix = formData.quotation_serial_number.prefix.replace("-" + formData.code.toUpperCase(), "");
-
-                                                // formData.customer_serial_number.prefix = formData.customer_serial_number.prefix.replace("-" + formData.code.toUpperCase(), "");
-                                                // formData.vendor_serial_number.prefix = formData.vendor_serial_number.prefix.replace("-" + formData.code.toUpperCase(), "");
-                                                // formData.quotation_serial_number.prefix = formData.quotation_serial_number.prefix.replace(formData.code.toUpperCase(), "-");
                                             }
 
                                             if (e.target.value) {
-                                                /*
-                                                formData.sales_serial_number.prefix = formData.sales_serial_number.prefix + "-" + e.target.value.toUpperCase();
-                                                formData.sales_return_serial_number.prefix = formData.sales_return_serial_number.prefix + "-" + e.target.value.toUpperCase();
-                                                formData.purchase_serial_number.prefix = formData.purchase_serial_number.prefix + "-" + e.target.value.toUpperCase();
-                                                formData.purchase_return_serial_number.prefix = formData.purchase_return_serial_number.prefix + "-" + e.target.value.toUpperCase();
-                                                formData.quotation_serial_number.prefix = formData.quotation_serial_number.prefix + "-" + e.target.value.toUpperCase();
-                                                formData.customer_serial_number.prefix = formData.customer_serial_number.prefix + "-" + e.target.value.toUpperCase();
-                                                formData.vendor_serial_number.prefix = formData.vendor_serial_number.prefix + "-" + e.target.value.toUpperCase();
-                                                */
+
                                             }
                                         }
 
@@ -2799,6 +2789,30 @@ const StoreCreate = forwardRef((props, ref) => {
                                 )}
                             </div>
                             <div className="col-md-4">
+                                <label className="form-label">Stock Transfer*</label>
+                                <div className="input-group mb-3">
+                                    <input
+                                        value={formData.settings?.invoice?.stock_transfer_title}
+                                        type='string'
+                                        onChange={(e) => {
+
+                                            errors["settings_invoice_stock_transfer"] = "";
+                                            formData.settings.invoice.stock_transfer_title = e.target.value;
+                                            setFormData({ ...formData });
+                                            console.log(formData);
+                                        }}
+                                        className="form-control"
+                                        id="settings.invoice.stock_transfer_title"
+                                        placeholder="Invoice title"
+                                    />
+                                </div>
+                                {errors.settings?.invoice?.stock_transfer_title && (
+                                    <div style={{ color: "red" }}>
+                                        {errors.settings.invoice.stock_transfer_title}
+                                    </div>
+                                )}
+                            </div>
+                            <div className="col-md-4">
                                 <label className="form-label">Payable*</label>
                                 <div className="input-group mb-3">
                                     <input
@@ -3001,6 +3015,88 @@ const StoreCreate = forwardRef((props, ref) => {
 
 
                         <h6><b>Serial Numbers</b></h6>
+                        <h6><b>Stock Transfer ID's:</b> {formData.stock_transfer_serial_number?.prefix.toUpperCase()}-{String(formData.stock_transfer_serial_number?.start_from_count).padStart(formData.stock_transfer_serial_number?.padding_count, '0')}, {formData.stock_transfer_serial_number?.prefix.toUpperCase()}-{String((formData.stock_transfer_serial_number?.start_from_count + 1)).padStart(formData.stock_transfer_serial_number?.padding_count, '0')}...</h6>
+                        <div className="col-md-2">
+                            <label className="form-label">Prefix*</label>
+                            <div className="input-group mb-3">
+                                <input
+                                    value={formData.stock_transfer_serial_number?.prefix}
+                                    type='string'
+                                    onChange={(e) => {
+
+                                        errors["formData.stock_transfer_serial_number.prefix"] = "";
+                                        formData.stock_transfer_serial_number.prefix = e.target.value;
+                                        setFormData({ ...formData });
+                                        console.log(formData);
+                                    }}
+                                    className="form-control"
+                                    id="formData.stock_transfer_serial_number.prefix"
+                                    placeholder="S-INV-UMLJ"
+                                />
+
+
+                            </div>
+                            {errors.stock_transfer_serial_number_prefix && (
+                                <div style={{ color: "red" }}>
+
+                                    {errors.stock_transfer_serial_number_prefix}
+                                </div>
+                            )}
+                        </div>
+
+                        <div className="col-md-2">
+                            <label className="form-label">Padding count*</label>
+                            <div className="input-group mb-3">
+                                <input
+                                    value={formData.stock_transfer_serial_number?.padding_count}
+                                    type='number'
+                                    onChange={(e) => {
+
+                                        errors["formData.stock_transfer_serial_number.padding_count"] = "";
+                                        formData.stock_transfer_serial_number.padding_count = parseInt(e.target.value);
+                                        setFormData({ ...formData });
+                                        console.log(formData);
+                                    }}
+                                    className="form-control"
+                                    id="formData.stock_transfer_serial_number.padding_count"
+                                    placeholder="4 will make counter value: 0001"
+                                />
+
+
+                            </div>
+                            {errors.formData?.stock_transfer_serial_number?.padding_count && (
+                                <div style={{ color: "red" }}>
+
+                                    {errors.stock_transfer_serial_number_padding_count}
+                                </div>
+                            )}
+                        </div>
+
+                        <div className="col-md-2">
+                            <label className="form-label">Counting start from*</label>
+                            <div className="input-group mb-3">
+                                <input
+                                    value={formData.stock_transfer_serial_number?.start_from_count ? formData.stock_transfer_serial_number.start_from_count : ""}
+                                    type='number'
+                                    onChange={(e) => {
+                                        errors["formData.stock_transfer_serial_number.start_from_count"] = "";
+                                        formData.stock_transfer_serial_number.start_from_count = parseInt(e.target.value);
+                                        setFormData({ ...formData });
+                                        console.log(formData);
+                                    }}
+                                    className="form-control"
+                                    id="formData.stock_transfer_serial_number.start_from_count"
+                                    placeholder="eg: Start counting from 1000"
+                                />
+                            </div>
+                            {errors.stock_transfer_serial_number_start_from_count && (
+                                <div style={{ color: "red" }}>
+
+                                    {errors.stock_transfer_serial_number_start_from_count}
+                                </div>
+                            )}
+                        </div>
+
                         <h6><b>Sales ID's:</b> {formData.sales_serial_number.prefix.toUpperCase()}-{String(formData.sales_serial_number.start_from_count).padStart(formData.sales_serial_number.padding_count, '0')}, {formData.sales_serial_number.prefix.toUpperCase()}-{String((formData.sales_serial_number.start_from_count + 1)).padStart(formData.sales_serial_number.padding_count, '0')}...</h6>
                         <div className="col-md-2">
                             <label className="form-label">Prefix*</label>
@@ -4335,6 +4431,29 @@ const StoreCreate = forwardRef((props, ref) => {
                         <h6><b>Settings</b></h6>
 
 
+                        <div className="col-md-2">
+                            <div className="input-group mb-3">
+                                <input type="checkbox"
+                                    value={formData.settings.show_currency_symbol}
+                                    checked={formData.settings.show_currency_symbol}
+                                    onChange={(e) => {
+                                        errors["show_currency_symbol"] = "";
+                                        formData.settings.show_currency_symbol = !formData.settings.show_currency_symbol;
+                                        setFormData({ ...formData });
+                                        console.log(formData);
+                                    }}
+                                    className=""
+                                    id="show_currency_symbol"
+
+                                /> &nbsp;Show Currency Symbol
+                            </div>
+                            <label className="form-label"></label>
+                            {errors.show_currency_symbol && (
+                                <div style={{ color: "red" }}>
+                                    {errors.show_currency_symbol}
+                                </div>
+                            )}
+                        </div>
 
                         <div className="col-md-2">
                             <div className="input-group mb-3">
@@ -4359,6 +4478,93 @@ const StoreCreate = forwardRef((props, ref) => {
                                 </div>
                             )}
                         </div>
+
+                        <div className="col-md-2">
+                            <div className="input-group mb-3">
+                                <input type="checkbox"
+                                    value={formData.settings.enable_warehouse_module}
+                                    checked={formData.settings.enable_warehouse_module}
+                                    onChange={(e) => {
+                                        errors["enable_warehouse_module"] = "";
+                                        formData.settings.enable_warehouse_module = !formData.settings.enable_warehouse_module;
+                                        setFormData({ ...formData });
+                                        console.log(formData);
+                                    }}
+                                    className=""
+                                    id="enable_warehouse_module"
+
+                                /> &nbsp;Enable Warehouse Module
+                            </div>
+                            <label className="form-label"></label>
+                            {errors.enable_warehouse_module && (
+                                <div style={{ color: "red" }}>
+                                    {errors.enable_warehouse_module}
+                                </div>
+                            )}
+                        </div>
+
+                        <div className="col-md-2">
+                            <div className="input-group mb-3">
+                                <input type="checkbox"
+                                    value={formData.settings.add_price_details_in_delivery_note}
+                                    checked={formData.settings.add_price_details_in_delivery_note}
+                                    onChange={(e) => {
+                                        errors["add_price_details_in_delivery_note"] = "";
+                                        formData.settings.add_price_details_in_delivery_note = !formData.settings.add_price_details_in_delivery_note;
+                                        setFormData({ ...formData });
+                                    }}
+                                    className=""
+                                    id="add_price_details_in_delivery_note"
+                                /> &nbsp;Add price details in Delivery note
+                            </div>
+                            <label className="form-label"></label>
+                            {errors.add_price_details_in_delivery_note && (
+                                <div style={{ color: "red" }}>
+                                    {errors.add_price_details_in_delivery_note}
+                                </div>
+                            )}
+                        </div>
+
+                        <div className="col-md-2">
+                            <div className="input-group mb-3">
+                                <input type="checkbox"
+                                    value={formData.settings.skip_product_selection_while_delivery_note_import}
+                                    checked={formData.settings.skip_product_selection_while_delivery_note_import}
+                                    onChange={(e) => {
+                                        errors["skip_product_selection_while_delivery_note_import"] = "";
+                                        formData.settings.skip_product_selection_while_delivery_note_import = !formData.settings.skip_product_selection_while_delivery_note_import;
+                                        setFormData({ ...formData });
+                                    }}
+                                    className=""
+                                    id="skip_product_selection_while_delivery_note_import"
+                                /> &nbsp;Skip Product Selection While Delivery Note Import
+                            </div>
+                            <label className="form-label"></label>
+                            {errors.skip_product_selection_while_delivery_note_import && (
+                                <div style={{ color: "red" }}>
+                                    {errors.skip_product_selection_while_delivery_note_import}
+                                </div>
+                            )}
+                        </div>
+
+                        <div className="col-md-3">
+                            <label className="form-label">Block Sales After N Pending (0 = disabled)</label>
+                            <div className="input-group mb-3">
+                                <input type="number"
+                                    min="0"
+                                    value={formData.settings.block_sales_after_pending_count || ""}
+                                    onChange={(e) => {
+                                        const raw = e.target.value;
+                                        formData.settings.block_sales_after_pending_count = raw === "" ? 0 : (parseInt(raw) || 0);
+                                        setFormData({ ...formData });
+                                    }}
+                                    className="form-control"
+                                    id="block_sales_after_pending_count"
+                                    placeholder="0"
+                                />
+                            </div>
+                        </div>
+
                         <div className="col-md-2">
                             <div className="input-group mb-3">
                                 <input type="checkbox"
@@ -4381,6 +4587,38 @@ const StoreCreate = forwardRef((props, ref) => {
                                     {errors.disable_purchases_on_accounts}
                                 </div>
                             )}
+                        </div>
+
+                        <div className="col-md-2">
+                            <div className="input-group mb-3">
+                                <input type="checkbox"
+                                    value={formData.settings.enable_notification}
+                                    checked={!!formData.settings.enable_notification}
+                                    onChange={(e) => {
+                                        formData.settings.enable_notification = !formData.settings.enable_notification;
+                                        setFormData({ ...formData });
+                                    }}
+                                    className=""
+                                    id="enable_notification"
+                                /> &nbsp;Enable Notification
+                            </div>
+                            <label className="form-label"></label>
+                        </div>
+
+                        <div className="col-md-2">
+                            <div className="input-group mb-3">
+                                <input type="checkbox"
+                                    value={formData.settings.enable_sales_page_selection}
+                                    checked={!!formData.settings.enable_sales_page_selection}
+                                    onChange={(e) => {
+                                        formData.settings.enable_sales_page_selection = !formData.settings.enable_sales_page_selection;
+                                        setFormData({ ...formData });
+                                    }}
+                                    className=""
+                                    id="enable_sales_page_selection"
+                                /> &nbsp;Enable Sales Page Selection
+                            </div>
+                            <label className="form-label"></label>
                         </div>
 
                         <div className="col-md-2">
@@ -4454,6 +4692,38 @@ const StoreCreate = forwardRef((props, ref) => {
                                     {errors.enable_auto_payment_close_on_return}
                                 </div>
                             )}
+                        </div>
+
+                        <div className="col-md-2">
+                            <div className="input-group mb-3">
+                                <input type="checkbox"
+                                    value={formData.settings.stats_show_overall_summary}
+                                    checked={formData.settings.stats_show_overall_summary}
+                                    onChange={(e) => {
+                                        formData.settings.stats_show_overall_summary = !formData.settings.stats_show_overall_summary;
+                                        setFormData({ ...formData });
+                                    }}
+                                    className=""
+                                    id="stats_show_overall_summary"
+                                /> &nbsp;Stats: Show Overall Summary
+                            </div>
+                            <label className="form-label"></label>
+                        </div>
+
+                        <div className="col-md-2">
+                            <div className="input-group mb-3">
+                                <input type="checkbox"
+                                    value={formData.settings.stats_show_profit_loss_statement}
+                                    checked={formData.settings.stats_show_profit_loss_statement}
+                                    onChange={(e) => {
+                                        formData.settings.stats_show_profit_loss_statement = !formData.settings.stats_show_profit_loss_statement;
+                                        setFormData({ ...formData });
+                                    }}
+                                    className=""
+                                    id="stats_show_profit_loss_statement"
+                                /> &nbsp;Stats: Show Profit / Loss Statement
+                            </div>
+                            <label className="form-label"></label>
                         </div>
 
 

@@ -122,7 +122,7 @@ const ProductUpdate = forwardRef((props, ref) => {
         if (form && event.target) {
           var index = Array.prototype.indexOf.call(form, event.target);
           if (form && form.elements[index + 1]) {
-            if (event.target.getAttribute("class").includes("barcode")) {
+            if ((event.target.getAttribute("class") || "").includes("barcode")) {
               form.elements[index].focus();
             } else {
               form.elements[index + 1].focus();
@@ -678,7 +678,7 @@ const ProductUpdate = forwardRef((props, ref) => {
       },
     };
 
-    let Select = `select=id,additional_keywords,search_label,set.name,item_code,prefix_part_number,country_name,brand_name,part_number,name,unit,name_in_arabic,product_stores.${localStorage.getItem('store_id')}.purchase_unit_price,product_stores.${localStorage.getItem('store_id')}.purchase_unit_price_with_vat,product_stores.${localStorage.getItem('store_id')}.retail_unit_price,product_stores.${localStorage.getItem('store_id')}.retail_unit_price_with_vat,product_stores.${localStorage.getItem('store_id')}.stock`;
+    let Select = `select=id,additional_keywords,search_label,set.name,item_code,prefix_part_number,country_name,brand_name,part_number,name,unit,name_in_arabic,product_stores.${localStorage.getItem('store_id')}.purchase_unit_price,product_stores.${localStorage.getItem('store_id')}.purchase_unit_price_with_vat,product_stores.${localStorage.getItem('store_id')}.retail_unit_price,product_stores.${localStorage.getItem('store_id')}.retail_unit_price_with_vat,product_stores.${localStorage.getItem('store_id')}.stock,product_stores.${localStorage.getItem('store_id')}.warehouse_stocks`;
     //setIsProductsLoading(true);
     let result = await fetch(
       "/v1/product?" + Select + queryString + "&limit=50&sort=-country_name",

@@ -5,10 +5,10 @@ import { Modal, Button, Table } from 'react-bootstrap';
 import NumberFormat from "react-number-format";
 import PurchaseReturnPrint from './print.js';
 import { format } from "date-fns";
-
+import { useTranslation } from 'react-i18next';
 
 const PurchaseReturnView = forwardRef((props, ref) => {
-
+    const { t } = useTranslation('common');
     useImperativeHandle(ref, () => ({
         open(id) {
             if (id) {
@@ -160,16 +160,16 @@ const PurchaseReturnView = forwardRef((props, ref) => {
         <PurchaseReturnPrint ref={PrintRef} />
         <Modal show={show} size="xl" onHide={handleClose} animation={false} scrollable={true}>
             <Modal.Header>
-                <Modal.Title>Details of Purchase Return #{model.code} </Modal.Title>
+                <Modal.Title>{t('Details of Purchase Return')} #{model.code} </Modal.Title>
 
 
                 <div className="col align-self-end text-end">
                     <Button variant="secondary" className="btn btn-primary" onClick={openPrint}>
-                        <i className="bi bi-printer"></i> Print Only Data
+                        <i className="bi bi-printer"></i> {t('Print Only Data')}
                     </Button>
                     &nbsp;&nbsp;&nbsp;&nbsp;
                     <Button variant="primary" className="btn btn-primary" onClick={openPreview}>
-                        <i className="bi bi-printer"></i> Print Full Invoice
+                        <i className="bi bi-printer"></i> {t('Print Full Invoice')}
                     </Button>
 
                     &nbsp;&nbsp;
@@ -195,14 +195,14 @@ const PurchaseReturnView = forwardRef((props, ref) => {
                     <table className="table table-striped table-sm table-bordered">
                         <thead>
                             <tr className="text-end">
-                                <th>SI No.</th>
-                                <th>Part No.</th>
-                                <th>Name</th>
-                                <th>Qty</th>
-                                <th>Unit Price</th>
-                                <th>Unit Disc.</th>
-                                <th>Disc. %</th>
-                                <th>Price</th>
+                                <th>{t('SI No.')}</th>
+                                <th>{t('Part No.')}</th>
+                                <th>{t('Name')}</th>
+                                <th>{t('Qty')}</th>
+                                <th>{t('Unit Price')}</th>
+                                <th>{t('Unit Disc.')}</th>
+                                <th>{t('Disc. %')}</th>
+                                <th>{t('Price')}</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -251,7 +251,7 @@ const PurchaseReturnView = forwardRef((props, ref) => {
                                 </tr>
                             ))}
                             <tr>
-                                <th colSpan="7" className="text-end">Total</th>
+                                <th colSpan="7" className="text-end">{t('Total')}</th>
                                 <td className="text-end">
                                     <NumberFormat
                                         value={model.total}
@@ -264,7 +264,7 @@ const PurchaseReturnView = forwardRef((props, ref) => {
                             </tr>
                             <tr>
                                 <th colSpan="7" className="text-end">
-                                    Shipping / Handling Fees
+                                    {t('Shipping / Handling Fees')}
                                 </th>
                                 <td className="text-end">
                                     {model.shipping_handling_fees ? <NumberFormat
@@ -278,14 +278,14 @@ const PurchaseReturnView = forwardRef((props, ref) => {
                             </tr>
                             <tr>
                                 <th colSpan="7" className="text-end">
-                                    Discount  {model.discount_percent?.toFixed(2) + "%"}
+                                    {t('Discount')}  {model.discount_percent?.toFixed(2) + "%"}
                                 </th>
                                 <td className="text-end">
                                     {model.discount?.toFixed(2)}
                                 </td>
                             </tr>
                             <tr>
-                                <th colSpan="7" className="text-end">VAT {model.vat_percent + "%"}</th>
+                                <th colSpan="7" className="text-end">{t('VAT')} {model.vat_percent + "%"}</th>
                                 <td className="text-end">
                                     <NumberFormat
                                         value={model.vat_price}
@@ -298,7 +298,7 @@ const PurchaseReturnView = forwardRef((props, ref) => {
                             </tr>
 
                             <tr>
-                                <th colSpan="7" className="text-end">Net Total</th>
+                                <th colSpan="7" className="text-end">{t('Net Total')}</th>
                                 <th className="text-end">
                                     <NumberFormat
                                         value={model.net_total}
@@ -316,49 +316,49 @@ const PurchaseReturnView = forwardRef((props, ref) => {
                 <Table striped bordered hover responsive="xl">
                     <tbody>
                         <tr>
-                            <th>Purchase Code:</th><td> {model.purchase_code}</td>
-                            <th>Purchase ID:</th><td> {model.purchase_id}</td>
-                            <th>Vendor:</th><td> {model.vendor_name}</td>
-                            <th>Vendor Invoice No.:</th><td> {model.vendor_invoice_no}</td>
-                            <th>Purchase Returned by:</th><td> {model.purchase_returned_by_name}</td>
+                            <th>{t('Purchase Code')}:</th><td> {model.purchase_code}</td>
+                            <th>{t('Purchase ID')}:</th><td> {model.purchase_id}</td>
+                            <th>{t('Vendor')}:</th><td> {model.vendor_name}</td>
+                            <th>{t('Vendor Invoice No.')}:</th><td> {model.vendor_invoice_no}</td>
+                            <th>{t('Purchase Returned by')}:</th><td> {model.purchase_returned_by_name}</td>
                         </tr>
                         <tr>
-                            <th>Store:</th><td> {model.store_name}</td>
-                            <th>Vendor:</th><td> {model.vendor_name}</td>
-                            <th>Vendor Invoice No.:</th><td> {model.vendor_invoice_no}</td>
-                            <th>Purchase Returned by:</th><td> {model.purchase_returned_by_name}</td>
+                            <th>{t('Store')}:</th><td> {model.store_name}</td>
+                            <th>{t('Vendor')}:</th><td> {model.vendor_name}</td>
+                            <th>{t('Vendor Invoice No.')}:</th><td> {model.vendor_invoice_no}</td>
+                            <th>{t('Purchase Returned by')}:</th><td> {model.purchase_returned_by_name}</td>
                         </tr>
                         <tr>
-                            <th>Date:</th><td>
+                            <th>{t('Date')}:</th><td>
                                 {model.date ? format(
                                     new Date(model.date),
                                     "MMM dd yyyy h:mma"
-                                ) : "Not set"}
+                                ) : t('Not set')}
                             </td>
-                            <th>VAT %:</th><td> {model.vat_percent}%</td>
-                            <th>Cash Discount :</th><td> {model.cash_discount} </td>
-                            <th>Discount :</th><td> {model.discount} </td>
-                            <th>Discount %:</th><td> {model.discount_percent} </td>
+                            <th>{t('VAT %')}:</th><td> {model.vat_percent}%</td>
+                            <th>{t('Cash Discount')}:</th><td> {model.cash_discount} </td>
+                            <th>{t('Discount')}:</th><td> {model.discount} </td>
+                            <th>{t('Discount %')}:</th><td> {model.discount_percent} </td>
                         </tr>
                         <tr>
-                            <th>Status:</th><td> {model.status}</td>
-                            <th>Signature Date:</th><td> {model.signature_date_str}</td>
-                            <th>Created At:</th><td> {model.created_at}</td>
-                            <th>Updated At:</th><td> {model.updated_at}</td>
+                            <th>{t('Status')}:</th><td> {model.status}</td>
+                            <th>{t('Signature Date')}:</th><td> {model.signature_date_str}</td>
+                            <th>{t('Created At')}:</th><td> {model.created_at}</td>
+                            <th>{t('Updated At')}:</th><td> {model.updated_at}</td>
                         </tr>
                         <tr>
-                            <th>Created By:</th><td> {model.created_by_name}</td>
-                            <th>Updated By:</th><td> {model.updated_by_name}</td>
+                            <th>{t('Created By')}:</th><td> {model.created_by_name}</td>
+                            <th>{t('Updated By')}:</th><td> {model.updated_by_name}</td>
 
                         </tr>
                         <tr>
-                            <th>Payment Status:</th><td> {model.payment_status}</td>
-                            <th>Payment Method:</th><td> {model.payment_method}</td>
-                            <th>Partial Payment Amount:</th><td> {model.partial_payment_amount}</td>
+                            <th>{t('Payment Status')}:</th><td> {model.payment_status}</td>
+                            <th>{t('Payment Method')}:</th><td> {model.payment_method}</td>
+                            <th>{t('Partial Payment Amount')}:</th><td> {model.partial_payment_amount}</td>
                         </tr>
                         <tr>
                             {purchaseReturnPaymentList.length > 0 ?
-                                <th>Payments</th> : ""}
+                                <th>{t('Payments')}</th> : ""}
                             {purchaseReturnPaymentList.length > 0 ?
                                 <td>
                                     <div className="table-responsive" style={{ overflowX: "auto" }}>
@@ -366,17 +366,17 @@ const PurchaseReturnView = forwardRef((props, ref) => {
                                             <thead>
                                                 <tr className="text-center">
                                                     <th>
-                                                        Amount
+                                                        {t('Amount')}
                                                     </th>
                                                     <th>
-                                                        Payment Method
+                                                        {t('Payment Method')}
                                                     </th>
 
                                                     <th>
-                                                        Created By
+                                                        {t('Created By')}
                                                     </th>
                                                     <th>
-                                                        Created At
+                                                        {t('Created At')}
                                                     </th>
                                                 </tr>
                                             </thead>

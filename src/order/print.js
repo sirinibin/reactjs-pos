@@ -1,5 +1,5 @@
 import { React, useState, useRef, forwardRef, useImperativeHandle, useMemo, useCallback, useEffect } from "react";
-import { Modal, Button } from 'react-bootstrap';
+import { Modal, Button, Spinner } from 'react-bootstrap';
 import OrderPrintContent from './printContent.js';
 import OrderPrintContent2 from './printContent2.js';
 import OrderPrintContent3 from './printContent3.js';
@@ -7,9 +7,11 @@ import OrderPrintContent4 from './printContent4.js';
 
 import { useReactToPrint } from 'react-to-print';
 import { Invoice } from '@axenda/zatca';
+import { useTranslation } from 'react-i18next';
 //import { format } from "date-fns";
 
 const OrderPrint = forwardRef((props, ref) => {
+    const { t } = useTranslation('common');
     // let [InvoiceBackground, setInvoiceBackground] = useState("");
     useImperativeHandle(ref, () => ({
         async open(modelObj, modelNameStr) {
@@ -165,8 +167,8 @@ const OrderPrint = forwardRef((props, ref) => {
                     return Promise.reject(error);
                 }
 
-                console.log("Response:");
-                console.log(data);
+                //console.log("Response:");
+                //console.log(data);
 
                 model = data.result;
                 setModel({ ...model });
@@ -226,15 +228,15 @@ const OrderPrint = forwardRef((props, ref) => {
             }
         }
 
-        console.log("model.pages:", model.pages);
+        //console.log("model.pages:", model.pages);
 
-        console.log("model.products:", model.products);
+        //console.log("model.products:", model.products);
         getQRCodeContents();
         //model.qr_content = getQRCodeContents();
         //setModel({ ...model });
 
         setShow(true);
-        console.log("model:", model);
+        //console.log("model:", model);
     }
 
 
@@ -633,6 +635,8 @@ const OrderPrint = forwardRef((props, ref) => {
     }, [props]);
 
 
+    const [isPrinting, setIsPrinting] = useState(false);
+
     let [qrContent, setQrContent] = useState("");
 
     function getQRCodeContents() {
@@ -831,7 +835,7 @@ const OrderPrint = forwardRef((props, ref) => {
 
     const printAreaRef = useRef();
 
-    function getFileName() {
+    const getFileName = useCallback(() => {
         let filename = "Sales_Invoice";
 
         if (model.id) {
@@ -839,7 +843,7 @@ const OrderPrint = forwardRef((props, ref) => {
         }
 
         return filename;
-    }
+    }, [model]);
 
     /*
     const handlePrint = useReactToPrint({
@@ -850,10 +854,11 @@ const OrderPrint = forwardRef((props, ref) => {
         }
     });*/
 
-    const handlePrint = useReactToPrint({
+    const webPrint = useReactToPrint({
         content: () => printAreaRef.current,
         documentTitle: getFileName(),
         onBeforeGetContent: () => {
+            setIsPrinting(true);
             const style = document.createElement("style");
             style.innerHTML = `
                 @media print {
@@ -864,9 +869,90 @@ const OrderPrint = forwardRef((props, ref) => {
             document.head.appendChild(style);
         },
         onAfterPrint: () => {
+            setIsPrinting(false);
             handleClose();
         },
     });
+
+    // For Tauri/WKWebView: window.print() inside an iframe is blocked.
+    // core:webview:allow-print only covers the top-level WebviewWindow (tabs.html).
+    // React runs inside an <iframe> within tabs.html — both are same-origin
+    // (http://localhost:2003) so we can walk up to window.parent and inject the
+    // overlay into the parent document, then call window.parent.print() which
+    // is permitted by the Tauri ACL.
+    const tauriPrint = useCallback(() => {
+        const content = printAreaRef.current;
+        if (!content) return;
+
+        setIsPrinting(true);
+
+        // Find the top-level same-origin window
+        let topWin = window;
+        try {
+            while (topWin !== topWin.parent) {
+                topWin = topWin.parent;
+            }
+        } catch (_) { topWin = window; }
+
+        const topDoc = topWin.document;
+
+        // Collect all <style> and <link rel="stylesheet"> from this document
+        const styles = Array.from(document.querySelectorAll('style, link[rel="stylesheet"]'))
+            .map(el => el.tagName === 'STYLE'
+                ? `<style>${el.textContent}</style>`
+                : el.outerHTML)
+            .join('\n');
+
+        const html = styles + '\n' + content.outerHTML;
+
+        // Inject overlay into top-level document; hide everything else via @media print
+        const overlay = topDoc.createElement('div');
+        overlay.id = '__tauri_print_overlay__';
+        overlay.innerHTML = html;
+        topDoc.body.appendChild(overlay);
+
+        const printStyle = topDoc.createElement('style');
+        printStyle.id = '__tauri_print_style__';
+        printStyle.textContent = `
+            @media print {
+                body > *:not(#__tauri_print_overlay__) { display: none !important; }
+                #__tauri_print_overlay__ { display: block !important; }
+            }
+            #__tauri_print_overlay__ { display: none; }
+        `;
+        topDoc.head.appendChild(printStyle);
+
+        const cleanup = () => {
+            topDoc.getElementById('__tauri_print_overlay__')?.remove();
+            topDoc.getElementById('__tauri_print_style__')?.remove();
+        };
+        topWin.addEventListener('afterprint', cleanup, { once: true });
+        setTimeout(cleanup, 30000); // fallback if afterprint never fires
+
+        topWin.print();
+
+        setIsPrinting(false);
+        handleClose();
+    }, [handleClose]);
+
+    const handlePrint = useCallback(() => {
+        // Walk up parent chain (React is in an iframe; __TAURI__ is on parent tabs.html)
+        let isInTauri = false;
+        try {
+            let w = window;
+            while (w) {
+                if (w.__TAURI__?.core?.invoke || w.__TAURI_INTERNALS__?.invoke) { isInTauri = true; break; }
+                if (w === w.parent) break;
+                w = w.parent;
+            }
+        } catch (_) { }
+
+        if (isInTauri) {
+            tauriPrint();
+        } else {
+            webPrint();
+        }
+    }, [webPrint, tauriPrint]);
 
     const defaultFontSizes = useMemo(() => ({
         "printQrCode": {
@@ -1103,11 +1189,11 @@ const OrderPrint = forwardRef((props, ref) => {
     return (<>
         <Modal show={show} scrollable={true} size="xl" fullscreen={model.store?.code === "PH2" || model.store?.code === "LGK-SIMULATION" || model.store?.code === "LGK"} onHide={handleClose} animation={false} style={{ overflowY: "auto", height: "auto" }}>
             <Modal.Header className="d-flex flex-wrap align-items-center justify-content-between">
-                <Modal.Title>Invoice Preview</Modal.Title>
+                <Modal.Title>{t("Invoice Preview")}</Modal.Title>
                 <div className="row" style={{ border: "solid 0px" }}>
                     <div className="col align-self-end text-end" style={{ border: "solid 0px", minWidth: "200px" }}>
                         <>
-                            <label className="form-label">Page Size:&nbsp;</label>
+                            <label className="form-label">{t("Page Size")}:&nbsp;</label>
                             <select
                                 value={fontSizes[modelName + "_printPageSize"]}
                                 onChange={(e) => {
@@ -1137,8 +1223,12 @@ const OrderPrint = forwardRef((props, ref) => {
                     </div>
 
                     <div className="col align-self-end text-end" style={{ border: "solid 0px", minWidth: "100px" }}>
-                        <Button variant="primary" className="btn btn-primary mb-3" onClick={handlePrint}>
-                            <i className="bi bi-printer"></i> Print
+                        <Button variant="primary" className="btn btn-primary mb-3 d-flex align-items-center gap-2" onClick={handlePrint} disabled={isPrinting}>
+                            {isPrinting ? (
+                                <Spinner as="span" animation="border" size="sm" role="status" aria-hidden={true} />
+                            ) : (
+                                <><i className="bi bi-printer"></i> {t("Print")}</>
+                            )}
                         </Button>
                         <button
                             type="button"

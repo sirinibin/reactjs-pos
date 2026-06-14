@@ -1,4 +1,4 @@
-import React, { useState, useEffect, forwardRef, useImperativeHandle, useMemo, useRef } from "react";
+import React, { useState, useEffect, forwardRef, useImperativeHandle, useMemo, useRef, useCallback } from "react";
 import { Modal, Button } from "react-bootstrap";
 
 import { Spinner } from "react-bootstrap";
@@ -70,6 +70,29 @@ const CustomerCreate = forwardRef((props, ref) => {
             });
     }
 
+    const translateText = useCallback(async (text, setter) => {
+        if (store.settings?.enable_auto_translation_to_arabic !== true) {
+            return;
+        }
+        try {
+            const response = await fetch('/v1/translate', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    Authorization: localStorage.getItem('access_token'),
+                },
+                body: JSON.stringify({ text }),
+            });
+            if (!response.ok) {
+                throw new Error('Failed to fetch translation');
+            }
+            const data = await response.json();
+            setter(data.translatedText);
+        } catch (error) {
+            console.error('Translation error:', error);
+        }
+    }, [store]);
+
     useEffect(() => {
         const listener = event => {
             if (event.code === "Enter" || event.code === "NumpadEnter") {
@@ -80,7 +103,7 @@ const CustomerCreate = forwardRef((props, ref) => {
                 if (form && event.target) {
                     var index = Array.prototype.indexOf.call(form, event.target);
                     if (form && form.elements[index + 1]) {
-                        if (event.target.getAttribute("class").includes("barcode")) {
+                        if ((event.target.getAttribute("class") || "").includes("barcode")) {
                             form.elements[index].focus();
                         } else {
                             form.elements[index + 1].focus();
@@ -224,6 +247,12 @@ const CustomerCreate = forwardRef((props, ref) => {
             formData.vat_percent = parseFloat(formData.vat_percent);
         } else {
             formData.vat_percent = null;
+        }
+
+        if (formData.credit_limit) {
+            formData.credit_limit = parseFloat(formData.credit_limit);
+        } else {
+            formData.credit_limit = 0.00;
         }
 
         formData.phone_in_arabic = convertToArabicNumber(formData.phone);
@@ -521,6 +550,12 @@ const CustomerCreate = forwardRef((props, ref) => {
                                         formData.name = e.target.value;
                                         setFormData({ ...formData });
                                         console.log(formData);
+                                        if (timerRef.current) clearTimeout(timerRef.current);
+                                        timerRef.current = setTimeout(() => {
+                                            translateText(e.target.value, (translated) =>
+                                                setFormData(prev => ({ ...prev, name_in_arabic: translated }))
+                                            );
+                                        }, 500);
                                     }}
                                     className="form-control"
                                     placeholder="Name"
@@ -1023,6 +1058,12 @@ const CustomerCreate = forwardRef((props, ref) => {
                                         formData.national_address.street_name = e.target.value;
                                         setFormData({ ...formData });
                                         console.log(formData);
+                                        if (timerRef.current) clearTimeout(timerRef.current);
+                                        timerRef.current = setTimeout(() => {
+                                            translateText(e.target.value, (translated) =>
+                                                setFormData(prev => ({ ...prev, national_address: { ...prev.national_address, street_name_arabic: translated } }))
+                                            );
+                                        }, 500);
                                     }}
                                     className="form-control"
                                     id="customer_national_address_street_name"
@@ -1083,6 +1124,12 @@ const CustomerCreate = forwardRef((props, ref) => {
                                         formData.national_address.district_name = e.target.value;
                                         setFormData({ ...formData });
                                         console.log(formData);
+                                        if (timerRef.current) clearTimeout(timerRef.current);
+                                        timerRef.current = setTimeout(() => {
+                                            translateText(e.target.value, (translated) =>
+                                                setFormData(prev => ({ ...prev, national_address: { ...prev.national_address, district_name_arabic: translated } }))
+                                            );
+                                        }, 500);
                                     }}
                                     className="form-control"
                                     placeholder="District Name"
@@ -1169,6 +1216,12 @@ const CustomerCreate = forwardRef((props, ref) => {
                                         formData.national_address.city_name = e.target.value;
                                         setFormData({ ...formData });
                                         console.log(formData);
+                                        if (timerRef.current) clearTimeout(timerRef.current);
+                                        timerRef.current = setTimeout(() => {
+                                            translateText(e.target.value, (translated) =>
+                                                setFormData(prev => ({ ...prev, national_address: { ...prev.national_address, city_name_arabic: translated } }))
+                                            );
+                                        }, 500);
                                     }}
                                     className="form-control"
 

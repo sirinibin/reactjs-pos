@@ -1,4 +1,4 @@
-import React, { useState, useEffect, forwardRef, useImperativeHandle, useMemo, useRef } from "react";
+import React, { useState, useEffect, forwardRef, useImperativeHandle, useMemo, useRef, useCallback } from "react";
 import { Modal, Button } from "react-bootstrap";
 
 import { Spinner } from "react-bootstrap";
@@ -29,6 +29,10 @@ const VendorCreate = forwardRef((props, ref) => {
                 }, 300);
             }
             setShow(true);
+
+            if (localStorage.getItem('store_id')) {
+                getStore(localStorage.getItem('store_id'));
+            }
         },
 
     }));
@@ -43,7 +47,7 @@ const VendorCreate = forwardRef((props, ref) => {
                 if (form && event.target) {
                     var index = Array.prototype.indexOf.call(form, event.target);
                     if (form && form.elements[index + 1]) {
-                        if (event.target.getAttribute("class").includes("barcode")) {
+                        if ((event.target.getAttribute("class") || "").includes("barcode")) {
                             form.elements[index].focus();
                         } else {
                             form.elements[index + 1].focus();
@@ -62,6 +66,52 @@ const VendorCreate = forwardRef((props, ref) => {
 
     let [errors, setErrors] = useState({});
     const [isProcessing, setProcessing] = useState(false);
+
+    let [store, setStore] = useState({});
+
+    function getStore(id) {
+        const requestOptions = {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': localStorage.getItem('access_token'),
+            },
+        };
+        fetch('/v1/store/' + id, requestOptions)
+            .then(async response => {
+                const isJson = response.headers.get('content-type')?.includes('application/json');
+                const data = isJson && await response.json();
+                if (!response.ok) {
+                    return Promise.reject(data && data.errors);
+                }
+                store = data.result;
+                setStore({ ...store });
+            })
+            .catch(() => { });
+    }
+
+    const translateText = useCallback(async (text, setter) => {
+        if (store.settings?.enable_auto_translation_to_arabic !== true) {
+            return;
+        }
+        try {
+            const response = await fetch('/v1/translate', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    Authorization: localStorage.getItem('access_token'),
+                },
+                body: JSON.stringify({ text }),
+            });
+            if (!response.ok) {
+                throw new Error('Failed to fetch translation');
+            }
+            const data = await response.json();
+            setter(data.translatedText);
+        } catch (error) {
+            console.error('Translation error:', error);
+        }
+    }, [store]);
 
 
     //fields
@@ -274,6 +324,10 @@ const VendorCreate = forwardRef((props, ref) => {
                         props.refreshList();
                     }
 
+                    if (props.onUpdated) {
+                        props.onUpdated(data.result);
+                    }
+
                     handleClose();
                     if (props.openDetailsView)
                         props.openDetailsView(data.result.id);
@@ -367,6 +421,12 @@ const VendorCreate = forwardRef((props, ref) => {
                                         formData.name = e.target.value;
                                         setFormData({ ...formData });
                                         console.log(formData);
+                                        if (timerRef.current) clearTimeout(timerRef.current);
+                                        timerRef.current = setTimeout(() => {
+                                            translateText(e.target.value, (translated) =>
+                                                setFormData(prev => ({ ...prev, name_in_arabic: translated }))
+                                            );
+                                        }, 500);
                                     }}
                                     className="form-control"
                                     id="vendor_name"
@@ -760,6 +820,12 @@ const VendorCreate = forwardRef((props, ref) => {
                                         formData.national_address.street_name = e.target.value;
                                         setFormData({ ...formData });
                                         console.log(formData);
+                                        if (timerRef.current) clearTimeout(timerRef.current);
+                                        timerRef.current = setTimeout(() => {
+                                            translateText(e.target.value, (translated) =>
+                                                setFormData(prev => ({ ...prev, national_address: { ...prev.national_address, street_name_arabic: translated } }))
+                                            );
+                                        }, 500);
                                     }}
                                     className="form-control"
 
@@ -823,6 +889,12 @@ const VendorCreate = forwardRef((props, ref) => {
                                         formData.national_address.district_name = e.target.value;
                                         setFormData({ ...formData });
                                         console.log(formData);
+                                        if (timerRef.current) clearTimeout(timerRef.current);
+                                        timerRef.current = setTimeout(() => {
+                                            translateText(e.target.value, (translated) =>
+                                                setFormData(prev => ({ ...prev, national_address: { ...prev.national_address, district_name_arabic: translated } }))
+                                            );
+                                        }, 500);
                                     }}
                                     className="form-control"
 
@@ -917,6 +989,12 @@ const VendorCreate = forwardRef((props, ref) => {
                                         formData.national_address.city_name = e.target.value;
                                         setFormData({ ...formData });
                                         console.log(formData);
+                                        if (timerRef.current) clearTimeout(timerRef.current);
+                                        timerRef.current = setTimeout(() => {
+                                            translateText(e.target.value, (translated) =>
+                                                setFormData(prev => ({ ...prev, national_address: { ...prev.national_address, city_name_arabic: translated } }))
+                                            );
+                                        }, 500);
                                     }}
                                     className="form-control"
 

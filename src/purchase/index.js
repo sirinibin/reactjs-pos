@@ -1,10 +1,12 @@
 import React, { useState, useEffect, useRef, useContext, useCallback, useMemo } from "react";
+import { useTranslation } from "react-i18next";
 import PurchaseCreate from "./create.js";
 import PurchaseView from "./view.js";
 import { Typeahead } from "react-bootstrap-typeahead";
 import { format } from "date-fns";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
+import { getDateLocale } from "../i18n/dateLocales";
 import { Button, Spinner, Modal, Alert } from "react-bootstrap";
 import ReactPaginate from "react-paginate";
 import PurchaseReturnCreate from "./../purchase_return/create.js";
@@ -24,12 +26,15 @@ import OrderPrint from "./../order/print.js";
 import VendorCreate from "./../vendor/create.js";
 import Draggable2 from "react-draggable";
 
-
 import ReactExport from 'react-data-export';
+
 const ExcelFile = ReactExport.ExcelFile;
 const ExcelSheet = ReactExport.ExcelFile.ExcelSheet;
 
 function PurchaseIndex(props) {
+    const { t, i18n } = useTranslation('common');
+    const dateLocale = useMemo(() => getDateLocale(i18n.language), [i18n.language]);
+
     let [enableSelection, setEnableSelection] = useState(false);
     let [pendingView, setPendingView] = useState(false);
 
@@ -51,6 +56,7 @@ function PurchaseIndex(props) {
 
 
     let [totalPurchase, setTotalPurchase] = useState(0.00);
+    let [totalAccountedPurchase, setTotalAccountedPurchase] = useState(0.00);
     let [vatPrice, setVatPrice] = useState(0.00);
     let [totalShippingHandlingFees, setTotalShippingHandlingFees] = useState(0.00);
     let [totalDiscount, setTotalDiscount] = useState(0.00);
@@ -64,7 +70,7 @@ function PurchaseIndex(props) {
     const [purchaseList, setPurchaseList] = useState([]);
 
     //pagination
-    const [pageSize, setPageSize] = useState(20);
+    const [pageSize, setPageSize] = useState(() => parseInt(localStorage.getItem('purchase_pageSize') || '10'));
     let [page, setPage] = useState(1);
     const [totalPages, setTotalPages] = useState(0);
     const [totalItems, setTotalItems] = useState(1);
@@ -119,53 +125,53 @@ function PurchaseIndex(props) {
     const paymentStatusOptions = [
         {
             id: "paid",
-            name: "Paid",
+            name: t('Paid'),
         },
         {
             id: "not_paid",
-            name: "Not Paid",
+            name: t('Not Paid'),
         },
         {
             id: "paid_partially",
-            name: "Paid partially",
+            name: t('Paid partially'),
         },
     ];
     const paymentMethodOptions = [
         {
             id: "cash",
-            name: "Cash",
+            name: t('Cash'),
         },
         {
             id: "debit_card",
-            name: "Debit Card",
+            name: t('Debit Card'),
         },
         {
             id: "credit_card",
-            name: "Credit Card",
+            name: t('Credit Card'),
         },
         {
             id: "bank_card",
-            name: "Bank Card",
+            name: t('Bank Card'),
         },
         {
             id: "bank_transfer",
-            name: "Bank Transfer",
+            name: t('Bank Transfer'),
         },
         {
             id: "bank_cheque",
-            name: "Bank Cheque",
+            name: t('Bank Cheque'),
         },
         {
             id: "sales",
-            name: "Sales",
+            name: t('Sales'),
         },
         {
             id: "purchase_return",
-            name: "Purchase Return",
+            name: t('Purchase Return'),
         },
         {
             id: "vendor_account",
-            name: "Vendor Account",
+            name: t('Vendor Account'),
         },
     ];
 
@@ -241,7 +247,8 @@ function PurchaseIndex(props) {
         for (var i = 0; i < allPurchases.length; i++) {
             let date = format(
                 new Date(allPurchases[i].date),
-                "dd-MMM-yyyy"
+                "dd-MMM-yyyy",
+                { locale: dateLocale }
             );
             if (!groupedByDate[date]) {
                 groupedByDate[date] = [];
@@ -366,7 +373,8 @@ function PurchaseIndex(props) {
         } else if (searchParams["from_date"]) {
             purchaseReportFileName += " - From " + searchParams["from_date"] + " to " + format(
                 new Date(),
-                "dd-MMM-yyyy"
+                "dd-MMM-yyyy",
+                { locale: dateLocale }
             );
         } else if (searchParams["to_date"]) {
             purchaseReportFileName += " - Upto " + searchParams["to_date"];
@@ -615,6 +623,11 @@ function PurchaseIndex(props) {
 
     function searchByFieldValue(field, value) {
         searchParams[field] = value;
+        setFieldFilters(prev => {
+            const updated = { ...prev };
+            if (value) { updated[field] = value; } else { delete updated[field]; }
+            return updated;
+        });
 
         page = 1;
         setPage(page);
@@ -622,7 +635,6 @@ function PurchaseIndex(props) {
     }
 
     function searchByDateField(field, value) {
-
         if (!value) {
             page = 1;
             searchParams[field] = "";
@@ -634,27 +646,27 @@ function PurchaseIndex(props) {
         let d = new Date(value);
         d = new Date(d.toUTCString());
         value = format(d, "MMM dd yyyy");
-
+        let valueWithLocal = format(d, "MMM dd yyyy", { locale: dateLocale });
 
         if (field === "date_str") {
-            setDateValue(value);
+            setDateValue(valueWithLocal);
             setFromDateValue("");
             setToDateValue("");
             searchParams["from_date"] = "";
             searchParams["to_date"] = "";
             searchParams[field] = value;
         } else if (field === "from_date") {
-            setFromDateValue(value);
+            setFromDateValue(valueWithLocal);
             setDateValue("");
             searchParams["date"] = "";
             searchParams[field] = value;
         } else if (field === "to_date") {
-            setToDateValue(value);
+            setToDateValue(valueWithLocal);
             setDateValue("");
             searchParams["date"] = "";
             searchParams[field] = value;
         } else if (field === "created_at") {
-            setCreatedAtValue(value);
+            setCreatedAtValue(valueWithLocal);
             setCreatedAtFromValue("");
             setCreatedAtToValue("");
             searchParams["created_at_from"] = "";
@@ -670,12 +682,12 @@ function PurchaseIndex(props) {
         }*/
 
         if (field === "created_at_from") {
-            setCreatedAtFromValue(value);
+            setCreatedAtFromValue(valueWithLocal);
             setCreatedAtValue("");
             searchParams["created_at"] = "";
             searchParams[field] = value;
         } else if (field === "created_at_to") {
-            setCreatedAtToValue(value);
+            setCreatedAtToValue(valueWithLocal);
             setCreatedAtValue("");
             searchParams["created_at"] = "";
             searchParams[field] = value;
@@ -702,6 +714,7 @@ function PurchaseIndex(props) {
 
     const [selectedPaymentMethodList, setSelectedPaymentMethodList] = useState([]);
     const [selectedPaymentStatusList, setSelectedPaymentStatusList] = useState([]);
+    const [selectedAccountedFilter, setSelectedAccountedFilter] = useState("");
 
     function searchByMultipleValuesField(field, values, noList) {
         if (field === "created_by") {
@@ -716,6 +729,9 @@ function PurchaseIndex(props) {
 
         searchParams[field] = Object.values(values)
             .map(function (model) {
+                if (model.name === "UNKNOWN VENDOR") {
+                    return "unknown_vendor";
+                }
                 return model.id;
             })
             .join(",");
@@ -737,6 +753,7 @@ function PurchaseIndex(props) {
 
 
     let [statsOpen, setStatsOpen] = useState(false);
+    const [fieldFilters, setFieldFilters] = useState({});
 
 
     const list = useCallback(() => {
@@ -749,7 +766,7 @@ function PurchaseIndex(props) {
             },
         };
         let Select =
-            "select=id,code,date,net_total,return_count,return_amount,cash_discount,discount,vat_price,total,store_id,created_by_name,vendor_id,vendor_name,vendor_name_arabic,vendor_invoice_no,status,created_at,updated_at,net_retail_profit,net_wholesale_profit,total_payment_paid,payments_count,payment_methods,payment_status,balance_amount";
+            "select=id,code,date,net_total,return_count,return_amount,cash_discount,discount,vat_price,total,store_id,created_by_name,vendor_id,vendor_name,vendor_name_arabic,vendor_invoice_no,status,created_at,updated_at,net_retail_profit,net_wholesale_profit,total_payment_paid,payments_count,payment_methods,payment_status,balance_amount,enable_on_accounts";
         if (localStorage.getItem("store_id")) {
             searchParams.store_id = localStorage.getItem("store_id");
         }
@@ -807,6 +824,7 @@ function PurchaseIndex(props) {
                 setOffset((page - 1) * pageSize);
                 setCurrentPageItemsCount(data.result.length);
                 setTotalPurchase(data.meta.total_purchase);
+                setTotalAccountedPurchase(data.meta.accounted_purchase || 0);
                 setVatPrice(data.meta.vat_price);
                 setTotalShippingHandlingFees(data.meta.shipping_handling_fees);
                 setTotalDiscount(data.meta.discount);
@@ -884,6 +902,7 @@ function PurchaseIndex(props) {
 
 
     function changePageSize(size) {
+        localStorage.setItem('purchase_pageSize', size);
         setPageSize(parseInt(size));
     }
 
@@ -990,26 +1009,27 @@ function PurchaseIndex(props) {
     const [successMessage, setSuccessMessage] = useState(false);
 
     const defaultColumns = useMemo(() => [
-        { key: "actions", label: "Actions", fieldName: "actions", visible: true },
-        { key: "select", label: "Select", fieldName: "select", visible: true },
-        { key: "id", label: "ID", fieldName: "code", visible: true },
-        { key: "date", label: "Date", fieldName: "date", visible: true },
-        { key: "vendor", label: "Vendor", fieldName: "vendor_name", visible: true },
-        { key: "net_total", label: "Net Total", fieldName: "net_total", visible: true },
-        { key: "amount_paid", label: "Amount Paid", fieldName: "total_payment_paid", visible: true },
-        { key: "credit_balance", label: "Credit Balance", fieldName: "balance_amount", visible: true },
-        { key: "cash_discount", label: "Cash Discount", fieldName: "cash_discount", visible: true },
-        { key: "vendor_invoice_no", label: "Vendor Invoice No.", fieldName: "vendor_invoice_no", visible: true },
-        { key: "payment_status", label: "Payment Status", fieldName: "payment_status", visible: true },
-        { key: "payment_methods", label: "Payment Methods", fieldName: "payment_methods", visible: true },
-        { key: "purchase_discount", label: "Purchase Discount", fieldName: "discount", visible: true },
-        { key: "vat_price", label: "VAT", fieldName: "vat_price", visible: true },
-        { key: "return_count", label: "Return Count", fieldName: "return_count", visible: true },
-        { key: "return_paid_amount", label: "Return Paid Amount", fieldName: "return_amount", visible: true },
-        { key: "created_by", label: "Created By", fieldName: "created_by", visible: true },
-        { key: "created_at", label: "Created At", fieldName: "created_at", visible: true },
-        { key: "actions_end", label: "Actions", fieldName: "actions_end", visible: true },
-    ], []);
+        { key: "actions", label: t("Actions"), fieldName: "actions", visible: true },
+        { key: "select", label: t("Select"), fieldName: "select", visible: true },
+        { key: "id", label: t("ID"), fieldName: "code", visible: true },
+        { key: "date", label: t("Date"), fieldName: "date", visible: true },
+        { key: "vendor", label: t("Vendor"), fieldName: "vendor_name", visible: true },
+        { key: "net_total", label: t("Net Total"), fieldName: "net_total", visible: true },
+        { key: "amount_paid", label: t("Amount Paid"), fieldName: "total_payment_paid", visible: true },
+        { key: "credit_balance", label: t("Credit Balance"), fieldName: "balance_amount", visible: true },
+        { key: "cash_discount", label: t("Cash Discount"), fieldName: "cash_discount", visible: true },
+        { key: "vendor_invoice_no", label: t("Vendor Invoice No."), fieldName: "vendor_invoice_no", visible: true },
+        { key: "payment_status", label: t("Payment Status"), fieldName: "payment_status", visible: true },
+        { key: "payment_methods", label: t("Payment Methods"), fieldName: "payment_methods", visible: true },
+        { key: "purchase_discount", label: t("Purchase Discount"), fieldName: "discount", visible: true },
+        { key: "vat_price", label: t("VAT"), fieldName: "vat_price", visible: true },
+        { key: "return_count", label: t("Return Count"), fieldName: "return_count", visible: true },
+        { key: "return_paid_amount", label: t("Return Paid Amount"), fieldName: "return_amount", visible: true },
+        { key: "created_by", label: t("Created By"), fieldName: "created_by", visible: true },
+        { key: "created_at", label: t("Created At"), fieldName: "created_at", visible: true },
+        { key: "enable_on_accounts", label: t("Accounted"), fieldName: "enable_on_accounts", visible: false },
+        { key: "actions_end", label: t("Actions"), fieldName: "actions_end", visible: true },
+    ], [t]);
 
 
     const [columns, setColumns] = useState(defaultColumns);
@@ -1067,6 +1087,14 @@ function PurchaseIndex(props) {
 
     }, [defaultColumns, enableSelection, pendingView]);
 
+    useEffect(() => {
+        setColumns(prev => prev.map(col =>
+            col.key === "enable_on_accounts"
+                ? { ...col, visible: !!store.settings?.disable_purchases_on_accounts }
+                : col
+        ));
+    }, [store]);
+
     function RestoreDefaultSettings() {
         if (enableSelection === true) {
             localStorage.setItem("select_purchase_table_settings", JSON.stringify(defaultColumns));
@@ -1079,7 +1107,7 @@ function PurchaseIndex(props) {
         setColumns(defaultColumns);
 
         setShowSuccess(true);
-        setSuccessMessage("Successfully restored to default settings!")
+        setSuccessMessage(t("Successfully restored to default settings!"))
     }
 
     // Save column settings to localStorage
@@ -1212,7 +1240,7 @@ function PurchaseIndex(props) {
                 setShowPrintTypeSelection(showPrintTypeSelection);
             }} centered>
                 <Modal.Header closeButton>
-                    <Modal.Title>Select Print Type</Modal.Title>
+                    <Modal.Title>{t('Select Print Type')}</Modal.Title>
                 </Modal.Header>
                 <Modal.Body className="d-flex justify-content-around">
                     <Button variant="secondary" ref={printButtonRef} onClick={() => {
@@ -1226,7 +1254,7 @@ function PurchaseIndex(props) {
                             }, 100);
                         }
                     }}>
-                        <i className="bi bi-printer"></i> Print
+                        <i className="bi bi-printer"></i> {t('Print')}
                     </Button>
 
                     <Button variant="primary" ref={printA4ButtonRef} onClick={() => {
@@ -1242,7 +1270,7 @@ function PurchaseIndex(props) {
                             }
                         }}
                     >
-                        <i className="bi bi-printer"></i> Print A4 Invoice
+                        <i className="bi bi-printer"></i> {t('Print A4 Invoice')}
                     </Button>
                 </Modal.Body>
             </Modal>
@@ -1259,16 +1287,16 @@ function PurchaseIndex(props) {
                         <i
                             className="bi bi-gear-fill"
                             style={{ fontSize: "1.2rem", marginRight: "4px" }}
-                            title="Table Settings"
+                            title={t('Table Settings')}
                         />
-                        Purchase Settings
+                        {t('Purchase Settings')}
                     </Modal.Title>
                 </Modal.Header>
                 <Modal.Body>
                     {/* Column Settings */}
                     {showSettings && (
                         <>
-                            <h6 className="mb-2">Customize Columns</h6>
+                            <h6 className="mb-2">{t('Customize Columns')}</h6>
                             <DragDropContext onDragEnd={onDragEnd}>
                                 <Droppable droppableId="columns">
                                     {(provided) => (
@@ -1319,7 +1347,7 @@ function PurchaseIndex(props) {
                 </Modal.Body>
                 <Modal.Footer>
                     <Button variant="secondary" onClick={() => setShowSettings(false)}>
-                        Close
+                        {t('Close')}
                     </Button>
                     <Button
                         variant="primary"
@@ -1329,14 +1357,14 @@ function PurchaseIndex(props) {
                             //setShowSettings(false);
                         }}
                     >
-                        Restore to Default
+                        {t('Restore to Default')}
                     </Button>
                 </Modal.Footer>
             </Modal>
 
             <Modal show={showSuccess} onHide={() => setShowSuccess(false)} centered>
                 <Modal.Header closeButton>
-                    <Modal.Title>Success</Modal.Title>
+                    <Modal.Title>{t('Success')}</Modal.Title>
                 </Modal.Header>
                 <Modal.Body>
                     <Alert variant="success">
@@ -1345,7 +1373,7 @@ function PurchaseIndex(props) {
                 </Modal.Body>
                 <Modal.Footer>
                     <Button variant="secondary" onClick={() => setShowSuccess(false)}>
-                        Close
+                        {t('Close')}
                     </Button>
                 </Modal.Footer>
             </Modal>
@@ -1363,7 +1391,24 @@ function PurchaseIndex(props) {
                     <div className="col">
                         <span className="text-end">
                             <StatsSummary
-                                title="Purchase"
+                                title="Purchase Summary"
+                                filters={{
+                                    ...(dateValue ? { 'Date': dateValue } : {}),
+                                    ...(fromDateValue ? { 'From Date': fromDateValue } : {}),
+                                    ...(toDateValue ? { 'To Date': toDateValue } : {}),
+                                    ...(selectedVendors.length > 0 ? { 'Vendor': selectedVendors.map(v => v.name).join(', ') } : {}),
+                                    ...(selectedCreatedByUsers.length > 0 ? { 'Created By': selectedCreatedByUsers.map(u => u.name).join(', ') } : {}),
+                                    ...(selectedPaymentStatusList.length > 0 ? { 'Payment Status': selectedPaymentStatusList.map(s => s.name || s.id).join(', ') } : {}),
+                                    ...(selectedPaymentMethodList.length > 0 ? { 'Payment Method': selectedPaymentMethodList.map(m => m.name || m.id).join(', ') } : {}),
+                                    ...Object.fromEntries(
+                                        Object.entries(fieldFilters)
+                                            .filter(([, v]) => v)
+                                            .map(([field, value]) => {
+                                                const col = columns.find(c => c.fieldName === field || c.key === field);
+                                                return [col ? col.label : field, value];
+                                            })
+                                    ),
+                                }}
                                 stats={{
                                     "Cash purchase": totalCashPurchase,
                                     "Credit purchase": totalUnPaidPurchase,
@@ -1373,6 +1418,7 @@ function PurchaseIndex(props) {
                                     "Cash discount": totalCashDiscount,
                                     "VAT paid": vatPrice,
                                     "Purchase": totalPurchase,
+                                    ...(store.settings?.disable_purchases_on_accounts ? { "Accounted Purchase(with VAT)": selectedAccountedFilter === "false" ? 0 : (selectedAccountedFilter === "true" ? totalPurchase : totalAccountedPurchase) } : {}),
                                     "Paid purchase": totalPaidPurchase,
                                     "Purchase discount": totalDiscount,
                                     "Shipping/Handling fees": totalShippingHandlingFees,
@@ -1388,31 +1434,31 @@ function PurchaseIndex(props) {
                 </div>
                 <div className="row">
                     <div className="col">
-                        <h1 className="h3">Purchases</h1>
+                        <h1 className="h3">{t('Purchases')}</h1>
                     </div>
 
                     <div className="col text-end">
                         <Button variant="primary" onClick={() => {
                             openReportPreview();
-                        }} style={{ marginRight: "8px" }} className="btn btn-primary mb-3">
+                        }} style={{ marginRight: "8px" }} className="btn btn-primary mb-1">
                             <i className="bi bi-printer"></i>&nbsp;
-                            Print Report
+                            {t('Print Report')}
                         </Button>
 
-                        <ExcelFile filename={purchaseReportFileName} element={excelData.length > 0 ? <Button variant="success" className="btn btn-primary mb-3 success" >Download Purchase Report</Button> : ""}>
+                        <ExcelFile filename={purchaseReportFileName} element={excelData.length > 0 ? <Button variant="success" className="btn btn-primary mb-1 success" >{t('Download Purchase Report')}</Button> : ""}>
                             <ExcelSheet dataSet={excelData} name={purchaseReportFileName} />
                         </ExcelFile>
 
-                        {excelData.length === 0 ? <Button variant="primary" className="btn btn-primary mb-3" onClick={getAllPurchases} >{fettingAllRecordsInProgress ? "Preparing.." : "Purchase Report"}</Button> : ""}
+                        {excelData.length === 0 ? <Button variant="primary" className="btn btn-primary mb-1" onClick={getAllPurchases} >{fettingAllRecordsInProgress ? t('Preparing...') : t('Purchase Report')}</Button> : ""}
                         &nbsp;&nbsp;
 
                         <Button
                             hide={true.toString()}
                             variant="primary"
-                            className="btn btn-primary mb-3"
+                            className="btn btn-primary mb-1"
                             onClick={openCreateForm}
                         >
-                            <i className="bi bi-plus-lg"></i> Create
+                            <i className="bi bi-plus-lg"></i> {t('Create')}
                         </Button>
                     </div>
                 </div>
@@ -1425,89 +1471,58 @@ function PurchaseIndex(props) {
                         <h5   className="card-title mb-0"></h5>
                     </div>
                     */}
-                            <div className="card-body">
+                            <div className="card-body p-2">
                                 <div className="row">
                                     {totalItems === 0 && (
                                         <div className="col">
-                                            <p className="text-start">No Purchases to display</p>
+                                            <p className="text-start">{t('No Purchases to display')}</p>
                                         </div>
                                     )}
                                 </div>
-                                <div className="row" style={{ border: "solid 0px" }}>
-                                    <div className="col text-start" style={{ border: "solid 0px" }}>
-                                        <Button
-                                            onClick={() => {
-                                                setIsRefreshInProcess(true);
-                                                list();
-                                            }}
-                                            variant="primary"
-                                            disabled={isRefreshInProcess}
-                                        >
-                                            {isRefreshInProcess ? (
-                                                <Spinner
-                                                    as="span"
-                                                    animation="border"
-                                                    size="sm"
-                                                    role="status"
-                                                    aria-hidden={true}
-                                                />
-                                            ) : (
-                                                <i className="fa fa-refresh"></i>
-                                            )}
-                                            <span className="visually-hidden">Loading...</span>
-                                        </Button>
-                                    </div>
-                                    <div className="col text-center">
-                                        {isListLoading && (
-                                            <Spinner animation="grow" variant="primary" />
+                                <div style={{ display: "flex", alignItems: "center", gap: "8px", flexWrap: "wrap", marginBottom: "8px" }}>
+                                    <Button
+                                        onClick={() => { setIsRefreshInProcess(true); list(); }}
+                                        variant="primary"
+                                        disabled={isRefreshInProcess}
+                                    >
+                                        {isRefreshInProcess ? (
+                                            <Spinner as="span" animation="border" size="sm" role="status" aria-hidden={true} />
+                                        ) : (
+                                            <i className="fa fa-refresh"></i>
                                         )}
-                                    </div>
-                                    <div className="col text-end">
-                                        {totalItems > 0 && (
-                                            <>
-                                                <label className="form-label">Size:&nbsp;</label>
-                                                <select
-                                                    value={pageSize}
-                                                    onChange={(e) => {
-                                                        changePageSize(e.target.value);
-                                                    }}
-                                                    className="form-control pull-right"
-                                                    style={{
-                                                        border: "solid 1px",
-                                                        borderColor: "silver",
-                                                        width: "55px",
-                                                    }}
-                                                >
-                                                    <option value="5">
-                                                        5
-                                                    </option>
-                                                    <option value="10">
-                                                        10
-                                                    </option>
-                                                    <option value="20">20</option>
-                                                    <option value="40">40</option>
-                                                    <option value="50">50</option>
-                                                    <option value="100">100</option>
-                                                </select>
-                                            </>
-                                        )}
-                                    </div>
-                                </div>
+                                        <span className="visually-hidden">{t('Loading...')}</span>
+                                    </Button>
 
-                                <br />
-                                <div className="row">
-                                    <div className="col" style={{ border: "solid 0px" }}>
+                                    {totalItems > 0 && (
+                                        <>
+                                            <label className="form-label mb-0">{t('Size')}:&nbsp;</label>
+                                            <select
+                                                value={pageSize}
+                                                onChange={(e) => { changePageSize(e.target.value); }}
+                                                className="form-control"
+                                                style={{ border: "solid 1px", borderColor: "silver", width: "55px" }}
+                                            >
+                                                <option value="5">5</option>
+                                                <option value="10">10</option>
+                                                <option value="20">20</option>
+                                                <option value="40">40</option>
+                                                <option value="50">50</option>
+                                                <option value="100">100</option>
+                                            </select>
+                                        </>
+                                    )}
+
+                                    <div className="w-100" style={{ overflowX: "auto" }}>
                                         {totalPages ? <ReactPaginate
                                             breakLabel="..."
-                                            nextLabel="next >"
-                                            onPageChange={(event) => {
-                                                changePage(event.selected + 1);
-                                            }}
-                                            pageRangeDisplayed={5}
+                                            nextLabel={t('next >')}
+                                            onPageChange={(event) => { changePage(event.selected + 1); }}
+                                            pageRangeDisplayed={3}
+                                            marginPagesDisplayed={1}
                                             pageCount={totalPages}
-                                            previousLabel="< previous"
+                                            previousLabel={t('< prev')}
                                             renderOnZeroPageCount={null}
-                                            className="pagination  flex-wrap"
+                                            className="pagination flex-wrap mb-0"
                                             pageClassName="page-item"
                                             pageLinkClassName="page-link"
                                             activeClassName="active"
@@ -1518,46 +1533,40 @@ function PurchaseIndex(props) {
                                             forcePage={page - 1}
                                         /> : ""}
                                     </div>
-                                </div>
 
-                                <div className="row">
-                                    <div className="col text-end">
-                                        <button
-                                            className="btn btn-sm btn-outline-secondary"
-                                            onClick={() => {
-                                                setShowSettings(!showSettings);
-                                            }}
-                                        >
-                                            <i
-                                                className="bi bi-gear-fill"
-                                                style={{ fontSize: "1.2rem" }}
-                                                title="Table Settings"
-
-                                            />
-                                        </button>
-                                    </div>
-                                </div>
-
-                                <div className="row">
                                     {totalItems > 0 && (
-                                        <>
-                                            <div className="col text-start">
-                                                <p className="text-start">
-                                                    showing {offset + 1}-{offset + currentPageItemsCount} of{" "}
-                                                    {totalItems}
-                                                </p>
-                                            </div>
-
-                                            <div className="col text-end">
-                                                <p className="text-end">
-                                                    page {page} of {totalPages}
-                                                </p>
-                                            </div>
-                                        </>
+                                        <span className="text-muted small">
+                                            {t("Showing {{from}}-{{to}} of {{totalItems}}", { from: (offset + 1), to: (offset + currentPageItemsCount), totalItems: totalItems })}
+                                            &nbsp;|&nbsp;
+                                            {t("Page {{page}} of {{totalPages}}", { page: page, totalPages: totalPages })}
+                                        </span>
                                     )}
+
+                                    <button
+                                        className="btn btn-sm btn-outline-secondary ms-auto"
+                                        onClick={() => { setShowSettings(!showSettings); }}
+                                    >
+                                        <i className="bi bi-gear-fill" style={{ fontSize: "1.2rem" }} title="Table Settings" />
+                                    </button>
                                 </div>
 
-                                <div className="table-responsive" style={{ overflowX: "auto", overflowY: "auto", maxHeight: "500px" }}>
+                                <div className="table-responsive" style={{ position: "relative", overflowX: "auto", overflowY: "auto", minHeight: "200px" }} ref={(el) => {
+                                    if (!el) return;
+                                    const fit = () => {
+                                        const top = el.getBoundingClientRect().top;
+                                        el.style.height = Math.max(200, window.innerHeight - top - 16) + "px";
+                                    };
+                                    fit();
+                                    if (!el._fitListenerAdded) {
+                                        el._fitListenerAdded = true;
+                                        window.addEventListener("resize", fit);
+                                    }
+                                }}>
+                                    {isListLoading && (
+                                        <div style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0, display: "flex", alignItems: "center", justifyContent: "center", zIndex: 10, background: "rgba(255,255,255,0.5)" }}>
+                                            <Spinner animation="grow" variant="primary" style={{ width: "3rem", height: "3rem" }} />
+                                        </div>
+                                    )}
                                     <table className="table table-striped table-sm table-bordered">
                                         <thead>
                                             <tr className="text-center">
@@ -1600,6 +1609,7 @@ function PurchaseIndex(props) {
                                                             col.key !== "date" &&
                                                             col.key !== "payment_status" &&
                                                             col.key !== "payment_methods" &&
+                                                            col.key !== "enable_on_accounts" &&
                                                             col.key !== "created_by" &&
                                                             col.key !== "created_at" &&
                                                             col.key !== "actions_end" &&
@@ -1625,7 +1635,7 @@ function PurchaseIndex(props) {
                                                                     );
                                                                 }}
                                                                 options={paymentMethodOptions}
-                                                                placeholder="Select payment methods"
+                                                                placeholder={t('Select payment methods')}
                                                                 selected={selectedPaymentMethodList}
                                                                 highlightOnlyResult={true}
                                                                 multiple
@@ -1643,7 +1653,7 @@ function PurchaseIndex(props) {
                                                                     );
                                                                 }}
                                                                 options={userOptions}
-                                                                placeholder="Select Users"
+                                                                placeholder={t('Select Users')}
                                                                 selected={selectedCreatedByUsers}
                                                                 highlightOnlyResult={true}
                                                                 onInputChange={(searchTerm, e) => {
@@ -1659,6 +1669,7 @@ function PurchaseIndex(props) {
                                                                 selected={selectedCreatedAtDate}
                                                                 className="form-control"
                                                                 dateFormat="MMM dd yyyy"
+                                                                locale={dateLocale}
                                                                 isClearable={true}
                                                                 onChange={(date) => {
                                                                     if (!date) {
@@ -1682,18 +1693,19 @@ function PurchaseIndex(props) {
                                                                     setShowCreatedAtDateRange(!showCreatedAtDateRange)
                                                                 }
                                                             >
-                                                                {showCreatedAtDateRange ? "Less.." : "More.."}
+                                                                {showCreatedAtDateRange ? t('Less...') : t('More...')}
                                                             </small>
                                                             <br />
                                                             {showCreatedAtDateRange ? (
                                                                 <span className="text-left">
-                                                                    From:{" "}
+                                                                    {t('From')}: {" "}
                                                                     <DatePicker
                                                                         id="created_at_from"
                                                                         value={createdAtFromValue}
                                                                         selected={selectedCreatedAtFromDate}
                                                                         className="form-control"
                                                                         dateFormat="MMM dd yyyy"
+                                                                        locale={dateLocale}
                                                                         isClearable={true}
                                                                         onChange={(date) => {
                                                                             if (!date) {
@@ -1706,13 +1718,14 @@ function PurchaseIndex(props) {
                                                                             setSelectedCreatedAtFromDate(date);
                                                                         }}
                                                                     />
-                                                                    To:{" "}
+                                                                    {t('To')}: {" "}
                                                                     <DatePicker
                                                                         id="created_at_to"
                                                                         value={createdAtToValue}
                                                                         selected={selectedCreatedAtToDate}
                                                                         className="form-control"
                                                                         dateFormat="MMM dd yyyy"
+                                                                        locale={dateLocale}
                                                                         isClearable={true}
                                                                         onChange={(date) => {
                                                                             if (!date) {
@@ -1739,11 +1752,26 @@ function PurchaseIndex(props) {
                                                                     );
                                                                 }}
                                                                 options={paymentStatusOptions}
-                                                                placeholder="Select Payment Status"
+                                                                placeholder={t('Select Payment Status')}
                                                                 selected={selectedPaymentStatusList}
                                                                 highlightOnlyResult={true}
                                                                 multiple
                                                             />
+                                                        </th>}
+                                                        {col.key === "enable_on_accounts" && <th>
+                                                            <select
+                                                                className="form-select form-select-sm"
+                                                                value={selectedAccountedFilter}
+                                                                onChange={(e) => {
+                                                                    const val = e.target.value;
+                                                                    setSelectedAccountedFilter(val);
+                                                                    searchByFieldValue("enable_on_accounts", val);
+                                                                }}
+                                                            >
+                                                                <option value="">ALL</option>
+                                                                <option value="true">YES</option>
+                                                                <option value="false">NO</option>
+                                                            </select>
                                                         </th>}
                                                         {col.key === "vendor" && <th>
                                                             <Typeahead
@@ -1758,7 +1786,7 @@ function PurchaseIndex(props) {
                                                                     );
                                                                 }}
                                                                 options={vendorOptions}
-                                                                placeholder="Vendor Name / Mob / VAT # / ID"
+                                                                placeholder={t('Vendor Name / Mob / VAT # / ID')}
                                                                 selected={selectedVendors}
                                                                 highlightOnlyResult={true}
                                                                 onInputChange={(searchTerm, e) => {
@@ -1782,6 +1810,7 @@ function PurchaseIndex(props) {
                                                                 <DatePicker
                                                                     id="date_str"
                                                                     value={dateValue}
+                                                                    locale={dateLocale}
                                                                     selected={selectedDate}
                                                                     className="form-control"
                                                                     dateFormat="MMM dd yyyy"
@@ -1806,19 +1835,20 @@ function PurchaseIndex(props) {
                                                                     }}
                                                                     onClick={(e) => setShowDateRange(!showDateRange)}
                                                                 >
-                                                                    {showDateRange ? "Less.." : "More.."}
+                                                                    {showDateRange ? t('Less...') : t('More...')}
                                                                 </small>
                                                                 <br />
 
                                                                 {showDateRange ? (
                                                                     <span className="text-left">
-                                                                        From:{" "}
+                                                                        {t('From')}:{" "}
                                                                         <DatePicker
                                                                             id="from_date"
                                                                             value={fromDateValue}
                                                                             selected={selectedFromDate}
                                                                             className="form-control"
                                                                             dateFormat="MMM dd yyyy"
+                                                                            locale={dateLocale}
                                                                             isClearable={true}
                                                                             onChange={(date) => {
                                                                                 if (!date) {
@@ -1831,13 +1861,14 @@ function PurchaseIndex(props) {
                                                                                 setSelectedFromDate(date);
                                                                             }}
                                                                         />
-                                                                        To:{" "}
+                                                                        {t('To')}: {" "}
                                                                         <DatePicker
                                                                             id="to_date"
                                                                             value={toDateValue}
                                                                             selected={selectedToDate}
                                                                             className="form-control"
                                                                             dateFormat="MMM dd yyyy"
+                                                                            locale={dateLocale}
                                                                             isClearable={true}
                                                                             onChange={(date) => {
                                                                                 if (!date) {
@@ -1877,6 +1908,7 @@ function PurchaseIndex(props) {
                                                             selected={selectedDate}
                                                             className="form-control"
                                                             dateFormat="MMM dd yyyy"
+                                                            locale={dateLocale}
                                                             isClearable={true}
                                                             onChange={(date) => {
                                                                 if (!date) {
@@ -1929,6 +1961,7 @@ function PurchaseIndex(props) {
                                                                     selected={selectedToDate}
                                                                     className="form-control"
                                                                     dateFormat="MMM dd yyyy"
+                                                                    locale={dateLocale}
                                                                     isClearable={true}
                                                                     onChange={(date) => {
                                                                         if (!date) {
@@ -2157,6 +2190,7 @@ function PurchaseIndex(props) {
                                                         selected={selectedCreatedAtDate}
                                                         className="form-control"
                                                         dateFormat="MMM dd yyyy"
+                                                        locale={dateLocale}
                                                         isClearable={true}
                                                         onChange={(date) => {
                                                             if (!date) {
@@ -2192,6 +2226,7 @@ function PurchaseIndex(props) {
                                                                 selected={selectedCreatedAtFromDate}
                                                                 className="form-control"
                                                                 dateFormat="MMM dd yyyy"
+                                                                locale={dateLocale}
                                                                 isClearable={true}
                                                                 onChange={(date) => {
                                                                     if (!date) {
@@ -2211,6 +2246,7 @@ function PurchaseIndex(props) {
                                                                 selected={selectedCreatedAtToDate}
                                                                 className="form-control"
                                                                 dateFormat="MMM dd yyyy"
+                                                                locale={dateLocale}
                                                                 isClearable={true}
                                                                 onChange={(date) => {
                                                                     if (!date) {
@@ -2233,6 +2269,7 @@ function PurchaseIndex(props) {
                                                         selected={selectedUpdatedAtDate}
                                                         className="form-control"
                                                         dateFormat="MMM dd yyyy"
+                                                        locale={dateLocale}
                                                         isClearable={true}
                                                         onChange={(date) => {
                                                             if (!date) {
@@ -2269,6 +2306,7 @@ function PurchaseIndex(props) {
                                                                 selected={selectedUpdatedAtFromDate}
                                                                 className="form-control"
                                                                 dateFormat="MMM dd yyyy"
+                                                                locale={dateLocale}
                                                                 isClearable={true}
                                                                 onChange={(date) => {
                                                                     if (!date) {
@@ -2288,6 +2326,7 @@ function PurchaseIndex(props) {
                                                                 selected={selectedUpdatedAtToDate}
                                                                 className="form-control"
                                                                 dateFormat="MMM dd yyyy"
+                                                                locale={dateLocale}
                                                                 isClearable={true}
                                                                 onChange={(date) => {
                                                                     if (!date) {
@@ -2342,12 +2381,12 @@ function PurchaseIndex(props) {
                                                                         className="btn btn-dark btn-sm"
                                                                         data-bs-toggle="tooltip"
                                                                         data-bs-placement="top"
-                                                                        title="Create Purchase Return"
+                                                                        title={t('Create Purchase Return')}
                                                                         onClick={() => {
                                                                             openPurchaseReturnCreateForm(purchase.id);
                                                                         }}
                                                                     >
-                                                                        <i className="bi bi-arrow-left"></i> Return
+                                                                        <i className="bi bi-arrow-left"></i> {t('Return')}
                                                                     </Button>
                                                                 </td>
                                                                 }
@@ -2355,7 +2394,7 @@ function PurchaseIndex(props) {
                                                                     <Button className="btn btn-success btn-sm" onClick={() => {
                                                                         handleSelected(purchase);
                                                                     }}>
-                                                                        Select
+                                                                        {t('Select')}
                                                                     </Button>
                                                                 </td>}
                                                                 {(col.fieldName === "code") && <td style={{ width: "auto", whiteSpace: "nowrap" }}>
@@ -2365,7 +2404,7 @@ function PurchaseIndex(props) {
                                                                     {purchase.vendor_invoice_no}
                                                                 </td>}
                                                                 {(col.fieldName === "date" || col.fieldName === "created_at") && <td style={{ width: "auto", whiteSpace: "nowrap" }}>
-                                                                    {format(new Date(purchase[col.key]), "MMM dd yyyy h:mma")}
+                                                                    {format(new Date(purchase[col.key]), "MMM dd yyyy h:mma", { locale: dateLocale })}
                                                                 </td>}
                                                                 {(col.fieldName === "vendor_name") && <td style={{ width: "auto", whiteSpace: "nowrap" }}>
                                                                     {purchase.vendor_name && <span style={{ cursor: "pointer", color: "blue" }} onClick={() => {
@@ -2394,15 +2433,15 @@ function PurchaseIndex(props) {
                                                                 {(col.fieldName === "payment_status") && <td style={{ width: "auto", whiteSpace: "nowrap" }}>
                                                                     {purchase.payment_status === "paid" ?
                                                                         <span className="badge bg-success">
-                                                                            Paid
+                                                                            {t('Paid')}
                                                                         </span> : ""}
                                                                     {purchase.payment_status === "paid_partially" ?
                                                                         <span className="badge bg-warning">
-                                                                            Paid Partially
+                                                                            {t('Paid Partially')}
                                                                         </span> : ""}
                                                                     {purchase.payment_status === "not_paid" ?
                                                                         <span className="badge bg-danger">
-                                                                            Not Paid
+                                                                            {t('Not Paid')}
                                                                         </span> : ""}
                                                                 </td>}
                                                                 {(col.fieldName === "payment_methods") && <td style={{ width: "auto", whiteSpace: "nowrap" }}>
@@ -2431,6 +2470,11 @@ function PurchaseIndex(props) {
                                                                     }}>
                                                                         {purchase.return_amount}
                                                                     </Button>
+                                                                </td>}
+                                                                {(col.fieldName === "enable_on_accounts") && <td style={{ width: "auto", whiteSpace: "nowrap", textAlign: "center" }}>
+                                                                    {purchase.enable_on_accounts
+                                                                        ? <span className="badge bg-success">YES</span>
+                                                                        : <span className="badge bg-secondary">NO</span>}
                                                                 </td>}
                                                                 {(col.fieldName === "created_by") && <td style={{ width: "auto", whiteSpace: "nowrap" }}>
                                                                     {purchase.created_by_name}
@@ -2481,7 +2525,7 @@ function PurchaseIndex(props) {
                                                         </td>
                                                         <td style={{ width: "auto", whiteSpace: "nowrap" }} >{purchase.code}</td>
                                                         <td style={{ width: "auto", whiteSpace: "nowrap" }} >
-                                                            {format(new Date(purchase.date), "MMM dd yyyy h:mma")}
+                                                            {format(new Date(purchase.date), "MMM dd yyyy h:mma", { locale: dateLocale })}
                                                         </td>
                                                         <td className="text-start" style={{ width: "auto", whiteSpace: "nowrap" }} >
                                                             {purchase.vendor_name && <OverflowTooltip value={purchase.vendor_name} />}
@@ -2555,13 +2599,15 @@ function PurchaseIndex(props) {
                                                         <td style={{ width: "auto", whiteSpace: "nowrap" }} >
                                                             {format(
                                                                 new Date(purchase.created_at),
-                                                                "MMM dd yyyy h:mma"
+                                                                "MMM dd yyyy h:mma",
+                                                                { locale: dateLocale }
                                                             )}
                                                         </td>
                                                         <td style={{ width: "auto", whiteSpace: "nowrap" }} >
                                                             {purchase.updated_at ? format(
                                                                 new Date(purchase.updated_at),
-                                                                "MMM dd yyyy h:mma"
+                                                                "MMM dd yyyy h:mma",
+                                                                { locale: dateLocale }
                                                             ) : ""}
                                                         </td>
                                                         <td style={{ width: "auto", whiteSpace: "nowrap" }} >
@@ -2595,26 +2641,6 @@ function PurchaseIndex(props) {
                                     </table>
                                 </div>
 
-                                {totalPages ? <ReactPaginate
-                                    breakLabel="..."
-                                    nextLabel="next >"
-                                    onPageChange={(event) => {
-                                        changePage(event.selected + 1);
-                                    }}
-                                    pageRangeDisplayed={5}
-                                    pageCount={totalPages}
-                                    previousLabel="< previous"
-                                    renderOnZeroPageCount={null}
-                                    className="pagination  flex-wrap"
-                                    pageClassName="page-item"
-                                    pageLinkClassName="page-link"
-                                    activeClassName="active"
-                                    previousClassName="page-item"
-                                    nextClassName="page-item"
-                                    previousLinkClassName="page-link"
-                                    nextLinkClassName="page-link"
-                                    forcePage={page - 1}
-                                /> : ""}
                             </div>
                         </div>
                     </div>
@@ -2648,7 +2674,7 @@ function PurchaseIndex(props) {
                 )}
             >
                 <Modal.Header>
-                    <Modal.Title>Payment history of Purchase #{selectedPurchase.code}</Modal.Title>
+                    <Modal.Title>{t('Payment history of Purchase')} #{selectedPurchase.code}</Modal.Title>
 
                     <div className="col align-self-end text-end">
                         <button
@@ -2692,7 +2718,7 @@ function PurchaseIndex(props) {
                 )}
             >
                 <Modal.Header>
-                    <Modal.Title>Purchase Returns of Purchase Order #{selectedPurchase.code}</Modal.Title>
+                    <Modal.Title>{t('Purchase Returns of Purchase Order')} #{selectedPurchase.code}</Modal.Title>
 
                     <div className="col align-self-end text-end">
                         <button

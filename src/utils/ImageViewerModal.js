@@ -37,8 +37,8 @@ const ImageViewerModal = forwardRef((props, ref) => {
         }
     };
 
-    const zoomIn = () => setZoom((z) => Math.min(z + 0.25, 3));
-    const zoomOut = () => setZoom((z) => Math.max(z - 0.25, 1));
+    const zoomIn = () => setZoom((z) => Math.round((Math.min(z + 0.25, 3)) * 100) / 100);
+    const zoomOut = () => setZoom((z) => Math.round((Math.max(z - 0.25, 1)) * 100) / 100);
     const resetZoom = () => setZoom(1);
 
     const handleClose = () => {
@@ -65,7 +65,12 @@ const ImageViewerModal = forwardRef((props, ref) => {
             <Modal.Header closeButton />
             <Modal.Body
                 className="p-0 d-flex justify-content-center align-items-center position-relative"
-                style={{ backgroundColor: '#000', color: '#fff', height: '100vh' }}
+                style={{
+                    backgroundColor: '#000',
+                    color: '#fff',
+                    height: '100vh',
+                    overflow: 'hidden'
+                }}
             >
                 {images.length === 0 ? (
                     <h4 className="text-white">No images to display</h4>
@@ -73,13 +78,16 @@ const ImageViewerModal = forwardRef((props, ref) => {
                     <>
                         <img
                             src={images[index]}
-                            alt=""
+                            alt="zoomed"
                             style={{
                                 transform: `scale(${zoom})`,
-                                transition: 'transform 0.3s ease',
+                                transition: 'transform 0.2s ease',
                                 maxWidth: '100%',
                                 maxHeight: '100%',
                                 userSelect: 'none',
+                                willChange: 'transform',
+                                backfaceVisibility: 'hidden',
+                                perspective: '1000px',
                             }}
                         />
 

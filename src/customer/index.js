@@ -14,14 +14,22 @@ import { trimTo2Decimals } from "../utils/numberUtils";
 import PostingIndex from "./../posting/index.js";
 import { confirm } from 'react-bootstrap-confirmation';
 import CustomerPending from "./../utils/customer_pending.js";
+import { Menu, MenuItem } from "react-bootstrap-typeahead";
+import { highlightWords } from "../utils/search.js";
+import StatsSummary from "../utils/StatsSummary.js";
+import Sales from "../utils/sales.js";
+import SalesReturns from "../utils/salesReturn.js";
+
 
 function CustomerIndex(props) {
+
+    let [enableSelection, setEnableSelection] = useState(false);
 
     //list
     const [customerList, setCustomerList] = useState([]);
 
     //pagination
-    let [pageSize, setPageSize] = useState(20);
+    let [pageSize, setPageSize] = useState(() => parseInt(localStorage.getItem('customer_pageSize') || '10'));
     let [page, setPage] = useState(1);
     const [totalPages, setTotalPages] = useState(0);
     const [totalItems, setTotalItems] = useState(1);
@@ -45,6 +53,11 @@ function CustomerIndex(props) {
 
 
     useEffect(() => {
+        if (props.enableSelection) {
+            setEnableSelection(true);
+        } else {
+            setEnableSelection(false);
+        }
         list();
         getStore(localStorage.getItem("store_id"));
         // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -133,6 +146,11 @@ function CustomerIndex(props) {
 
     function searchByFieldValue(field, value) {
         searchParams[field] = value;
+        setFieldFilters(prev => {
+            const updated = { ...prev };
+            if (value) { updated[field] = value; } else { delete updated[field]; }
+            return updated;
+        });
 
         page = 1;
         setPage(page);
@@ -198,6 +216,63 @@ function CustomerIndex(props) {
         list();
     }
 
+    let [creditBalance, setCreditBalance] = useState(0.00);
+    //Sales Summary Stats
+    let [sales, setSales] = useState(0.00);
+    let [salesPaid, setSalesPaid] = useState(0.00);
+    let [salesCreditBalance, setSalesCreditBalance] = useState(0.00);
+    let [salesCount, setSalesCount] = useState(0.00);
+    let [salesPaidCount, setSalesPaidCount] = useState(0.00);
+    let [salesPaidPartiallyCount, setSalesPaidPartiallyCount] = useState(0.00);
+    let [salesUnPaidCount, setSalesUnPaidCount] = useState(0.00);
+    let [salesProfit, setSalesProfit] = useState(0.00);
+    let [salesLoss, setSalesLoss] = useState(0.00);
+
+    //Sales Return Summary Stats
+    let [salesReturn, setSalesReturn] = useState(0.00);
+    let [salesReturnPaid, setSalesReturnPaid] = useState(0.00);
+    let [salesReturnCreditBalance, setSalesReturnCreditBalance] = useState(0.00);
+    let [salesReturnCount, setSalesReturnCount] = useState(0.00);
+    let [salesReturnPaidCount, setSalesReturnPaidCount] = useState(0.00);
+    let [salesReturnPaidPartiallyCount, setSalesReturnPaidPartiallyCount] = useState(0.00);
+    let [salesReturnUnPaidCount, setSalesReturnUnPaidCount] = useState(0.00);
+    let [salesReturnProfit, setSalesReturnProfit] = useState(0.00);
+    let [salesReturnLoss, setSalesReturnLoss] = useState(0.00);
+
+
+    //Quotation Summary Stats
+    let [quotation, setQuotation] = useState(0.00);
+    let [quotationCount, setQuotationCount] = useState(0.00);
+    let [quotationProfit, setQuotationProfit] = useState(0.00);
+    let [quotationLoss, setQuotationLoss] = useState(0.00);
+
+    //Quotation Sales Summary Stats
+    let [quotationSales, setQuotationSales] = useState(0.00);
+    let [quotationSalesPaid, setQuotationSalesPaid] = useState(0.00);
+    let [quotationSalesCreditBalance, setQuotationSalesCreditBalance] = useState(0.00);
+    let [quotationSalesCount, setQuotationSalesCount] = useState(0.00);
+    let [quotationSalesPaidCount, setQuotationSalesPaidCount] = useState(0.00);
+    let [quotationSalesPaidPartiallyCount, setQuotationSalesPaidPartiallyCount] = useState(0.00);
+    let [quotationSalesUnPaidCount, setQuotationSalesUnPaidCount] = useState(0.00);
+    let [quotationSalesProfit, setQuotationSalesProfit] = useState(0.00);
+    let [quotationSalesLoss, setQuotationSalesLoss] = useState(0.00);
+
+
+    //Quotation Sales Return Summary Stats
+    let [quotationSalesReturn, setQuotationSalesReturn] = useState(0.00);
+    let [quotationSalesReturnPaid, setQuotationSalesReturnPaid] = useState(0.00);
+    let [quotationSalesReturnCreditBalance, setQuotationSalesReturnCreditBalance] = useState(0.00);
+    let [quotationSalesReturnCount, setQuotationSalesReturnCount] = useState(0.00);
+    let [quotationSalesReturnPaidCount, setQuotationSalesReturnPaidCount] = useState(0.00);
+    let [quotationSalesReturnPaidPartiallyCount, setQuotationSalesReturnPaidPartiallyCount] = useState(0.00);
+    let [quotationSalesReturnUnPaidCount, setQuotationSalesReturnUnPaidCount] = useState(0.00);
+    let [quotationSalesReturnProfit, setQuotationSalesReturnProfit] = useState(0.00);
+    let [quotationSalesReturnLoss, setQuotationSalesReturnLoss] = useState(0.00);
+
+    //Delivery Notes Summary Stats
+    let [deliveryNoteCount, setDeliveryNoteCount] = useState(0.00);
+
+
     function list() {
         const requestOptions = {
             method: "GET",
@@ -207,10 +282,16 @@ function CustomerIndex(props) {
             },
         };
         let Select =
-            "select=id,code,deleted,search_label,credit_limit,credit_balance,account,name,name_in_arabic,email,phone,vat_no,created_by_name,created_at,stores";
+            "select=id,code,deleted,search_label,credit_limit,credit_balance,account,name,name_in_arabic,email,phone,vat_no,created_by_name,created_at,stores,churn_risk_tier,churn_risk_tier_reason,churn_percent,total_spend,days_since_last_buy,lifetime_value_segment_for_12months,lifetime_value_segment_reason_for_12months,predicted_clv_amount_12months,predicted_avg_order_amount,tenure_days,first_purchase_at,last_purchase_at,retention_1month,retention_3month,retention_6month,retention_12month,retention_24month";
 
         if (localStorage.getItem("store_id")) {
             searchParams.store_id = localStorage.getItem("store_id");
+        }
+
+        if (statsOpen) {
+            searchParams["stats"] = "1";
+        } else {
+            searchParams["stats"] = "0";
         }
 
         const d = new Date();
@@ -258,6 +339,142 @@ function CustomerIndex(props) {
                 setTotalItems(data.total_count);
                 setOffset((page - 1) * pageSize);
                 setCurrentPageItemsCount(data.result.length);
+
+                creditBalance = data.meta.credit_balance;
+                setCreditBalance(creditBalance);
+
+                //Sales
+                sales = data.meta.sales;
+                setSales(sales);
+
+                salesPaid = data.meta.sales_paid;
+                setSalesPaid(salesPaid);
+
+                salesCreditBalance = data.meta.sales_credit_balance;
+                setSalesCreditBalance(salesCreditBalance);
+
+                salesCount = data.meta.sales_count;
+                setSalesCount(salesCount);
+
+                salesPaidCount = data.meta.sales_paid_count;
+                setSalesPaidCount(salesPaidCount);
+
+                salesPaidPartiallyCount = data.meta.sales_paid_partially_count;
+                setSalesPaidPartiallyCount(salesPaidPartiallyCount);
+
+                salesUnPaidCount = data.meta.sales_unpaid_count;
+                setSalesUnPaidCount(salesUnPaidCount);
+
+                salesProfit = data.meta.sales_profit;
+                setSalesProfit(salesProfit);
+
+                salesLoss = data.meta.sales_loss;
+                setSalesLoss(salesLoss);
+
+
+                //Sales Return
+                salesReturn = data.meta.sales_return;
+                setSalesReturn(salesReturn);
+
+                salesReturnPaid = data.meta.sales_return_paid;
+                setSalesReturnPaid(salesReturnPaid);
+
+                salesReturnCreditBalance = data.meta.sales_return_credit_balance;
+                setSalesReturnCreditBalance(salesReturnCreditBalance);
+
+                salesReturnCount = data.meta.sales_return_count;
+                setSalesReturnCount(salesReturnCount);
+
+                salesReturnPaidCount = data.meta.sales_return_paid_count;
+                setSalesReturnPaidCount(salesReturnPaidCount);
+
+                salesReturnPaidPartiallyCount = data.meta.sales_return_paid_partially_count;
+                setSalesReturnPaidPartiallyCount(salesReturnPaidPartiallyCount);
+
+                salesReturnUnPaidCount = data.meta.sales_return_unpaid_count;
+                setSalesReturnUnPaidCount(salesReturnUnPaidCount);
+
+                salesReturnProfit = data.meta.sales_return_profit;
+                setSalesReturnProfit(salesReturnProfit);
+
+                salesReturnLoss = data.meta.sales_return_loss;
+                setSalesReturnLoss(salesReturnLoss);
+
+                //Quotation
+                quotation = data.meta.quotation;
+                setQuotation(quotation);
+
+                quotationCount = data.meta.quotation_count;
+                setQuotationCount(quotationCount);
+
+                quotationProfit = data.meta.quotation_profit;
+                setQuotationProfit(quotationProfit);
+
+                quotationLoss = data.meta.quotation_loss;
+                setQuotationLoss(quotationLoss);
+
+
+                //Quotation Sales
+                quotationSales = data.meta.quotation_sales;
+                setQuotationSales(quotationSales);
+
+                quotationSalesPaid = data.meta.quotation_sales_paid;
+                setQuotationSalesPaid(quotationSalesPaid);
+
+                quotationSalesCreditBalance = data.meta.quotation_sales_credit_balance;
+                setQuotationSalesCreditBalance(quotationSalesCreditBalance);
+
+                quotationSalesCount = data.meta.quotation_sales_count;
+                setQuotationSalesCount(quotationSalesCount);
+
+                quotationSalesPaidCount = data.meta.quotation_sales_paid_count;
+                setQuotationSalesPaidCount(quotationSalesPaidCount);
+
+                quotationSalesPaidPartiallyCount = data.meta.quotation_sales_paid_partially_count;
+                setQuotationSalesPaidPartiallyCount(quotationSalesPaidPartiallyCount);
+
+                quotationSalesUnPaidCount = data.meta.quotation_sales_unpaid_count;
+                setQuotationSalesUnPaidCount(quotationSalesUnPaidCount);
+
+                quotationSalesProfit = data.meta.quotation_sales_profit;
+                setQuotationSalesProfit(quotationSalesProfit);
+
+                quotationSalesLoss = data.meta.quotation_sales_loss;
+                setQuotationSalesLoss(quotationSalesLoss);
+
+
+                //Quotation Sales Return
+                quotationSalesReturn = data.meta.quotation_sales_return;
+                setQuotationSalesReturn(quotationSalesReturn);
+
+                quotationSalesReturnPaid = data.meta.quotation_sales_return_paid;
+                setQuotationSalesReturnPaid(quotationSalesReturnPaid);
+
+                quotationSalesReturnCreditBalance = data.meta.quotation_sales_return_credit_balance;
+                setQuotationSalesReturnCreditBalance(quotationSalesReturnCreditBalance);
+
+                quotationSalesReturnCount = data.meta.quotation_sales_return_count;
+                setQuotationSalesReturnCount(quotationSalesReturnCount);
+
+                quotationSalesReturnPaidCount = data.meta.quotation_sales_return_paid_count;
+                setQuotationSalesReturnPaidCount(quotationSalesReturnPaidCount);
+
+                quotationSalesReturnPaidPartiallyCount = data.meta.quotation_sales_return_paid_partially_count;
+                setQuotationSalesReturnPaidPartiallyCount(quotationSalesReturnPaidPartiallyCount);
+
+                quotationSalesReturnUnPaidCount = data.meta.quotation_sales_return_unpaid_count;
+                setQuotationSalesReturnUnPaidCount(quotationSalesReturnUnPaidCount);
+
+                quotationSalesReturnProfit = data.meta.quotation_sales_return_profit;
+                setQuotationSalesReturnProfit(quotationSalesReturnProfit);
+
+                quotationSalesReturnLoss = data.meta.quotation_sales_return_loss;
+                setQuotationSalesReturnLoss(quotationSalesReturnLoss);
+
+                //Delivery Notes
+                deliveryNoteCount = data.meta.delivery_note_count;
+                setDeliveryNoteCount(deliveryNoteCount);
+
             })
             .catch((error) => {
                 setIsListLoading(false);
@@ -276,6 +493,7 @@ function CustomerIndex(props) {
 
     function changePageSize(size) {
         pageSize = parseInt(size);
+        localStorage.setItem('customer_pageSize', size);
         setPageSize(pageSize);
         list();
     }
@@ -306,6 +524,28 @@ function CustomerIndex(props) {
     const [selectedCustomers, setSelectedCustomers] = useState([]);
 
 
+    /* const customCustomerFilter = useCallback((option, query) => {
+         const normalize = (str) => str?.toLowerCase().replace(/\s+/g, " ").trim() || "";
+ 
+         const q = normalize(query);
+         const qWords = q.split(" ");
+ 
+         const fields = [
+             option.code,
+             option.vat_no,
+             option.name,
+             option.name_in_arabic,
+             option.phone,
+             option.search_label,
+             option.phone_in_arabic,
+             ...(Array.isArray(option.additional_keywords) ? option.additional_keywords : []),
+         ];
+ 
+         const searchable = normalize(fields.join(" "));
+ 
+         return qWords.every((word) => searchable.includes(word));
+     }, []);*/
+
     const customCustomerFilter = useCallback((option, query) => {
         const normalize = (str) => str?.toLowerCase().replace(/\s+/g, " ").trim() || "";
 
@@ -313,35 +553,82 @@ function CustomerIndex(props) {
         const qWords = q.split(" ");
 
         const fields = [
-            option.code,
-            option.vat_no,
-            option.name,
-            option.name_in_arabic,
-            option.phone,
-            option.search_label,
-            option.phone_in_arabic,
+            option.code            || "",
+            option.vat_no          || "",
+            option.name            || "",
+            option.name_in_arabic  || "",
+            option.phone           || "",
+            option.phone2          || "",
+            option.email           || "",
+            option.search_label    || "",
+            option.phone_in_arabic || "",
             ...(Array.isArray(option.additional_keywords) ? option.additional_keywords : []),
         ];
 
         const searchable = normalize(fields.join(" "));
+        const searchableCompact = fields.join(" ").toLowerCase()
+            .replace(/[^\p{L}\p{N}\s]/gu, "")
+            .replace(/\s+/g, " ").trim();
 
-        return qWords.every((word) => searchable.includes(word));
+        return qWords.every((word) => {
+            const wordCompact = word.replace(/[^\p{L}\p{N}]/gu, "");
+            return searchable.includes(word) || searchableCompact.includes(wordCompact);
+        });
     }, []);
 
 
+    /* async function suggestCustomers(searchTerm) {
+         console.log("Inside handle suggestCustomers");
+         setCustomerOptions([]);
+ 
+         console.log("searchTerm:" + searchTerm);
+         if (!searchTerm) {
+             return;
+         }
+ 
+         var params = {
+             query: searchTerm,
+         };
+ 
+         if (localStorage.getItem("store_id")) {
+             params.store_id = localStorage.getItem("store_id");
+         }
+ 
+         var queryString = ObjectToSearchQueryParams(params);
+         if (queryString !== "") {
+             queryString = "&" + queryString;
+         }
+ 
+         const requestOptions = {
+             method: "GET",
+             headers: {
+                 "Content-Type": "application/json",
+                 Authorization: localStorage.getItem("access_token"),
+             },
+         };
+ 
+         let Select = "select=id,code,credit_limit,credit_balance,additional_keywords,remarks,use_remarks_in_sales,vat_no,name,phone,name_in_arabic,phone_in_arabic,search_label";
+         // setIsCustomersLoading(true);
+         let result = await fetch(
+             "/v1/customer?" + Select + queryString,
+             requestOptions
+         );
+         let data = await result.json();
+ 
+         const filtered = data.result.filter((opt) => customCustomerFilter(opt, searchTerm));
+ 
+         setCustomerOptions(filtered);
+         // setCustomerOptions(filtered);
+         // setIsCustomersLoading(false);
+     }*/
+
     async function suggestCustomers(searchTerm) {
-        console.log("Inside handle suggestCustomers");
         setCustomerOptions([]);
 
-        console.log("searchTerm:" + searchTerm);
-        if (!searchTerm) {
-            return;
-        }
+        searchTerm = searchTerm.replace(/\s+/g, " ").trim();
+        if (!searchTerm) return;
 
-        var params = {
-            query: searchTerm,
-        };
-
+        var params = { query: searchTerm };
         if (localStorage.getItem("store_id")) {
             params.store_id = localStorage.getItem("store_id");
         }
@@ -359,19 +646,17 @@ function CustomerIndex(props) {
             },
         };
 
-        let Select = "select=id,code,credit_limit,credit_balance,additional_keywords,remarks,use_remarks_in_sales,vat_no,name,phone,name_in_arabic,phone_in_arabic,search_label";
-        // setIsCustomersLoading(true);
+        let Select = "select=id,code,credit_limit,credit_balance,additional_keywords,remarks,use_remarks_in_sales,vat_no,name,phone,phone2,email,name_in_arabic,phone_in_arabic,search_label";
         let result = await fetch(
-            "/v1/customer?" + Select + queryString,
+            "/v1/customer?limit=100&" + Select + queryString,
             requestOptions
         );
         let data = await result.json();
 
-        const filtered = data.result.filter((opt) => customCustomerFilter(opt, searchTerm));
+        if (!data.result) return;
 
+        const filtered = data.result.filter((opt) => customCustomerFilter(opt, searchTerm));
         setCustomerOptions(filtered);
-        // setCustomerOptions(filtered);
-        // setIsCustomersLoading(false);
     }
 
 
@@ -533,7 +818,14 @@ function CustomerIndex(props) {
 
 
     //Table settings
+    const handleSelected = (customer) => {
+        if (props.onSelectCustomer) {
+            props.onSelectCustomer(customer);
+        }
+    };
+
     const defaultColumns = useMemo(() => [
+        { key: "select", label: "Select", fieldName: "select", visible: true },
         { key: "deleted", label: "Deleted", fieldName: "deleted", visible: true },
         { key: "actions", label: "Actions", fieldName: "actions", visible: true },
         { key: "code", label: "ID", fieldName: "code", visible: true },
@@ -593,6 +885,22 @@ function CustomerIndex(props) {
 
 
         { key: "delivery_note_count", label: "Delivery Note Count", fieldName: "stores.delivery_note_count", visible: true },
+        { key: "churn_risk_tier", label: "Churn Risk Tier", fieldName: "churn_risk_tier", visible: false },
+        { key: "churn_risk_tier_reason", label: "Churn Risk Reason", fieldName: "churn_risk_tier_reason", visible: true },
+        { key: "churn_percent", label: "Churn %", fieldName: "churn_percent", visible: false },
+        { key: "total_spend", label: "Total Spend (SAR)", fieldName: "total_spend", visible: true },
+        { key: "days_since_last_buy", label: "Days Since Last Buy", fieldName: "days_since_last_buy", visible: false },
+        { key: "predicted_clv_amount_12months", label: "CLV 12m (SAR)", fieldName: "predicted_clv_amount_12months", visible: false },
+        { key: "lifetime_value_segment_for_12months", label: "CLV Segment", fieldName: "lifetime_value_segment_for_12months", visible: false },
+        { key: "lifetime_value_segment_reason_for_12months", label: "CLV Segment Reason", fieldName: "lifetime_value_segment_reason_for_12months", visible: true },
+        { key: "tenure_days", label: "Tenure (Days)", fieldName: "tenure_days", visible: false },
+        { key: "first_purchase_at", label: "First Purchase", fieldName: "first_purchase_at", visible: false },
+        { key: "last_purchase_at", label: "Last Purchase", fieldName: "last_purchase_at", visible: false },
+        { key: "retention_1month", label: "1m Retention", fieldName: "retention_1month", visible: false },
+        { key: "retention_3month", label: "3m Retention", fieldName: "retention_3month", visible: false },
+        { key: "retention_6month", label: "6m Retention", fieldName: "retention_6month", visible: false },
+        { key: "retention_12month", label: "12m Retention", fieldName: "retention_12month", visible: false },
+        { key: "retention_24month", label: "24m Retention", fieldName: "retention_24month", visible: false },
         { key: "created_by_name", label: "Created By", fieldName: "created_by", visible: true },
         { key: "created_at", label: "Created At", fieldName: "created_at", visible: true },
         { key: "actions_end", label: "Actions", fieldName: "actions_end", visible: true },
@@ -670,12 +978,65 @@ function CustomerIndex(props) {
     const [showSuccess, setShowSuccess] = useState(false);
     const [successMessage, setSuccessMessage] = useState(false);
 
+    const [showHistoryModal, setShowHistoryModal] = useState(false);
+    const [historyCustomer, setHistoryCustomer] = useState(null);
+    const [historyData, setHistoryData] = useState({ churn_history: [], clv_history: [] });
+    const [historyLoading, setHistoryLoading] = useState(false);
+    const [historyTab, setHistoryTab] = useState("churn");
+
+    const SalesRef = useRef();
+    function openCustomerSales(customer) {
+        SalesRef.current.open(false, [customer], null);
+    }
+
+    const SalesReturnsRef = useRef();
+    function openCustomerSalesReturns(customer) {
+        SalesReturnsRef.current.open(false, [customer], null);
+    }
+
+    async function openHistoryModal(customerId, customerName) {
+        setHistoryCustomer(customerName);
+        setHistoryData({ churn_history: [], clv_history: [] });
+        setHistoryTab("churn");
+        setHistoryLoading(true);
+        setShowHistoryModal(true);
+        try {
+            const storeId = localStorage.getItem("store_id") || "";
+            const res = await fetch("/v1/customer/" + customerId + "/history?search[store_id]=" + storeId, {
+                method: "GET",
+                headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": localStorage.getItem("access_token"),
+                },
+            });
+            const data = await res.json();
+            if (data.status) {
+                setHistoryData(data.result);
+            }
+        } catch (e) {
+            console.error("Failed to load customer history", e);
+        } finally {
+            setHistoryLoading(false);
+        }
+    }
+
     let [selectedCreatedAtDate, setSelectedCreatedAtDate] = useState(new Date());
     let [selectedCreatedAtFromDate, setSelectedCreatedAtFromDate] = useState(new Date());
     let [selectedCreatedAtToDate, setSelectedCreatedAtToDate] = useState(new Date());
 
     const handlePendingUpdated = () => {
         list();
+    };
+
+    let [statsOpen, setStatsOpen] = useState(false);
+    const [fieldFilters, setFieldFilters] = useState({});
+    const handleSummaryToggle = (isOpen) => {
+        statsOpen = isOpen
+        setStatsOpen(statsOpen)
+
+        if (isOpen) {
+            list(); // Fetch stats only if it's opened and not fetched before
+        }
     };
 
     return (
@@ -754,6 +1115,18 @@ function CustomerIndex(props) {
                         Close
                     </Button>
                     <Button
+                        variant="outline-secondary"
+                        onClick={() => setColumns(cols => cols.map(c => ({ ...c, visible: false })))}
+                    >
+                        Uncheck All
+                    </Button>
+                    <Button
+                        variant="outline-secondary"
+                        onClick={() => setColumns(cols => cols.map(c => ({ ...c, visible: true })))}
+                    >
+                        Check All
+                    </Button>
+                    <Button
                         variant="primary"
                         onClick={() => {
                             RestoreDefaultSettings();
@@ -780,11 +1153,195 @@ function CustomerIndex(props) {
                     </Button>
                 </Modal.Footer>
             </Modal>
+            <Modal show={showHistoryModal} onHide={() => setShowHistoryModal(false)} size="xl" centered>
+                <Modal.Header closeButton>
+                    <Modal.Title>Customer History{historyCustomer ? ` — ${historyCustomer}` : ""}</Modal.Title>
+                </Modal.Header>
+                <Modal.Body>
+                    <ul className="nav nav-tabs mb-3">
+                        <li className="nav-item">
+                            <button className={"nav-link" + (historyTab === "churn" ? " active" : "")} onClick={() => setHistoryTab("churn")}>
+                                Churn Risk History
+                            </button>
+                        </li>
+                        <li className="nav-item">
+                            <button className={"nav-link" + (historyTab === "clv" ? " active" : "")} onClick={() => setHistoryTab("clv")}>
+                                CLV History
+                            </button>
+                        </li>
+                    </ul>
+                    {historyLoading && <div className="text-center py-4"><Spinner animation="border" /></div>}
+                    {!historyLoading && historyTab === "churn" && (
+                        <div className="table-responsive">
+                            <table className="table table-sm table-bordered">
+                                <thead className="table-light">
+                                    <tr>
+                                        <th>Date</th>
+                                        <th>Risk Tier</th>
+                                        <th>Churn %</th>
+                                        <th>Total Spend</th>
+                                        <th>Days Since Last Buy</th>
+                                        <th>Reason</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {historyData.churn_history && historyData.churn_history.length > 0 ? historyData.churn_history.map((row, i) => (
+                                        <tr key={i}>
+                                            <td>{row.date ? new Date(row.date).toLocaleDateString() : ""}</td>
+                                            <td>
+                                                <span className={
+                                                    "badge " + (
+                                                        row.risk_tier === "Critical" ? "bg-danger" :
+                                                            row.risk_tier === "High" ? "bg-warning text-dark" :
+                                                                row.risk_tier === "Medium" ? "bg-info" :
+                                                                    row.risk_tier === "Low" ? "bg-success" : "bg-secondary"
+                                                    )
+                                                }>{row.risk_tier || "—"}</span>
+                                            </td>
+                                            <td>{row.churn_percent != null ? row.churn_percent.toFixed(1) + "%" : "—"}</td>
+                                            <td>{row.total_spend != null ? row.total_spend.toFixed(2) : "—"}</td>
+                                            <td>{row.days_since_last_buy != null ? row.days_since_last_buy : "—"}</td>
+                                            <td style={{ fontSize: "0.8em", maxWidth: "220px" }}>{row.risk_tier_reason || "—"}</td>
+                                        </tr>
+                                    )) : (
+                                        <tr><td colSpan={6} className="text-center text-muted">No churn history found</td></tr>
+                                    )}
+                                </tbody>
+                            </table>
+                        </div>
+                    )}
+                    {!historyLoading && historyTab === "clv" && (
+                        <div className="table-responsive">
+                            <table className="table table-sm table-bordered">
+                                <thead className="table-light">
+                                    <tr>
+                                        <th>Date</th>
+                                        <th>CLV Segment</th>
+                                        <th>Predicted CLV 12m</th>
+                                        <th>Avg Order</th>
+                                        <th>Orders Count</th>
+                                        <th>Spend</th>
+                                        <th>Reason</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {historyData.clv_history && historyData.clv_history.length > 0 ? historyData.clv_history.map((row, i) => (
+                                        <tr key={i}>
+                                            <td>{row.date ? new Date(row.date).toLocaleDateString() : ""}</td>
+                                            <td>
+                                                <span className={
+                                                    "badge " + (
+                                                        row.lifetime_value_segment_for_12months === "High Value" ? "bg-success" :
+                                                            row.lifetime_value_segment_for_12months === "Mid Value" ? "bg-primary" :
+                                                                row.lifetime_value_segment_for_12months === "Low Value" ? "bg-warning text-dark" : "bg-secondary"
+                                                    )
+                                                }>{row.lifetime_value_segment_for_12months || "—"}</span>
+                                            </td>
+                                            <td>{row.predicted_clv_amount_12months != null ? row.predicted_clv_amount_12months.toFixed(2) : "—"}</td>
+                                            <td>{row.predicted_avg_order_amount != null ? row.predicted_avg_order_amount.toFixed(2) : "—"}</td>
+                                            <td>{row.history_orders_count != null ? row.history_orders_count : "—"}</td>
+                                            <td>{row.history_spend_amount != null ? row.history_spend_amount.toFixed(2) : "—"}</td>
+                                            <td style={{ fontSize: "0.8em", maxWidth: "220px" }}>{row.lifetime_value_segment_reason_for_12months || "—"}</td>
+                                        </tr>
+                                    )) : (
+                                        <tr><td colSpan={7} className="text-center text-muted">No CLV history found</td></tr>
+                                    )}
+                                </tbody>
+                            </table>
+                        </div>
+                    )}
+                </Modal.Body>
+                <Modal.Footer>
+                    <Button variant="secondary" onClick={() => setShowHistoryModal(false)}>Close</Button>
+                </Modal.Footer>
+            </Modal>
             <PostingIndex ref={AccountBalanceSheetRef} showToastMessage={props.showToastMessage} />
+            <Sales ref={SalesRef} showToastMessage={props.showToastMessage} />
+            <SalesReturns ref={SalesReturnsRef} showToastMessage={props.showToastMessage} />
             <CustomerCreate ref={CreateFormRef} refreshList={list} showToastMessage={props.showToastMessage} openDetailsView={openDetailsView} />
             <CustomerView ref={DetailsViewRef} openUpdateForm={openUpdateForm} openCreateForm={openCreateForm} />
 
             <div className="container-fluid p-0">
+
+
+                <div className="row">
+                    <div className="col">
+                        <span className="text-end">
+                            <StatsSummary
+                                title="Customer Stats Summary"
+                                filters={{
+                                    ...(selectedCustomers.length > 0 ? { 'Customer': selectedCustomers.map(c => c.name).join(', ') } : {}),
+                                    ...Object.fromEntries(
+                                        Object.entries(fieldFilters)
+                                            .filter(([, v]) => v)
+                                            .map(([field, value]) => {
+                                                const col = columns.find(c => c.fieldName === field || c.key === field);
+                                                return [col ? col.label : field, value];
+                                            })
+                                    ),
+                                }}
+                                stats={{
+                                    "Credit Balance": creditBalance,
+                                    //Sales
+                                    "Sales": sales,
+                                    "Sales Paid": salesPaid,
+                                    "Sales Credit Balance": salesCreditBalance,
+                                    "Sales Count": salesCount,
+                                    "Sales Paid Count": salesPaidCount,
+                                    "Sales Paid Partially Count": salesPaidPartiallyCount,
+                                    "Sales UnPaid Count": salesUnPaidCount,
+                                    "Sales Profit": salesProfit,
+                                    "Sales Loss": salesLoss,
+
+                                    //Sales Return
+                                    "Sales Return": salesReturn,
+                                    "Sales Return Paid": salesReturnPaid,
+                                    "Sales Return Credit Balance": salesReturnCreditBalance,
+                                    "Sales Return Count": salesReturnCount,
+                                    "Sales Return Paid Count": salesReturnPaidCount,
+                                    "Sales Return Paid Partially Count": salesReturnPaidPartiallyCount,
+                                    "Sales Return UnPaid Count": salesReturnUnPaidCount,
+                                    "Sales Return Profit": salesReturnProfit,
+                                    "Sales Return Loss": salesReturnLoss,
+
+                                    //Quotation
+                                    "Quotation": sales,
+                                    "Quotation Count": quotationCount,
+                                    "Quotation Profit": quotationProfit,
+                                    "Quotation Loss": quotationLoss,
+
+                                    //Quotation Sales
+                                    "Qtn. Sales": quotationSales,
+                                    "Qtn. Sales Paid": quotationSalesPaid,
+                                    "Qtn. Sales Credit Balance": quotationSalesCreditBalance,
+                                    "Qtn. Sales Count": quotationSalesCount,
+                                    "Qtn. Sales Paid Count": quotationSalesPaidCount,
+                                    "Qtn. Sales Paid Partially Count": quotationSalesPaidPartiallyCount,
+                                    "Qtn. Sales UnPaid Count": quotationSalesUnPaidCount,
+                                    "Qtn. Sales Profit": quotationSalesProfit,
+                                    "Qtn. Sales Loss": quotationSalesLoss,
+
+                                    //Quotation Sales Return
+                                    "Qtn. Sales Return": quotationSalesReturn,
+                                    "Qtn. Sales Return Paid": quotationSalesReturnPaid,
+                                    "Qtn. Sales Return Credit Balance": quotationSalesReturnCreditBalance,
+                                    "Qtn. Sales Return Count": quotationSalesReturnCount,
+                                    "Qtn. Sales Return Paid Count": quotationSalesReturnPaidCount,
+                                    "Qtn. Sales Return Paid Partially Count": quotationSalesReturnPaidPartiallyCount,
+                                    "Qtn. Sales Return UnPaid Count": quotationSalesReturnUnPaidCount,
+                                    "Qtn. Sales Return Profit": quotationSalesReturnProfit,
+                                    "Qtn. Sales Return Loss": quotationSalesReturnLoss,
+
+                                    //Delivery Notes
+                                    "Delivery Note Count": deliveryNoteCount,
+
+                                }}
+                                onToggle={handleSummaryToggle}
+                            />
+                        </span>
+                    </div>
+                </div >
+
                 <div className="row">
                     <div className="col">
                         <h1 className="h3">Customers</h1>
@@ -794,7 +1351,7 @@ function CustomerIndex(props) {
                         <Button
                             hide={true.toString()}
                             variant="primary"
-                            className="btn btn-primary mb-3"
+                            className="btn btn-primary mb-1"
                             onClick={openCreateForm}
                         >
                             <i className="bi bi-plus-lg"></i> Create
@@ -810,7 +1367,7 @@ function CustomerIndex(props) {
                         <h5   className="card-title mb-0"></h5>
                     </div>
                     */}
-                            <div className="card-body">
+                            <div className="card-body p-2">
                                 <div className="row">
                                     {totalItems === 0 && (
                                         <div className="col">
@@ -818,81 +1375,61 @@ function CustomerIndex(props) {
                                         </div>
                                     )}
                                 </div>
-                                <div className="row" style={{ bcustomer: "solid 0px" }}>
-                                    <div className="col text-start" style={{ bcustomer: "solid 0px" }}>
-                                        <Button
-                                            onClick={() => {
-                                                setIsRefreshInProcess(true);
-                                                list();
-                                            }}
-                                            variant="primary"
-                                            disabled={isRefreshInProcess}
-                                        >
-                                            {isRefreshInProcess ? (
-                                                <Spinner
-                                                    as="span"
-                                                    animation="bcustomer"
-                                                    size="sm"
-                                                    role="status"
-                                                    aria-hidden={true}
-                                                />
-                                            ) : (
-                                                <i className="fa fa-refresh"></i>
-                                            )}
-                                            <span className="visually-hidden">Loading...</span>
-                                        </Button>
-                                    </div>
-                                    <div className="col text-center">
-                                        {isListLoading && (
-                                            <Spinner animation="grow" variant="primary" />
+                                <div style={{ display: "flex", alignItems: "center", gap: "8px", flexWrap: "wrap", marginBottom: "8px" }}>
+                                    <Button
+                                        onClick={() => {
+                                            setIsRefreshInProcess(true);
+                                            list();
+                                        }}
+                                        variant="primary"
+                                        disabled={isRefreshInProcess}
+                                    >
+                                        {isRefreshInProcess ? (
+                                            <Spinner
+                                                as="span"
+                                                animation="border"
+                                                size="sm"
+                                                role="status"
+                                                aria-hidden={true}
+                                            />
+                                        ) : (
+                                            <i className="fa fa-refresh"></i>
                                         )}
-                                    </div>
-                                    <div className="col text-end">
-                                        {totalItems > 0 && (
-                                            <>
-                                                <label className="form-label">Size:&nbsp;</label>
-                                                <select
-                                                    value={pageSize}
-                                                    onChange={(e) => {
-                                                        changePageSize(e.target.value);
-                                                    }}
-                                                    className="form-control pull-right"
-                                                    style={{
-                                                        bcustomer: "solid 1px",
-                                                        bcustomerColor: "silver",
-                                                        width: "55px",
-                                                    }}
-                                                >
-                                                    <option value="5">
-                                                        5
-                                                    </option>
-                                                    <option value="10">
-                                                        10
-                                                    </option>
-                                                    <option value="20">20</option>
-                                                    <option value="40">40</option>
-                                                    <option value="50">50</option>
-                                                    <option value="100">100</option>
-                                                </select>
-                                            </>
-                                        )}
-                                    </div>
-                                </div>
-
-                                <br />
-                                <div className="row">
-                                    <div className="col" style={{ bcustomer: "solid 0px" }}>
+                                        <span className="visually-hidden">Loading...</span>
+                                    </Button>
+                                    {totalItems > 0 && (
+                                        <>
+                                            <label className="form-label mb-0">Size:&nbsp;</label>
+                                            <select
+                                                value={pageSize}
+                                                onChange={(e) => {
+                                                    changePageSize(e.target.value);
+                                                }}
+                                                className="form-control"
+                                                style={{ width: "55px" }}
+                                            >
+                                                <option value="5">5</option>
+                                                <option value="10">10</option>
+                                                <option value="20">20</option>
+                                                <option value="40">40</option>
+                                                <option value="50">50</option>
+                                                <option value="100">100</option>
+                                            </select>
+                                        </>
+                                    )}
+                                    <div className="w-100" style={{ overflowX: "auto" }}>
                                         {totalPages ? <ReactPaginate
                                             breakLabel="..."
                                             nextLabel="next >"
                                             onPageChange={(event) => {
                                                 changePage(event.selected + 1);
                                             }}
-                                            pageRangeDisplayed={5}
+                                            pageRangeDisplayed={3}
+                                            marginPagesDisplayed={1}
                                             pageCount={totalPages}
-                                            previousLabel="< previous"
+                                            previousLabel="< prev"
                                             renderOnZeroPageCount={null}
-                                            className="pagination  flex-wrap"
+                                            className="pagination flex-wrap mb-0"
                                             pageClassName="page-item"
                                             pageLinkClassName="page-link"
                                             activeClassName="active"
@@ -903,42 +1440,23 @@ function CustomerIndex(props) {
                                             forcePage={page - 1}
                                         /> : ""}
                                     </div>
-                                </div>
-
-                                <div className="row">
-                                    <div className="col text-end">
-                                        <button
-                                            className="btn btn-sm btn-outline-secondary"
-                                            onClick={() => {
-                                                setShowSettings(!showSettings);
-                                            }}
-                                        >
-                                            <i
-                                                className="bi bi-gear-fill"
-                                                style={{ fontSize: "1.2rem" }}
-                                                title="Table Settings"
-                                            />
-                                        </button>
-                                    </div>
-                                </div>
-
-                                <div className="row">
                                     {totalItems > 0 && (
-                                        <>
-                                            <div className="col text-start">
-                                                <p className="text-start">
-                                                    showing {offset + 1}-{offset + currentPageItemsCount} of{" "}
-                                                    {totalItems}
-                                                </p>
-                                            </div>
-
-                                            <div className="col text-end">
-                                                <p className="text-end">
-                                                    page {page} of {totalPages}
-                                                </p>
-                                            </div>
-                                        </>
+                                        <span className="text-muted small">
+                                            showing {offset + 1}-{offset + currentPageItemsCount} of {totalItems} &nbsp;|&nbsp; page {page} of {totalPages}
+                                        </span>
                                     )}
+                                    <button
+                                        className="btn btn-sm btn-outline-secondary"
+                                        onClick={() => {
+                                            setShowSettings(!showSettings);
+                                        }}
+                                    >
+                                        <i
+                                            className="bi bi-gear-fill"
+                                            style={{ fontSize: "1.2rem" }}
+                                            title="Table Settings"
+                                        />
+                                    </button>
                                 </div>
 
                                 <div className="row">
@@ -975,15 +1493,34 @@ function CustomerIndex(props) {
                                         </p>
                                     </div>
                                 </div>
-                                <div className="table-responsive" style={{ overflowX: "auto", overflowY: "auto", maxHeight: "500px" }}>
+                                <div className="table-responsive" style={{ position: "relative", overflowX: "auto", overflowY: "auto", minHeight: "200px" }}
+                                    ref={(el) => {
+                                        if (!el) return;
+                                        const fit = () => {
+                                            const top = el.getBoundingClientRect().top;
+                                            el.style.height = Math.max(200, window.innerHeight - top - 16) + "px";
+                                        };
+                                        fit();
+                                        if (!el._fitListenerAdded) {
+                                            el._fitListenerAdded = true;
+                                            window.addEventListener("resize", fit);
+                                        }
+                                    }}
+                                >
+                                    {isListLoading && (
+                                        <div style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0, display: "flex", alignItems: "center", justifyContent: "center", zIndex: 10, background: "rgba(255,255,255,0.5)" }}>
+                                            <Spinner animation="grow" variant="primary" style={{ width: "3rem", height: "3rem" }} />
+                                        </div>
+                                    )}
                                     <table className="table table-striped table-sm table-bordered">
                                         <thead>
                                             <tr className="text-center">
                                                 {columns.filter(c => c.visible).map((col) => {
                                                     return (<>
+                                                        {col.key === "select" && enableSelection && <th key={col.key}>{col.label}</th>}
                                                         {col.key === "deleted" && <th key={col.key}>{col.label}</th>}
                                                         {col.key === "actions" && <th key={col.key}>{col.label}</th>}
-                                                        {col.key !== "actions" && col.key !== "deleted" && <th>
+                                                        {col.key !== "actions" && col.key !== "deleted" && col.key !== "select" && <th>
                                                             <b
                                                                 style={{
                                                                     textDecoration: "underline",
@@ -1827,11 +2364,13 @@ function CustomerIndex(props) {
                                                                 <option value="1">YES</option>
                                                             </select>
                                                         </th>}
+                                                        {col.key === "select" && enableSelection && <th></th>}
                                                         {(col.key === "actions" || col.key === "actions_end") && <th></th>}
                                                         {(col.key === "name") && <th>
                                                             <Typeahead
                                                                 id="customer_id"
-                                                                filterBy={['additional_keywords']}
+                                                                //  filterBy={['additional_keywords']}
+                                                                filterBy={() => true}
                                                                 labelKey="search_label"
                                                                 style={{ minWidth: "300px" }}
                                                                 onChange={(selectedItems) => {
@@ -1858,6 +2397,34 @@ function CustomerIndex(props) {
                                                                     }, 100);
                                                                 }}
                                                                 multiple
+
+                                                                renderMenu={(results, menuProps, state) => (
+                                                                    <Menu {...menuProps} style={{ ...menuProps.style, minWidth: '600px' }}>
+                                                                        {results.map((option, idx) => (
+                                                                            <MenuItem option={option} position={idx} key={option.id}>
+                                                                                <div>
+                                                                                    {highlightWords(option.search_label, state.text)}
+                                                                                    {option.name_in_arabic && (
+                                                                                        <span style={{ color: "#888", marginLeft: 8 }}>
+                                                                                            {highlightWords(option.name_in_arabic, state.text)}
+                                                                                        </span>
+                                                                                    )}
+                                                                                    {option.phone && (
+                                                                                        <span style={{ color: "#888", marginLeft: 8 }}>
+                                                                                            {highlightWords(option.phone, state.text)}
+                                                                                        </span>
+                                                                                    )}
+                                                                                    {option.vat_no && (
+                                                                                        <span style={{ color: "#888", marginLeft: 8 }}>
+                                                                                            {highlightWords(option.vat_no, state.text)}
+                                                                                        </span>
+                                                                                    )}
+                                                                                </div>
+                                                                            </MenuItem>
+                                                                        ))}
+                                                                    </Menu>
+                                                                )}
+
                                                             />
                                                         </th>}
                                                         {(col.key === "code" ||
@@ -1930,6 +2497,42 @@ function CustomerIndex(props) {
                                                                     className="form-control"
                                                                 />
                                                             </th>}
+                                                        {col.key === "churn_risk_tier" && <th>
+                                                            <select className="form-control"
+                                                                onChange={(e) => searchByFieldValue("churn_risk_tier", e.target.value)}>
+                                                                <option value="">All Tiers</option>
+                                                                <option value="Critical">Critical</option>
+                                                                <option value="High">High</option>
+                                                                <option value="Medium">Medium</option>
+                                                                <option value="Low">Low</option>
+                                                            </select>
+                                                        </th>}
+                                                        {col.key === "churn_percent" && <th><input className="form-control" type="number" placeholder="Churn %" /></th>}
+                                                        {col.key === "total_spend" && <th><input className="form-control" type="number" placeholder="Total Spend" onChange={(e) => searchByFieldValue("total_spend", e.target.value)} /></th>}
+                                                        {col.key === "churn_risk_tier_reason" && <th><input className="form-control" placeholder="Churn Reason" /></th>}
+                                                        {col.key === "days_since_last_buy" && <th><input className="form-control" type="number" placeholder="Days Since Buy" /></th>}
+                                                        {col.key === "predicted_clv_amount_12months" && <th><input className="form-control" type="number" placeholder="CLV 12m" /></th>}
+                                                        {col.key === "lifetime_value_segment_for_12months" && <th>
+                                                            <select className="form-control"
+                                                                onChange={(e) => searchByFieldValue("lifetime_value_segment_for_12months", e.target.value)}>
+                                                                <option value="">All Segments</option>
+                                                                <option value="High Value">High Value</option>
+                                                                <option value="Mid Value">Mid Value</option>
+                                                                <option value="Low Value">Low Value</option>
+                                                            </select>
+                                                        </th>}
+                                                        {col.key === "tenure_days" && <th><input className="form-control" type="number" placeholder="Tenure Days" /></th>}
+                                                        {col.key === "lifetime_value_segment_reason_for_12months" && <th><input className="form-control" placeholder="CLV Reason" /></th>}
+                                                        {col.key === "first_purchase_at" && <th></th>}
+                                                        {col.key === "last_purchase_at" && <th></th>}
+                                                        {["retention_1month", "retention_3month", "retention_6month", "retention_12month", "retention_24month"].includes(col.key) && <th>
+                                                            <select className="form-control"
+                                                                onChange={(e) => searchByFieldValue(col.key, e.target.value)}>
+                                                                <option value="">All</option>
+                                                                <option value="YES">YES</option>
+                                                                <option value="NO">NO</option>
+                                                            </select>
+                                                        </th>}
                                                         {col.key === "created_by_name" && <th>
                                                             <Typeahead
                                                                 id="created_by"
@@ -2052,7 +2655,7 @@ function CustomerIndex(props) {
                                                 <th>
                                                     <Typeahead
                                                         id="customer_id"
-                                                        filterBy={['additional_keywords']}
+                                                        filterBy={() => true}
                                                         labelKey="search_label"
                                                         style={{ minWidth: "300px" }}
                                                         onChange={(selectedItems) => {
@@ -2514,6 +3117,11 @@ function CustomerIndex(props) {
                                                     <tr key={customer.id}>
                                                         {columns.filter(c => c.visible).map((col) => {
                                                             return (<>
+                                                                {(col.key === "select" && enableSelection) && <td style={{ width: "auto", whiteSpace: "nowrap" }}>
+                                                                    <Button className="btn btn-success btn-sm" onClick={() => { handleSelected(customer); }}>
+                                                                        Select
+                                                                    </Button>
+                                                                </td>}
                                                                 {(col.key === "deleted") && <td>{customer.deleted ? "YES" : "NO"}</td>}
                                                                 {(col.key === "actions" || col.key === "actions_end") && <td style={{ width: "auto", whiteSpace: "nowrap" }} >
                                                                     {!customer.deleted && <><Button className="btn btn-danger btn-sm" onClick={() => {
@@ -2536,6 +3144,24 @@ function CustomerIndex(props) {
                                                                         openDetailsView(customer.id);
                                                                     }}>
                                                                         <i className="bi bi-eye"></i>
+                                                                    </Button>
+
+                                                                    <Button className="btn btn-secondary btn-sm" title="View BI History" onClick={() => {
+                                                                        openHistoryModal(customer.id, customer.name);
+                                                                    }}>
+                                                                        <i className="bi bi-clock-history"></i>
+                                                                    </Button>
+
+                                                                    <Button className="btn btn-outline-success btn-sm" title="Sales History" onClick={() => {
+                                                                        openCustomerSales(customer);
+                                                                    }}>
+                                                                        <i className="bi bi-receipt"></i>
+                                                                    </Button>
+
+                                                                    <Button className="btn btn-outline-warning btn-sm" title="Sales Return History" onClick={() => {
+                                                                        openCustomerSalesReturns(customer);
+                                                                    }}>
+                                                                        <i className="bi bi-arrow-return-left"></i>
                                                                     </Button>
                                                                 </td>}
                                                                 {(col.key === "name") && <td style={{ width: "auto", whiteSpace: "nowrap" }} className="text-start" >
@@ -2629,6 +3255,59 @@ function CustomerIndex(props) {
                                                                             */}
                                                                     </td>}
 
+                                                                {col.key === "churn_risk_tier" && <td style={{ whiteSpace: "nowrap", minWidth: "140px" }}>
+                                                                    {customer.churn_risk_tier && (
+                                                                        <span className={`badge ${customer.churn_risk_tier === "Critical" ? "bg-danger" :
+                                                                            customer.churn_risk_tier === "High" ? "bg-warning" :
+                                                                                customer.churn_risk_tier === "Medium" ? "bg-info" : "bg-success"
+                                                                            }`} title={customer.churn_risk_tier_reason}>
+                                                                            {customer.churn_risk_tier}
+                                                                        </span>
+                                                                    )}
+                                                                </td>}
+                                                                {col.key === "churn_percent" && <td style={{ textAlign: "right" }}>
+                                                                    {customer.churn_percent != null ? customer.churn_percent.toFixed(1) + "%" : ""}
+                                                                </td>}
+                                                                {col.key === "total_spend" && <td style={{ textAlign: "right" }}>
+                                                                    {customer.total_spend != null ? customer.total_spend.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : ""}
+                                                                </td>}
+                                                                {col.key === "churn_risk_tier_reason" && <td style={{ fontSize: "0.8em", maxWidth: "250px" }}>
+                                                                    {customer.churn_risk_tier_reason || ""}
+                                                                </td>}
+                                                                {col.key === "days_since_last_buy" && <td style={{ textAlign: "right" }}>
+                                                                    {customer.days_since_last_buy != null ? customer.days_since_last_buy : ""}
+                                                                </td>}
+                                                                {col.key === "predicted_clv_amount_12months" && <td style={{ textAlign: "right" }}>
+                                                                    {customer.predicted_clv_amount_12months != null ? customer.predicted_clv_amount_12months.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : ""}
+                                                                </td>}
+                                                                {col.key === "lifetime_value_segment_for_12months" && <td style={{ whiteSpace: "nowrap" }}>
+                                                                    {customer.lifetime_value_segment_for_12months && (
+                                                                        <span className={`badge ${customer.lifetime_value_segment_for_12months === "High Value" ? "bg-success" :
+                                                                            customer.lifetime_value_segment_for_12months === "Mid Value" ? "bg-warning" : "bg-secondary"
+                                                                            }`} title={customer.lifetime_value_segment_reason_for_12months}>
+                                                                            {customer.lifetime_value_segment_for_12months}
+                                                                        </span>
+                                                                    )}
+                                                                </td>}
+                                                                {col.key === "tenure_days" && <td style={{ textAlign: "right" }}>
+                                                                    {customer.tenure_days != null ? customer.tenure_days : ""}
+                                                                </td>}
+                                                                {col.key === "lifetime_value_segment_reason_for_12months" && <td style={{ fontSize: "0.8em", maxWidth: "250px" }}>
+                                                                    {customer.lifetime_value_segment_reason_for_12months || ""}
+                                                                </td>}
+                                                                {col.key === "first_purchase_at" && <td style={{ whiteSpace: "nowrap" }}>
+                                                                    {customer.first_purchase_at ? new Date(customer.first_purchase_at).toLocaleDateString() : ""}
+                                                                </td>}
+                                                                {col.key === "last_purchase_at" && <td style={{ whiteSpace: "nowrap" }}>
+                                                                    {customer.last_purchase_at ? new Date(customer.last_purchase_at).toLocaleDateString() : ""}
+                                                                </td>}
+                                                                {["retention_1month", "retention_3month", "retention_6month", "retention_12month", "retention_24month"].includes(col.key) && <td>
+                                                                    {customer[col.key] && (
+                                                                        <span className={`badge ${customer[col.key] === "YES" ? "bg-success" : "bg-secondary"}`}>
+                                                                            {customer[col.key]}
+                                                                        </span>
+                                                                    )}
+                                                                </td>}
                                                                 {col.key === "created_at" && <td style={{ width: "auto", whiteSpace: "nowrap" }}>
                                                                     {format(
                                                                         new Date(customer.created_at),
@@ -3093,26 +3772,6 @@ function CustomerIndex(props) {
                                     </table>
                                 </div>
 
-                                {totalPages ? <ReactPaginate
-                                    breakLabel="..."
-                                    nextLabel="next >"
-                                    onPageChange={(event) => {
-                                        changePage(event.selected + 1);
-                                    }}
-                                    pageRangeDisplayed={5}
-                                    pageCount={totalPages}
-                                    previousLabel="< previous"
-                                    renderOnZeroPageCount={null}
-                                    className="pagination  flex-wrap"
-                                    pageClassName="page-item"
-                                    pageLinkClassName="page-link"
-                                    activeClassName="active"
-                                    previousClassName="page-item"
-                                    nextClassName="page-item"
-                                    previousLinkClassName="page-link"
-                                    nextLinkClassName="page-link"
-                                    forcePage={page - 1}
-                                /> : ""}
                             </div>
                         </div>
                     </div>

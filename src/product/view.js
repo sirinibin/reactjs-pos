@@ -7,15 +7,15 @@ import NumberFormat from "react-number-format";
 //import ThermalPrinterEncoder from 'thermal-printer-encoder';
 
 import { Button } from "react-bootstrap";
-import SalesHistory from "./sales_history.js";
-import SalesReturnHistory from "./sales_return_history.js";
+import SalesHistory from "../utils/product_sales_history.js";
+import SalesReturnHistory from "./../utils/product_sales_return_history.js";
 
-import PurchaseHistory from "./purchase_history.js";
-import PurchaseReturnHistory from "./purchase_return_history.js";
+import PurchaseHistory from "./../utils/product_purchase_history.js";
+import PurchaseReturnHistory from "./../utils/product_purchase_return_history.js";
 
-import QuotationHistory from "./quotation_history.js";
+import QuotationHistory from "./../utils/product_quotation_history.js";
 
-import DeliveryNoteHistory from "./delivery_note_history.js";
+import DeliveryNoteHistory from "./../utils/product_delivery_note_history.js";
 import Dropdown from 'react-bootstrap/Dropdown';
 
 import ImageGallery from '../utils/ImageGallery.js';

@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef, forwardRef, useContext, useCallback, useMemo } from "react";
+import { useTranslation } from 'react-i18next';
 import OrderCreate from "./create.js";
 import OrderView from "./view.js";
 
@@ -9,6 +10,7 @@ import { Typeahead } from "react-bootstrap-typeahead";
 import { format } from "date-fns";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
+import { getDateLocale } from "../i18n/dateLocales";
 import { Button, Spinner, Modal, Alert } from "react-bootstrap";
 import ReactPaginate from "react-paginate";
 import { formatDistanceToNowStrict } from "date-fns";
@@ -55,24 +57,17 @@ const TimeAgo = ({ date }) => {
 
 
 const OrderIndex = forwardRef((props, ref) => {
+    const { t, i18n } = useTranslation('common');
+    const dateLocale = useMemo(() => getDateLocale(i18n.language), [i18n.language]);
     //deploy to master
     let [enableSelection, setEnableSelection] = useState(false);
     let [pendingView, setPendingView] = useState(false);
 
     const dragRef = useRef(null);
-    const { lastMessage } = useContext(WebSocketContext);
-
-
-
-
     let [allOrders, setAllOrders] = useState([]);
     let [excelData, setExcelData] = useState([]);
     let [salesReportFileName, setSalesReportFileName] = useState("Sales Report");
     let [fettingAllRecordsInProgress, setFettingAllRecordsInProgress] = useState(false);
-
-
-
-
 
     function prepareExcelData() {
         console.log("Inside prepareExcelData()");
@@ -80,7 +75,8 @@ const OrderIndex = forwardRef((props, ref) => {
         for (var i = 0; i < allOrders.length; i++) {
             let date = format(
                 new Date(allOrders[i].date),
-                "dd-MMM-yyyy"
+                "dd-MMM-yyyy",
+                { locale: dateLocale }
             );
             if (!groupedByDate[date]) {
                 groupedByDate[date] = [];
@@ -94,16 +90,16 @@ const OrderIndex = forwardRef((props, ref) => {
 
         excelData = [{
             columns: [
-                { title: "Description", width: { wch: 50 } },//pixels width 
-                { title: "Quantity", width: { wpx: 90 } },//char width 
-                { title: "Unit", width: { wpx: 90 } },
-                { title: "Rate", width: { wpx: 90 } },
-                { title: "Gross", width: { wpx: 90 } },
-                { title: "Disc %", width: { wpx: 90 } },
-                { title: "Disc", width: { wpx: 90 } },
-                { title: "Tax %", width: { wpx: 90 } },
-                { title: "Tax Amount", width: { wpx: 180 } },
-                { title: "Net Amount", width: { wpx: 90 } },
+                { title: t("Description"), width: { wch: 50 } },//pixels width 
+                { title: t("Quantity"), width: { wpx: 90 } },//char width 
+                { title: t("Unit"), width: { wpx: 90 } },
+                { title: t("Rate"), width: { wpx: 90 } },
+                { title: t("Gross"), width: { wpx: 90 } },
+                { title: t("Disc %"), width: { wpx: 90 } },
+                { title: t("Disc"), width: { wpx: 90 } },
+                { title: t("Tax %"), width: { wpx: 90 } },
+                { title: t("Tax Amount"), width: { wpx: 180 } },
+                { title: t("Net Amount"), width: { wpx: 90 } },
             ],
             data: [],
             filename: salesReportFileName,
@@ -202,7 +198,7 @@ const OrderIndex = forwardRef((props, ref) => {
                     { value: "", },
                     { value: "", },
                     {
-                        value: "Shipping/Handling Fees",
+                        value: t("Shipping/Handling Fees"),
                     }, {
                         value: trimTo2Decimals(order.shipping_handling_fees),
                     },
@@ -218,7 +214,7 @@ const OrderIndex = forwardRef((props, ref) => {
                     { value: "", },
                     { value: "", },
                     {
-                        value: "Discount",
+                        value: t("Discount"),
                     }, {
                         value: trimTo2Decimals(order.discount),
                     },
@@ -234,7 +230,7 @@ const OrderIndex = forwardRef((props, ref) => {
                     { value: "", },
                     { value: "", },
                     {
-                        value: "Total Amount After Discount",
+                        value: t("Total Amount After Discount"),
                     }, {
                         value: trimTo2Decimals(totalAmountAfterDiscount),
                     },
@@ -250,7 +246,7 @@ const OrderIndex = forwardRef((props, ref) => {
                     { value: "", },
                     { value: "", },
                     {
-                        value: "Total Amount Before VAT",
+                        value: t("Total Amount Before VAT"),
                     }, {
                         value: trimTo2Decimals(totalAmountBeforeVat),
                     },
@@ -266,7 +262,7 @@ const OrderIndex = forwardRef((props, ref) => {
                     { value: "", },
                     { value: "", },
                     {
-                        value: "VAT Amount",
+                        value: t("VAT Amount"),
                     }, {
                         value: trimTo2Decimals(order.vat_price),
                     },
@@ -284,7 +280,7 @@ const OrderIndex = forwardRef((props, ref) => {
                     { value: "", },
                     { value: "", },
                     {
-                        value: "Total Amount After VAT",
+                        value: t("Total Amount After VAT"),
                     }, {
                         value: trimTo2Decimals(totalAmountAfterVat),
                     },
@@ -307,7 +303,7 @@ const OrderIndex = forwardRef((props, ref) => {
                 { value: "", },
                 { value: "", },
                 {
-                    value: "Day Total Before VAT",
+                    value: t("Day Total Before VAT"),
                 }, {
                     value: trimTo2Decimals(dayTotalBeforeVAT),
                 },
@@ -323,7 +319,7 @@ const OrderIndex = forwardRef((props, ref) => {
                 { value: "", },
                 { value: "", },
                 {
-                    value: "Day VAT",
+                    value: t("Day VAT"),
                 }, {
                     value: trimTo2Decimals(dayVAT),
                 },
@@ -339,7 +335,7 @@ const OrderIndex = forwardRef((props, ref) => {
                 { value: "", },
                 { value: "", },
                 {
-                    value: "Day Total After VAT",
+                    value: t("Day Total After VAT"),
                 }, {
                     value: trimTo2Decimals(dayTotalAfterVAT),
                 },
@@ -379,7 +375,7 @@ const OrderIndex = forwardRef((props, ref) => {
             { value: "", },
             { value: "", },
             {
-                value: "Total Amount Before VAT",
+                value: t("Total Amount Before VAT"),
             }, {
                 value: trimTo2Decimals(totalAmountBeforeVAT),
             },
@@ -395,7 +391,7 @@ const OrderIndex = forwardRef((props, ref) => {
             { value: "", },
             { value: "", },
             {
-                value: "Total VAT",
+                value: t("Total VAT"),
             }, {
                 value: trimTo2Decimals(totalVAT),
             },
@@ -411,7 +407,7 @@ const OrderIndex = forwardRef((props, ref) => {
             { value: "", },
             { value: "", },
             {
-                value: "Total Amount After VAT",
+                value: t("Total Amount After VAT"),
             }, {
                 value: trimTo2Decimals(totalAmountAfterVAT),
             },
@@ -420,7 +416,7 @@ const OrderIndex = forwardRef((props, ref) => {
 
         setExcelData(excelData);
 
-        console.log("excelData:", excelData);
+        //console.log("excelData:", excelData);
     }
 
     function makeSalesReportFilename() {
@@ -430,7 +426,8 @@ const OrderIndex = forwardRef((props, ref) => {
         } else if (searchParams["created_at_from"]) {
             salesReportFileName += " - From " + searchParams["created_at_from"] + " to " + format(
                 new Date(),
-                "dd-MMM-yyyy"
+                "dd-MMM-yyyy",
+                { locale: dateLocale }
             );
         } else if (searchParams["created_at_to"]) {
             salesReportFileName += " - Upto " + searchParams["created_at_to"];
@@ -549,7 +546,7 @@ const OrderIndex = forwardRef((props, ref) => {
     const [orderList, setOrderList] = useState([]);
 
     //pagination
-    let [pageSize, setPageSize] = useState(20);
+    let [pageSize, setPageSize] = useState(() => parseInt(localStorage.getItem('order_pageSize') || '10'));
     let [page, setPage] = useState(1);
     const [totalPages, setTotalPages] = useState(0);
     const [totalItems, setTotalItems] = useState(1);
@@ -723,6 +720,7 @@ const OrderIndex = forwardRef((props, ref) => {
     const [totalSalesReturnSales, setTotalSalesReturnSales] = useState(0.00);
     const [totalPurchaseSales, setTotalPurchaseSales] = useState(0.00);
     const [loss, setLoss] = useState(0.00);
+    const [totalDeliveryNote, setTotalDeliveryNote] = useState(0.00);
 
 
     const [commission, setCommission] = useState(0.00);
@@ -880,6 +878,11 @@ const OrderIndex = forwardRef((props, ref) => {
 
     function searchByFieldValue(field, value) {
         searchParams[field] = value;
+        setFieldFilters(prev => {
+            const updated = { ...prev };
+            if (value) { updated[field] = value; } else { delete updated[field]; }
+            return updated;
+        });
 
         page = 1;
         setPage(page);
@@ -895,35 +898,31 @@ const OrderIndex = forwardRef((props, ref) => {
             return;
         }
 
-        if (value) {
-            let d = new Date(value);
-            value = format(d, "MMM dd yyyy");
-            console.log("value2:", value);
-            console.log(Intl.DateTimeFormat().resolvedOptions().timeZone)
-        } else {
-            value = "";
-        }
+        let d = new Date(value);
+        d = new Date(d.toUTCString());
+        value = format(d, "MMM dd yyyy");
+        let valueWithLocale = format(d, "MMM dd yyyy", { locale: dateLocale });
 
 
         if (field === "date_str") {
-            setDateValue(value);
+            setDateValue(valueWithLocale);
             setFromDateValue("");
             setToDateValue("");
             searchParams["from_date"] = "";
             searchParams["to_date"] = "";
             searchParams[field] = value;
         } else if (field === "from_date") {
-            setFromDateValue(value);
+            setFromDateValue(valueWithLocale);
             setDateValue("");
             searchParams["date"] = "";
             searchParams[field] = value;
         } else if (field === "to_date") {
-            setToDateValue(value);
+            setToDateValue(valueWithLocale);
             setDateValue("");
             searchParams["date"] = "";
             searchParams[field] = value;
         } else if (field === "created_at") {
-            setCreatedAtValue(value);
+            setCreatedAtValue(valueWithLocale);
             setCreatedAtFromValue("");
             setCreatedAtToValue("");
             searchParams["created_at_from"] = "";
@@ -932,12 +931,12 @@ const OrderIndex = forwardRef((props, ref) => {
             console.log("searchParams[field]:", searchParams[field]);
         }
         if (field === "created_at_from") {
-            setCreatedAtFromValue(value);
+            setCreatedAtFromValue(valueWithLocale);
             setCreatedAtValue("");
             searchParams["created_at"] = "";
             searchParams[field] = value;
         } else if (field === "created_at_to") {
-            setCreatedAtToValue(value);
+            setCreatedAtToValue(valueWithLocale);
             setCreatedAtValue("");
             searchParams["created_at"] = "";
             searchParams[field] = value;
@@ -964,6 +963,10 @@ const OrderIndex = forwardRef((props, ref) => {
 
         searchParams[field] = Object.values(values)
             .map(function (model) {
+                if (model.name === "UNKNOWN CUSTOMER") {
+                    return "unknown_customer";
+                }
+
                 return model.id;
             })
             .join(",");
@@ -978,6 +981,7 @@ const OrderIndex = forwardRef((props, ref) => {
 
 
     const [statsOpen, setStatsOpen] = useState(false);
+    const [fieldFilters, setFieldFilters] = useState({});
 
     const list = useCallback(() => {
         setExcelData([]);
@@ -998,6 +1002,7 @@ const OrderIndex = forwardRef((props, ref) => {
 
         const d = new Date();
         let diff = d.getTimezoneOffset();
+        console.log("Timezone diff:", diff);
         console.log("Timezone:", parseFloat(diff / 60));
         searchParams["timezone_offset"] = parseFloat(diff / 60);
 
@@ -1069,6 +1074,7 @@ const OrderIndex = forwardRef((props, ref) => {
                 setTotalBankAccountSales(data.meta.bank_account_sales);
                 setTotalPurchaseSales(data.meta.purchase_sales);
                 setTotalSalesReturnSales(data.meta.sales_return_sales);
+                setTotalDeliveryNote(data.meta.delivery_note_total || 0);
                 //setReturnCount(data.meta.return_count);
                 //setReturnPaidAmount(data.meta.return_amount);
 
@@ -1092,6 +1098,8 @@ const OrderIndex = forwardRef((props, ref) => {
     }, [statsOpen, list]);
 
 
+    const { lastMessage } = useContext(WebSocketContext);
+
     useEffect(() => {
         if (lastMessage) {
             const jsonMessage = JSON.parse(lastMessage.data);
@@ -1108,7 +1116,7 @@ const OrderIndex = forwardRef((props, ref) => {
     useEffect(() => {
         const handleSocketOpen = () => {
             //console.log("WebSocket Opened in sales list");
-            list();
+            //list();
         };
 
         eventEmitter.on("socket_connection_open", handleSocketOpen);
@@ -1117,6 +1125,40 @@ const OrderIndex = forwardRef((props, ref) => {
             eventEmitter.off("socket_connection_open", handleSocketOpen); // Cleanup
         };
     }, [list]); // Runs only once when component mounts
+
+    // Listen for notification bell clicks — open sales create form with a delivery note
+    useEffect(() => {
+        const handleCreateFromDN = ({ id: dnId }) => {
+            if (!dnId) return;
+            setShowOrderCreateForm(true);
+            if (timerRef.current) clearTimeout(timerRef.current);
+            timerRef.current = setTimeout(() => {
+                CreateFormRef.current?.openForDeliveryNote(dnId);
+            }, 50);
+        };
+        eventEmitter.on("create_sales_from_dn", handleCreateFromDN);
+        return () => eventEmitter.off("create_sales_from_dn", handleCreateFromDN);
+    }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+    // On mount: check if the Topbar navigated us here for a specific DN
+    useEffect(() => {
+        const pending = localStorage.getItem("pending_sales_from_dn");
+        if (pending) {
+            try {
+                const { id: dnId } = JSON.parse(pending);
+                localStorage.removeItem("pending_sales_from_dn");
+                if (dnId) {
+                    setShowOrderCreateForm(true);
+                    if (timerRef.current) clearTimeout(timerRef.current);
+                    timerRef.current = setTimeout(() => {
+                        CreateFormRef.current?.openForDeliveryNote(dnId);
+                    }, 800);
+                }
+            } catch (_) {
+                localStorage.removeItem("pending_sales_from_dn");
+            }
+        }
+    }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
     function sort(field) {
         sortField = field;
@@ -1139,21 +1181,29 @@ const OrderIndex = forwardRef((props, ref) => {
     */
 
     // Add this effect:
-    useEffect(() => {
-        list();
-    }, [pageSize, list]);
+    /* useEffect(() => {
+         list();
+     }, [pageSize, list]);*/
+    /* useEffect(() => {
+         const timer = setTimeout(() => {
+             list();
+         }, 300);
+ 
+         // Cleanup to avoid memory leaks
+         return () => clearTimeout(timer);
+     }, [pageSize, list]);*/
 
-    function changePageSize(size) {
-        // pageSize = parseInt(size);
-        setPageSize(parseInt(size));
-
-        /*
-                if (timerRef.current) clearTimeout(timerRef.current);
-        
-                timerRef.current = setTimeout(() => {
-                    list();
-                }, 100);*/
-    }
+    /* function changePageSize(size) {
+         // pageSize = parseInt(size);
+         setPageSize(parseInt(size));
+ 
+         /*
+                 if (timerRef.current) clearTimeout(timerRef.current);
+         
+                 timerRef.current = setTimeout(() => {
+                     list();
+                 }, 100);*/
+    // }
 
     useEffect(() => {
         list();
@@ -1407,6 +1457,7 @@ const OrderIndex = forwardRef((props, ref) => {
 
 
     let [showReportPreview, setShowReportPreview] = useState(false);
+
     const ReportPreviewRef = useRef();
     function openReportPreview() {
         showReportPreview = true;
@@ -1602,6 +1653,7 @@ const OrderIndex = forwardRef((props, ref) => {
 
     return (
         <>
+
             {showCustomerUpdateForm && <CustomerCreate ref={CustomerUpdateFormRef} />}
             {/* ⚙️ Settings Modal */}
             <Modal
@@ -1615,17 +1667,16 @@ const OrderIndex = forwardRef((props, ref) => {
                         <i
                             className="bi bi-gear-fill"
                             style={{ fontSize: "1.2rem", marginRight: "4px" }}
-                            title="Table Settings"
-
+                            title={t('Table Settings')}
                         />
-                        Sales Settings
+                        {t('Sales Settings')}
                     </Modal.Title>
                 </Modal.Header>
                 <Modal.Body>
                     {/* Column Settings */}
                     {showSettings && (
                         <>
-                            <h6 className="mb-2">Customize Columns</h6>
+                            <h6 className="mb-2">{t('Customize Columns')}</h6>
                             <DragDropContext onDragEnd={onDragEnd}>
                                 <Droppable droppableId="columns">
                                     {(provided) => (
@@ -1658,7 +1709,7 @@ const OrderIndex = forwardRef((props, ref) => {
                                                                                 handleToggleColumn(index);
                                                                             }}
                                                                         />
-                                                                        {col.label}
+                                                                        {t(col.label)}
                                                                     </div>
                                                                     <span style={{ cursor: "grab" }}>☰</span>
                                                                 </li>
@@ -1676,7 +1727,7 @@ const OrderIndex = forwardRef((props, ref) => {
                 </Modal.Body>
                 <Modal.Footer>
                     <Button variant="secondary" onClick={() => setShowSettings(false)}>
-                        Close
+                        {t('Close')}
                     </Button>
                     <Button
                         variant="primary"
@@ -1686,7 +1737,7 @@ const OrderIndex = forwardRef((props, ref) => {
                             //setShowSettings(false);
                         }}
                     >
-                        Restore to Default
+                        {t('Restore to Default')}
                     </Button>
                 </Modal.Footer>
             </Modal>
@@ -1698,7 +1749,7 @@ const OrderIndex = forwardRef((props, ref) => {
                 setShowPrintTypeSelection(showPrintTypeSelection);
             }} centered>
                 <Modal.Header closeButton>
-                    <Modal.Title>Select Print Type</Modal.Title>
+                    <Modal.Title>{t("Select Print Type")}</Modal.Title>
                 </Modal.Header>
                 <Modal.Body className="d-flex justify-content-around">
                     <Button variant="secondary" ref={printButtonRef} onClick={() => {
@@ -1712,7 +1763,7 @@ const OrderIndex = forwardRef((props, ref) => {
                             }, 100);
                         }
                     }}>
-                        <i className="bi bi-printer"></i> Print
+                        <i className="bi bi-printer"></i> {t("Print")}
                     </Button>
 
                     <Button variant="primary" ref={printA4ButtonRef} onClick={() => {
@@ -1728,7 +1779,7 @@ const OrderIndex = forwardRef((props, ref) => {
                             }
                         }}
                     >
-                        <i className="bi bi-printer"></i> Print A4 Invoice
+                        <i className="bi bi-printer"></i> {t("Print A4 Invoice")}
                     </Button>
                 </Modal.Body>
             </Modal>
@@ -1742,11 +1793,11 @@ const OrderIndex = forwardRef((props, ref) => {
             {/* Error Modal */}
             <Modal show={showErrors} onHide={() => setShowErrors(false)} centered>
                 <Modal.Header closeButton>
-                    <Modal.Title>Error</Modal.Title>
+                    <Modal.Title>{t('Error')}</Modal.Title>
                 </Modal.Header>
                 <Modal.Body>
                     <Alert variant="danger">
-                        ❌ Oops! Something went wrong. Please try again later.
+                        ❌ {t('Oops! Something went wrong. Please try again later.')}
                     </Alert>
                     {Object.keys(errors).length > 0 ?
                         <div>
@@ -1765,14 +1816,14 @@ const OrderIndex = forwardRef((props, ref) => {
                 </Modal.Body>
                 <Modal.Footer>
                     <Button variant="secondary" onClick={() => setShowErrors(false)}>
-                        Close
+                        {t('Close')}
                     </Button>
                 </Modal.Footer>
             </Modal>
 
             <Modal show={showSuccess} onHide={() => setShowSuccess(false)} centered>
                 <Modal.Header closeButton>
-                    <Modal.Title>Success</Modal.Title>
+                    <Modal.Title>{t('Success')}</Modal.Title>
                 </Modal.Header>
                 <Modal.Body>
                     <Alert variant="success">
@@ -1781,7 +1832,7 @@ const OrderIndex = forwardRef((props, ref) => {
                 </Modal.Body>
                 <Modal.Footer>
                     <Button variant="secondary" onClick={() => setShowSuccess(false)}>
-                        Close
+                        {t('Close')}
                     </Button>
                 </Modal.Footer>
             </Modal>
@@ -1791,7 +1842,25 @@ const OrderIndex = forwardRef((props, ref) => {
                     <div className="col">
                         <span className="text-end">
                             <StatsSummary
-                                title="Sales"
+                                title={'Sales Summary'}
+                                filters={{
+                                    ...(dateValue ? { 'Date': dateValue } : {}),
+                                    ...(fromDateValue ? { 'From Date': fromDateValue } : {}),
+                                    ...(toDateValue ? { 'To Date': toDateValue } : {}),
+                                    ...(createdAtValue ? { 'Created At': createdAtValue } : {}),
+                                    ...(createdAtFromValue ? { 'Created From': createdAtFromValue } : {}),
+                                    ...(createdAtToValue ? { 'Created To': createdAtToValue } : {}),
+                                    ...(selectedCustomers.length > 0 ? { 'Customer': selectedCustomers.map(c => c.name).join(', ') } : {}),
+                                    ...(selectedCreatedByUsers.length > 0 ? { 'Created By': selectedCreatedByUsers.map(u => u.name).join(', ') } : {}),
+                                    ...(selectedPaymentStatusList.length > 0 ? { 'Payment Status': selectedPaymentStatusList.map(s => s.name).join(', ') } : {}),
+                                    ...(selectedPaymentMethodList.length > 0 ? { 'Payment Method': selectedPaymentMethodList.map(m => m.name).join(', ') } : {}),
+                                    ...(selectedCommissionPaymentMethodList.length > 0 ? { 'Commission Method': selectedCommissionPaymentMethodList.map(m => m.name).join(', ') } : {}),
+                                    ...(fieldFilters.code ? { 'ID': fieldFilters.code } : {}),
+                                    ...(fieldFilters.net_total ? { 'Net Total': fieldFilters.net_total } : {}),
+                                    ...(fieldFilters.total_payment_received ? { 'Amount Paid': fieldFilters.total_payment_received } : {}),
+                                    ...(fieldFilters.balance_amount ? { 'Credit Balance': fieldFilters.balance_amount } : {}),
+                                    ...(fieldFilters.customer_name ? { 'Customer Name': fieldFilters.customer_name } : {}),
+                                }}
                                 stats={{
                                     "Sales": totalSales,
                                     "Cash Sales": totalCashSales,
@@ -1810,9 +1879,11 @@ const OrderIndex = forwardRef((props, ref) => {
                                     "Commission": commission,
                                     "Commission Paid By Cash": commissionPaidByCash,
                                     "Commission Paid By Bank": commissionPaidByBank,
+                                    "Delivery Note": totalDeliveryNote,
                                     //"Return Count": returnCount,
                                     //"Return Paid Amount": returnPaidAmount,
                                 }}
+                                statsDefaultVisibility={{ "Delivery Note": false }}
                                 onToggle={handleSummaryToggle}
                             />
                         </span>
@@ -1820,7 +1891,7 @@ const OrderIndex = forwardRef((props, ref) => {
                 </div>
                 <div className="row">
                     <div className="col">
-                        <h1 className="h3">Sales Orders</h1>
+                        <h1 className="h3">{t('Sales')}</h1>
                     </div>
 
 
@@ -1828,27 +1899,27 @@ const OrderIndex = forwardRef((props, ref) => {
 
                         <Button variant="primary" onClick={() => {
                             openReportPreview();
-                        }} style={{ marginRight: "8px" }} className="btn btn-primary mb-3">
+                        }} style={{ marginRight: "8px" }} className="btn btn-primary mb-1">
                             <i className="bi bi-printer"></i>&nbsp;
-                            Print Report
+                            {t('Print Report')}
                         </Button>
 
-                        <ExcelFile filename={salesReportFileName} element={excelData.length > 0 ? <Button variant="success" className="btn btn-primary mb-3 success" >Download Sales Report(XLS)</Button> : ""}>
+                        <ExcelFile filename={salesReportFileName} element={excelData.length > 0 ? <Button variant="success" className="btn btn-primary mb-1 success" >{t('Download Sales Report(XLS)')}</Button> : ""}>
                             <ExcelSheet dataSet={excelData} name={salesReportFileName} />
                         </ExcelFile>
 
-                        {excelData.length === 0 ? <Button variant="primary" className="btn btn-primary mb-3" onClick={getAllOrders} >{fettingAllRecordsInProgress ? "Preparing.." : "Sales Report(XLS)"}</Button> : ""}
+                        {excelData.length === 0 ? <Button variant="primary" className="btn btn-primary mb-1" onClick={getAllOrders} >{fettingAllRecordsInProgress ? t('Preparing..') : t('Sales Report(XLS)')}</Button> : ""}
                         &nbsp;&nbsp;
 
                         <Button
                             hide={true.toString()}
                             variant="primary"
-                            className="btn btn-primary mb-3"
+                            className="btn btn-primary mb-1"
                             onClick={() => {
                                 openCreateForm();
                             }}
                         >
-                            <i className="bi bi-plus-lg"></i> Create
+                            <i className="bi bi-plus-lg"></i> {t('Create')}
                         </Button>
                     </div>
                 </div>
@@ -1861,150 +1932,146 @@ const OrderIndex = forwardRef((props, ref) => {
                         <h5   className="card-title mb-0"></h5>
                     </div>
                     */}
-                            <div className="card-body">
+                            <div className="card-body p-2">
                                 <div className="row">
                                     {totalItems === 0 && (
                                         <div className="col">
-                                            <p className="text-start">No Orders to display</p>
+                                            <p className="text-start">{t('No Orders to display')}</p>
                                         </div>
                                     )}
                                 </div>
-                                <div className="row" style={{ border: "solid 0px" }}>
-                                    <div className="col text-start" style={{ border: "solid 0px" }}>
-                                        <Button
-                                            onClick={() => {
-                                                setIsRefreshInProcess(true);
-                                                list();
-                                            }}
-                                            variant="primary"
-                                            disabled={isRefreshInProcess}
-                                        >
-                                            {isRefreshInProcess ? (
-                                                <Spinner
-                                                    as="span"
-                                                    animation="border"
-                                                    size="sm"
-                                                    role="status"
-                                                    aria-hidden={true}
-                                                />
-                                            ) : (
-                                                <i className="fa fa-refresh"></i>
-                                            )}
-                                            <span className="visually-hidden">Loading...</span>
-                                        </Button>
-                                    </div>
-                                    <div className="col text-center">
-                                        {isListLoading && (
-                                            <Spinner animation="grow" variant="primary" />
-                                        )}
-                                    </div>
-                                    <div className="col text-end">
-                                        {totalItems > 0 && (
-                                            <>
-                                                <label className="form-label">Size:&nbsp;</label>
-                                                <select
-                                                    value={pageSize}
-                                                    onChange={(e) => {
-                                                        changePageSize(e.target.value);
-                                                    }}
-                                                    className="form-control pull-right"
-                                                    style={{
-                                                        border: "solid 1px",
-                                                        borderColor: "silver",
-                                                        width: "55px",
-                                                    }}
-                                                >
-                                                    <option value="5">
-                                                        5
-                                                    </option>
-                                                    <option value="10">
-                                                        10
-                                                    </option>
-                                                    <option value="20">20</option>
-                                                    <option value="40">40</option>
-                                                    <option value="50">50</option>
-                                                    <option value="100">100</option>
-                                                    <option value="500">500</option>
-                                                    <option value="1000">1000</option>
-                                                </select>
-                                            </>
-                                        )}
-                                    </div>
-                                </div>
-
-                                <br />
-                                <div className="row">
-                                    <div className="col" style={{ border: "solid 0px", width: "100%" }}>
-                                        {totalPages ? <ReactPaginate
-                                            breakLabel="..."
-                                            nextLabel="next >"
-                                            onPageChange={(event) => {
-                                                changePage(event.selected + 1);
-                                            }}
-                                            pageRangeDisplayed={5}
-                                            pageCount={totalPages}
-                                            previousLabel="< previous"
-                                            renderOnZeroPageCount={null}
-                                            className="pagination  flex-wrap"
-                                            pageClassName="page-item"
-                                            pageLinkClassName="page-link"
-                                            activeClassName="active"
-                                            previousClassName="page-item"
-                                            nextClassName="page-item"
-                                            previousLinkClassName="page-link"
-                                            nextLinkClassName="page-link"
-                                            forcePage={page - 1}
-                                        /> : ""}
-                                    </div>
-                                </div>
-
-                                <div className="row">
-                                    <div className="col text-end">
-                                        <button
-                                            className="btn btn-sm btn-outline-secondary"
-                                            onClick={() => {
-                                                setShowSettings(!showSettings);
-                                            }}
-                                        >
-                                            <i
-                                                className="bi bi-gear-fill"
-                                                style={{ fontSize: "1.2rem" }}
-                                                title="Table Settings"
-
+                                <div className="d-flex align-items-center gap-2 flex-wrap mb-2">
+                                    {/* Row 1: Refresh + Size + Gear */}
+                                    <Button
+                                        onClick={() => {
+                                            setIsRefreshInProcess(true);
+                                            list();
+                                        }}
+                                        variant="primary"
+                                        disabled={isRefreshInProcess}
+                                    >
+                                        {isRefreshInProcess ? (
+                                            <Spinner
+                                                as="span"
+                                                animation="border"
+                                                size="sm"
+                                                role="status"
+                                                aria-hidden={true}
                                             />
-                                        </button>
-                                    </div>
-                                </div>
+                                        ) : (
+                                            <i className="fa fa-refresh"></i>
+                                        )}
+                                        <span className="visually-hidden">Loading...</span>
+                                    </Button>
 
-                                <div className="row">
                                     {totalItems > 0 && (
                                         <>
-                                            <div className="col text-start">
-                                                <p className="text-start">
-                                                    showing {offset + 1}-{offset + currentPageItemsCount} of{" "}
-                                                    {totalItems}
-                                                </p>
-                                            </div>
-
-
-
-                                            <div className="col text-end">
-                                                <p className="text-end">
-                                                    page {page} of {totalPages}
-                                                </p>
-                                            </div>
+                                            <label className="form-label mb-0">{t('Size')}:&nbsp;</label>
+                                            <select
+                                                value={pageSize}
+                                                onChange={(e) => {
+                                                    localStorage.setItem('order_pageSize', e.target.value);
+                                                    setPageSize(parseInt(e.target.value));
+                                                }}
+                                                className="form-control"
+                                                style={{
+                                                    border: "solid 1px",
+                                                    borderColor: "silver",
+                                                    width: "55px",
+                                                }}
+                                            >
+                                                <option value="5">5</option>
+                                                <option value="10">10</option>
+                                                <option value="20">20</option>
+                                                <option value="40">40</option>
+                                                <option value="50">50</option>
+                                                <option value="100">100</option>
+                                                <option value="500">500</option>
+                                                <option value="1000">1000</option>
+                                            </select>
                                         </>
                                     )}
+
+                                    <button
+                                        className="btn btn-sm btn-outline-secondary ms-auto"
+                                        onClick={() => {
+                                            setShowSettings(!showSettings);
+                                        }}
+                                    >
+                                        <i
+                                            className="bi bi-gear-fill"
+                                            style={{ fontSize: "1.2rem" }}
+                                            title="Table Settings"
+                                        />
+                                    </button>
+
+                                    {/* Row 2: Pagination + Count info (full width) */}
+                                    <div className="w-100 d-flex align-items-center gap-2 flex-wrap">
+                                        <div style={{ flex: "1 1 auto", minWidth: 0, overflowX: "auto" }}>
+                                            {totalPages ? <ReactPaginate
+                                                breakLabel={t('...')}
+                                                nextLabel={t('next >')}
+                                                onPageChange={(event) => {
+                                                    changePage(event.selected + 1);
+                                                }}
+                                                pageRangeDisplayed={3}
+                                                marginPagesDisplayed={1}
+                                                pageCount={totalPages}
+                                                previousLabel={t('< prev')}
+                                                renderOnZeroPageCount={null}
+                                                className="pagination flex-wrap mb-0"
+                                                pageClassName="page-item"
+                                                pageLinkClassName="page-link"
+                                                activeClassName="active"
+                                                previousClassName="page-item"
+                                                nextClassName="page-item"
+                                                previousLinkClassName="page-link"
+                                                nextLinkClassName="page-link"
+                                                forcePage={page - 1}
+                                            /> : ""}
+                                        </div>
+
+                                        {totalItems > 0 && (
+                                            <span className="text-muted small">
+                                                {t("Showing {{from}}-{{to}} of {{totalItems}}", {
+                                                    from: (offset + 1),
+                                                    to: (offset + currentPageItemsCount),
+                                                    totalItems: totalItems,
+                                                })}
+                                                &nbsp;|&nbsp;
+                                                {t("Page {{page}} of {{totalPages}}", {
+                                                    page: page,
+                                                    totalPages: totalPages,
+                                                })}
+                                            </span>
+                                        )}
+                                    </div>
                                 </div>
 
-                                <div className="table-responsive" style={{ overflowX: "auto", overflowY: "auto", maxHeight: "500px" }}>
+                                <div className="table-responsive" style={{ position: "relative", overflowX: "auto", overflowY: "auto", minHeight: "200px" }} ref={(el) => {
+                                    if (!el) return;
+                                    const fit = () => {
+                                        const top = el.getBoundingClientRect().top;
+                                        el.style.height = Math.max(200, window.innerHeight - top - 16) + "px";
+                                    };
+                                    fit();
+                                    if (!el._fitListenerAdded) {
+                                        el._fitListenerAdded = true;
+                                        window.addEventListener("resize", fit);
+                                    }
+                                }}>
+                                    {isListLoading && (
+                                        <div style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0, display: "flex", alignItems: "center", justifyContent: "center", zIndex: 10, background: "rgba(255,255,255,0.5)" }}>
+                                            <Spinner animation="grow" variant="primary" style={{ width: "3rem", height: "3rem" }} />
+                                        </div>
+                                    )}
                                     <table className="table table-striped table-bordered table-sm" style={{}}>
                                         <thead>
                                             <tr className="text-center main-header">
                                                 {columns.filter(c => c.visible).map((col) => {
                                                     return (<>
-                                                        {col.key === "actions" && <th key={col.key}>{col.label}</th>}
-                                                        {col.key === "select" && enableSelection && <th key={col.key}>{col.label}</th>}
+                                                        {col.key === "actions" && <th key={col.key}>{t(col.label)}</th>}
+                                                        {col.key === "select" && enableSelection && <th key={col.key}>{t(col.label)}</th>}
                                                         {col.key === "reported_to_zatca" && store.zatca?.phase === "2" && store.zatca?.connected && <th>
                                                             <b
                                                                 style={{
@@ -2015,7 +2082,7 @@ const OrderIndex = forwardRef((props, ref) => {
                                                                     sort(col.fieldName);
                                                                 }}
                                                             >
-                                                                {col.label}
+                                                                {t(col.label)}
                                                                 {sortField === col.fieldName && sortOrder === "-" ? (
                                                                     <i className="bi bi-sort-alpha-up-alt"></i>
                                                                 ) : null}
@@ -2034,7 +2101,7 @@ const OrderIndex = forwardRef((props, ref) => {
                                                                     sort(col.fieldName);
                                                                 }}
                                                             >
-                                                                {col.label}
+                                                                {t(col.label)}
                                                                 {sortField === col.fieldName && sortOrder === "-" ? (
                                                                     <i className="bi bi-sort-alpha-up-alt"></i>
                                                                 ) : null}
@@ -2070,6 +2137,7 @@ const OrderIndex = forwardRef((props, ref) => {
                                                                     searchByFieldValue(col.fieldName, e.target.value)
                                                                 }
                                                                 className="form-control"
+                                                                placeholder={t('Search')}
                                                             /></th>}
                                                         {col.key === "payment_methods" && <th>
                                                             <Typeahead
@@ -2083,7 +2151,7 @@ const OrderIndex = forwardRef((props, ref) => {
                                                                     );
                                                                 }}
                                                                 options={paymentMethodOptions}
-                                                                placeholder="Select payment methods"
+                                                                placeholder={t('Select payment methods')}
                                                                 selected={selectedPaymentMethodList}
                                                                 highlightOnlyResult={true}
                                                                 multiple
@@ -2119,7 +2187,7 @@ const OrderIndex = forwardRef((props, ref) => {
                                                                     );
                                                                 }}
                                                                 options={userOptions}
-                                                                placeholder="Select Users"
+                                                                placeholder={t('Select Users')}
                                                                 selected={selectedCreatedByUsers}
                                                                 highlightOnlyResult={true}
                                                                 onInputChange={(searchTerm, e) => {
@@ -2136,6 +2204,7 @@ const OrderIndex = forwardRef((props, ref) => {
                                                                 selected={selectedCreatedAtDate}
                                                                 className="form-control"
                                                                 dateFormat="MMM dd yyyy"
+                                                                locale={dateLocale}
                                                                 isClearable={true}
 
                                                                 onChange={(date) => {
@@ -2160,13 +2229,13 @@ const OrderIndex = forwardRef((props, ref) => {
                                                                     setShowCreatedAtDateRange(!showCreatedAtDateRange)
                                                                 }
                                                             >
-                                                                {showCreatedAtDateRange ? "Less.." : "More.."}
+                                                                {showCreatedAtDateRange ? t('Less') + ".." : t('More') + ".."}
                                                             </small>
                                                             <br />
 
                                                             {showCreatedAtDateRange ? (
                                                                 <span className="text-left">
-                                                                    From:{" "}
+                                                                    {t('From')}: {" "}
                                                                     <DatePicker
                                                                         id="created_at_from"
                                                                         autoComplete="off"
@@ -2174,6 +2243,7 @@ const OrderIndex = forwardRef((props, ref) => {
                                                                         selected={selectedCreatedAtFromDate}
                                                                         className="form-control"
                                                                         dateFormat="MMM dd yyyy"
+                                                                        locale={dateLocale}
                                                                         isClearable={true}
                                                                         onChange={(date) => {
                                                                             if (!date) {
@@ -2186,7 +2256,7 @@ const OrderIndex = forwardRef((props, ref) => {
                                                                             setSelectedCreatedAtFromDate(date);
                                                                         }}
                                                                     />
-                                                                    To:{" "}
+                                                                    {t('To')}: {" "}
                                                                     <DatePicker
                                                                         id="created_at_to"
                                                                         autoComplete="off"
@@ -2194,6 +2264,7 @@ const OrderIndex = forwardRef((props, ref) => {
                                                                         selected={selectedCreatedAtToDate}
                                                                         className="form-control"
                                                                         dateFormat="MMM dd yyyy"
+                                                                        locale={dateLocale}
                                                                         isClearable={true}
                                                                         onChange={(date) => {
                                                                             if (!date) {
@@ -2220,7 +2291,7 @@ const OrderIndex = forwardRef((props, ref) => {
                                                                     );
                                                                 }}
                                                                 options={paymentStatusOptions}
-                                                                placeholder="Select Payment Status"
+                                                                placeholder={t('Select Payment Status')}
                                                                 selected={selectedPaymentStatusList}
                                                                 highlightOnlyResult={true}
                                                                 multiple
@@ -2232,11 +2303,11 @@ const OrderIndex = forwardRef((props, ref) => {
                                                                     searchByFieldValue("zatca.reporting_passed", e.target.value);
                                                                 }}
                                                             >
-                                                                <option value="" SELECTED>Select</option>
-                                                                <option value="reported">REPORTED</option>
-                                                                <option value="compliance_failed">COMPLIANCE FAILED</option>
-                                                                <option value="reporting_failed">REPORTING FAILED</option>
-                                                                <option value="not_reported">NOT REPORTED</option>
+                                                                <option value="" SELECTED>{t('Select')}</option>
+                                                                <option value="reported">{t('REPORTED')}</option>
+                                                                <option value="compliance_failed">{t('COMPLIANCE FAILED')}</option>
+                                                                <option value="reporting_failed">{t('REPORTING FAILED')}</option>
+                                                                <option value="not_reported">{t('NOT REPORTED')}</option>
                                                             </select>
                                                         </th>}
                                                         {col.key === "customer" && <th>
@@ -2252,7 +2323,7 @@ const OrderIndex = forwardRef((props, ref) => {
                                                                     );
                                                                 }}
                                                                 options={customerOptions}
-                                                                placeholder="Customer Name / Mob / VAT # / ID"
+                                                                placeholder={t('Customer Name / Mob / VAT # / ID')}
                                                                 selected={selectedCustomers}
                                                                 highlightOnlyResult={true}
                                                                 onInputChange={(searchTerm, e) => {
@@ -2280,6 +2351,7 @@ const OrderIndex = forwardRef((props, ref) => {
                                                                     selected={selectedDate}
                                                                     className="form-control"
                                                                     dateFormat="MMM dd yyyy"
+                                                                    locale={dateLocale}
                                                                     isClearable={true}
                                                                     onChange={(date) => {
                                                                         if (!date) {
@@ -2303,13 +2375,13 @@ const OrderIndex = forwardRef((props, ref) => {
                                                                     }}
                                                                     onClick={(e) => setShowDateRange(!showDateRange)}
                                                                 >
-                                                                    {showDateRange ? "Less.." : "More.."}
+                                                                    {showDateRange ? t('Less') + ".." : t('More') + ".."}
                                                                 </small>
                                                                 <br />
 
                                                                 {showDateRange ? (
                                                                     <span className="text-left">
-                                                                        From:{" "}
+                                                                        {t('From')}: {" "}
                                                                         <DatePicker
                                                                             id="from_date"
                                                                             autoComplete="off"
@@ -2317,6 +2389,7 @@ const OrderIndex = forwardRef((props, ref) => {
                                                                             selected={selectedFromDate}
                                                                             className="form-control"
                                                                             dateFormat="MMM dd yyyy"
+                                                                            locale={dateLocale}
                                                                             isClearable={true}
                                                                             onChange={(date) => {
                                                                                 if (!date) {
@@ -2329,7 +2402,7 @@ const OrderIndex = forwardRef((props, ref) => {
                                                                                 setSelectedFromDate(date);
                                                                             }}
                                                                         />
-                                                                        To:{" "}
+                                                                        {t('To')}: {" "}
                                                                         <DatePicker
                                                                             id="to_date"
                                                                             autoComplete="off"
@@ -2337,6 +2410,7 @@ const OrderIndex = forwardRef((props, ref) => {
                                                                             selected={selectedToDate}
                                                                             className="form-control"
                                                                             dateFormat="MMM dd yyyy"
+                                                                            locale={dateLocale}
                                                                             isClearable={true}
                                                                             onChange={(date) => {
                                                                                 if (!date) {
@@ -2398,21 +2472,21 @@ const OrderIndex = forwardRef((props, ref) => {
                                                                             openSalesReturnCreateForm(order.id);
                                                                         }}
                                                                     >
-                                                                        <i className="bi bi-arrow-left"></i> Return
+                                                                        <i className="bi bi-arrow-left"></i> {t("Return")}
                                                                     </Button>
                                                                 </td>}
                                                                 {(col.key === "select" && enableSelection) && <td style={{ width: "auto", whiteSpace: "nowrap" }}>
                                                                     <Button className="btn btn-success btn-sm" onClick={() => {
                                                                         handleSelected(order);
                                                                     }}>
-                                                                        Select
+                                                                        {t("Select")}
                                                                     </Button>
                                                                 </td>}
                                                                 {(col.fieldName === "code") && <td style={{ width: "auto", whiteSpace: "nowrap" }}>
                                                                     {order.code}
                                                                 </td>}
                                                                 {(col.fieldName === "date" || col.fieldName === "created_at") && <td style={{ width: "auto", whiteSpace: "nowrap" }}>
-                                                                    {format(new Date(order[col.key]), "MMM dd yyyy h:mma")}
+                                                                    {format(new Date(order[col.key]), "MMM dd yyyy h:mma", { locale: dateLocale })}
                                                                 </td>}
                                                                 {(col.fieldName === "customer_name") && <td style={{ width: "auto", whiteSpace: "nowrap" }}>
                                                                     {order.customer_name && <span style={{ cursor: "pointer", color: "blue" }} onClick={() => {
@@ -2435,26 +2509,26 @@ const OrderIndex = forwardRef((props, ref) => {
                                                                 </td>}
                                                                 {(col.fieldName === "zatca.reporting_passed" && store.zatca?.phase === "2" && store.zatca?.connected) && <td style={{ width: "auto", whiteSpace: "nowrap" }}>
                                                                     {!order.zatca?.compliance_passed && !order.zatca?.reporting_passed && order.zatca?.compliance_check_failed_count > 0 ? <span className="badge bg-danger">
-                                                                        Compliance check failed
+                                                                        {t("Compliance check failed")}
                                                                         {!order.zatca.compliance_passed && order.zatca.compliance_check_last_failed_at ? <span>&nbsp;<TimeAgo date={order.zatca.compliance_check_last_failed_at} />&nbsp;</span> : ""}
                                                                         &nbsp;</span> : ""}
                                                                     {!order.zatca?.reporting_passed && order.zatca?.reporting_failed_count > 0 ? <span> <span className="badge bg-danger">
-                                                                        Reporting failed
+                                                                        {t("Reporting failed")}
                                                                         {!order.zatca.reporting_passed && order.zatca.reporting_last_failed_at ? <span><TimeAgo date={order.zatca.reporting_last_failed_at} />&nbsp;</span> : ""}
                                                                     </span> &nbsp;</span> : ""}
                                                                     {order.zatca?.reporting_passed ? <span>&nbsp;<span className="badge bg-success">
-                                                                        Reported
+                                                                        {t("Reported")}
                                                                         {order.zatca.reporting_passed && order.zatca.reporting_passed_at ? <span>&nbsp;<TimeAgo date={order.zatca.reporting_passed_at} />&nbsp;</span> : ""}
                                                                         &nbsp;</span></span> : ""}
 
                                                                     {!order.zatca?.reporting_passed && !order.zatca?.compliance_passed && !order.zatca?.reporting_failed_count && !order.zatca?.compliance_check_failed_count ? <span className="badge bg-warning">
-                                                                        Not Reported
+                                                                        {t("Not Reported")}
                                                                         &nbsp;</span> : ""}
                                                                     {!order.zatca.reporting_passed ? <span> &nbsp; <Button disabled={reportingInProgress} style={{ marginTop: "3px" }} className="btn btn btn-sm" onClick={() => {
                                                                         ReportInvoiceToZatca(order.id, index);
                                                                     }}>
                                                                         {!order.zatca?.reportingInProgress && (order.zatca?.reporting_failed_count > 0 || order.zatca?.compliance_check_failed_count > 0) ? <i class="bi bi-bootstrap-reboot"></i> : ""}
-                                                                        {!order.zatca?.reportingInProgress && (!order.zatca?.reporting_failed_count > 0 && !order.zatca?.compliance_check_failed_count) ? <span class="bi-arrow-right-circle">&nbsp;Report</span> : ""}
+                                                                        {!order.zatca?.reportingInProgress && (!order.zatca?.reporting_failed_count > 0 && !order.zatca?.compliance_check_failed_count) ? <span class="bi-arrow-right-circle">&nbsp; {t("Report")}</span> : ""}
 
                                                                         {order.zatca?.reportingInProgress ? <Spinner
                                                                             as="span"
@@ -2466,8 +2540,26 @@ const OrderIndex = forwardRef((props, ref) => {
                                                                     </Button></span> : ""}
                                                                     {order.zatca?.reporting_passed ? <span>&nbsp;
 
-                                                                        <Button onClick={() => {
-                                                                            window.open("/zatca/xml/" + order.code + ".xml", "_blank");
+                                                                        <Button onClick={async () => {
+                                                                            const url = "/zatca/xml/" + order.code + ".xml";
+                                                                            const filename = order.code + ".xml";
+                                                                            if (window.__TAURI__) {
+                                                                                try {
+                                                                                    const invoke = window.__TAURI__.core.invoke;
+                                                                                    const savedPath = await invoke("save_xml_file", { url: "http://localhost:2003" + url, filename });
+                                                                                    if (props.showToastMessage) props.showToastMessage("File saved to " + savedPath, "success");
+                                                                                } catch (e) {
+                                                                                    if (props.showToastMessage) props.showToastMessage("Download failed: " + e, "danger");
+                                                                                }
+                                                                            } else {
+                                                                                fetch(url).then(r => r.blob()).then(blob => {
+                                                                                    const a = document.createElement("a");
+                                                                                    a.href = URL.createObjectURL(blob);
+                                                                                    a.download = filename;
+                                                                                    a.click();
+                                                                                    URL.revokeObjectURL(a.href);
+                                                                                });
+                                                                            }
                                                                         }}><i class="bi bi-filetype-xml"></i> XML
                                                                         </Button>
                                                                     </span> : ""}
@@ -2475,21 +2567,21 @@ const OrderIndex = forwardRef((props, ref) => {
                                                                 {(col.fieldName === "payment_status") && <td style={{ width: "auto", whiteSpace: "nowrap" }}>
                                                                     {order.payment_status === "paid" ?
                                                                         <span className="badge bg-success">
-                                                                            Paid
+                                                                            {t("Paid")}
                                                                         </span> : ""}
                                                                     {order.payment_status === "paid_partially" ?
                                                                         <span className="badge bg-warning">
-                                                                            Paid Partially
+                                                                            {t("Paid Partially")}
                                                                         </span> : ""}
                                                                     {order.payment_status === "not_paid" ?
                                                                         <span className="badge bg-danger">
-                                                                            Not Paid
+                                                                            {t("Not Paid")}
                                                                         </span> : ""}
                                                                 </td>}
                                                                 {(col.fieldName === "payment_methods") && <td style={{ width: "auto", whiteSpace: "nowrap" }}>
                                                                     {order.payment_methods &&
                                                                         order.payment_methods.map((name) => (
-                                                                            <span className="badge bg-info">{name}</span>
+                                                                            <span className="badge bg-info">{t(name)}</span>
                                                                         ))}
                                                                 </td>}
                                                                 {(col.fieldName === "cash_discount") && <td style={{ width: "auto", whiteSpace: "nowrap" }}>
@@ -2535,26 +2627,6 @@ const OrderIndex = forwardRef((props, ref) => {
                                     </table>
                                 </div>
 
-                                {totalPages ? <ReactPaginate
-                                    breakLabel="..."
-                                    nextLabel="next >"
-                                    onPageChange={(event) => {
-                                        changePage(event.selected + 1);
-                                    }}
-                                    pageRangeDisplayed={5}
-                                    pageCount={totalPages}
-                                    previousLabel="< previous"
-                                    renderOnZeroPageCount={null}
-                                    className="pagination  flex-wrap"
-                                    pageClassName="page-item"
-                                    pageLinkClassName="page-link"
-                                    activeClassName="active"
-                                    previousClassName="page-item"
-                                    nextClassName="page-item"
-                                    previousLinkClassName="page-link"
-                                    nextLinkClassName="page-link"
-                                    forcePage={page - 1}
-                                /> : ""}
                             </div>
                         </div>
                     </div>

@@ -196,6 +196,42 @@ const DeliveryNotePreviewContent = forwardRef((props, ref) => {
                                                 <li>Qty</li>
                                             </ul>
                                         </th>
+                                        {props.model.net_total > 0 && <th className="per1 text-center" style={{ padding: "0px" }}>
+                                            <ul className="list-unstyled" style={{ fontSize: "3mm", height: "35px", marginBottom: "0px" }}>
+                                                <li>سعر الوحدة</li>
+                                                <li>Unit Price</li>
+                                            </ul>
+                                        </th>}
+                                        {props.model.net_total > 0 && props.model.total_with_vat > 0 && <th className="per1 text-center" style={{ padding: "0px" }}>
+                                            <ul className="list-unstyled" style={{ fontSize: "3mm", height: "35px", marginBottom: "0px" }}>
+                                                <li>سعر الوحدة (مع ض.ق.م)</li>
+                                                <li>Unit Price(with VAT)</li>
+                                            </ul>
+                                        </th>}
+                                        {props.model.net_total > 0 && <th className="per1 text-center" style={{ padding: "0px" }}>
+                                            <ul className="list-unstyled" style={{ fontSize: "3mm", height: "35px", marginBottom: "0px" }}>
+                                                <li>خصم</li>
+                                                <li>Discount</li>
+                                            </ul>
+                                        </th>}
+                                        {props.model.net_total > 0 && props.model.total_with_vat > 0 && <th className="per1 text-center" style={{ padding: "0px" }}>
+                                            <ul className="list-unstyled" style={{ fontSize: "3mm", height: "35px", marginBottom: "0px" }}>
+                                                <li>خصم (مع ض.ق.م)</li>
+                                                <li>Disc.(with VAT)</li>
+                                            </ul>
+                                        </th>}
+                                        {props.model.net_total > 0 && <th className="per1 text-center" style={{ padding: "0px" }}>
+                                            <ul className="list-unstyled" style={{ fontSize: "3mm", height: "35px", marginBottom: "0px" }}>
+                                                <li>المجموع</li>
+                                                <li>Price</li>
+                                            </ul>
+                                        </th>}
+                                        {props.model.net_total > 0 && props.model.total_with_vat > 0 && <th className="per1 text-center" style={{ padding: "0px" }}>
+                                            <ul className="list-unstyled" style={{ fontSize: "3mm", height: "35px", marginBottom: "0px" }}>
+                                                <li>المجموع (مع ض.ق.م)</li>
+                                                <li>Price(with VAT)</li>
+                                            </ul>
+                                        </th>}
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -209,10 +245,63 @@ const DeliveryNotePreviewContent = forwardRef((props, ref) => {
 
                                             </td>
                                             <td>{product.quantity}  {product.unit ? product.unit : ""} </td>
+                                            {props.model.net_total > 0 && <td>{product.unit_price ? product.unit_price.toFixed(2) : "0.00"}</td>}
+                                            {props.model.net_total > 0 && props.model.total_with_vat > 0 && <td>{product.unit_price_with_vat ? product.unit_price_with_vat.toFixed(2) : "0.00"}</td>}
+                                            {props.model.net_total > 0 && <td>{product.unit_discount ? product.unit_discount.toFixed(2) : "0.00"}</td>}
+                                            {props.model.net_total > 0 && props.model.total_with_vat > 0 && <td>{product.unit_discount_with_vat ? product.unit_discount_with_vat.toFixed(2) : "0.00"}</td>}
+                                            {props.model.net_total > 0 && <td>{product.unit_price ? ((product.unit_price - (product.unit_discount || 0)) * product.quantity).toFixed(2) : "0.00"}</td>}
+                                            {props.model.net_total > 0 && props.model.total_with_vat > 0 && <td>{product.unit_price_with_vat ? (((product.unit_price_with_vat || 0) - (product.unit_discount_with_vat || 0)) * product.quantity).toFixed(2) : "0.00"}</td>}
                                         </tr>
                                     ))}
                                 </tbody>
                             </table>
+
+                            {props.model.net_total > 0 && pageIndex === (props.model.pages.length - 1) && (
+                                <table className="table table-bordered no-bold" style={{ fontSize: "3mm" }}>
+                                    <tbody>
+                                        <tr>
+                                            <td style={{ width: "75%" }}></td>
+                                            <th className="text-end" style={{ width: "12.5%" }}>Total(without VAT) / المجموع الفرعي</th>
+                                            <td className="text-end" style={{ width: "12.5%" }}>{props.model.total ? props.model.total.toFixed(2) : "0.00"}</td>
+                                        </tr>
+                                        {props.model.total_with_vat > 0 && <tr>
+                                            <td style={{ width: "75%" }}></td>
+                                            <th className="text-end" style={{ width: "12.5%" }}>Total(with VAT) / المجموع مع ض.ق.م</th>
+                                            <td className="text-end" style={{ width: "12.5%" }}>{props.model.total_with_vat.toFixed(2)}</td>
+                                        </tr>}
+                                        {props.model.shipping_handling_fees > 0 && <tr>
+                                            <td style={{ width: "75%" }}></td>
+                                            <th className="text-end" style={{ width: "12.5%" }}>Shipping / شحن</th>
+                                            <td className="text-end" style={{ width: "12.5%" }}>{props.model.shipping_handling_fees.toFixed(2)}</td>
+                                        </tr>}
+                                        {props.model.discount > 0 && <tr>
+                                            <td style={{ width: "75%" }}></td>
+                                            <th className="text-end" style={{ width: "12.5%" }}>Discount(without VAT){props.model.discount_percent > 0 ? ` (${props.model.discount_percent}%)` : ""} / خصم</th>
+                                            <td className="text-end" style={{ width: "12.5%" }}>{props.model.discount.toFixed(2)}</td>
+                                        </tr>}
+                                        {props.model.discount_with_vat > 0 && <tr>
+                                            <td style={{ width: "75%" }}></td>
+                                            <th className="text-end" style={{ width: "12.5%" }}>Discount(with VAT){props.model.discount_percent_with_vat > 0 ? ` (${props.model.discount_percent_with_vat}%)` : ""} / خصم مع ض.ق.م</th>
+                                            <td className="text-end" style={{ width: "12.5%" }}>{props.model.discount_with_vat.toFixed(2)}</td>
+                                        </tr>}
+                                        <tr>
+                                            <td style={{ width: "75%" }}></td>
+                                            <th className="text-end" style={{ width: "12.5%" }}>VAT {props.model.vat_percent ? "(" + props.model.vat_percent + "%)" : ""} / ضريبة القيمة المضافة</th>
+                                            <td className="text-end" style={{ width: "12.5%" }}>{props.model.vat_price ? props.model.vat_price.toFixed(2) : "0.00"}</td>
+                                        </tr>
+                                        {props.model.rounding_amount !== 0 && props.model.rounding_amount !== undefined && <tr>
+                                            <td style={{ width: "75%" }}></td>
+                                            <th className="text-end" style={{ width: "12.5%" }}>Rounding / تقريب</th>
+                                            <td className="text-end" style={{ width: "12.5%" }}>{props.model.rounding_amount ? props.model.rounding_amount.toFixed(2) : "0.00"}</td>
+                                        </tr>}
+                                        <tr>
+                                            <td style={{ width: "75%" }}></td>
+                                            <th className="text-end" style={{ width: "12.5%" }}><strong>Net Total(with VAT) / الإجمالي</strong></th>
+                                            <td className="text-end" style={{ width: "12.5%" }}><strong>{props.model.net_total.toFixed(2)}</strong></td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            )}
 
                             <table className="table table-bordered no-bold" style={{ fontSize: "3mm" }}>
                                 <thead>

@@ -12,7 +12,7 @@ const VendorView = forwardRef((props, ref) => {
                 await getVendor(id);
                 if (timerRef.current) clearTimeout(timerRef.current);
                 timerRef.current = setTimeout(() => {
-                    ImageGalleryRef.current.open();
+                    ImageGalleryRef.current?.open();
                 }, 300);
                 SetShow(true);
             }

@@ -2,6 +2,7 @@
 import avatar from './../avatar.jpg';
 import React, { useState, useEffect } from "react";
 import Footer from './../Footer.js';
+import { getLandingPath } from './../sidebar_menu_config';
 
 //import { useHistory } from "react-router-dom";
 
@@ -18,11 +19,11 @@ function Login() {
         if (at) {
             // history.push("/dashboard/quotations");
             //window.location = "/dashboard/analytics";
-            window.location = "/dashboard/sales";
+            window.location = getLandingPath();
         }
     }, []);
 
-    function me() {
+    async function me() {
         console.log("inside me");
         const requestOptions = {
             method: 'GET',
@@ -64,7 +65,8 @@ function Login() {
                     if (storeIDs[0]) {
                         await getStore(storeIDs[0]);
                     }
-
+                } else {
+                    await getFirstStore();
                 }
 
                 localStorage.setItem("user_name", data.result.name);
@@ -86,12 +88,43 @@ function Login() {
 
                 // history.push("/dashboard/analytics");
                 //history.push("/dashboard/sales");
-                window.location = "/dashboard/sales";
+                window.location = getLandingPath();
             })
             .catch(error => {
                 setProcessing(false);
                 setErrors(error);
             });
+    }
+
+    async function getFirstStore() {
+        const requestOptions = {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': localStorage.getItem('access_token'),
+            },
+        };
+
+        await fetch('/v1/store', requestOptions)
+            .then(async response => {
+                const isJson = response.headers.get('content-type')?.includes('application/json');
+                const data = isJson && await response.json();
+
+                if (!response.ok) {
+                    return Promise.reject(data && data.errors);
+                }
+
+                const stores = data.result;
+                if (stores && stores.length > 0) {
+                    const first = stores[0];
+                    localStorage.setItem("store_name", first.name);
+                    localStorage.setItem("store_id", first.id);
+                    if (first.id) {
+                        await getStore(first.id);
+                    }
+                }
+            })
+            .catch(() => {});
     }
 
     async function getStore(id) {

@@ -1,5 +1,9 @@
 import Dashboard from './Dashboard.js';
 import Login from './user/login.js';
+import InvoicePrintPage from './order/InvoicePrintPage';
+import ReceiptPrintPage from './customer_deposit/ReceiptPrintPage';
+import PostingPrintPage from './posting/PostingPrintPage';
+import ReportPrintPage from './order/ReportPrintPage';
 import { WebSocketProvider } from "./utils/WebSocketContext.js";
 import {
   BrowserRouter as Router,
@@ -20,11 +24,31 @@ function App() {
     <WebSocketProvider userId={userId}>
       <Router>
         <Switch>
+          <Route path="/invoice-print">
+            <InvoicePrintPage />
+          </Route>
+          <Route path="/receipt-print">
+            <ReceiptPrintPage />
+          </Route>
+          <Route path="/posting-print">
+            <PostingPrintPage />
+          </Route>
+          <Route path="/report-print">
+            <ReportPrintPage />
+          </Route>
+          <Route path="/dashboard/business-dashboard">
+            <Dashboard />
+          </Route>
+
           <Route path="/dashboard/analytics">
             <Dashboard />
           </Route>
 
           <Route path="/dashboard/sales">
+            <Dashboard />
+          </Route>
+
+          <Route path="/dashboard/stock-transfers">
             <Dashboard />
           </Route>
 
@@ -86,6 +110,10 @@ function App() {
           </Route>
 
           <Route path="/dashboard/stores">
+            <Dashboard />
+          </Route>
+
+          <Route path="/dashboard/warehouses">
             <Dashboard />
           </Route>
 

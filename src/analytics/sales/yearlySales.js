@@ -12,7 +12,7 @@ const YearlySales = forwardRef((props, ref) => {
         }
     }));
 
-   
+
 
 
     let [yearlySales, setYearlySales] = useState([]);
@@ -124,7 +124,7 @@ const YearlySales = forwardRef((props, ref) => {
             let totalSalesReturn = 0.00;
             let totalSalesReturnProfit = 0.00;
             let totalSalesReturnLoss = 0.00;
-            if (props.columns.salesReturn||props.columns.salesReturnProfit||props.columns.salesReturnLoss) {
+            if (props.columns.salesReturn || props.columns.salesReturnProfit || props.columns.salesReturnLoss) {
                 for (const salesReturn of props.allSalesReturns) {
                     if (parseInt(new Date(salesReturn.date).getFullYear()) === year) {
                         totalSalesReturn += parseFloat(salesReturn.net_total);
@@ -214,7 +214,7 @@ const YearlySales = forwardRef((props, ref) => {
             // 1: { curveType: "function", axis: 'Daylight' },
         },
     };
-   
+
 
 
 

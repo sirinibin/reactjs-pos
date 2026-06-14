@@ -1,0 +1,160 @@
+/* RTL-specific overrides */
+
+/* Sidebar positioning for RTL */
+[dir="rtl"] .sidebar {
+  left: auto;
+  right: 0;
+  width: 260px !important;
+  max-width: 260px !important;
+  min-width: 260px !important;
+}
+
+[dir="rtl"] .main {
+  margin-right: 260px;
+  margin-left: 0;
+}
+
+/* Sidebar content wrapper */
+[dir="rtl"] .sidebar-content {
+  width: 100%;
+  overflow-x: hidden;
+}
+
+/* Sidebar collapsed state in RTL - Desktop */
+[dir="rtl"] .sidebar.collapsed {
+  margin-right: -260px;
+  margin-left: 0;
+}
+
+/* Main content adjustment when sidebar is collapsed in RTL */
+[dir="rtl"] .sidebar.collapsed ~ .main,
+[dir="rtl"] .sidebar.collapsed + .main {
+  margin-right: 0;
+  margin-left: 0;
+}
+
+/* Mobile RTL - sidebar hidden by default, shown when collapsed class is present */
+@media (min-width: 1px) and (max-width: 991.98px) {
+  [dir="rtl"] .sidebar {
+    margin-right: -260px;
+    margin-left: 0;
+  }
+
+  [dir="rtl"] .sidebar.collapsed {
+    margin-right: 0;
+    margin-left: 0;
+  }
+
+  [dir="rtl"] .main {
+    margin-right: 0;
+    margin-left: 0;
+  }
+}
+
+/* Hamburger menu icon positioning in RTL */
+[dir="rtl"] .navbar {
+  position: relative;
+  padding-right: 70px; /* Make room for hamburger on right */
+  padding-left: 1.5rem;
+}
+
+[dir="rtl"] .sidebar-toggle {
+  position: absolute;
+  right: 15px;
+  left: auto;
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+[dir="rtl"] .navbar-collapse {
+  margin-left: 0;
+  margin-right: 0;
+}
+
+/* Sidebar menu items - reverse icon and text order */
+[dir="rtl"] .sidebar-link {
+  display: flex;
+  flex-direction: row-reverse;
+  justify-content: flex-start;
+  align-items: center;
+}
+
+/* Sidebar icons spacing in RTL */
+[dir="rtl"] .sidebar-link i {
+  margin-right: 0;
+  margin-left: 0.75rem;
+}
+
+[dir="rtl"] .sidebar-link .bi {
+  margin-right: 0;
+  margin-left: 0.75rem;
+}
+
+/* Navbar adjustments */
+[dir="rtl"] .navbar-nav {
+  margin-left: auto;
+  margin-right: 0;
+}
+
+[dir="rtl"] .navbar-align {
+  flex-direction: row-reverse;
+}
+
+/* Dropdown menu positioning */
+[dir="rtl"] .dropdown-menu {
+  left: auto;
+  right: 0;
+}
+
+/* Form labels and inputs */
+[dir="rtl"] .form-label {
+  text-align: right;
+}
+
+[dir="rtl"] .input-group {
+  flex-direction: row-reverse;
+}
+
+/* Modal adjustments */
+[dir="rtl"] .modal-header .btn-close {
+  margin: 0 auto 0 -0.5rem;
+}
+
+[dir="rtl"] .modal-footer {
+  flex-direction: row-reverse;
+}
+
+/* Table adjustments */
+[dir="rtl"] table {
+  text-align: right;
+}
+
+[dir="rtl"] th,
+[dir="rtl"] td {
+  text-align: right;
+}
+
+/* Buttons and icons */
+[dir="rtl"] .bi {
+  margin-left: 0.25rem;
+  margin-right: 0;
+}
+
+/* Toast positioning */
+[dir="rtl"] .toast-container {
+  left: 1rem;
+  right: auto;
+}
+
+/* General text alignment */
+[dir="rtl"] {
+  text-align: right;
+}
+
+[dir="rtl"] .text-end {
+  text-align: left !important;
+}
+
+[dir="rtl"] .text-start {
+  text-align: right !important;
+}

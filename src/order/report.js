@@ -5,11 +5,14 @@ import ReportContent from './reportContent.js';
 //import { useReactToPrint } from 'react-to-print';
 import html2pdf from 'html2pdf.js';
 import "./print.css";
+import { useTranslation } from 'react-i18next';
 //import jsPDF from "jspdf";
 //import html2canvas from "html2canvas";
 
 
 const ReportPreview = forwardRef((props, ref) => {
+    const { t } = useTranslation('common');
+
     let [modelName, setModelName] = useState("sales_report");
     let [model, setModel] = useState({});
     const [show, setShow] = useState(props.show);
@@ -666,35 +669,94 @@ const ReportPreview = forwardRef((props, ref) => {
 
 
 
-    const handlePrint = useCallback(() => {
-        const element = printAreaRef.current;
-        if (!element) return;
+    const handlePrint = useCallback(async () => {
+        // Detect Tauri — walk up iframe parent chain (same-origin) to find the Tauri API.
+        let tauriRoot = null;
+        try {
+            let w = window;
+            while (w) {
+                if (w.__TAURI__?.core?.invoke) { tauriRoot = w.__TAURI__; break; }
+                if (w.__TAURI_INTERNALS__?.invoke) { tauriRoot = w.__TAURI_INTERNALS__; break; }
+                if (w === w.parent) break;
+                w = w.parent;
+            }
+        } catch (_) { /* cross-origin parent */ }
+        const tauriInvoke = tauriRoot?.core?.invoke ?? tauriRoot?.invoke ?? null;
+        const isInTauri = !!tauriInvoke;
 
-        const elementsToHide = element.querySelectorAll('.no-print');
-        elementsToHide.forEach(el => el.style.display = 'none');
+        try {
+            const fileName = getFileName();
 
+            if (isInTauri) {
+                // Tauri: use Go chromedp PDF generation (correct Arabic text), then open for printing
+                const apiResponse = await fetch('/v1/report/pdf', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': localStorage.getItem('access_token'),
+                    },
+                    body: JSON.stringify({
+                        model: model,
+                        modelName: modelName,
+                        fontSizes: fontSizesRef.current,
+                        filename: fileName,
+                    }),
+                });
 
-        html2pdf().from(element).set({
-            margin: 0,
-            filename: `${getFileName()}.pdf`,
-            image: { type: 'jpeg', quality: 0.98 },
-            html2canvas: { scale: 2, useCORS: true },
-            jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
-        }).outputPdf('bloburl').then(blobUrl => {
-            // Restore visibility after PDF is created
-            elementsToHide.forEach(el => el.style.display = '');
+                if (!apiResponse.ok) {
+                    const errData = await apiResponse.json().catch(() => ({}));
+                    throw new Error(
+                        errData?.errors?.chrome ||
+                        errData?.errors?.pdf ||
+                        errData?.errors?.body ||
+                        `HTTP ${apiResponse.status}`
+                    );
+                }
 
-            const iframe = document.createElement('iframe');
-            iframe.style.display = 'none';
-            iframe.src = blobUrl;
-            document.body.appendChild(iframe);
+                const pdfBlob = await apiResponse.blob();
+                const arrayBuffer = await pdfBlob.arrayBuffer();
+                const uint8Array = new Uint8Array(arrayBuffer);
+                let binary = '';
+                for (let i = 0; i < uint8Array.length; i++) {
+                    binary += String.fromCharCode(uint8Array[i]);
+                }
+                const base64 = btoa(binary);
 
-            iframe.onload = () => {
-                iframe.contentWindow?.focus();
-                iframe.contentWindow?.print();
-            };
-        });
-    }, [getFileName]);
+                await tauriInvoke('print_pdf', {
+                    dataBase64: base64,
+                    filename: `${fileName}.pdf`,
+                });
+            } else {
+                // Web browser: use html2pdf() and print via hidden iframe
+                const element = printAreaRef.current;
+                if (!element) return;
+
+                const elementsToHide = element.querySelectorAll('.no-print');
+                elementsToHide.forEach(el => el.style.display = 'none');
+
+                const blobUrl = await html2pdf().from(element).set({
+                    margin: 0,
+                    filename: `${fileName}.pdf`,
+                    image: { type: 'jpeg', quality: 0.98 },
+                    html2canvas: { scale: 2, useCORS: true },
+                    jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+                }).outputPdf('bloburl');
+
+                elementsToHide.forEach(el => el.style.display = '');
+
+                const iframe = document.createElement('iframe');
+                iframe.style.display = 'none';
+                iframe.src = blobUrl;
+                document.body.appendChild(iframe);
+                iframe.onload = () => {
+                    iframe.contentWindow?.focus();
+                    iframe.contentWindow?.print();
+                };
+            }
+        } catch (e) {
+            alert('Print failed: ' + (e?.message || JSON.stringify(e)));
+        }
+    }, [getFileName, model, modelName]);
 
 
 
@@ -1014,6 +1076,11 @@ const ReportPreview = forwardRef((props, ref) => {
 
     let [fontSizes, setFontSizes] = useState(defaultFontSizes);
 
+    // fontSizesRef lets handlePrint always read the latest fontSizes without
+    // needing to add it to the useCallback dependency array.
+    const fontSizesRef = useRef(fontSizes);
+    useEffect(() => { fontSizesRef.current = fontSizes; }, [fontSizes]);
+
     useEffect(() => {
         let storedFontSizes = getFromLocalStorage("fontSizes");
         if (storedFontSizes) {
@@ -1158,7 +1225,7 @@ const ReportPreview = forwardRef((props, ref) => {
             <Modal.Header className="d-flex flex-wrap align-items-center justify-content-between">
                 {/* Left: Title */}
                 <div className="flex-grow-1">
-                    <Modal.Title>{formatModelName(modelName)} Preview</Modal.Title>
+                    <Modal.Title>{t(`${formatModelName(modelName)} Preview`)}</Modal.Title>
                 </div>
 
                 {/* Right: Fixed control block */}
@@ -1167,13 +1234,13 @@ const ReportPreview = forwardRef((props, ref) => {
                     {showSlider && (
                         <div className="d-flex align-items-center border rounded bg-light p-2">
                             <button className="btn btn-outline-secondary" onClick={decrement}>−</button>
-                            <span className="mx-2">Font Size: {fontSizes[modelName + "_" + selectedText]?.size}</span>
+                            <span className="mx-2">{t("Font Size")}: {fontSizes[modelName + "_" + selectedText]?.size}</span>
                             <button className="btn btn-outline-secondary" onClick={increment}>+</button>
                             <button className="btn-close ms-2" onClick={() => setShowSlider(false)}></button>
                         </div>
                     )}
 
-                    <label htmlFor="font-select">Select Font: </label>
+                    <label htmlFor="font-select">{t("Select Font")}: </label>
                     <select id="font-select" value={fontSizes[modelName + "_font"]} onChange={handleFontChange}>
                         {fonts.map((font) => (
                             <option key={font.value} value={font.value}>
@@ -1200,7 +1267,7 @@ const ReportPreview = forwardRef((props, ref) => {
                                 saveToLocalStorage("fontSizes", fontSizes);
                             }}
                         />
-                        <label htmlFor="storeHeaderCheck" className="form-check-label">Show Store Header</label>
+                        <label htmlFor="storeHeaderCheck" className="form-check-label">{t("Show Store Header")}</label>
                     </div>}
 
 
@@ -1209,14 +1276,14 @@ const ReportPreview = forwardRef((props, ref) => {
 
                     {<div className="d-flex align-items-center border rounded bg-light p-2" style={{ marginRight: "200px" }}>
                         <button className="btn btn-outline-secondary" onClick={() => decrementSize(modelName + "_marginTop")}>−</button>
-                        <span className="mx-2">Margin Top: {fontSizes[modelName + "_marginTop"]?.size}</span>
+                        <span className="mx-2">{t("Margin Top")}: {fontSizes[modelName + "_marginTop"]?.size}</span>
                         <button className="btn btn-outline-secondary" onClick={() => incrementSize(modelName + "_marginTop")}>+</button>
 
                     </div>}
 
                     <div className="col ">
                         <>
-                            <label className="form-label">Page Size:&nbsp;</label>
+                            <label className="form-label">{t("Page Size")}:&nbsp;</label>
                             <select
                                 value={fontSizes[modelName + "_reportPageSize"]}
                                 onChange={(e) => {
@@ -1270,7 +1337,7 @@ const ReportPreview = forwardRef((props, ref) => {
                             className="me-2"
                         >
                             <>
-                                <i className="bi bi-printer"></i> Print
+                                <i className="bi bi-printer"></i> {t("Print")}
                             </>
                         </Button>
                         <button className="btn-close" onClick={handleClose} aria-label="Close"></button>
@@ -1299,8 +1366,6 @@ const ReportPreview = forwardRef((props, ref) => {
 
                 </div>
             </Modal.Body>
-            <Modal.Footer>
-            </Modal.Footer>
         </Modal >
     </>);
 

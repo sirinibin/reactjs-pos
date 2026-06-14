@@ -415,6 +415,8 @@ const BalanceSheetPrintPreview = forwardRef((props, ref) => {
     }
     */
 
+    let [modelName, setModelName] = useState("balance_sheet");
+
     const printAreaRef = useRef();
 
     const getFileName = useCallback(() => {
@@ -453,33 +455,95 @@ const BalanceSheetPrintPreview = forwardRef((props, ref) => {
     });*/
 
 
-    const handlePrint = useCallback(() => {
+    const handlePrint = useCallback(async () => {
         model.download = false;
         setModel({ ...model });
-
         setIsProcessing(true);
-        const element = printAreaRef.current;
-        if (!element) return;
 
-        html2pdf().from(element).set({
-            margin: 0,
-            filename: `${getFileName()}.pdf`,
-            image: { type: 'jpeg', quality: 0.98 },
-            html2canvas: { scale: 2, useCORS: true },
-            jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
-        }).outputPdf('bloburl').then(blobUrl => {
-            setIsProcessing(false);
-            const iframe = document.createElement('iframe');
-            iframe.style.display = 'none';
-            iframe.src = blobUrl;
-            document.body.appendChild(iframe);
+        // Detect Tauri — walk up iframe parent chain (same-origin) to find the Tauri API.
+        let tauriRoot = null;
+        try {
+            let w = window;
+            while (w) {
+                if (w.__TAURI__?.core?.invoke) { tauriRoot = w.__TAURI__; break; }
+                if (w.__TAURI_INTERNALS__?.invoke) { tauriRoot = w.__TAURI_INTERNALS__; break; }
+                if (w === w.parent) break;
+                w = w.parent;
+            }
+        } catch (_) { /* cross-origin parent */ }
+        const tauriInvoke = tauriRoot?.core?.invoke ?? tauriRoot?.invoke ?? null;
+        const isInTauri = !!tauriInvoke;
 
-            iframe.onload = () => {
-                iframe.contentWindow?.focus();
-                iframe.contentWindow?.print();
-            };
-        });
-    }, [getFileName, model]);
+        try {
+            const fileName = getFileName();
+
+            if (isInTauri) {
+                // Tauri: use Go chromedp PDF generation (correct Arabic text), then open for printing
+                const apiResponse = await fetch('/v1/posting/pdf', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': localStorage.getItem('access_token'),
+                    },
+                    body: JSON.stringify({
+                        model: model,
+                        modelName: modelName,
+                        fontSizes: fontSizesRef.current,
+                        filename: fileName,
+                    }),
+                });
+
+                if (!apiResponse.ok) {
+                    const errData = await apiResponse.json().catch(() => ({}));
+                    throw new Error(
+                        errData?.errors?.chrome ||
+                        errData?.errors?.pdf ||
+                        errData?.errors?.body ||
+                        `HTTP ${apiResponse.status}`
+                    );
+                }
+
+                const pdfBlob = await apiResponse.blob();
+                const arrayBuffer = await pdfBlob.arrayBuffer();
+                const uint8Array = new Uint8Array(arrayBuffer);
+                let binary = '';
+                for (let i = 0; i < uint8Array.length; i++) {
+                    binary += String.fromCharCode(uint8Array[i]);
+                }
+                const base64 = btoa(binary);
+
+                await tauriInvoke('print_pdf', {
+                    dataBase64: base64,
+                    filename: `${fileName}.pdf`,
+                });
+            } else {
+                // Web browser: use html2pdf() and print via hidden iframe
+                const element = printAreaRef.current;
+                if (!element) return;
+
+                const blobUrl = await html2pdf().from(element).set({
+                    margin: 0,
+                    filename: `${fileName}.pdf`,
+                    image: { type: 'jpeg', quality: 0.98 },
+                    html2canvas: { scale: 2, useCORS: true },
+                    jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+                }).outputPdf('bloburl');
+
+                const iframe = document.createElement('iframe');
+                iframe.style.display = 'none';
+                iframe.src = blobUrl;
+                document.body.appendChild(iframe);
+                iframe.onload = () => {
+                    iframe.contentWindow?.focus();
+                    iframe.contentWindow?.print();
+                };
+            }
+        } catch (e) {
+            alert('Print failed: ' + (e?.message || JSON.stringify(e)));
+        }
+
+        setIsProcessing(false);
+    }, [getFileName, model, modelName]);
 
 
 
@@ -495,33 +559,91 @@ const BalanceSheetPrintPreview = forwardRef((props, ref) => {
 
         model.download = true;
         setModel({ ...model });
-        const element = printAreaRef.current;
-        if (!element) return;
+
+        // Detect Tauri
+        let tauriRoot = null;
+        try {
+            let w = window;
+            while (w) {
+                if (w.__TAURI__?.core?.invoke) { tauriRoot = w.__TAURI__; break; }
+                if (w.__TAURI_INTERNALS__?.invoke) { tauriRoot = w.__TAURI_INTERNALS__; break; }
+                if (w === w.parent) break;
+                w = w.parent;
+            }
+        } catch (_) { /* cross-origin parent */ }
+        const tauriInvoke = tauriRoot?.core?.invoke ?? tauriRoot?.invoke ?? null;
+        const isInTauri = !!tauriInvoke;
 
         const fileName = getFileName();
 
-        // 2. Generate PDF as ArrayBuffer
-        const pdfArrayBuffer = await html2pdf()
-            .set({
-                margin: 0,
-                filename: `${fileName}.pdf`,
-                image: { type: 'jpeg', quality: 0.98 },
-                html2canvas: { scale: 2, useCORS: true },
-                jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
-            })
-            .from(element)
-            .outputPdf('arraybuffer');
+        try {
+            if (isInTauri) {
+                // Tauri: use Go chromedp PDF generation (correct Arabic text), save to Downloads
+                const apiResponse = await fetch('/v1/posting/pdf', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': localStorage.getItem('access_token'),
+                    },
+                    body: JSON.stringify({
+                        model: model,
+                        modelName: modelName,
+                        fontSizes: fontSizesRef.current,
+                        filename: fileName,
+                    }),
+                });
 
-        // 3. Load PDF with pdf-lib
-        const pdfDoc = await PDFDocument.load(pdfArrayBuffer);
+                if (!apiResponse.ok) {
+                    const errData = await apiResponse.json().catch(() => ({}));
+                    throw new Error(
+                        errData?.errors?.chrome ||
+                        errData?.errors?.pdf ||
+                        errData?.errors?.body ||
+                        `HTTP ${apiResponse.status}`
+                    );
+                }
 
-        // 5. Save the PDF
-        const pdfBytes = await pdfDoc.save();
-        const blob = new Blob([pdfBytes], { type: "application/pdf" });
-        const link = document.createElement("a");
-        link.href = URL.createObjectURL(blob);
-        link.download = `${fileName}.pdf`;
-        link.click();
+                const pdfBlob = await apiResponse.blob();
+                const arrayBuffer = await pdfBlob.arrayBuffer();
+                const uint8Array = new Uint8Array(arrayBuffer);
+                let binary = '';
+                for (let i = 0; i < uint8Array.length; i++) {
+                    binary += String.fromCharCode(uint8Array[i]);
+                }
+                const base64 = btoa(binary);
+
+                await tauriInvoke('save_pdf_for_print', {
+                    dataBase64: base64,
+                    filename: `${fileName}.pdf`,
+                });
+            } else {
+                // Web browser: use html2pdf() + pdf-lib and trigger browser download
+                const element = printAreaRef.current;
+                if (!element) return;
+
+                const pdfArrayBuffer = await html2pdf()
+                    .set({
+                        margin: 0,
+                        filename: `${fileName}.pdf`,
+                        image: { type: 'jpeg', quality: 0.98 },
+                        html2canvas: { scale: 2, useCORS: true },
+                        jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+                    })
+                    .from(element)
+                    .outputPdf('arraybuffer');
+
+                const pdfDoc = await PDFDocument.load(pdfArrayBuffer);
+                const pdfBytes = await pdfDoc.save();
+                const blob = new Blob([pdfBytes], { type: "application/pdf" });
+                const link = document.createElement("a");
+                link.href = URL.createObjectURL(blob);
+                link.download = `${fileName}.pdf`;
+                link.click();
+            }
+        } catch (e) {
+            alert('Download failed: ' + (e?.message || JSON.stringify(e)));
+        }
+
         setIsDownloadProcessing(false);
     };
     /*
@@ -593,59 +715,97 @@ const handlePrint = useCallback(async () => {
     const openWhatsAppShare = useCallback(async () => {
         model.download = false;
         setModel({ ...model });
-
         setIsProcessing(true);
-        console.log("Inside openWhatsAppShare")
+
+        const fileName = getFileName();
         const element = printAreaRef.current;
         if (!element) return;
 
-        const opt = {
-            margin: 0,
-            filename: `${getFileName()}.pdf`,
-            image: { type: 'jpeg', quality: 0.98 },
-            html2canvas: { scale: 2, useCORS: true, logging: true },
-            jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
-        };
+        // Detect Tauri
+        let isInTauri = false;
+        try {
+            isInTauri = !!(window.__TAURI__ || window.__TAURI_INTERNALS__ ||
+                (window.parent !== window &&
+                    (window.parent.__TAURI__ || window.parent.__TAURI_INTERNALS__)));
+        } catch (_) { /* cross-origin guard */ }
 
-        const pdfBlob = await html2pdf().from(element).set(opt).outputPdf('blob');
+        let pdfBlob;
 
-        // Upload to your server
-        const formData = new FormData();
-        formData.append("file", pdfBlob, `${getFileName()}.pdf`);
+        if (isInTauri) {
+            // Tauri: use Go chromedp PDF generation (correct Arabic text)
+            const apiResponse = await fetch('/v1/posting/pdf', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': localStorage.getItem('access_token'),
+                },
+                body: JSON.stringify({
+                    model: model,
+                    modelName: modelName,
+                    fontSizes: fontSizesRef.current,
+                    filename: fileName,
+                }),
+            });
 
-        await fetch("/v1/upload-pdf", { method: "POST", body: formData });
-        // const { fileUrl } = await res.json();
+            if (!apiResponse.ok) {
+                const errData = await apiResponse.json().catch(() => ({}));
+                setIsProcessing(false);
+                alert('PDF generation failed: ' + (errData?.errors?.chrome || errData?.errors?.pdf || `HTTP ${apiResponse.status}`));
+                return;
+            }
 
+            pdfBlob = await apiResponse.blob();
+        } else {
+            // Web: use html2pdf()
+            const opt = {
+                margin: 0,
+                filename: `${fileName}.pdf`,
+                image: { type: 'jpeg', quality: 0.98 },
+                html2canvas: { scale: 2, useCORS: true, logging: true },
+                jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+            };
+            const pdfArrayBuffer = await html2pdf().from(element).set(opt).outputPdf('arraybuffer');
+            pdfBlob = new Blob([pdfArrayBuffer], { type: "application/pdf" });
+        }
 
-        // Share via WhatsApp
-        console.log(" model.phone:", model.phone);
-
-
-
+        // Upload: Tauri → filebin.net (public URL), Web → local server
+        let publicUrl = "";
+        if (isInTauri) {
+            try {
+                const binId = `startpos-${Date.now()}`;
+                const safeFileName = `${fileName}.pdf`.replace(/[^a-zA-Z0-9._-]/g, "_");
+                // Use untyped Blob so browser does NOT set Content-Type header,
+                // keeping it a simple CORS request (no preflight needed).
+                const rawBlob = new Blob([await pdfBlob.arrayBuffer()]);
+                const fbResponse = await fetch(`https://filebin.net/${binId}/${safeFileName}`, {
+                    method: "POST",
+                    body: rawBlob,
+                });
+                if (fbResponse.ok || fbResponse.status === 201) {
+                    publicUrl = `https://filebin.net/${binId}/${safeFileName}`;
+                }
+            } catch (err) {
+                console.error("filebin.net upload failed:", err);
+            }
+        } else {
+            const formData = new FormData();
+            formData.append("file", pdfBlob, `${fileName}.pdf`);
+            await fetch("/v1/upload-pdf", { method: "POST", body: formData });
+        }
 
         let whatsAppNo = "";
-
         if (phone) {
             whatsAppNo = phone;
         } else if (model.phone) {
-            whatsAppNo = model.phone
+            whatsAppNo = model.phone;
         }
 
-        /*
+        let cacheBuster = `?v=${Date.now()}`;
+        const pdfUrl = (isInTauri && publicUrl)
+            ? publicUrl
+            : `${window.location.origin}/pdfs/${fileName}.pdf${cacheBuster}`;
 
-        if (!whatsAppNo) {
-            whatsAppNo = prompt("Enter the WhatsApp number (with country code, e.g., 9665xxxxxxxx):");
-
-            if (!whatsAppNo) {
-                // User cancelled or entered nothing
-                alert("No number entered. Cannot send message.");
-                handleClose();
-                return;
-            }
-        }*/
-
-
-        let message = `Hello, here is your balance sheet:\n${window.location.origin}/pdfs/${getFileName()}.pdf`;
+        let message = `Hello, here is your balance sheet:\n${pdfUrl}`;
         if (timerRef.current) clearTimeout(timerRef.current);
 
         timerRef.current = setTimeout(() => {
@@ -656,11 +816,9 @@ const handlePrint = useCallback(async () => {
             setShowWhatsAppMessageModal(true);
         }, 100);
 
-    }, [getFileName, model, formatPhoneForWhatsApp, phone]);
+    }, [getFileName, model, phone, modelName, formatPhoneForWhatsApp]);
 
 
-
-    let [modelName, setModelName] = useState("balance_sheet");
 
     const [showSlider, setShowSlider] = useState(false);
     let [selectedText, setSelectedText] = useState("");
@@ -811,6 +969,8 @@ const handlePrint = useCallback(async () => {
 
 
     let [fontSizes, setFontSizes] = useState(defaultFontSizes);
+    const fontSizesRef = useRef(defaultFontSizes);
+    useEffect(() => { fontSizesRef.current = fontSizes; }, [fontSizes]);
 
 
     useEffect(() => {

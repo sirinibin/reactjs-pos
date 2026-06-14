@@ -17,17 +17,20 @@ import countryList from 'react-select-country-list';
 import ImageGallery from '../utils/ImageGallery.js';
 import { trimTo2Decimals, trimTo8Decimals, trimTo4Decimals } from "../utils/numberUtils";
 import Amount from "../utils/amount.js";
-import SalesHistory from "./../product/sales_history.js";
-import SalesReturnHistory from "./../product/sales_return_history.js";
-import PurchaseHistory from "./../product/purchase_history.js";
-import PurchaseReturnHistory from "./../product/purchase_return_history.js";
-import QuotationHistory from "./../product/quotation_history.js";
-import QuotationSalesReturnHistory from "./../product/quotation_sales_return_history.js";
-import DeliveryNoteHistory from "./../product/delivery_note_history.js";
+import SalesHistory from "../utils/product_sales_history.js";
+import SalesReturnHistory from "./../utils/product_sales_return_history.js";
+import PurchaseHistory from "./../utils/product_purchase_history.js";
+import PurchaseReturnHistory from "./../utils/product_purchase_return_history.js";
+import QuotationHistory from "./../utils/product_quotation_history.js";
+import QuotationSalesReturnHistory from "./../utils/product_quotation_sales_return_history.js";
+
+import DeliveryNoteHistory from "./../utils/product_delivery_note_history.js";
 import Products from "../utils/products.js";
 import ImageViewerModal from './../utils/ImageViewerModal';
 import { highlightWords } from "../utils/search.js";
-import ProductHistory from "./../product/product_history.js";
+//import ProductHistory from "./../product/product_history.js";
+import ProductHistory from "../utils/product_history.js";
+
 import DatePicker from "react-datepicker";
 import { format } from "date-fns";
 
@@ -146,7 +149,7 @@ const ProductCreate = forwardRef((props, ref) => {
         if (form && event.target) {
           var index = Array.prototype.indexOf.call(form, event.target);
           if (form && form.elements[index + 1]) {
-            if (event.target.getAttribute("class").includes("barcode")) {
+            if ((event.target.getAttribute("class") || "").includes("barcode")) {
               form.elements[index].focus();
             } else {
               form.elements[index + 1].focus();
@@ -823,7 +826,7 @@ const ProductCreate = forwardRef((props, ref) => {
       },
     };
 
-    let Select = `select=id,additional_keywords,search_label,set.name,item_code,prefix_part_number,country_name,brand_name,part_number,name,unit,name_in_arabic,product_stores.${localStorage.getItem('store_id')}.purchase_unit_price,product_stores.${localStorage.getItem('store_id')}.purchase_unit_price_with_vat,product_stores.${localStorage.getItem('store_id')}.retail_unit_price,product_stores.${localStorage.getItem('store_id')}.retail_unit_price_with_vat,product_stores.${localStorage.getItem('store_id')}.stock`;
+    let Select = `select=id,additional_keywords,search_label,set.name,item_code,prefix_part_number,country_name,brand_name,part_number,name,unit,name_in_arabic,product_stores.${localStorage.getItem('store_id')}.purchase_unit_price,product_stores.${localStorage.getItem('store_id')}.purchase_unit_price_with_vat,product_stores.${localStorage.getItem('store_id')}.retail_unit_price,product_stores.${localStorage.getItem('store_id')}.retail_unit_price_with_vat,product_stores.${localStorage.getItem('store_id')}.stock,product_stores.${localStorage.getItem('store_id')}.warehouse_stocks`;
     //setIsProductsLoading(true);
     let result = await fetch(
       "/v1/product?" + Select + queryString + "&limit=50&sort=-country_name",
@@ -1398,7 +1401,7 @@ const ProductCreate = forwardRef((props, ref) => {
     setFormData({ ...formData });
     findStocksAdded();
     findStocksRemoved();
-    findProductStock();
+    //findProductStock();
     //validatePaymentAmounts();
     //validatePaymentAmounts((formData.payments_input.filter(payment => !payment.deleted).length - 1));
   }
@@ -1413,13 +1416,14 @@ const ProductCreate = forwardRef((props, ref) => {
 
     findStocksAdded();
     findStocksRemoved();
-    findProductStock();
+    //findProductStock();
 
     //formData.payments_input[key]["deleted"] = true;
     //setFormData({ ...formData });
 
   }
 
+  /*
   function findProductStock() {
     if (!productStores[localStorage.getItem('store_id')]?.stock) {
       productStores[localStorage.getItem('store_id')].stock = 0;
@@ -1465,7 +1469,7 @@ const ProductCreate = forwardRef((props, ref) => {
 
     setProductStores({ ...productStores });
 
-  }
+  }*/
 
   function findStocksAdded() {
     let stocksAdded = 0;
@@ -1494,6 +1498,69 @@ const ProductCreate = forwardRef((props, ref) => {
     setFormData({ ...formData });
   }
 
+
+  const [warehouseList, setWarehouseList] = useState([]);
+  const [searchParams, setSearchParams] = useState({});
+
+  const loadWarehouses = useCallback(() => {
+    const requestOptions = {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: localStorage.getItem("access_token"),
+      },
+    };
+    let Select =
+      "select=id,name,code,created_by_name,created_at";
+
+    const d = new Date();
+    let diff = d.getTimezoneOffset();
+    searchParams["timezone_offset"] = parseFloat(diff / 60);
+
+    if (localStorage.getItem("store_id")) {
+      searchParams.store_id = localStorage.getItem("store_id");
+    }
+
+    setSearchParams(searchParams);
+    let queryParams = ObjectToSearchQueryParams(searchParams);
+    if (queryParams !== "") {
+      queryParams = "&" + queryParams;
+    }
+
+    fetch(
+      "/v1/warehouse?" +
+      Select +
+      queryParams +
+      "&sort=name" +
+      "&page=1" +
+      "&limit=100",
+      requestOptions
+    )
+      .then(async (response) => {
+        const isJson = response.headers
+          .get("content-type")
+          ?.includes("application/json");
+        const data = isJson && (await response.json());
+
+        // check for error response
+        if (!response.ok) {
+          const error = data && data.errors;
+          return Promise.reject(error);
+        }
+
+
+        setWarehouseList(data.result);
+      })
+      .catch((error) => {
+        console.log(error);
+      });
+  }, [searchParams]);
+
+  useEffect(() => {
+    if (show) {
+      loadWarehouses();
+    }
+  }, [loadWarehouses, show]);
 
   return (
     <>
@@ -2411,320 +2478,382 @@ const ProductCreate = forwardRef((props, ref) => {
               </table>
             </div>
 
-            <h4>Stock</h4>
-            <div className="table-responsive" style={{ overflowX: "auto" }}>
-              <table className="table table-striped table-sm table-bordered">
-                <thead>
-                  <tr className="text-center">
-                    <th>Damaged/Missing Stock</th>
-                    <th>Stock</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr className="text-center">
-                    <td style={{ width: "150px" }}>
-                      <input
-                        id={`${"product_damaged_stock_0"}`}
-                        name={`${"product_damaged_stock_0"}`}
-                        value={damagedStock}
-                        type="number"
-                        onChange={(e) => {
-                          errors["damaged_stock_0"] = "";
-                          setErrors({ ...errors });
+            <div className="row">
+              <div className="col-md-8">
+                <h4>Stock Adjustments</h4>
+                <div className="table-responsive" style={{ overflowX: "auto" }}>
+                  <table className="table table-striped table-sm table-bordered">
+                    <thead>
+                      <tr className="text-center">
+                        <th>Damaged/Missing Stock</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr className="text-center">
+                        <td style={{ width: "150px" }}>
+                          <input
+                            id={`${"product_damaged_stock_0"}`}
+                            name={`${"product_damaged_stock_0"}`}
+                            value={damagedStock}
+                            type="number"
+                            onChange={(e) => {
+                              errors["damaged_stock_0"] = "";
+                              setErrors({ ...errors });
 
-                          /*if (!e.target.value) {
-                             productStores[localStorage.getItem('store_id')].damaged_stock = "";
-                             setProductStores({ ...productStores });
-                             //errors["stock_" + index] = "Invalid Stock value";
-                             //setErrors({ ...errors });
-                             return;
-                           }
-   
-                           productStores[localStorage.getItem('store_id')].damaged_stock = parseFloat(e.target.value);
-                           */
-                          setDamagedStock(parseFloat(e.target.value));
-                          setOperationType(null); // reset choice
+                              /*if (!e.target.value) {
+                                 productStores[localStorage.getItem('store_id')].damaged_stock = "";
+                                 setProductStores({ ...productStores });
+                                 //errors["stock_" + index] = "Invalid Stock value";
+                                 //setErrors({ ...errors });
+                                 return;
+                               }
+       
+                               productStores[localStorage.getItem('store_id')].damaged_stock = parseFloat(e.target.value);
+                               */
+                              setDamagedStock(parseFloat(e.target.value));
+                              setOperationType(null); // reset choice
 
-                        }}
-                        className="form-control"
-                        placeholder="Damaged stock"
-                      />
-                      {errors["damaged_stock_0"] && (
-                        <div style={{ color: "red" }}>
-                          {errors["damaged_stock_0"]}
-                        </div>
-                      )}
-                    </td>
-                    <td style={{ width: "150px" }}>
-                      <input
-                        id={`${"product_stock0"}`}
-                        name={`${"product_stock0"}`}
-                        value={productStores[localStorage.getItem('store_id')]?.stock || productStores[localStorage.getItem('store_id')]?.stock === 0
-                          ? productStores[localStorage.getItem('store_id')].stock
-                          : ""
-                        }
-                        disabled={true}
-                        type="number"
-                        onChange={(e) => {
-                          errors["stock_0"] = "";
-                          setErrors({ ...errors });
+                            }}
+                            className="form-control"
+                            placeholder="Damaged stock"
+                          />
+                          {errors["damaged_stock_0"] && (
+                            <div style={{ color: "red" }}>
+                              {errors["damaged_stock_0"]}
+                            </div>
+                          )}
+                        </td>
+                      </tr>
+                      <tr>
+                        <td colSpan={1}>
+                          {damagedStock && !operationType && (
+                            <div className="mt-2">
+                              <button className="btn btn-success me-2" onClick={(e) => {
+                                e.preventDefault();
+                                if (!productStores[localStorage.getItem('store_id')].stocks_added) {
+                                  productStores[localStorage.getItem('store_id')].stocks_added = 0.00;
+                                }
 
-                          if (!e.target.value) {
-                            productStores[localStorage.getItem('store_id')].stock = "";
-                            setProductStores({ ...productStores });
-                            //errors["stock_" + index] = "Invalid Stock value";
-                            //setErrors({ ...errors });
-                            return;
+                                if (!productStores[localStorage.getItem('store_id')].stock) {
+                                  productStores[localStorage.getItem('store_id')].stock = 0.00;
+                                }
+
+                                // productStores[localStorage.getItem('store_id')].stocks_added += parseFloat(damagedStock);
+                                //productStores[localStorage.getItem('store_id')].stock += parseFloat(damagedStock);
+                                addStockAdjustment(parseFloat(damagedStock), "added")
+                                setProductStores({ ...productStores });
+                                damagedStock = "";
+                                setDamagedStock(damagedStock);
+
+
+
+                              }}>Add</button>
+                              <button className="btn btn-danger" onClick={(e) => {
+                                e.preventDefault();
+
+                                if (!productStores[localStorage.getItem('store_id')].stocks_removed) {
+                                  productStores[localStorage.getItem('store_id')].stocks_removed = 0.00;
+                                }
+
+                                if (!productStores[localStorage.getItem('store_id')].stock) {
+                                  productStores[localStorage.getItem('store_id')].stock = 0.00;
+                                }
+
+                                //productStores[localStorage.getItem('store_id')].stocks_removed += parseFloat(damagedStock);
+                                //productStores[localStorage.getItem('store_id')].stock -= parseFloat(damagedStock);
+                                addStockAdjustment(parseFloat(damagedStock), "removed")
+                                setProductStores({ ...productStores });
+                                damagedStock = "";
+                                setDamagedStock(damagedStock);
+
+
+
+                              }}>Remove</button>
+                            </div>
+                          )}
+
+                          <div className="">
+                            <label className="form-label"></label>
+
+                            <div class="table-responsive" style={{ maxWidth: "900px" }}>
+                              <Button variant="secondary" style={{ alignContent: "right", marginBottom: "10px" }} onClick={() => {
+                                addStockAdjustment();
+                              }}>
+                                Create Stock Adjustment
+                              </Button>
+                              <table class="table table-striped table-sm table-bordered">
+                                {productStores[localStorage.getItem('store_id')]?.stock_adjustments && productStores[localStorage.getItem('store_id')].stock_adjustments?.length > 0 &&
+                                  <thead>
+                                    <th style={{ textAlign: "center" }}>
+                                      Date
+                                    </th>
+                                    <th style={{ textAlign: "center" }}>
+                                      Quantity
+                                    </th>
+                                    <th style={{ textAlign: "center" }}>
+                                      Add/Remove
+                                    </th>
+                                    <th style={{ textAlign: "center" }}>Warehouse/Store</th> {/* New column */}
+                                    <th style={{ textAlign: "center" }}>
+                                      Action
+                                    </th>
+                                  </thead>}
+                                <tbody>
+                                  {productStores[localStorage.getItem('store_id')]?.stock_adjustments &&
+                                    productStores[localStorage.getItem('store_id')].stock_adjustments.filter(adjustment => !adjustment.deleted).map((adjustment, key) => (
+                                      <tr key={key}>
+                                        <td style={{ width: "180px" }}>
+
+                                          <DatePicker
+                                            id="payment_date_str"
+                                            selected={productStores[localStorage.getItem('store_id')].stock_adjustments[key].date_str ? new Date(productStores[localStorage.getItem('store_id')].stock_adjustments[key].date_str) : null}
+                                            value={productStores[localStorage.getItem('store_id')].stock_adjustments[key].date_str ? format(
+                                              new Date(productStores[localStorage.getItem('store_id')].stock_adjustments[key].date_str),
+                                              "MMMM d, yyyy h:mm aa"
+                                            ) : null}
+                                            className="form-control"
+                                            dateFormat="MMMM d, yyyy h:mm aa"
+                                            showTimeSelect
+                                            timeIntervals="1"
+                                            onChange={(value) => {
+                                              console.log("Value", value);
+                                              productStores[localStorage.getItem('store_id')].stock_adjustments[key].date_str = value;
+                                              setProductStores({ ...productStores });
+                                              //setFormData({ ...formData });
+                                            }}
+                                          />
+                                          {errors["adjustment_date_" + key] && (
+                                            <div style={{ color: "red" }}>
+
+                                              {errors["adjustment_date_" + key]}
+                                            </div>
+                                          )}
+                                        </td>
+                                        <td style={{ width: "80px" }}>
+                                          <input
+                                            type='number'
+                                            id={`${"adjustment_quantity_" + key}`}
+                                            name={`${"adjustment_quantity_" + key}`}
+                                            value={productStores[localStorage.getItem('store_id')].stock_adjustments[key].quantity}
+                                            className="form-control"
+                                            ref={(el) => {
+                                              if (!inputRefs.current[key]) inputRefs.current[key] = {};
+                                              inputRefs.current[key][`${"adjustment_quantity_" + key}`] = el;
+                                            }}
+                                            onFocus={() => {
+                                              if (timerRef.current) clearTimeout(timerRef.current);
+                                              timerRef.current = setTimeout(() => {
+                                                inputRefs.current[key][`${"adjustment_quantity_" + key}`]?.select();
+                                              }, 20);
+                                            }}
+                                            onChange={(e) => {
+                                              delete errors["adjustment_quantity_" + key];
+                                              setErrors({ ...errors });
+
+
+                                              if (!e.target.value) {
+                                                productStores[localStorage.getItem('store_id')].stock_adjustments[key].quantity = e.target.value;
+                                                setProductStores({ ...productStores });
+                                                //setFormData({ ...formData });
+                                                //validatePaymentAmounts();
+                                                return;
+                                              }
+
+                                              productStores[localStorage.getItem('store_id')].stock_adjustments[key].quantity = parseFloat(e.target.value);
+
+                                              /*
+      
+                                              if (productStores[localStorage.getItem('store_id')]?.stock_adjustments[key]?.type === "added") {
+                                               // productStores[localStorage.getItem('store_id')].stocks_added += parseFloat(e.target.value);
+                                                productStores[localStorage.getItem('store_id')].stock += parseFloat(e.target.value);
+                                                //alert("Added:" + productStores[localStorage.getItem('store_id')].stocks_added);
+                                              } else if (productStores[localStorage.getItem('store_id')]?.stock_adjustments[key]?.type === "removed") {
+                                               // productStores[localStorage.getItem('store_id')].stocks_removed += parseFloat(e.target.value);
+                                                productStores[localStorage.getItem('store_id')].stock -= parseFloat(e.target.value);
+                                              }*/
+
+
+                                              setProductStores({ ...productStores });
+
+                                              findStocksAdded();
+                                              findStocksRemoved();
+
+                                              // validatePaymentAmounts();
+                                              //setFormData({ ...formData });
+                                              console.log(formData);
+                                            }}
+                                          />
+                                          {errors["adjustment_quantity_" + key] && (
+                                            <div style={{ color: "red" }}>
+                                              {errors["adjustment_quantity_" + key]}
+                                            </div>
+                                          )}
+                                        </td>
+                                        <td style={{ width: "100px" }}>
+                                          <select
+                                            value={productStores[localStorage.getItem('store_id')].stock_adjustments[key].type} className="form-control "
+                                            onChange={(e) => {
+                                              // errors["payment_method"] = [];
+                                              delete errors["adjustment_type_" + key];
+                                              setErrors({ ...errors });
+
+                                              if (!e.target.value) {
+                                                errors["adjustment_type_" + key] = "Type is required";
+                                                setErrors({ ...errors });
+
+                                                productStores[localStorage.getItem('store_id')].stock_adjustments[key].type = "";
+                                                //  setFormData({ ...formData });
+                                                setProductStores({ ...productStores });
+                                                return;
+                                              }
+
+                                              // errors["payment_method"] = "";
+                                              //setErrors({ ...errors });
+
+                                              productStores[localStorage.getItem('store_id')].stock_adjustments[key].type = e.target.value;
+                                              setProductStores({ ...productStores });
+                                              findStocksAdded();
+                                              findStocksRemoved();
+
+                                              //setFormData({ ...formData });
+                                              console.log(formData);
+                                            }}
+                                          >
+                                            <option value="">Select</option>
+                                            <option value="adding">Adding</option>
+                                            <option value="removing">Removing</option>
+                                          </select>
+                                          {errors["adjustment_type_" + key] && (
+                                            <div style={{ color: "red" }}>
+                                              {errors["adjustment_type_" + key]}
+                                            </div>
+                                          )}
+                                        </td>
+                                        <td style={{ width: "130px" }} >
+                                          <select
+                                            id={`adjustment_warehouse_${key}`}
+                                            name={`adjustment_warehouse_${key}`}
+                                            className="form-control"
+                                            value={productStores[localStorage.getItem('store_id')].stock_adjustments[key].warehouse_id || "main_store"}
+                                            onChange={(e) => {
+                                              const selectedValue = e.target.value;
+
+                                              if (selectedValue === "main_store") {
+                                                productStores[localStorage.getItem('store_id')].stock_adjustments[key].warehouse_id = null;
+                                                productStores[localStorage.getItem('store_id')].stock_adjustments[key].warehouse_code = "";
+                                              } else {
+                                                const selectedWarehouse = warehouseList.find(w => w.id === selectedValue);
+                                                if (selectedWarehouse) {
+                                                  productStores[localStorage.getItem('store_id')].stock_adjustments[key].warehouse_id = selectedWarehouse.id;
+                                                  productStores[localStorage.getItem('store_id')].stock_adjustments[key].warehouse_code = selectedWarehouse.code;
+                                                }
+                                              }
+
+                                              setProductStores({ ...productStores });
+                                            }}
+                                          >
+                                            <option value="main_store">Main Store</option>
+                                            {warehouseList.map((warehouse) => (
+                                              <option key={warehouse.id} value={warehouse.id}>
+                                                {warehouse.name} ({warehouse.code})
+                                              </option>
+                                            ))}
+                                          </select>
+                                          {errors[`adjustment_warehouse_${key}`] && (
+                                            <div style={{ color: "red" }}>
+                                              {errors[`adjustment_warehouse_${key}`]}
+                                            </div>
+                                          )}
+                                        </td>
+                                        <td style={{ width: "70px", textAlign: "center" }}>
+                                          <Button variant="danger" onClick={(event) => {
+                                            removeStockAdjustment(key);
+                                          }}>
+                                            Remove
+                                          </Button>
+
+                                        </td>
+                                      </tr>
+                                    ))}
+                                </tbody>
+                              </table>
+                            </div>
+                          </div>
+
+
+
+                          <div className="mt-4">
+                            <h6>Stock Adjustment Summary:</h6>
+                            <ul className="list-unstyled">
+                              <li>
+                                ✅ Total Added: {productStores[localStorage.getItem('store_id')]?.stocks_added ? productStores[localStorage.getItem('store_id')]?.stocks_added : 0.00}
+                              </li>
+                              <li>
+                                ❌ Total Removed:  {productStores[localStorage.getItem('store_id')]?.stocks_removed ? productStores[localStorage.getItem('store_id')]?.stocks_removed : 0.00}
+                              </li>
+                            </ul>
+                          </div>
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+
+              <div className="col-md-2">
+                <h4>Stock</h4>
+                <div className="table-responsive" style={{ maxWidth: "400px", marginBottom: "16px" }}>
+                  <table className="table table-bordered table-sm mb-0">
+                    <thead>
+                      <tr>
+                        <th>Main Store / Warehouse</th>
+                        <th>Stock</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {(() => {
+                        const storeId = localStorage.getItem('store_id');
+                        const productStore = productStores?.[storeId] || {};
+                        const warehousesStocks = productStore.warehouse_stocks || {};
+                        const mainStoreStock = productStore.stock ?? 0;
+
+                        let rows = [];
+                        // Main Store first
+                        const mainStock = warehousesStocks["main_store"] !== undefined ? warehousesStocks["main_store"] : mainStoreStock;
+                        rows.push(
+                          <tr key="main_store">
+                            <td>Main Store</td>
+                            <td>{mainStock}</td>
+                          </tr>
+                        );
+
+                        // Other warehouses from warehouseList
+                        warehouseList.forEach((wh) => {
+                          if (wh.code !== "main_store") {
+                            const whStock = warehousesStocks[wh.code] !== undefined ? warehousesStocks[wh.code] : 0;
+                            rows.push(
+                              <tr key={wh.code}>
+                                <td>{wh.name} ({wh.code})</td>
+                                <td>{whStock}</td>
+                              </tr>
+                            );
                           }
+                        });
 
-                          productStores[localStorage.getItem('store_id')].stock = parseFloat(e.target.value);
-                        }}
-                        className="form-control"
-                        placeholder="Stock"
-                      />
-                      {errors["stock_0"] && (
-                        <div style={{ color: "red" }}>
-                          <i className="bi bi-x-lg"> </i>
-                          {errors["stock_0"]}
-                        </div>
-                      )}
-                    </td>
-                  </tr>
-                  <tr>
-                    <td colSpan={2}>
-                      {damagedStock && !operationType && (
-                        <div className="mt-2">
-                          <button className="btn btn-success me-2" onClick={(e) => {
-                            e.preventDefault();
-                            if (!productStores[localStorage.getItem('store_id')].stocks_added) {
-                              productStores[localStorage.getItem('store_id')].stocks_added = 0.00;
-                            }
+                        // Add total row at the end
+                        rows.push(
+                          <tr key="total" style={{ fontWeight: "bold", background: "#f6f6f6" }}>
+                            <td>Total Stock</td>
+                            <td>{productStores[localStorage.getItem('store_id')]?.stock}</td>
+                          </tr>
+                        );
 
-                            if (!productStores[localStorage.getItem('store_id')].stock) {
-                              productStores[localStorage.getItem('store_id')].stock = 0.00;
-                            }
-
-                            // productStores[localStorage.getItem('store_id')].stocks_added += parseFloat(damagedStock);
-                            //productStores[localStorage.getItem('store_id')].stock += parseFloat(damagedStock);
-                            addStockAdjustment(parseFloat(damagedStock), "added")
-                            setProductStores({ ...productStores });
-                            damagedStock = "";
-                            setDamagedStock(damagedStock);
-
-
-
-                          }}>Add</button>
-                          <button className="btn btn-danger" onClick={(e) => {
-                            e.preventDefault();
-
-                            if (!productStores[localStorage.getItem('store_id')].stocks_removed) {
-                              productStores[localStorage.getItem('store_id')].stocks_removed = 0.00;
-                            }
-
-                            if (!productStores[localStorage.getItem('store_id')].stock) {
-                              productStores[localStorage.getItem('store_id')].stock = 0.00;
-                            }
-
-                            //productStores[localStorage.getItem('store_id')].stocks_removed += parseFloat(damagedStock);
-                            //productStores[localStorage.getItem('store_id')].stock -= parseFloat(damagedStock);
-                            addStockAdjustment(parseFloat(damagedStock), "removed")
-                            setProductStores({ ...productStores });
-                            damagedStock = "";
-                            setDamagedStock(damagedStock);
-
-
-
-                          }}>Remove</button>
-                        </div>
-                      )}
-
-                      <div className="col-md-8">
-                        <label className="form-label">Stock Adjustments</label>
-
-                        <div class="table-responsive" style={{ maxWidth: "900px" }}>
-                          <Button variant="secondary" style={{ alignContent: "right", marginBottom: "10px" }} onClick={() => {
-                            addStockAdjustment();
-                          }}>
-                            Create Stock Adjustment
-                          </Button>
-                          <table class="table table-striped table-sm table-bordered">
-                            {productStores[localStorage.getItem('store_id')]?.stock_adjustments && productStores[localStorage.getItem('store_id')].stock_adjustments?.length > 0 &&
-                              <thead>
-                                <th>
-                                  Date
-                                </th>
-                                <th>
-                                  Quantity
-                                </th>
-                                <th>
-                                  Adjustment Type
-                                </th>
-                                <th>
-                                  Action
-                                </th>
-                              </thead>}
-                            <tbody>
-                              {productStores[localStorage.getItem('store_id')]?.stock_adjustments &&
-                                productStores[localStorage.getItem('store_id')].stock_adjustments.filter(adjustment => !adjustment.deleted).map((adjustment, key) => (
-                                  <tr key={key}>
-                                    <td style={{ minWidth: "220px" }}>
-
-                                      <DatePicker
-                                        id="payment_date_str"
-                                        selected={productStores[localStorage.getItem('store_id')].stock_adjustments[key].date_str ? new Date(productStores[localStorage.getItem('store_id')].stock_adjustments[key].date_str) : null}
-                                        value={productStores[localStorage.getItem('store_id')].stock_adjustments[key].date_str ? format(
-                                          new Date(productStores[localStorage.getItem('store_id')].stock_adjustments[key].date_str),
-                                          "MMMM d, yyyy h:mm aa"
-                                        ) : null}
-                                        className="form-control"
-                                        dateFormat="MMMM d, yyyy h:mm aa"
-                                        showTimeSelect
-                                        timeIntervals="1"
-                                        onChange={(value) => {
-                                          console.log("Value", value);
-                                          productStores[localStorage.getItem('store_id')].stock_adjustments[key].date_str = value;
-                                          setProductStores({ ...productStores });
-                                          //setFormData({ ...formData });
-                                        }}
-                                      />
-                                      {errors["adjustment_date_" + key] && (
-                                        <div style={{ color: "red" }}>
-
-                                          {errors["adjustment_date_" + key]}
-                                        </div>
-                                      )}
-                                    </td>
-                                    <td style={{ width: "300px" }}>
-                                      <input
-                                        type='number'
-                                        id={`${"adjustment_quantity_" + key}`}
-                                        name={`${"adjustment_quantity_" + key}`}
-                                        value={productStores[localStorage.getItem('store_id')].stock_adjustments[key].quantity}
-                                        className="form-control"
-                                        ref={(el) => {
-                                          if (!inputRefs.current[key]) inputRefs.current[key] = {};
-                                          inputRefs.current[key][`${"adjustment_quantity_" + key}`] = el;
-                                        }}
-                                        onFocus={() => {
-                                          if (timerRef.current) clearTimeout(timerRef.current);
-                                          timerRef.current = setTimeout(() => {
-                                            inputRefs.current[key][`${"adjustment_quantity_" + key}`]?.select();
-                                          }, 20);
-                                        }}
-                                        onChange={(e) => {
-                                          delete errors["adjustment_quantity_" + key];
-                                          setErrors({ ...errors });
-
-
-                                          if (!e.target.value) {
-                                            productStores[localStorage.getItem('store_id')].stock_adjustments[key].quantity = e.target.value;
-                                            setProductStores({ ...productStores });
-                                            //setFormData({ ...formData });
-                                            //validatePaymentAmounts();
-                                            return;
-                                          }
-
-                                          productStores[localStorage.getItem('store_id')].stock_adjustments[key].quantity = parseFloat(e.target.value);
-
-                                          /*
-  
-                                          if (productStores[localStorage.getItem('store_id')]?.stock_adjustments[key]?.type === "added") {
-                                           // productStores[localStorage.getItem('store_id')].stocks_added += parseFloat(e.target.value);
-                                            productStores[localStorage.getItem('store_id')].stock += parseFloat(e.target.value);
-                                            //alert("Added:" + productStores[localStorage.getItem('store_id')].stocks_added);
-                                          } else if (productStores[localStorage.getItem('store_id')]?.stock_adjustments[key]?.type === "removed") {
-                                           // productStores[localStorage.getItem('store_id')].stocks_removed += parseFloat(e.target.value);
-                                            productStores[localStorage.getItem('store_id')].stock -= parseFloat(e.target.value);
-                                          }*/
-
-
-                                          setProductStores({ ...productStores });
-
-                                          findStocksAdded();
-                                          findStocksRemoved();
-
-                                          // validatePaymentAmounts();
-                                          //setFormData({ ...formData });
-                                          console.log(formData);
-                                        }}
-                                      />
-                                      {errors["adjustment_quantity_" + key] && (
-                                        <div style={{ color: "red" }}>
-                                          {errors["adjustment_quantity_" + key]}
-                                        </div>
-                                      )}
-                                    </td>
-                                    <td style={{ width: "200px" }}>
-                                      <select value={productStores[localStorage.getItem('store_id')].stock_adjustments[key].type} className="form-control "
-                                        onChange={(e) => {
-                                          // errors["payment_method"] = [];
-                                          delete errors["adjustment_type_" + key];
-                                          setErrors({ ...errors });
-
-                                          if (!e.target.value) {
-                                            errors["adjustment_type_" + key] = "Type is required";
-                                            setErrors({ ...errors });
-
-                                            productStores[localStorage.getItem('store_id')].stock_adjustments[key].type = "";
-                                            //  setFormData({ ...formData });
-                                            setProductStores({ ...productStores });
-                                            return;
-                                          }
-
-                                          // errors["payment_method"] = "";
-                                          //setErrors({ ...errors });
-
-                                          productStores[localStorage.getItem('store_id')].stock_adjustments[key].type = e.target.value;
-                                          setProductStores({ ...productStores });
-                                          findStocksAdded();
-                                          findStocksRemoved();
-
-                                          //setFormData({ ...formData });
-                                          console.log(formData);
-                                        }}
-                                      >
-                                        <option value="">Select</option>
-                                        <option value="adding">Adding</option>
-                                        <option value="removing">Removing</option>
-                                      </select>
-                                      {errors["adjustment_type_" + key] && (
-                                        <div style={{ color: "red" }}>
-                                          {errors["adjustment_type_" + key]}
-                                        </div>
-                                      )}
-                                    </td>
-                                    <td style={{ width: "200px" }}>
-                                      <Button variant="danger" onClick={(event) => {
-                                        removeStockAdjustment(key);
-                                      }}>
-                                        Remove
-                                      </Button>
-
-                                    </td>
-                                  </tr>
-                                ))}
-                            </tbody>
-                          </table>
-                        </div>
-                      </div>
-
-
-
-                      <div className="mt-4">
-                        <h6>Stock Adjustment Summary:</h6>
-                        <ul className="list-unstyled">
-                          <li>
-                            ✅ Total Added: {productStores[localStorage.getItem('store_id')]?.stocks_added ? productStores[localStorage.getItem('store_id')]?.stocks_added : 0.00}
-                          </li>
-                          <li>
-                            ❌ Total Removed:  {productStores[localStorage.getItem('store_id')]?.stocks_removed ? productStores[localStorage.getItem('store_id')]?.stocks_removed : 0.00}
-                          </li>
-                        </ul>
-                      </div>
-                    </td>
-                  </tr>
-                </tbody>
-              </table>
+                        return rows;
+                      })()}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
             </div>
 
             <h4>SET</h4>
@@ -2844,12 +2973,12 @@ const ProductCreate = forwardRef((props, ref) => {
                           <div style={{ width: '3%', border: "solid 0px", }}></div>
                           <div style={{ width: '14%', border: "solid 0px", }}>Part Number</div>
                           <div style={{ width: '29%', border: "solid 0px", }}>Name</div>
-                          <div style={{ width: '12%', border: "solid 0px", }}>S.Unit Price</div>
-                          <div style={{ width: '5%', border: "solid 0px", }}>Stock</div>
+                          <div style={{ width: '10%', border: "solid 0px", }}>S.Unit Price</div>
+                          <div style={{ width: '13%', border: "solid 0px", }}>Stock</div>
                           <div style={{ width: '5%', border: "solid 0px", }}>Photos</div>
-                          <div style={{ width: '10%', border: "solid 0px", }}>Brand</div>
-                          <div style={{ width: '12%' }}>P.Unit Price</div>
-                          <div style={{ width: '10%', border: "solid 0px", }}>Country</div>
+                          <div style={{ width: '8%', border: "solid 0px", }}>Brand</div>
+                          <div style={{ width: '10%' }}>P.Unit Price</div>
+                          <div style={{ width: '8%', border: "solid 0px", }}>Country</div>
                         </div>
                       </MenuItem>
 
@@ -2922,7 +3051,7 @@ const ProductCreate = forwardRef((props, ref) => {
                                   isActive
                                 )}
                               </div>
-                              <div style={{ ...columnStyle, width: '12%' }}>
+                              <div style={{ ...columnStyle, width: '10%' }}>
                                 {option.product_stores?.[localStorage.getItem("store_id")]?.retail_unit_price && (
                                   <>
                                     <Amount amount={trimTo2Decimals(option.product_stores?.[localStorage.getItem("store_id")]?.retail_unit_price)} />+
@@ -2934,8 +3063,31 @@ const ProductCreate = forwardRef((props, ref) => {
                                   </>
                                 )}
                               </div>
-                              <div style={{ ...columnStyle, width: '5%' }}>
-                                {option.product_stores?.[localStorage.getItem("store_id")]?.stock ?? ''}
+                              <div style={{ ...columnStyle, width: '13%' }}>
+                                {(() => {
+                                  const storeId = localStorage.getItem("store_id");
+                                  const productStore = option.product_stores?.[storeId];
+                                  const warehouseStocks = productStore?.warehouse_stocks || {};
+                                  const mainStock = warehouseStocks["main_store"] ?? 0;
+                                  let warehouseDetail = "";
+                                  if (store.settings?.enable_warehouse_module) {
+                                    const whEntries = Object.entries(warehouseStocks)
+                                      .filter(([key]) => key !== "main_store")
+                                      .map(([key, value]) => {
+                                        let name = key.toUpperCase();
+                                        return `${name}: ${value}`;
+                                      });
+                                    if (whEntries.length > 0) {
+                                      warehouseDetail = ` (${whEntries.join(", ")})`;
+                                    }
+                                  }
+                                  return (
+                                    <span>
+                                      {mainStock}
+                                      {warehouseDetail}
+                                    </span>
+                                  );
+                                })()}
                               </div>
                               <div style={{ ...columnStyle, width: '5%' }}>
                                 <button
@@ -2950,10 +3102,10 @@ const ProductCreate = forwardRef((props, ref) => {
                                   <i className="bi bi-images" aria-hidden="true" />
                                 </button>
                               </div>
-                              <div style={{ ...columnStyle, width: '10%' }}>
+                              <div style={{ ...columnStyle, width: '8%' }}>
                                 {highlightWords(option.brand_name, searchWords, isActive)}
                               </div>
-                              <div style={{ ...columnStyle, width: '12%' }}>
+                              <div style={{ ...columnStyle, width: '10%' }}>
                                 {option.product_stores?.[localStorage.getItem("store_id")]?.purchase_unit_price && (
                                   <>
                                     <Amount amount={trimTo2Decimals(option.product_stores?.[localStorage.getItem("store_id")]?.purchase_unit_price)} />+
@@ -2965,7 +3117,7 @@ const ProductCreate = forwardRef((props, ref) => {
                                   </>
                                 )}
                               </div>
-                              <div style={{ ...columnStyle, width: '10%' }}>
+                              <div style={{ ...columnStyle, width: '8%' }}>
                                 {highlightWords(option.country_name, searchWords, isActive)}
                               </div>
                             </div>
@@ -3682,7 +3834,35 @@ const ProductCreate = forwardRef((props, ref) => {
                                 )}
                               </div>
                               <div style={{ ...columnStyle, width: '5%' }}>
-                                {option.product_stores?.[localStorage.getItem("store_id")]?.stock ?? ''}
+                                {(() => {
+                                  const storeId = localStorage.getItem("store_id");
+                                  const productStore = option.product_stores?.[storeId];
+                                  const totalStock = productStore?.stock ?? 0;
+                                  const warehouseStocks = productStore?.warehouse_stocks ?? {};
+
+                                  // Build warehouse stock details string
+                                  const warehouseDetails = (() => {
+                                    // Always show MS first
+                                    let details = [];
+                                    if (warehouseStocks["main_store"] !== undefined) {
+                                      details.push(`MS: ${warehouseStocks["main_store"]}`);
+                                    }
+                                    Object.entries(warehouseStocks)
+                                      .filter(([key]) => key !== "main_store")
+                                      .forEach(([key, value]) => {
+                                        details.push(`${key.replace(/^w/, "WH").toUpperCase()}: ${value}`);
+                                      });
+                                    return details.join(", ");
+                                  })();
+
+                                  // Final display string
+                                  return (
+                                    <span>
+                                      {totalStock}
+                                      {warehouseDetails && store.settings.enable_warehouse_module ? ` (${warehouseDetails})` : ""}
+                                    </span>
+                                  );
+                                })()}
                               </div>
                               <div style={{ ...columnStyle, width: '5%' }}>
                                 <button

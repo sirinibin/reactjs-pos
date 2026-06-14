@@ -183,6 +183,12 @@ const DeliveryNoteView = forwardRef((props, ref) => {
                                 <th>Part No.</th>
                                 <th>Name</th>
                                 <th>Qty</th>
+                                {model.net_total > 0 && <th>Unit Price(without VAT)</th>}
+                                {model.net_total > 0 && model.total_with_vat > 0 && <th>Unit Price(with VAT)</th>}
+                                {model.net_total > 0 && <th>Unit Disc.(without VAT)</th>}
+                                {model.net_total > 0 && model.total_with_vat > 0 && <th>Unit Disc.(with VAT)</th>}
+                                {model.net_total > 0 && <th>Price(without VAT)</th>}
+                                {model.net_total > 0 && model.total_with_vat > 0 && <th>Price(with VAT)</th>}
                             </tr>
                         </thead>
                         <tbody>
@@ -192,11 +198,59 @@ const DeliveryNoteView = forwardRef((props, ref) => {
                                     <td>{product.part_number}</td>
                                     <td>{product.name}{product.name_in_arabic ? " / " + product.name_in_arabic : ""}</td>
                                     <td>{product.quantity}  {product.unit ? product.unit : ""} </td>
+                                    {model.net_total > 0 && <td>{product.unit_price ? product.unit_price.toFixed(2) : "0.00"}</td>}
+                                    {model.net_total > 0 && model.total_with_vat > 0 && <td>{product.unit_price_with_vat ? product.unit_price_with_vat.toFixed(2) : "0.00"}</td>}
+                                    {model.net_total > 0 && <td>{product.unit_discount ? product.unit_discount.toFixed(2) : "0.00"}</td>}
+                                    {model.net_total > 0 && model.total_with_vat > 0 && <td>{product.unit_discount_with_vat ? product.unit_discount_with_vat.toFixed(2) : "0.00"}</td>}
+                                    {model.net_total > 0 && <td>{product.unit_price ? ((product.unit_price - (product.unit_discount || 0)) * product.quantity).toFixed(2) : "0.00"}</td>}
+                                    {model.net_total > 0 && model.total_with_vat > 0 && <td>{product.unit_price_with_vat ? (((product.unit_price_with_vat || 0) - (product.unit_discount_with_vat || 0)) * product.quantity).toFixed(2) : "0.00"}</td>}
                                 </tr>
                             ))}
                         </tbody>
                     </table>
                 </div>
+                {model.net_total > 0 && (
+                    <div className="row justify-content-end">
+                        <div className="col-md-5">
+                            <table className="table table-sm table-bordered">
+                                <tbody>
+                                    <tr>
+                                        <th>Total(without VAT)</th>
+                                        <td className="text-end">{model.total ? model.total.toFixed(2) : "0.00"}</td>
+                                    </tr>
+                                    {model.total_with_vat > 0 && <tr>
+                                        <th>Total(with VAT)</th>
+                                        <td className="text-end">{model.total_with_vat.toFixed(2)}</td>
+                                    </tr>}
+                                    {model.shipping_handling_fees > 0 && <tr>
+                                        <th>Shipping/Handling</th>
+                                        <td className="text-end">{model.shipping_handling_fees.toFixed(2)}</td>
+                                    </tr>}
+                                    {model.discount > 0 && <tr>
+                                        <th>Discount(without VAT){model.discount_percent > 0 ? ` (${model.discount_percent}%)` : ""}</th>
+                                        <td className="text-end">{model.discount.toFixed(2)}</td>
+                                    </tr>}
+                                    {model.discount_with_vat > 0 && <tr>
+                                        <th>Discount(with VAT){model.discount_percent_with_vat > 0 ? ` (${model.discount_percent_with_vat}%)` : ""}</th>
+                                        <td className="text-end">{model.discount_with_vat.toFixed(2)}</td>
+                                    </tr>}
+                                    <tr>
+                                        <th>VAT {model.vat_percent ? "(" + model.vat_percent + "%)" : ""}</th>
+                                        <td className="text-end">{model.vat_price ? model.vat_price.toFixed(2) : "0.00"}</td>
+                                    </tr>
+                                    {model.rounding_amount !== 0 && model.rounding_amount !== undefined && <tr>
+                                        <th>Rounding Amount</th>
+                                        <td className="text-end">{model.rounding_amount ? model.rounding_amount.toFixed(2) : "0.00"}</td>
+                                    </tr>}
+                                    <tr>
+                                        <th><strong>Net Total(with VAT)</strong></th>
+                                        <td className="text-end"><strong>{model.net_total.toFixed(2)}</strong></td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                )}
 
                 {/*
                     <form className="row g-3 needs-validation" >
