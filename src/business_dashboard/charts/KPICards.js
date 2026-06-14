@@ -356,8 +356,10 @@ export default function KPICards({
     const profitLossWithoutVAT = profitLoss - profitLossVat;
     const isProfitable         = profitLoss >= 0;
 
-    const totalOrders    = orders.length;
-    const avgOrderValue  = totalOrders > 0 ? (totalSales / totalOrders) : 0;
+    const totalOrders           = orders.length;
+    const avgOrderValue         = totalOrders > 0 ? (totalSales / totalOrders) : 0;
+    const avgOrderValueVat      = avgOrderValue * vatPercent / (100 + vatPercent);
+    const avgOrderValueWithoutVAT = avgOrderValue - avgOrderValueVat;
     const returnRate     = totalSales > 0 ? (totalSalesReturn / totalSales) * 100 : 0;
 
     // ── Tooltip line definitions  (exact numbers shown on hover) ──────────
@@ -422,7 +424,9 @@ export default function KPICards({
     const avgTooltip = [
         { label: "Gross Sales", value: `SAR ${fmt(totalSales)}` },
         { label: "Orders", value: `÷ ${totalOrders}` },
-        { divider: true, label: "Avg Order Value", value: `SAR ${fmt(avgOrderValue)}`, bold: true },
+        { divider: true, label: "Avg Order Value (with VAT)", value: `SAR ${fmt(avgOrderValue)}`, bold: true },
+        { label: `VAT ${vatPercent}%`, value: `− ${fmt(avgOrderValueVat)}` },
+        { divider: true, label: "Avg Order Value (without VAT)", value: `SAR ${fmt(avgOrderValueWithoutVAT)}`, bold: true },
     ];
 
     const returnTooltip = [
@@ -476,7 +480,8 @@ export default function KPICards({
                 tooltip={avgTooltip}
                 fieldValue={avgOrderValue}
                 value={`${fmtCompact(avgOrderValue)}`}
-                exact={`${fmt(avgOrderValue)}`}
+                exact={`${fmt(avgOrderValue)} (w/ VAT) · ${fmt(avgOrderValueWithoutVAT)} (w/o VAT)`}
+                sub2={`w/o VAT: ${fmtCompact(avgOrderValueWithoutVAT)}`}
                 icon="bi bi-bag"
                 color="#36b9cc"
             />
