@@ -137,6 +137,22 @@ const BTN = 'background:none;border:1px solid rgba(255,255,255,0.25);color:#f8f9
 const BTN_GREEN = 'background:none;border:1px solid #28a745;color:#28a745;' +
                   'border-radius:4px;cursor:pointer;font-size:0.68rem;padding:2px 8px;';
 
+export function onChartSelect() {
+    setTimeout(() => {
+        const els = document.querySelectorAll('.google-visualization-tooltip');
+        els.forEach(el => {
+            const style = window.getComputedStyle(el);
+            if (style.display !== 'none' && style.visibility !== 'hidden') {
+                el.classList.add('__ctt_pinned');
+                clearTimeout(window.__cttTimer);
+                window.__cttTimer = setTimeout(() => {
+                    el.classList.remove('__ctt_pinned');
+                }, 5000);
+            }
+        });
+    }, 50);
+}
+
 export function tooltipHtml(title, titleColor, lines, store, filters) {
     const key = storeData({ title, lines, store: store || {}, filters: filters || {} });
 
