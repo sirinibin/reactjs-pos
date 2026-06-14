@@ -115,7 +115,7 @@ const StatsSummary = ({ title, stats = {}, statsWithInfo = {}, defaultOpen = fal
             const amount = trimTo2Decimals((typeof stats[f.label] !== "undefined") ? stats[f.label] : (typeof f.value !== "undefined" ? f.value : 0));
             return (
                 <div className="mb-2" key={index}>
-                    <div className="d-flex justify-content-between align-items-center">
+                    <div className="d-flex justify-content-between align-items-start">
                         <span>
                             {f.label}
                             {f.info ? (
@@ -125,9 +125,16 @@ const StatsSummary = ({ title, stats = {}, statsWithInfo = {}, defaultOpen = fal
                             ) : null}
                             :
                         </span>
-                        <span className="badge bg-secondary">
-                            <Amount amount={amount} />
-                        </span>
+                        <div style={{ textAlign: 'right' }}>
+                            <span className="badge bg-secondary">
+                                <Amount amount={amount} />
+                            </span>
+                            {f.sub && (
+                                <div style={{ fontSize: '0.72rem', color: '#6c757d', marginTop: '2px' }}>
+                                    {f.sub}
+                                </div>
+                            )}
+                        </div>
                     </div>
                 </div>
             );
