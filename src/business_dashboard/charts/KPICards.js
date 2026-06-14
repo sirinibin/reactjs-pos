@@ -347,6 +347,10 @@ export default function KPICards({
         : (totalExpense + totalPurchase - totalPurchaseReturn))
         + cashDiscountAdj;
 
+    const revenueVat        = revenue * vatPercent / (100 + vatPercent);
+    const revenueWithoutVAT = revenue - revenueVat;
+    const expenseVat        = expenseTotal * vatPercent / (100 + vatPercent);
+    const expenseWithoutVAT = expenseTotal - expenseVat;
     const profitLoss           = revenue - expenseTotal;
     const profitLossVat        = profitLoss * vatPercent / (100 + vatPercent);
     const profitLossWithoutVAT = profitLoss - profitLossVat;
@@ -363,7 +367,9 @@ export default function KPICards({
         ...(qtnInvoiceAccounting ? [{ label: "Qtn. Sales", value: `+ ${fmt(totalQtnSales)}` }] : []),
         { label: "Sales Returns", value: `− ${fmt(totalSalesReturn)}` },
         ...(qtnInvoiceAccounting ? [{ label: "Qtn. Returns", value: `− ${fmt(totalQtnSalesReturn)}` }] : []),
-        { divider: true, label: "Net Revenue", value: `SAR ${fmt(revenue)}`, bold: true },
+        { divider: true, label: "Net Revenue (with VAT)", value: `SAR ${fmt(revenue)}`, bold: true },
+        { label: `VAT ${vatPercent}%`, value: `− ${fmt(revenueVat)}` },
+        { divider: true, label: "Net Revenue (without VAT)", value: `SAR ${fmt(revenueWithoutVAT)}`, bold: true },
     ];
 
     const expenseTooltip = disablePurchasesOnAccounts ? [
@@ -379,7 +385,9 @@ export default function KPICards({
             { label: "Qtn. Sales C.D.", value: `+ ${fmt(qtnSalesCashDiscount)}` },
             { label: "Qtn. Sales Ret. C.D.", value: `− ${fmt(qtnSalesReturnCashDiscount)}` },
         ] : []),
-        { divider: true, label: "Total Expense", value: `SAR ${fmt(expenseTotal)}`, bold: true },
+        { divider: true, label: "Total Expense (with VAT)", value: `SAR ${fmt(expenseTotal)}`, bold: true },
+        { label: `VAT ${vatPercent}%`, value: `− ${fmt(expenseVat)}` },
+        { divider: true, label: "Total Expense (without VAT)", value: `SAR ${fmt(expenseWithoutVAT)}`, bold: true },
     ] : [
         { label: "Expenses", value: `${fmt(totalExpense)}` },
         { label: "Purchases", value: `+ ${fmt(totalPurchase)}` },
@@ -392,14 +400,17 @@ export default function KPICards({
             { label: "Qtn. Sales C.D.", value: `+ ${fmt(qtnSalesCashDiscount)}` },
             { label: "Qtn. Sales Ret. C.D.", value: `− ${fmt(qtnSalesReturnCashDiscount)}` },
         ] : []),
-        { divider: true, label: "Total Expense", value: `SAR ${fmt(expenseTotal)}`, bold: true },
+        { divider: true, label: "Total Expense (with VAT)", value: `SAR ${fmt(expenseTotal)}`, bold: true },
+        { label: `VAT ${vatPercent}%`, value: `− ${fmt(expenseVat)}` },
+        { divider: true, label: "Total Expense (without VAT)", value: `SAR ${fmt(expenseWithoutVAT)}`, bold: true },
     ];
 
     const profitTooltip = [
         { label: "Net Revenue", value: `${fmt(revenue)}` },
         { label: "Total Expense", value: `− ${fmt(expenseTotal)}` },
-        { label: `VAT ${vatPercent}%`, value: `${fmt(profitLossVat)}` },
-        { divider: true, label: isProfitable ? "Net Profit" : "Net Loss", value: `SAR ${fmt(Math.abs(profitLoss))}`, bold: true },
+        { divider: true, label: isProfitable ? "Net Profit (with VAT)" : "Net Loss (with VAT)", value: `SAR ${fmt(Math.abs(profitLoss))}`, bold: true },
+        { label: `VAT ${vatPercent}%`, value: `− ${fmt(Math.abs(profitLossVat))}` },
+        { divider: true, label: isProfitable ? "Net Profit (without VAT)" : "Net Loss (without VAT)", value: `SAR ${fmt(Math.abs(profitLossWithoutVAT))}`, bold: true },
     ];
 
     const ordersTooltip = [
@@ -427,7 +438,8 @@ export default function KPICards({
                 tooltip={revenueTooltip}
                 fieldValue={revenue}
                 value={`${fmtCompact(revenue)}`}
-                exact={`${fmt(revenue)}`}
+                exact={`${fmt(revenue)} (w/ VAT) · ${fmt(revenueWithoutVAT)} (w/o VAT)`}
+                sub2={`w/o VAT: ${fmtCompact(revenueWithoutVAT)}`}
                 icon="bi bi-currency-dollar"
                 color="#4e73df"
             />
@@ -436,7 +448,8 @@ export default function KPICards({
                 tooltip={expenseTooltip}
                 fieldValue={expenseTotal}
                 value={`${fmtCompact(expenseTotal)}`}
-                exact={`${fmt(expenseTotal)}`}
+                exact={`${fmt(expenseTotal)} (w/ VAT) · ${fmt(expenseWithoutVAT)} (w/o VAT)`}
+                sub2={`w/o VAT: ${fmtCompact(expenseWithoutVAT)}`}
                 icon="bi bi-receipt-cutoff"
                 color="#e74a3b"
             />
