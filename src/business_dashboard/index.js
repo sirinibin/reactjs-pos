@@ -470,6 +470,11 @@ export default function BusinessDashboard() {
         };
     }, [monthlyData]);
 
+    const chartFilters = {
+        ...(appliedFrom ? { 'From': appliedFrom } : {}),
+        ...(appliedTo   ? { 'To':   appliedTo   } : {}),
+    };
+
     return (
         <div className="container-fluid px-3 py-3">
             <style>{`@keyframes spin{to{transform:rotate(360deg)}}.spin{animation:spin .7s linear infinite;display:inline-block;}`}</style>
@@ -704,24 +709,24 @@ export default function BusinessDashboard() {
                             <div className="row mt-4">
                                 <div className="col-lg-6">
                                     <ChartCard>
-                                        <MonthlyRevenueTrendChart store={store} orders={synOrders} returns={synReturns} purchases={synPur} purchaseReturns={synPurRet} expenses={synExpenses} quotations={synQtnInvoices} quotationSalesReturns={synQtnReturns} accountedPurchases={synAcctPur} accountedPurchaseReturns={synAcctPurRet} customerDeposits={synDeposits} />
+                                        <MonthlyRevenueTrendChart store={store} filters={chartFilters} orders={synOrders} returns={synReturns} purchases={synPur} purchaseReturns={synPurRet} expenses={synExpenses} quotations={synQtnInvoices} quotationSalesReturns={synQtnReturns} accountedPurchases={synAcctPur} accountedPurchaseReturns={synAcctPurRet} customerDeposits={synDeposits} />
                                     </ChartCard>
                                 </div>
                                 <div className="col-lg-6">
                                     <ChartCard>
-                                        <PaymentStatusPieChart orders={synOrdersWithStatus} store={store} quotations={synQtnInvoices} />
+                                        <PaymentStatusPieChart orders={synOrdersWithStatus} store={store} filters={chartFilters} quotations={synQtnInvoices} />
                                     </ChartCard>
                                 </div>
                             </div>
                             <div className="row">
                                 <div className="col-lg-6">
                                     <ChartCard>
-                                        <CategoryRevenuePieChart categorySummaries={categorySummaries} store={store} />
+                                        <CategoryRevenuePieChart categorySummaries={categorySummaries} store={store} filters={chartFilters} />
                                     </ChartCard>
                                 </div>
                                 <div className="col-lg-6">
                                     <ChartCard>
-                                        <StockHealthChart stockSummary={stockSummary} />
+                                        <StockHealthChart stockSummary={stockSummary} store={store} filters={chartFilters} />
                                     </ChartCard>
                                 </div>
                             </div>
@@ -735,26 +740,26 @@ export default function BusinessDashboard() {
                             <div className="row">
                                 <div className="col-12">
                                     <ChartCard>
-                                        <MonthlyRevenueTrendChart store={store} orders={synOrders} returns={synReturns} purchases={synPur} purchaseReturns={synPurRet} expenses={synExpenses} quotations={synQtnInvoices} quotationSalesReturns={synQtnReturns} accountedPurchases={synAcctPur} accountedPurchaseReturns={synAcctPurRet} customerDeposits={synDeposits} />
+                                        <MonthlyRevenueTrendChart store={store} filters={chartFilters} orders={synOrders} returns={synReturns} purchases={synPur} purchaseReturns={synPurRet} expenses={synExpenses} quotations={synQtnInvoices} quotationSalesReturns={synQtnReturns} accountedPurchases={synAcctPur} accountedPurchaseReturns={synAcctPurRet} customerDeposits={synDeposits} />
                                     </ChartCard>
                                 </div>
                             </div>
                             <div className="row">
                                 <div className="col-lg-6">
                                     <ChartCard>
-                                        <CumulativeRevenueChart store={store} orders={synOrders} returns={synReturns} quotations={synQtnInvoices} quotationSalesReturns={synQtnReturns} />
+                                        <CumulativeRevenueChart store={store} filters={chartFilters} orders={synOrders} returns={synReturns} quotations={synQtnInvoices} quotationSalesReturns={synQtnReturns} />
                                     </ChartCard>
                                 </div>
                                 <div className="col-lg-6">
                                     <ChartCard>
-                                        <Last30DaysSalesChart orders={synOrders} store={store} />
+                                        <Last30DaysSalesChart orders={synOrders} store={store} filters={chartFilters} />
                                     </ChartCard>
                                 </div>
                             </div>
                             <div className="row">
                                 <div className="col-12">
                                     <ChartCard>
-                                        <SalesVsReturnsChart orders={synOrders} returns={synReturns} store={store} />
+                                        <SalesVsReturnsChart orders={synOrders} returns={synReturns} store={store} filters={chartFilters} />
                                     </ChartCard>
                                 </div>
                             </div>
@@ -768,19 +773,19 @@ export default function BusinessDashboard() {
                             <div className="row">
                                 <div className="col-lg-6">
                                     <ChartCard>
-                                        <PaymentMethodPieChart payments={synPayments} store={store} quotations={synQtnInvoices} />
+                                        <PaymentMethodPieChart payments={synPayments} store={store} filters={chartFilters} quotations={synQtnInvoices} />
                                     </ChartCard>
                                 </div>
                                 <div className="col-lg-6">
                                     <ChartCard>
-                                        <PaymentStatusPieChart orders={synOrdersWithStatus} store={store} quotations={synQtnInvoices} />
+                                        <PaymentStatusPieChart orders={synOrdersWithStatus} store={store} filters={chartFilters} quotations={synQtnInvoices} />
                                     </ChartCard>
                                 </div>
                             </div>
                             <div className="row">
                                 <div className="col-12">
                                     <ChartCard>
-                                        <CashVsBankTrendChart payments={synPayments} store={store} quotations={synQtnInvoices} />
+                                        <CashVsBankTrendChart payments={synPayments} store={store} filters={chartFilters} quotations={synQtnInvoices} />
                                     </ChartCard>
                                 </div>
                             </div>
@@ -794,19 +799,19 @@ export default function BusinessDashboard() {
                             <div className="row">
                                 <div className="col-12">
                                     <ChartCard>
-                                        <TopProductsChart productSummaries={productSummaries} store={store} />
+                                        <TopProductsChart productSummaries={productSummaries} store={store} filters={chartFilters} />
                                     </ChartCard>
                                 </div>
                             </div>
                             <div className="row">
                                 <div className="col-lg-6">
                                     <ChartCard>
-                                        <CategoryRevenuePieChart categorySummaries={categorySummaries} store={store} />
+                                        <CategoryRevenuePieChart categorySummaries={categorySummaries} store={store} filters={chartFilters} />
                                     </ChartCard>
                                 </div>
                                 <div className="col-lg-6">
                                     <ChartCard>
-                                        <CategoryMarginChart categorySummaries={categorySummaries} store={store} />
+                                        <CategoryMarginChart categorySummaries={categorySummaries} store={store} filters={chartFilters} />
                                     </ChartCard>
                                 </div>
                             </div>
@@ -814,7 +819,7 @@ export default function BusinessDashboard() {
                             <div className="row">
                                 <div className="col-lg-6">
                                     <ChartCard>
-                                        <StockHealthChart stockSummary={stockSummary} />
+                                        <StockHealthChart stockSummary={stockSummary} store={store} filters={chartFilters} />
                                     </ChartCard>
                                 </div>
                                 <div className="col-lg-6">
@@ -853,12 +858,12 @@ export default function BusinessDashboard() {
                             <div className="row">
                                 <div className="col-lg-6">
                                     <ChartCard>
-                                        <TopCustomersChart customerSummaries={customerSummaries} store={store} />
+                                        <TopCustomersChart customerSummaries={customerSummaries} store={store} filters={chartFilters} />
                                     </ChartCard>
                                 </div>
                                 <div className="col-lg-6">
                                     <ChartCard>
-                                        <OutstandingReceivablesChart outstandingSummaries={outstandingSummaries} />
+                                        <OutstandingReceivablesChart outstandingSummaries={outstandingSummaries} store={store} filters={chartFilters} />
                                     </ChartCard>
                                 </div>
                             </div>
@@ -871,14 +876,14 @@ export default function BusinessDashboard() {
                                 </div>
                                 <div className="col-lg-6">
                                     <ChartCard>
-                                        <VendorSpendPieChart vendorSummaries={vendorSummaries} store={store} />
+                                        <VendorSpendPieChart vendorSummaries={vendorSummaries} store={store} filters={chartFilters} />
                                     </ChartCard>
                                 </div>
                             </div>
                             <div className="row">
                                 <div className="col-12">
                                     <ChartCard>
-                                        <PurchaseVsSalesChart store={store} orders={synOrders} returns={synReturns} purchases={synPur} purchaseReturns={synPurRet} expenses={synExpenses} quotations={synQtnInvoices} quotationSalesReturns={synQtnReturns} accountedPurchases={synAcctPur} accountedPurchaseReturns={synAcctPurRet} customerDeposits={synDeposits} />
+                                        <PurchaseVsSalesChart store={store} filters={chartFilters} orders={synOrders} returns={synReturns} purchases={synPur} purchaseReturns={synPurRet} expenses={synExpenses} quotations={synQtnInvoices} quotationSalesReturns={synQtnReturns} accountedPurchases={synAcctPur} accountedPurchaseReturns={synAcctPurRet} customerDeposits={synDeposits} />
                                     </ChartCard>
                                 </div>
                             </div>

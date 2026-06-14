@@ -1,5 +1,6 @@
 import React, { useMemo } from "react";
 import { Chart } from "react-google-charts";
+import { tooltipHtml } from './chartTooltipSetup';
 
 const MONTH_NAMES = ["Jan", "Feb", "Mar", "Apr", "May", "Jun",
     "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
@@ -46,28 +47,9 @@ function fmtT(n) {
     return Number(n).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 }
 
-function tooltipHtml(title, titleColor, lines) {
-    const D = '#495057';
-    let html = `<div style="background:#212529;color:#f8f9fa;padding:10px 14px;border-radius:6px;box-shadow:0 4px 14px rgba(0,0,0,.35);min-width:220px;">`;
-    html += `<div style="font-size:0.8rem;font-weight:700;color:${titleColor};margin-bottom:6px;border-bottom:1px solid ${D};padding-bottom:6px;">${title}</div>`;
-    html += `<table style="width:100%;border-collapse:collapse;font-size:0.75rem;"><tbody>`;
-    lines.forEach(l => {
-        const bt    = l.divider ? `border-top:1px solid ${D};` : '';
-        const pt    = l.divider ? '6px' : '1px';
-        const pb    = l.divider ? '2px' : '1px';
-        const fw    = l.bold ? 'font-weight:700;' : '';
-        const color = l.color || '#f8f9fa';
-        html += `<tr style="${bt}">`;
-        html += `<td style="color:#adb5bd;white-space:nowrap;padding:${pt} 12px ${pb} 0;vertical-align:top;">${l.label || ''}</td>`;
-        html += `<td style="text-align:right;white-space:nowrap;${fw}color:${color};padding:${pt} 0 ${pb} 0;">${l.value}</td>`;
-        html += `</tr>`;
-    });
-    html += `</tbody></table></div>`;
-    return html;
-}
 
 // vendorSummaries: array of { vendor_name, purchase_amount } from /v1/dashboard/vendors
-export function VendorSpendPieChart({ vendorSummaries, store }) {
+export function VendorSpendPieChart({ vendorSummaries, store, filters }) {
     const vatPercent = store?.vat_percent || 15;
     const data = useMemo(() => {
         const entries = (vendorSummaries || []).filter(v => v.purchase_amount > 0);
@@ -86,7 +68,7 @@ export function VendorSpendPieChart({ vendorSummaries, store }) {
                 { label: `VAT ${vatPercent}%`,                  value: `− ${fmtT(spendVat)}` },
                 { divider: true, label: "Spend (without VAT)", value: `SAR ${fmtT(spendWithoutVAT)}`, bold: true },
             ];
-            return [v.vendor_name, parseFloat(v.purchase_amount.toFixed(2)), tooltipHtml(v.vendor_name, "#36b9cc", lines)];
+            return [v.vendor_name, parseFloat(v.purchase_amount.toFixed(2)), tooltipHtml(v.vendor_name, "#36b9cc", lines, store, filters)];
         });
         return [header, ...rows];
     }, [vendorSummaries, vatPercent]);
@@ -114,7 +96,7 @@ export function VendorSpendPieChart({ vendorSummaries, store }) {
 //   ? Expenses − DepositPurchaseFund + AccountedPurchases − AccountedPurchaseReturns
 //   : Expenses + Purchases − Purchase Returns
 export function PurchaseVsSalesChart({
-    store, orders, returns, purchases, purchaseReturns, expenses,
+    store, filters, orders, returns, purchases, purchaseReturns, expenses,
     quotations, quotationSalesReturns,
     accountedPurchases, accountedPurchaseReturns, customerDeposits,
 }) {
@@ -225,9 +207,9 @@ export function PurchaseVsSalesChart({
             return [
                 label,
                 parseFloat(revenue.toFixed(2)),
-                tooltipHtml(`Net Revenue — ${label}`, "#69db7c", revLines),
+                tooltipHtml(`Net Revenue — ${label}`, "#69db7c", revLines, store, filters),
                 parseFloat(expense.toFixed(2)),
-                tooltipHtml(`Total Expense — ${label}`, "#ffa8a8", expLines),
+                tooltipHtml(`Total Expense — ${label}`, "#ffa8a8", expLines, store, filters),
             ];
         });
 

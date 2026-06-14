@@ -1,5 +1,6 @@
 import React, { useMemo } from "react";
 import { Chart } from "react-google-charts";
+import { tooltipHtml } from './chartTooltipSetup';
 
 const MONTH_NAMES = ["Jan", "Feb", "Mar", "Apr", "May", "Jun",
     "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
@@ -36,28 +37,9 @@ function fmtT(n) {
     return Number(n).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 }
 
-function tooltipHtml(title, titleColor, lines) {
-    const D = '#495057';
-    let html = `<div style="background:#212529;color:#f8f9fa;padding:10px 14px;border-radius:6px;box-shadow:0 4px 14px rgba(0,0,0,.35);min-width:220px;">`;
-    html += `<div style="font-size:0.8rem;font-weight:700;color:${titleColor};margin-bottom:6px;border-bottom:1px solid ${D};padding-bottom:6px;">${title}</div>`;
-    html += `<table style="width:100%;border-collapse:collapse;font-size:0.75rem;"><tbody>`;
-    lines.forEach(l => {
-        const bt    = l.divider ? `border-top:1px solid ${D};` : '';
-        const pt    = l.divider ? '6px' : '1px';
-        const pb    = l.divider ? '2px' : '1px';
-        const fw    = l.bold ? 'font-weight:700;' : '';
-        const color = l.color || '#f8f9fa';
-        html += `<tr style="${bt}">`;
-        html += `<td style="color:#adb5bd;white-space:nowrap;padding:${pt} 12px ${pb} 0;vertical-align:top;">${l.label || ''}</td>`;
-        html += `<td style="text-align:right;white-space:nowrap;${fw}color:${color};padding:${pt} 0 ${pb} 0;">${l.value}</td>`;
-        html += `</tr>`;
-    });
-    html += `</tbody></table></div>`;
-    return html;
-}
 
 export function MonthlyRevenueTrendChart({
-    store, orders, returns, purchases, purchaseReturns, expenses,
+    store, filters, orders, returns, purchases, purchaseReturns, expenses,
     quotations, quotationSalesReturns,
     accountedPurchases, accountedPurchaseReturns, customerDeposits,
 }) {
@@ -210,21 +192,21 @@ export function MonthlyRevenueTrendChart({
             const plColor  = isProfitable ? "#69db7c" : "#ffa8a8";
             const plTitle  = isProfitable ? "Net Profit" : "Net Loss";
             const plLines  = [
-                { label: `${plTitle} (w/ VAT)`,   value: `SAR ${fmtT(Math.abs(profit))}`,           bold: true, color: plColor },
-                { label: `${plTitle} (w/o VAT)`,  value: `SAR ${fmtT(Math.abs(profitWithoutVAT))}`, bold: true },
-                { label: `VAT ${vatPercent}%`,     value: `${fmtT(Math.abs(profitVat))}` },
-                { divider: true, label: "Net Revenue",   value: `${fmtT(revenue)}` },
-                { label: "Total Expense",  value: `− ${fmtT(expense)}` },
+                { label: "Net Revenue",   value: `${fmtT(revenue)}`, color: "#74c0fc" },
+                { label: "Total Expense", value: `− ${fmtT(expense)}`, color: "#ffa8a8" },
+                { divider: true, label: `${plTitle} (with VAT)`,    value: `SAR ${fmtT(Math.abs(profit))}`,           bold: true, color: plColor },
+                { label: `VAT ${vatPercent}%`,                       value: `− ${fmtT(Math.abs(profitVat))}` },
+                { divider: true, label: `${plTitle} (without VAT)`, value: `SAR ${fmtT(Math.abs(profitWithoutVAT))}`, bold: true, color: plColor },
             ];
 
             return [
                 monthLabel(k),
                 parseFloat(revenue.toFixed(2)),
-                tooltipHtml(`Net Revenue — ${monthLabel(k)}`, "#74c0fc", revLines),
+                tooltipHtml(`Net Revenue — ${monthLabel(k)}`, "#74c0fc", revLines, store, filters),
                 parseFloat(expense.toFixed(2)),
-                tooltipHtml(`Expense — ${monthLabel(k)}`, "#ffa8a8", expLines),
+                tooltipHtml(`Expense — ${monthLabel(k)}`, "#ffa8a8", expLines, store, filters),
                 parseFloat(profit.toFixed(2)),
-                tooltipHtml(`${plTitle} — ${monthLabel(k)}`, plColor, plLines),
+                tooltipHtml(`${plTitle} — ${monthLabel(k)}`, plColor, plLines, store, filters),
             ];
         });
 
@@ -260,7 +242,7 @@ export function MonthlyRevenueTrendChart({
 }
 
 // ── Chart 2: Cumulative Net Revenue (P&L Revenue) ────────────────────────────
-export function CumulativeRevenueChart({ store, orders, returns, quotations, quotationSalesReturns }) {
+export function CumulativeRevenueChart({ store, filters, orders, returns, quotations, quotationSalesReturns }) {
     const qtnInvoiceAccounting = store?.settings?.quotation_invoice_accounting === true;
     const vatPercent           = store?.vat_percent || 15;
 
@@ -311,7 +293,7 @@ export function CumulativeRevenueChart({ store, orders, returns, quotations, quo
                 { divider: true, label: "Cumulative (with VAT)",    value: `SAR ${fmtT(cumulative)}`, bold: true, color: "#74c0fc" },
                 { label: `VAT ${vatPercent}%`,                       value: `− ${fmtT(cumulativeVat)}` },
                 { divider: true, label: "Cumulative (without VAT)", value: `SAR ${fmtT(cumulativeWithoutVAT)}`, bold: true, color: "#74c0fc" },
-            ]);
+            ], store, filters);
 
             return [monthLabel(k), parseFloat(cumulative.toFixed(2)), tip];
         });
@@ -340,7 +322,7 @@ export function CumulativeRevenueChart({ store, orders, returns, quotations, quo
 }
 
 // ── Chart 3: Last 12 Months — Monthly Gross Sales ────────────────────────────
-export function Last30DaysSalesChart({ orders, store }) {
+export function Last30DaysSalesChart({ orders, store, filters }) {
     const vatPercent = store?.vat_percent || 15;
     const data = useMemo(() => {
         const map = {};
@@ -359,7 +341,7 @@ export function Last30DaysSalesChart({ orders, store }) {
                 { label: "Gross Sales (with VAT)",    value: `SAR ${fmtT(sales)}`, bold: true, color: "#36b9cc" },
                 { label: `VAT ${vatPercent}%`,        value: `− ${fmtT(salesVat)}` },
                 { divider: true, label: "Gross Sales (without VAT)", value: `SAR ${fmtT(salesWithoutVAT)}`, bold: true },
-            ]);
+            ], store, filters);
             return [monthLabel(k), parseFloat(sales.toFixed(2)), tip];
         });
         return [header, ...rows];
@@ -385,7 +367,7 @@ export function Last30DaysSalesChart({ orders, store }) {
 }
 
 // ── Chart 4: Sales vs Returns by Month ───────────────────────────────────────
-export function SalesVsReturnsChart({ orders, returns, store }) {
+export function SalesVsReturnsChart({ orders, returns, store, filters }) {
     const vatPercent = store?.vat_percent || 15;
     const data = useMemo(() => {
         const salesMap  = buildMap(orders,  o => o.date, o => o.net_total || 0);
@@ -410,12 +392,12 @@ export function SalesVsReturnsChart({ orders, returns, store }) {
                 { label: "Gross Sales (with VAT)",    value: `SAR ${fmtT(sales)}`, bold: true, color: "#1cc88a" },
                 { label: `VAT ${vatPercent}%`,        value: `− ${fmtT(salesVat)}` },
                 { divider: true, label: "Gross Sales (without VAT)", value: `SAR ${fmtT(salesWithoutVAT)}`, bold: true },
-            ]);
+            ], store, filters);
             const retTooltip = tooltipHtml(`Returns — ${monthLabel(k)}`, "#e74a3b", [
                 { label: "Returns (with VAT)",    value: `SAR ${fmtT(ret)}`, bold: true, color: "#e74a3b" },
                 { label: `VAT ${vatPercent}%`,    value: `− ${fmtT(retVat)}` },
                 { divider: true, label: "Returns (without VAT)", value: `SAR ${fmtT(retWithoutVAT)}`, bold: true },
-            ]);
+            ], store, filters);
             return [monthLabel(k), parseFloat(sales.toFixed(2)), salesTooltip, parseFloat(ret.toFixed(2)), retTooltip];
         });
         return [header, ...rows];

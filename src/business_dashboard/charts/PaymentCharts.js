@@ -1,5 +1,6 @@
 import React, { useMemo } from "react";
 import { Chart } from "react-google-charts";
+import { tooltipHtml } from './chartTooltipSetup';
 
 const MONTH_NAMES = ["Jan", "Feb", "Mar", "Apr", "May", "Jun",
     "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
@@ -19,28 +20,10 @@ function fmtT(n) {
     return Number(n).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 }
 
-function tooltipHtml(title, titleColor, lines) {
-    const headerStyle  = `font-size:0.8rem;font-weight:700;color:${titleColor};margin-bottom:6px;`;
-    const rowStyle     = "font-size:0.75rem;line-height:1.7;white-space:nowrap;";
-    const dividerStyle = "border-top:1px solid #495057;margin-top:6px;padding-top:6px;";
-    const labelStyle   = "color:#adb5bd;margin-right:4px;";
-
-    let html = `<div style="background:#212529;color:#f8f9fa;padding:10px 14px;border-radius:6px;box-shadow:0 4px 14px rgba(0,0,0,.35);">`;
-    html += `<div style="${headerStyle}">${title}</div>`;
-    lines.forEach(l => {
-        const wrap = l.divider ? dividerStyle : "";
-        const val  = l.bold
-            ? `<strong style="color:${l.color || "#f8f9fa"}">${l.value}</strong>`
-            : `<span style="color:${l.color || "#f8f9fa"}">${l.value}</span>`;
-        html += `<div style="${rowStyle}${wrap}"><span style="${labelStyle}">${l.label}:</span>${val}</div>`;
-    });
-    html += `</div>`;
-    return html;
-}
 
 // Distribution of payment methods from sales payments.
 // When quotation_invoice_accounting is ON, also includes embedded payments from quotation invoices.
-export function PaymentMethodPieChart({ payments, store, quotations }) {
+export function PaymentMethodPieChart({ payments, store, filters, quotations }) {
     const qtnInvoiceAccounting = store?.settings?.quotation_invoice_accounting === true;
 
     const data = useMemo(() => {
@@ -80,16 +63,16 @@ export function PaymentMethodPieChart({ payments, store, quotations }) {
         const rows = combined.map(r => {
             const pct = grandTotal > 0 ? ((r.total / grandTotal) * 100).toFixed(1) : "0.0";
             const lines = [
-                { label: "Amount",   value: `SAR ${fmtT(r.total)}`, bold: true, color: "#f8f9fa" },
-                { label: "Share",    value: `${pct}% of total collected` },
-                { divider: true, label: "Formula", value: `Payments where method = "${r.method}"` },
+                { label: "Share",                   value: `${pct}% of total collected` },
+                { label: "Formula",                 value: `Payments where method = "${r.method}"` },
                 { label: "Sales Payments",          value: `${fmtT(r.sales)}` },
                 ...(qtnInvoiceAccounting ? [{ label: "Qtn. Invoice Payments", value: `${fmtT(r.qtn)}` }] : []),
+                { divider: true, label: "Total Amount", value: `SAR ${fmtT(r.total)}`, bold: true, color: "#f8f9fa" },
             ];
             return [
                 METHOD_LABELS[r.method] || r.method,
                 parseFloat(r.total.toFixed(2)),
-                tooltipHtml(METHOD_LABELS[r.method] || r.method, "#f6c23e", lines),
+                tooltipHtml(METHOD_LABELS[r.method] || r.method, "#f6c23e", lines, store, filters),
             ];
         });
 
@@ -116,7 +99,7 @@ export function PaymentMethodPieChart({ payments, store, quotations }) {
 
 // Payment status distribution — groups order net_total by payment_status.
 // When quotation_invoice_accounting is ON, also includes quotation invoices.
-export function PaymentStatusPieChart({ orders, store, quotations }) {
+export function PaymentStatusPieChart({ orders, store, filters, quotations }) {
     const qtnInvoiceAccounting = store?.settings?.quotation_invoice_accounting === true;
 
     const data = useMemo(() => {
@@ -159,13 +142,13 @@ export function PaymentStatusPieChart({ orders, store, quotations }) {
         const rows = combined.map(r => {
             const pct = grandTotal > 0 ? ((r.total / grandTotal) * 100).toFixed(1) : "0.0";
             const lines = [
-                { label: "Amount",  value: `SAR ${fmtT(r.total)}`, bold: true, color: r.color },
-                { label: "Share",   value: `${pct}% of total orders` },
-                { divider: true, label: "Formula", value: `net_total where payment_status = "${r.key}"` },
-                { label: "Sales Orders",      value: `${fmtT(r.sales)}` },
+                { label: "Share",         value: `${pct}% of total orders` },
+                { label: "Formula",       value: `net_total where payment_status = "${r.key}"` },
+                { label: "Sales Orders",  value: `${fmtT(r.sales)}` },
                 ...(qtnInvoiceAccounting ? [{ label: "Qtn. Invoices", value: `${fmtT(r.qtn)}` }] : []),
+                { divider: true, label: "Total Amount", value: `SAR ${fmtT(r.total)}`, bold: true, color: r.color },
             ];
-            return [r.label, parseFloat(r.total.toFixed(2)), tooltipHtml(r.label, r.color, lines)];
+            return [r.label, parseFloat(r.total.toFixed(2)), tooltipHtml(r.label, r.color, lines, store, filters)];
         });
 
         return [header, ...rows];
@@ -194,7 +177,7 @@ export function PaymentStatusPieChart({ orders, store, quotations }) {
 // Cash = payments where method === "cash"
 // Bank/Card = payments where method !== "cash" (debit_card, bank_card, credit_card, bank_transfer, bank_cheque, customer_account, …)
 // When quotation_invoice_accounting is ON, also includes embedded payments from quotation invoices.
-export function CashVsBankTrendChart({ payments, store, quotations }) {
+export function CashVsBankTrendChart({ payments, store, filters, quotations }) {
     const qtnInvoiceAccounting = store?.settings?.quotation_invoice_accounting === true;
 
     const data = useMemo(() => {
@@ -267,10 +250,10 @@ export function CashVsBankTrendChart({ payments, store, quotations }) {
 
             // Cash tooltip
             const cashLines = [
-                { label: "Cash Total", value: `SAR ${fmtT(totalCash)}`, bold: true, color: "#f6c23e" },
-                { divider: true, label: "Formula", value: 'Payments where method = "cash"' },
+                { label: "Formula",        value: 'Payments where method = "cash"' },
                 { label: "Sales Payments", value: `${fmtT(b.cashSales)}` },
                 ...(qtnInvoiceAccounting ? [{ label: "Qtn. Invoice Payments", value: `${fmtT(b.cashQtn)}` }] : []),
+                { divider: true, label: "Cash Total", value: `SAR ${fmtT(totalCash)}`, bold: true, color: "#f6c23e" },
             ];
 
             // Bank/Card tooltip — show method breakdown across all sources
@@ -286,20 +269,20 @@ export function CashVsBankTrendChart({ payments, store, quotations }) {
                 .map(([method, amt]) => ({ label: METHOD_LABELS[method] || method, value: `${fmtT(amt)}` }));
 
             const bankLines = [
-                { label: "Bank/Card Total", value: `SAR ${fmtT(totalBank)}`, bold: true, color: "#4e73df" },
-                { divider: true, label: "Formula", value: "All non-cash payment methods" },
+                { label: "Formula",        value: "All non-cash payment methods" },
                 { label: "Sales Payments", value: `${fmtT(b.bankSales)}` },
                 ...(qtnInvoiceAccounting ? [{ label: "Qtn. Invoice Payments", value: `${fmtT(b.bankQtn)}` }] : []),
                 ...(methodBreakdown.length ? [{ divider: true, label: "By Method", value: "" }] : []),
                 ...methodBreakdown,
+                { divider: true, label: "Bank/Card Total", value: `SAR ${fmtT(totalBank)}`, bold: true, color: "#4e73df" },
             ];
 
             return [
                 label,
                 parseFloat(totalCash.toFixed(2)),
-                tooltipHtml(`Cash Collections — ${label}`, "#f6c23e", cashLines),
+                tooltipHtml(`Cash Collections — ${label}`, "#f6c23e", cashLines, store, filters),
                 parseFloat(totalBank.toFixed(2)),
-                tooltipHtml(`Bank/Card Collections — ${label}`, "#4e73df", bankLines),
+                tooltipHtml(`Bank/Card Collections — ${label}`, "#4e73df", bankLines, store, filters),
             ];
         });
 
