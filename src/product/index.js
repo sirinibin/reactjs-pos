@@ -2192,7 +2192,7 @@ function ProductIndex(props) {
                             ))}
                         </select>
                     </div>
-                    <div className="col-auto" style={{ paddingLeft: "8px" }}>
+                    {localStorage.getItem("user_role") === "Admin" && <div className="col-auto" style={{ paddingLeft: "8px" }}>
                         <button
                             className="btn btn-sm btn-outline-warning"
                             title="Copy legacy Rack/Location values into Main Store rack for all products"
@@ -2201,7 +2201,7 @@ function ProductIndex(props) {
                         >
                             {isMigratingRack ? "Migrating..." : "Migrate Rack → Main Store"}
                         </button>
-                    </div>
+                    </div>}
                 </div>}
 
                 <div className="row">
