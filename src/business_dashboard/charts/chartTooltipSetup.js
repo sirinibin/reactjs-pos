@@ -37,7 +37,7 @@ if (typeof window !== 'undefined' && !window.__cttReady) {
     }
 
     // ── Sticky-tooltip state ────────────────────────────────────────────────
-    let _pinEl = null;   // currently-pinned tooltip element
+    let _pinEl = null;
 
     function pinTooltip(el) {
         if (_pinEl && _pinEl !== el) unpinTooltip(_pinEl);
@@ -53,33 +53,26 @@ if (typeof window !== 'undefined' && !window.__cttReady) {
         clearTimeout(window.__cttTimer);
     }
 
-    // Use MutationObserver only for DETECTION (not to fight back).
-    // When Google Charts makes the tooltip visible, we pin it with the CSS class.
-    // After that, Google Charts' own el.style.display='none' is overridden by CSS.
-    const _obs = new MutationObserver(muts => {
-        for (const m of muts) {
-            if (m.type !== 'attributes') continue;
-            const el = m.target;
-            if (!el.classList?.contains('google-visualization-tooltip')) continue;
-            if (m.attributeName !== 'style') continue;
-            // Tooltip just became visible → pin it for 5 s
-            if (el.style.display !== 'none') pinTooltip(el);
-        }
-    });
-    _obs.observe(document.body, {
-        subtree:         true,
-        attributes:      true,
-        attributeFilter: ['style'],
-    });
+    // MutationObserver fires AFTER all mutations in the current task complete,
+    // so if Google Charts shows+hides the tooltip in one event handler we only
+    // see the hidden state. Instead, poll on every mousemove — fast enough to
+    // pin the tooltip before it becomes invisible to the user.
+    document.addEventListener('mousemove', () => {
+        const els = document.querySelectorAll('.google-visualization-tooltip');
+        els.forEach(el => {
+            if (window.getComputedStyle(el).display !== 'none' &&
+                !el.classList.contains('__ctt_pinned')) {
+                pinTooltip(el);
+            }
+        });
+    }, { passive: true });
 
     window.__cttClose = () => {
         if (_pinEl) unpinTooltip(_pinEl);
     };
 
-    // Action-bar mouse events: keep pinned while user is in the buttons area
-    window.__cttEnter = () => {
-        clearTimeout(window.__cttTimer);   // cancel countdown while hovering buttons
-    };
+    // Action-bar: cancel the countdown while the user is over the buttons
+    window.__cttEnter = () => clearTimeout(window.__cttTimer);
     window.__cttLeave = () => {
         clearTimeout(window.__cttTimer);
         if (_pinEl) {
