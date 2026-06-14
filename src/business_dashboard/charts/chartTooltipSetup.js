@@ -73,10 +73,14 @@ if (typeof window !== 'undefined' && !window.__cttReady) {
             }
         }
     });
-    _obs.observe(document.body, { subtree: true, attributes: true, attributeFilter: ['style'] });
-
-    // Also observe childList in case Google Charts recreates the element
-    _obs.observe(document.body, { subtree: true, childList: true });
+    // Single observe call — calling observe() twice on the same target replaces
+    // the first registration, so all needed options must be in one call.
+    _obs.observe(document.body, {
+        subtree:         true,
+        childList:       true,   // catches element recreation
+        attributes:      true,
+        attributeFilter: ['style'],
+    });
 
     window.__cttClose = () => {
         clearTimeout(window.__cttTimer);
