@@ -145,19 +145,19 @@ function drawColumnHeaders(doc, y, small = false) {
 const ROW_H       = 7;
 const ROW_H_SMALL = 5.5;
 
-function drawRow(doc, label, value, y, isTotal, small = false) {
+function drawRow(doc, label, value, y, isTotal, small = false, noBottomRule = false) {
     const rowH = small ? ROW_H_SMALL : ROW_H;
     const ty   = small ? y + 3.8     : y + 5;
 
     if (isTotal) {
         doc.setFont('helvetica', 'bold');
-        doc.setFontSize(small ? 8 : 9.5);
+        doc.setFontSize(small ? 7 : 9.5);
         doc.setTextColor(0, 0, 0);
         doc.setFillColor(240, 240, 240);
         doc.rect(ML, y, CW, rowH, 'F');
     } else {
         doc.setFont('helvetica', 'normal');
-        doc.setFontSize(small ? 7.5 : 9);
+        doc.setFontSize(small ? 6.5 : 9);
         doc.setTextColor(30, 30, 30);
     }
 
@@ -170,10 +170,11 @@ function drawRow(doc, label, value, y, isTotal, small = false) {
         doc.text(valStr, PAGE_W - MR - 2, ty, { align: 'right' });
     }
 
-    // Thin rule
-    doc.setDrawColor(180, 180, 180);
-    doc.setLineWidth(0.1);
-    doc.line(ML, y + rowH, PAGE_W - MR, y + rowH);
+    if (!noBottomRule) {
+        doc.setDrawColor(180, 180, 180);
+        doc.setLineWidth(0.1);
+        doc.line(ML, y + rowH, PAGE_W - MR, y + rowH);
+    }
 
     return y + rowH;
 }
@@ -312,7 +313,6 @@ export function generateSectionPdf(title, visibleStats, infoMap, filters, store)
     y = drawColumnHeaders(doc, y);
 
     visibleStats.forEach((stat) => {
-        y = guard(doc, y, ROW_H + 1);
         const raw = stat.value;
         const isPercent = typeof stat.label === 'string' &&
             stat.label.includes('%') && !/\d\s*%/.test(stat.label) &&
@@ -322,15 +322,51 @@ export function generateSectionPdf(title, visibleStats, infoMap, filters, store)
             : isPercent
                 ? `${addCommasToInfoValue(Number(raw).toFixed(2))}%`
                 : `SAR ${addCommasToInfoValue(Number(raw).toFixed(2))}`;
-        y = drawRow(doc, stat.label, valStr, y, !!stat.bold);
-        if (stat.sub) {
-            y = guard(doc, y, 6);
-            doc.setFont('helvetica', 'normal');
-            doc.setFontSize(7.5);
-            doc.setTextColor(120, 120, 120);
-            doc.text(S(stat.sub), PAGE_W - MR, y + 1, { align: 'right' });
-            y += 5;
+
+        if (stat.colorByValue) {
+            // Highlighted row — bold 11pt, taller, grey background
+            const rowH = ROW_H + 3;
+            y = guard(doc, y, rowH + 1);
+            doc.setFillColor(235, 235, 235);
+            doc.rect(ML, y, CW, rowH, 'F');
+            doc.setFont('helvetica', 'bold');
+            doc.setFontSize(11);
             doc.setTextColor(0, 0, 0);
+            doc.text(S(String(stat.label)) + ':', ML + 2, y + 7);
+            doc.text(S(valStr), PAGE_W - MR - 2, y + 7, { align: 'right' });
+            if (!stat.sub) {
+                doc.setDrawColor(180, 180, 180);
+                doc.setLineWidth(0.1);
+                doc.line(ML, y + rowH, PAGE_W - MR, y + rowH);
+            }
+            y += rowH;
+            if (stat.sub) {
+                y = guard(doc, y, 6);
+                doc.setFont('helvetica', 'normal');
+                doc.setFontSize(7.5);
+                doc.setTextColor(120, 120, 120);
+                doc.text(S(stat.sub), PAGE_W - MR - 2, y + 4, { align: 'right' });
+                y += 5;
+                doc.setDrawColor(180, 180, 180);
+                doc.setLineWidth(0.1);
+                doc.line(ML, y, PAGE_W - MR, y);
+                doc.setTextColor(0, 0, 0);
+            }
+        } else {
+            y = guard(doc, y, ROW_H + 1);
+            y = drawRow(doc, stat.label, valStr, y, !!stat.bold, false, !!stat.sub);
+            if (stat.sub) {
+                y = guard(doc, y, 6);
+                doc.setFont('helvetica', 'normal');
+                doc.setFontSize(7.5);
+                doc.setTextColor(120, 120, 120);
+                doc.text(S(stat.sub), PAGE_W - MR - 2, y + 4, { align: 'right' });
+                y += 5;
+                doc.setDrawColor(180, 180, 180);
+                doc.setLineWidth(0.1);
+                doc.line(ML, y, PAGE_W - MR, y);
+                doc.setTextColor(0, 0, 0);
+            }
         }
     });
 
