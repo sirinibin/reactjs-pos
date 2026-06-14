@@ -826,7 +826,7 @@ const ProductCreate = forwardRef((props, ref) => {
       },
     };
 
-    let Select = `select=id,additional_keywords,search_label,set.name,item_code,prefix_part_number,country_name,brand_name,part_number,name,unit,name_in_arabic,product_stores.${localStorage.getItem('store_id')}.purchase_unit_price,product_stores.${localStorage.getItem('store_id')}.purchase_unit_price_with_vat,product_stores.${localStorage.getItem('store_id')}.retail_unit_price,product_stores.${localStorage.getItem('store_id')}.retail_unit_price_with_vat,product_stores.${localStorage.getItem('store_id')}.stock,product_stores.${localStorage.getItem('store_id')}.warehouse_stocks`;
+    let Select = `select=id,additional_keywords,search_label,set.name,item_code,prefix_part_number,country_name,brand_name,part_number,name,unit,name_in_arabic,product_stores.${localStorage.getItem('store_id')}.purchase_unit_price,product_stores.${localStorage.getItem('store_id')}.purchase_unit_price_with_vat,product_stores.${localStorage.getItem('store_id')}.retail_unit_price,product_stores.${localStorage.getItem('store_id')}.retail_unit_price_with_vat,product_stores.${localStorage.getItem('store_id')}.stock,product_stores.${localStorage.getItem('store_id')}.warehouse_stocks,product_stores.${localStorage.getItem('store_id')}.warehouse_racks`;
     //setIsProductsLoading(true);
     let result = await fetch(
       "/v1/product?" + Select + queryString + "&limit=50&sort=-country_name",
@@ -1868,34 +1868,74 @@ const ProductCreate = forwardRef((props, ref) => {
               </div>
             </div>
 
-            <div className="col-md-6">
-              <label className="form-label">Rack / Location </label>
-
-              <div className="input-group mb-3">
-                <input
-                  id="product_rack"
-                  name="product_rack"
-                  value={formData.rack ? formData.rack : ""}
-                  type="string"
-                  onChange={(e) => {
-                    errors["rack"] = "";
-                    setErrors({ ...errors });
-                    formData.rack = e.target.value;
-                    setFormData({ ...formData });
-                    console.log(formData);
-                  }}
-                  className="form-control"
-                  placeholder="Rack/Location"
-                />
-                {errors.rack && (
-                  <div style={{ color: "red" }}>
-
-                    {errors.rack}
-                  </div>
-                )}
-
+            {!store?.settings?.enable_warehouse_module ? (
+              <div className="col-md-6">
+                <label className="form-label">Rack / Location</label>
+                <div className="input-group mb-3">
+                  <input
+                    id="product_rack"
+                    name="product_rack"
+                    value={formData.rack ? formData.rack : ""}
+                    type="string"
+                    onChange={(e) => {
+                      formData.rack = e.target.value;
+                      setFormData({ ...formData });
+                    }}
+                    className="form-control"
+                    placeholder="Rack/Location"
+                  />
+                  {errors.rack && <div style={{ color: "red" }}>{errors.rack}</div>}
+                </div>
               </div>
-            </div>
+            ) : (
+              <div className="col-md-12">
+                <label className="form-label">Rack / Location</label>
+                <table className="table table-sm table-bordered" style={{ maxWidth: "500px" }}>
+                  <tbody>
+                    <tr>
+                      <td style={{ width: "220px" }}><b>Main Store</b></td>
+                      <td>
+                        <input
+                          type="text"
+                          className="form-control form-control-sm"
+                          value={productStores[localStorage.getItem('store_id')]?.warehouse_racks?.main_store || ""}
+                          onChange={(e) => {
+                            const storeId = localStorage.getItem('store_id');
+                            if (!productStores[storeId].warehouse_racks) {
+                              productStores[storeId].warehouse_racks = {};
+                            }
+                            productStores[storeId].warehouse_racks.main_store = e.target.value;
+                            setProductStores({ ...productStores });
+                          }}
+                          placeholder="Rack/Location"
+                        />
+                      </td>
+                    </tr>
+                    {warehouseList.map((wh) => (
+                      <tr key={wh.id}>
+                        <td><b>{wh.name} ({wh.code})</b></td>
+                        <td>
+                          <input
+                            type="text"
+                            className="form-control form-control-sm"
+                            value={productStores[localStorage.getItem('store_id')]?.warehouse_racks?.[wh.code] || ""}
+                            onChange={(e) => {
+                              const storeId = localStorage.getItem('store_id');
+                              if (!productStores[storeId].warehouse_racks) {
+                                productStores[storeId].warehouse_racks = {};
+                              }
+                              productStores[storeId].warehouse_racks[wh.code] = e.target.value;
+                              setProductStores({ ...productStores });
+                            }}
+                            placeholder="Rack/Location"
+                          />
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
 
             <div className="col-md-4">
               <label className="form-label">Category</label>

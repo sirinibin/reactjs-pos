@@ -775,33 +775,14 @@ const QuotationCreate = forwardRef((props, ref) => {
       },
     };
 
-    let Select = `select=id,rack,allow_duplicates,additional_keywords,search_label,set.name,item_code,prefix_part_number,country_name,brand_name,part_number,name,unit,name_in_arabic,product_stores.${localStorage.getItem('store_id')}.purchase_unit_price,product_stores.${localStorage.getItem('store_id')}.purchase_unit_price_with_vat,product_stores.${localStorage.getItem('store_id')}.retail_unit_price,product_stores.${localStorage.getItem('store_id')}.retail_unit_price_with_vat,product_stores.${localStorage.getItem('store_id')}.stock,product_stores.${localStorage.getItem('store_id')}.warehouse_stocks`;
+    let Select = `select=id,rack,allow_duplicates,additional_keywords,search_label,set.name,item_code,prefix_part_number,country_name,brand_name,part_number,name,unit,name_in_arabic,product_stores.${localStorage.getItem('store_id')}.purchase_unit_price,product_stores.${localStorage.getItem('store_id')}.purchase_unit_price_with_vat,product_stores.${localStorage.getItem('store_id')}.retail_unit_price,product_stores.${localStorage.getItem('store_id')}.retail_unit_price_with_vat,product_stores.${localStorage.getItem('store_id')}.stock,product_stores.${localStorage.getItem('store_id')}.warehouse_stocks,product_stores.${localStorage.getItem('store_id')}.warehouse_racks`;
 
-    // Fetch page 1 and page 2 in parallel
-    const urls = [
-      "/v1/product?" + Select + queryString + "&limit=200&page=1&sort=-country_name",
-      "/v1/product?" + Select + queryString + "&limit=200&page=2&sort=-country_name",
-      "/v1/product?" + Select + queryString + "&limit=200&page=3&sort=-country_name"
-    ];
-
-    const [result1, result2, result3] = await Promise.all([
-      fetch(urls[0], requestOptions),
-      fetch(urls[1], requestOptions),
-      fetch(urls[2], requestOptions)
-    ]);
-
-    const data1 = await result1.json();
-    const data2 = await result2.json();
-    const data3 = await result3.json();
+    const result = await fetch("/v1/product?" + Select + queryString + "&limit=100&sort=-country_name", requestOptions);
+    const data = await result.json();
     // Only update if this is the latest request
     if (latestRequestRef.current !== requestId) return;
 
-    // Combine results from both pages
-    let products = [
-      ...(data1.result || []),
-      ...(data2.result || []),
-      ...(data3.result || [])
-    ];
+    let products = data.result || [];
 
     if (!products || products.length === 0) {
       openProductSearchResult = false;
@@ -3670,11 +3651,18 @@ async function checkWarning(i) {
                                         {highlightWords(option.country_name, searchWords, isActive)}
                                       </div>
                                     }
-                                    {col.key === "rack" &&
-                                      <div style={{ ...columnStyle, width: getColumnWidth(col) }}>
-                                        {highlightWords(option.rack, searchWords, isActive)}
-                                      </div>
-                                    }
+                                    {col.key === "rack" && (() => {
+                                      if (store?.settings?.enable_warehouse_module) {
+                                        const storeId = localStorage.getItem("store_id");
+                                        const wRacks = option.product_stores?.[storeId]?.warehouse_racks;
+                                        const parts = [];
+                                        if (wRacks?.main_store) parts.push(`MS:${wRacks.main_store}`);
+                                        if (wRacks) Object.entries(wRacks).filter(([k]) => k !== "main_store").forEach(([k, v]) => { if (v) parts.push(`${k}:${v}`); });
+                                        const rackText = parts.join(" | ") || option.rack || "";
+                                        return <div style={{ ...columnStyle, width: getColumnWidth(col), whiteSpace: 'normal', overflow: 'visible' }} title={rackText}>{rackText}</div>;
+                                      }
+                                      return <div style={{ ...columnStyle, width: getColumnWidth(col) }}>{highlightWords(option.rack, searchWords, isActive)}</div>;
+                                    })()}
                                   </>)
                                 })}
                               </div>
