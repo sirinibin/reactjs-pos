@@ -517,6 +517,9 @@ const StatsSummary = ({ title, stats = {}, statsWithInfo = {}, defaultOpen = fal
         const boldSet = normalized
             ? new Set(normalized.filter(n => n.bold).map(n => n.label))
             : new Set();
+        const subMap = normalized
+            ? Object.fromEntries(normalized.filter(n => n.sub).map(n => [n.label, n.sub]))
+            : {};
         const allVisible = [...leftFields, ...rightFields]
             .filter(f => f.visible)
             .map(f => ({
@@ -524,6 +527,7 @@ const StatsSummary = ({ title, stats = {}, statsWithInfo = {}, defaultOpen = fal
                 value: typeof stats[f.label] !== 'undefined' ? stats[f.label] : (f.value ?? 0),
                 colorByValue: colorByValueSet.has(f.label),
                 bold: boldSet.has(f.label),
+                sub: subMap[f.label] || null,
             }));
         return generateSectionPdf(title, allVisible, infoMap, filters, store);
     }, [normalizeStatsWithInfo, leftFields, rightFields, stats, title, filters, store]);

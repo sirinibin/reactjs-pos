@@ -323,6 +323,15 @@ export function generateSectionPdf(title, visibleStats, infoMap, filters, store)
                 ? `${addCommasToInfoValue(Number(raw).toFixed(2))}%`
                 : `SAR ${addCommasToInfoValue(Number(raw).toFixed(2))}`;
         y = drawRow(doc, stat.label, valStr, y, !!stat.bold);
+        if (stat.sub) {
+            y = guard(doc, y, 6);
+            doc.setFont('helvetica', 'normal');
+            doc.setFontSize(7.5);
+            doc.setTextColor(120, 120, 120);
+            doc.text(S(stat.sub), PAGE_W - MR, y + 1, { align: 'right' });
+            y += 5;
+            doc.setTextColor(0, 0, 0);
+        }
     });
 
     // Detailed breakdowns
