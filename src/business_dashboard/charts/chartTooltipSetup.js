@@ -15,18 +15,27 @@ function storeData(data) {
 if (typeof window !== 'undefined' && !window.__cttReady) {
     window.__cttReady = true;
 
-    window.__cttClose = () => {
+    const hideTooltips = () => {
         document.querySelectorAll('.google-visualization-tooltip')
             .forEach(el => { el.style.display = 'none'; });
         clearTimeout(window.__cttTimer);
     };
 
-    window.__cttEnter = () => clearTimeout(window.__cttTimer);
+    window.__cttClose = hideTooltips;
 
+    // Auto-close 5 s after mouse leaves the action bar
+    window.__cttEnter = () => clearTimeout(window.__cttTimer);
     window.__cttLeave = () => {
         clearTimeout(window.__cttTimer);
-        window.__cttTimer = setTimeout(window.__cttClose, 5000);
+        window.__cttTimer = setTimeout(hideTooltips, 5000);
     };
+
+    // Click outside the tooltip → close immediately
+    document.addEventListener('mousedown', e => {
+        if (!e.target.closest('.google-visualization-tooltip')) {
+            hideTooltips();
+        }
+    });
 
     window.__cttPrint = key => {
         const d = _store[key];
