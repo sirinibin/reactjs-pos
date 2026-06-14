@@ -30,6 +30,7 @@ function tooltipHtml(title, titleColor, lines) {
 // from GET /v1/dashboard/products. Already sorted by total_revenue descending.
 export function TopProductsChart({ productSummaries, store }) {
     const qtnInvoiceAccounting = store?.settings?.quotation_invoice_accounting === true;
+    const vatPercent           = store?.vat_percent || 15;
 
     const data = useMemo(() => {
         const top = (productSummaries || []).slice(0, 10);
@@ -37,16 +38,21 @@ export function TopProductsChart({ productSummaries, store }) {
 
         const header = ["Product", "Revenue (SAR)", { role: "tooltip", type: "string", p: { html: true } }];
         const rows = top.map(r => {
+            const rev             = r.total_revenue || 0;
+            const revVat          = rev * vatPercent / (100 + vatPercent);
+            const revWithoutVAT   = rev - revVat;
             const lines = [
-                { label: "Revenue",      value: `SAR ${fmtT(r.total_revenue)}`, bold: true, color: "#74c0fc" },
+                { label: "Revenue (with VAT)",    value: `SAR ${fmtT(rev)}`, bold: true, color: "#74c0fc" },
+                { label: `VAT ${vatPercent}%`,    value: `− ${fmtT(revVat)}` },
+                { label: "Revenue (without VAT)", value: `SAR ${fmtT(revWithoutVAT)}`, bold: true },
                 { divider: true, label: "Formula", value: "Σ (unit_price × quantity)" },
                 { label: "Sales Orders", value: `${fmtT(r.sales_revenue)}` },
                 ...(qtnInvoiceAccounting ? [{ label: "Qtn. Invoice Orders", value: `${fmtT(r.qtn_revenue || 0)}` }] : []),
             ];
-            return [r.product_name, parseFloat((r.total_revenue || 0).toFixed(2)), tooltipHtml(r.product_name, "#74c0fc", lines)];
+            return [r.product_name, parseFloat(rev.toFixed(2)), tooltipHtml(r.product_name, "#74c0fc", lines)];
         });
         return [header, ...rows];
-    }, [productSummaries, qtnInvoiceAccounting]);
+    }, [productSummaries, qtnInvoiceAccounting, vatPercent]);
 
     if (!data) return <p className="text-muted small">No product sales data</p>;
     return (
@@ -69,7 +75,8 @@ export function TopProductsChart({ productSummaries, store }) {
 
 
 // categorySummaries: array of { category_name, sales, profit } from /v1/dashboard/categories
-export function CategoryRevenuePieChart({ categorySummaries }) {
+export function CategoryRevenuePieChart({ categorySummaries, store }) {
+    const vatPercent = store?.vat_percent || 15;
     const data = useMemo(() => {
         const entries = (categorySummaries || []).filter(c => c.sales > 0).slice(0, 12);
         if (entries.length === 0) return null;
@@ -77,18 +84,25 @@ export function CategoryRevenuePieChart({ categorySummaries }) {
         const grandTotal = entries.reduce((s, c) => s + c.sales, 0);
         const header = ["Category", "Revenue (SAR)", { role: "tooltip", type: "string", p: { html: true } }];
         const rows = entries.map(c => {
-            const pct = grandTotal > 0 ? ((c.sales / grandTotal) * 100).toFixed(1) : "0.0";
+            const pct             = grandTotal > 0 ? ((c.sales / grandTotal) * 100).toFixed(1) : "0.0";
+            const revVat          = c.sales * vatPercent / (100 + vatPercent);
+            const revWithoutVAT   = c.sales - revVat;
+            const profitVat       = c.profit * vatPercent / (100 + vatPercent);
+            const profitWithoutVAT = c.profit - profitVat;
             const lines = [
-                { label: "Revenue", value: `SAR ${fmtT(c.sales)}`, bold: true, color: "#74c0fc" },
-                { label: "Share",   value: `${pct}% of category revenue` },
-                { divider: true, label: "Formula", value: "product_stores.sales (server-aggregated)" },
-                { label: "Profit",  value: `${fmtT(c.profit)}` },
-                { label: "Margin",  value: c.sales > 0 ? `${((c.profit / c.sales) * 100).toFixed(1)}%` : "—" },
+                { label: "Revenue (with VAT)",    value: `SAR ${fmtT(c.sales)}`, bold: true, color: "#74c0fc" },
+                { label: `VAT ${vatPercent}%`,    value: `− ${fmtT(revVat)}` },
+                { label: "Revenue (without VAT)", value: `SAR ${fmtT(revWithoutVAT)}`, bold: true },
+                { divider: true, label: "Share",  value: `${pct}% of category revenue` },
+                { label: "Formula",               value: "product_stores.sales (server-aggregated)" },
+                { label: "Profit (with VAT)",     value: `${fmtT(c.profit)}` },
+                { label: "Profit (without VAT)",  value: `${fmtT(profitWithoutVAT)}` },
+                { label: "Margin",                value: c.sales > 0 ? `${((c.profit / c.sales) * 100).toFixed(1)}%` : "—" },
             ];
             return [c.category_name, parseFloat(c.sales.toFixed(2)), tooltipHtml(c.category_name, "#74c0fc", lines)];
         });
         return [header, ...rows];
-    }, [categorySummaries]);
+    }, [categorySummaries, vatPercent]);
 
     if (!data) return <p className="text-muted small">No category data</p>;
     return (
@@ -109,7 +123,8 @@ export function CategoryRevenuePieChart({ categorySummaries }) {
 }
 
 // categorySummaries: same array as CategoryRevenuePieChart
-export function CategoryMarginChart({ categorySummaries }) {
+export function CategoryMarginChart({ categorySummaries, store }) {
+    const vatPercent = store?.vat_percent || 15;
     const data = useMemo(() => {
         const entries = (categorySummaries || [])
             .filter(c => c.sales > 0)
@@ -120,17 +135,23 @@ export function CategoryMarginChart({ categorySummaries }) {
 
         const header = ["Category", "Profit Margin (%)", { role: "tooltip", type: "string", p: { html: true } }];
         const rows = entries.map(c => {
+            const revVat           = c.sales  * vatPercent / (100 + vatPercent);
+            const revWithoutVAT    = c.sales  - revVat;
+            const profitVat        = c.profit * vatPercent / (100 + vatPercent);
+            const profitWithoutVAT = c.profit - profitVat;
             const lines = [
-                { label: "Margin",  value: `${c.margin}%`, bold: true, color: "#1cc88a" },
+                { label: "Margin",                value: `${c.margin}%`, bold: true, color: "#1cc88a" },
                 { divider: true, label: "Formula", value: "(sales_profit ÷ sales) × 100" },
-                { label: "Revenue", value: `${fmtT(c.sales)}` },
-                { label: "Profit",  value: `${fmtT(c.profit)}` },
-                { label: "Source",  value: "server-aggregated (product_stores)" },
+                { label: "Revenue (with VAT)",    value: `${fmtT(c.sales)}` },
+                { label: "Revenue (without VAT)", value: `${fmtT(revWithoutVAT)}` },
+                { label: "Profit (with VAT)",     value: `${fmtT(c.profit)}` },
+                { label: "Profit (without VAT)",  value: `${fmtT(profitWithoutVAT)}` },
+                { label: "Source",                value: "server-aggregated (product_stores)" },
             ];
             return [c.category_name, c.margin, tooltipHtml(c.category_name, "#1cc88a", lines)];
         });
         return [header, ...rows];
-    }, [categorySummaries]);
+    }, [categorySummaries, vatPercent]);
 
     if (!data) return <p className="text-muted small">No margin data</p>;
     return (

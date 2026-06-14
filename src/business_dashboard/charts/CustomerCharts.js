@@ -29,6 +29,7 @@ function tooltipHtml(title, titleColor, lines) {
 // from GET /v1/dashboard/customers. Already sorted by total_amount descending.
 export function TopCustomersChart({ customerSummaries, store }) {
     const qtnInvoiceAccounting = store?.settings?.quotation_invoice_accounting === true;
+    const vatPercent           = store?.vat_percent || 15;
 
     const data = useMemo(() => {
         const top = (customerSummaries || []).slice(0, 10);
@@ -36,16 +37,21 @@ export function TopCustomersChart({ customerSummaries, store }) {
 
         const header = ["Customer", "Revenue (SAR)", { role: "tooltip", type: "string", p: { html: true } }];
         const rows = top.map(r => {
+            const total           = r.total_amount || 0;
+            const revVat          = total * vatPercent / (100 + vatPercent);
+            const revWithoutVAT   = total - revVat;
             const lines = [
-                { label: "Total Revenue",  value: `SAR ${fmtT(r.total_amount)}`, bold: true, color: "#74c0fc" },
-                { divider: true, label: "Formula", value: "Sum of net_total across all orders" },
-                { label: "Sales Orders",   value: `${fmtT(r.sales_amount)}` },
+                { label: "Total Revenue (with VAT)",    value: `SAR ${fmtT(total)}`, bold: true, color: "#74c0fc" },
+                { label: `VAT ${vatPercent}%`,          value: `− ${fmtT(revVat)}` },
+                { label: "Total Revenue (without VAT)", value: `SAR ${fmtT(revWithoutVAT)}`, bold: true },
+                { divider: true, label: "Formula",      value: "Sum of net_total across all orders" },
+                { label: "Sales Orders",                value: `${fmtT(r.sales_amount)}` },
                 ...(qtnInvoiceAccounting ? [{ label: "Qtn. Invoice Orders", value: `${fmtT(r.qtn_amount || 0)}` }] : []),
             ];
-            return [r.customer_name, parseFloat((r.total_amount || 0).toFixed(2)), tooltipHtml(r.customer_name, "#74c0fc", lines)];
+            return [r.customer_name, parseFloat(total.toFixed(2)), tooltipHtml(r.customer_name, "#74c0fc", lines)];
         });
         return [header, ...rows];
-    }, [customerSummaries, qtnInvoiceAccounting]);
+    }, [customerSummaries, qtnInvoiceAccounting, vatPercent]);
 
     if (!data) return <p className="text-muted small">No customer data</p>;
     return (

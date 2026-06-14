@@ -66,7 +66,8 @@ function tooltipHtml(title, titleColor, lines) {
 }
 
 // vendorSummaries: array of { vendor_name, purchase_amount } from /v1/dashboard/vendors
-export function VendorSpendPieChart({ vendorSummaries }) {
+export function VendorSpendPieChart({ vendorSummaries, store }) {
+    const vatPercent = store?.vat_percent || 15;
     const data = useMemo(() => {
         const entries = (vendorSummaries || []).filter(v => v.purchase_amount > 0);
         if (entries.length === 0) return null;
@@ -74,16 +75,20 @@ export function VendorSpendPieChart({ vendorSummaries }) {
         const grandTotal = entries.reduce((s, v) => s + v.purchase_amount, 0);
         const header = ["Vendor", "Amount (SAR)", { role: "tooltip", type: "string", p: { html: true } }];
         const rows = entries.map(v => {
-            const pct = grandTotal > 0 ? ((v.purchase_amount / grandTotal) * 100).toFixed(1) : "0.0";
+            const pct              = grandTotal > 0 ? ((v.purchase_amount / grandTotal) * 100).toFixed(1) : "0.0";
+            const spendVat         = v.purchase_amount * vatPercent / (100 + vatPercent);
+            const spendWithoutVAT  = v.purchase_amount - spendVat;
             const lines = [
-                { label: "Spend",  value: `SAR ${fmtT(v.purchase_amount)}`, bold: true, color: "#36b9cc" },
-                { label: "Share",  value: `${pct}% of total purchase spend` },
-                { divider: true, label: "Formula", value: "Σ net_total across all purchase orders" },
+                { label: "Spend (with VAT)",    value: `SAR ${fmtT(v.purchase_amount)}`, bold: true, color: "#36b9cc" },
+                { label: `VAT ${vatPercent}%`,  value: `− ${fmtT(spendVat)}` },
+                { label: "Spend (without VAT)", value: `SAR ${fmtT(spendWithoutVAT)}`, bold: true },
+                { divider: true, label: "Share", value: `${pct}% of total purchase spend` },
+                { label: "Formula",              value: "Σ net_total across all purchase orders" },
             ];
             return [v.vendor_name, parseFloat(v.purchase_amount.toFixed(2)), tooltipHtml(v.vendor_name, "#36b9cc", lines)];
         });
         return [header, ...rows];
-    }, [vendorSummaries]);
+    }, [vendorSummaries, vatPercent]);
 
     if (!data) return <p className="text-muted small">No purchase data</p>;
     return (
@@ -114,6 +119,7 @@ export function PurchaseVsSalesChart({
 }) {
     const qtnInvoiceAccounting       = store?.settings?.quotation_invoice_accounting === true;
     const disablePurchasesOnAccounts = store?.settings?.disable_purchases_on_accounts === true;
+    const vatPercent                 = store?.vat_percent || 15;
 
     const data = useMemo(() => {
         function buildMap(arr, dateFn, valueFn) {
@@ -183,25 +189,36 @@ export function PurchaseVsSalesChart({
                 ? exp - depFund + acctPur - acctPurRet
                 : exp + pur - purRet;
 
+            const revenueVat        = revenue * vatPercent / (100 + vatPercent);
+            const revenueWithoutVAT = revenue - revenueVat;
+            const expenseVat        = expense * vatPercent / (100 + vatPercent);
+            const expenseWithoutVAT = expense - expenseVat;
+
             const revLines = [
-                { label: "Net Revenue",      value: `SAR ${fmtT(revenue)}`, bold: true, color: "#69db7c" },
-                { divider: true, label: "Gross Sales",   value: `${fmtT(sales)}` },
+                { label: "Net Revenue (with VAT)",    value: `SAR ${fmtT(revenue)}`, bold: true, color: "#69db7c" },
+                { label: `VAT ${vatPercent}%`,        value: `− ${fmtT(revenueVat)}` },
+                { label: "Net Revenue (without VAT)", value: `SAR ${fmtT(revenueWithoutVAT)}`, bold: true },
+                { divider: true, label: "Gross Sales", value: `${fmtT(sales)}` },
                 ...(qtnInvoiceAccounting ? [{ label: "Qtn. Invoice Sales", value: `+ ${fmtT(qtnInv)}` }] : []),
-                { label: "Sales Returns",    value: `− ${fmtT(ret)}` },
+                { label: "Sales Returns",              value: `− ${fmtT(ret)}` },
                 ...(qtnInvoiceAccounting ? [{ label: "Qtn. Returns",       value: `− ${fmtT(qtnRet)}` }] : []),
             ];
 
             const expLines = disablePurchasesOnAccounts ? [
-                { label: "Total Expense",          value: `SAR ${fmtT(expense)}`, bold: true, color: "#ffa8a8" },
-                { divider: true, label: "Expenses", value: `${fmtT(exp)}` },
-                { label: "Purchase Return Fund",   value: `− ${fmtT(depFund)}` },
-                { label: "Accounted Purchases",    value: `+ ${fmtT(acctPur)}` },
-                { label: "Accounted Pur. Returns", value: `− ${fmtT(acctPurRet)}` },
+                { label: "Total Expense (with VAT)",    value: `SAR ${fmtT(expense)}`, bold: true, color: "#ffa8a8" },
+                { label: `VAT ${vatPercent}%`,          value: `− ${fmtT(expenseVat)}` },
+                { label: "Total Expense (without VAT)", value: `SAR ${fmtT(expenseWithoutVAT)}`, bold: true },
+                { divider: true, label: "Expenses",     value: `${fmtT(exp)}` },
+                { label: "Purchase Return Fund",        value: `− ${fmtT(depFund)}` },
+                { label: "Accounted Purchases",         value: `+ ${fmtT(acctPur)}` },
+                { label: "Accounted Pur. Returns",      value: `− ${fmtT(acctPurRet)}` },
             ] : [
-                { label: "Total Expense",    value: `SAR ${fmtT(expense)}`, bold: true, color: "#ffa8a8" },
-                { divider: true, label: "Expenses",         value: `${fmtT(exp)}` },
-                { label: "Purchases",        value: `+ ${fmtT(pur)}` },
-                { label: "Purchase Returns", value: `− ${fmtT(purRet)}` },
+                { label: "Total Expense (with VAT)",    value: `SAR ${fmtT(expense)}`, bold: true, color: "#ffa8a8" },
+                { label: `VAT ${vatPercent}%`,          value: `− ${fmtT(expenseVat)}` },
+                { label: "Total Expense (without VAT)", value: `SAR ${fmtT(expenseWithoutVAT)}`, bold: true },
+                { divider: true, label: "Expenses",     value: `${fmtT(exp)}` },
+                { label: "Purchases",                   value: `+ ${fmtT(pur)}` },
+                { label: "Purchase Returns",            value: `− ${fmtT(purRet)}` },
             ];
 
             return [
@@ -216,7 +233,7 @@ export function PurchaseVsSalesChart({
         return [header, ...rows];
     }, [orders, returns, purchases, purchaseReturns, expenses, quotations, quotationSalesReturns,
         accountedPurchases, accountedPurchaseReturns, customerDeposits,
-        qtnInvoiceAccounting, disablePurchasesOnAccounts]);
+        qtnInvoiceAccounting, disablePurchasesOnAccounts, vatPercent]);
 
     if (!data) return <p className="text-muted small">No data</p>;
     return (

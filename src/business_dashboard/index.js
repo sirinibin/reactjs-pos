@@ -716,7 +716,7 @@ export default function BusinessDashboard() {
                             <div className="row">
                                 <div className="col-lg-6">
                                     <ChartCard>
-                                        <CategoryRevenuePieChart categorySummaries={categorySummaries} />
+                                        <CategoryRevenuePieChart categorySummaries={categorySummaries} store={store} />
                                     </ChartCard>
                                 </div>
                                 <div className="col-lg-6">
@@ -747,14 +747,14 @@ export default function BusinessDashboard() {
                                 </div>
                                 <div className="col-lg-6">
                                     <ChartCard>
-                                        <Last30DaysSalesChart orders={synOrders} />
+                                        <Last30DaysSalesChart orders={synOrders} store={store} />
                                     </ChartCard>
                                 </div>
                             </div>
                             <div className="row">
                                 <div className="col-12">
                                     <ChartCard>
-                                        <SalesVsReturnsChart orders={synOrders} returns={synReturns} />
+                                        <SalesVsReturnsChart orders={synOrders} returns={synReturns} store={store} />
                                     </ChartCard>
                                 </div>
                             </div>
@@ -801,12 +801,12 @@ export default function BusinessDashboard() {
                             <div className="row">
                                 <div className="col-lg-6">
                                     <ChartCard>
-                                        <CategoryRevenuePieChart categorySummaries={categorySummaries} />
+                                        <CategoryRevenuePieChart categorySummaries={categorySummaries} store={store} />
                                     </ChartCard>
                                 </div>
                                 <div className="col-lg-6">
                                     <ChartCard>
-                                        <CategoryMarginChart categorySummaries={categorySummaries} />
+                                        <CategoryMarginChart categorySummaries={categorySummaries} store={store} />
                                     </ChartCard>
                                 </div>
                             </div>
@@ -871,7 +871,7 @@ export default function BusinessDashboard() {
                                 </div>
                                 <div className="col-lg-6">
                                     <ChartCard>
-                                        <VendorSpendPieChart vendorSummaries={vendorSummaries} />
+                                        <VendorSpendPieChart vendorSummaries={vendorSummaries} store={store} />
                                     </ChartCard>
                                 </div>
                             </div>
