@@ -231,6 +231,11 @@ const StatsSummary = ({ title, stats = {}, statsWithInfo = {}, defaultOpen = fal
         }
     }, [title, filters, store]);
 
+    const isNumericInfoValue = (v) => {
+        const s = String(v ?? '').trim();
+        return /^[+\-−\d]/.test(s) || /^SAR\s/i.test(s);
+    };
+
     const renderInfoPopover = useCallback((fieldLabel, info, noActions = false) => {
         const lines = Array.isArray(info) ? info : null;
         const field = { label: fieldLabel, info };
@@ -342,7 +347,7 @@ const StatsSummary = ({ title, stats = {}, statsWithInfo = {}, defaultOpen = fal
                                         </td>
                                         <td style={{
                                             padding: line.divider ? '6px 14px 2px 4px' : '1px 14px 1px 4px',
-                                            textAlign: 'right',
+                                            textAlign: isNumericInfoValue(line.value) ? 'right' : 'left',
                                             fontWeight: line.bold ? 700 : 400,
                                             color: line.color || '#f8f9fa',
                                             whiteSpace: 'nowrap',

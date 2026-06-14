@@ -33,6 +33,7 @@ export function SalesByHourChart({ dailyData }) {
                 vAxis: { title: "Revenue (SAR)" },
                 hAxis: { title: "Hour" },
                 chartArea: { width: "80%", height: "65%" },
+                tooltip: { trigger: 'selection' },
             }}
             width="100%"
             height="320px"
@@ -64,6 +65,7 @@ export function SalesByDayOfWeekChart({ dailyData }) {
                 legend: { position: "none" },
                 vAxis: { title: "Revenue (SAR)" },
                 chartArea: { width: "80%", height: "65%" },
+                tooltip: { trigger: 'selection' },
             }}
             width="100%"
             height="320px"
@@ -91,6 +93,7 @@ export function SalesCalendarChart({ dailyData }) {
                     cellSize: 14,
                     dayOfWeekLabel: { fontName: "Arial", fontSize: 10 },
                 },
+                tooltip: { trigger: 'none' },
             }}
             width="100%"
             height="180px"

@@ -167,7 +167,15 @@ function drawRow(doc, label, value, y, isTotal, small = false, noBottomRule = fa
 
     if (value !== undefined && value !== null) {
         const valStr = S(stripSarBreakdown(addCommasToInfoValue(String(value)), isTotal));
-        doc.text(valStr, PAGE_W - MR - 2, ty, { align: 'right' });
+        const sv = valStr.trim();
+        const isNumeric = !sv || /^[+\-−\d]/.test(sv) || /^SAR\s/i.test(sv);
+        if (isNumeric) {
+            doc.text(valStr, PAGE_W - MR - 2, ty, { align: 'right' });
+        } else {
+            const labelStr = (label !== undefined && label !== '') ? S(String(label)) + ':' : '';
+            const labelW = labelStr ? doc.getTextWidth(labelStr) : 0;
+            doc.text(valStr, ML + 2 + labelW + 3, ty);
+        }
     }
 
     if (!noBottomRule) {
