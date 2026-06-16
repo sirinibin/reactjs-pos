@@ -48,6 +48,7 @@ function DeliveryNoteIndex(props) {
   let [vatPrice, setVatPrice] = useState(0.00);
   let [totalDiscount, setTotalDiscount] = useState(0.00);
   let [totalShippingFees, setTotalShippingFees] = useState(0.00);
+  const [invoicedCount, setInvoicedCount] = useState(0);
 
   // eslint-disable-next-line no-unused-vars
   const [statsOpen, setStatsOpen] = useState(false);
@@ -373,6 +374,7 @@ function DeliveryNoteIndex(props) {
         setVatPrice(data.meta.vat_price || 0);
         setTotalDiscount(data.meta.discount || 0);
         setTotalShippingFees(data.meta.shipping_handling_fees || 0);
+        setInvoicedCount(data.meta.invoiced_count || 0);
 
       })
       .catch((error) => {
@@ -514,6 +516,7 @@ function DeliveryNoteIndex(props) {
     { key: "date", label: "Date", fieldName: "date", visible: true },
     { key: "customer", label: "Customer", fieldName: "customer_name", visible: true },
     { key: "net_total", label: "Net Total", fieldName: "net_total", visible: true },
+    { key: "invoiced", label: "Invoiced", fieldName: "invoiced", visible: true },
     { key: "order_code", label: "Sales ID", fieldName: "order_code", visible: true },
     { key: "created_by", label: "Created By", fieldName: "created_by", visible: true },
     { key: "created_at", label: "Created At", fieldName: "created_at", visible: true },
@@ -789,6 +792,7 @@ function DeliveryNoteIndex(props) {
                 }}
                 stats={{
                   "Total Delivery Note": totalDeliveryNote,
+                  "Invoiced Count": invoicedCount,
                   "VAT": vatPrice,
                   "Discount": totalDiscount,
                   "Shipping/Handling Fees": totalShippingFees,
@@ -1064,6 +1068,17 @@ function DeliveryNoteIndex(props) {
                           return (<>
                             {(col.key === "actions" || col.key === "actions_end") && <th></th>}
                             {col.key === "select" && enableSelection && <th></th>}
+                            {col.key === "invoiced" && <th>
+                              <select
+                                onChange={(e) =>
+                                  searchByFieldValue("invoiced", e.target.value)
+                                }
+                              >
+                                <option value="">ALL</option>
+                                <option value="1">YES</option>
+                                <option value="0">NO</option>
+                              </select>
+                            </th>}
                             {col.key !== "actions" &&
                               col.key !== "select" &&
                               col.key !== "date" &&
@@ -1071,6 +1086,7 @@ function DeliveryNoteIndex(props) {
                               col.key !== "created_at" &&
                               col.key !== "actions_end" &&
                               col.key !== "customer" &&
+                              col.key !== "invoiced" &&
                               <th><input
                                 type="text"
                                 id={"delivery_note_" + col.fieldName}
@@ -1574,6 +1590,12 @@ function DeliveryNoteIndex(props) {
                                 </td>}
                                 {(col.fieldName === "net_total") && <td style={{ width: "auto", whiteSpace: "nowrap" }}>
                                   {deliverynote.net_total ? deliverynote.net_total.toFixed(2) : "-"}
+                                </td>}
+                                {(col.fieldName === "invoiced") && <td style={{ width: "auto", whiteSpace: "nowrap", textAlign: "center" }}>
+                                  {deliverynote.order_id && deliverynote.order_id !== "000000000000000000000000"
+                                    ? <span style={{ background: "#d1fae5", color: "#065f46", padding: "2px 8px", borderRadius: "12px", fontSize: "12px", fontWeight: 600 }}>YES</span>
+                                    : <span style={{ background: "#fee2e2", color: "#991b1b", padding: "2px 8px", borderRadius: "12px", fontSize: "12px", fontWeight: 600 }}>NO</span>
+                                  }
                                 </td>}
                                 {(col.fieldName === "order_code") && <td style={{ width: "auto", whiteSpace: "nowrap" }}>
                                   {deliverynote.order_code && <span style={{ cursor: "pointer", color: "blue" }} onClick={() => {

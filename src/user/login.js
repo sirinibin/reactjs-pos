@@ -92,7 +92,7 @@ function Login() {
             })
             .catch(error => {
                 setProcessing(false);
-                setErrors(error);
+                setErrors(error || {});
             });
     }
 
@@ -208,7 +208,7 @@ function Login() {
             })
             .catch(error => {
                 setProcessing(false);
-                setErrors(error);
+                setErrors(error || {});
             });
     }
 
@@ -252,7 +252,7 @@ function Login() {
                 setProcessing(false);
                 console.log("Inside catch");
                 console.log(error);
-                setErrors(error);
+                setErrors(error || {});
                 console.error('There was an error!', error);
             });
 

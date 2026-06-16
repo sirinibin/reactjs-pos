@@ -65,6 +65,8 @@ function QuotationIndex(props) {
   let [totalQuotation, setTotalQuotation] = useState(0.00);
   let [profit, setProfit] = useState(0.00);
   let [loss, setLoss] = useState(0.00);
+  const [invoicedCount, setInvoicedCount] = useState(0);
+  const [invoicedAmount, setInvoicedAmount] = useState(0.00);
 
   //list
   const [quotationList, setQuotationList] = useState([]);
@@ -522,6 +524,8 @@ function QuotationIndex(props) {
         setTotalQuotation(data.meta.total_quotation);
         setProfit(data.meta.profit);
         setLoss(data.meta.loss);
+        setInvoicedCount(data.meta.invoiced_count || 0);
+        setInvoicedAmount(data.meta.invoiced_amount || 0);
 
         //invoice meta
 
@@ -791,6 +795,7 @@ function QuotationIndex(props) {
     { key: "credit_balance", label: "Credit Balance", fieldName: "balance_amount", visible: true },
     { key: "reported_to_zatca", label: "Reported to Zatca", fieldName: "reported_to_zatca", visible: true },
     { key: "type", label: "Type", fieldName: "type", visible: true },
+    { key: "invoiced", label: "Invoiced", fieldName: "invoiced", visible: true },
     { key: "order_code", label: "Sales ID", fieldName: "order_code", visible: true },
     { key: "payment_status", label: "Payment Status", fieldName: "payment_status", visible: true },
     { key: "payment_methods", label: "Payment Methods", fieldName: "payment_methods", visible: true },
@@ -848,7 +853,7 @@ function QuotationIndex(props) {
         }
       }
 
-      alert("Setting default columns")
+      // alert("Setting default columns")
 
       setColumns(defaultColumns);
     }
@@ -1164,6 +1169,8 @@ function QuotationIndex(props) {
                 }}
                 stats={{
                   "Quotation": totalQuotation,
+                  "Invoiced Count": invoicedCount,
+                  "Invoiced Amount": invoicedAmount,
                   "Profit": profit,
                   "Profit %": profit && totalQuotation ? (profit / totalQuotation) * 100 : "",
                   "Loss": loss,
@@ -1426,6 +1433,17 @@ function QuotationIndex(props) {
                           return (<>
                             {(col.key === "actions" || col.key === "actions_end") && <th></th>}
                             {col.key === "select" && enableSelection && <th></th>}
+                            {col.key === "invoiced" && <th>
+                              <select
+                                onChange={(e) =>
+                                  searchByFieldValue("invoiced", e.target.value)
+                                }
+                              >
+                                <option value="">ALL</option>
+                                <option value="1">YES</option>
+                                <option value="0">NO</option>
+                              </select>
+                            </th>}
                             {col.key !== "actions" &&
                               col.key !== "select" &&
                               col.key !== "date" &&
@@ -1438,6 +1456,7 @@ function QuotationIndex(props) {
                               col.key !== "customer" &&
                               col.key !== "type" &&
                               col.key !== "status" &&
+                              col.key !== "invoiced" &&
                               <th><input
                                 type="text"
                                 id={"quotation_" + col.fieldName}
@@ -1894,6 +1913,7 @@ function QuotationIndex(props) {
                             ) : null}
                           </b>
                         </th>
+                        <th><b>Invoiced</b></th>
                         <th>
                           <b
                             style={{
@@ -2259,6 +2279,17 @@ function QuotationIndex(props) {
                           </select>
                         </th>
                         <th>
+                          <select
+                            onChange={(e) =>
+                              searchByFieldValue("invoiced", e.target.value)
+                            }
+                          >
+                            <option value="">ALL</option>
+                            <option value="1">YES</option>
+                            <option value="0">NO</option>
+                          </select>
+                        </th>
+                        <th>
                           <input
                             type="text"
                             id="order_code"
@@ -2514,6 +2545,12 @@ function QuotationIndex(props) {
                                 </td>}
                                 {(col.fieldName === "code") && <td style={{ width: "auto", whiteSpace: "nowrap" }}>
                                   {quotation.code}
+                                </td>}
+                                {(col.fieldName === "invoiced") && <td style={{ width: "auto", whiteSpace: "nowrap", textAlign: "center" }}>
+                                  {quotation.order_id && quotation.order_id !== "000000000000000000000000"
+                                    ? <span style={{ background: "#d1fae5", color: "#065f46", padding: "2px 8px", borderRadius: "12px", fontSize: "12px", fontWeight: 600 }}>YES</span>
+                                    : <span style={{ background: "#fee2e2", color: "#991b1b", padding: "2px 8px", borderRadius: "12px", fontSize: "12px", fontWeight: 600 }}>NO</span>
+                                  }
                                 </td>}
                                 {(col.fieldName === "order_code") && <td style={{ width: "auto", whiteSpace: "nowrap" }}>
                                   {quotation.order_code && <span style={{ cursor: "pointer", color: "blue" }} onClick={() => {

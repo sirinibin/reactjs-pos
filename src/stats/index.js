@@ -754,6 +754,56 @@ const StatsIndex = forwardRef((props, ref) => {
 
     //End Payables
 
+    // ── 6-Month Forecast ──────────────────────────────────────────────────────
+    const [revForecastRows,  setRevForecastRows]  = useState([]);
+    const [expForecastRows,  setExpForecastRows]  = useState([]);
+    const [profForecastRows, setProfForecastRows] = useState([]);
+
+    function parseCSVRows(text) {
+        if (!text?.trim()) return [];
+        const lines = text.trim().split('\n');
+        if (lines.length < 2) return [];
+        const headers = lines[0].split(',').map(h => h.trim().replace(/^"|"$/g, ''));
+        return lines.slice(1).filter(l => l.trim()).map(line => {
+            const vals = line.split(',');
+            const row  = {};
+            headers.forEach((h, i) => { row[h] = vals[i]?.trim() || ''; });
+            return row;
+        });
+    }
+
+    async function fetchForecastCSV(reportKey) {
+        const storeId = localStorage.getItem("store_id");
+        if (!storeId) return [];
+        const token = localStorage.getItem("access_token");
+        try {
+            const res = await fetch(
+                `/v1/bi/report-result/download?store_id=${storeId}&report_key=${reportKey}&format=csv`,
+                { headers: { "Content-Type": "application/json", Authorization: token } }
+            );
+            if (!res.ok) return [];
+            const text = await res.text();
+            return parseCSVRows(text);
+        } catch (e) {
+            return [];
+        }
+    }
+
+    useEffect(() => {
+        (async () => {
+            const [rev, exp, prof] = await Promise.all([
+                fetchForecastCSV("revenue_forecast_6m"),
+                fetchForecastCSV("expense_forecast_6m"),
+                fetchForecastCSV("profit_forecast_6m"),
+            ]);
+            setRevForecastRows(rev);
+            setExpForecastRows(exp);
+            setProfForecastRows(prof);
+        })();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
+    // ── End 6-Month Forecast ──────────────────────────────────────────────────
+
     //Quotation + Qtn. Sales
     let [totalQuotation, setTotalQuotation] = useState(0.00);
     let [quotationProfit, setQuotationProfit] = useState(0.00);
@@ -999,6 +1049,9 @@ const StatsIndex = forwardRef((props, ref) => {
         { key: "qtn_sales_return", label: "Qtn. Sales Return Summary", visible: true },
         { key: "receivables", label: "Receivables Summary", visible: true },
         { key: "payables", label: "Payables Summary", visible: true },
+        { key: "revenue_forecast", label: "Revenue Forecast (Next 6 Months)", visible: true },
+        { key: "expense_forecast", label: "Expense Forecast (Next 6 Months)", visible: true },
+        { key: "profit_forecast", label: "Profit / Loss Forecast (Next 6 Months)", visible: true },
     ], []);
     const [sections, setSections] = useState(defaultSections);
     const [showSectionSettings, setShowSectionSettings] = useState(false);
@@ -2012,6 +2065,174 @@ const StatsIndex = forwardRef((props, ref) => {
                             </div>
                         </div>
                     )}
+                    {sections.find(s => s.key === "revenue_forecast")?.visible !== false && (() => {
+                        const revQtnAccounting = revForecastRows.length > 0 && parseInt(revForecastRows[0].qtn_accounting, 10) === 1;
+
+                        const totalGross    = revForecastRows.reduce((s, r) => s + (parseFloat(r.predicted_gross_sales)       || 0), 0);
+                        const totalRet      = revForecastRows.reduce((s, r) => s + (parseFloat(r.predicted_sales_returns)     || 0), 0);
+                        const totalQtn      = revForecastRows.reduce((s, r) => s + (parseFloat(r.predicted_qtn_sales)         || 0), 0);
+                        const totalQtnRet   = revForecastRows.reduce((s, r) => s + (parseFloat(r.predicted_qtn_sales_returns) || 0), 0);
+                        const totalRev      = revForecastRows.reduce((s, r) => s + (parseFloat(r.predicted_revenue)           || 0), 0);
+                        const revVat        = totalRev * vatPercent / (100 + vatPercent);
+                        const revWithoutVat = totalRev - revVat;
+
+                        // Per-month component breakdown (mirrors P&L tooltip exactly)
+                        const revMonthlyInfo = revForecastRows.flatMap(r => {
+                            const gross  = parseFloat(r.predicted_gross_sales)       || 0;
+                            const ret    = parseFloat(r.predicted_sales_returns)     || 0;
+                            const qtn    = parseFloat(r.predicted_qtn_sales)         || 0;
+                            const qtnret = parseFloat(r.predicted_qtn_sales_returns) || 0;
+                            const rev    = parseFloat(r.predicted_revenue)           || 0;
+                            const vat    = rev * vatPercent / (100 + vatPercent);
+                            const label  = `${r.month_name || ''} ${r.year || ''}`.trim();
+                            return [
+                                { divider: true, label, value: "" },
+                                { label: "Gross Sales",   value: `${trimTo2Decimals(gross)}` },
+                                ...(revQtnAccounting ? [{ label: "Qtn. Invoice Sales", value: `+ ${trimTo2Decimals(qtn)}` }] : []),
+                                { label: "Sales Returns", value: `− ${trimTo2Decimals(ret)}` },
+                                ...(revQtnAccounting ? [{ label: "Qtn. Sales Returns", value: `− ${trimTo2Decimals(qtnret)}` }] : []),
+                                { label: "= Revenue (with VAT)",    value: `SAR ${trimTo2Decimals(rev)}`,      bold: true, color: "#74c0fc" },
+                                { label: `VAT ${vatPercent}%`,      value: `− ${trimTo2Decimals(vat)}` },
+                                { label: "= Revenue (without VAT)", value: `SAR ${trimTo2Decimals(rev - vat)}`, bold: true, color: "#74c0fc" },
+                            ];
+                        });
+
+                        return (
+                            <div className="row mt-3" style={{ order: sections.findIndex(s => s.key === "revenue_forecast") }}>
+                                <div className="col">
+                                    <StatsSummary store={store}
+                                        title="Revenue Forecast (Next 6 Months)"
+                                        storageKey="stats_revenue_forecast_summary"
+                                        stats={{
+                                            "Total 6-Month Predicted Revenue": totalRev,
+                                            [`Revenue w/o VAT ${vatPercent}%`]: revWithoutVat,
+                                        }}
+                                        statsWithInfo={[
+                                            { label: "Total 6-Month Predicted Revenue", value: totalRev, sub: `w/o VAT: ${trimTo2Decimals(revWithoutVat)}`, info: [
+                                                { label: "What it is", value: "Predicted total sales revenue (with VAT) for the next 6 months — same P&L formula: Gross Sales − Sales Returns", bold: true, color: "#74c0fc" },
+                                                { divider: true, label: "6-Month Component Totals", value: "" },
+                                                { label: "Gross Sales",   value: `${trimTo2Decimals(totalGross)}` },
+                                                ...(revQtnAccounting ? [{ label: "Qtn. Invoice Sales", value: `+ ${trimTo2Decimals(totalQtn)}` }] : []),
+                                                { label: "Sales Returns", value: `− ${trimTo2Decimals(totalRet)}` },
+                                                ...(revQtnAccounting ? [{ label: "Qtn. Sales Returns", value: `− ${trimTo2Decimals(totalQtnRet)}` }] : []),
+                                                { divider: true, label: "= Revenue (with VAT)", value: `SAR ${trimTo2Decimals(totalRev)}`, bold: true, color: "#74c0fc" },
+                                                { label: `VAT ${vatPercent}%`, value: `− ${trimTo2Decimals(revVat)}` },
+                                                { divider: true, label: "= Revenue (without VAT)", value: `SAR ${trimTo2Decimals(revWithoutVat)}`, bold: true, color: "#74c0fc" },
+                                                ...revMonthlyInfo,
+                                            ]},
+                                            { label: `Revenue w/o VAT ${vatPercent}%`, value: revWithoutVat, sub: `VAT portion: ${trimTo2Decimals(revVat)}`, info: [
+                                                { label: "What it is", value: `Revenue excluding the embedded ${vatPercent}% VAT portion`, bold: true, color: "#74c0fc" },
+                                                { label: "Formula", value: `Revenue × ${vatPercent} ÷ (100 + ${vatPercent})` },
+                                                { divider: true, label: "Revenue (with VAT)", value: `${trimTo2Decimals(totalRev)}` },
+                                                { label: `VAT ${vatPercent}%`, value: `− ${trimTo2Decimals(revVat)}` },
+                                                { divider: true, label: "= Revenue (without VAT)", value: `SAR ${trimTo2Decimals(revWithoutVat)}`, bold: true, color: "#74c0fc" },
+                                            ]},
+                                        ]}
+                                        defaultOpen={true}
+                                        filters={statsFilters}
+                                        onToggle={() => {}}
+                                    />
+                                </div>
+                            </div>
+                        );
+                    })()}
+                    {sections.find(s => s.key === "expense_forecast")?.visible !== false && (() => {
+                        const totalExp       = expForecastRows.reduce((s, r) => s + (parseFloat(r.predicted_expense) || 0), 0);
+                        const expVat         = totalExp * vatPercent / (100 + vatPercent);
+                        const expWithoutVat  = totalExp - expVat;
+                        const expInfo = expForecastRows.map(r => {
+                            const v   = parseFloat(r.predicted_expense) || 0;
+                            const vat = v * vatPercent / (100 + vatPercent);
+                            return {
+                                label: `${r.month_name || ''} ${r.year || ''}`.trim(),
+                                value: `SAR ${trimTo2Decimals(v)} (w/o VAT: ${trimTo2Decimals(v - vat)})`,
+                                color: "#ffa8a8",
+                            };
+                        });
+                        return (
+                            <div className="row mt-3" style={{ order: sections.findIndex(s => s.key === "expense_forecast") }}>
+                                <div className="col">
+                                    <StatsSummary store={store}
+                                        title="Expense Forecast (Next 6 Months)"
+                                        storageKey="stats_expense_forecast_summary"
+                                        stats={{
+                                            "Total 6-Month Predicted Expense": totalExp,
+                                            [`Expense w/o VAT ${vatPercent}%`]: expWithoutVat,
+                                        }}
+                                        statsWithInfo={[
+                                            { label: "Total 6-Month Predicted Expense", value: totalExp, sub: `w/o VAT: ${trimTo2Decimals(expWithoutVat)}`, info: [
+                                                { label: "What it is", value: "Predicted total operating expense (with VAT) for the next 6 months — same formula as P&L Statement: Expenses + Purchases − Purchase Returns", bold: true, color: "#ffa8a8" },
+                                                { divider: true, label: "Monthly Breakdown (with VAT)", value: "" },
+                                                ...expInfo,
+                                                { divider: true, label: "= 6-Month Total (with VAT)", value: `SAR ${trimTo2Decimals(totalExp)}`, bold: true, color: "#ffa8a8" },
+                                                { label: `VAT ${vatPercent}%`, value: `− ${trimTo2Decimals(expVat)}` },
+                                                { divider: true, label: "= 6-Month Total (without VAT)", value: `SAR ${trimTo2Decimals(expWithoutVat)}`, bold: true, color: "#ffa8a8" },
+                                            ]},
+                                            { label: `Expense w/o VAT ${vatPercent}%`, value: expWithoutVat, sub: `VAT portion: ${trimTo2Decimals(expVat)}`, info: [
+                                                { label: "What it is", value: `Expense excluding the embedded ${vatPercent}% VAT portion`, bold: true, color: "#ffa8a8" },
+                                                { label: "Formula", value: `Expense × 100 ÷ (100 + ${vatPercent})` },
+                                                { divider: true, label: "Expense (with VAT)", value: `${trimTo2Decimals(totalExp)}` },
+                                                { label: `VAT ${vatPercent}%`, value: `− ${trimTo2Decimals(expVat)}` },
+                                                { divider: true, label: "= Expense (without VAT)", value: `SAR ${trimTo2Decimals(expWithoutVat)}`, bold: true, color: "#ffa8a8" },
+                                            ]},
+                                        ]}
+                                        defaultOpen={true}
+                                        filters={statsFilters}
+                                        onToggle={() => {}}
+                                    />
+                                </div>
+                            </div>
+                        );
+                    })()}
+                    {sections.find(s => s.key === "profit_forecast")?.visible !== false && (() => {
+                        const totalProfit        = profForecastRows.reduce((s, r) => s + (parseFloat(r.predicted_profit) || 0), 0);
+                        const profitVat          = totalProfit * vatPercent / (100 + vatPercent);
+                        const profitWithoutVat   = totalProfit - profitVat;
+                        const profInfo = profForecastRows.map(r => {
+                            const profit = parseFloat(r.predicted_profit) || 0;
+                            const vat    = profit * vatPercent / (100 + vatPercent);
+                            const isProf = parseInt(r.is_profit, 10) === 1;
+                            return {
+                                label: `${r.month_name || ''} ${r.year || ''}`.trim(),
+                                value: `${isProf ? '' : '−'}SAR ${trimTo2Decimals(Math.abs(profit))} (w/o VAT: ${trimTo2Decimals(Math.abs(profit - vat))}) — ${isProf ? 'Profit' : 'Loss'}`,
+                                color: isProf ? "#69db7c" : "#ffa8a8",
+                            };
+                        });
+                        return (
+                            <div className="row mt-3" style={{ order: sections.findIndex(s => s.key === "profit_forecast") }}>
+                                <div className="col">
+                                    <StatsSummary store={store}
+                                        title="Profit / Loss Forecast (Next 6 Months)"
+                                        storageKey="stats_profit_forecast_summary"
+                                        stats={{
+                                            "6-Month Predicted Profit / Loss": totalProfit,
+                                            [`Profit / Loss w/o VAT ${vatPercent}%`]: profitWithoutVat,
+                                        }}
+                                        statsWithInfo={[
+                                            { label: "6-Month Predicted Profit / Loss", value: totalProfit, colorByValue: true, sub: `w/o VAT: ${trimTo2Decimals(profitWithoutVat)}`, info: [
+                                                { label: "What it is", value: "Predicted net profit or loss (with VAT) per month — Revenue minus Expense using P&L methodology", bold: true, color: totalProfit >= 0 ? "#69db7c" : "#ffa8a8" },
+                                                { divider: true, label: "Monthly Breakdown (with VAT)", value: "" },
+                                                ...profInfo,
+                                                { divider: true, label: totalProfit >= 0 ? "= 6-Month Profit (with VAT)" : "= 6-Month Loss (with VAT)", value: `SAR ${trimTo2Decimals(Math.abs(totalProfit))}`, bold: true, color: totalProfit >= 0 ? "#69db7c" : "#ffa8a8" },
+                                                { label: `VAT ${vatPercent}%`, value: `− ${trimTo2Decimals(Math.abs(profitVat))}` },
+                                                { divider: true, label: totalProfit >= 0 ? "= 6-Month Profit (without VAT)" : "= 6-Month Loss (without VAT)", value: `SAR ${trimTo2Decimals(Math.abs(profitWithoutVat))}`, bold: true, color: totalProfit >= 0 ? "#69db7c" : "#ffa8a8" },
+                                            ]},
+                                            { label: `Profit / Loss w/o VAT ${vatPercent}%`, value: profitWithoutVat, colorByValue: true, sub: `VAT portion: ${trimTo2Decimals(Math.abs(profitVat))}`, info: [
+                                                { label: "What it is", value: `Net profit/loss excluding the embedded ${vatPercent}% VAT portion`, bold: true, color: profitWithoutVat >= 0 ? "#69db7c" : "#ffa8a8" },
+                                                { label: "Formula", value: `P/L × ${vatPercent} ÷ ${100 + vatPercent}` },
+                                                { divider: true, label: "Profit / Loss (with VAT)", value: `${trimTo2Decimals(totalProfit)}` },
+                                                { label: `VAT ${vatPercent}%`, value: `− ${trimTo2Decimals(Math.abs(profitVat))}` },
+                                                { divider: true, label: profitWithoutVat >= 0 ? "= Profit (without VAT)" : "= Loss (without VAT)", value: `SAR ${trimTo2Decimals(Math.abs(profitWithoutVat))}`, bold: true, color: profitWithoutVat >= 0 ? "#69db7c" : "#ffa8a8" },
+                                            ]},
+                                        ]}
+                                        defaultOpen={true}
+                                        filters={statsFilters}
+                                        onToggle={() => {}}
+                                    />
+                                </div>
+                            </div>
+                        );
+                    })()}
                     {sections.find(s => s.key === "payables")?.visible !== false && (
                         <div className="row" style={{ order: sections.findIndex(s => s.key === "payables") }}>
                             <div className="col">
