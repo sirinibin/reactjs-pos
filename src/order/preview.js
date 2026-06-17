@@ -8,6 +8,7 @@ import { Invoice } from '@axenda/zatca';
 import html2pdf from 'html2pdf.js';
 import "./print.css";
 import WhatsAppModal from './../utils/WhatsAppModal';
+import WhatsAppAPIModal from './../utils/WhatsAppAPIModal';
 import MBDIInvoiceBackground from './../INVOICE.jpg';
 import LGKInvoiceBackground from './../LGK_WHATSAPP.png';
 //import jsPDF from "jspdf";
@@ -1354,6 +1355,10 @@ const Preview = forwardRef((props, ref) => {
     const [defaultMessage, setDefaultMessage] = useState("");
     let [isProcessing, setIsProcessing] = useState(false);
 
+    // True when store has Use WhatsApp API enabled AND has an Evolution API instance connected.
+    // Only requires the flag — connection state is handled inside WhatsAppAPIModal.
+    const useWhatsAppAPI = !!model?.store?.settings?.use_whatsapp_api;
+
     const openWhatsAppShare = useCallback(async () => {
         setIsProcessing(true);
         const element = printAreaRef.current;
@@ -1368,13 +1373,6 @@ const Preview = forwardRef((props, ref) => {
                 (window.parent !== window &&
                     (window.parent.__TAURI__ || window.parent.__TAURI_INTERNALS__)));
         } catch (_) { /* cross-origin guard */ }
-
-        // Debug flash: confirm which path we're on
-        setDownloadFlash({
-            message: isInTauri ? '✅ Running in Tauri Desktop App' : '🌐 Running in Web Browser',
-            variant: isInTauri ? 'success' : 'info',
-        });
-        setTimeout(() => setDownloadFlash(null), 5000);
 
         let pdfBlob;
 
@@ -1512,15 +1510,25 @@ const Preview = forwardRef((props, ref) => {
 
         if (timerRef.current) clearTimeout(timerRef.current);
 
+        // Store blob for both modal paths
+        setWhatsAppPdfBlob(pdfBlob);
+        setWhatsAppFileName(`${fileName}.pdf`);
+
         timerRef.current = setTimeout(() => {
             setIsProcessing(false);
-            whatsAppNo = formatPhoneForWhatsApp(whatsAppNo);
-            setDefaultMessage(message);
-            setDefaultNumber(whatsAppNo);
-            setShowWhatsAppMessageModal(true);
+            if (useWhatsAppAPI) {
+                // API path: open the new 2-option modal (no link, no pre-filled number needed)
+                setShowWhatsAppAPIModal(true);
+            } else {
+                // Legacy path: open the link-sharing modal
+                whatsAppNo = formatPhoneForWhatsApp(whatsAppNo);
+                setDefaultMessage(message);
+                setDefaultNumber(whatsAppNo);
+                setShowWhatsAppMessageModal(true);
+            }
         }, 100);
 
-    }, [getFileName, model, phone, modelName, formatPhoneForWhatsApp, t]);
+    }, [getFileName, model, phone, modelName, formatPhoneForWhatsApp, t, useWhatsAppAPI]);
 
     /*
     const openWhatsAppShare = useCallback(async () => {
@@ -1596,8 +1604,12 @@ const Preview = forwardRef((props, ref) => {
     }, [getFileName, model, phone, modelName, formatPhoneForWhatsApp]);*/
 
     const [showWhatsAppMessageModal, setShowWhatsAppMessageModal] = useState(false);
+    const [showWhatsAppAPIModal, setShowWhatsAppAPIModal] = useState(false);
     const [downloadFlash, setDownloadFlash] = useState(null); // { message, variant }
     const [isDownloading, setIsDownloading] = useState(false);
+    const [whatsAppPdfBlob, setWhatsAppPdfBlob] = useState(null);
+    const [whatsAppFileName, setWhatsAppFileName] = useState("");
+
     /* const handleChoice = ({ type, number, message }) => {
          let whatsappUrl = "";
          if (type === "number" && number) {
@@ -1657,6 +1669,7 @@ const Preview = forwardRef((props, ref) => {
             }
         }, 100);
     };
+
 
 
 
@@ -2047,12 +2060,24 @@ const Preview = forwardRef((props, ref) => {
 
 
     return (<>
+        {/* Legacy link-sharing modal — shown when Use WhatsApp API is OFF */}
         <WhatsAppModal
             show={showWhatsAppMessageModal}
             onClose={() => setShowWhatsAppMessageModal(false)}
             onChoice={handleChoice}
             defaultNumber={defaultNumber}
             defaultMessage={defaultMessage}
+        />
+
+        {/* API modal — shown when Use WhatsApp API is ON */}
+        <WhatsAppAPIModal
+            show={showWhatsAppAPIModal}
+            onClose={() => setShowWhatsAppAPIModal(false)}
+            pdfBlob={whatsAppPdfBlob}
+            pdfFileName={whatsAppFileName}
+            storeId={model?.store?.id || model?.store_id || localStorage.getItem('store_id')}
+            customer={model?.customer}
+            defaultCaption=""
         />
 
         <Modal show={show} scrollable={true} size="xl" fullscreen onHide={handleClose} animation={false}>

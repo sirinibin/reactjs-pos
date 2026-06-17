@@ -1,7 +1,9 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 import StoreCreate from "./create.js";
 import ZatcaConnect from "./zatca_connect.js";
 import StoreView from "./view.js";
+import WhatsAppConnect from "./WhatsAppConnect.js";
+import WhatsAppContactsModal from "./WhatsAppContactsModal.js";
 
 import "react-datepicker/dist/react-datepicker.css";
 import { Button, Spinner } from "react-bootstrap";
@@ -99,7 +101,7 @@ function StoreIndex(props) {
             },
         };
         let Select =
-            "select=id,name,code,branch_name,created_by_name,created_at,vat_percent,zatca";
+            "select=id,name,code,branch_name,created_by_name,created_at,vat_percent,zatca,phone,settings";
 
         const d = new Date();
         let diff = d.getTimezoneOffset();
@@ -140,6 +142,7 @@ function StoreIndex(props) {
                 setIsListLoading(false);
                 setIsRefreshInProcess(false);
                 setStoreList(data.result);
+                loadContactCounts(data.result || []);
 
                 let pageCount = parseInt((data.total_count + pageSize - 1) / pageSize);
 
@@ -248,6 +251,100 @@ function StoreIndex(props) {
     */
 
     const ZatcaConnectFormRef = useRef();
+    const WhatsAppConnectRef = useRef();
+
+    function openWhatsAppConnect(store) {
+        WhatsAppConnectRef.current.open(store);
+    }
+
+    const [disconnectingStoreId, setDisconnectingStoreId] = useState(null);
+    const [syncingStoreId, setSyncingStoreId] = useState(null);
+    const [clearingStoreId, setClearingStoreId] = useState(null);
+
+    async function clearWhatsAppContacts(store) {
+        if (!window.confirm(`Clear all synced WhatsApp contacts for "${store.name}"?\nYou can re-sync them anytime.`)) return;
+        setClearingStoreId(store.id);
+        try {
+            const res = await fetch(`/v1/whatsapp/contacts?store_id=${store.id}`, {
+                method: 'DELETE',
+                headers: { Authorization: localStorage.getItem('access_token') },
+            });
+            const data = await res.json().catch(() => ({}));
+            if (data.success) {
+                setContactCounts(prev => ({ ...prev, [store.id]: 0 }));
+                if (props.showToastMessage) props.showToastMessage(`Cleared ${data.deleted} contacts from DB`, 'success');
+            } else {
+                if (props.showToastMessage) props.showToastMessage(data.error || 'Clear failed', 'danger');
+            }
+        } catch (e) {
+            if (props.showToastMessage) props.showToastMessage('Clear failed: ' + e.message, 'danger');
+        } finally {
+            setClearingStoreId(null);
+        }
+    }
+    const [contactCounts, setContactCounts] = useState({}); // storeId → count
+
+    const WhatsAppContactsRef = useRef();
+
+    // Fetch contacts counts for all connected stores
+    const loadContactCounts = useCallback(async (stores) => {
+        const connected = stores.filter(s => s.settings?.evolution_instance_name);
+        if (!connected.length) return;
+        const results = await Promise.allSettled(
+            connected.map(s =>
+                fetch(`/v1/whatsapp/contacts-count?store_id=${s.id}`, {
+                    headers: { Authorization: localStorage.getItem('access_token') },
+                }).then(r => r.json()).then(d => ({ id: s.id, count: d.count || 0 }))
+            )
+        );
+        const counts = {};
+        results.forEach(r => { if (r.status === 'fulfilled') counts[r.value.id] = r.value.count; });
+        setContactCounts(counts);
+    }, []);
+
+    async function syncWhatsAppContacts(store) {
+        setSyncingStoreId(store.id);
+        try {
+            const res = await fetch('/v1/whatsapp/sync-contacts', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', Authorization: localStorage.getItem('access_token') },
+                body: JSON.stringify({ store_id: store.id }),
+            });
+            const data = await res.json().catch(() => ({}));
+            if (data.success) {
+                setContactCounts(prev => ({ ...prev, [store.id]: data.count }));
+                if (props.showToastMessage) props.showToastMessage(`Synced ${data.count} contacts`, 'success');
+            } else {
+                if (props.showToastMessage) props.showToastMessage(data.error || 'Sync failed', 'danger');
+            }
+        } catch (e) {
+            if (props.showToastMessage) props.showToastMessage('Sync failed: ' + e.message, 'danger');
+        } finally {
+            setSyncingStoreId(null);
+        }
+    }
+
+    async function disconnectWhatsApp(store) {
+        if (!window.confirm(`Disconnect WhatsApp from "${store.name}"? This will delete the Evolution API instance.`)) return;
+        setDisconnectingStoreId(store.id);
+        try {
+            const res = await fetch(`/v1/whatsapp/disconnect?store_id=${store.id}`, {
+                method: 'DELETE',
+                headers: { Authorization: localStorage.getItem('access_token') },
+            });
+            const data = await res.json().catch(() => ({}));
+            if (data.success) {
+                if (props.showToastMessage) props.showToastMessage('WhatsApp disconnected successfully', 'success');
+                list();
+            } else {
+                if (props.showToastMessage) props.showToastMessage(data.error || 'Disconnect failed', 'danger');
+            }
+        } catch (e) {
+            if (props.showToastMessage) props.showToastMessage('Disconnect failed: ' + e.message, 'danger');
+        } finally {
+            setDisconnectingStoreId(null);
+        }
+    }
 
     const DetailsViewRef = useRef();
     function openDetailsView(id) {
@@ -266,6 +363,8 @@ function StoreIndex(props) {
             <StoreCreate ref={CreateFormRef} refreshList={list} showToastMessage={props.showToastMessage} openDetailsView={openDetailsView} />
             <ZatcaConnect ref={ZatcaConnectFormRef} refreshList={list} showToastMessage={props.showToastMessage} />
             <StoreView ref={DetailsViewRef} openUpdateForm={openUpdateForm} openCreateForm={openCreateForm} />
+            <WhatsAppConnect ref={WhatsAppConnectRef} showToastMessage={props.showToastMessage} onConnected={list} onDisconnected={list} />
+            <WhatsAppContactsModal ref={WhatsAppContactsRef} showToastMessage={props.showToastMessage} />
 
             <div className="container-fluid p-0">
                 <div className="row">
@@ -609,6 +708,80 @@ function StoreIndex(props) {
                                                             }}>
                                                                 <i className="bi bi-eye"></i>
                                                             </Button>
+
+                                                            {store.settings?.evolution_instance_name ? (
+                                                                <>
+                                                                    {/* Connected badge with contact count */}
+                                                                    <span
+                                                                        className="badge bg-success ms-1"
+                                                                        style={{ fontSize: '0.75em', verticalAlign: 'middle', cursor: 'pointer' }}
+                                                                        title={`Instance: ${store.settings.evolution_instance_name}`}
+                                                                        onClick={() => WhatsAppContactsRef.current.open(store)}
+                                                                    >
+                                                                        <i className="bi bi-whatsapp me-1"></i>
+                                                                        {contactCounts[store.id] != null
+                                                                            ? `${contactCounts[store.id]} contacts`
+                                                                            : 'Connected'
+                                                                        }
+                                                                    </span>
+
+                                                                    {/* View contacts button */}
+                                                                    <Button
+                                                                        className="btn btn-outline-success btn-sm ms-1"
+                                                                        title="View contacts"
+                                                                        onClick={() => WhatsAppContactsRef.current.open(store)}
+                                                                    >
+                                                                        <i className="bi bi-people"></i>
+                                                                    </Button>
+
+                                                                    {/* Sync contacts button */}
+                                                                    <Button
+                                                                        className="btn btn-outline-primary btn-sm ms-1"
+                                                                        title="Sync WhatsApp contacts now"
+                                                                        disabled={syncingStoreId === store.id}
+                                                                        onClick={() => syncWhatsAppContacts(store)}
+                                                                    >
+                                                                        {syncingStoreId === store.id
+                                                                            ? <Spinner size="sm" animation="border" />
+                                                                            : <i className="bi bi-arrow-clockwise"></i>
+                                                                        }
+                                                                    </Button>
+
+                                                                    {/* Clear contacts button */}
+                                                                    <Button
+                                                                        className="btn btn-outline-warning btn-sm ms-1"
+                                                                        title="Clear all synced contacts from DB"
+                                                                        disabled={clearingStoreId === store.id}
+                                                                        onClick={() => clearWhatsAppContacts(store)}
+                                                                    >
+                                                                        {clearingStoreId === store.id
+                                                                            ? <Spinner size="sm" animation="border" />
+                                                                            : <i className="bi bi-trash"></i>
+                                                                        }
+                                                                    </Button>
+
+                                                                    {/* Disconnect button */}
+                                                                    <Button
+                                                                        className="btn btn-danger btn-sm ms-1"
+                                                                        title="Disconnect WhatsApp"
+                                                                        disabled={disconnectingStoreId === store.id}
+                                                                        onClick={() => disconnectWhatsApp(store)}
+                                                                    >
+                                                                        {disconnectingStoreId === store.id
+                                                                            ? <Spinner size="sm" animation="border" />
+                                                                            : <i className="bi bi-plug-fill"></i>
+                                                                        }
+                                                                    </Button>
+                                                                </>
+                                                            ) : (
+                                                                <Button
+                                                                    className="btn btn-outline-success btn-sm ms-1"
+                                                                    title="Connect WhatsApp"
+                                                                    onClick={() => openWhatsAppConnect(store)}
+                                                                >
+                                                                    <i className="bi bi-whatsapp"></i>
+                                                                </Button>
+                                                            )}
                                                         </td>
                                                     </tr>
                                                 ))}

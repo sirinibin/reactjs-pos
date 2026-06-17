@@ -3328,21 +3328,6 @@ const OrderCreate = forwardRef((props, ref) => {
 
 
 
-    function validatePhoneNumber(input) {
-        // Remove everything except digits and plus
-        let s = input.trim().replace(/[^\d+]/g, "");
-
-        if (s.startsWith("+")) {
-            // International number: must be + followed by 6 to 15 digits
-            return /^\+\d{6,15}$/.test(s);
-        } else if (s.startsWith("05")) {
-            // Saudi local number: must be 05 followed by 8 digits
-            return /^05\d{8}$/.test(s);
-        } else {
-            return false;
-        }
-    }
-
     const productSearchRef = useRef();
 
     const timerRef = useRef(null);
@@ -3534,11 +3519,6 @@ const OrderCreate = forwardRef((props, ref) => {
         setErrors({ ...errors });
 
         if (model.phone) {
-            if (!validatePhoneNumber(model.phone)) {
-                errors["phone"] = t("Invalid phone no.")
-                setErrors({ ...errors });
-                return;
-            }
         }
 
         setShowOrderPreview(true);

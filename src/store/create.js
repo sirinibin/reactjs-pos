@@ -475,11 +475,6 @@ const StoreCreate = forwardRef((props, ref) => {
         return regex.test(str);
     }
 
-    const validateSaudiPhone = (phone) => {
-        const regex = /^(?:\+9665|05)[0-9]{8}$/;
-        return regex.test(phone);
-    }
-
     function handleCreate(event) {
         event.preventDefault();
         console.log("Inside handle Create");
@@ -575,9 +570,6 @@ const StoreCreate = forwardRef((props, ref) => {
 
         if (!formData.phone) {
             errors["phone"] = "Phone is required";
-            haveErrors = true;
-        } else if (!validateSaudiPhone(formData.phone)) {
-            errors["phone"] = "Invalid phone no.";
             haveErrors = true;
         }
 
@@ -4619,6 +4611,72 @@ const StoreCreate = forwardRef((props, ref) => {
                                 /> &nbsp;Enable Sales Page Selection
                             </div>
                             <label className="form-label"></label>
+                        </div>
+
+                        <div className="col-md-12 mt-3">
+                            <h6 className="text-success"><i className="bi bi-whatsapp me-1"></i>WhatsApp Integration (Evolution API)</h6>
+                        </div>
+
+                        <div className="col-md-3">
+                            <div className="input-group mb-3">
+                                <input type="checkbox"
+                                    value={formData.settings.use_whatsapp_api}
+                                    checked={!!formData.settings.use_whatsapp_api}
+                                    onChange={(e) => {
+                                        formData.settings.use_whatsapp_api = !formData.settings.use_whatsapp_api;
+                                        setFormData({ ...formData });
+                                    }}
+                                    className=""
+                                    id="use_whatsapp_api"
+                                /> &nbsp;Use WhatsApp API (send PDF as attachment)
+                            </div>
+                            <label className="form-label text-muted" style={{fontSize:'0.8em'}}>When enabled, invoices are sent as PDF files via your connected WhatsApp number instead of a link.</label>
+                        </div>
+
+                        <div className="col-md-4">
+                            <div className="mb-3">
+                                <label className="form-label fw-bold">Evolution API URL</label>
+                                <input type="text"
+                                    className="form-control"
+                                    placeholder="http://localhost:8081"
+                                    value={formData.settings.evolution_api_url || ""}
+                                    onChange={(e) => {
+                                        formData.settings.evolution_api_url = e.target.value;
+                                        setFormData({ ...formData });
+                                    }}
+                                />
+                                <small className="text-muted">Leave blank to use default (http://localhost:8081)</small>
+                            </div>
+                        </div>
+
+                        <div className="col-md-4">
+                            <div className="mb-3">
+                                <label className="form-label fw-bold">Evolution API Key</label>
+                                <input type="text"
+                                    className="form-control"
+                                    placeholder="startpos-evo-local-key"
+                                    value={formData.settings.evolution_api_key || ""}
+                                    onChange={(e) => {
+                                        formData.settings.evolution_api_key = e.target.value;
+                                        setFormData({ ...formData });
+                                    }}
+                                />
+                            </div>
+                        </div>
+
+                        <div className="col-md-4">
+                            <div className="mb-3">
+                                <label className="form-label fw-bold">Evolution Instance Name</label>
+                                <input type="text"
+                                    className="form-control"
+                                    placeholder="startpos"
+                                    value={formData.settings.evolution_instance_name || ""}
+                                    onChange={(e) => {
+                                        formData.settings.evolution_instance_name = e.target.value;
+                                        setFormData({ ...formData });
+                                    }}
+                                />
+                            </div>
                         </div>
 
                         <div className="col-md-2">

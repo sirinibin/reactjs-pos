@@ -1,15 +1,14 @@
 // WhatsAppModal.js
 import React from 'react';
-import { Modal, Button, Form } from 'react-bootstrap';
+import { Modal, Button, Form, Spinner, Alert } from 'react-bootstrap';
 import { useTranslation } from 'react-i18next';
-//import jsPDF from "jspdf";
-//import html2canvas from "html2canvas";
 
-
-const WhatsAppModal = ({ show, onClose, onChoice, defaultNumber, defaultMessage, hideMessage }) => {
+const WhatsAppModal = ({ show, onClose, onChoice, onSendDirect, defaultNumber, defaultMessage, hideMessage }) => {
     const { t } = useTranslation('common');
     const [number, setNumber] = React.useState(defaultNumber || "");
     const [message, setMessage] = React.useState(defaultMessage || "");
+    const [isSendingDirect, setIsSendingDirect] = React.useState(false);
+    const [directResult, setDirectResult] = React.useState(null); // { success, message }
 
     React.useEffect(() => {
         setNumber(defaultNumber || "");
@@ -18,6 +17,14 @@ const WhatsAppModal = ({ show, onClose, onChoice, defaultNumber, defaultMessage,
     React.useEffect(() => {
         setMessage(defaultMessage || "");
     }, [defaultMessage]);
+
+    // Reset state when modal opens
+    React.useEffect(() => {
+        if (show) {
+            setIsSendingDirect(false);
+            setDirectResult(null);
+        }
+    }, [show]);
 
     const handleSendToNumber = () => {
         onChoice?.({ type: 'number', number, message });
@@ -28,6 +35,23 @@ const WhatsAppModal = ({ show, onClose, onChoice, defaultNumber, defaultMessage,
         onChoice?.({ type: 'contacts', message });
         onClose();
     };
+
+    const handleSendDirect = async () => {
+        if (!number) return;
+        setIsSendingDirect(true);
+        setDirectResult(null);
+        try {
+            await onSendDirect?.({ number, message });
+            setDirectResult({ success: true, message: t("PDF sent successfully via WhatsApp!") });
+            setTimeout(() => onClose(), 1800);
+        } catch (err) {
+            setDirectResult({ success: false, message: err?.message || t("Failed to send PDF. Make sure Evolution API is running and WhatsApp is connected.") });
+        } finally {
+            setIsSendingDirect(false);
+        }
+    };
+
+    const hasDirect = !!onSendDirect;
 
     return (
         <Modal show={show} onHide={onClose} centered>
@@ -76,13 +100,34 @@ const WhatsAppModal = ({ show, onClose, onChoice, defaultNumber, defaultMessage,
                         placeholder={t("e.g., 9665xxxxxxxx")}
                     />
                 </Form.Group>
+
+                {directResult && (
+                    <Alert variant={directResult.success ? "success" : "danger"} className="mt-3 mb-0 py-2" style={{ fontSize: '0.85em' }}>
+                        <i className={`bi ${directResult.success ? 'bi-check-circle' : 'bi-exclamation-triangle'} me-1`}></i>
+                        {directResult.message}
+                    </Alert>
+                )}
             </Modal.Body>
-            <Modal.Footer>
-                <Button variant="success" disabled={!number} onClick={handleSendToNumber}>
-                    <i className="bi bi-whatsapp me-1"></i>{t("Send to this number")}
+            <Modal.Footer className="flex-wrap gap-2">
+                {hasDirect && (
+                    <Button
+                        variant="success"
+                        disabled={!number || isSendingDirect}
+                        onClick={handleSendDirect}
+                        title={t("Send PDF as file attachment via Evolution API")}
+                    >
+                        {isSendingDirect ? (
+                            <><Spinner animation="border" size="sm" className="me-1" />{t("Sending...")}</>
+                        ) : (
+                            <><i className="bi bi-file-earmark-pdf me-1"></i>{t("Send PDF (Attached)")}</>
+                        )}
+                    </Button>
+                )}
+                <Button variant={hasDirect ? "outline-success" : "success"} disabled={!number} onClick={handleSendToNumber}>
+                    <i className="bi bi-whatsapp me-1"></i>{t("Open in WhatsApp")}
                 </Button>
-                <Button variant="outline-success" onClick={handleSendToContacts}>
-                    <i className="bi bi-whatsapp me-1"></i>{t("Send to WhatsApp contacts")}
+                <Button variant="outline-secondary" onClick={handleSendToContacts}>
+                    <i className="bi bi-whatsapp me-1"></i>{t("Send to contacts")}
                 </Button>
             </Modal.Footer>
         </Modal>

@@ -226,11 +226,6 @@ const CustomerCreate = forwardRef((props, ref) => {
     }
 
 
-    const validateSaudiPhone = (phone) => {
-        const regex = /^(?:\+9665|05)[0-9]{8}$/;
-        return regex.test(phone);
-    }
-
     const validateEmail = (email) => {
         const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
         return re.test(email);
@@ -262,11 +257,6 @@ const CustomerCreate = forwardRef((props, ref) => {
         setErrors({ ...errors });
         if (!formData.name) {
             errors["name"] = "Name is required";
-            haveErrors = true;
-        }
-
-        if (formData.phone && !validateSaudiPhone(formData.phone)) {
-            errors["phone"] = "Invalid phone no.";
             haveErrors = true;
         }
 
