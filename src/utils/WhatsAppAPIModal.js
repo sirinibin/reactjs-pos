@@ -668,7 +668,7 @@ export default function WhatsAppAPIModal({
                 {/* ── Section 2: Store Contacts ── */}
                 <div>
                     <div className="fw-bold mb-2" style={{ fontSize: '0.9em', color: '#198754' }}>
-                        <i className="bi bi-people me-1"></i>{t("Store Contacts")}
+                        <i className="bi bi-people me-1"></i>{t("Store Contacts")}{contactTotalCount > 0 && <span className="ms-2 text-muted fw-normal" style={{ fontSize: '0.85em' }}>({contactTotalCount})</span>}
                     </div>
                     <div>
                         {/* Search + controls */}
