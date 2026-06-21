@@ -2505,7 +2505,7 @@ const SalesReturnIndex = forwardRef((props, ref) => {
                                                                     </Button></span> : ""}
                                                                     {salesReturn.zatca?.reporting_passed ? <span>&nbsp;
                                                                         <Button onClick={async () => {
-                                                                            const url = "/zatca/returns/xml/" + salesReturn.code + ".xml";
+                                                                            const url = "/zatca/returns/xml/" + salesReturn.store_id + "_" + salesReturn.code + ".xml";
                                                                             const filename = salesReturn.code + ".xml";
                                                                             if (window.__TAURI__) {
                                                                                 try {
