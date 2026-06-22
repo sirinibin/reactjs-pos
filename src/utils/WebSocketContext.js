@@ -71,40 +71,7 @@ async function getDeviceFingerprint() {
     return deviceDetails;
 }
 
-// Function to get user location (latitude, longitude, city, country)
-async function getUserLocation() {
-    return new Promise((resolve, reject) => {
-        if (!navigator.geolocation) {
-            return reject({ code: 0, message: "Geolocation is not supported by this browser." });
-        }
 
-        navigator.geolocation.getCurrentPosition(
-            async (position) => {
-                const { latitude, longitude } = position.coords;
-
-                try {
-                    // Fetch location details using OpenStreetMap's Nominatim API
-                    const response = await fetch(
-                        `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}`
-                    );
-                    const data = await response.json();
-
-                    resolve({
-                        latitude: latitude.toString(), // Matches Golang struct field name
-                        longitude: longitude.toString(), // Matches Golang struct field name
-                        city: data.address.city || data.address.town || data.address.village || "Unknown", // Matches Golang struct field name
-                        country: data.address.country || "Unknown", // Matches Golang struct field name
-                    });
-                } catch (error) {
-                    reject({ code: 0, message: "Failed to fetch location details." });
-                }
-            },
-            (error) => {
-                reject(error); // pass the full PositionError (has .code and .message)
-            }
-        );
-    });
-}
 
 export const WebSocketProvider = ({ userId, children }) => {
     const didUnmount = useRef(false);
@@ -175,53 +142,8 @@ export const WebSocketProvider = ({ userId, children }) => {
         if (!userId) return;
         console.log("WebSocket initialized for userId:", userId);
 
-        // Detect Tauri (may run inside an iframe, so check window.parent too)
-        const isTauri = typeof window.__TAURI__ !== 'undefined' ||
-            typeof window.__TAURI_INTERNALS__ !== 'undefined' ||
-            (() => { try { return window.parent !== window && typeof window.parent.__TAURI__ !== 'undefined'; } catch (_) { return false; } })();
-
-        const sendLocation = async () => {
-            try {
-                // In Tauri (macOS desktop app), skip the navigator.permissions pre-check.
-                // WKWebView caches geolocation as 'denied' at its own layer (set before
-                // macOS system permission was granted), but Tauri routes getCurrentPosition
-                // through CoreLocation directly — so the permissions API state is stale and
-                // causes a false "Location Access Required" modal on every new tab.
-                // We rely solely on getCurrentPosition() to determine the real state.
-                if (!isTauri && navigator.permissions) {
-                    const perm = await navigator.permissions.query({ name: 'geolocation' });
-                    if (perm.state === 'denied') {
-                        eventEmitter.emit('geolocation_denied');
-                        return;
-                    }
-                }
-
-                const locationInfo = await getUserLocation();
-                // Successfully got location — emit granted so modal can close
-                eventEmitter.emit('geolocation_granted');
-                sendMessage(JSON.stringify({ event: "location_update", data: locationInfo }));
-            } catch (err) {
-                // PERMISSION_DENIED (code 1) — user actually blocked location access.
-                // In Tauri, geolocation inside a WKWebView iframe may fail with code 1
-                // regardless of system permission (iframe vs main-frame restriction).
-                // Suppress the modal in Tauri to avoid it appearing on every tab load.
-                if (err && err.code === 1 && !isTauri) {
-                    eventEmitter.emit('geolocation_denied');
-                }
-                // All other errors (network, timeout, etc.) silently ignored
-            }
-        };
-
-        // Send ping immediately
-        sendLocation();
-
-        // Set interval for every 30min
-        const interval = setInterval(sendLocation, 60000 * 30);
-
-        // Cleanup interval on unmount
-        return () => {
-            clearInterval(interval);
-        };
+        // Location tracking disabled — no interval needed
+        return () => {};
     }, [userId, sendMessage]); // Removed lastMessage to avoid unnecessary re-runs
 
 
