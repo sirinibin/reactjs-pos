@@ -1422,7 +1422,7 @@ const Preview = forwardRef((props, ref) => {
 
         if (shouldAttachXml) {
             try {
-                const xmlUrl = `/zatca/xml/${model.store_id}_${model.code}.xml`;
+                const xmlUrl = `/zatca/${model.store_id}/sales/xml/${model.code}.xml`;
                 const xmlResponse = await fetch(xmlUrl);
                 if (!xmlResponse.ok) throw new Error("Failed to fetch XML");
                 const xmlBytes = new Uint8Array(await xmlResponse.arrayBuffer());

@@ -2541,7 +2541,7 @@ const OrderIndex = forwardRef((props, ref) => {
                                                                     {order.zatca?.reporting_passed ? <span>&nbsp;
 
                                                                         <Button onClick={async () => {
-                                                                            const url = "/zatca/xml/" + order.store_id + "_" + order.code + ".xml";
+                                                                            const url = "/zatca/" + order.store_id + "/sales/xml/" + order.code + ".xml";
                                                                             const filename = order.code + ".xml";
                                                                             if (window.__TAURI__) {
                                                                                 try {
