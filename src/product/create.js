@@ -1387,6 +1387,7 @@ const ProductCreate = forwardRef((props, ref) => {
       // "amount": "",
       "quantity": qty ? qty : 0.00,
       "type": type ? type : "adding",
+      "reason": "",
     });
 
     if (type === "adding") {
@@ -2519,7 +2520,7 @@ const ProductCreate = forwardRef((props, ref) => {
             </div>
 
             <div className="row">
-              <div className="col-md-8">
+              <div className="col-md-10">
                 <h4>Stock Adjustments</h4>
                 <div className="table-responsive" style={{ overflowX: "auto" }}>
                   <table className="table table-striped table-sm table-bordered">
@@ -2615,7 +2616,7 @@ const ProductCreate = forwardRef((props, ref) => {
                           <div className="">
                             <label className="form-label"></label>
 
-                            <div class="table-responsive" style={{ maxWidth: "900px" }}>
+                            <div class="table-responsive" style={{ maxWidth: "1200px" }}>
                               <Button variant="secondary" style={{ alignContent: "right", marginBottom: "10px" }} onClick={() => {
                                 addStockAdjustment();
                               }}>
@@ -2633,7 +2634,8 @@ const ProductCreate = forwardRef((props, ref) => {
                                     <th style={{ textAlign: "center" }}>
                                       Add/Remove
                                     </th>
-                                    <th style={{ textAlign: "center" }}>Warehouse/Store</th> {/* New column */}
+                                    <th style={{ textAlign: "center" }}>Warehouse/Store</th>
+                                    <th style={{ textAlign: "center" }}>Reason</th>
                                     <th style={{ textAlign: "center" }}>
                                       Action
                                     </th>
@@ -2804,6 +2806,20 @@ const ProductCreate = forwardRef((props, ref) => {
                                               {errors[`adjustment_warehouse_${key}`]}
                                             </div>
                                           )}
+                                        </td>
+                                        <td style={{ width: "160px" }}>
+                                          <input
+                                            type="text"
+                                            id={`adjustment_reason_${key}`}
+                                            name={`adjustment_reason_${key}`}
+                                            value={productStores[localStorage.getItem('store_id')].stock_adjustments[key].reason || ""}
+                                            className="form-control"
+                                            placeholder="Reason"
+                                            onChange={(e) => {
+                                              productStores[localStorage.getItem('store_id')].stock_adjustments[key].reason = e.target.value;
+                                              setProductStores({ ...productStores });
+                                            }}
+                                          />
                                         </td>
                                         <td style={{ width: "70px", textAlign: "center" }}>
                                           <Button variant="danger" onClick={(event) => {
