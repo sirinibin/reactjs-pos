@@ -522,14 +522,14 @@ const QuotationCreate = forwardRef((props, ref) => {
     const qWords = q.split(" ");
 
     const fields = [
-      option.code            || "",
-      option.vat_no          || "",
-      option.name            || "",
-      option.name_in_arabic  || "",
-      option.phone           || "",
-      option.phone2          || "",
-      option.email           || "",
-      option.search_label    || "",
+      option.code || "",
+      option.vat_no || "",
+      option.name || "",
+      option.name_in_arabic || "",
+      option.phone || "",
+      option.phone2 || "",
+      option.email || "",
+      option.search_label || "",
       option.phone_in_arabic || "",
       ...(Array.isArray(option.additional_keywords) ? option.additional_keywords : []),
     ];
@@ -2265,17 +2265,83 @@ const QuotationCreate = forwardRef((props, ref) => {
 
   async function checkWarnings(index) {
     if (index) {
+      // Single-product check (from an edit event) — update immediately.
       checkWarning(index);
     } else {
-      //for (let i = 0; i < selectedProducts.length; i++) {
-      for (let i = (selectedProducts.length - 1); i >= 0; i--) {
-        checkWarning(i);
+      // Bulk-fetch stock for all products. Chunk into 100-ID batches to stay
+      // within URL length limits, then run all batches in parallel.
+      const storeId = localStorage.getItem("store_id");
+      const productIds = [...new Set(selectedProducts.map(p => p.product_id).filter(Boolean))];
+      if (productIds.length === 0) return;
+
+      const requestOptions = {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: localStorage.getItem("access_token"),
+        },
+      };
+
+      const CHUNK = 100;
+      const chunks = [];
+      for (let i = 0; i < productIds.length; i += CHUNK) {
+        chunks.push(productIds.slice(i, i + CHUNK));
       }
+
+      const batchResults = await Promise.all(
+        chunks.map(async (chunk) => {
+          const queryParams = ObjectToSearchQueryParams({ ids: chunk.join(","), store_id: storeId });
+          try {
+            const res = await fetch(`/v1/product?${queryParams}&limit=${chunk.length}`, requestOptions);
+            const isJson = res.headers.get("content-type")?.includes("application/json");
+            const data = isJson ? await res.json() : null;
+            if (res.ok && data?.result) return data.result;
+          } catch (e) {}
+          return [];
+        })
+      );
+
+      // Flatten all batch results into a single id → product map.
+      const productMap = {};
+      for (const batch of batchResults) {
+        for (const p of batch) {
+          productMap[p.id] = p;
+        }
+      }
+
+      for (let i = 0; i < selectedProducts.length; i++) {
+        const product = productMap[selectedProducts[i].product_id];
+        if (!product || !product.product_stores || !product.product_stores[storeId]) continue;
+
+        const storeData = product.product_stores[storeId];
+        const stock = storeData.stock;
+        selectedProducts[i].warehouse_stocks = storeData.warehouse_stocks || null;
+
+        if (!selectedProducts[i].warehouse_stocks) {
+          selectedProducts[i].warehouse_stocks = { main_store: stock };
+          for (let j = 0; j < warehouseList.length; j++) {
+            selectedProducts[i].warehouse_stocks[warehouseList[j].code] = 0;
+          }
+        }
+
+        const warehouseCode = selectedProducts[i].warehouse_code || "main_store";
+        selectedProducts[i].stock = selectedProducts[i].warehouse_stocks[warehouseCode] || 0;
+
+        if (!formData.id && selectedProducts[i].quantity > selectedProducts[i].stock) {
+          warnings["quantity_" + i] = "Warning: Available stock is " + selectedProducts[i].stock;
+        } else {
+          delete warnings["quantity_" + i];
+        }
+      }
+
+      // One single state update after all batches complete.
+      setSelectedProducts([...selectedProducts]);
+      setWarnings({ ...warnings });
     }
   }
 
 
-  async function checkWarning(i, selectedProduct) {
+  async function checkWarning(i, selectedProduct, skipUpdate) {
     let product = null;
     //if (selectedProduct) {
     //  product = selectedProduct;
@@ -2310,7 +2376,7 @@ const QuotationCreate = forwardRef((props, ref) => {
 
 
       selectedProducts[i].stock = selectedProducts[i].warehouse_stocks[selectedWarehouseCode] ? selectedProducts[i].warehouse_stocks[selectedWarehouseCode] : 0;
-      setSelectedProducts([...selectedProducts]);
+      if (!skipUpdate) setSelectedProducts([...selectedProducts]);
     }
 
     if (!formData.id && selectedProducts[i].quantity > selectedProducts[i].stock) {
@@ -2319,7 +2385,7 @@ const QuotationCreate = forwardRef((props, ref) => {
       delete warnings["quantity_" + i];
     }
 
-    setWarnings({ ...warnings });
+    if (!skipUpdate) setWarnings({ ...warnings });
 
     /*
     if (product.product_stores && product.product_stores[localStorage.getItem("store_id")]?.stock) {
