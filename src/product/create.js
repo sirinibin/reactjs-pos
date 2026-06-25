@@ -1710,340 +1710,344 @@ const ProductCreate = forwardRef((props, ref) => {
               </div>
             </div>
 
-            <div className="col-md-3" style={{ border: "solid 0px" }}>
-              <label className="form-label">Brand</label>
-              <div className="input-group mb-3">
-                <Typeahead
-                  id="brand_id"
-                  labelKey="name"
-                  isLoading={isBrandsLoading}
-                  onChange={(selectedItems) => {
-                    errors.brand_id = "";
-                    setErrors(errors);
-                    if (selectedItems.length === 0) {
-                      errors.brand_id = "Invalid brand selected";
-                      setErrors(errors);
-                      formData.brand_id = "";
-                      formData.brand_code = "";
-                      formData.brand_name = "";
-                      makePartNumberPrefix();
-                      setFormData({ ...formData });
-                      setSelectedBrands([]);
-                      return;
-                    }
-                    formData.brand_id = selectedItems[0].id;
-                    formData.brand_code = selectedItems[0].code;
-                    formData.brand_name = selectedItems[0].name;
-                    makePartNumberPrefix();
-                    setFormData({ ...formData });
-                    setSelectedBrands(selectedItems);
+            {/* Row 2: Brand / Country / Prefix / Part No. / Rack — all in one explicit flex row */}
+            <div className="col-12">
+              <div className="d-flex gap-3 align-items-end" style={{ overflowX: "auto" }}>
 
-                  }}
-                  options={brandOptions}
-                  placeholder="Brand name"
-                  selected={selectedBrands}
-                  highlightOnlyResult={true}
-                  ref={brandSearchRef}
-                  onKeyDown={(e) => {
-                    if (e.key === "Escape") {
-                      setBrandOptions([]);
-                      brandSearchRef.current?.clear();
-                    }
-                  }}
-                  onInputChange={(searchTerm, e) => {
-                    suggestBrands(searchTerm);
-                  }}
-                />
-                <Button
-                  hide={true.toString()}
-                  onClick={openProductBrandCreateForm}
-                  className="btn btn-outline-secondary btn-primary btn-sm"
-                  type="button"
-                  id="button-addon1"
-                >
-                  {" "}
-                  <i className="bi bi-plus-lg"></i> New
-                </Button>
-              </div>
-            </div>
+                <div style={{ flex: "0 0 240px", width: "240px" }}>
+                  <label className="form-label">Brand</label>
+                  <div className="d-flex align-items-center gap-1">
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <Typeahead
+                        id="brand_id"
+                        labelKey="name"
+                        isLoading={isBrandsLoading}
+                        onChange={(selectedItems) => {
+                          errors.brand_id = "";
+                          setErrors(errors);
+                          if (selectedItems.length === 0) {
+                            errors.brand_id = "Invalid brand selected";
+                            setErrors(errors);
+                            formData.brand_id = "";
+                            formData.brand_code = "";
+                            formData.brand_name = "";
+                            makePartNumberPrefix();
+                            setFormData({ ...formData });
+                            setSelectedBrands([]);
+                            return;
+                          }
+                          formData.brand_id = selectedItems[0].id;
+                          formData.brand_code = selectedItems[0].code;
+                          formData.brand_name = selectedItems[0].name;
+                          makePartNumberPrefix();
+                          setFormData({ ...formData });
+                          setSelectedBrands(selectedItems);
+                        }}
+                        options={brandOptions}
+                        placeholder="Brand name"
+                        selected={selectedBrands}
+                        highlightOnlyResult={true}
+                        ref={brandSearchRef}
+                        onKeyDown={(e) => {
+                          if (e.key === "Escape") {
+                            setBrandOptions([]);
+                            brandSearchRef.current?.clear();
+                          }
+                        }}
+                        onInputChange={(searchTerm, e) => {
+                          suggestBrands(searchTerm);
+                        }}
+                      />
+                    </div>
+                    <Button
+                      hide={true.toString()}
+                      onClick={openProductBrandCreateForm}
+                      className="btn btn-primary btn-sm"
+                      type="button"
+                      style={{ whiteSpace: "nowrap", flexShrink: 0 }}
+                    >
+                      <i className="bi bi-plus-lg"></i> New
+                    </Button>
+                  </div>
+                </div>
 
+                <div style={{ flex: "0 0 200px", width: "200px" }}>
+                  <label className="form-label">Country</label>
+                  <div className="input-group">
+                    <Typeahead
+                      id="country_code"
+                      labelKey="label"
+                      onChange={(selectedItems) => {
+                        errors.country_code = "";
+                        setErrors(errors);
+                        if (selectedItems.length === 0) {
+                          errors.country_code = "Invalid country selected";
+                          setErrors(errors);
+                          formData.country_code = "";
+                          formData.country_name = "";
+                          makePartNumberPrefix();
+                          setFormData({ ...formData });
+                          setSelectedCountries([]);
+                          return;
+                        }
+                        formData.country_code = selectedItems[0].value;
+                        formData.country_name = selectedItems[0].label;
+                        makePartNumberPrefix();
+                        setFormData({ ...formData });
+                        setSelectedCountries(selectedItems);
+                      }}
+                      options={countryOptions}
+                      placeholder="Country name"
+                      selected={selectedCountries}
+                      highlightOnlyResult={true}
+                      ref={countrySearchRef}
+                      onKeyDown={(e) => {
+                        if (e.key === "Escape") {
+                          countrySearchRef.current?.clear();
+                        }
+                      }}
+                      onInputChange={(searchTerm, e) => {
+                        //suggestBrands(searchTerm);
+                      }}
+                    />
+                  </div>
+                </div>
 
-            <div className="col-md-3">
-              <label className="form-label">Country</label>
+                <div style={{ flex: "0 0 150px", width: "150px" }}>
+                  <label className="form-label">Part no. prefix</label>
+                  <div className="input-group">
+                    <input
+                      id="product_prefix_part_no"
+                      name="product_prefix_part_no"
+                      value={formData.prefix_part_number ? formData.prefix_part_number : ""}
+                      type="string"
+                      onChange={(e) => {
+                        errors["part_number"] = "";
+                        setErrors({ ...errors });
+                        formData.prefix_part_number = e.target.value;
+                        setFormData({ ...formData });
+                        console.log(formData);
+                      }}
+                      className="form-control"
+                      placeholder="Prefix"
+                    />
+                    {errors.prefix_part_number && (
+                      <div style={{ color: "red" }}>
+                        <i className="bi bi-x-lg"> </i>
+                        {errors.prefix_part_number}
+                      </div>
+                    )}
+                  </div>
+                </div>
 
-              <div className="input-group mb-3">
+                <div style={{ flex: "0 0 250px", width: "250px" }}>
+                  <label className="form-label">Part No.</label>
+                  <div className="input-group">
+                    <input
+                      id="product_part_no"
+                      name="product_part_no"
+                      value={formData.part_number ? formData.part_number : ""}
+                      type="string"
+                      onChange={(e) => {
+                        errors["part_number"] = "";
+                        setErrors({ ...errors });
+                        formData.part_number = e.target.value;
+                        setFormData({ ...formData });
+                        console.log(formData);
+                      }}
+                      className="form-control"
+                      placeholder="Part Number"
+                    />
+                    {errors.part_number && (
+                      <div style={{ color: "red" }}>
+                        <i className="bi bi-x-lg"> </i>
+                        {errors.part_number}
+                      </div>
+                    )}
+                  </div>
+                </div>
 
-                <Typeahead
-                  id="country_code"
-                  labelKey="label"
-                  onChange={(selectedItems) => {
-                    errors.country_code = "";
-                    setErrors(errors);
-                    if (selectedItems.length === 0) {
-                      errors.country_code = "Invalid country selected";
-                      setErrors(errors);
-                      formData.country_code = "";
-                      formData.country_name = "";
-                      makePartNumberPrefix();
-                      setFormData({ ...formData });
-                      setSelectedCountries([]);
-                      return;
-                    }
-                    formData.country_code = selectedItems[0].value;
-                    formData.country_name = selectedItems[0].label;
-                    makePartNumberPrefix();
-                    setFormData({ ...formData });
-                    setSelectedCountries(selectedItems);
-                  }}
-                  options={countryOptions}
-                  placeholder="Country name"
-                  selected={selectedCountries}
-                  highlightOnlyResult={true}
-                  ref={countrySearchRef}
-                  onKeyDown={(e) => {
-                    if (e.key === "Escape") {
-                      countrySearchRef.current?.clear();
-                    }
-                  }}
-                  onInputChange={(searchTerm, e) => {
-                    //suggestBrands(searchTerm);
-                  }}
-                />
-              </div>
-            </div>
-
-            <div className="col-md-2">
-              <label className="form-label">Part no. prefix </label>
-
-              <div className="input-group mb-3">
-                <input
-                  id="product_prefix_part_no"
-                  name="product_prefix_part_no"
-                  value={formData.prefix_part_number ? formData.prefix_part_number : ""}
-                  type="string"
-                  onChange={(e) => {
-                    errors["part_number"] = "";
-                    setErrors({ ...errors });
-                    formData.prefix_part_number = e.target.value;
-                    setFormData({ ...formData });
-                    console.log(formData);
-                  }}
-                  className="form-control"
-                  placeholder="Prefix"
-                />
-                {errors.prefix_part_number && (
-                  <div style={{ color: "red" }}>
-                    <i className="bi bi-x-lg"> </i>
-                    {errors.prefix_part_number}
+                {!store?.settings?.enable_warehouse_module && (
+                  <div style={{ flex: "0 0 200px", width: "200px" }}>
+                    <label className="form-label">Rack / Location</label>
+                    <div className="input-group">
+                      <input
+                        id="product_rack"
+                        name="product_rack"
+                        value={formData.rack ? formData.rack : ""}
+                        type="string"
+                        onChange={(e) => {
+                          formData.rack = e.target.value;
+                          setFormData({ ...formData });
+                        }}
+                        className="form-control"
+                        placeholder="Rack/Location"
+                      />
+                      {errors.rack && <div style={{ color: "red" }}>{errors.rack}</div>}
+                    </div>
                   </div>
                 )}
-              </div>
-            </div>
 
-            <div className="col-md-4">
-              <label className="form-label">Part No.</label>
-
-              <div className="input-group mb-3">
-                <input
-                  id="product_part_no"
-                  name="product_part_no"
-                  value={formData.part_number ? formData.part_number : ""}
-                  type="string"
-                  onChange={(e) => {
-                    errors["part_number"] = "";
-                    setErrors({ ...errors });
-                    formData.part_number = e.target.value;
-                    setFormData({ ...formData });
-                    console.log(formData);
-                  }}
-                  className="form-control"
-                  placeholder="Part Number"
-                />
-                {errors.part_number && (
-                  <div style={{ color: "red" }}>
-                    <i className="bi bi-x-lg"> </i>
-                    {errors.part_number}
+                {/* Category */}
+                <div style={{ flex: "0 0 220px", width: "220px" }}>
+                  <label className="form-label">Category</label>
+                  <div className="d-flex align-items-center gap-1">
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <Typeahead
+                        ref={categorySearchRef}
+                        id="category_id"
+                        labelKey="name"
+                        isInvalid={errors.category_id ? true : false}
+                        onChange={(selectedItems) => {
+                          errors.category_id = "";
+                          setErrors(errors);
+                          if (selectedItems.length === 0) {
+                            errors.category_id = "Invalid Category selected";
+                            setErrors(errors);
+                            setFormData({ ...formData });
+                            setSelectedCategories([]);
+                            return;
+                          }
+                          setFormData({ ...formData });
+                          setSelectedCategories(selectedItems);
+                        }}
+                        options={categoryOptions}
+                        placeholder="Select Categories"
+                        selected={selectedCategories}
+                        highlightOnlyResult={true}
+                        onInputChange={(searchTerm, e) => {
+                          suggestCategories(searchTerm);
+                        }}
+                        onKeyDown={(e) => {
+                          if (e.key === "Escape") {
+                            setCategoryOptions([]);
+                            categorySearchRef.current?.clear();
+                          }
+                        }}
+                      />
+                    </div>
+                    <Button
+                      hide={true.toString()}
+                      onClick={openProductCategoryCreateForm}
+                      className="btn btn-primary btn-sm"
+                      type="button"
+                      style={{ whiteSpace: "nowrap", flexShrink: 0 }}
+                    >
+                      <i className="bi bi-plus-lg"></i> New
+                    </Button>
                   </div>
-                )}
+                  {errors.category_id && (
+                    <div style={{ color: "red" }}>{errors.category_id}</div>
+                  )}
+                </div>
 
-              </div>
-            </div>
-
-            {!store?.settings?.enable_warehouse_module ? (
-              <div className="col-md-6">
-                <label className="form-label">Rack / Location</label>
-                <div className="input-group mb-3">
-                  <input
-                    id="product_rack"
-                    name="product_rack"
-                    value={formData.rack ? formData.rack : ""}
-                    type="string"
+                {/* Unit */}
+                <div style={{ flex: "0 0 130px", width: "130px" }}>
+                  <label className="form-label">Unit*</label>
+                  <select
+                    className="form-control"
+                    value={formData.unit}
                     onChange={(e) => {
-                      formData.rack = e.target.value;
+                      formData.unit = e.target.value;
                       setFormData({ ...formData });
                     }}
-                    className="form-control"
-                    placeholder="Rack/Location"
-                  />
-                  {errors.rack && <div style={{ color: "red" }}>{errors.rack}</div>}
+                  >
+                    <option value="">PC</option>
+                    <option value="drum">Drum</option>
+                    <option value="set">Set</option>
+                    <option value="Kg">Kg</option>
+                    <option value="Meter(s)">Meter(s)</option>
+                    <option value="CMT">Centi Meter(s)</option>
+                    <option value="MMT">Milli Meter(s)</option>
+                    <option value="Gm">Gm</option>
+                    <option value="L">Liter (L)</option>
+                    <option value="Mg">Mg</option>
+                  </select>
                 </div>
+
+
               </div>
-            ) : (
-              <div className="col-md-12">
-                <label className="form-label">Rack / Location</label>
-                <table className="table table-sm table-bordered" style={{ maxWidth: "500px" }}>
-                  <tbody>
-                    <tr>
-                      <td style={{ width: "220px" }}><b>Main Store</b></td>
-                      <td>
-                        <input
-                          type="text"
-                          className="form-control form-control-sm"
-                          value={productStores[localStorage.getItem('store_id')]?.warehouse_racks?.main_store || ""}
-                          onChange={(e) => {
-                            const storeId = localStorage.getItem('store_id');
-                            if (!productStores[storeId].warehouse_racks) {
-                              productStores[storeId].warehouse_racks = {};
-                            }
-                            productStores[storeId].warehouse_racks.main_store = e.target.value;
-                            setProductStores({ ...productStores });
-                          }}
-                          placeholder="Rack/Location"
-                        />
-                      </td>
-                    </tr>
-                    {warehouseList.map((wh) => (
-                      <tr key={wh.id}>
-                        <td><b>{wh.name} ({wh.code})</b></td>
-                        <td>
-                          <input
-                            type="text"
-                            className="form-control form-control-sm"
-                            value={productStores[localStorage.getItem('store_id')]?.warehouse_racks?.[wh.code] || ""}
-                            onChange={(e) => {
-                              const storeId = localStorage.getItem('store_id');
-                              if (!productStores[storeId].warehouse_racks) {
-                                productStores[storeId].warehouse_racks = {};
-                              }
-                              productStores[storeId].warehouse_racks[wh.code] = e.target.value;
-                              setProductStores({ ...productStores });
-                            }}
-                            placeholder="Rack/Location"
-                          />
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
+            </div>
+
+            {store?.settings?.enable_warehouse_module && (
+              <div className="col-12">
+                <div className="d-flex align-items-start gap-4 flex-wrap">
+                  <div>
+                    <label className="form-label">Rack / Location</label>
+                    <table className="table table-sm table-bordered" style={{ maxWidth: "500px" }}>
+                      <tbody>
+                        <tr>
+                          <td style={{ width: "220px" }}><b>Main Store</b></td>
+                          <td>
+                            <input
+                              type="text"
+                              className="form-control form-control-sm"
+                              value={productStores[localStorage.getItem('store_id')]?.warehouse_racks?.main_store || ""}
+                              onChange={(e) => {
+                                const storeId = localStorage.getItem('store_id');
+                                if (!productStores[storeId].warehouse_racks) {
+                                  productStores[storeId].warehouse_racks = {};
+                                }
+                                productStores[storeId].warehouse_racks.main_store = e.target.value;
+                                setProductStores({ ...productStores });
+                              }}
+                              placeholder="Rack/Location"
+                            />
+                          </td>
+                        </tr>
+                        {warehouseList.map((wh) => (
+                          <tr key={wh.id}>
+                            <td><b>{wh.name} ({wh.code})</b></td>
+                            <td>
+                              <input
+                                type="text"
+                                className="form-control form-control-sm"
+                                value={productStores[localStorage.getItem('store_id')]?.warehouse_racks?.[wh.code] || ""}
+                                onChange={(e) => {
+                                  const storeId = localStorage.getItem('store_id');
+                                  if (!productStores[storeId].warehouse_racks) {
+                                    productStores[storeId].warehouse_racks = {};
+                                  }
+                                  productStores[storeId].warehouse_racks[wh.code] = e.target.value;
+                                  setProductStores({ ...productStores });
+                                }}
+                                placeholder="Rack/Location"
+                              />
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
               </div>
             )}
 
-            <div className="col-md-4">
-              <label className="form-label">Category</label>
-
-              <div className="input-group mb-4">
-
-                <Typeahead
-                  ref={categorySearchRef}
-                  id="category_id"
-                  labelKey="name"
-
-                  isInvalid={errors.category_id ? true : false}
-                  onChange={(selectedItems) => {
-                    errors.category_id = "";
-                    setErrors(errors);
-                    if (selectedItems.length === 0) {
-                      errors.category_id = "Invalid Category selected";
-                      setErrors(errors);
-                      setFormData({ ...formData });
-                      setSelectedCategories([]);
-                      return;
-                    }
-                    setFormData({ ...formData });
-                    setSelectedCategories(selectedItems);
-                  }}
-                  options={categoryOptions}
-                  placeholder="Select Categories"
-                  selected={selectedCategories}
-                  highlightOnlyResult={true}
-                  onInputChange={(searchTerm, e) => {
-                    suggestCategories(searchTerm);
-                  }}
-                  onKeyDown={(e) => {
-                    if (e.key === "Escape") {
-                      setCategoryOptions([]);
-                      categorySearchRef.current?.clear();
-                    }
-                  }}
-                />
-                <Button
-                  hide={true.toString()}
-                  onClick={openProductCategoryCreateForm}
-                  className="btn btn-outline-secondary btn-primary btn-sm"
-                  type="button"
-                  id="button-addon1"
-                >
-                  {" "}
-                  <i className="bi bi-plus-lg"></i> New
-                </Button>
-                {errors.category_id && (
-                  <div style={{ color: "red" }}>
-                    {errors.category_id}
-                  </div>
-                )}
-              </div>
-            </div>
-
-            <div className="col-md-2">
-              <label className="form-label">Unit*</label>
-              <select
-                className="form-control"
-                value={formData.unit}
-                onChange={(e) => {
-                  formData.unit = e.target.value;
-                  console.log("Inside onchange price type:", formData.unit);
-                  setFormData({ ...formData });
-                }}
-              >
-                <option value="">PC</option>
-                <option value="drum">Drum</option>
-                <option value="set">Set</option>
-                <option value="Kg">Kg</option>
-                <option value="Meter(s)">Meter(s)</option>
-                <option value="CMT">Centi Meter(s)</option>
-                <option value="MMT">Milli Meter(s)</option>
-                <option value="Gm">Gm</option>
-                <option value="L">Liter (L)</option>
-                <option value="Mg">Mg</option>
-              </select>
-            </div>
-
-            <div className="col-md-4">
-              <div className="input-group mb-3">
-                <input type="checkbox"
+            <div className="col-auto" style={{ alignSelf: "center" }}>
+              <div className="d-flex align-items-center gap-2">
+                <input
+                  type="checkbox"
+                  style={{ width: "18px", height: "18px" }}
                   value={formData.allow_duplicates}
                   checked={formData.allow_duplicates}
                   onChange={(e) => {
-
                     errors["formData.allow_duplicates"] = "";
-                    formData.allow_duplicates = !formData.allow_duplicates
+                    formData.allow_duplicates = !formData.allow_duplicates;
                     setFormData({ ...formData });
-                    console.log(formData);
                   }}
-                  className=""
                   id="formData.allow_duplicates"
-                /> &nbsp;Allow duplicates in Sales, Purchases etc
+                />
+                <label htmlFor="formData.allow_duplicates" style={{ marginBottom: 0, cursor: "pointer" }}>
+                  Allow duplicates in Sales, Purchases etc
+                </label>
               </div>
-              <label className="form-label"></label>
               {errors.allow_duplicates && (
-                <div style={{ color: "red" }}>
-                  {errors.allow_duplicates}
-                </div>
+                <div style={{ color: "red" }}>{errors.allow_duplicates}</div>
               )}
             </div>
 
-            <h4>Unit Prices</h4>
-            <div className="table-responsive" style={{ overflowX: "auto" }}>
+            <div className="col-12"><h4>Unit Prices</h4></div>
+            <div className="col-12 table-responsive" style={{ overflowX: "auto" }}>
               <table className="table table-striped table-sm table-bordered">
                 <tbody>
                   <tr className="text-center">
@@ -2520,7 +2524,7 @@ const ProductCreate = forwardRef((props, ref) => {
             </div>
 
             <div className="row">
-              <div className="col-md-10">
+              <div className="col-auto" style={{ minWidth: "700px" }}>
                 <h4>Stock Adjustments</h4>
                 <div className="table-responsive" style={{ overflowX: "auto" }}>
                   <table className="table table-striped table-sm table-bordered">
@@ -2614,8 +2618,6 @@ const ProductCreate = forwardRef((props, ref) => {
                           )}
 
                           <div className="">
-                            <label className="form-label"></label>
-
                             <div class="table-responsive" style={{ maxWidth: "1200px" }}>
                               <Button variant="secondary" style={{ alignContent: "right", marginBottom: "10px" }} onClick={() => {
                                 addStockAdjustment();
@@ -2808,26 +2810,32 @@ const ProductCreate = forwardRef((props, ref) => {
                                           )}
                                         </td>
                                         <td style={{ width: "160px" }}>
-                                          <input
-                                            type="text"
+                                          <textarea
                                             id={`adjustment_reason_${key}`}
                                             name={`adjustment_reason_${key}`}
                                             value={productStores[localStorage.getItem('store_id')].stock_adjustments[key].reason || ""}
                                             className="form-control"
                                             placeholder="Reason"
+                                            rows={2}
+                                            style={{ resize: "vertical" }}
+                                            onKeyDown={(e) => {
+                                              if (e.key === "Enter") e.stopPropagation();
+                                            }}
                                             onChange={(e) => {
                                               productStores[localStorage.getItem('store_id')].stock_adjustments[key].reason = e.target.value;
                                               setProductStores({ ...productStores });
                                             }}
                                           />
                                         </td>
-                                        <td style={{ width: "70px", textAlign: "center" }}>
-                                          <Button variant="danger" onClick={(event) => {
-                                            removeStockAdjustment(key);
-                                          }}>
-                                            Remove
-                                          </Button>
-
+                                        <td style={{ width: "36px", textAlign: "center" }}>
+                                          <button
+                                            type="button"
+                                            className="btn btn-sm btn-outline-danger"
+                                            title="Remove"
+                                            onClick={() => removeStockAdjustment(key)}
+                                          >
+                                            <i className="bi bi-trash"></i>
+                                          </button>
                                         </td>
                                       </tr>
                                     ))}
@@ -2912,7 +2920,7 @@ const ProductCreate = forwardRef((props, ref) => {
               </div>
             </div>
 
-            <h4>SET</h4>
+            <div className="col-12"><h4>SET</h4></div>
             <div className="col-md-2">
               <label className="form-label">Set Name</label>
               <div className="input-group mb-3">
@@ -3186,7 +3194,7 @@ const ProductCreate = forwardRef((props, ref) => {
               />
             </div>
 
-            <div className="col-md-12">
+            {formData.set?.products?.length > 0 && <div className="col-md-12">
               <label className="form-label">Set Products</label>
               <div class="table-responsive" style={{}}>
                 <table class="table table-striped table-sm table-bordered">
@@ -3721,7 +3729,7 @@ const ProductCreate = forwardRef((props, ref) => {
                 </table>
 
               </div>
-            </div>
+            </div>}
 
             <h4>Link Products</h4>
             <div className="col-md-12">
