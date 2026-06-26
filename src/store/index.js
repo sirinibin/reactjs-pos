@@ -4,9 +4,10 @@ import ZatcaConnect from "./zatca_connect.js";
 import StoreView from "./view.js";
 import WhatsAppConnect from "./WhatsAppConnect.js";
 import WhatsAppContactsModal from "./WhatsAppContactsModal.js";
+import StoreBackup from "./StoreBackup.js";
 
 import "react-datepicker/dist/react-datepicker.css";
-import { Button, Spinner } from "react-bootstrap";
+import { Button, Spinner, Dropdown } from "react-bootstrap";
 import ReactPaginate from "react-paginate";
 //import { confirm } from 'react-bootstrap-confirmation';
 import { formatDistanceToNowStrict } from "date-fns";
@@ -356,6 +357,11 @@ function StoreIndex(props) {
         CreateFormRef.current.open();
     }
 
+    const StoreBackupRef = useRef();
+    function openBackup(store) {
+        StoreBackupRef.current.open(store);
+    }
+
 
 
     return (
@@ -365,6 +371,7 @@ function StoreIndex(props) {
             <StoreView ref={DetailsViewRef} openUpdateForm={openUpdateForm} openCreateForm={openCreateForm} />
             <WhatsAppConnect ref={WhatsAppConnectRef} showToastMessage={props.showToastMessage} onConnected={list} onDisconnected={list} />
             <WhatsAppContactsModal ref={WhatsAppContactsRef} showToastMessage={props.showToastMessage} />
+            <StoreBackup ref={StoreBackupRef} />
 
             <div className="container-fluid p-0">
                 <div className="row">
@@ -697,23 +704,30 @@ function StoreIndex(props) {
                                                             </Button> : ""}
                                                         </td>
                                                         <td style={{ width: "auto", whiteSpace: "nowrap" }} >
-                                                            {localStorage.getItem('user_role') === "Admin" && (
-                                                                <Button className="btn btn-light btn-sm" onClick={() => {
-                                                                    openUpdateForm(store.id);
-                                                                }}>
-                                                                    <i className="bi bi-pencil"></i>
-                                                                </Button>
-                                                            )}
+                                                            {/* Actions dropdown */}
+                                                            <Dropdown className="d-inline-block me-1">
+                                                                <Dropdown.Toggle variant="outline-secondary" size="sm" id={`actions-${store.id}`}>
+                                                                    <i className="bi bi-three-dots-vertical"></i> Actions
+                                                                </Dropdown.Toggle>
+                                                                <Dropdown.Menu>
+                                                                    <Dropdown.Item onClick={() => openDetailsView(store.id)}>
+                                                                        <i className="bi bi-eye me-2"></i>View
+                                                                    </Dropdown.Item>
+                                                                    {localStorage.getItem('user_role') === "Admin" && (
+                                                                        <Dropdown.Item onClick={() => openUpdateForm(store.id)}>
+                                                                            <i className="bi bi-pencil me-2"></i>Edit
+                                                                        </Dropdown.Item>
+                                                                    )}
+                                                                    <Dropdown.Divider />
+                                                                    <Dropdown.Item onClick={() => openBackup(store)}>
+                                                                        <i className="bi bi-archive me-2"></i>Backup Data
+                                                                    </Dropdown.Item>
+                                                                </Dropdown.Menu>
+                                                            </Dropdown>
 
-                                                            <Button className="btn btn-primary btn-sm" onClick={() => {
-                                                                openDetailsView(store.id);
-                                                            }}>
-                                                                <i className="bi bi-eye"></i>
-                                                            </Button>
-
+                                                            {/* WhatsApp section (kept as inline badges/buttons due to status indicators) */}
                                                             {(localStorage.getItem('user_role') === "Admin" || store.settings?.use_whatsapp_api) && store.settings?.evolution_instance_name ? (
                                                                 <>
-                                                                    {/* Connected badge with contact count */}
                                                                     <span
                                                                         className="badge bg-success ms-1"
                                                                         style={{ fontSize: '0.75em', verticalAlign: 'middle', cursor: 'pointer' }}
@@ -727,7 +741,6 @@ function StoreIndex(props) {
                                                                         }
                                                                     </span>
 
-                                                                    {/* View contacts button */}
                                                                     <Button
                                                                         className="btn btn-outline-success btn-sm ms-1"
                                                                         title="View contacts"
@@ -736,7 +749,6 @@ function StoreIndex(props) {
                                                                         <i className="bi bi-people"></i>
                                                                     </Button>
 
-                                                                    {/* Sync contacts button */}
                                                                     <Button
                                                                         className="btn btn-outline-primary btn-sm ms-1"
                                                                         title="Sync WhatsApp contacts now"
@@ -749,7 +761,6 @@ function StoreIndex(props) {
                                                                         }
                                                                     </Button>
 
-                                                                    {/* Clear contacts button */}
                                                                     <Button
                                                                         className="btn btn-outline-warning btn-sm ms-1"
                                                                         title="Clear all synced contacts from DB"
@@ -762,7 +773,6 @@ function StoreIndex(props) {
                                                                         }
                                                                     </Button>
 
-                                                                    {/* Disconnect button */}
                                                                     <Button
                                                                         className="btn btn-danger btn-sm ms-1"
                                                                         title="Disconnect WhatsApp"
