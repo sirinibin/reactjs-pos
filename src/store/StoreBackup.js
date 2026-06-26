@@ -219,28 +219,20 @@ const StoreBackup = forwardRef((props, ref) => {
     }
 
     // ── File download trigger ─────────────────────────────────────────────────
+    // Use a direct <a> link so the browser streams the file straight to disk
+    // instead of buffering the whole thing in memory first (critical for large files).
     function triggerFileDownload(storeId, token) {
         const authToken = encodeURIComponent(localStorage.getItem("access_token") || "");
-        fetch(`/v1/store/${storeId}/backup/file?job_id=${token}&access_token=${authToken}`)
-            .then(res => {
-                if (!res.ok) throw new Error("Download failed");
-                // Read filename from Content-Disposition header so the datetime is preserved
-                const disposition = res.headers.get("Content-Disposition") || "";
-                const match = disposition.match(/filename="([^"]+)"/);
-                const filename = match ? match[1] : `backup_${storeId}.zip`;
-                return res.blob().then(blob => ({ blob, filename }));
-            })
-            .then(({ blob, filename }) => {
-                const blobUrl = URL.createObjectURL(blob);
-                const a = document.createElement("a");
-                a.href = blobUrl;
-                a.download = filename;
-                document.body.appendChild(a);
-                a.click();
-                document.body.removeChild(a);
-                setTimeout(() => URL.revokeObjectURL(blobUrl), 1000);
-            })
-            .catch(err => setBackupError("Download failed: " + err.message));
+        const url = `/v1/store/${storeId}/backup/file?job_id=${token}&access_token=${authToken}`;
+        const a = document.createElement("a");
+        a.href = url;
+        // Leave `download` empty — the browser uses the Content-Disposition
+        // filename from the server (backup_<storeId>_<datetime>.zip)
+        a.download = "";
+        a.style.display = "none";
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
     }
 
     // ── Derived timing values ─────────────────────────────────────────────────
