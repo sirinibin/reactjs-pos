@@ -1,4 +1,5 @@
 import { React, forwardRef } from "react";
+import { resolveImageUrl } from '../utils/imageUtils';
 import { format } from "date-fns";
 import n2words from 'n2words'
 import { trimTo2Decimals } from "../utils/numberUtils";
@@ -117,7 +118,7 @@ const CustomerDepositPreviewContent = forwardRef((props, ref) => {
                         </div>
                         <div className="col">
                             <div className="invoice-logo text-center">
-                                {props.model?.store?.logo ? <img width="70" height="70" src={props.model.store.logo + "?" + (Date.now())} alt="Invoice logo" /> : null}
+                                {props.model?.store?.logo ? <img width="70" height="70" src={resolveImageUrl(props.model.store.logo, props.model.store.id, "store") + "?" + Date.now()} alt="Invoice logo" /> : null}
                             </div>
                         </div>
                         <div className="col">

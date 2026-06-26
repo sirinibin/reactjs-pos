@@ -1,4 +1,5 @@
 import React, { useState, forwardRef, useImperativeHandle } from "react";
+import { resolveImageUrl } from '../utils/imageUtils';
 import { Modal, Table, Button } from 'react-bootstrap';
 
 import { format } from "date-fns";
@@ -135,7 +136,7 @@ const StoreView = forwardRef((props, ref) => {
                         </tr>
                     </tbody>
                 </Table>
-                <div>Logo:<br /><img alt="Logo" src={model.logo + "?" + (Date.now())} key={model.logo} style={{ width: 100, height: 100 }} ></img></div>
+                <div>Logo:<br /><img alt="Logo" src={resolveImageUrl(model.logo, model.id, "store") + "?" + Date.now()} key={model.logo} style={{ width: 100, height: 100 }} ></img></div>
 
                 {model.national_address &&
                     <span>

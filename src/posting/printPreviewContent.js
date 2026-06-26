@@ -1,4 +1,5 @@
 import { React, forwardRef } from "react";
+import { resolveImageUrl } from '../utils/imageUtils';
 import NumberFormat from "react-number-format";
 import { format } from "date-fns";
 import n2words from 'n2words'
@@ -143,7 +144,7 @@ const BalanceSheetPrintPreviewContent = forwardRef((props, ref) => {
                         </div>
                         <div className="col">
                             <div className="invoice-logo text-center">
-                                {props.model?.store?.logo ? <img width="70" height="70" src={props.model.store.logo + "?" + (Date.now())} alt="Invoice logo" /> : null}
+                                {props.model?.store?.logo ? <img width="70" height="70" src={resolveImageUrl(props.model.store.logo, props.model.store.id, "store") + "?" + Date.now()} alt="Invoice logo" /> : null}
                             </div>
                         </div>
                         <div className="col">
@@ -632,7 +633,7 @@ const BalanceSheetPrintPreviewContent = forwardRef((props, ref) => {
                                             </th>
                                             <th style={{ width: "30%", height: "60px" }}>
                                                 {/*props.model.delivered_by_signature ?
-                                                <img alt="Signature" src={ props.model.delivered_by_signature.signature + "?" + (Date.now())} key={props.model.delivered_by_signature.signature} style={{ width: 100, height: 80 }} ></img>
+                                                <img alt="Signature" src={resolveImageUrl(props.model.delivered_by_signature.signature, props.model.delivered_by_signature.store_id, "signatures") + "?" + Date.now()} key={props.model.delivered_by_signature.signature} style={{ width: 100, height: 80 }} ></img>
                     : null*/}
                                             </th>
                                             {/*

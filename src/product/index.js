@@ -1123,7 +1123,13 @@ function ProductIndex(props) {
 
     async function openProductImages(id) {
         let product = await getProductObj(id);
-        productImages = product?.images;
+        const storeId = localStorage.getItem("store_id");
+        productImages = (product?.images || []).map(img => {
+            if (img && !img.startsWith('/') && storeId && id) {
+                return `/images/${storeId}/products/${id}/${img}`;
+            }
+            return img;
+        });
         setProductImages(productImages);
         imageViewerRef.current.open(0);
     }

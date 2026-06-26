@@ -1,4 +1,5 @@
 import React, { useState, forwardRef, useImperativeHandle } from "react";
+import { resolveImageUrl } from '../utils/imageUtils';
 import { Modal, Table } from 'react-bootstrap';
 
 import { Button } from "react-bootstrap";
@@ -120,7 +121,7 @@ const SignatureView = forwardRef((props, ref) => {
                         </tr>
                     </tbody>
                 </Table>
-                <div>Signature:<img alt="Signature" src={model.signature + "?" + (Date.now())} key={model.signature} style={{ width: 100, height: 80 }} /></div>
+                <div>Signature:<img alt="Signature" src={resolveImageUrl(model.signature, model.store_id, "signatures") + "?" + Date.now()} key={model.signature} style={{ width: 100, height: 80 }} /></div>
 
                 {/*
                     <form className="row g-3 needs-validation" >

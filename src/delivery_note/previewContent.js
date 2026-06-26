@@ -1,4 +1,5 @@
 import { React, forwardRef } from "react";
+import { resolveImageUrl } from '../utils/imageUtils';
 import { format } from "date-fns";
 
 
@@ -59,7 +60,7 @@ const DeliveryNotePreviewContent = forwardRef((props, ref) => {
                     </div>
                     <div className="col">
                         <div className="invoice-logo text-center">
-                            {props.model.store && props.model.store.logo ? <img width="100" height="100" src={props.model.store.logo + "?" + (Date.now())} alt="Invoice logo" /> : null}
+                            {props.model.store && props.model.store.logo ? <img width="100" height="100" src={resolveImageUrl(props.model.store.logo, props.model.store.id, "store") + "?" + Date.now()} alt="Invoice logo" /> : null}
                         </div>
                     </div>
                     <div className="col">
@@ -338,7 +339,7 @@ const DeliveryNotePreviewContent = forwardRef((props, ref) => {
                                         </th>
                                         <th style={{ width: "37%", height: "80px" }}>
                                             {props.model.delivered_by_signature ?
-                                                <img alt="Signature" src={props.model.delivered_by_signature.signature + "?" + (Date.now())} key={props.model.delivered_by_signature.signature} style={{ width: 100, height: 80 }} ></img>
+                                                <img alt="Signature" src={resolveImageUrl(props.model.delivered_by_signature.signature, props.model.delivered_by_signature.store_id, "signatures") + "?" + Date.now()} key={props.model.delivered_by_signature.signature} style={{ width: 100, height: 80 }} ></img>
                                                 : null}
                                         </th>
                                         <th className="text-end" style={{ padding: "0px" }}>

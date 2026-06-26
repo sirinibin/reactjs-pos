@@ -15,11 +15,19 @@ const ImageGallery = forwardRef((props, ref) => {
 
     useImperativeHandle(ref, () => ({
         open() {
-            const formatted = (props.storedImages || []).map(url => ({
-                serverUrl: url,
-                preview: url,
-                status: 'uploaded'
-            }));
+            const formatted = (props.storedImages || []).map(url => {
+                // If stored as just filename (no leading '/'), construct the full URL
+                // using storeID + modelName (plural) + entityID + filename
+                let fullUrl = url;
+                if (url && !url.startsWith('/') && props.storeID && props.id) {
+                    fullUrl = `/images/${props.storeID}/${props.modelName}s/${props.id}/${url}`;
+                }
+                return {
+                    serverUrl: fullUrl,
+                    preview: fullUrl,
+                    status: 'uploaded'
+                };
+            });
             setImages(formatted);
         },
         async uploadAllImages() {
