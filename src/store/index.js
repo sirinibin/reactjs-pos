@@ -697,11 +697,13 @@ function StoreIndex(props) {
                                                             </Button> : ""}
                                                         </td>
                                                         <td style={{ width: "auto", whiteSpace: "nowrap" }} >
-                                                            <Button className="btn btn-light btn-sm" onClick={() => {
-                                                                openUpdateForm(store.id);
-                                                            }}>
-                                                                <i className="bi bi-pencil"></i>
-                                                            </Button>
+                                                            {localStorage.getItem('user_role') === "Admin" && (
+                                                                <Button className="btn btn-light btn-sm" onClick={() => {
+                                                                    openUpdateForm(store.id);
+                                                                }}>
+                                                                    <i className="bi bi-pencil"></i>
+                                                                </Button>
+                                                            )}
 
                                                             <Button className="btn btn-primary btn-sm" onClick={() => {
                                                                 openDetailsView(store.id);
@@ -709,7 +711,7 @@ function StoreIndex(props) {
                                                                 <i className="bi bi-eye"></i>
                                                             </Button>
 
-                                                            {store.settings?.evolution_instance_name ? (
+                                                            {(localStorage.getItem('user_role') === "Admin" || store.settings?.use_whatsapp_api) && store.settings?.evolution_instance_name ? (
                                                                 <>
                                                                     {/* Connected badge with contact count */}
                                                                     <span
@@ -773,7 +775,7 @@ function StoreIndex(props) {
                                                                         }
                                                                     </Button>
                                                                 </>
-                                                            ) : (
+                                                            ) : (localStorage.getItem('user_role') === "Admin" || store.settings?.use_whatsapp_api) ? (
                                                                 <Button
                                                                     className="btn btn-outline-success btn-sm ms-1"
                                                                     title="Connect WhatsApp"
@@ -781,7 +783,7 @@ function StoreIndex(props) {
                                                                 >
                                                                     <i className="bi bi-whatsapp"></i>
                                                                 </Button>
-                                                            )}
+                                                            ) : null}
                                                         </td>
                                                     </tr>
                                                 ))}
