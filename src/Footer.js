@@ -17,44 +17,6 @@ class Footer extends React.Component {
                         </p>
                     </div>
                     <div className="col-6 text-end">
-                        <ul className="list-inline">
-                            <li className="list-inline-item">
-                                <a
-                                    className="text-muted"
-                                    href="https://adminkit.io/"
-                                    target="_blank"
-                                    rel="noreferrer"
-                                >Support</a
-                                >
-                            </li>
-                            <li className="list-inline-item">
-                                <a
-                                    className="text-muted"
-                                    href="https://adminkit.io/"
-                                    target="_blank"
-                                    rel="noreferrer"
-                                >Help Center</a
-                                >
-                            </li>
-                            <li className="list-inline-item">
-                                <a
-                                    className="text-muted"
-                                    href="https://adminkit.io/"
-                                    target="_blank"
-                                    rel="noreferrer"
-                                >Privacy</a
-                                >
-                            </li>
-                            <li className="list-inline-item">
-                                <a
-                                    className="text-muted"
-                                    href="https://adminkit.io/"
-                                    target="_blank"
-                                    rel="noreferrer"
-                                >Terms</a
-                                >
-                            </li>
-                        </ul>
                     </div>
                 </div>
             </div>

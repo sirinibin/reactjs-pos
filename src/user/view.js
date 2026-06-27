@@ -59,6 +59,36 @@ const UserView = forwardRef((props, ref) => {
         return battery !== 'N/A' ? `${(parseFloat(battery) * 100).toFixed(0)}%` : 'Unknown';
     };
 
+    const countryTimezoneMap = {
+        'SA': 'Asia/Riyadh', 'AE': 'Asia/Dubai', 'KW': 'Asia/Kuwait',
+        'QA': 'Asia/Qatar', 'BH': 'Asia/Bahrain', 'OM': 'Asia/Muscat',
+        'IN': 'Asia/Kolkata', 'PK': 'Asia/Karachi', 'BD': 'Asia/Dhaka',
+        'LK': 'Asia/Colombo', 'NP': 'Asia/Kathmandu', 'MY': 'Asia/Kuala_Lumpur',
+        'SG': 'Asia/Singapore', 'PH': 'Asia/Manila', 'ID': 'Asia/Jakarta',
+        'EG': 'Africa/Cairo', 'JO': 'Asia/Amman', 'LB': 'Asia/Beirut',
+        'IQ': 'Asia/Baghdad', 'IR': 'Asia/Tehran', 'TR': 'Europe/Istanbul',
+        'GB': 'Europe/London', 'DE': 'Europe/Berlin', 'FR': 'Europe/Paris',
+        'US': 'America/New_York', 'CA': 'America/Toronto', 'AU': 'Australia/Sydney',
+    };
+
+    function formatInStoreTimezone(dateStr) {
+        if (!dateStr) return '';
+        const tz = countryTimezoneMap[localStorage.getItem('store_country_code')] || 'UTC';
+        const tzLabel = tz.replace(/_/g, ' ');
+        try {
+            const d = new Date(dateStr);
+            const formatted = d.toLocaleString('en-US', {
+                timeZone: tz,
+                year: 'numeric', month: 'short', day: '2-digit',
+                hour: '2-digit', minute: '2-digit', second: '2-digit',
+                hour12: true,
+            });
+            return `${formatted} (${tzLabel})`;
+        } catch {
+            return dateStr;
+        }
+    }
+
     const infoCard = (label, value, icon) => (
         <div style={{ backgroundColor: '#ffffff', padding: '24px', borderRadius: '8px', border: '1px solid #e2e8f0', display: 'flex', flexDirection: 'column', gap: '6px' }}>
             <span style={{ fontSize: '13px', fontWeight: 600, color: '#434655', lineHeight: '16px', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
@@ -144,8 +174,8 @@ const UserView = forwardRef((props, ref) => {
 
                         {/* Audit Info Cards */}
                         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-lg">
-                            {infoCard('Created At', model.created_at, 'bi-calendar-plus')}
-                            {infoCard('Updated At', model.updated_at, 'bi-calendar-check')}
+                            {infoCard('Created At', formatInStoreTimezone(model.created_at), 'bi-calendar-plus')}
+                            {infoCard('Updated At', formatInStoreTimezone(model.updated_at), 'bi-calendar-check')}
                             {infoCard('Created By', model.created_by_name, 'bi-person-plus')}
                             {infoCard('Updated By', model.updated_by_name, 'bi-person-gear')}
                         </div>
@@ -212,7 +242,7 @@ const UserView = forwardRef((props, ref) => {
                                                     <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
                                                         <span style={{ fontSize: '12px', fontWeight: 500, color: '#434655', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Last Connected</span>
                                                         <span style={{ fontSize: '14px', color: '#191c1e' }}>
-                                                            {device.last_connected_at ? new Date(device.last_connected_at).toLocaleString() : '—'}
+                                                            {device.last_connected_at ? formatInStoreTimezone(device.last_connected_at) : '—'}
                                                         </span>
                                                     </div>
                                                 </div>

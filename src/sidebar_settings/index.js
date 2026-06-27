@@ -7,6 +7,12 @@ export default function SidebarSettings() {
     const dragIndex               = useRef(null);
     const [draggingId, setDraggingId] = useState(null);
 
+    const isAdmin = localStorage.getItem("user_role") === "Admin";
+    const storeSettings = (() => {
+        try { return JSON.parse(localStorage.getItem('_store_settings_cache') || 'null'); } catch (_) { return null; }
+    })();
+    const warehouseEnabled = !!storeSettings?.enable_warehouse_module;
+
     useEffect(() => { setItems(loadSidebarConfig()); }, []);
 
     // ── Drag handlers (HTML5 native, no library) ────────────────────────────
@@ -104,6 +110,8 @@ export default function SidebarSettings() {
                 {items.map((item, index) => {
                     const meta       = DEFAULT_MENU.find(m => m.id === item.id);
                     if (!meta) return null;
+                    if (meta.adminOnly && !isAdmin) return null;
+                    if (meta.warehouseOnly && !warehouseEnabled) return null;
                     const isLanding  = item.id === landingId && item.visible;
                     const isDragging = draggingId === item.id;
 

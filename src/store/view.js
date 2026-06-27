@@ -2,7 +2,35 @@ import React, { useState, forwardRef, useImperativeHandle } from "react";
 import { resolveImageUrl } from '../utils/imageUtils';
 import { Modal } from 'react-bootstrap';
 
-import { format } from "date-fns";
+const countryTimezoneMap = {
+    'SA': 'Asia/Riyadh', 'AE': 'Asia/Dubai', 'KW': 'Asia/Kuwait',
+    'QA': 'Asia/Qatar', 'BH': 'Asia/Bahrain', 'OM': 'Asia/Muscat',
+    'IN': 'Asia/Kolkata', 'PK': 'Asia/Karachi', 'BD': 'Asia/Dhaka',
+    'LK': 'Asia/Colombo', 'NP': 'Asia/Kathmandu', 'MY': 'Asia/Kuala_Lumpur',
+    'SG': 'Asia/Singapore', 'PH': 'Asia/Manila', 'ID': 'Asia/Jakarta',
+    'EG': 'Africa/Cairo', 'JO': 'Asia/Amman', 'LB': 'Asia/Beirut',
+    'IQ': 'Asia/Baghdad', 'IR': 'Asia/Tehran', 'TR': 'Europe/Istanbul',
+    'GB': 'Europe/London', 'DE': 'Europe/Berlin', 'FR': 'Europe/Paris',
+    'US': 'America/New_York', 'CA': 'America/Toronto', 'AU': 'Australia/Sydney',
+};
+
+function formatInStoreTimezone(dateStr) {
+    if (!dateStr) return '';
+    const tz = countryTimezoneMap[localStorage.getItem('store_country_code')] || 'UTC';
+    const tzLabel = tz.replace(/_/g, ' ');
+    try {
+        const d = new Date(dateStr);
+        const formatted = d.toLocaleString('en-US', {
+            timeZone: tz,
+            year: 'numeric', month: 'short', day: '2-digit',
+            hour: '2-digit', minute: '2-digit', second: '2-digit',
+            hour12: true,
+        });
+        return `${formatted} (${tzLabel})`;
+    } catch {
+        return dateStr;
+    }
+}
 
 const StoreView = forwardRef((props, ref) => {
 
@@ -55,6 +83,9 @@ const StoreView = forwardRef((props, ref) => {
                 model = data.result;
 
                 setModel({ ...model });
+                if (model.country_code) {
+                    localStorage.setItem('store_country_code', model.country_code);
+                }
             })
             .catch(error => {
                 // setErrors(error);
@@ -468,7 +499,7 @@ const StoreView = forwardRef((props, ref) => {
                                         <span style={{ fontSize: '14px', color: '#434655', flexShrink: 0 }}>Last Connected At</span>
                                         <span style={{ fontSize: '13px', fontWeight: 500, color: '#191c1e', textAlign: 'right' }}>
                                             {model.zatca?.last_connected_at
-                                                ? format(new Date(model.zatca.last_connected_at), "MMM dd yyyy h:mm:ssa")
+                                                ? formatInStoreTimezone(model.zatca.last_connected_at)
                                                 : <span style={{ fontStyle: 'italic', color: '#434655' }}>Not set</span>}
                                         </span>
                                     </div>
@@ -483,7 +514,7 @@ const StoreView = forwardRef((props, ref) => {
                                                 <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
                                                     <span style={{ fontSize: '12px', color: '#ba1a1a' }}>Last Failed At</span>
                                                     <span style={{ fontSize: '12px', color: '#ba1a1a' }}>
-                                                        {format(new Date(model.zatca.connection_last_failed_at), "MMM dd yyyy h:mm:ssa")}
+                                                        {formatInStoreTimezone(model.zatca.connection_last_failed_at)}
                                                     </span>
                                                 </div>
                                             )}
@@ -520,7 +551,7 @@ const StoreView = forwardRef((props, ref) => {
                                     {model.created_at && (
                                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingBottom: '8px', borderBottom: '1px solid #c3c6d7' }}>
                                             <span style={{ fontSize: '14px', color: '#434655' }}>Created At</span>
-                                            <span style={{ fontSize: '14px', fontWeight: 500, color: '#191c1e' }}>{model.created_at}</span>
+                                            <span style={{ fontSize: '14px', fontWeight: 500, color: '#191c1e' }}>{formatInStoreTimezone(model.created_at)}</span>
                                         </div>
                                     )}
                                     {model.updated_by_name && (
@@ -532,7 +563,7 @@ const StoreView = forwardRef((props, ref) => {
                                     {model.updated_at && (
                                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '8px' }}>
                                             <span style={{ fontSize: '14px', color: '#434655', flexShrink: 0 }}>Last Updated</span>
-                                            <span style={{ fontSize: '14px', fontWeight: 500, color: '#191c1e', textAlign: 'right' }}>{model.updated_at}</span>
+                                            <span style={{ fontSize: '14px', fontWeight: 500, color: '#191c1e', textAlign: 'right' }}>{formatInStoreTimezone(model.updated_at)}</span>
                                         </div>
                                     )}
                                 </div>

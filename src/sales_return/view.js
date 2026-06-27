@@ -64,6 +64,9 @@ const SalesReturnView = forwardRef((props, ref) => {
                 console.log(data);
                 store = data.result;
                 setStore({ ...store });
+                if (store.country_code) {
+                    localStorage.setItem('store_country_code', store.country_code);
+                }
             })
             .catch(error => {
 
@@ -291,7 +294,7 @@ const SalesReturnView = forwardRef((props, ref) => {
 
     function formatInStoreTimezone(dateStr) {
         if (!dateStr) return '';
-        const tz = countryTimezoneMap[localStorage.getItem('store_country_code')] || 'UTC';
+        const tz = countryTimezoneMap[localStorage.getItem('store_country_code')] || countryTimezoneMap[store?.country_code] || 'UTC';
         const tzLabel = tz.replace('_', ' ');
         try {
             const d = new Date(dateStr);
@@ -458,99 +461,99 @@ const SalesReturnView = forwardRef((props, ref) => {
                         </div>
                     </div>
 
+                    {/* Full-width Returned Items Table Section */}
+                    <section style={{ backgroundColor: '#ffffff', borderRadius: '8px', border: '1px solid #e2e8f0', overflow: 'hidden', marginBottom: '0' }}>
+                        <div style={{ padding: '12px 24px', borderBottom: '1px solid #c3c6d7', display: 'flex', justifyContent: 'space-between', alignItems: 'center', backgroundColor: '#f2f4f6' }}>
+                            <h3 style={{ margin: 0, fontSize: '18px', fontWeight: 600, lineHeight: '26px', fontFamily: "'Hanken Grotesk', sans-serif", color: '#191c1e' }}>{t("Returned Items")}</h3>
+                            <span style={{ fontSize: '12px', fontWeight: 500, color: '#434655' }}>
+                                {model.products ? model.products.filter(p => p.selected).length : 0} {t("Item(s)")}
+                            </span>
+                        </div>
+                        <div style={{ overflowX: 'auto' }}>
+                            <table style={{ width: '100%', textAlign: 'left', borderCollapse: 'collapse', minWidth: '700px' }}>
+                                <thead style={{ backgroundColor: '#f1f5f9' }}>
+                                    <tr style={{ fontSize: '13px', fontWeight: 600, color: '#434655', textTransform: 'uppercase', lineHeight: '16px' }}>
+                                        <th style={{ padding: '12px 16px', fontWeight: 600 }}>{t("SI No.")}</th>
+                                        <th style={{ padding: '12px 16px', fontWeight: 600 }}>{t("Part No.")}</th>
+                                        <th style={{ padding: '12px 16px', fontWeight: 600 }}>{t("Name")}</th>
+                                        <th style={{ padding: '12px 16px', textAlign: 'center', fontWeight: 600 }}>{t("Qty")}</th>
+                                        <th style={{ padding: '12px 16px', textAlign: 'right', fontWeight: 600 }}>{t("Unit Price")}</th>
+                                        <th style={{ padding: '12px 16px', textAlign: 'right', fontWeight: 600 }}>{t("Disc %")}</th>
+                                        <th style={{ padding: '12px 16px', textAlign: 'right', fontWeight: 600 }}>{t("VAT")}</th>
+                                        <th style={{ padding: '12px 16px', textAlign: 'right', fontWeight: 600 }}>{t("Total")}</th>
+                                    </tr>
+                                </thead>
+                                <tbody style={{ fontSize: '14px', lineHeight: '20px', color: '#191c1e' }}>
+                                    {model.products && model.products.filter(product => product.selected).map((product, index) => (
+                                        <tr key={index}
+                                            style={{ borderBottom: '1px solid #c3c6d7', transition: 'transform 0.2s ease-out' }}
+                                            onMouseEnter={e => { e.currentTarget.style.transform = 'translateX(4px)'; e.currentTarget.style.backgroundColor = '#f2f4f6'; }}
+                                            onMouseLeave={e => { e.currentTarget.style.transform = 'translateX(0)'; e.currentTarget.style.backgroundColor = ''; }}
+                                        >
+                                            <td style={{ padding: '12px 16px' }}>{index + 1}</td>
+                                            <td style={{ padding: '12px 16px', fontFamily: 'monospace', color: '#004ac6' }}>{product.part_number}</td>
+                                            <td style={{ padding: '12px 16px' }}>{product.name}{product.name_in_arabic ? " / " + product.name_in_arabic : ""}</td>
+                                            <td style={{ padding: '12px 16px', textAlign: 'center' }}>{product.quantity} {product.unit || ""}</td>
+                                            <td style={{ padding: '12px 16px', textAlign: 'right' }}>
+                                                <NumberFormat value={trimTo2Decimals(product.unit_price)} displayType={"text"} thousandSeparator={true} renderText={(v) => v} />
+                                            </td>
+                                            <td style={{ padding: '12px 16px', textAlign: 'right' }}>
+                                                <NumberFormat value={trimTo2Decimals(product.unit_discount_percent)} displayType={"text"} thousandSeparator={true} suffix="%" renderText={(v) => v} />
+                                            </td>
+                                            <td style={{ padding: '12px 16px', textAlign: 'right' }}>
+                                                <NumberFormat value={trimTo2Decimals(product.vat_price || 0)} displayType={"text"} thousandSeparator={true} renderText={(v) => v} />
+                                            </td>
+                                            <td style={{ padding: '12px 16px', textAlign: 'right', fontWeight: 700 }}>
+                                                <NumberFormat value={trimTo2Decimals((product.unit_price - (product.unit_discount || 0)) * product.quantity)} displayType={"text"} thousandSeparator={true} renderText={(v) => v} />
+                                            </td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
+
+                        {/* Totals Summary */}
+                        <div style={{ display: 'flex', justifyContent: 'flex-end', padding: '24px', backgroundColor: '#ffffff' }}>
+                            <div style={{ width: '100%', maxWidth: '320px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '14px', lineHeight: '20px' }}>
+                                    <span style={{ color: '#434655' }}>{t("Subtotal")}</span>
+                                    <span><NumberFormat value={trimTo2Decimals(model.total)} displayType={"text"} thousandSeparator={true} renderText={(v) => v} /></span>
+                                </div>
+                                {model.shipping_handling_fees > 0 && (
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '14px', lineHeight: '20px' }}>
+                                        <span style={{ color: '#434655' }}>{t("Shipping / Handling Fees")}</span>
+                                        <span><NumberFormat value={trimTo2Decimals(model.shipping_handling_fees)} displayType={"text"} thousandSeparator={true} renderText={(v) => v} /></span>
+                                    </div>
+                                )}
+                                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '14px', lineHeight: '20px' }}>
+                                    <span style={{ color: '#434655' }}>{t("Discount")} {model.discount_percent ? `(${trimTo2Decimals(model.discount_percent)}%)` : ''}</span>
+                                    <span style={{ color: '#ba1a1a' }}>-<NumberFormat value={trimTo2Decimals(model.discount || 0)} displayType={"text"} thousandSeparator={true} renderText={(v) => v} /></span>
+                                </div>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '14px', lineHeight: '20px' }}>
+                                    <span style={{ color: '#434655' }}>{t("VAT ({{vatPercent}}%)", { vatPercent: trimTo2Decimals(model.vat_percent) })}</span>
+                                    <span><NumberFormat value={trimTo2Decimals(model.vat_price)} displayType={"text"} thousandSeparator={true} renderText={(v) => v} /></span>
+                                </div>
+                                {model.cash_discount > 0 && (
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '14px', lineHeight: '20px' }}>
+                                        <span style={{ color: '#434655' }}>{t("Cash Discount")}</span>
+                                        <span style={{ color: '#ba1a1a' }}>-<NumberFormat value={trimTo2Decimals(model.cash_discount)} displayType={"text"} thousandSeparator={true} renderText={(v) => v} /></span>
+                                    </div>
+                                )}
+                                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '16px', lineHeight: '24px', fontWeight: 700, paddingTop: '8px', borderTop: '1px solid #c3c6d7', color: '#191c1e' }}>
+                                    <span>{t("Net Total")}</span>
+                                    <span style={{ color: '#004ac6' }}>
+                                        <NumberFormat value={trimTo2Decimals(model.net_total)} displayType={"text"} thousandSeparator={true} renderText={(v) => v} />
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+
                     {/* Main Body Grid */}
                     <div className="grid grid-cols-1 lg:grid-cols-12 items-start" style={{ gap: '32px' }}>
 
-                        {/* Left Column: Returned Items & Payments */}
+                        {/* Left Column: Payments */}
                         <div className="lg:col-span-8" style={{ display: 'flex', flexDirection: 'column', gap: '32px' }}>
-
-                            {/* Returned Items Table Section */}
-                            <section style={{ backgroundColor: '#ffffff', borderRadius: '8px', border: '1px solid #e2e8f0', overflow: 'hidden' }}>
-                                <div style={{ padding: '12px 24px', borderBottom: '1px solid #c3c6d7', display: 'flex', justifyContent: 'space-between', alignItems: 'center', backgroundColor: '#f2f4f6' }}>
-                                    <h3 style={{ margin: 0, fontSize: '18px', fontWeight: 600, lineHeight: '26px', fontFamily: "'Hanken Grotesk', sans-serif", color: '#191c1e' }}>{t("Returned Items")}</h3>
-                                    <span style={{ fontSize: '12px', fontWeight: 500, color: '#434655' }}>
-                                        {model.products ? model.products.filter(p => p.selected).length : 0} {t("Item(s)")}
-                                    </span>
-                                </div>
-                                <div style={{ overflowX: 'auto', maxHeight: '400px', overflowY: 'auto' }}>
-                                    <table style={{ width: '100%', textAlign: 'left', borderCollapse: 'collapse' }}>
-                                        <thead style={{ backgroundColor: '#f1f5f9' }}>
-                                            <tr style={{ fontSize: '13px', fontWeight: 600, color: '#434655', textTransform: 'uppercase', lineHeight: '16px' }}>
-                                                <th style={{ padding: '12px 24px', fontWeight: 600 }}>{t("SI No.")}</th>
-                                                <th style={{ padding: '12px 24px', fontWeight: 600 }}>{t("Part No.")}</th>
-                                                <th style={{ padding: '12px 24px', fontWeight: 600 }}>{t("Name")}</th>
-                                                <th style={{ padding: '12px 24px', textAlign: 'center', fontWeight: 600 }}>{t("Qty")}</th>
-                                                <th style={{ padding: '12px 24px', textAlign: 'right', fontWeight: 600 }}>{t("Unit Price")}</th>
-                                                <th style={{ padding: '12px 24px', textAlign: 'right', fontWeight: 600 }}>{t("Disc %")}</th>
-                                                <th style={{ padding: '12px 24px', textAlign: 'right', fontWeight: 600 }}>{t("VAT")}</th>
-                                                <th style={{ padding: '12px 24px', textAlign: 'right', fontWeight: 600 }}>{t("Total")}</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody style={{ fontSize: '14px', lineHeight: '20px', color: '#191c1e' }}>
-                                            {model.products && model.products.filter(product => product.selected).map((product, index) => (
-                                                <tr key={index}
-                                                    style={{ borderBottom: '1px solid #c3c6d7', transition: 'transform 0.2s ease-out' }}
-                                                    onMouseEnter={e => { e.currentTarget.style.transform = 'translateX(4px)'; e.currentTarget.style.backgroundColor = '#f2f4f6'; }}
-                                                    onMouseLeave={e => { e.currentTarget.style.transform = 'translateX(0)'; e.currentTarget.style.backgroundColor = ''; }}
-                                                >
-                                                    <td style={{ padding: '12px 24px' }}>{index + 1}</td>
-                                                    <td style={{ padding: '12px 24px', fontFamily: 'monospace', color: '#004ac6' }}>{product.part_number}</td>
-                                                    <td style={{ padding: '12px 24px' }}>{product.name}{product.name_in_arabic ? " / " + product.name_in_arabic : ""}</td>
-                                                    <td style={{ padding: '12px 24px', textAlign: 'center' }}>{product.quantity} {product.unit || ""}</td>
-                                                    <td style={{ padding: '12px 24px', textAlign: 'right' }}>
-                                                        <NumberFormat value={trimTo2Decimals(product.unit_price)} displayType={"text"} thousandSeparator={true} renderText={(v) => v} />
-                                                    </td>
-                                                    <td style={{ padding: '12px 24px', textAlign: 'right' }}>
-                                                        <NumberFormat value={trimTo2Decimals(product.unit_discount_percent)} displayType={"text"} thousandSeparator={true} suffix="%" renderText={(v) => v} />
-                                                    </td>
-                                                    <td style={{ padding: '12px 24px', textAlign: 'right' }}>
-                                                        <NumberFormat value={trimTo2Decimals(product.vat_price || 0)} displayType={"text"} thousandSeparator={true} renderText={(v) => v} />
-                                                    </td>
-                                                    <td style={{ padding: '12px 24px', textAlign: 'right', fontWeight: 700 }}>
-                                                        <NumberFormat value={trimTo2Decimals((product.unit_price - (product.unit_discount || 0)) * product.quantity)} displayType={"text"} thousandSeparator={true} renderText={(v) => v} />
-                                                    </td>
-                                                </tr>
-                                            ))}
-                                        </tbody>
-                                    </table>
-                                </div>
-
-                                {/* Totals Summary */}
-                                <div style={{ display: 'flex', justifyContent: 'flex-end', padding: '24px', backgroundColor: '#ffffff' }}>
-                                    <div style={{ width: '100%', maxWidth: '320px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                                        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '14px', lineHeight: '20px' }}>
-                                            <span style={{ color: '#434655' }}>{t("Subtotal")}</span>
-                                            <span><NumberFormat value={trimTo2Decimals(model.total)} displayType={"text"} thousandSeparator={true} renderText={(v) => v} /></span>
-                                        </div>
-                                        {model.shipping_handling_fees > 0 && (
-                                            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '14px', lineHeight: '20px' }}>
-                                                <span style={{ color: '#434655' }}>{t("Shipping / Handling Fees")}</span>
-                                                <span><NumberFormat value={trimTo2Decimals(model.shipping_handling_fees)} displayType={"text"} thousandSeparator={true} renderText={(v) => v} /></span>
-                                            </div>
-                                        )}
-                                        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '14px', lineHeight: '20px' }}>
-                                            <span style={{ color: '#434655' }}>{t("Discount")} {model.discount_percent ? `(${trimTo2Decimals(model.discount_percent)}%)` : ''}</span>
-                                            <span style={{ color: '#ba1a1a' }}>-<NumberFormat value={trimTo2Decimals(model.discount || 0)} displayType={"text"} thousandSeparator={true} renderText={(v) => v} /></span>
-                                        </div>
-                                        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '14px', lineHeight: '20px' }}>
-                                            <span style={{ color: '#434655' }}>{t("VAT ({{vatPercent}}%)", { vatPercent: trimTo2Decimals(model.vat_percent) })}</span>
-                                            <span><NumberFormat value={trimTo2Decimals(model.vat_price)} displayType={"text"} thousandSeparator={true} renderText={(v) => v} /></span>
-                                        </div>
-                                        {model.cash_discount > 0 && (
-                                            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '14px', lineHeight: '20px' }}>
-                                                <span style={{ color: '#434655' }}>{t("Cash Discount")}</span>
-                                                <span style={{ color: '#ba1a1a' }}>-<NumberFormat value={trimTo2Decimals(model.cash_discount)} displayType={"text"} thousandSeparator={true} renderText={(v) => v} /></span>
-                                            </div>
-                                        )}
-                                        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '16px', lineHeight: '24px', fontWeight: 700, paddingTop: '8px', borderTop: '1px solid #c3c6d7', color: '#191c1e' }}>
-                                            <span>{t("Net Total")}</span>
-                                            <span style={{ color: '#004ac6' }}>
-                                                <NumberFormat value={trimTo2Decimals(model.net_total)} displayType={"text"} thousandSeparator={true} renderText={(v) => v} />
-                                            </span>
-                                        </div>
-                                    </div>
-                                </div>
-                            </section>
 
                             {/* Payment History */}
                             {salesReturnPaymentList.length > 0 && (
@@ -576,7 +579,7 @@ const SalesReturnView = forwardRef((props, ref) => {
                                                 <div style={{ display: 'flex', flexDirection: 'column' }}>
                                                     <span style={{ fontSize: '12px', fontWeight: 500, color: '#434655', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{t("Processed At")}</span>
                                                     <span style={{ fontSize: '14px', color: '#191c1e' }}>
-                                                        {payment.created_at ? format(new Date(payment.created_at), "MMM dd yyyy H:mma", { locale: dateLocale }) : '—'}
+                                                        {payment.created_at ? formatInStoreTimezone(payment.created_at) : '—'}
                                                     </span>
                                                 </div>
                                             </div>
@@ -605,7 +608,7 @@ const SalesReturnView = forwardRef((props, ref) => {
                                         <div style={{ display: 'flex', flexDirection: 'column' }}>
                                             <span style={{ fontSize: '12px', fontWeight: 500, color: '#434655' }}>{t("Reported At")}</span>
                                             <span style={{ fontSize: '14px', color: model.zatca?.reporting_passed_at ? '#191c1e' : '#434655', fontStyle: model.zatca?.reporting_passed_at ? 'normal' : 'italic' }}>
-                                                {model.zatca?.reporting_passed_at ? format(new Date(model.zatca.reporting_passed_at), "MMM dd yyyy h:mm:ssa", { locale: dateLocale }) : t("Not set")}
+                                                {model.zatca?.reporting_passed_at ? formatInStoreTimezone(model.zatca.reporting_passed_at) : t("Not set")}
                                             </span>
                                         </div>
                                     </div>
@@ -632,7 +635,7 @@ const SalesReturnView = forwardRef((props, ref) => {
                                     {model.zatca?.signing_time && (
                                         <div style={{ display: 'flex', flexDirection: 'column' }}>
                                             <span style={{ fontSize: '12px', fontWeight: 500, color: '#434655' }}>{t("Signing time")}</span>
-                                            <span style={{ fontSize: '14px', color: '#191c1e' }}>{format(new Date(model.zatca.signing_time), "MMM dd yyyy h:mm:ssa", { locale: dateLocale })}</span>
+                                            <span style={{ fontSize: '14px', color: '#191c1e' }}>{formatInStoreTimezone(model.zatca.signing_time)}</span>
                                         </div>
                                     )}
                                     {model.prev_hash && (

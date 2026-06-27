@@ -33,6 +33,36 @@ const PurchaseCashDiscountView = forwardRef((props, ref) => {
             .join("&");
     }
 
+    const countryTimezoneMap = {
+        'SA': 'Asia/Riyadh', 'AE': 'Asia/Dubai', 'KW': 'Asia/Kuwait',
+        'QA': 'Asia/Qatar', 'BH': 'Asia/Bahrain', 'OM': 'Asia/Muscat',
+        'IN': 'Asia/Kolkata', 'PK': 'Asia/Karachi', 'BD': 'Asia/Dhaka',
+        'LK': 'Asia/Colombo', 'NP': 'Asia/Kathmandu', 'MY': 'Asia/Kuala_Lumpur',
+        'SG': 'Asia/Singapore', 'PH': 'Asia/Manila', 'ID': 'Asia/Jakarta',
+        'EG': 'Africa/Cairo', 'JO': 'Asia/Amman', 'LB': 'Asia/Beirut',
+        'IQ': 'Asia/Baghdad', 'IR': 'Asia/Tehran', 'TR': 'Europe/Istanbul',
+        'GB': 'Europe/London', 'DE': 'Europe/Berlin', 'FR': 'Europe/Paris',
+        'US': 'America/New_York', 'CA': 'America/Toronto', 'AU': 'Australia/Sydney',
+    };
+
+    function formatInStoreTimezone(dateStr) {
+        if (!dateStr) return '';
+        const tz = countryTimezoneMap[localStorage.getItem('store_country_code')] || 'UTC';
+        const tzLabel = tz.replace(/_/g, ' ');
+        try {
+            const d = new Date(dateStr);
+            const formatted = d.toLocaleString('en-US', {
+                timeZone: tz,
+                year: 'numeric', month: 'short', day: '2-digit',
+                hour: '2-digit', minute: '2-digit', second: '2-digit',
+                hour12: true,
+            });
+            return `${formatted} (${tzLabel})`;
+        } catch {
+            return dateStr;
+        }
+    }
+
     function getPurchaseCashDiscount(id) {
         console.log("inside get PurchaseCashDiscount");
         const requestOptions = {
@@ -110,8 +140,8 @@ const PurchaseCashDiscountView = forwardRef((props, ref) => {
                         </tr>
                         <tr>
                             <th>Created By:</th><td> {model.created_by_name}</td>
-                            <th>Created At:</th><td> {model.created_at}</td>
-                            <th>Updated At:</th><td> {model.updated_at}</td>
+                            <th>Created At:</th><td> {formatInStoreTimezone(model.created_at)}</td>
+                            <th>Updated At:</th><td> {formatInStoreTimezone(model.updated_at)}</td>
                         </tr>
                         <tr>
 

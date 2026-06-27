@@ -48,18 +48,56 @@ function Topbar(props) {
     const [storeSettings, setStoreSettings] = useState(() => {
         try { return JSON.parse(localStorage.getItem('_store_settings_cache') || 'null'); } catch (_) { return null; }
     });
+    const storeName = localStorage.getItem("store_name") || "";
+    const branchName = localStorage.getItem("branch_name") || "";
+    const [stores, setStores] = useState([]);
+    const [storesLoading, setStoresLoading] = useState(false);
+    const [storeCode, setStoreCode] = useState("");
+    const [storeZatca, setStoreZatca] = useState(null);
+
+    async function fetchStores() {
+        if (stores.length > 0) return;
+        setStoresLoading(true);
+        const token = localStorage.getItem("access_token");
+        try {
+            const res = await fetch('/v1/store?select=id,name,code,branch_name,zatca', { headers: { Authorization: "Bearer " + token } });
+            const data = res.ok && await res.json();
+            if (data && Array.isArray(data.result)) setStores(data.result);
+        } catch (_) {}
+        setStoresLoading(false);
+    }
+
+    async function switchStore(store) {
+        const token = localStorage.getItem("access_token");
+        localStorage.setItem("store_id", store.id);
+        localStorage.setItem("store_name", store.name);
+        try {
+            const res = await fetch(`/v1/store/${store.id}?select=id,branch_name`, { headers: { Authorization: "Bearer " + token } });
+            const data = res.ok && await res.json();
+            if (data?.result?.branch_name) {
+                localStorage.setItem("branch_name", data.result.branch_name);
+            } else {
+                localStorage.removeItem("branch_name");
+            }
+        } catch (_) {}
+        window.location.reload();
+    }
 
     // Fetch store settings once on mount (for feature flags like enable_notification)
     useEffect(() => {
         const storeId = localStorage.getItem("store_id");
         const token = localStorage.getItem("access_token");
         if (!storeId || !token) return;
-        fetch(`/v1/store/${storeId}?select=id,settings`, { headers: { Authorization: "Bearer " + token } })
+        fetch(`/v1/store/${storeId}?select=id,code,settings,zatca`, { headers: { Authorization: "Bearer " + token } })
             .then(async res => {
                 const data = res.ok && await res.json();
-                if (data && data.result && data.result.settings) {
-                    setStoreSettings(data.result.settings);
-                    localStorage.setItem('_store_settings_cache', JSON.stringify(data.result.settings));
+                if (data && data.result) {
+                    if (data.result.settings) {
+                        setStoreSettings(data.result.settings);
+                        localStorage.setItem('_store_settings_cache', JSON.stringify(data.result.settings));
+                    }
+                    if (data.result.code) setStoreCode(data.result.code);
+                    if (data.result.zatca) setStoreZatca(data.result.zatca);
                 }
             })
             .catch(() => { });
@@ -196,8 +234,65 @@ function Topbar(props) {
 
 
         <div className="navbar-collapse collapse">
-            {localStorage.getItem("branch_name") ? t('labels.branch') + ": " + localStorage.getItem("branch_name") : ""}
-
+            <Dropdown onToggle={(isOpen) => { if (isOpen) fetchStores(); }} className="ms-2">
+                <Dropdown.Toggle
+                    as="span"
+                    style={{ cursor: "pointer", display: "inline-flex", alignItems: "center", gap: "6px", userSelect: "none", maxWidth: "100%" }}
+                    id="store-switcher-toggle"
+                >
+                    <i className="bi bi-shop" style={{ fontSize: "15px", flexShrink: 0 }}></i>
+                    <span style={{
+                        fontWeight: 600,
+                        maxWidth: "25%",
+                        overflow: "hidden",
+                        textOverflow: "ellipsis",
+                        whiteSpace: "nowrap",
+                        flexShrink: 1,
+                    }}>{storeName}</span>
+                    {storeCode && (
+                        <span className="text-muted" style={{ fontWeight: 400, fontSize: "12px", flexShrink: 0 }}>({storeCode})</span>
+                    )}
+                    {branchName && (
+                        <span className="text-muted" style={{ fontWeight: 400, flexShrink: 0, whiteSpace: "nowrap" }}>· {branchName}</span>
+                    )}
+                    {storeZatca?.phase === "2" && storeZatca?.env && (
+                        <span style={{
+                            fontSize: "11px", fontWeight: 600, padding: "1px 6px",
+                            borderRadius: "4px", background: "#dbeafe", color: "#1d4ed8",
+                            flexShrink: 0, whiteSpace: "nowrap",
+                        }}>{storeZatca.env}</span>
+                    )}
+                    <i className="bi bi-chevron-down" style={{ fontSize: "11px", flexShrink: 0 }}></i>
+                </Dropdown.Toggle>
+                <Dropdown.Menu>
+                    {storesLoading ? (
+                        <Dropdown.ItemText className="text-muted small">Loading...</Dropdown.ItemText>
+                    ) : stores.length === 0 ? (
+                        <Dropdown.ItemText className="text-muted small">No stores found</Dropdown.ItemText>
+                    ) : (
+                        stores.map(s => {
+                            const isActive = s.id === localStorage.getItem("store_id");
+                            const mutedColor = isActive ? "rgba(255,255,255,0.75)" : "#6c757d";
+                            return (
+                            <Dropdown.Item
+                                key={s.id}
+                                active={isActive}
+                                onClick={() => switchStore(s)}
+                            >
+                                <strong>{s.name}</strong>
+                                {s.code && <span style={{ fontSize: "12px", marginLeft: "4px", color: mutedColor }}>({s.code})</span>}
+                                {s.branch_name && <span style={{ marginLeft: "4px", color: mutedColor }}>· {s.branch_name}</span>}
+                                {s.zatca?.phase === "2" && s.zatca?.env && (
+                                    <span style={{
+                                        fontSize: "11px", fontWeight: 600, padding: "1px 6px", marginLeft: "6px",
+                                        borderRadius: "4px", background: "#dbeafe", color: "#1d4ed8",
+                                    }}>{s.zatca.env}</span>
+                                )}
+                            </Dropdown.Item>
+                        )})
+                    )}
+                </Dropdown.Menu>
+            </Dropdown>
 
             <ul className="navbar-nav navbar-align">
 

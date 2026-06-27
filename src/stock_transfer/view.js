@@ -4,7 +4,6 @@ import { Modal, Button } from 'react-bootstrap';
 import NumberFormat from "react-number-format";
 import StockTransferPreview from './../order/preview.js';
 import StockTransferPrint from './../order/print.js';
-import { format } from "date-fns";
 import { trimTo2Decimals } from "../utils/numberUtils.js";
 
 const StockTransferView = forwardRef((props, ref) => {
@@ -232,6 +231,9 @@ const StockTransferView = forwardRef((props, ref) => {
                 console.log(data);
                 store = data.result;
                 setStore({ ...store });
+                if (store.country_code) {
+                    localStorage.setItem('store_country_code', store.country_code);
+                }
             })
             .catch(error => {
 
@@ -356,7 +358,7 @@ const StockTransferView = forwardRef((props, ref) => {
 
     function formatInStoreTimezone(dateStr) {
         if (!dateStr) return '';
-        const tz = countryTimezoneMap[localStorage.getItem('store_country_code')] || 'UTC';
+        const tz = countryTimezoneMap[localStorage.getItem('store_country_code')] || countryTimezoneMap[store?.country_code] || 'UTC';
         try {
             const formatted = new Date(dateStr).toLocaleString('en-US', {
                 timeZone: tz,
@@ -614,7 +616,7 @@ const StockTransferView = forwardRef((props, ref) => {
                                                 </div>
                                                 <div style={{ display: 'flex', flexDirection: 'column' }}>
                                                     <span style={{ fontSize: '12px', fontWeight: 500, color: '#434655', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Created At</span>
-                                                    <span style={{ fontSize: '14px', color: '#191c1e' }}>{format(new Date(cd.created_at), "MMM dd yyyy H:mma")}</span>
+                                                    <span style={{ fontSize: '14px', color: '#191c1e' }}>{formatInStoreTimezone(cd.created_at)}</span>
                                                 </div>
                                             </div>
                                         ))}
@@ -645,7 +647,7 @@ const StockTransferView = forwardRef((props, ref) => {
                                                 </div>
                                                 <div style={{ display: 'flex', flexDirection: 'column' }}>
                                                     <span style={{ fontSize: '12px', fontWeight: 500, color: '#434655', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Processed At</span>
-                                                    <span style={{ fontSize: '14px', color: '#191c1e' }}>{format(new Date(payment.created_at), "MMM dd yyyy H:mma")}</span>
+                                                    <span style={{ fontSize: '14px', color: '#191c1e' }}>{formatInStoreTimezone(payment.created_at)}</span>
                                                 </div>
                                             </div>
                                         ))}
@@ -696,7 +698,7 @@ const StockTransferView = forwardRef((props, ref) => {
                                     {model.date && (
                                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingBottom: '8px', borderBottom: '1px solid #c3c6d7' }}>
                                             <span style={{ fontSize: '14px', color: '#434655' }}>Transfer Date</span>
-                                            <span style={{ fontSize: '14px', fontWeight: 500, color: '#191c1e' }}>{format(new Date(model.date), "MMM dd, yyyy")}</span>
+                                            <span style={{ fontSize: '14px', fontWeight: 500, color: '#191c1e' }}>{formatInStoreTimezone(model.date)}</span>
                                         </div>
                                     )}
                                     {model.vat_percent !== undefined && (

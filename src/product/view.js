@@ -247,6 +247,36 @@ const ProductView = forwardRef((props, ref) => {
         : null;
     const activeStore = activeStoreKey ? model.product_stores[activeStoreKey] : null;
 
+    const countryTimezoneMap = {
+        'SA': 'Asia/Riyadh', 'AE': 'Asia/Dubai', 'KW': 'Asia/Kuwait',
+        'QA': 'Asia/Qatar', 'BH': 'Asia/Bahrain', 'OM': 'Asia/Muscat',
+        'IN': 'Asia/Kolkata', 'PK': 'Asia/Karachi', 'BD': 'Asia/Dhaka',
+        'LK': 'Asia/Colombo', 'NP': 'Asia/Kathmandu', 'MY': 'Asia/Kuala_Lumpur',
+        'SG': 'Asia/Singapore', 'PH': 'Asia/Manila', 'ID': 'Asia/Jakarta',
+        'EG': 'Africa/Cairo', 'JO': 'Asia/Amman', 'LB': 'Asia/Beirut',
+        'IQ': 'Asia/Baghdad', 'IR': 'Asia/Tehran', 'TR': 'Europe/Istanbul',
+        'GB': 'Europe/London', 'DE': 'Europe/Berlin', 'FR': 'Europe/Paris',
+        'US': 'America/New_York', 'CA': 'America/Toronto', 'AU': 'Australia/Sydney',
+    };
+
+    function formatInStoreTimezone(dateStr) {
+        if (!dateStr) return '';
+        const tz = countryTimezoneMap[localStorage.getItem('store_country_code')] || 'UTC';
+        const tzLabel = tz.replace(/_/g, ' ');
+        try {
+            const d = new Date(dateStr);
+            const formatted = d.toLocaleString('en-US', {
+                timeZone: tz,
+                year: 'numeric', month: 'short', day: '2-digit',
+                hour: '2-digit', minute: '2-digit', second: '2-digit',
+                hour12: true,
+            });
+            return `${formatted} (${tzLabel})`;
+        } catch {
+            return dateStr;
+        }
+    }
+
     return (<>
         <SalesHistory ref={SalesHistoryRef} showToastMessage={props.showToastMessage} />
         <SalesReturnHistory ref={SalesReturnHistoryRef} showToastMessage={props.showToastMessage} />
@@ -587,13 +617,13 @@ const ProductView = forwardRef((props, ref) => {
                                     {model.created_at && (
                                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingBottom: '8px', borderBottom: '1px solid #c3c6d7' }}>
                                             <span style={{ fontSize: '14px', color: '#434655' }}>Created At</span>
-                                            <span style={{ fontSize: '14px', fontWeight: 500, color: '#191c1e' }}>{model.created_at}</span>
+                                            <span style={{ fontSize: '14px', fontWeight: 500, color: '#191c1e' }}>{formatInStoreTimezone(model.created_at)}</span>
                                         </div>
                                     )}
                                     {model.updated_at && (
                                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '8px' }}>
                                             <span style={{ fontSize: '14px', color: '#434655', flexShrink: 0 }}>Updated At</span>
-                                            <span style={{ fontSize: '14px', fontWeight: 500, color: '#191c1e', textAlign: 'right' }}>{model.updated_at}</span>
+                                            <span style={{ fontSize: '14px', fontWeight: 500, color: '#191c1e', textAlign: 'right' }}>{formatInStoreTimezone(model.updated_at)}</span>
                                         </div>
                                     )}
                                 </div>

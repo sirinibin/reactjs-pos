@@ -104,7 +104,7 @@ function StoreIndex(props) {
             },
         };
         let Select =
-            "select=id,name,code,branch_name,created_by_name,created_at,vat_percent,zatca,phone,settings";
+            "select=id,name,code,branch_name,country_code,created_by_name,created_at,vat_percent,zatca,phone,settings";
 
         const d = new Date();
         let diff = d.getTimezoneOffset();

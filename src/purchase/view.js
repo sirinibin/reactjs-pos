@@ -1,17 +1,14 @@
-import React, { useState, useRef, forwardRef, useImperativeHandle, useMemo } from "react";
+import React, { useState, useRef, forwardRef, useImperativeHandle } from "react";
 import Preview from './../order/preview.js';
 import { Modal } from 'react-bootstrap';
 
 import NumberFormat from "react-number-format";
 import PurchasePrint from './print.js';
-import { format } from "date-fns";
 import { trimTo2Decimals } from "../utils/numberUtils";
 import { useTranslation } from 'react-i18next';
-import { getDateLocale } from "../i18n/dateLocales";
 
 const PurchaseView = forwardRef((props, ref) => {
-    const { t, i18n } = useTranslation('common');
-    const dateLocale = useMemo(() => getDateLocale(i18n.language), [i18n.language]);
+    const { t } = useTranslation('common');
 
     useImperativeHandle(ref, () => ({
         open(id) {
@@ -379,90 +376,90 @@ const PurchaseView = forwardRef((props, ref) => {
                         </div>
                     </div>
 
+                    {/* Full-width Products Section — outside the grid, above it */}
+                    <section style={{ backgroundColor: '#ffffff', borderRadius: '8px', border: '1px solid #e2e8f0', overflow: 'hidden', marginBottom: '0' }}>
+                        <div style={{ padding: '12px 24px', borderBottom: '1px solid #c3c6d7', display: 'flex', justifyContent: 'space-between', alignItems: 'center', backgroundColor: '#f2f4f6' }}>
+                            <h3 style={{ margin: 0, fontSize: '18px', fontWeight: 600, lineHeight: '26px', fontFamily: "'Hanken Grotesk', sans-serif", color: '#191c1e' }}>{t("Purchased Items")}</h3>
+                            <span style={{ fontSize: '12px', fontWeight: 500, color: '#434655' }}>{model.products?.length || 0} {t("Item(s)")}</span>
+                        </div>
+                        <div style={{ overflowX: 'auto' }}>
+                            <table style={{ width: '100%', textAlign: 'left', borderCollapse: 'collapse', minWidth: '700px' }}>
+                                <thead style={{ backgroundColor: '#f1f5f9' }}>
+                                    <tr style={{ fontSize: '13px', fontWeight: 600, color: '#434655', textTransform: 'uppercase', lineHeight: '16px' }}>
+                                        <th style={{ padding: '12px 24px', fontWeight: 600 }}>{t("SI No.")}</th>
+                                        <th style={{ padding: '12px 24px', fontWeight: 600 }}>{t("Part No.")}</th>
+                                        <th style={{ padding: '12px 24px', fontWeight: 600 }}>{t("Name")}</th>
+                                        <th style={{ padding: '12px 24px', textAlign: 'center', fontWeight: 600 }}>{t("Qty")}</th>
+                                        <th style={{ padding: '12px 24px', textAlign: 'right', fontWeight: 600 }}>{t("Unit Price")}</th>
+                                        <th style={{ padding: '12px 24px', textAlign: 'right', fontWeight: 600 }}>{t("Disc %")}</th>
+                                        <th style={{ padding: '12px 24px', textAlign: 'right', fontWeight: 600 }}>{t("VAT")}</th>
+                                        <th style={{ padding: '12px 24px', textAlign: 'right', fontWeight: 600 }}>{t("Total")}</th>
+                                    </tr>
+                                </thead>
+                                <tbody style={{ fontSize: '14px', lineHeight: '20px', color: '#191c1e' }}>
+                                    {model.products && model.products.map((product, index) => (
+                                        <tr key={index}
+                                            style={{ borderBottom: '1px solid #c3c6d7', transition: 'transform 0.2s ease-out' }}
+                                            onMouseEnter={e => { e.currentTarget.style.transform = 'translateX(4px)'; e.currentTarget.style.backgroundColor = '#f2f4f6'; }}
+                                            onMouseLeave={e => { e.currentTarget.style.transform = 'translateX(0)'; e.currentTarget.style.backgroundColor = ''; }}
+                                        >
+                                            <td style={{ padding: '12px 24px' }}>{index + 1}</td>
+                                            <td style={{ padding: '12px 24px', fontFamily: 'monospace', color: '#004ac6' }}>{product.part_number}</td>
+                                            <td style={{ padding: '12px 24px' }}>{product.name}{product.name_in_arabic ? " / " + product.name_in_arabic : ""}</td>
+                                            <td style={{ padding: '12px 24px', textAlign: 'center' }}>{product.quantity} {product.unit || ""}</td>
+                                            <td style={{ padding: '12px 24px', textAlign: 'right' }}>
+                                                <NumberFormat value={trimTo2Decimals(product.purchase_unit_price)} displayType={"text"} thousandSeparator={true} renderText={(v) => v} />
+                                            </td>
+                                            <td style={{ padding: '12px 24px', textAlign: 'right' }}>
+                                                <NumberFormat value={trimTo2Decimals(product.unit_discount_percent)} displayType={"text"} thousandSeparator={true} suffix="%" renderText={(v) => v} />
+                                            </td>
+                                            <td style={{ padding: '12px 24px', textAlign: 'right' }}>
+                                                <NumberFormat value={trimTo2Decimals(product.vat_price || 0)} displayType={"text"} thousandSeparator={true} renderText={(v) => v} />
+                                            </td>
+                                            <td style={{ padding: '12px 24px', textAlign: 'right', fontWeight: 700 }}>
+                                                <NumberFormat value={trimTo2Decimals((product.purchase_unit_price - (product.unit_discount || 0)) * product.quantity)} displayType={"text"} thousandSeparator={true} renderText={(v) => v} />
+                                            </td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
+                        {/* Totals Summary */}
+                        <div style={{ display: 'flex', justifyContent: 'flex-end', padding: '24px', backgroundColor: '#ffffff' }}>
+                            <div style={{ width: '100%', maxWidth: '320px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '14px', lineHeight: '20px' }}>
+                                    <span style={{ color: '#434655' }}>{t("Subtotal")}</span>
+                                    <span><NumberFormat value={trimTo2Decimals(model.total)} displayType={"text"} thousandSeparator={true} renderText={(v) => v} /></span>
+                                </div>
+                                {model.shipping_handling_fees > 0 && (
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '14px', lineHeight: '20px' }}>
+                                        <span style={{ color: '#434655' }}>{t("Shipping / Handling Fees")}</span>
+                                        <span><NumberFormat value={trimTo2Decimals(model.shipping_handling_fees)} displayType={"text"} thousandSeparator={true} renderText={(v) => v} /></span>
+                                    </div>
+                                )}
+                                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '14px', lineHeight: '20px' }}>
+                                    <span style={{ color: '#434655' }}>{t("Discount")}</span>
+                                    <span style={{ color: '#ba1a1a' }}>-<NumberFormat value={trimTo2Decimals(model.discount || 0)} displayType={"text"} thousandSeparator={true} renderText={(v) => v} /></span>
+                                </div>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '14px', lineHeight: '20px' }}>
+                                    <span style={{ color: '#434655' }}>{t("VAT ({{vatPercent}}%)", { vatPercent: trimTo2Decimals(model.vat_percent) })}</span>
+                                    <span><NumberFormat value={trimTo2Decimals(model.vat_price)} displayType={"text"} thousandSeparator={true} renderText={(v) => v} /></span>
+                                </div>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '16px', lineHeight: '24px', fontWeight: 700, paddingTop: '8px', borderTop: '1px solid #c3c6d7', color: '#191c1e' }}>
+                                    <span>{t("Net Total")}</span>
+                                    <span style={{ color: '#004ac6' }}>
+                                        <NumberFormat value={trimTo2Decimals(model.net_total)} displayType={"text"} thousandSeparator={true} renderText={(v) => v} />
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+
                     {/* Main Body Grid */}
                     <div className="grid grid-cols-1 lg:grid-cols-12 items-start" style={{ gap: '32px' }}>
 
-                        {/* Left Column: Purchased Items, Cash Discounts & Payments */}
+                        {/* Left Column: Cash Discounts & Payments */}
                         <div className="lg:col-span-8" style={{ display: 'flex', flexDirection: 'column', gap: '32px' }}>
-
-                            {/* Purchased Items Table Section */}
-                            <section style={{ backgroundColor: '#ffffff', borderRadius: '8px', border: '1px solid #e2e8f0', overflow: 'hidden' }}>
-                                <div style={{ padding: '12px 24px', borderBottom: '1px solid #c3c6d7', display: 'flex', justifyContent: 'space-between', alignItems: 'center', backgroundColor: '#f2f4f6' }}>
-                                    <h3 style={{ margin: 0, fontSize: '18px', fontWeight: 600, lineHeight: '26px', fontFamily: "'Hanken Grotesk', sans-serif", color: '#191c1e' }}>{t("Purchased Items")}</h3>
-                                    <span style={{ fontSize: '12px', fontWeight: 500, color: '#434655' }}>{model.products?.length || 0} {t("Item(s)")}</span>
-                                </div>
-                                <div style={{ overflowX: 'auto', maxHeight: '400px', overflowY: 'auto' }}>
-                                    <table style={{ width: '100%', textAlign: 'left', borderCollapse: 'collapse' }}>
-                                        <thead style={{ backgroundColor: '#f1f5f9' }}>
-                                            <tr style={{ fontSize: '13px', fontWeight: 600, color: '#434655', textTransform: 'uppercase', lineHeight: '16px' }}>
-                                                <th style={{ padding: '12px 24px', fontWeight: 600 }}>{t("SI No.")}</th>
-                                                <th style={{ padding: '12px 24px', fontWeight: 600 }}>{t("Part No.")}</th>
-                                                <th style={{ padding: '12px 24px', fontWeight: 600 }}>{t("Name")}</th>
-                                                <th style={{ padding: '12px 24px', textAlign: 'center', fontWeight: 600 }}>{t("Qty")}</th>
-                                                <th style={{ padding: '12px 24px', textAlign: 'right', fontWeight: 600 }}>{t("Unit Price")}</th>
-                                                <th style={{ padding: '12px 24px', textAlign: 'right', fontWeight: 600 }}>{t("Disc %")}</th>
-                                                <th style={{ padding: '12px 24px', textAlign: 'right', fontWeight: 600 }}>{t("VAT")}</th>
-                                                <th style={{ padding: '12px 24px', textAlign: 'right', fontWeight: 600 }}>{t("Total")}</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody style={{ fontSize: '14px', lineHeight: '20px', color: '#191c1e' }}>
-                                            {model.products && model.products.map((product, index) => (
-                                                <tr key={index}
-                                                    style={{ borderBottom: '1px solid #c3c6d7', transition: 'transform 0.2s ease-out' }}
-                                                    onMouseEnter={e => { e.currentTarget.style.transform = 'translateX(4px)'; e.currentTarget.style.backgroundColor = '#f2f4f6'; }}
-                                                    onMouseLeave={e => { e.currentTarget.style.transform = 'translateX(0)'; e.currentTarget.style.backgroundColor = ''; }}
-                                                >
-                                                    <td style={{ padding: '12px 24px' }}>{index + 1}</td>
-                                                    <td style={{ padding: '12px 24px', fontFamily: 'monospace', color: '#004ac6' }}>{product.part_number}</td>
-                                                    <td style={{ padding: '12px 24px' }}>{product.name}{product.name_in_arabic ? " / " + product.name_in_arabic : ""}</td>
-                                                    <td style={{ padding: '12px 24px', textAlign: 'center' }}>{product.quantity} {product.unit || ""}</td>
-                                                    <td style={{ padding: '12px 24px', textAlign: 'right' }}>
-                                                        <NumberFormat value={trimTo2Decimals(product.purchase_unit_price)} displayType={"text"} thousandSeparator={true} renderText={(v) => v} />
-                                                    </td>
-                                                    <td style={{ padding: '12px 24px', textAlign: 'right' }}>
-                                                        <NumberFormat value={trimTo2Decimals(product.unit_discount_percent)} displayType={"text"} thousandSeparator={true} suffix="%" renderText={(v) => v} />
-                                                    </td>
-                                                    <td style={{ padding: '12px 24px', textAlign: 'right' }}>
-                                                        <NumberFormat value={trimTo2Decimals(product.vat_price || 0)} displayType={"text"} thousandSeparator={true} renderText={(v) => v} />
-                                                    </td>
-                                                    <td style={{ padding: '12px 24px', textAlign: 'right', fontWeight: 700 }}>
-                                                        <NumberFormat value={trimTo2Decimals((product.purchase_unit_price - (product.unit_discount || 0)) * product.quantity)} displayType={"text"} thousandSeparator={true} renderText={(v) => v} />
-                                                    </td>
-                                                </tr>
-                                            ))}
-                                        </tbody>
-                                    </table>
-                                </div>
-                                {/* Totals Summary */}
-                                <div style={{ display: 'flex', justifyContent: 'flex-end', padding: '24px', backgroundColor: '#ffffff' }}>
-                                    <div style={{ width: '100%', maxWidth: '320px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                                        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '14px', lineHeight: '20px' }}>
-                                            <span style={{ color: '#434655' }}>{t("Subtotal")}</span>
-                                            <span><NumberFormat value={trimTo2Decimals(model.total)} displayType={"text"} thousandSeparator={true} renderText={(v) => v} /></span>
-                                        </div>
-                                        {model.shipping_handling_fees > 0 && (
-                                            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '14px', lineHeight: '20px' }}>
-                                                <span style={{ color: '#434655' }}>{t("Shipping / Handling Fees")}</span>
-                                                <span><NumberFormat value={trimTo2Decimals(model.shipping_handling_fees)} displayType={"text"} thousandSeparator={true} renderText={(v) => v} /></span>
-                                            </div>
-                                        )}
-                                        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '14px', lineHeight: '20px' }}>
-                                            <span style={{ color: '#434655' }}>{t("Discount")}</span>
-                                            <span style={{ color: '#ba1a1a' }}>-<NumberFormat value={trimTo2Decimals(model.discount || 0)} displayType={"text"} thousandSeparator={true} renderText={(v) => v} /></span>
-                                        </div>
-                                        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '14px', lineHeight: '20px' }}>
-                                            <span style={{ color: '#434655' }}>{t("VAT ({{vatPercent}}%)", { vatPercent: trimTo2Decimals(model.vat_percent) })}</span>
-                                            <span><NumberFormat value={trimTo2Decimals(model.vat_price)} displayType={"text"} thousandSeparator={true} renderText={(v) => v} /></span>
-                                        </div>
-                                        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '16px', lineHeight: '24px', fontWeight: 700, paddingTop: '8px', borderTop: '1px solid #c3c6d7', color: '#191c1e' }}>
-                                            <span>{t("Net Total")}</span>
-                                            <span style={{ color: '#004ac6' }}>
-                                                <NumberFormat value={trimTo2Decimals(model.net_total)} displayType={"text"} thousandSeparator={true} renderText={(v) => v} />
-                                            </span>
-                                        </div>
-                                    </div>
-                                </div>
-                            </section>
 
                             {/* Cash Discounts */}
                             {purchaseCashDiscountList.length > 0 && (
@@ -484,7 +481,7 @@ const PurchaseView = forwardRef((props, ref) => {
                                                 </div>
                                                 <div style={{ display: 'flex', flexDirection: 'column' }}>
                                                     <span style={{ fontSize: '12px', fontWeight: 500, color: '#434655', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{t("Created At")}</span>
-                                                    <span style={{ fontSize: '14px', color: '#191c1e' }}>{format(new Date(cd.created_at), "MMM dd yyyy H:mma", { locale: dateLocale })}</span>
+                                                    <span style={{ fontSize: '14px', color: '#191c1e' }}>{formatInStoreTimezone(cd.created_at)}</span>
                                                 </div>
                                             </div>
                                         ))}
@@ -519,7 +516,7 @@ const PurchaseView = forwardRef((props, ref) => {
                                                 </div>
                                                 <div style={{ display: 'flex', flexDirection: 'column' }}>
                                                     <span style={{ fontSize: '12px', fontWeight: 500, color: '#434655', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{t("Processed At")}</span>
-                                                    <span style={{ fontSize: '14px', color: '#191c1e' }}>{format(new Date(payment.created_at), "MMM dd yyyy H:mma", { locale: dateLocale })}</span>
+                                                    <span style={{ fontSize: '14px', color: '#191c1e' }}>{formatInStoreTimezone(payment.created_at)}</span>
                                                 </div>
                                             </div>
                                         ))}
@@ -604,7 +601,7 @@ const PurchaseView = forwardRef((props, ref) => {
                                     {model.date && (
                                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingBottom: '8px', borderBottom: '1px solid #c3c6d7' }}>
                                             <span style={{ fontSize: '14px', color: '#434655' }}>{t("Purchase Date")}</span>
-                                            <span style={{ fontSize: '14px', fontWeight: 500, color: '#191c1e' }}>{format(new Date(model.date), "MMM dd, yyyy", { locale: dateLocale })}</span>
+                                            <span style={{ fontSize: '14px', fontWeight: 500, color: '#191c1e' }}>{formatInStoreTimezone(model.date)}</span>
                                         </div>
                                     )}
 

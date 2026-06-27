@@ -4,7 +4,6 @@ import { Modal } from 'react-bootstrap';
 
 import NumberFormat from "react-number-format";
 import PurchaseReturnPrint from './print.js';
-import { format } from "date-fns";
 import { useTranslation } from 'react-i18next';
 
 const PurchaseReturnView = forwardRef((props, ref) => {
@@ -200,7 +199,7 @@ const PurchaseReturnView = forwardRef((props, ref) => {
 
     function formatInStoreTimezone(dateStr) {
         if (!dateStr) return '';
-        const tz = countryTimezoneMap[localStorage.getItem('store_country_code')] || 'UTC';
+        const tz = countryTimezoneMap[localStorage.getItem('store_country_code')] || countryTimezoneMap[model?.store_country_code] || 'UTC';
         const tzLabel = tz.replace('_', ' ');
         try {
             const d = new Date(dateStr);
@@ -323,121 +322,121 @@ const PurchaseReturnView = forwardRef((props, ref) => {
                         </div>
                     </div>
 
+                    {/* Full-width Returned Items Section — OUTSIDE the grid, ABOVE it */}
+                    <section style={{ backgroundColor: '#ffffff', borderRadius: '8px', border: '1px solid #e2e8f0', overflow: 'hidden', marginBottom: '32px' }}>
+                        <div style={{ padding: '12px 24px', borderBottom: '1px solid #c3c6d7', display: 'flex', justifyContent: 'space-between', alignItems: 'center', backgroundColor: '#f2f4f6' }}>
+                            <h3 style={{ margin: 0, fontSize: '18px', fontWeight: 600, lineHeight: '26px', fontFamily: "'Hanken Grotesk', sans-serif", color: '#191c1e' }}>{t("Returned Items")}</h3>
+                            <span style={{ fontSize: '12px', fontWeight: 500, color: '#434655' }}>
+                                {model.products ? model.products.filter(p => p.selected).length : 0} {t("Item(s)")}
+                            </span>
+                        </div>
+                        <div style={{ overflowX: 'auto' }}>
+                            <table style={{ width: '100%', textAlign: 'left', borderCollapse: 'collapse', minWidth: '700px' }}>
+                                <thead style={{ backgroundColor: '#f1f5f9' }}>
+                                    <tr style={{ fontSize: '13px', fontWeight: 600, color: '#434655', textTransform: 'uppercase', lineHeight: '16px' }}>
+                                        <th style={{ padding: '12px 24px', fontWeight: 600 }}>{t("SI No.")}</th>
+                                        <th style={{ padding: '12px 24px', fontWeight: 600 }}>{t("Part No.")}</th>
+                                        <th style={{ padding: '12px 24px', fontWeight: 600 }}>{t("Name")}</th>
+                                        <th style={{ padding: '12px 24px', textAlign: 'center', fontWeight: 600 }}>{t("Qty")}</th>
+                                        <th style={{ padding: '12px 24px', textAlign: 'right', fontWeight: 600 }}>{t("Unit Price")}</th>
+                                        <th style={{ padding: '12px 24px', textAlign: 'right', fontWeight: 600 }}>{t("Unit Disc.")}</th>
+                                        <th style={{ padding: '12px 24px', textAlign: 'right', fontWeight: 600 }}>{t("Disc. %")}</th>
+                                        <th style={{ padding: '12px 24px', textAlign: 'right', fontWeight: 600 }}>{t("Price")}</th>
+                                    </tr>
+                                </thead>
+                                <tbody style={{ fontSize: '14px', lineHeight: '20px', color: '#191c1e' }}>
+                                    {model.products && model.products.filter(product => product.selected).map((product, index) => (
+                                        <tr key={index}
+                                            style={{ borderBottom: '1px solid #c3c6d7', transition: 'transform 0.2s ease-out' }}
+                                            onMouseEnter={e => { e.currentTarget.style.transform = 'translateX(4px)'; e.currentTarget.style.backgroundColor = '#f2f4f6'; }}
+                                            onMouseLeave={e => { e.currentTarget.style.transform = 'translateX(0)'; e.currentTarget.style.backgroundColor = ''; }}
+                                        >
+                                            <td style={{ padding: '12px 24px' }}>{index + 1}</td>
+                                            <td style={{ padding: '12px 24px', fontFamily: 'monospace', color: '#004ac6' }}>{product.part_number}</td>
+                                            <td style={{ padding: '12px 24px' }}>{product.name}{product.name_in_arabic ? " / " + product.name_in_arabic : ""}</td>
+                                            <td style={{ padding: '12px 24px', textAlign: 'center' }}>{product.quantity} {product.unit || ""}</td>
+                                            <td style={{ padding: '12px 24px', textAlign: 'right' }}>
+                                                <NumberFormat
+                                                    value={product.purchasereturn_unit_price}
+                                                    displayType={"text"}
+                                                    thousandSeparator={true}
+                                                    renderText={(v) => v}
+                                                />
+                                            </td>
+                                            <td style={{ padding: '12px 24px', textAlign: 'right' }}>
+                                                <NumberFormat
+                                                    value={(product.unit_discount * product.quantity)?.toFixed(2)}
+                                                    displayType={"text"}
+                                                    thousandSeparator={true}
+                                                    renderText={(v) => v}
+                                                />
+                                            </td>
+                                            <td style={{ padding: '12px 24px', textAlign: 'right' }}>
+                                                <NumberFormat
+                                                    value={product.unit_discount_percent?.toFixed(2)}
+                                                    displayType={"text"}
+                                                    thousandSeparator={true}
+                                                    suffix="%"
+                                                    renderText={(v) => v}
+                                                />
+                                            </td>
+                                            <td style={{ padding: '12px 24px', textAlign: 'right', fontWeight: 700 }}>
+                                                <NumberFormat
+                                                    value={((product.purchasereturn_unit_price - product.unit_discount) * product.quantity)?.toFixed(2)}
+                                                    displayType={"text"}
+                                                    thousandSeparator={true}
+                                                    renderText={(v) => v}
+                                                />
+                                            </td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
+                        {/* Totals Summary */}
+                        <div style={{ display: 'flex', justifyContent: 'flex-end', padding: '24px', backgroundColor: '#ffffff' }}>
+                            <div style={{ width: '100%', maxWidth: '320px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '14px', lineHeight: '20px' }}>
+                                    <span style={{ color: '#434655' }}>{t("Subtotal")}</span>
+                                    <span>
+                                        <NumberFormat value={model.total?.toFixed(2)} displayType={"text"} thousandSeparator={true} renderText={(v) => v} />
+                                    </span>
+                                </div>
+                                {model.shipping_handling_fees > 0 && (
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '14px', lineHeight: '20px' }}>
+                                        <span style={{ color: '#434655' }}>{t("Shipping / Handling Fees")}</span>
+                                        <span>
+                                            <NumberFormat value={model.shipping_handling_fees?.toFixed(2)} displayType={"text"} thousandSeparator={true} renderText={(v) => v} />
+                                        </span>
+                                    </div>
+                                )}
+                                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '14px', lineHeight: '20px' }}>
+                                    <span style={{ color: '#434655' }}>{t("Discount")} ({model.discount_percent?.toFixed(2)}%)</span>
+                                    <span style={{ color: '#ba1a1a' }}>
+                                        -{model.discount?.toFixed(2)}
+                                    </span>
+                                </div>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '14px', lineHeight: '20px' }}>
+                                    <span style={{ color: '#434655' }}>{t("VAT")} ({model.vat_percent}%)</span>
+                                    <span>
+                                        <NumberFormat value={model.vat_price?.toFixed(2)} displayType={"text"} thousandSeparator={true} renderText={(v) => v} />
+                                    </span>
+                                </div>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '16px', lineHeight: '24px', fontWeight: 700, paddingTop: '8px', borderTop: '1px solid #c3c6d7', color: '#191c1e' }}>
+                                    <span>{t("Net Total")}</span>
+                                    <span style={{ color: '#004ac6' }}>
+                                        <NumberFormat value={model.net_total?.toFixed(2)} displayType={"text"} thousandSeparator={true} renderText={(v) => v} />
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+
                     {/* Main Body Grid */}
                     <div className="grid grid-cols-1 lg:grid-cols-12 items-start" style={{ gap: '32px' }}>
 
-                        {/* Left Column: Returned Items & Payments */}
+                        {/* Left Column: Payments */}
                         <div className="lg:col-span-8" style={{ display: 'flex', flexDirection: 'column', gap: '32px' }}>
-
-                            {/* Returned Items Table Section */}
-                            <section style={{ backgroundColor: '#ffffff', borderRadius: '8px', border: '1px solid #e2e8f0', overflow: 'hidden' }}>
-                                <div style={{ padding: '12px 24px', borderBottom: '1px solid #c3c6d7', display: 'flex', justifyContent: 'space-between', alignItems: 'center', backgroundColor: '#f2f4f6' }}>
-                                    <h3 style={{ margin: 0, fontSize: '18px', fontWeight: 600, lineHeight: '26px', fontFamily: "'Hanken Grotesk', sans-serif", color: '#191c1e' }}>{t("Returned Items")}</h3>
-                                    <span style={{ fontSize: '12px', fontWeight: 500, color: '#434655' }}>
-                                        {model.products ? model.products.filter(p => p.selected).length : 0} {t("Item(s)")}
-                                    </span>
-                                </div>
-                                <div style={{ overflowX: 'auto', maxHeight: '400px', overflowY: 'auto' }}>
-                                    <table style={{ width: '100%', textAlign: 'left', borderCollapse: 'collapse' }}>
-                                        <thead style={{ backgroundColor: '#f1f5f9' }}>
-                                            <tr style={{ fontSize: '13px', fontWeight: 600, color: '#434655', textTransform: 'uppercase', lineHeight: '16px' }}>
-                                                <th style={{ padding: '12px 24px', fontWeight: 600 }}>{t("SI No.")}</th>
-                                                <th style={{ padding: '12px 24px', fontWeight: 600 }}>{t("Part No.")}</th>
-                                                <th style={{ padding: '12px 24px', fontWeight: 600 }}>{t("Name")}</th>
-                                                <th style={{ padding: '12px 24px', textAlign: 'center', fontWeight: 600 }}>{t("Qty")}</th>
-                                                <th style={{ padding: '12px 24px', textAlign: 'right', fontWeight: 600 }}>{t("Unit Price")}</th>
-                                                <th style={{ padding: '12px 24px', textAlign: 'right', fontWeight: 600 }}>{t("Unit Disc.")}</th>
-                                                <th style={{ padding: '12px 24px', textAlign: 'right', fontWeight: 600 }}>{t("Disc. %")}</th>
-                                                <th style={{ padding: '12px 24px', textAlign: 'right', fontWeight: 600 }}>{t("Price")}</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody style={{ fontSize: '14px', lineHeight: '20px', color: '#191c1e' }}>
-                                            {model.products && model.products.filter(product => product.selected).map((product, index) => (
-                                                <tr key={index}
-                                                    style={{ borderBottom: '1px solid #c3c6d7', transition: 'transform 0.2s ease-out' }}
-                                                    onMouseEnter={e => { e.currentTarget.style.transform = 'translateX(4px)'; e.currentTarget.style.backgroundColor = '#f2f4f6'; }}
-                                                    onMouseLeave={e => { e.currentTarget.style.transform = 'translateX(0)'; e.currentTarget.style.backgroundColor = ''; }}
-                                                >
-                                                    <td style={{ padding: '12px 24px' }}>{index + 1}</td>
-                                                    <td style={{ padding: '12px 24px', fontFamily: 'monospace', color: '#004ac6' }}>{product.part_number}</td>
-                                                    <td style={{ padding: '12px 24px' }}>{product.name}{product.name_in_arabic ? " / " + product.name_in_arabic : ""}</td>
-                                                    <td style={{ padding: '12px 24px', textAlign: 'center' }}>{product.quantity} {product.unit || ""}</td>
-                                                    <td style={{ padding: '12px 24px', textAlign: 'right' }}>
-                                                        <NumberFormat
-                                                            value={product.purchasereturn_unit_price}
-                                                            displayType={"text"}
-                                                            thousandSeparator={true}
-                                                            renderText={(v) => v}
-                                                        />
-                                                    </td>
-                                                    <td style={{ padding: '12px 24px', textAlign: 'right' }}>
-                                                        <NumberFormat
-                                                            value={(product.unit_discount * product.quantity)?.toFixed(2)}
-                                                            displayType={"text"}
-                                                            thousandSeparator={true}
-                                                            renderText={(v) => v}
-                                                        />
-                                                    </td>
-                                                    <td style={{ padding: '12px 24px', textAlign: 'right' }}>
-                                                        <NumberFormat
-                                                            value={product.unit_discount_percent?.toFixed(2)}
-                                                            displayType={"text"}
-                                                            thousandSeparator={true}
-                                                            suffix="%"
-                                                            renderText={(v) => v}
-                                                        />
-                                                    </td>
-                                                    <td style={{ padding: '12px 24px', textAlign: 'right', fontWeight: 700 }}>
-                                                        <NumberFormat
-                                                            value={((product.purchasereturn_unit_price - product.unit_discount) * product.quantity)?.toFixed(2)}
-                                                            displayType={"text"}
-                                                            thousandSeparator={true}
-                                                            renderText={(v) => v}
-                                                        />
-                                                    </td>
-                                                </tr>
-                                            ))}
-                                        </tbody>
-                                    </table>
-                                </div>
-                                {/* Totals Summary */}
-                                <div style={{ display: 'flex', justifyContent: 'flex-end', padding: '24px', backgroundColor: '#ffffff' }}>
-                                    <div style={{ width: '100%', maxWidth: '320px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                                        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '14px', lineHeight: '20px' }}>
-                                            <span style={{ color: '#434655' }}>{t("Subtotal")}</span>
-                                            <span>
-                                                <NumberFormat value={model.total?.toFixed(2)} displayType={"text"} thousandSeparator={true} renderText={(v) => v} />
-                                            </span>
-                                        </div>
-                                        {model.shipping_handling_fees > 0 && (
-                                            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '14px', lineHeight: '20px' }}>
-                                                <span style={{ color: '#434655' }}>{t("Shipping / Handling Fees")}</span>
-                                                <span>
-                                                    <NumberFormat value={model.shipping_handling_fees?.toFixed(2)} displayType={"text"} thousandSeparator={true} renderText={(v) => v} />
-                                                </span>
-                                            </div>
-                                        )}
-                                        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '14px', lineHeight: '20px' }}>
-                                            <span style={{ color: '#434655' }}>{t("Discount")} ({model.discount_percent?.toFixed(2)}%)</span>
-                                            <span style={{ color: '#ba1a1a' }}>
-                                                -{model.discount?.toFixed(2)}
-                                            </span>
-                                        </div>
-                                        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '14px', lineHeight: '20px' }}>
-                                            <span style={{ color: '#434655' }}>{t("VAT")} ({model.vat_percent}%)</span>
-                                            <span>
-                                                <NumberFormat value={model.vat_price?.toFixed(2)} displayType={"text"} thousandSeparator={true} renderText={(v) => v} />
-                                            </span>
-                                        </div>
-                                        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '16px', lineHeight: '24px', fontWeight: 700, paddingTop: '8px', borderTop: '1px solid #c3c6d7', color: '#191c1e' }}>
-                                            <span>{t("Net Total")}</span>
-                                            <span style={{ color: '#004ac6' }}>
-                                                <NumberFormat value={model.net_total?.toFixed(2)} displayType={"text"} thousandSeparator={true} renderText={(v) => v} />
-                                            </span>
-                                        </div>
-                                    </div>
-                                </div>
-                            </section>
 
                             {/* Payment History */}
                             {purchaseReturnPaymentList.length > 0 && (
@@ -463,7 +462,7 @@ const PurchaseReturnView = forwardRef((props, ref) => {
                                                 <div style={{ display: 'flex', flexDirection: 'column' }}>
                                                     <span style={{ fontSize: '12px', fontWeight: 500, color: '#434655', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{t("Created At")}</span>
                                                     <span style={{ fontSize: '14px', color: '#191c1e' }}>
-                                                        {format(new Date(payment.created_at), "MMM dd yyyy H:mma")}
+                                                        {formatInStoreTimezone(payment.created_at)}
                                                     </span>
                                                 </div>
                                             </div>
@@ -546,7 +545,7 @@ const PurchaseReturnView = forwardRef((props, ref) => {
                                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingBottom: '8px', borderBottom: '1px solid #c3c6d7' }}>
                                             <span style={{ fontSize: '14px', color: '#434655' }}>{t("Return Date")}</span>
                                             <span style={{ fontSize: '14px', fontWeight: 500, color: '#191c1e' }}>
-                                                {format(new Date(model.date), "MMM dd, yyyy")}
+                                                {formatInStoreTimezone(model.date)}
                                             </span>
                                         </div>
                                     )}

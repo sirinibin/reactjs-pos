@@ -3,7 +3,6 @@ import { Modal } from 'react-bootstrap';
 
 import OrderPreview from './../order/preview.js';
 import DeliveryNotePrint from './print.js';
-import { format } from "date-fns";
 
 const DeliveryNoteView = forwardRef((props, ref) => {
 
@@ -83,6 +82,9 @@ const DeliveryNoteView = forwardRef((props, ref) => {
 
                 store = data.result;
                 setStore({ ...store });
+                if (store.country_code) {
+                    localStorage.setItem('store_country_code', store.country_code);
+                }
             })
             .catch(error => {});
     }
@@ -133,7 +135,7 @@ const DeliveryNoteView = forwardRef((props, ref) => {
 
     function formatInStoreTimezone(dateStr) {
         if (!dateStr) return '';
-        const tz = countryTimezoneMap[localStorage.getItem('store_country_code')] || 'UTC';
+        const tz = countryTimezoneMap[localStorage.getItem('store_country_code')] || countryTimezoneMap[store?.country_code] || 'UTC';
         const tzLabel = tz.replace('_', ' ');
         try {
             const d = new Date(dateStr);
@@ -261,7 +263,7 @@ const DeliveryNoteView = forwardRef((props, ref) => {
                             <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '4px' }}>
                                 <i className="bi bi-calendar3" style={{ fontSize: '20px', color: '#505f76' }}></i>
                                 <span style={{ fontSize: '15px', fontWeight: 600, lineHeight: '22px', color: '#191c1e', fontFamily: "'Hanken Grotesk', sans-serif" }}>
-                                    {model.date ? format(new Date(model.date), "MMM dd, yyyy") : '—'}
+                                    {model.date ? formatInStoreTimezone(model.date) : '—'}
                                 </span>
                             </div>
                         </div>

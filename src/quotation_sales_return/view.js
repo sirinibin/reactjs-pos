@@ -4,7 +4,6 @@ import { Modal, Button } from 'react-bootstrap';
 import NumberFormat from "react-number-format";
 import OrderPreview from './../order/preview.js';
 import OrderPrint from './../order/print.js';
-import { format } from "date-fns";
 import { trimTo2Decimals } from "../utils/numberUtils.js";
 
 const QuotationSalesReturnView = forwardRef((props, ref) => {
@@ -50,6 +49,9 @@ const QuotationSalesReturnView = forwardRef((props, ref) => {
                 console.log(data);
                 store = data.result;
                 setStore({ ...store });
+                if (store.country_code) {
+                    localStorage.setItem('store_country_code', store.country_code);
+                }
             })
             .catch(error => {
 
@@ -271,7 +273,7 @@ const QuotationSalesReturnView = forwardRef((props, ref) => {
 
     function formatInStoreTimezone(dateStr) {
         if (!dateStr) return '';
-        const tz = countryTimezoneMap[localStorage.getItem('store_country_code')] || 'UTC';
+        const tz = countryTimezoneMap[localStorage.getItem('store_country_code')] || countryTimezoneMap[store?.country_code] || 'UTC';
         const tzLabel = tz.replace('_', ' ');
         try {
             const d = new Date(dateStr);
@@ -438,20 +440,14 @@ const QuotationSalesReturnView = forwardRef((props, ref) => {
                         </div>
                     </div>
 
-                    {/* Main Body Grid */}
-                    <div className="grid grid-cols-1 lg:grid-cols-12 items-start" style={{ gap: '32px' }}>
-
-                        {/* Left Column: Items & Payments */}
-                        <div className="lg:col-span-8" style={{ display: 'flex', flexDirection: 'column', gap: '32px' }}>
-
-                            {/* Returned Items Table Section */}
-                            <section style={{ backgroundColor: '#ffffff', borderRadius: '8px', border: '1px solid #e2e8f0', overflow: 'hidden' }}>
-                                <div style={{ padding: '12px 24px', borderBottom: '1px solid #c3c6d7', display: 'flex', justifyContent: 'space-between', alignItems: 'center', backgroundColor: '#f2f4f6' }}>
-                                    <h3 style={{ margin: 0, fontSize: '18px', fontWeight: 600, lineHeight: '26px', fontFamily: "'Hanken Grotesk', sans-serif", color: '#191c1e' }}>Returned Items</h3>
-                                    <span style={{ fontSize: '12px', fontWeight: 500, color: '#434655' }}>{model.products?.filter(p => p.selected).length || 0} Item(s)</span>
-                                </div>
-                                <div style={{ overflowX: 'auto', maxHeight: '400px', overflowY: 'auto' }}>
-                                    <table style={{ width: '100%', textAlign: 'left', borderCollapse: 'collapse' }}>
+                    {/* Full-width Returned Items Section — OUTSIDE the grid, ABOVE it */}
+                    <section style={{ backgroundColor: '#ffffff', borderRadius: '8px', border: '1px solid #e2e8f0', overflow: 'hidden', marginBottom: '0' }}>
+                        <div style={{ padding: '12px 24px', borderBottom: '1px solid #c3c6d7', display: 'flex', justifyContent: 'space-between', alignItems: 'center', backgroundColor: '#f2f4f6' }}>
+                            <h3 style={{ margin: 0, fontSize: '18px', fontWeight: 600, lineHeight: '26px', fontFamily: "'Hanken Grotesk', sans-serif", color: '#191c1e' }}>Returned Items</h3>
+                            <span style={{ fontSize: '12px', fontWeight: 500, color: '#434655' }}>{model.products?.filter(p => p.selected).length || 0} Item(s)</span>
+                        </div>
+                        <div style={{ overflowX: 'auto' }}>
+                            <table style={{ width: '100%', textAlign: 'left', borderCollapse: 'collapse', minWidth: '700px' }}>
                                         <thead style={{ backgroundColor: '#f1f5f9' }}>
                                             <tr style={{ fontSize: '13px', fontWeight: 600, color: '#434655', textTransform: 'uppercase', lineHeight: '16px' }}>
                                                 <th style={{ padding: '12px 24px', fontWeight: 600 }}>SI No.</th>
@@ -502,56 +498,62 @@ const QuotationSalesReturnView = forwardRef((props, ref) => {
                                                 </tr>
                                             ))}
                                         </tbody>
-                                    </table>
-                                </div>
+                            </table>
+                        </div>
 
-                                {/* Totals Summary */}
-                                <div style={{ display: 'flex', justifyContent: 'flex-end', padding: '24px', backgroundColor: '#ffffff' }}>
-                                    <div style={{ width: '100%', maxWidth: '320px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                                        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '14px', lineHeight: '20px' }}>
-                                            <span style={{ color: '#434655' }}>Subtotal</span>
-                                            <span><NumberFormat value={trimTo2Decimals(model.total)} displayType={"text"} thousandSeparator={true} renderText={(v) => v} /></span>
-                                        </div>
-                                        {model.shipping_handling_fees > 0 && (
-                                            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '14px', lineHeight: '20px' }}>
-                                                <span style={{ color: '#434655' }}>Shipping / Handling Fees</span>
-                                                <span><NumberFormat value={trimTo2Decimals(model.shipping_handling_fees)} displayType={"text"} thousandSeparator={true} renderText={(v) => v} /></span>
-                                            </div>
-                                        )}
-                                        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '14px', lineHeight: '20px' }}>
-                                            <span style={{ color: '#434655' }}>Discount ({trimTo2Decimals(model.discount_percent)}%)</span>
-                                            <span style={{ color: '#ba1a1a' }}>-<NumberFormat value={trimTo2Decimals(model.discount || 0)} displayType={"text"} thousandSeparator={true} renderText={(v) => v} /></span>
-                                        </div>
-                                        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '14px', lineHeight: '20px' }}>
-                                            <span style={{ color: '#434655' }}>VAT ({trimTo2Decimals(model.vat_percent)}%)</span>
-                                            <span><NumberFormat value={trimTo2Decimals(model.vat_price)} displayType={"text"} thousandSeparator={true} renderText={(v) => v} /></span>
-                                        </div>
-                                        {model.cash_discount > 0 && (
-                                            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '14px', lineHeight: '20px' }}>
-                                                <span style={{ color: '#434655' }}>Cash Discount</span>
-                                                <span style={{ color: '#ba1a1a' }}>-<NumberFormat value={trimTo2Decimals(model.cash_discount)} displayType={"text"} thousandSeparator={true} renderText={(v) => v} /></span>
-                                            </div>
-                                        )}
-                                        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '16px', lineHeight: '24px', fontWeight: 700, paddingTop: '8px', borderTop: '1px solid #c3c6d7', color: '#191c1e' }}>
-                                            <span>Net Total</span>
-                                            <span style={{ color: '#004ac6' }}>
-                                                <NumberFormat value={trimTo2Decimals(model.net_total)} displayType={"text"} thousandSeparator={true} renderText={(v) => v} />
-                                            </span>
-                                        </div>
-                                        {(model.net_profit > 0 || model.net_loss > 0) && (
-                                            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '14px', lineHeight: '20px', paddingTop: '4px' }}>
-                                                <span style={{ color: '#434655' }}>Net Profit / Loss</span>
-                                                <span style={{ color: model.net_profit > 0 ? '#15803d' : '#ba1a1a', fontWeight: 600 }}>
-                                                    {model.net_profit > 0
-                                                        ? <NumberFormat value={trimTo2Decimals(model.net_profit)} displayType={"text"} thousandSeparator={true} renderText={(v) => v} />
-                                                        : <NumberFormat value={trimTo2Decimals(model.net_loss)} displayType={"text"} thousandSeparator={true} renderText={(v) => v} />
-                                                    }
-                                                </span>
-                                            </div>
-                                        )}
-                                    </div>
+                        {/* Totals Summary */}
+                        <div style={{ display: 'flex', justifyContent: 'flex-end', padding: '24px', backgroundColor: '#ffffff' }}>
+                            <div style={{ width: '100%', maxWidth: '320px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '14px', lineHeight: '20px' }}>
+                                    <span style={{ color: '#434655' }}>Subtotal</span>
+                                    <span><NumberFormat value={trimTo2Decimals(model.total)} displayType={"text"} thousandSeparator={true} renderText={(v) => v} /></span>
                                 </div>
-                            </section>
+                                {model.shipping_handling_fees > 0 && (
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '14px', lineHeight: '20px' }}>
+                                        <span style={{ color: '#434655' }}>Shipping / Handling Fees</span>
+                                        <span><NumberFormat value={trimTo2Decimals(model.shipping_handling_fees)} displayType={"text"} thousandSeparator={true} renderText={(v) => v} /></span>
+                                    </div>
+                                )}
+                                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '14px', lineHeight: '20px' }}>
+                                    <span style={{ color: '#434655' }}>Discount ({trimTo2Decimals(model.discount_percent)}%)</span>
+                                    <span style={{ color: '#ba1a1a' }}>-<NumberFormat value={trimTo2Decimals(model.discount || 0)} displayType={"text"} thousandSeparator={true} renderText={(v) => v} /></span>
+                                </div>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '14px', lineHeight: '20px' }}>
+                                    <span style={{ color: '#434655' }}>VAT ({trimTo2Decimals(model.vat_percent)}%)</span>
+                                    <span><NumberFormat value={trimTo2Decimals(model.vat_price)} displayType={"text"} thousandSeparator={true} renderText={(v) => v} /></span>
+                                </div>
+                                {model.cash_discount > 0 && (
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '14px', lineHeight: '20px' }}>
+                                        <span style={{ color: '#434655' }}>Cash Discount</span>
+                                        <span style={{ color: '#ba1a1a' }}>-<NumberFormat value={trimTo2Decimals(model.cash_discount)} displayType={"text"} thousandSeparator={true} renderText={(v) => v} /></span>
+                                    </div>
+                                )}
+                                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '16px', lineHeight: '24px', fontWeight: 700, paddingTop: '8px', borderTop: '1px solid #c3c6d7', color: '#191c1e' }}>
+                                    <span>Net Total</span>
+                                    <span style={{ color: '#004ac6' }}>
+                                        <NumberFormat value={trimTo2Decimals(model.net_total)} displayType={"text"} thousandSeparator={true} renderText={(v) => v} />
+                                    </span>
+                                </div>
+                                {(model.net_profit > 0 || model.net_loss > 0) && (
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '14px', lineHeight: '20px', paddingTop: '4px' }}>
+                                        <span style={{ color: '#434655' }}>Net Profit / Loss</span>
+                                        <span style={{ color: model.net_profit > 0 ? '#15803d' : '#ba1a1a', fontWeight: 600 }}>
+                                            {model.net_profit > 0
+                                                ? <NumberFormat value={trimTo2Decimals(model.net_profit)} displayType={"text"} thousandSeparator={true} renderText={(v) => v} />
+                                                : <NumberFormat value={trimTo2Decimals(model.net_loss)} displayType={"text"} thousandSeparator={true} renderText={(v) => v} />
+                                            }
+                                        </span>
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+                    </section>
+
+                    {/* Main Body Grid */}
+                    <div className="grid grid-cols-1 lg:grid-cols-12 items-start" style={{ gap: '32px' }}>
+
+                        {/* Left Column: Payments */}
+                        <div className="lg:col-span-8" style={{ display: 'flex', flexDirection: 'column', gap: '32px' }}>
 
                             {/* Payment History */}
                             {quotationsalesReturnPaymentList && quotationsalesReturnPaymentList.length > 0 && (
@@ -577,7 +579,7 @@ const QuotationSalesReturnView = forwardRef((props, ref) => {
                                                 <div style={{ display: 'flex', flexDirection: 'column' }}>
                                                     <span style={{ fontSize: '12px', fontWeight: 500, color: '#434655', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Processed At</span>
                                                     <span style={{ fontSize: '14px', color: '#191c1e' }}>
-                                                        {format(new Date(payment.created_at), "MMM dd yyyy H:mma")}
+                                                        {formatInStoreTimezone(payment.created_at)}
                                                     </span>
                                                 </div>
                                             </div>
@@ -638,7 +640,7 @@ const QuotationSalesReturnView = forwardRef((props, ref) => {
                                     {model.date && (
                                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingBottom: '8px', borderBottom: '1px solid #c3c6d7' }}>
                                             <span style={{ fontSize: '14px', color: '#434655' }}>Return Date</span>
-                                            <span style={{ fontSize: '14px', fontWeight: 500, color: '#191c1e' }}>{format(new Date(model.date), "MMM dd, yyyy")}</span>
+                                            <span style={{ fontSize: '14px', fontWeight: 500, color: '#191c1e' }}>{formatInStoreTimezone(model.date)}</span>
                                         </div>
                                     )}
 

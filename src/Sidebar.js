@@ -56,9 +56,7 @@ function Sidebar(props) {
         <nav id="sidebar" className={'sidebar ' + props.isSidebarOpen + ' js-sidebar'} style={{ overflowY: 'scroll' }}>
             <div className="sidebar-content js-simplebar">
                 <div className="sidebar-brand">
-                    <span className="align-middle">
-                        {localStorage.getItem("store_name") || "Start POS"}
-                    </span>
+                    <span className="align-middle">Start POS</span>
                 </div>
 
                 <ul className="sidebar-nav">

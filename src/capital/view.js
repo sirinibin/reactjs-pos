@@ -204,7 +204,7 @@ const CapitalView = forwardRef((props, ref) => {
                             <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '4px' }}>
                                 <i className="bi bi-calendar3" style={{ fontSize: '20px', color: '#505f76' }}></i>
                                 <span style={{ fontSize: '15px', fontWeight: 600, lineHeight: '22px', color: '#191c1e', fontFamily: "'Hanken Grotesk', sans-serif" }}>
-                                    {model.date ? new Date(model.date).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: '2-digit' }) : '—'}
+                                    {model.date ? formatInStoreTimezone(model.date) : '—'}
                                 </span>
                             </div>
                         </div>
