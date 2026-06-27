@@ -11,7 +11,14 @@
  */
 export function resolveImageUrl(filename, storeId, category, entityId = null) {
     if (!filename) return filename;
-    if (filename.startsWith('/')) return filename; // already a full path
+    if (filename.startsWith('/')) {
+        // Rewrite legacy paths like /images/store/logo_xxx.jpg -> /images/{storeId}/store/logo_xxx.jpg
+        if (storeId && filename.startsWith('/images/store/')) {
+            const basename = filename.split('/').pop().split('?')[0];
+            return `/images/${storeId}/store/${basename}`;
+        }
+        return filename;
+    }
     if (!storeId) return filename;                 // no store context, can't build URL
     if (entityId) {
         return `/images/${storeId}/${category}/${entityId}/${filename}`;
