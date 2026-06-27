@@ -60,7 +60,7 @@ function Topbar(props) {
         setStoresLoading(true);
         const token = localStorage.getItem("access_token");
         try {
-            const res = await fetch('/v1/store?select=id,name,code,branch_name,zatca', { headers: { Authorization: "Bearer " + token } });
+            const res = await fetch('/v1/store?select=id,name,code,branch_name,zatca&limit=10000', { headers: { Authorization: "Bearer " + token } });
             const data = res.ok && await res.json();
             if (data && Array.isArray(data.result)) setStores(data.result);
         } catch (_) {}
@@ -251,13 +251,13 @@ function Topbar(props) {
                                 flexShrink: 1,
                             }}>{storeName}</span>
                             {storeCode && (
-                                <span className="text-muted" style={{ fontWeight: 400, fontSize: "12px", flexShrink: 0 }}>({storeCode})</span>
+                                <span className="d-none d-sm-inline text-muted" style={{ fontWeight: 400, fontSize: "12px", flexShrink: 0 }}>({storeCode})</span>
                             )}
                             {branchName && (
-                                <span className="text-muted" style={{ fontWeight: 400, flexShrink: 0, whiteSpace: "nowrap" }}>· {branchName}</span>
+                                <span className="d-none d-sm-inline text-muted" style={{ fontWeight: 400, flexShrink: 0, whiteSpace: "nowrap" }}>· {branchName}</span>
                             )}
                             {storeZatca?.phase === "2" && storeZatca?.env && (
-                                <span style={{
+                                <span className="d-none d-sm-inline" style={{
                                     fontSize: "11px", fontWeight: 600, padding: "1px 6px",
                                     borderRadius: "4px", background: "#dbeafe", color: "#1d4ed8",
                                     flexShrink: 0, whiteSpace: "nowrap",
@@ -295,6 +295,16 @@ function Topbar(props) {
                             )}
                         </Dropdown.Menu>
                     </Dropdown>
+
+                    {/* Mobile menu button — inside collapse so ms-auto works in the flex row */}
+                    <button
+                        className="d-flex d-sm-none align-items-center ms-auto"
+                        style={{ background: "none", border: "none", cursor: "pointer", padding: "4px 10px", color: "#495057", flexShrink: 0 }}
+                        onClick={() => setMobileMenuOpen(true)}
+                        aria-label="Open menu"
+                    >
+                        <i className="bi bi-three-dots-vertical" style={{ fontSize: "22px" }}></i>
+                    </button>
 
                     {/* Desktop nav items — hidden on mobile */}
                     <ul className="navbar-nav navbar-align d-none d-sm-flex">
@@ -415,15 +425,6 @@ function Topbar(props) {
                     </ul>
                 </div>
 
-                {/* Mobile: three-dots button pinned to the right */}
-                <button
-                    className="d-flex d-sm-none align-items-center ms-auto"
-                    style={{ background: "none", border: "none", cursor: "pointer", padding: "4px 10px", color: "#495057", flexShrink: 0 }}
-                    onClick={() => setMobileMenuOpen(true)}
-                    aria-label="Open menu"
-                >
-                    <i className="bi bi-three-dots-vertical" style={{ fontSize: "20px" }}></i>
-                </button>
             </nav>
 
             {/* Mobile right drawer */}
