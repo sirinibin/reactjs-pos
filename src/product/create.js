@@ -1120,6 +1120,16 @@ const ProductCreate = forwardRef((props, ref) => {
     return () => document.removeEventListener("keydown", handleKeyDown);
   }, []);
 
+  useEffect(() => {
+    const blurNumberOnWheel = () => {
+      if (document.activeElement?.type === 'number') {
+        document.activeElement.blur();
+      }
+    };
+    document.addEventListener('wheel', blurNumberOnWheel, { passive: true });
+    return () => document.removeEventListener('wheel', blurNumberOnWheel);
+  }, []);
+
 
   const renderPercentTooltip = (props) => (
     <Tooltip id="label-tooltip" {...props}>
@@ -1707,6 +1717,9 @@ const ProductCreate = forwardRef((props, ref) => {
         </Modal.Header>
         <style>{`
           @keyframes fadeInDown { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
+          input[type="number"]::-webkit-outer-spin-button,
+          input[type="number"]::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+          input[type="number"] { -moz-appearance: textfield; }
           .pw-modal .modal-content { display: flex; flex-direction: column; height: 100%; }
           .pw-body { padding: 0 !important; overflow: hidden !important; display: flex !important; flex-direction: column !important; flex: 1 !important; min-height: 0 !important; }
           .pw-form { display: flex; width: 100%; flex: 1; min-height: 0; }
