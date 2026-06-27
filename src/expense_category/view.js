@@ -1,5 +1,5 @@
 import React, { useState, forwardRef, useImperativeHandle } from "react";
-import { Modal, Table, Button } from 'react-bootstrap';
+import { Modal } from 'react-bootstrap';
 
 
 const ExpenseCategoryView = forwardRef((props, ref) => {
@@ -72,86 +72,158 @@ const ExpenseCategoryView = forwardRef((props, ref) => {
             });
     }
 
+    // Helper: avatar initials
+    function getInitials(name) {
+        if (!name) return '';
+        return name.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase();
+    }
 
     return (<>
-        <Modal show={show} size="lg" onHide={handleClose} animation={false} scrollable={true}>
-            <Modal.Header>
-                <Modal.Title>Details of Expense Category #{model.name} </Modal.Title>
+        <Modal show={show} size="xl" onHide={handleClose} animation={false} scrollable={true}>
+            <Modal.Body className="p-0" style={{ backgroundColor: '#f7f9fb', fontFamily: "'Inter', sans-serif", position: 'relative' }}>
 
-                <div className="col align-self-end text-end">
-                    <Button variant="primary" onClick={() => {
-                        handleClose();
-                        props.openCreateForm();
-                    }}>
-                        <i className="bi bi-plus"></i> Create
-                    </Button>
-                    &nbsp;&nbsp;
-                    <Button variant="primary" onClick={() => {
-                        handleClose();
-                        props.openUpdateForm(model.id);
-                    }}>
-                        <i className="bi bi-pencil"></i> Edit
-                    </Button>
-                    <button
-                        type="button"
-                        className="btn-close"
-                        onClick={handleClose}
-                        aria-label="Close"
-                    ></button>
+                {/* Close button - always top right */}
+                <button
+                    type="button"
+                    className="btn-close"
+                    onClick={handleClose}
+                    aria-label="Close"
+                    style={{ position: 'absolute', top: '16px', right: '16px', zIndex: 10 }}
+                ></button>
 
-                </div>
-            </Modal.Header>
-            <Modal.Body>
-                <Table striped bordered hover responsive="lg">
-                    <tbody>
-                        <tr>
-                            <th>Name:</th><td> {model.name}</td>
-                            <th>Parent Category Name:</th><td> {model.parent_name}</td>
-                        </tr>
-                        <tr>
-                            <th>Created At:</th><td> {model.created_at}</td>
-                            <th>Updated At:</th><td> {model.updated_at}</td>
-                        </tr>
-                        <tr>
-                            <th>Created By:</th><td> {model.created_by_name}</td>
-                            <th>Updated By:</th><td> {model.updated_by_name}</td>
-                        </tr>
-                    </tbody>
-                </Table>
-
-                {/*
-                    <form className="row g-3 needs-validation" >
-                        
-                  
-                        <div className="col-md-6">
-                            <label className="form-label"
-                            >Delivered By*</label
+                {/* Page Header */}
+                <div className="flex flex-col md:flex-row justify-between items-start md:items-center flex-wrap" style={{ padding: '24px 32px 20px', gap: '16px', borderBottom: '1px solid #c3c6d7' }}>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+<button onClick={handleClose} style={{ display: 'flex', alignItems: 'center', gap: '4px', border: '1px solid #c3c6d7', backgroundColor: '#ffffff', color: '#434655', padding: '6px 12px', borderRadius: '4px', fontSize: '13px', fontWeight: 500, cursor: 'pointer' }}>
+                            <i className="bi bi-arrow-left" style={{ fontSize: '14px' }}></i>
+                            Back
+                        </button>
+                        <h1 style={{ margin: 0, fontSize: '30px', lineHeight: '38px', fontWeight: 700, letterSpacing: '-0.02em', fontFamily: "'Hanken Grotesk', sans-serif", color: '#191c1e' }}>
+                            {model.name ? model.name : 'Details of Expense Category'}
+                        </h1>
+                        {model.parent_name && (
+                            <p style={{ margin: 0, fontSize: '14px', lineHeight: '20px', color: '#434655', fontWeight: 400 }}>
+                                Parent: {model.parent_name}
+                            </p>
+                        )}
+                    </div>
+                    <div className="flex flex-wrap items-center" style={{ gap: '8px', paddingRight: '32px' }}>
+                        {props.openCreateForm && (
+                            <button
+                                onClick={() => { handleClose(); props.openCreateForm(); }}
+                                style={{ display: 'flex', alignItems: 'center', gap: '4px', border: '1px solid #c3c6d7', backgroundColor: '#f7f9fb', color: '#191c1e', padding: '8px 24px', borderRadius: '4px', fontSize: '13px', fontWeight: 600, lineHeight: '16px', cursor: 'pointer' }}
                             >
+                                <i className="bi bi-plus" style={{ fontSize: '18px' }}></i>
+                                Create
+                            </button>
+                        )}
+                        {props.openUpdateForm && (
+                            <button
+                                onClick={() => { handleClose(); props.openUpdateForm(model.id); }}
+                                style={{ display: 'flex', alignItems: 'center', gap: '4px', backgroundColor: '#004ac6', color: '#ffffff', border: 'none', padding: '8px 24px', borderRadius: '4px', fontSize: '13px', fontWeight: 600, lineHeight: '16px', cursor: 'pointer', boxShadow: '0 1px 2px rgba(0,0,0,0.1)' }}
+                            >
+                                <i className="bi bi-pencil" style={{ fontSize: '18px' }}></i>
+                                Edit
+                            </button>
+                        )}
+                    </div>
+                </div>
 
-                            <div className="input-group mb-3">
-                                <input type="text" className="form-control" id="validationCustom06" placeholder="Select User" aria-label="Select User" aria-describedby="button-addon4" />
-                                <UserCreate showCreateButton={true} />
-                                <div className="valid-feedback">Looks good!</div>
-                                <div className="invalid-feedback">
-                                    Please provide a valid User.
-                  </div>
+                {/* Main scrollable content */}
+                <div className="p-md md:p-xl" style={{ display: 'flex', flexDirection: 'column', gap: '32px' }}>
+
+                    {/* Info Cards Grid */}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-lg">
+
+                        {/* Name */}
+                        <div style={{ backgroundColor: '#ffffff', padding: '24px', borderRadius: '8px', border: '1px solid #e2e8f0', display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                            <span style={{ fontSize: '12px', fontWeight: 600, color: '#434655', textTransform: 'uppercase', letterSpacing: '0.05em', lineHeight: '16px' }}>Name</span>
+                            <span style={{ fontSize: '20px', fontWeight: 700, lineHeight: '28px', color: '#191c1e', fontFamily: "'Hanken Grotesk', sans-serif" }}>
+                                {model.name || <span style={{ color: '#a0a8b4', fontStyle: 'italic', fontWeight: 400, fontSize: '16px' }}>—</span>}
+                            </span>
+                        </div>
+
+                        {/* Parent Category */}
+                        <div style={{ backgroundColor: '#ffffff', padding: '24px', borderRadius: '8px', border: '1px solid #e2e8f0', display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                            <span style={{ fontSize: '12px', fontWeight: 600, color: '#434655', textTransform: 'uppercase', letterSpacing: '0.05em', lineHeight: '16px' }}>Parent Category</span>
+                            <span style={{ fontSize: '18px', fontWeight: 600, lineHeight: '26px', color: '#191c1e', fontFamily: "'Hanken Grotesk', sans-serif" }}>
+                                {model.parent_name || <span style={{ color: '#a0a8b4', fontStyle: 'italic', fontWeight: 400, fontSize: '14px' }}>None</span>}
+                            </span>
+                        </div>
+
+                        {/* Created By */}
+                        <div style={{ backgroundColor: '#ffffff', padding: '24px', borderRadius: '8px', border: '1px solid #e2e8f0', display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                            <span style={{ fontSize: '12px', fontWeight: 600, color: '#434655', textTransform: 'uppercase', letterSpacing: '0.05em', lineHeight: '16px' }}>Created By</span>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '2px' }}>
+                                {model.created_by_name && (
+                                    <div style={{ width: '28px', height: '28px', borderRadius: '50%', backgroundColor: '#2563eb', color: '#eeefff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '11px', fontWeight: 700, flexShrink: 0 }}>
+                                        {getInitials(model.created_by_name)}
+                                    </div>
+                                )}
+                                <span style={{ fontSize: '15px', fontWeight: 600, lineHeight: '22px', color: '#191c1e' }}>
+                                    {model.created_by_name || <span style={{ color: '#a0a8b4', fontStyle: 'italic', fontWeight: 400 }}>—</span>}
+                                </span>
                             </div>
                         </div>
-                       
+                    </div>
 
-                    </form>
-                    */}
+                    {/* Metadata Section */}
+                    <section style={{ backgroundColor: '#ffffff', borderRadius: '8px', border: '1px solid #e2e8f0', overflow: 'hidden' }}>
+                        <div style={{ padding: '12px 24px', borderBottom: '1px solid #c3c6d7', backgroundColor: '#f2f4f6' }}>
+                            <h3 style={{ margin: 0, fontSize: '18px', fontWeight: 600, lineHeight: '26px', fontFamily: "'Hanken Grotesk', sans-serif", color: '#191c1e' }}>Details</h3>
+                        </div>
+                        <div style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: '0' }}>
+
+                            {/* Created At */}
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px 0', borderBottom: '1px solid #c3c6d7' }}>
+                                <span style={{ fontSize: '14px', color: '#434655' }}>Created At</span>
+                                <span style={{ fontSize: '14px', fontWeight: 500, color: '#191c1e' }}>
+                                    {model.created_at || <span style={{ color: '#a0a8b4', fontStyle: 'italic' }}>—</span>}
+                                </span>
+                            </div>
+
+                            {/* Updated At */}
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px 0', borderBottom: '1px solid #c3c6d7' }}>
+                                <span style={{ fontSize: '14px', color: '#434655' }}>Updated At</span>
+                                <span style={{ fontSize: '14px', fontWeight: 500, color: '#191c1e' }}>
+                                    {model.updated_at || <span style={{ color: '#a0a8b4', fontStyle: 'italic' }}>—</span>}
+                                </span>
+                            </div>
+
+                            {/* Updated By */}
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px 0' }}>
+                                <span style={{ fontSize: '14px', color: '#434655' }}>Updated By</span>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                    {model.updated_by_name && (
+                                        <div style={{ width: '24px', height: '24px', borderRadius: '50%', backgroundColor: '#7c3aed', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '10px', fontWeight: 700, flexShrink: 0 }}>
+                                            {getInitials(model.updated_by_name)}
+                                        </div>
+                                    )}
+                                    <span style={{ fontSize: '14px', fontWeight: 500, color: '#191c1e' }}>
+                                        {model.updated_by_name || <span style={{ color: '#a0a8b4', fontStyle: 'italic', fontWeight: 400 }}>—</span>}
+                                    </span>
+                                </div>
+                            </div>
+
+                        </div>
+                    </section>
+
+                </div>
             </Modal.Body>
-            {/*
-                <Modal.Footer>
-                    <Button variant="secondary" onClick={this.handleClose}>
-                        Close
-                </Button>
-                    <Button variant="primary" onClick={this.handleClose}>
-                        Save Changes
-                </Button>
-                </Modal.Footer>
-                */}
+            <Modal.Footer style={{ backgroundColor: '#ffffff', borderTop: '1px solid #c3c6d7', padding: '12px 32px', display: 'flex', justifyContent: 'flex-end', gap: '12px' }}>
+                <button
+                    onClick={handleClose}
+                    style={{ backgroundColor: '#d0e1fb', color: '#54647a', border: 'none', padding: '8px 24px', borderRadius: '4px', fontSize: '13px', fontWeight: 600, cursor: 'pointer' }}
+                >
+                    Cancel
+                </button>
+                <button
+                    onClick={handleClose}
+                    style={{ backgroundColor: '#004ac6', color: '#ffffff', border: 'none', padding: '8px 24px', borderRadius: '4px', fontSize: '13px', fontWeight: 700, cursor: 'pointer' }}
+                >
+                    Close
+                </button>
+            </Modal.Footer>
         </Modal>
     </>);
 

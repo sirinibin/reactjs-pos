@@ -1637,6 +1637,11 @@ const ProductCreate = forwardRef((props, ref) => {
     return acc;
   }, {});
   const totalErrors = allErrors.length;
+
+  const tabIds = NAV_TABS.map(t => t.id);
+  const currentTabIndex = tabIds.indexOf(activeTab);
+  const prevTab = tabIds[currentTabIndex - 1];
+  const nextTab = tabIds[currentTabIndex + 1];
   // ─────────────────────────────────────────────────────────────────────
 
   return (
@@ -1694,8 +1699,14 @@ const ProductCreate = forwardRef((props, ref) => {
       )}
 
       <Modal show={show} fullscreen onHide={handleClose} animation={false} backdrop="static" dialogClassName="pw-modal">
-        <Modal.Header style={{ background: '#ffffff', borderBottom: '1px solid #c3c6d7', padding: '10px 20px', flexShrink: 0 }}>
-          <Modal.Title style={{ fontFamily: '"Hanken Grotesk", sans-serif', fontSize: '17px', fontWeight: 700, color: '#191c1e', letterSpacing: '-0.01em' }}>
+        <Modal.Header style={{ background: '#ffffff', borderBottom: '1px solid #c3c6d7', padding: '10px 20px', flexShrink: 0, display: 'flex', alignItems: 'center', gap: '12px' }}>
+          <button type="button" onClick={handleClose}
+            style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#434655', display: 'inline-flex', alignItems: 'center', gap: '4px', fontSize: '13px', fontWeight: 600, fontFamily: '"Inter", sans-serif', padding: '4px 8px', borderRadius: '4px', flexShrink: 0 }}
+            onMouseEnter={e => e.currentTarget.style.background = '#f0f2f4'}
+            onMouseLeave={e => e.currentTarget.style.background = 'none'}>
+            <i className="bi bi-arrow-left" style={{ fontSize: '16px' }}></i> Back
+          </button>
+          <Modal.Title style={{ fontFamily: '"Hanken Grotesk", sans-serif', fontSize: '17px', fontWeight: 700, color: '#191c1e', letterSpacing: '-0.01em', flex: 1 }}>
             {formData.id ? `Update Product — ${formData.name}` : 'Create New Product'}
           </Modal.Title>
           <div className="d-flex align-items-center gap-2">
@@ -1725,7 +1736,8 @@ const ProductCreate = forwardRef((props, ref) => {
           .pw-form { display: flex; width: 100%; flex: 1; min-height: 0; }
           .pw-sidebar { width: 200px; background: #f2f4f6; border-right: 1px solid #c3c6d7; padding: 16px 10px; flex-shrink: 0; overflow-y: auto; display: flex; flex-direction: column; gap: 4px; }
           .pw-sidebar-header { margin-bottom: 16px; }
-          .pw-content { flex: 1; overflow-y: auto; padding: 20px 28px; background: #f7f9fb; min-width: 0; }
+          .pw-content { flex: 1; display: flex; flex-direction: column; background: #f7f9fb; min-width: 0; overflow: hidden; }
+          .pw-content-scroll { flex: 1; overflow-y: auto; padding: 20px 28px; }
           .pw-tab-wrap { max-width: 900px; }
           .pw-price-cards .col-md-4 { margin-bottom: 16px; }
           @media (max-width: 767px) {
@@ -1733,16 +1745,16 @@ const ProductCreate = forwardRef((props, ref) => {
             .pw-sidebar { width: 100%; height: auto; flex-direction: row; overflow-x: auto; overflow-y: hidden; border-right: none; border-bottom: 1px solid #c3c6d7; padding: 6px 8px; gap: 4px; }
             .pw-sidebar-header { display: none; }
             .pw-sidebar button { flex-shrink: 0; white-space: nowrap; padding: 8px 12px !important; }
-            .pw-content { padding: 14px 16px !important; }
+            .pw-content-scroll { padding: 14px 16px !important; }
             .pw-tab-wrap { max-width: 100%; }
           }
           @media (min-width: 768px) and (max-width: 1100px) {
             .pw-sidebar { width: 170px; }
-            .pw-content { padding: 16px 20px; }
+            .pw-content-scroll { padding: 16px 20px; }
             .pw-tab-wrap { max-width: 100%; }
           }
           @media (min-height: 600px) and (max-height: 800px) {
-            .pw-content { padding: 14px 24px; }
+            .pw-content-scroll { padding: 14px 24px; }
           }
           @media (max-width: 767px) {
             .pw-card { padding: 14px !important; margin-bottom: 12px !important; }
@@ -1793,10 +1805,11 @@ const ProductCreate = forwardRef((props, ref) => {
 
             {/* Main Content Area */}
             <div className="pw-content">
+              <div className="pw-content-scroll">
 
-              {/* ── Error Summary (always visible across all tabs) ── */}
-              {totalErrors > 0 && (
-                <div style={{ background: '#ffdad6', border: '1px solid #f4adaa', borderRadius: '8px', padding: '12px 16px', marginBottom: '16px' }}>
+              {/* ── Error Summary (animated — no layout jump) ── */}
+              <div style={{ overflow: 'hidden', maxHeight: totalErrors > 0 ? '500px' : '0', marginBottom: totalErrors > 0 ? '16px' : '0', transition: 'max-height 0.25s ease, margin-bottom 0.2s ease' }}>
+                <div style={{ background: '#ffdad6', border: '1px solid #f4adaa', borderRadius: '8px', padding: '12px 16px' }}>
                   <div style={{ fontFamily: '"Inter", sans-serif', fontWeight: 700, color: '#93000a', marginBottom: '8px', fontSize: '13px', display: 'flex', alignItems: 'center', gap: '6px' }}>
                     <i className="bi bi-exclamation-circle-fill" style={{ fontSize: '14px' }}></i>
                     {totalErrors} error{totalErrors > 1 ? 's' : ''} — please fix before saving:
@@ -1817,7 +1830,7 @@ const ProductCreate = forwardRef((props, ref) => {
                     );
                   })}
                 </div>
-              )}
+              </div>
 
               {/* ===== TAB 1: BASIC INFO ===== */}
               {activeTab === 'basic' && (
@@ -2604,7 +2617,27 @@ const ProductCreate = forwardRef((props, ref) => {
                 </div>
               )}
 
-            </div>{/* end main content */}
+              </div>{/* end pw-content-scroll */}
+
+              <div style={{ flexShrink: 0, padding: '12px 28px', borderTop: '1px solid #c3c6d7', background: '#ffffff' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <button type="button" disabled={!prevTab} onClick={() => prevTab && setActiveTab(prevTab)}
+                    style={{ background: prevTab ? '#d0e1fb' : '#f0f2f4', color: prevTab ? '#54647a' : '#9aa0b0', border: 'none', borderRadius: '4px', padding: '7px 16px', fontSize: '13px', fontWeight: 600, fontFamily: '"Inter", sans-serif', cursor: prevTab ? 'pointer' : 'default', display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+                    <i className="bi bi-arrow-left"></i>
+                    {prevTab ? NAV_TABS.find(t => t.id === prevTab)?.label : 'Previous'}
+                  </button>
+                  <span style={{ fontFamily: '"Inter", sans-serif', fontSize: '12px', color: '#737686' }}>
+                    {currentTabIndex + 1} / {tabIds.length}
+                  </span>
+                  <button type="button" disabled={!nextTab} onClick={() => nextTab && setActiveTab(nextTab)}
+                    style={{ background: nextTab ? '#004ac6' : '#f0f2f4', color: nextTab ? '#ffffff' : '#9aa0b0', border: 'none', borderRadius: '4px', padding: '7px 16px', fontSize: '13px', fontWeight: 600, fontFamily: '"Inter", sans-serif', cursor: nextTab ? 'pointer' : 'default', display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+                    {nextTab ? NAV_TABS.find(t => t.id === nextTab)?.label : 'Next'}
+                    <i className="bi bi-arrow-right"></i>
+                  </button>
+                </div>
+              </div>
+
+            </div>{/* end pw-content */}
           </form>
         </Modal.Body>
       </Modal >

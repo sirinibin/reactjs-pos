@@ -1747,6 +1747,29 @@ const DeliveryNoteCreate = forwardRef((props, ref) => {
   };
 
 
+  // ── Design tokens ──────────────────────────────────────────────────────────
+  const CARD = { background: '#ffffff', border: '1px solid #c3c6d7', borderRadius: '8px', padding: '24px', marginBottom: '20px' };
+  const INPUT = { border: '1px solid #c3c6d7', borderRadius: '4px', padding: '7px 12px', fontSize: '13px', fontFamily: '"Inter", sans-serif', width: '100%', outline: 'none', color: '#191c1e', background: '#fff' };
+
+  const Label = ({ children, required }) => (
+    <label style={{ display: 'block', fontFamily: '"Inter", sans-serif', fontSize: '13px', fontWeight: 600, color: '#191c1e', marginBottom: '4px' }}>
+      {children}{required && <span style={{ color: '#ba1a1a', marginLeft: '2px' }}>*</span>}
+    </label>
+  );
+  const ErrMsg = ({ children }) => (
+    <div style={{ color: '#ba1a1a', fontSize: '12px', fontFamily: '"Inter", sans-serif', marginTop: '3px' }}>{children}</div>
+  );
+  const SectionTitle = ({ children, icon }) => (
+    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '20px' }}>
+      {icon && <i className={`bi ${icon}`} style={{ fontSize: '18px', color: '#004ac6' }}></i>}
+      <h3 style={{ fontFamily: '"Hanken Grotesk", sans-serif', fontSize: '16px', fontWeight: 600, color: '#191c1e', margin: 0 }}>{children}</h3>
+    </div>
+  );
+  // ───────────────────────────────────────────────────────────────────────────
+
+  const allErrors = Object.entries(errors).filter(([, v]) => v);
+  const totalErrors = allErrors.length;
+
   return (
     <>
 
@@ -1892,84 +1915,102 @@ const DeliveryNoteCreate = forwardRef((props, ref) => {
       <CustomerCreate ref={CustomerCreateFormRef} showToastMessage={props.showToastMessage} />
       <UserCreate ref={UserCreateFormRef} showToastMessage={props.showToastMessage} />
       <SignatureCreate ref={SignatureCreateFormRef} showToastMessage={props.showToastMessage} />
-      <Modal show={show} size="xl" fullscreen={!enableProductSelection} onHide={handleClose} animation={false} backdrop="static" scrollable={true}>
-        <Modal.Header>
-          <Modal.Title>
-            {!enableProductSelection && formData.id ? "Update Delivery Note #" + formData.code : !enableProductSelection ? "Create New DeliveryNote" : ""}
-            {enableProductSelection ? "Select products from Delivery Note #" + formData.code : ""}
+      <Modal show={show} fullscreen onHide={handleClose} animation={false} backdrop="static" dialogClassName="pw-modal">
+        <Modal.Header style={{ background: '#ffffff', borderBottom: '1px solid #c3c6d7', padding: '10px 20px', flexShrink: 0, display: 'flex', alignItems: 'center', gap: '12px' }}>
+          <button type="button" onClick={handleClose}
+            style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#434655', display: 'inline-flex', alignItems: 'center', gap: '4px', fontSize: '13px', fontWeight: 600, fontFamily: 'Inter, sans-serif', padding: '4px 8px', borderRadius: '4px', flexShrink: 0 }}
+            onMouseEnter={e => e.currentTarget.style.background = '#f0f2f4'}
+            onMouseLeave={e => e.currentTarget.style.background = 'none'}>
+            <i className="bi bi-arrow-left" style={{ fontSize: '16px' }}></i> Back
+          </button>
+          <Modal.Title style={{ fontFamily: '"Hanken Grotesk", sans-serif', fontSize: '17px', fontWeight: 700, color: '#191c1e', letterSpacing: '-0.01em', flex: 1 }}>
+            {formData.id ? 'Update Delivery Note' : 'Create New Delivery Note'}
           </Modal.Title>
-
-
-          <div className="col align-self-end text-end">
-            <Button variant="primary" onClick={openPreview}>
-              <i className="bi bi-display"></i> Preview
+          <div className="d-flex align-items-center gap-2">
+            <Button variant="light" size="sm" onClick={openPreview} style={{ fontFamily: '"Inter", sans-serif', fontSize: '13px' }}>
+              <i className="bi bi-display me-1"></i>Preview
             </Button>
-
-            &nbsp;&nbsp; &nbsp;&nbsp; &nbsp;&nbsp;
-            {formData.id ? <Button variant="primary" onClick={() => {
-              handleClose();
-              if (props.openDetailsView)
-                props.openDetailsView(formData.id);
-            }}>
-              <i className="bi bi-eye"></i> View Detail
-            </Button> : ""}
-            &nbsp;&nbsp;
-            <Button variant="primary" disabled={enableProductSelection} onClick={handleCreate} >
-              {isProcessing ?
-                <Spinner
-                  as="span"
-                  animation="border"
-                  size="sm"
-                  role="status"
-                  aria-hidden={true}
-                />
-
-                : ""
-              }
-              {formData.id && !isProcessing ? "Update" : !isProcessing ? "Create" : ""}
-
-            </Button>
-            <button
-              type="button"
-              className="btn-close"
-              onClick={handleClose}
-              aria-label="Close"
-            ></button>
+            {formData.id && (
+              <button type="button"
+                style={{ background: '#d0e1fb', color: '#54647a', border: 'none', borderRadius: '4px', padding: '6px 14px', fontSize: '13px', fontWeight: 600, fontFamily: '"Inter", sans-serif', cursor: 'pointer' }}
+                onClick={() => { handleClose(); if (props.openDetailsView) props.openDetailsView(formData.id); }}>
+                <i className="bi bi-eye me-1"></i>View Detail
+              </button>
+            )}
+            <button type="button"
+              style={{ background: '#004ac6', color: '#ffffff', border: 'none', borderRadius: '4px', padding: '6px 18px', fontSize: '13px', fontWeight: 600, fontFamily: '"Inter", sans-serif', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '6px' }}
+              onClick={handleCreate} disabled={isProcessing || enableProductSelection}>
+              {isProcessing && <Spinner as="span" animation="border" size="sm" role="status" aria-hidden={true} />}
+              {formData.id ? 'Update' : 'Create'}
+            </button>
+            <button type="button" className="btn-close ms-1" onClick={handleClose} aria-label="Close" />
           </div>
         </Modal.Header>
-        <Modal.Body>
-          <div style={{
-            maxHeight: "50px",        // Adjust based on design
-            minHeight: "50px",
-            overflowY: "scroll",
-          }}>
-            {errors && Object.keys(errors).length > 0 && (
-              <div
-                style={{
-                  backgroundColor: "#fff0f0",
-                  border: "1px solid #f5c6cb",
-                  padding: "10px",
-                  marginBottom: "10px",
-                  borderRadius: "4px"
-                }}
-              >
-                <ul style={{ marginBottom: 0 }}>
-                  {Object.keys(errors).map((key, index) => {
-                    const message = Array.isArray(errors[key]) ? errors[key][0] : errors[key];
-                    return message ? (
-                      <li key={index} style={{ color: "red" }}>
-                        {message}
-                      </li>
-                    ) : null;
-                  })}
-                </ul>
+        <style>{`
+          @keyframes fadeInDown { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
+          input[type="number"]::-webkit-outer-spin-button,
+          input[type="number"]::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+          input[type="number"] { -moz-appearance: textfield; }
+          .pw-modal .modal-content { display: flex; flex-direction: column; height: 100%; }
+          .pw-body { padding: 0 !important; overflow: hidden !important; display: flex !important; flex-direction: column !important; flex: 1 !important; min-height: 0 !important; }
+          .pw-form { display: flex; width: 100%; flex: 1; min-height: 0; }
+          .pw-sidebar { width: 200px; background: #f2f4f6; border-right: 1px solid #c3c6d7; padding: 16px 10px; flex-shrink: 0; overflow-y: auto; display: flex; flex-direction: column; gap: 4px; }
+          .pw-sidebar-header { margin-bottom: 16px; }
+          .pw-content { flex: 1; overflow-y: auto; padding: 20px 28px; background: #f7f9fb; min-width: 0; }
+          .pw-tab-wrap { max-width: 900px; }
+          .pw-price-cards .col-md-4 { margin-bottom: 16px; }
+          @media (max-width: 767px) {
+            .pw-form { flex-direction: column; }
+            .pw-sidebar { width: 100%; height: auto; flex-direction: row; overflow-x: auto; overflow-y: hidden; border-right: none; border-bottom: 1px solid #c3c6d7; padding: 6px 8px; gap: 4px; }
+            .pw-sidebar-header { display: none; }
+            .pw-sidebar button { flex-shrink: 0; white-space: nowrap; padding: 8px 12px !important; }
+            .pw-content { padding: 14px 16px !important; }
+            .pw-tab-wrap { max-width: 100%; }
+          }
+          @media (min-width: 768px) and (max-width: 1100px) {
+            .pw-sidebar { width: 170px; }
+            .pw-content { padding: 16px 20px; }
+            .pw-tab-wrap { max-width: 100%; }
+          }
+          @media (min-height: 600px) and (max-height: 800px) {
+            .pw-content { padding: 14px 24px; }
+          }
+          @media (max-width: 767px) {
+            .pw-card { padding: 14px !important; margin-bottom: 12px !important; }
+          }
+          @media (min-width: 768px) and (max-width: 1100px) {
+            .pw-card { padding: 16px !important; margin-bottom: 14px !important; }
+          }
+        `}</style>
+        <Modal.Body className="pw-body">
+          <form style={{ flex: 1, overflow: 'auto', padding: '20px 28px', background: '#f7f9fb' }} onSubmit={handleCreate}>
+            <div style={{ maxWidth: '100%', margin: '0 auto' }}>
+
+              {/* Error summary */}
+              <div style={{ overflow: "hidden", maxHeight: totalErrors > 0 ? "500px" : "0", marginBottom: totalErrors > 0 ? "16px" : "0", transition: "max-height 0.25s ease, margin-bottom 0.2s ease" }}>
+                <div style={{ background: "#ffdad6", border: "1px solid #f4adaa", borderRadius: "8px", padding: "12px 16px" }}>
+                  <div style={{ fontFamily: "Inter, sans-serif", fontWeight: 700, color: "#93000a", marginBottom: "8px", fontSize: "13px", display: "flex", alignItems: "center", gap: "6px" }}>
+                    <i className="bi bi-exclamation-circle-fill" style={{ fontSize: "14px" }}></i>
+                    {totalErrors} error{totalErrors > 1 ? "s" : ""} — please fix before saving:
+                  </div>
+                  <ul style={{ margin: 0, paddingLeft: "18px" }}>
+                    {allErrors.map(([k, v]) => (
+                      <li key={k} style={{ fontFamily: "Inter, sans-serif", fontSize: "12px", color: "#93000a" }}>{v}</li>
+                    ))}
+                  </ul>
+                </div>
               </div>
-            )}
-          </div>
-          <form className="row g-3 needs-validation" onSubmit={handleCreate}>
-            <div className="col-md-10">
-              <label className="form-label">Customer</label>
-              <Typeahead
+
+              {/* Header Fields Card */}
+              <div style={CARD} className="pw-card">
+                <SectionTitle icon="bi-file-text">Delivery Note Details</SectionTitle>
+                <div className="row g-3">
+
+                  <div className="col-md-11">
+                    <Label>Customer</Label>
+                    <div style={{ display: 'flex', gap: '8px', alignItems: 'flex-end' }}>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                    <Typeahead
                 id="customer_search"
                 labelKey="search_label"
                 filterBy={() => true}
@@ -2093,127 +2134,96 @@ const DeliveryNoteCreate = forwardRef((props, ref) => {
                   );
                 }}
               />
-              <Button hide={true.toString()} onClick={openCustomerCreateForm} className="btn btn-outline-secondary btn-primary btn-sm" type="button" id="button-addon1"> <i className="bi bi-plus-lg"></i> New</Button>
-              {errors.customer_id && (
-                <div style={{ color: "red" }}>
-                  {errors.customer_id}
-                </div>
-              )}
-            </div>
-
-            <div className="col-md-1">
-              <Button className="btn btn-primary" style={{ marginTop: "30px" }} onClick={openCustomers}>
-                <i class="bi bi-list"></i>
+              </div>{/* end flex-1 inner */}
+              <Button hide={true.toString()} onClick={openCustomerCreateForm} className="btn btn-outline-secondary btn-primary btn-sm" type="button" id="button-addon1" style={{ flexShrink: 0 }}><i className="bi bi-plus-lg"></i> New</Button>
+              <Button className="btn btn-primary" style={{ flexShrink: 0 }} onClick={openCustomers}>
+                <i className="bi bi-list"></i>
               </Button>
-            </div>
-
-            <div className="col-md-3">
-              <label className="form-label">Product Barcode Scan</label>
-
-              <div className="input-group mb-3">
-                <DebounceInput
-                  minLength={3}
-                  debounceTimeout={500}
-                  placeholder="Scan Barcode"
-                  className="form-control"
-                  value={formData.barcode}
-                  onChange={event => getProductByBarCode(event.target.value)} />
-                {errors.bar_code && (
-                  <div style={{ color: "red" }}>
-                    <i className="bi bi-x-lg"> </i>
-                    {errors.bar_code}
-                  </div>
-                )}
-                {formData.bar_code && !errors.bar_code && (
-                  <div style={{ color: "green" }}>
-                    <i className="bi bi-check-lg"> </i>
-                    Looks good!
-                  </div>
-                )}
-              </div>
-            </div>
-
-            <div className="col-md-3">
-              <label className="form-label">Date*</label>
-
-              <div className="input-group mb-3">
-                <DatePicker
-                  id="date_str"
-                  selected={formData.date_str ? new Date(formData.date_str) : null}
-                  value={formData.date_str ? format(
-                    new Date(formData.date_str),
-                    "MMMM d, yyyy h:mm aa"
-                  ) : null}
-                  className="form-control"
-                  dateFormat="MMMM d, yyyy h:mm aa"
-                  showTimeSelect
-                  timeIntervals="1"
-                  onChange={(value) => {
-                    console.log("Value", value);
-                    formData.date_str = value;
-                    // formData.date_str = format(new Date(value), "MMMM d yyyy h:mm aa");
-                    setFormData({ ...formData });
-                  }}
-                />
-
-                {errors.date_str && (
-                  <div style={{ color: "red" }}>
-
-                    {errors.date_str}
-                  </div>
-                )}
-              </div>
-            </div>
-
-            <div className="col-md-3">
-              <label className="form-label">Remarks</label>
-              <div className="input-group mb-3">
-                <textarea
-                  value={formData.remarks}
-                  type='string'
-                  onChange={(e) => {
-                    delete errors["address"];
-                    setErrors({ ...errors });
-                    formData.remarks = e.target.value;
-                    setFormData({ ...formData });
-                    console.log(formData);
-                  }}
-                  className="form-control"
-                  id="remarks"
-                  placeholder="Remarks"
-                />
-              </div>
-              {errors.remarks && (
-                <div style={{ color: "red" }}>
-
-                  {errors.remarks}
-                </div>
+                    </div>{/* end flex wrapper */}
+              {errors.customer_id && (
+                <ErrMsg>{errors.customer_id}</ErrMsg>
               )}
-            </div>
+                  </div>
 
-            {store.settings?.enable_notification === true && (
-              <div className="col-md-3">
-                <label className="form-label">Notify At (Sales Reminder)</label>
-                <div className="input-group mb-3">
-                  <DatePicker
-                    id="notify_at"
-                    selected={formData.notify_at ? new Date(formData.notify_at) : null}
-                    value={formData.notify_at ? format(new Date(formData.notify_at), "MMMM d, yyyy h:mm aa") : null}
-                    className="form-control"
-                    dateFormat="MMMM d, yyyy h:mm aa"
-                    showTimeSelect
-                    timeIntervals="1"
-                    onChange={(value) => {
-                      formData.notify_at = value;
-                      setFormData({ ...formData });
-                    }}
-                  />
-                </div>
-              </div>
-            )}
+                  <div className="col-md-3">
+                    <Label>Product Barcode Scan</Label>
+                    <DebounceInput
+                      minLength={3}
+                      debounceTimeout={500}
+                      placeholder="Scan Barcode"
+                      style={INPUT}
+                      value={formData.barcode}
+                      onChange={event => getProductByBarCode(event.target.value)} />
+                    {errors.bar_code && <ErrMsg><i className="bi bi-x-lg"> </i>{errors.bar_code}</ErrMsg>}
+                  </div>
 
-            <div className="col-md-10">
-              <label className="form-label">Product*</label>
+                  <div className="col-md-3">
+                    <Label required>Date</Label>
+                    <DatePicker
+                      id="date_str"
+                      selected={formData.date_str ? new Date(formData.date_str) : null}
+                      value={formData.date_str ? format(new Date(formData.date_str), "MMMM d, yyyy h:mm aa") : null}
+                      className="form-control"
+                      dateFormat="MMMM d, yyyy h:mm aa"
+                      showTimeSelect
+                      timeIntervals="1"
+                      onChange={(value) => {
+                        console.log("Value", value);
+                        formData.date_str = value;
+                        setFormData({ ...formData });
+                      }}
+                    />
+                    {errors.date_str && <ErrMsg>{errors.date_str}</ErrMsg>}
+                  </div>
+
+                  <div className="col-md-3">
+                    <Label>Remarks</Label>
+                    <textarea
+                      value={formData.remarks}
+                      type='string'
+                      onChange={(e) => {
+                        delete errors["address"];
+                        setErrors({ ...errors });
+                        formData.remarks = e.target.value;
+                        setFormData({ ...formData });
+                        console.log(formData);
+                      }}
+                      style={{ ...INPUT, resize: 'vertical', minHeight: '38px' }}
+                      id="remarks"
+                      placeholder="Remarks"
+                    />
+                    {errors.remarks && <ErrMsg>{errors.remarks}</ErrMsg>}
+                  </div>
+
+                  {store.settings?.enable_notification === true && (
+                    <div className="col-md-3">
+                      <Label>Notify At (Sales Reminder)</Label>
+                      <DatePicker
+                        id="notify_at"
+                        selected={formData.notify_at ? new Date(formData.notify_at) : null}
+                        value={formData.notify_at ? format(new Date(formData.notify_at), "MMMM d, yyyy h:mm aa") : null}
+                        className="form-control"
+                        dateFormat="MMMM d, yyyy h:mm aa"
+                        showTimeSelect
+                        timeIntervals="1"
+                        onChange={(value) => {
+                          formData.notify_at = value;
+                          setFormData({ ...formData });
+                        }}
+                      />
+                    </div>
+                  )}
+
+                </div>{/* end row */}
+              </div>{/* end CARD */}
+
+              {/* Product Table Card */}
+              <div style={CARD} className="pw-card">
+                <SectionTitle icon="bi-box-seam">Products</SectionTitle>
+
+            <div style={{ display: 'flex', gap: '8px', alignItems: 'flex-end', marginBottom: '12px' }}>
+              <div style={{ flex: 1, minWidth: 0 }}>
+              <Label required>Product</Label>
               <Typeahead
                 id="product_id"
                 size="lg"
@@ -2507,17 +2517,13 @@ const DeliveryNoteCreate = forwardRef((props, ref) => {
                   );
                 }}
               />
-              <Button hide={true.toString()} onClick={openProductCreateForm} className="btn btn-outline-secondary btn-primary btn-sm" type="button" id="button-addon1"> <i className="bi bi-plus-lg"></i> New</Button>
               {errors.product_id ? (
-                <div style={{ color: "red" }}>
-                  <i className="bi bi-x-lg"> </i>
-                  {errors.product_id}
-                </div>
+                <ErrMsg><i className="bi bi-x-lg"> </i>{errors.product_id}</ErrMsg>
               ) : null}
-            </div>
-            <div className="col-md-1">
-              <Button className="btn btn-primary" style={{ marginTop: "30px" }} onClick={openProducts}>
-                <i class="bi bi-list"></i>
+              </div>
+              <Button hide={true.toString()} onClick={openProductCreateForm} className="btn btn-outline-secondary btn-primary btn-sm" type="button" id="button-addon1" style={{ flexShrink: 0, alignSelf: 'flex-end' }}> <i className="bi bi-plus-lg"></i> New</Button>
+              <Button className="btn btn-primary" style={{ flexShrink: 0, alignSelf: 'flex-end' }} onClick={openProducts}>
+                <i className="bi bi-list"></i>
               </Button>
             </div>
             <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: "0" }}>
@@ -2526,7 +2532,7 @@ const DeliveryNoteCreate = forwardRef((props, ref) => {
               </Button>
             </div>
 
-            <div className="table-responsive" style={{ overflowX: "auto", maxHeight: "400px", overflowY: "auto" }}>
+            <div className="table-responsive" style={{ overflowX: "auto", maxHeight: "55vh", overflowY: "auto", width: "100%" }}>
               {enableProductSelection && <button
                 style={{ marginBottom: "3px" }}
                 className="btn btn-success mt-2"
@@ -3251,28 +3257,13 @@ const DeliveryNoteCreate = forwardRef((props, ref) => {
                 </table>
               </div>
             )}
-            <Modal.Footer>
-              <Button variant="secondary" onClick={handleClose}>
-                Close
-              </Button>
-              <Button variant="primary" disabled={enableProductSelection} onClick={handleCreate} >
-                {isProcessing ?
-                  <Spinner
-                    as="span"
-                    animation="border"
-                    size="sm"
-                    role="status"
-                    aria-hidden={true}
-                  /> + " Processing..."
+              </div>{/* end product CARD */}
 
-                  : formData.id ? "Update" : "Create"
-                }
-              </Button>
-            </Modal.Footer>
+            </div>{/* end maxWidth wrapper */}
           </form>
         </Modal.Body>
 
-      </Modal >
+      </Modal>
 
 
       {/* DN SP Table Settings Modal */}

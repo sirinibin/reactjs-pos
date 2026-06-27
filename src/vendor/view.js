@@ -1,11 +1,11 @@
 import React, { useState, forwardRef, useImperativeHandle, useRef } from "react";
-import { Modal, Table, Button } from 'react-bootstrap';
+import { Modal } from 'react-bootstrap';
 import ImageGallery from '../utils/ImageGallery.js';
-
 
 const VendorView = forwardRef((props, ref) => {
     const timerRef = useRef(null);
     const ImageGalleryRef = useRef();
+
     useImperativeHandle(ref, () => ({
         async open(id) {
             if (id) {
@@ -16,231 +16,261 @@ const VendorView = forwardRef((props, ref) => {
                 }, 300);
                 SetShow(true);
             }
-
         },
-
     }));
 
     let [model, setModel] = useState({});
-
-
     const [show, SetShow] = useState(false);
 
-    function handleClose() {
-        SetShow(false);
-    };
+    function handleClose() { SetShow(false); }
 
     function ObjectToSearchQueryParams(object) {
-        return Object.keys(object)
-            .map(function (key) {
-                return `search[${key}]=${object[key]}`;
-            })
-            .join("&");
+        return Object.keys(object).map(k => `search[${k}]=${object[k]}`).join("&");
     }
 
     async function getVendor(id) {
-        console.log("inside get Vendor");
         const requestOptions = {
             method: 'GET',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': localStorage.getItem('access_token'),
-            },
+            headers: { 'Content-Type': 'application/json', 'Authorization': localStorage.getItem('access_token') },
         };
-
         let searchParams = {};
-        if (localStorage.getItem("store_id")) {
-            searchParams.store_id = localStorage.getItem("store_id");
-        }
+        if (localStorage.getItem("store_id")) searchParams.store_id = localStorage.getItem("store_id");
         let queryParams = ObjectToSearchQueryParams(searchParams);
-
         await fetch('/v1/vendor/' + id + "?" + queryParams, requestOptions)
             .then(async response => {
                 const isJson = response.headers.get('content-type')?.includes('application/json');
                 const data = isJson && await response.json();
-
-                // check for error response
-                if (!response.ok) {
-                    const error = (data && data.errors);
-                    return Promise.reject(error);
-                }
-
-                console.log("Response:");
-                console.log(data);
-
+                if (!response.ok) return Promise.reject(data && data.errors);
                 model = data.result;
-
                 setModel({ ...model });
             })
-            .catch(error => {
-                // setErrors(error);
-            });
+            .catch(() => {});
     }
 
+    const countryTimezoneMap = {
+        'SA': 'Asia/Riyadh', 'AE': 'Asia/Dubai', 'KW': 'Asia/Kuwait',
+        'QA': 'Asia/Qatar', 'BH': 'Asia/Bahrain', 'OM': 'Asia/Muscat',
+        'IN': 'Asia/Kolkata', 'PK': 'Asia/Karachi', 'EG': 'Africa/Cairo',
+        'GB': 'Europe/London', 'US': 'America/New_York', 'AU': 'Australia/Sydney',
+    };
+
+    function formatInStoreTimezone(dateStr) {
+        if (!dateStr) return '';
+        const tz = countryTimezoneMap[localStorage.getItem('store_country_code')] || 'UTC';
+        const tzLabel = tz.replace('_', ' ');
+        try {
+            const formatted = new Date(dateStr).toLocaleString('en-US', {
+                timeZone: tz, year: 'numeric', month: 'short', day: '2-digit',
+                hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true,
+            });
+            return `${formatted} (${tzLabel})`;
+        } catch { return dateStr; }
+    }
+
+    const rowStyle = { display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', padding: '10px 0', borderBottom: '1px solid #c3c6d7', gap: '16px' };
+    const labelStyle = { fontSize: '14px', color: '#434655', flexShrink: 0, minWidth: '160px' };
+    const valueStyle = { fontSize: '14px', fontWeight: 500, color: '#191c1e', textAlign: 'right' };
 
     return (<>
-        <Modal show={show} fullscreen onHide={handleClose} animation={false} scrollable={true}>
-            <Modal.Header>
-                <Modal.Title>Details of Vendor #{model.name} </Modal.Title>
+        <Modal show={show} size="xl" onHide={handleClose} animation={false} scrollable={true}>
+            <Modal.Body className="p-0" style={{ backgroundColor: '#f7f9fb', fontFamily: "'Inter', sans-serif", position: 'relative' }}>
 
-                <div className="col align-self-end text-end">
-                    {props.openCreateForm ? <Button variant="primary" onClick={() => {
-                        handleClose();
-                        props.openCreateForm();
-                    }}>
-                        <i className="bi bi-plus"></i> Create
-                    </Button> : ""}
-                    &nbsp;&nbsp;
-                    {props.openUpdateForm ? <Button variant="primary" onClick={() => {
-                        handleClose();
-                        props.openUpdateForm(model.id);
-                    }}>
-                        <i className="bi bi-pencil"></i> Edit
-                    </Button> : ""}
-                    <button
-                        type="button"
-                        className="btn-close"
-                        onClick={handleClose}
-                        aria-label="Close"
-                    ></button>
+                {/* Close button */}
+                <button type="button" className="btn-close" onClick={handleClose} aria-label="Close"
+                    style={{ position: 'absolute', top: '16px', right: '16px', zIndex: 10 }} />
 
-                </div>
-            </Modal.Header>
-            <Modal.Body>
-                <Table striped bordered hover responsive="lg">
-                    <tbody>
-                        <tr>
-                            <th>Name: </th><td> {model.name}</td>
-                            <th>Name(in Arabic): </th><td> {model.name_in_arabic}</td>
-                        </tr>
-                        <tr>
-                            <th>Title: </th><td> {model.title}</td>
-                            <th>Title(in Arabic): </th><td> {model.title_in_arabic}</td>
-                        </tr>
-                        <tr>
-                            <th>Address: </th><td> {model.address}</td>
-                            <th>Address in Arabic: </th><td> {model.address_in_arabic}</td>
-                        </tr>
-                        <tr>
-                            <th>Phone: </th><td> {model.phone}</td>
-                            <th>Phone in Arabic: </th><td> {model.phone_in_arabic}</td>
-                        </tr>
-                        <tr>
-                            <th>Registration Number(C.R NO.): </th><td> {model.registration_number}</td>
-                            <th>Registration Number(C.R NO.)(in Arabic): </th><td> {model.registration_number_in_arabic}</td>
-                        </tr>
-                        <tr>
-                            <th>VAT No: </th><td> {model.vat_no}</td>
-                            <th>VAT No(in Arabic): </th><td> {model.vat_no_in_arabic}</td>
-                        </tr>
-                        <tr>
-                            <th>Created At: </th><td> {model.created_at}</td>
-                            <th>Updated At: </th><td> {model.updated_at}</td>
-                        </tr>
-                        <tr>
-                            <th>Created By: </th><td> {model.created_by_name}</td>
-                            <th>Updated By: </th><td> {model.updated_by_name}</td>
-                        </tr>
-                        <tr>
-                            <th>E-mail: </th><td> {model.email}</td>
-                            <th>VAT %: </th><td> {model.vat_percent + "%"}</td>
-                        </tr>
-                    </tbody>
-                </Table>
-
-                <div className="col-md-12">
-                    <label className="form-label">Vendor photos</label>
-                    <ImageGallery ref={ImageGalleryRef} id={model.id} storeID={model.store_id} storedImages={model.images} modelName={"vendor"} />
-                </div>
-
-                {model.national_address &&
-                    <span>
-                        < h2 > National Address</h2>
-
-                        <Table striped bordered hover responsive="lg">
-                            <tbody>
-                                <tr>
-                                    <th>Application Number: </th><td> {model.national_address.application_no}</td>
-                                    <th>Application Number(Arabic): </th><td> {model.national_address.application_no_arabic}</td>
-                                </tr>
-                                <tr>
-                                    <th>Service Number: </th><td> {model.national_address.service_no}</td>
-                                    <th>Service Number(Arabic): </th><td> {model.national_address.service_no_arabic}</td>
-                                </tr>
-                                <tr>
-                                    <th>Customer Account Number: </th><td> {model.national_address.customer_account_no}</td>
-                                    <th>Customer Account Number(Arabic): </th><td> {model.national_address.customer_account_no_arabic}</td>
-                                </tr>
-                                <tr>
-                                    <th>Building Number: </th><td> {model.national_address.building_no}</td>
-                                    <th>Building Number(Arabic): </th><td> {model.national_address.building_no_arabic}</td>
-                                </tr>
-                                <tr>
-                                    <th>Street Name: </th><td> {model.national_address.street_name}</td>
-                                    <th>Street Name(Arabic): </th><td> {model.national_address.street_name_arabic}</td>
-                                </tr>
-                                <tr>
-                                    <th>District Name: </th><td> {model.national_address.district_name}</td>
-                                    <th>District Name(Arabic): </th><td> {model.national_address.district_name_arabic}</td>
-                                </tr>
-                                <tr>
-                                    <th>City Name: </th><td> {model.national_address.city_name}</td>
-                                    <th>City Name(Arabic): </th><td> {model.national_address.city_name_arabic}</td>
-                                </tr>
-                                <tr>
-                                    <th>ZipCode: </th><td> {model.national_address.zipcode}</td>
-                                    <th>ZipCode(Arabic): </th><td> {model.national_address.zipcode_arabic}</td>
-                                </tr>
-                                <tr>
-                                    <th>Additional Number: </th><td> {model.national_address.additional_no}</td>
-                                    <th>Additional Number(Arabic): </th><td> {model.national_address.additional_no_arabic}</td>
-                                </tr>
-                                <tr>
-                                    <th>Unit Number: </th><td> {model.national_address.unit_no}</td>
-                                    <th>Unit Number(Arabic): </th><td> {model.national_address.unit_no_arabic}</td>
-                                </tr>
-                            </tbody>
-                        </Table>
-                    </span>
-                }
-
-
-                {/*
-                    <form className="row g-3 needs-validation" >
-                        
-                  
-                        <div className="col-md-6">
-                            <label className="form-label"
-                            >Delivered By*</label
-                            >
-
-                            <div className="input-group mb-3">
-                                <input type="text" className="form-control" id="validationCustom06" placeholder="Select User" aria-label="Select User" aria-describedby="button-addon4" />
-                                <UserCreate showCreateButton={true} />
-                                <div className="valid-feedback">Looks good!</div>
-                                <div className="invalid-feedback">
-                                    Please provide a valid User.
-                  </div>
-                            </div>
+                {/* Page Header */}
+                <div className="flex flex-col md:flex-row justify-between items-start md:items-center flex-wrap"
+                    style={{ padding: '24px 32px 20px', gap: '16px', borderBottom: '1px solid #c3c6d7' }}>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+                            <button onClick={handleClose} style={{ display: 'flex', alignItems: 'center', gap: '4px', border: '1px solid #c3c6d7', backgroundColor: '#ffffff', color: '#434655', padding: '6px 12px', borderRadius: '4px', fontSize: '13px', fontWeight: 500, cursor: 'pointer' }}>
+                                <i className="bi bi-arrow-left" style={{ fontSize: '14px' }}></i> Back
+                            </button>
+                            <h1 style={{ margin: 0, fontSize: '30px', lineHeight: '38px', fontWeight: 700, letterSpacing: '-0.02em', fontFamily: "'Hanken Grotesk', sans-serif", color: '#191c1e' }}>
+                                {model.name || 'Vendor Details'}
+                            </h1>
+                            {model.title && (
+                                <span style={{ backgroundColor: '#dbeafe', color: '#1d4ed8', border: '1px solid #bfdbfe', padding: '2px 8px', borderRadius: '2px', fontSize: '12px', fontWeight: 500 }}>
+                                    {model.title}
+                                </span>
+                            )}
                         </div>
-                       
+                        {model.phone && (
+                            <p style={{ margin: 0, fontSize: '14px', color: '#434655' }}>
+                                <i className="bi bi-telephone" style={{ marginRight: '6px' }}></i>{model.phone}
+                                {model.email && <span style={{ marginLeft: '16px' }}><i className="bi bi-envelope" style={{ marginRight: '6px' }}></i>{model.email}</span>}
+                            </p>
+                        )}
+                    </div>
+                    <div className="flex flex-wrap items-center" style={{ gap: '8px', paddingRight: '32px' }}>
+                        {props.openCreateForm && (
+                            <button onClick={() => { handleClose(); props.openCreateForm(); }} style={{ display: 'flex', alignItems: 'center', gap: '4px', border: '1px solid #c3c6d7', backgroundColor: '#f7f9fb', color: '#191c1e', padding: '8px 24px', borderRadius: '4px', fontSize: '13px', fontWeight: 600, cursor: 'pointer' }}>
+                                <i className="bi bi-plus" style={{ fontSize: '18px' }}></i> Create
+                            </button>
+                        )}
+                        {props.openUpdateForm && (
+                            <button onClick={() => { handleClose(); props.openUpdateForm(model.id); }} style={{ display: 'flex', alignItems: 'center', gap: '4px', backgroundColor: '#004ac6', color: '#ffffff', border: 'none', padding: '8px 24px', borderRadius: '4px', fontSize: '13px', fontWeight: 600, cursor: 'pointer' }}>
+                                <i className="bi bi-pencil" style={{ fontSize: '18px' }}></i> Edit
+                            </button>
+                        )}
+                    </div>
+                </div>
 
-                    </form>
-                    */}
+                <div className="p-md md:p-xl" style={{ display: 'flex', flexDirection: 'column', gap: '32px' }}>
+
+                    {/* Summary Cards */}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-lg">
+                        <div style={{ backgroundColor: '#ffffff', padding: '24px', borderRadius: '8px', border: '1px solid #e2e8f0', display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                            <span style={{ fontSize: '13px', fontWeight: 600, color: '#434655' }}>Phone</span>
+                            <span style={{ fontSize: '18px', fontWeight: 600, color: '#191c1e', fontFamily: "'Hanken Grotesk', sans-serif" }}>{model.phone || '—'}</span>
+                            {model.phone_in_arabic && <span style={{ fontSize: '12px', color: '#434655' }}>{model.phone_in_arabic}</span>}
+                        </div>
+                        <div style={{ backgroundColor: '#ffffff', padding: '24px', borderRadius: '8px', border: '1px solid #e2e8f0', display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                            <span style={{ fontSize: '13px', fontWeight: 600, color: '#434655' }}>VAT No.</span>
+                            <span style={{ fontSize: '18px', fontWeight: 600, color: '#191c1e', fontFamily: "'Hanken Grotesk', sans-serif" }}>{model.vat_no || '—'}</span>
+                            {model.vat_no_in_arabic && <span style={{ fontSize: '12px', color: '#434655' }}>{model.vat_no_in_arabic}</span>}
+                        </div>
+                        <div style={{ backgroundColor: '#ffffff', padding: '24px', borderRadius: '8px', border: '1px solid #e2e8f0', display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                            <span style={{ fontSize: '13px', fontWeight: 600, color: '#434655' }}>C.R No.</span>
+                            <span style={{ fontSize: '16px', fontWeight: 600, color: '#191c1e', fontFamily: "'Hanken Grotesk', sans-serif" }}>{model.registration_number || '—'}</span>
+                        </div>
+                        <div style={{ backgroundColor: '#ffffff', padding: '24px', borderRadius: '8px', border: '1px solid #e2e8f0', display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                            <span style={{ fontSize: '13px', fontWeight: 600, color: '#434655' }}>VAT %</span>
+                            <span style={{ fontSize: '24px', fontWeight: 600, color: '#004ac6', fontFamily: "'Hanken Grotesk', sans-serif" }}>
+                                {model.vat_percent != null ? `${model.vat_percent}%` : '—'}
+                            </span>
+                        </div>
+                    </div>
+
+                    {/* Main Body Grid */}
+                    <div className="grid grid-cols-1 lg:grid-cols-12 items-start" style={{ gap: '32px' }}>
+
+                        {/* Left: Details + Photos */}
+                        <div className="lg:col-span-8" style={{ display: 'flex', flexDirection: 'column', gap: '32px' }}>
+
+                            {/* Contact & Identity */}
+                            <section style={{ backgroundColor: '#ffffff', borderRadius: '8px', border: '1px solid #e2e8f0', overflow: 'hidden' }}>
+                                <div style={{ padding: '12px 24px', borderBottom: '1px solid #c3c6d7', backgroundColor: '#f2f4f6' }}>
+                                    <h3 style={{ margin: 0, fontSize: '18px', fontWeight: 600, fontFamily: "'Hanken Grotesk', sans-serif", color: '#191c1e' }}>Contact Details</h3>
+                                </div>
+                                <div style={{ padding: '24px', display: 'flex', flexDirection: 'column' }}>
+                                    {[
+                                        { label: 'Name', value: model.name },
+                                        { label: 'Name (Arabic)', value: model.name_in_arabic },
+                                        { label: 'Title', value: model.title },
+                                        { label: 'Title (Arabic)', value: model.title_in_arabic },
+                                        { label: 'Phone', value: model.phone },
+                                        { label: 'Phone (Arabic)', value: model.phone_in_arabic },
+                                        { label: 'Email', value: model.email },
+                                        { label: 'Address', value: model.address },
+                                        { label: 'Address (Arabic)', value: model.address_in_arabic },
+                                        { label: 'VAT No.', value: model.vat_no },
+                                        { label: 'VAT No. (Arabic)', value: model.vat_no_in_arabic },
+                                        { label: 'VAT %', value: model.vat_percent != null ? `${model.vat_percent}%` : null },
+                                        { label: 'C.R No.', value: model.registration_number },
+                                        { label: 'C.R No. (Arabic)', value: model.registration_number_in_arabic },
+                                    ].filter(r => r.value).map((r, i, arr) => (
+                                        <div key={r.label} style={{ ...rowStyle, borderBottom: i < arr.length - 1 ? '1px solid #c3c6d7' : 'none' }}>
+                                            <span style={labelStyle}>{r.label}</span>
+                                            <span style={valueStyle}>{r.value}</span>
+                                        </div>
+                                    ))}
+                                </div>
+                            </section>
+
+                            {/* National Address */}
+                            {model.national_address && (
+                                <section style={{ backgroundColor: '#ffffff', borderRadius: '8px', border: '1px solid #e2e8f0', overflow: 'hidden' }}>
+                                    <div style={{ padding: '12px 24px', borderBottom: '1px solid #c3c6d7', backgroundColor: '#f2f4f6' }}>
+                                        <h3 style={{ margin: 0, fontSize: '18px', fontWeight: 600, fontFamily: "'Hanken Grotesk', sans-serif", color: '#191c1e' }}>National Address</h3>
+                                    </div>
+                                    <div style={{ padding: '24px', display: 'flex', flexDirection: 'column' }}>
+                                        {[
+                                            { label: 'Application No.', value: model.national_address.application_no, arabic: model.national_address.application_no_arabic },
+                                            { label: 'Service No.', value: model.national_address.service_no, arabic: model.national_address.service_no_arabic },
+                                            { label: 'Customer Account No.', value: model.national_address.customer_account_no, arabic: model.national_address.customer_account_no_arabic },
+                                            { label: 'Building No.', value: model.national_address.building_no, arabic: model.national_address.building_no_arabic },
+                                            { label: 'Street Name', value: model.national_address.street_name, arabic: model.national_address.street_name_arabic },
+                                            { label: 'District', value: model.national_address.district_name, arabic: model.national_address.district_name_arabic },
+                                            { label: 'City', value: model.national_address.city_name, arabic: model.national_address.city_name_arabic },
+                                            { label: 'Zip Code', value: model.national_address.zipcode, arabic: model.national_address.zipcode_arabic },
+                                            { label: 'Additional No.', value: model.national_address.additional_no, arabic: model.national_address.additional_no_arabic },
+                                            { label: 'Unit No.', value: model.national_address.unit_no, arabic: model.national_address.unit_no_arabic },
+                                        ].filter(r => r.value || r.arabic).map((r, i, arr) => (
+                                            <div key={r.label} style={{ ...rowStyle, borderBottom: i < arr.length - 1 ? '1px solid #c3c6d7' : 'none' }}>
+                                                <span style={labelStyle}>{r.label}</span>
+                                                <span style={valueStyle}>{r.value}{r.arabic ? ` / ${r.arabic}` : ''}</span>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </section>
+                            )}
+
+                            {/* Photos */}
+                            <section style={{ backgroundColor: '#ffffff', borderRadius: '8px', border: '1px solid #e2e8f0', overflow: 'hidden' }}>
+                                <div style={{ padding: '12px 24px', borderBottom: '1px solid #c3c6d7', backgroundColor: '#f2f4f6' }}>
+                                    <h3 style={{ margin: 0, fontSize: '18px', fontWeight: 600, fontFamily: "'Hanken Grotesk', sans-serif", color: '#191c1e' }}>Vendor Photos</h3>
+                                </div>
+                                <div style={{ padding: '24px' }}>
+                                    <ImageGallery ref={ImageGalleryRef} id={model.id} storeID={model.store_id} storedImages={model.images} modelName={"vendor"} />
+                                </div>
+                            </section>
+                        </div>
+
+                        {/* Right: Metadata */}
+                        <div className="lg:col-span-4" style={{ display: 'flex', flexDirection: 'column', gap: '32px' }}>
+                            <section style={{ backgroundColor: '#ffffff', borderRadius: '8px', border: '1px solid #e2e8f0', overflow: 'hidden' }}>
+                                <div style={{ padding: '12px 24px', borderBottom: '1px solid #c3c6d7', backgroundColor: '#f2f4f6' }}>
+                                    <h3 style={{ margin: 0, fontSize: '18px', fontWeight: 600, fontFamily: "'Hanken Grotesk', sans-serif", color: '#191c1e' }}>Metadata</h3>
+                                </div>
+                                <div style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingBottom: '8px', borderBottom: '1px solid #c3c6d7' }}>
+                                        <span style={{ fontSize: '14px', color: '#434655' }}>Created By</span>
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                                            <div style={{ width: '24px', height: '24px', borderRadius: '50%', backgroundColor: '#2563eb', color: '#eeefff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '10px', fontWeight: 700 }}>
+                                                {model.created_by_name ? model.created_by_name.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase() : ''}
+                                            </div>
+                                            <span style={{ fontSize: '14px', fontWeight: 500, color: '#191c1e' }}>{model.created_by_name || '—'}</span>
+                                        </div>
+                                    </div>
+                                    {model.updated_by_name && (
+                                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingBottom: '8px', borderBottom: '1px solid #c3c6d7' }}>
+                                            <span style={{ fontSize: '14px', color: '#434655' }}>Updated By</span>
+                                            <span style={{ fontSize: '14px', fontWeight: 500, color: '#191c1e' }}>{model.updated_by_name}</span>
+                                        </div>
+                                    )}
+                                    {model.created_at && (
+                                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '8px', paddingBottom: '8px', borderBottom: '1px solid #c3c6d7' }}>
+                                            <span style={{ fontSize: '14px', color: '#434655', flexShrink: 0 }}>Created At</span>
+                                            <span style={{ fontSize: '14px', fontWeight: 500, color: '#191c1e', textAlign: 'right' }}>{formatInStoreTimezone(model.created_at)}</span>
+                                        </div>
+                                    )}
+                                    {model.updated_at && (
+                                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '8px' }}>
+                                            <span style={{ fontSize: '14px', color: '#434655', flexShrink: 0 }}>Last Updated</span>
+                                            <span style={{ fontSize: '14px', fontWeight: 500, color: '#191c1e', textAlign: 'right' }}>{formatInStoreTimezone(model.updated_at)}</span>
+                                        </div>
+                                    )}
+                                </div>
+                            </section>
+                        </div>
+                    </div>
+                </div>
             </Modal.Body>
-            {/*
-                <Modal.Footer>
-                    <Button variant="secondary" onClick={this.handleClose}>
-                        Close
-                </Button>
-                    <Button variant="primary" onClick={this.handleClose}>
-                        Save Changes
-                </Button>
-                </Modal.Footer>
-                */}
+
+            <Modal.Footer style={{ backgroundColor: '#ffffff', borderTop: '1px solid #c3c6d7', padding: '12px 32px', display: 'flex', justifyContent: 'flex-end', gap: '12px' }}>
+                <button onClick={handleClose} style={{ backgroundColor: '#d0e1fb', color: '#54647a', border: 'none', padding: '8px 24px', borderRadius: '4px', fontSize: '13px', fontWeight: 600, cursor: 'pointer' }}>
+                    Cancel
+                </button>
+                {props.openUpdateForm && (
+                    <button onClick={() => { handleClose(); props.openUpdateForm(model.id); }} style={{ backgroundColor: '#004ac6', color: '#ffffff', border: 'none', padding: '8px 24px', borderRadius: '4px', fontSize: '13px', fontWeight: 700, cursor: 'pointer' }}>
+                        Edit Vendor
+                    </button>
+                )}
+            </Modal.Footer>
         </Modal>
     </>);
-
 });
 
 export default VendorView;

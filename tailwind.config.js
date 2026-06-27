@@ -8,6 +8,7 @@ module.exports = {
   theme: {
     extend: {
       colors: {
+        'on-surface-variant': '#434655',
         'outline': '#737686',
         'on-error': '#ffffff',
         'surface-variant': '#d8e3fb',
@@ -65,6 +66,7 @@ module.exports = {
         base: '4px',
         lg: '24px',
         'container-padding': '24px',
+        'container-margin': '40px',
         sm: '12px',
       },
       fontFamily: {
@@ -72,6 +74,7 @@ module.exports = {
         'label-sm': ['Inter'],
         'data-mono': ['JetBrains Mono'],
         'label-md': ['Inter'],
+        'headline-sm': ['Hanken Grotesk'],
         'headline-md': ['Hanken Grotesk'],
         'headline-lg': ['Hanken Grotesk'],
         'body-md': ['Inter'],
@@ -81,6 +84,7 @@ module.exports = {
         'label-sm': ['11px', { lineHeight: '14px', fontWeight: '500' }],
         'data-mono': ['13px', { lineHeight: '18px', fontWeight: '500' }],
         'label-md': ['12px', { lineHeight: '16px', fontWeight: '600' }],
+        'headline-sm': ['18px', { lineHeight: '26px', fontWeight: '600' }],
         'headline-md': ['18px', { lineHeight: '24px', fontWeight: '600' }],
         'headline-lg': ['22px', { lineHeight: '28px', letterSpacing: '-0.01em', fontWeight: '700' }],
         'body-md': ['13px', { lineHeight: '18px', fontWeight: '400' }],

@@ -43,6 +43,7 @@ function StoreIndex(props) {
         localStorage.setItem("store_name", store.name);
         localStorage.setItem("branch_name", store.branch_name);
         localStorage.setItem("store_id", store.id);
+        localStorage.setItem("store_country_code", store.country_code || '');
         window.location = "/dashboard/stores";
     }
 

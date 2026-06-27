@@ -1,5 +1,5 @@
 import React, { useState, useRef, forwardRef, useImperativeHandle, useCallback, useEffect, useMemo } from "react";
-import { Modal, Button, Table } from 'react-bootstrap';
+import { Modal, Button } from 'react-bootstrap';
 
 import NumberFormat from "react-number-format";
 import Preview from "./../order/preview.js";
@@ -12,7 +12,7 @@ import { useTranslation } from 'react-i18next';
 import { getDateLocale } from "../i18n/dateLocales";
 
 const SalesReturnView = forwardRef((props, ref) => {
-    const { i18n } = useTranslation('common');
+    const { t, i18n } = useTranslation('common');
     const dateLocale = useMemo(() => getDateLocale(i18n.language), [i18n.language]);
 
 
@@ -251,10 +251,6 @@ const SalesReturnView = forwardRef((props, ref) => {
     }, [openPreview, store]);
 
 
-
-
-
-
     const handleEnterKey = useCallback((event) => {
         const tag = event.target.tagName.toLowerCase();
         const isInput = tag === 'input' || tag === 'textarea' || event.target.isContentEditable;
@@ -276,13 +272,48 @@ const SalesReturnView = forwardRef((props, ref) => {
         };
     }, [handleEnterKey]);
 
+    const countryTimezoneMap = {
+        'SA': 'Asia/Riyadh', 'AE': 'Asia/Dubai', 'KW': 'Asia/Kuwait',
+        'QA': 'Asia/Qatar', 'BH': 'Asia/Bahrain', 'OM': 'Asia/Muscat',
+        'IN': 'Asia/Kolkata', 'PK': 'Asia/Karachi', 'BD': 'Asia/Dhaka',
+        'LK': 'Asia/Colombo', 'NP': 'Asia/Kathmandu', 'MY': 'Asia/Kuala_Lumpur',
+        'SG': 'Asia/Singapore', 'PH': 'Asia/Manila', 'ID': 'Asia/Jakarta',
+        'EG': 'Africa/Cairo', 'JO': 'Asia/Amman', 'LB': 'Asia/Beirut',
+        'IQ': 'Asia/Baghdad', 'IR': 'Asia/Tehran', 'TR': 'Europe/Istanbul',
+        'GB': 'Europe/London', 'DE': 'Europe/Berlin', 'FR': 'Europe/Paris',
+        'US': 'America/New_York', 'CA': 'America/Toronto', 'AU': 'Australia/Sydney',
+    };
+
+    function formatPaymentMethod(method) {
+        if (!method) return "—";
+        return method.split('_').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
+    }
+
+    function formatInStoreTimezone(dateStr) {
+        if (!dateStr) return '';
+        const tz = countryTimezoneMap[localStorage.getItem('store_country_code')] || 'UTC';
+        const tzLabel = tz.replace('_', ' ');
+        try {
+            const d = new Date(dateStr);
+            const formatted = d.toLocaleString('en-US', {
+                timeZone: tz,
+                year: 'numeric', month: 'short', day: '2-digit',
+                hour: '2-digit', minute: '2-digit', second: '2-digit',
+                hour12: true,
+            });
+            return `${formatted} (${tzLabel})`;
+        } catch {
+            return dateStr;
+        }
+    }
+
     return (<>
         <Modal show={showPrintTypeSelection} onHide={() => {
             showPrintTypeSelection = false;
             setShowPrintTypeSelection(showPrintTypeSelection);
         }} centered>
             <Modal.Header closeButton>
-                <Modal.Title>Select Print Type</Modal.Title>
+                <Modal.Title>{t("Select Print Type")}</Modal.Title>
             </Modal.Header>
             <Modal.Body className="d-flex justify-content-around">
 
@@ -297,7 +328,7 @@ const SalesReturnView = forwardRef((props, ref) => {
                         }, 100);
                     }
                 }}>
-                    <i className="bi bi-printer"></i> Print
+                    <i className="bi bi-printer"></i> {t("Print")}
                 </Button>
 
                 <Button variant="primary" ref={printA4ButtonRef} onClick={() => {
@@ -313,474 +344,397 @@ const SalesReturnView = forwardRef((props, ref) => {
                         }
                     }}
                 >
-                    <i className="bi bi-printer"></i> Print A4 Invoice
+                    <i className="bi bi-printer"></i> {t("Print A4 Invoice")}
                 </Button>
             </Modal.Body>
         </Modal >
         {showOrderPreview && <OrderPreview ref={PreviewRef} />}
         <Preview ref={PreviewRef} />
         <OrderPrint ref={PrintRef} />
+
         <Modal show={show} size="xl" onHide={handleClose} animation={false} scrollable={true}>
-            <Modal.Header>
-                <Modal.Title>Details of SalesReturn #{model.code}</Modal.Title>
-                <div className="col align-self-end text-end">
-                    <Button variant="secondary" className="btn btn-primary" onClick={openPrint}>
-                        <i className="bi bi-printer"></i> Print Only Data
-                    </Button>
-                    &nbsp;&nbsp;&nbsp;&nbsp;
-                    <Button variant="primary" className="btn btn-primary" onClick={openPreview}>
-                        <i className="bi bi-printer"></i> Print Full Invoice
-                    </Button>
-                    &nbsp;&nbsp;
-                    <Button className={`btn btn-success btn-sm`} style={{}} onClick={sendWhatsAppMessage}>
-                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="white" viewBox="0 0 16 16">
-                            <path d="M13.601 2.326A7.875 7.875 0 0 0 8.036 0C3.596 0 0 3.597 0 8.036c0 1.417.37 2.805 1.07 4.03L0 16l3.993-1.05a7.968 7.968 0 0 0 4.043 1.085h.003c4.44 0 8.036-3.596 8.036-8.036 0-2.147-.836-4.166-2.37-5.673ZM8.036 14.6a6.584 6.584 0 0 1-3.35-.92l-.24-.142-2.37.622.63-2.31-.155-.238a6.587 6.587 0 0 1-1.018-3.513c0-3.637 2.96-6.6 6.6-6.6 1.764 0 3.42.69 4.67 1.94a6.56 6.56 0 0 1 1.93 4.668c0 3.637-2.96 6.6-6.6 6.6Zm3.61-4.885c-.198-.1-1.17-.578-1.352-.644-.18-.066-.312-.1-.444.1-.13.197-.51.644-.626.775-.115.13-.23.15-.428.05-.198-.1-.837-.308-1.594-.983-.59-.525-.99-1.174-1.11-1.372-.116-.198-.012-.305.088-.403.09-.09.198-.23.298-.345.1-.115.132-.197.2-.33.065-.13.032-.247-.017-.345-.05-.1-.444-1.07-.61-1.46-.16-.384-.323-.332-.444-.338l-.378-.007c-.13 0-.344.048-.525.23s-.688.672-.688 1.64c0 .967.704 1.9.802 2.03.1.13 1.386 2.116 3.365 2.963.47.203.837.324 1.122.414.472.15.902.13 1.24.08.378-.057 1.17-.48 1.336-.942.165-.462.165-.858.116-.943-.048-.084-.18-.132-.378-.23Z" />
-                        </svg>
-                    </Button>
+            <Modal.Body className="p-0" style={{ backgroundColor: '#f7f9fb', fontFamily: "'Inter', sans-serif", position: 'relative' }}>
 
-                    <button
-                        type="button"
-                        className="btn-close"
-                        onClick={handleClose}
-                        aria-label="Close"
-                    ></button>
+                {/* Close button - always top right */}
+                <button
+                    type="button"
+                    className="btn-close"
+                    onClick={handleClose}
+                    aria-label="Close"
+                    style={{ position: 'absolute', top: '16px', right: '16px', zIndex: 10 }}
+                ></button>
 
-                </div>
-            </Modal.Header>
-            <Modal.Body>
-
-                <div className="table-responsive" style={{ overflowX: "auto" }}>
-                    <table className="table table-striped table-sm table-bordered">
-                        <thead>
-                            <tr className="text-center">
-                                <th>SI No.</th>
-                                <th>Part No.</th>
-                                <th>Name</th>
-                                <th>Qty</th>
-                                <th>Unit Price</th>
-                                <th>Disc.</th>
-                                <th>Disc. %</th>
-                                <th>Price</th>
-                                <th>Purchase Unit Price</th>
-                                <th>Purchase Price</th>
-                                <th>Profit</th>
-                                <th>Loss</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {model.products && model.products.filter(product => product.selected).map((product, index) => (
-                                <tr key={index} className="text-center">
-                                    <td>{index + 1}</td>
-                                    <td>{product.part_number}</td>
-                                    <td>{product.name}{product.name_in_arabic ? " / " + product.name_in_arabic : ""}</td>
-                                    <td>{product.quantity}  {product.unit ? product.unit : ""} </td>
-                                    <td className="text-end">
-                                        <NumberFormat
-                                            value={trimTo2Decimals(product.unit_price)}
-                                            displayType={"text"}
-                                            thousandSeparator={true}
-                                            suffix={" "}
-                                            renderText={(value, props) => value}
-                                        />
-                                    </td>
-                                    <td className="text-end">
-                                        <NumberFormat
-                                            value={product.unit_discount ? trimTo2Decimals(product.unit_discount * product.quantity) : 0.00}
-                                            displayType={"text"}
-                                            thousandSeparator={true}
-                                            suffix={" "}
-                                            renderText={(value, props) => value}
-                                        />
-                                    </td>
-                                    <td className="text-end">
-                                        <NumberFormat
-                                            value={trimTo2Decimals(product.unit_discount_percent)}
-                                            displayType={"text"}
-                                            thousandSeparator={true}
-                                            suffix={"%"}
-                                            renderText={(value, props) => value}
-                                        />
-                                    </td>
-                                    <td className="text-end">
-                                        <NumberFormat
-                                            value={trimTo2Decimals((product.unit_price - product.unit_discount) * product.quantity)}
-                                            displayType={"text"}
-                                            thousandSeparator={true}
-                                            suffix={" "}
-                                            renderText={(value, props) => value}
-                                        />
-                                    </td>
-                                    <td className="text-end">
-                                        <NumberFormat
-                                            value={trimTo2Decimals(product.purchase_unit_price)}
-                                            displayType={"text"}
-                                            thousandSeparator={true}
-                                            suffix={" "}
-                                            renderText={(value, props) => value}
-                                        />
-                                    </td>
-                                    <td className="text-end">
-                                        <NumberFormat
-                                            value={trimTo2Decimals(product.purchase_unit_price * product.quantity)}
-                                            displayType={"text"}
-                                            thousandSeparator={true}
-                                            suffix={" "}
-                                            renderText={(value, props) => value}
-                                        />
-                                    </td>
-                                    <td className="text-end">
-                                        <NumberFormat
-                                            value={trimTo2Decimals(product.profit)}
-                                            displayType={"text"}
-                                            thousandSeparator={true}
-                                            suffix={" "}
-                                            renderText={(value, props) => value}
-                                        />
-                                    </td>
-                                    <td className="text-end">
-                                        <NumberFormat
-                                            value={trimTo2Decimals(product.loss)}
-                                            displayType={"text"}
-                                            thousandSeparator={true}
-                                            suffix={" "}
-                                            renderText={(value, props) => value}
-                                        />
-                                    </td>
-                                </tr>
-                            ))}
-                            <tr>
-                                <th colSpan="7" className="text-end">Total</th>
-                                <td className="text-end">
-                                    <NumberFormat
-                                        value={trimTo2Decimals(model.total)}
-                                        displayType={"text"}
-                                        thousandSeparator={true}
-                                        suffix={" "}
-                                        renderText={(value, props) => value}
-                                    />
-                                </td>
-                                <td colSpan="2" ></td>
-                                <td className="text-end">
-                                    <NumberFormat
-                                        value={trimTo2Decimals(model.profit)}
-                                        displayType={"text"}
-                                        thousandSeparator={true}
-                                        suffix={" "}
-                                        renderText={(value, props) => value}
-                                    />
-                                </td>
-                                <td className="text-end">
-                                    <NumberFormat
-                                        value={trimTo2Decimals(model.loss)}
-                                        displayType={"text"}
-                                        thousandSeparator={true}
-                                        suffix={" "}
-                                        renderText={(value, props) => value}
-                                    />
-                                </td>
-                            </tr>
-                            <tr>
-                                <th colSpan="7" className="text-end">
-                                    Shipping / Handling Fees
-                                </th>
-                                <td className="text-end">
-                                    {model.shipping_handling_fees ? <NumberFormat
-                                        value={trimTo2Decimals(model.shipping_handling_fees)}
-                                        displayType={"text"}
-                                        thousandSeparator={true}
-                                        suffix={" "}
-                                        renderText={(value, props) => value}
-                                    /> : "0.00 "}
-                                </td>
-                                <td colSpan="2"></td>
-                                <td colSpan="1" className="text-end">0.00</td>
-                                <td colSpan="1" className="text-end">0.00</td>
-                            </tr>
-
-                            <tr>
-                                <th colSpan="7" className="text-end">
-                                    Discount {trimTo2Decimals(model.discount_percent) + "%"}
-                                </th>
-                                <td className="text-end">
-                                    <NumberFormat
-                                        value={trimTo2Decimals(model.discount)}
-                                        displayType={"text"}
-                                        thousandSeparator={true}
-                                        suffix={" "}
-                                        renderText={(value, props) => value}
-                                    />
-                                </td>
-                                <td colSpan="2"></td>
-                                <td className="text-end">
-                                    <NumberFormat
-                                        value={trimTo2Decimals(model.discount)}
-                                        displayType={"text"}
-                                        thousandSeparator={true}
-                                        suffix={" "}
-                                        renderText={(value, props) => value}
-                                    />
-                                </td>
-                                <td className="text-end">
-                                    0.00
-                                </td>
-                            </tr>
-                            <tr>
-                                <th colSpan="7" className="text-end">VAT {trimTo2Decimals(model.vat_percent) + "%"}</th>
-                                <td className="text-end">
-                                    <NumberFormat
-                                        value={trimTo2Decimals(model.vat_price)}
-                                        displayType={"text"}
-                                        thousandSeparator={true}
-                                        suffix={" "}
-                                        renderText={(value, props) => value}
-                                    />
-                                </td>
-                                <td colSpan="2"></td>
-                                <td className="text-end">0.00 </td>
-                                <td className="text-end">0.00 </td>
-                            </tr>
-
-                            <tr>
-                                <th colSpan="7" className="text-end">Net Total</th>
-                                <th className="text-end">
-                                    <NumberFormat
-                                        value={trimTo2Decimals(model.net_total)}
-                                        displayType={"text"}
-                                        thousandSeparator={true}
-                                        suffix={""}
-                                        renderText={(value, props) => value}
-                                    />
-                                </th>
-                                <th colSpan={2} className="text-end">Cash discount</th>
-                                <td className="text-end">
-                                    <NumberFormat
-                                        value={trimTo2Decimals(model.cash_discount)}
-                                        displayType={"text"}
-                                        suffix={""}
-                                        thousandSeparator={true}
-                                        renderText={(value, props) => value}
-                                    />
-                                </td>
-                                <td className="text-end">0.00</td>
-                            </tr>
-                            <tr>
-                                <td colSpan="8"></td>
-                                <th colSpan="2" className="text-end">Commission</th>
-                                <th className="text-end">
-                                    <NumberFormat
-                                        value={trimTo2Decimals(model.commission)}
-                                        displayType={"text"}
-                                        suffix={" "}
-                                        thousandSeparator={true}
-                                        renderText={(value, props) => value}
-                                    />
-                                </th>
-                                <th className="text-end">
-                                    0.00
-                                </th>
-                            </tr>
-
-                            <tr>
-                                <td colSpan="8"></td>
-                                <th colSpan="2" className="text-end">Net Profit / Loss</th>
-                                <th className="text-end">
-                                    <NumberFormat
-                                        value={trimTo2Decimals(model.net_profit)}
-                                        displayType={"text"}
-                                        suffix={" "}
-                                        thousandSeparator={true}
-                                        renderText={(value, props) => value}
-                                    />
-                                </th>
-                                <th className="text-end">
-                                    <NumberFormat
-                                        value={trimTo2Decimals(model.net_loss)}
-                                        displayType={"text"}
-                                        thousandSeparator={true}
-                                        suffix={" "}
-                                        renderText={(value, props) => value}
-                                    />
-                                </th>
-                            </tr>
-                        </tbody>
-                    </table>
+                {/* Page Header */}
+                <div className="flex flex-col md:flex-row justify-between items-start md:items-center flex-wrap" style={{ padding: '24px 32px 20px', gap: '16px', borderBottom: '1px solid #c3c6d7' }}>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+<button onClick={handleClose} style={{ display: 'flex', alignItems: 'center', gap: '4px', border: '1px solid #c3c6d7', backgroundColor: '#ffffff', color: '#434655', padding: '6px 12px', borderRadius: '4px', fontSize: '13px', fontWeight: 500, cursor: 'pointer' }}>
+                                <i className="bi bi-arrow-left" style={{ fontSize: '14px' }}></i>
+                                Back
+                            </button>
+                            <h1 style={{ margin: 0, fontSize: '30px', lineHeight: '38px', fontWeight: 700, letterSpacing: '-0.02em', fontFamily: "'Hanken Grotesk', sans-serif", color: '#191c1e' }}>
+                                {t("Details of Sales Return")} #{model.code}
+                            </h1>
+                            {model.status && (
+                                <span style={{ backgroundColor: '#dcfce7', color: '#15803d', border: '1px solid #bbf7d0', padding: '2px 8px', borderRadius: '2px', fontSize: '12px', fontWeight: 500, lineHeight: '14px' }}>
+                                    {formatPaymentMethod(model.status)}
+                                </span>
+                            )}
+                            {model.payment_status && (
+                                <span style={{ backgroundColor: '#dbeafe', color: '#1d4ed8', border: '1px solid #bfdbfe', padding: '2px 8px', borderRadius: '2px', fontSize: '12px', fontWeight: 500, lineHeight: '14px' }}>
+                                    {formatPaymentMethod(model.payment_status)}
+                                </span>
+                            )}
+                        </div>
+                        {model.date && (
+                            <p style={{ margin: 0, fontSize: '14px', lineHeight: '20px', color: '#434655', fontWeight: 400 }}>
+                                {t("Return processed on")} {formatInStoreTimezone(model.date)}
+                            </p>
+                        )}
+                    </div>
+                    <div className="flex flex-wrap items-center" style={{ gap: '8px', paddingRight: '32px' }}>
+                        <button onClick={sendWhatsAppMessage} style={{ display: 'flex', alignItems: 'center', gap: '4px', border: '1px solid #c3c6d7', backgroundColor: '#f7f9fb', color: '#191c1e', padding: '8px 24px', borderRadius: '4px', fontSize: '13px', fontWeight: 600, lineHeight: '16px', cursor: 'pointer' }}>
+                            <i className="bi bi-share" style={{ fontSize: '18px' }}></i>
+                            {t("Share")}
+                        </button>
+                        <button onClick={openPreview} style={{ display: 'flex', alignItems: 'center', gap: '4px', border: '1px solid #c3c6d7', backgroundColor: '#f7f9fb', color: '#191c1e', padding: '8px 24px', borderRadius: '4px', fontSize: '13px', fontWeight: 600, lineHeight: '16px', cursor: 'pointer' }}>
+                            <i className="bi bi-file-earmark-pdf" style={{ fontSize: '18px' }}></i>
+                            {t("Download PDF")}
+                        </button>
+                        <button onClick={openPrint} style={{ display: 'flex', alignItems: 'center', gap: '4px', backgroundColor: '#004ac6', color: '#ffffff', border: 'none', padding: '8px 24px', borderRadius: '4px', fontSize: '13px', fontWeight: 600, lineHeight: '16px', cursor: 'pointer', boxShadow: '0 1px 2px rgba(0,0,0,0.1)' }}>
+                            <i className="bi bi-printer" style={{ fontSize: '18px' }}></i>
+                            {t("Print Invoice")}
+                        </button>
+                    </div>
                 </div>
 
-                <h4>Zatca Info</h4>
-                <Table striped bordered hover responsive="xl">
-                    <tbody>
-                        <tr>
-                            <td><b>Zatca reporting/clearance passed</b><br /> {model.zatca?.reporting_passed ? "YES" : "NO"}</td>
-                            <td><b>Zatca reporting/clearance passed At</b><br /> {model.zatca?.reporting_passed_at ? format(
-                                new Date(model.zatca?.reporting_passed_at),
-                                "MMM dd yyyy h:mm:ssa",
-                                { locale: dateLocale }
-                            ) : "Not set"} </td>
-                            <td><b>Reported Invoice Hash</b><br />{model.zatca?.reporting_invoice_hash}</td>
-                        </tr>
-                        <tr>
-                            <td><b>Signing time</b><br />{model.zatca?.signing_time ? format(
-                                new Date(model.zatca?.signing_time),
-                                "MMM dd yyyy h:mm:ssa",
-                                { locale: dateLocale }
-                            ) : "Not set"}</td>
-                            <td>
-                                {model.zatca?.qr_code ? <QRCodeCanvas value={model.zatca?.qr_code} style={{ width: "128px", height: "128px" }} size={128} /> : ""}
-                            </td>
-                            <td><b>Previous Invoice Hash(PIH)</b><br /> {model.prev_hash}</td>
-                        </tr>
-                        <tr>
-                            <td><b>Compliance check failed count</b><br />{model.zatca?.compliance_check_failed_count}</td>
-                            <td><b>Compliance check last failed at</b><br />{model.zatca?.compliance_check_last_failed_at ? format(
-                                new Date(model.zatca?.compliance_check_last_failed_at),
-                                "MMM dd yyyy h:mm:ssa",
-                                { locale: dateLocale }
-                            ) : "Not set"}</td>
-                            <td>
-                                <b>Compliance check errors:</b>
-                                <ol>
-                                    {model.zatca?.compliance_check_errors &&
-                                        model.zatca?.compliance_check_errors.map((error) => (
-                                            <li>{error}</li>
-                                        ))}
-                                </ol>
-                            </td>
-                            <td><b>Reporting failed count</b><br />{model.zatca?.reporting_failed_count}</td>
-                            <td><b>Reporting last failed at</b><br />{model.zatca?.reporting_last_failed_at ? format(
-                                new Date(model.zatca?.reporting_last_failed_at),
-                                "MMM dd yyyy h:mm:ssa",
-                                { locale: dateLocale }
-                            ) : "Not set"}</td>
-                            <td>
-                                <b>Reporting errors:</b>
-                                <ol>
-                                    {model.zatca?.reporting_errors &&
-                                        model.zatca?.reporting_errors.map((error) => (
-                                            <li>{error}</li>
-                                        ))}
-                                </ol>
-                            </td>
-                        </tr>
+                {/* Main scrollable content */}
+                <div className="p-md md:p-xl" style={{ display: 'flex', flexDirection: 'column', gap: '32px' }}>
 
+                    {/* Summary Cards Grid */}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-lg">
 
-                    </tbody>
-                </Table>
+                        {/* Return Total */}
+                        <div style={{ backgroundColor: '#ffffff', padding: '24px', borderRadius: '8px', border: '1px solid #e2e8f0', display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                            <span style={{ fontSize: '13px', fontWeight: 600, color: '#434655', lineHeight: '16px' }}>{t("Return Total")}</span>
+                            <span style={{ fontSize: '24px', fontWeight: 600, lineHeight: '32px', letterSpacing: '-0.01em', color: '#191c1e', fontFamily: "'Hanken Grotesk', sans-serif" }}>
+                                <NumberFormat value={trimTo2Decimals(model.total)} displayType={"text"} thousandSeparator={true} renderText={(v) => v} />
+                            </span>
+                        </div>
 
-                <Table striped bordered hover responsive="lg">
-                    <tbody>
-                        <tr>
-                            <th>UUID:</th><td> {model.uuid}</td>
-                            <th>Invoice Count Value(ICU):</th><td> {model.invoice_count_value}</td>
-                            <th>Order ID: </th><td> {model.order_code}</td>
-                            <th>Store: </th><td> {model.store_name}</td>
-                            <th>Customer: </th><td> {model.customer_name}</td>
-                            <th>Received by: </th><td> {model.received_by_name}</td>
-                        </tr>
-                        <tr>
-                            <th>Date: </th><td>
-                                {model.date ? format(
-                                    new Date(model.date),
-                                    "MMM dd yyyy h:mma",
-                                    { locale: dateLocale }
-                                ) : "Not set"}
-                            </td>
-                            <th>VAT %: </th><td> {model.vat_percent}%</td>
-                            <th>Discount: </th><td> {model.discount} </td>
-                            <th>Discount %: </th><td> {model.discount_percent}</td>
-                        </tr>
-                        <tr>
-                            <th>Status: </th><td> {model.status}</td>
-                            <th>Created At: </th><td> {model.created_at}</td>
-                            <th>Updated At: </th><td> {model.updated_at}</td>
-                        </tr>
-                        <tr>
-                            <th>Created By: </th><td> {model.created_by_name}</td>
-                            <th>Updated By: </th><td> {model.updated_by_name}</td>
-                        </tr>
-                        <tr>
-                            {salesReturnPaymentList.length > 0 ?
-                                <th>Payments</th> : ""}
-                            {salesReturnPaymentList.length > 0 ?
-                                <td>
-                                    <div className="table-responsive" style={{ overflowX: "auto" }}>
-                                        <table className="table table-striped table-sm table-bordered">
-                                            <thead>
-                                                <tr className="text-center">
-                                                    <th>
-                                                        Amount
-                                                    </th>
-                                                    <th>
-                                                        Payment Method
-                                                    </th>
+                        {/* Total VAT */}
+                        <div style={{ backgroundColor: '#ffffff', padding: '24px', borderRadius: '8px', border: '1px solid #e2e8f0', display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                            <span style={{ fontSize: '13px', fontWeight: 600, color: '#434655', lineHeight: '16px' }}>{t("Total VAT ({{vatPercent}}%)", { vatPercent: trimTo2Decimals(model.vat_percent) })}</span>
+                            <span style={{ fontSize: '24px', fontWeight: 600, lineHeight: '32px', letterSpacing: '-0.01em', color: '#191c1e', fontFamily: "'Hanken Grotesk', sans-serif" }}>
+                                <NumberFormat value={trimTo2Decimals(model.vat_price)} displayType={"text"} thousandSeparator={true} renderText={(v) => v} />
+                            </span>
+                        </div>
 
-                                                    <th>
-                                                        Created By
-                                                    </th>
-                                                    <th>
-                                                        Created At
-                                                    </th>
-                                                </tr>
-                                            </thead>
-                                            <tbody className="text-center">
-                                                {salesReturnPaymentList &&
-                                                    salesReturnPaymentList.map((payment) => (
-                                                        <tr key={payment.id}>
-                                                            <td>{trimTo2Decimals(payment.amount) + " "}</td>
-                                                            <td>{payment.method}</td>
-                                                            <td>{payment.created_by_name}</td>
-                                                            <td>
-                                                                {format(
-                                                                    new Date(payment.created_at),
-                                                                    "MMM dd yyyy H:mma",
-                                                                    { locale: dateLocale }
-                                                                )}
-                                                            </td>
-                                                        </tr>
-                                                    ))}
-                                            </tbody>
-                                        </table>
-                                    </div>
-                                </td> : ""}
-                        </tr>
-                    </tbody>
-                </Table>
+                        {/* Net Profit / Loss */}
+                        <div style={{ backgroundColor: '#ffffff', padding: '24px', borderRadius: '8px', border: '1px solid #e2e8f0', display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                            <span style={{ fontSize: '13px', fontWeight: 600, color: '#434655', lineHeight: '16px' }}>{t("Net Profit / Loss")}</span>
+                            <span style={{ fontSize: '24px', fontWeight: 600, lineHeight: '32px', letterSpacing: '-0.01em', color: '#004ac6', fontFamily: "'Hanken Grotesk', sans-serif" }}>
+                                <NumberFormat value={trimTo2Decimals(model.net_profit || 0)} displayType={"text"} thousandSeparator={true} renderText={(v) => v} />
+                            </span>
+                            {(model.net_loss > 0) && (
+                                <div style={{ marginTop: '4px', fontSize: '12px', color: '#ba1a1a', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                                    <i className="bi bi-graph-down" style={{ fontSize: '14px' }}></i>
+                                    {t("Loss")}: <NumberFormat value={trimTo2Decimals(model.net_loss)} displayType={"text"} thousandSeparator={true} renderText={(v) => v} />
+                                </div>
+                            )}
+                        </div>
 
-
-
-
-                {/*
-                    <form className="row g-3 needs-validation" >
-                        
-                  
-                        <div className="col-md-6">
-                            <label className="form-label"
-                            >Delivered By*</label
-                            >
-
-                            <div className="input-group mb-3">
-                                <input type="text" className="form-control" id="validationCustom06" placeholder="Select User" aria-label="Select User" aria-describedby="button-addon4" />
-                                <UserCreate showCreateButton={true} />
-                                <div className="valid-feedback">Looks good!</div>
-                                <div className="invalid-feedback">
-                                    Please provide a valid User.
-                  </div>
+                        {/* Payment Method */}
+                        <div style={{ backgroundColor: '#ffffff', padding: '24px', borderRadius: '8px', border: '1px solid #e2e8f0', display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                            <span style={{ fontSize: '13px', fontWeight: 600, color: '#434655', lineHeight: '16px' }}>{t("Payment Method")}</span>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '4px' }}>
+                                <i className="bi bi-wallet2" style={{ fontSize: '20px', color: '#505f76' }}></i>
+                                <span style={{ fontSize: '18px', fontWeight: 600, lineHeight: '26px', color: '#191c1e', fontFamily: "'Hanken Grotesk', sans-serif" }}>
+                                    {salesReturnPaymentList.length > 0
+                                        ? [...new Set(salesReturnPaymentList.map(p => formatPaymentMethod(p.method)))].join(', ')
+                                        : formatPaymentMethod(model.payment_method)}
+                                </span>
                             </div>
                         </div>
-                       
+                    </div>
 
-                    </form>
-                    */}
+                    {/* Main Body Grid */}
+                    <div className="grid grid-cols-1 lg:grid-cols-12 items-start" style={{ gap: '32px' }}>
+
+                        {/* Left Column: Returned Items & Payments */}
+                        <div className="lg:col-span-8" style={{ display: 'flex', flexDirection: 'column', gap: '32px' }}>
+
+                            {/* Returned Items Table Section */}
+                            <section style={{ backgroundColor: '#ffffff', borderRadius: '8px', border: '1px solid #e2e8f0', overflow: 'hidden' }}>
+                                <div style={{ padding: '12px 24px', borderBottom: '1px solid #c3c6d7', display: 'flex', justifyContent: 'space-between', alignItems: 'center', backgroundColor: '#f2f4f6' }}>
+                                    <h3 style={{ margin: 0, fontSize: '18px', fontWeight: 600, lineHeight: '26px', fontFamily: "'Hanken Grotesk', sans-serif", color: '#191c1e' }}>{t("Returned Items")}</h3>
+                                    <span style={{ fontSize: '12px', fontWeight: 500, color: '#434655' }}>
+                                        {model.products ? model.products.filter(p => p.selected).length : 0} {t("Item(s)")}
+                                    </span>
+                                </div>
+                                <div style={{ overflowX: 'auto', maxHeight: '400px', overflowY: 'auto' }}>
+                                    <table style={{ width: '100%', textAlign: 'left', borderCollapse: 'collapse' }}>
+                                        <thead style={{ backgroundColor: '#f1f5f9' }}>
+                                            <tr style={{ fontSize: '13px', fontWeight: 600, color: '#434655', textTransform: 'uppercase', lineHeight: '16px' }}>
+                                                <th style={{ padding: '12px 24px', fontWeight: 600 }}>{t("SI No.")}</th>
+                                                <th style={{ padding: '12px 24px', fontWeight: 600 }}>{t("Part No.")}</th>
+                                                <th style={{ padding: '12px 24px', fontWeight: 600 }}>{t("Name")}</th>
+                                                <th style={{ padding: '12px 24px', textAlign: 'center', fontWeight: 600 }}>{t("Qty")}</th>
+                                                <th style={{ padding: '12px 24px', textAlign: 'right', fontWeight: 600 }}>{t("Unit Price")}</th>
+                                                <th style={{ padding: '12px 24px', textAlign: 'right', fontWeight: 600 }}>{t("Disc %")}</th>
+                                                <th style={{ padding: '12px 24px', textAlign: 'right', fontWeight: 600 }}>{t("VAT")}</th>
+                                                <th style={{ padding: '12px 24px', textAlign: 'right', fontWeight: 600 }}>{t("Total")}</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody style={{ fontSize: '14px', lineHeight: '20px', color: '#191c1e' }}>
+                                            {model.products && model.products.filter(product => product.selected).map((product, index) => (
+                                                <tr key={index}
+                                                    style={{ borderBottom: '1px solid #c3c6d7', transition: 'transform 0.2s ease-out' }}
+                                                    onMouseEnter={e => { e.currentTarget.style.transform = 'translateX(4px)'; e.currentTarget.style.backgroundColor = '#f2f4f6'; }}
+                                                    onMouseLeave={e => { e.currentTarget.style.transform = 'translateX(0)'; e.currentTarget.style.backgroundColor = ''; }}
+                                                >
+                                                    <td style={{ padding: '12px 24px' }}>{index + 1}</td>
+                                                    <td style={{ padding: '12px 24px', fontFamily: 'monospace', color: '#004ac6' }}>{product.part_number}</td>
+                                                    <td style={{ padding: '12px 24px' }}>{product.name}{product.name_in_arabic ? " / " + product.name_in_arabic : ""}</td>
+                                                    <td style={{ padding: '12px 24px', textAlign: 'center' }}>{product.quantity} {product.unit || ""}</td>
+                                                    <td style={{ padding: '12px 24px', textAlign: 'right' }}>
+                                                        <NumberFormat value={trimTo2Decimals(product.unit_price)} displayType={"text"} thousandSeparator={true} renderText={(v) => v} />
+                                                    </td>
+                                                    <td style={{ padding: '12px 24px', textAlign: 'right' }}>
+                                                        <NumberFormat value={trimTo2Decimals(product.unit_discount_percent)} displayType={"text"} thousandSeparator={true} suffix="%" renderText={(v) => v} />
+                                                    </td>
+                                                    <td style={{ padding: '12px 24px', textAlign: 'right' }}>
+                                                        <NumberFormat value={trimTo2Decimals(product.vat_price || 0)} displayType={"text"} thousandSeparator={true} renderText={(v) => v} />
+                                                    </td>
+                                                    <td style={{ padding: '12px 24px', textAlign: 'right', fontWeight: 700 }}>
+                                                        <NumberFormat value={trimTo2Decimals((product.unit_price - (product.unit_discount || 0)) * product.quantity)} displayType={"text"} thousandSeparator={true} renderText={(v) => v} />
+                                                    </td>
+                                                </tr>
+                                            ))}
+                                        </tbody>
+                                    </table>
+                                </div>
+
+                                {/* Totals Summary */}
+                                <div style={{ display: 'flex', justifyContent: 'flex-end', padding: '24px', backgroundColor: '#ffffff' }}>
+                                    <div style={{ width: '100%', maxWidth: '320px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                                        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '14px', lineHeight: '20px' }}>
+                                            <span style={{ color: '#434655' }}>{t("Subtotal")}</span>
+                                            <span><NumberFormat value={trimTo2Decimals(model.total)} displayType={"text"} thousandSeparator={true} renderText={(v) => v} /></span>
+                                        </div>
+                                        {model.shipping_handling_fees > 0 && (
+                                            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '14px', lineHeight: '20px' }}>
+                                                <span style={{ color: '#434655' }}>{t("Shipping / Handling Fees")}</span>
+                                                <span><NumberFormat value={trimTo2Decimals(model.shipping_handling_fees)} displayType={"text"} thousandSeparator={true} renderText={(v) => v} /></span>
+                                            </div>
+                                        )}
+                                        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '14px', lineHeight: '20px' }}>
+                                            <span style={{ color: '#434655' }}>{t("Discount")} {model.discount_percent ? `(${trimTo2Decimals(model.discount_percent)}%)` : ''}</span>
+                                            <span style={{ color: '#ba1a1a' }}>-<NumberFormat value={trimTo2Decimals(model.discount || 0)} displayType={"text"} thousandSeparator={true} renderText={(v) => v} /></span>
+                                        </div>
+                                        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '14px', lineHeight: '20px' }}>
+                                            <span style={{ color: '#434655' }}>{t("VAT ({{vatPercent}}%)", { vatPercent: trimTo2Decimals(model.vat_percent) })}</span>
+                                            <span><NumberFormat value={trimTo2Decimals(model.vat_price)} displayType={"text"} thousandSeparator={true} renderText={(v) => v} /></span>
+                                        </div>
+                                        {model.cash_discount > 0 && (
+                                            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '14px', lineHeight: '20px' }}>
+                                                <span style={{ color: '#434655' }}>{t("Cash Discount")}</span>
+                                                <span style={{ color: '#ba1a1a' }}>-<NumberFormat value={trimTo2Decimals(model.cash_discount)} displayType={"text"} thousandSeparator={true} renderText={(v) => v} /></span>
+                                            </div>
+                                        )}
+                                        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '16px', lineHeight: '24px', fontWeight: 700, paddingTop: '8px', borderTop: '1px solid #c3c6d7', color: '#191c1e' }}>
+                                            <span>{t("Net Total")}</span>
+                                            <span style={{ color: '#004ac6' }}>
+                                                <NumberFormat value={trimTo2Decimals(model.net_total)} displayType={"text"} thousandSeparator={true} renderText={(v) => v} />
+                                            </span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </section>
+
+                            {/* Payment History */}
+                            {salesReturnPaymentList.length > 0 && (
+                                <section style={{ backgroundColor: '#ffffff', borderRadius: '8px', border: '1px solid #e2e8f0', overflow: 'hidden', maxHeight: '500px', overflowY: 'auto' }}>
+                                    <div style={{ padding: '12px 24px', borderBottom: '1px solid #c3c6d7', display: 'flex', alignItems: 'center', gap: '8px', backgroundColor: '#f2f4f6' }}>
+                                        <i className="bi bi-clock-history" style={{ color: '#505f76' }}></i>
+                                        <h3 style={{ margin: 0, fontSize: '18px', fontWeight: 600, lineHeight: '26px', fontFamily: "'Hanken Grotesk', sans-serif", color: '#191c1e' }}>{t("Payment History")}</h3>
+                                    </div>
+                                    <div style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                                        {salesReturnPaymentList.map((payment) => (
+                                            <div key={payment.id} className="grid grid-cols-1 md:grid-cols-3" style={{ gap: '16px', padding: '16px', backgroundColor: '#f2f4f6', borderRadius: '4px', border: '1px solid #c3c6d7' }}>
+                                                <div style={{ display: 'flex', flexDirection: 'column' }}>
+                                                    <span style={{ fontSize: '12px', fontWeight: 500, color: '#434655', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{t("Amount")}</span>
+                                                    <span style={{ fontSize: '14px', fontWeight: 700, color: '#191c1e' }}>{trimTo2Decimals(payment.amount)}</span>
+                                                </div>
+                                                <div style={{ display: 'flex', flexDirection: 'column' }}>
+                                                    <span style={{ fontSize: '12px', fontWeight: 500, color: '#434655', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{t("Method")}</span>
+                                                    <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                                                        <i className="bi bi-credit-card" style={{ fontSize: '12px', color: '#505f76' }}></i>
+                                                        <span style={{ fontSize: '14px', color: '#191c1e' }}>{formatPaymentMethod(payment.method)}</span>
+                                                    </div>
+                                                </div>
+                                                <div style={{ display: 'flex', flexDirection: 'column' }}>
+                                                    <span style={{ fontSize: '12px', fontWeight: 500, color: '#434655', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{t("Processed At")}</span>
+                                                    <span style={{ fontSize: '14px', color: '#191c1e' }}>
+                                                        {payment.created_at ? format(new Date(payment.created_at), "MMM dd yyyy H:mma", { locale: dateLocale }) : '—'}
+                                                    </span>
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </section>
+                            )}
+                        </div>
+
+                        {/* Right Column: Sidebar */}
+                        <div className="lg:col-span-4" style={{ display: 'flex', flexDirection: 'column', gap: '32px' }}>
+
+                            {/* Zatca Info Card */}
+                            <section style={{ backgroundColor: '#ffffff', borderRadius: '8px', border: '1px solid #e2e8f0', overflow: 'hidden' }}>
+                                <div style={{ padding: '12px 24px', borderBottom: '1px solid #c3c6d7', backgroundColor: '#f2f4f6' }}>
+                                    <h3 style={{ margin: 0, fontSize: '18px', fontWeight: 600, lineHeight: '26px', fontFamily: "'Hanken Grotesk', sans-serif", color: '#191c1e' }}>{t("Zatca Info")}</h3>
+                                </div>
+                                <div style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                                    <div className="grid grid-cols-1 sm:grid-cols-2" style={{ gap: '16px' }}>
+                                        <div style={{ display: 'flex', flexDirection: 'column' }}>
+                                            <span style={{ fontSize: '12px', fontWeight: 500, color: '#434655' }}>{t("Zatca Status")}</span>
+                                            <span style={{ fontSize: '14px', fontWeight: 700, color: model.zatca?.reporting_passed ? '#15803d' : '#ba1a1a' }}>
+                                                {model.zatca?.reporting_passed ? t("YES") : t("NO (Pending)")}
+                                            </span>
+                                        </div>
+                                        <div style={{ display: 'flex', flexDirection: 'column' }}>
+                                            <span style={{ fontSize: '12px', fontWeight: 500, color: '#434655' }}>{t("Reported At")}</span>
+                                            <span style={{ fontSize: '14px', color: model.zatca?.reporting_passed_at ? '#191c1e' : '#434655', fontStyle: model.zatca?.reporting_passed_at ? 'normal' : 'italic' }}>
+                                                {model.zatca?.reporting_passed_at ? format(new Date(model.zatca.reporting_passed_at), "MMM dd yyyy h:mm:ssa", { locale: dateLocale }) : t("Not set")}
+                                            </span>
+                                        </div>
+                                    </div>
+                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                                        <span style={{ fontSize: '12px', fontWeight: 500, color: '#434655' }}>UUID</span>
+                                        <span style={{ fontSize: '12px', fontFamily: 'monospace', wordBreak: 'break-all', backgroundColor: '#eceef0', padding: '4px 8px', borderRadius: '4px' }}>{model.uuid}</span>
+                                    </div>
+                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                                        <span style={{ fontSize: '12px', fontWeight: 500, color: '#434655' }}>{t("Reported Invoice Hash")}</span>
+                                        {model.zatca?.reporting_invoice_hash
+                                            ? <span style={{ fontSize: '12px', fontFamily: 'monospace', wordBreak: 'break-all', backgroundColor: '#eceef0', padding: '4px 8px', borderRadius: '4px' }}>{model.zatca.reporting_invoice_hash}</span>
+                                            : <>
+                                                <div style={{ height: '16px', width: '100%', backgroundColor: '#e6e8ea', borderRadius: '4px' }}></div>
+                                                <span style={{ fontSize: '12px', fontStyle: 'italic', color: '#434655', marginTop: '4px' }}>{t("Awaiting reporting signature")}</span>
+                                              </>
+                                        }
+                                    </div>
+                                    {model.zatca?.qr_code && (
+                                        <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                                            <span style={{ fontSize: '12px', fontWeight: 500, color: '#434655' }}>{t("QR Code")}</span>
+                                            <QRCodeCanvas value={model.zatca.qr_code} size={96} />
+                                        </div>
+                                    )}
+                                    {model.zatca?.signing_time && (
+                                        <div style={{ display: 'flex', flexDirection: 'column' }}>
+                                            <span style={{ fontSize: '12px', fontWeight: 500, color: '#434655' }}>{t("Signing time")}</span>
+                                            <span style={{ fontSize: '14px', color: '#191c1e' }}>{format(new Date(model.zatca.signing_time), "MMM dd yyyy h:mm:ssa", { locale: dateLocale })}</span>
+                                        </div>
+                                    )}
+                                    {model.prev_hash && (
+                                        <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                                            <span style={{ fontSize: '12px', fontWeight: 500, color: '#434655' }}>{t("Previous Invoice Hash (PIH)")}</span>
+                                            <span style={{ fontSize: '11px', fontFamily: 'monospace', wordBreak: 'break-all', backgroundColor: '#eceef0', padding: '4px 8px', borderRadius: '4px' }}>{model.prev_hash}</span>
+                                        </div>
+                                    )}
+                                    {model.zatca?.compliance_check_failed_count > 0 && (
+                                        <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                                            <span style={{ fontSize: '12px', color: '#ba1a1a' }}>{t("Compliance check failed")}: {model.zatca.compliance_check_failed_count}</span>
+                                            {model.zatca?.compliance_check_errors?.length > 0 && (
+                                                <ol style={{ fontSize: '12px', color: '#ba1a1a', paddingLeft: '16px', margin: 0 }}>
+                                                    {model.zatca.compliance_check_errors.map((err, i) => <li key={i}>{err}</li>)}
+                                                </ol>
+                                            )}
+                                        </div>
+                                    )}
+                                    {model.zatca?.reporting_failed_count > 0 && (
+                                        <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                                            <span style={{ fontSize: '12px', color: '#ba1a1a' }}>{t("Reporting failed")}: {model.zatca.reporting_failed_count}</span>
+                                            {model.zatca?.reporting_errors?.length > 0 && (
+                                                <ol style={{ fontSize: '12px', color: '#ba1a1a', paddingLeft: '16px', margin: 0 }}>
+                                                    {model.zatca.reporting_errors.map((err, i) => <li key={i}>{err}</li>)}
+                                                </ol>
+                                            )}
+                                        </div>
+                                    )}
+                                </div>
+                            </section>
+
+                            {/* Metadata */}
+                            <section style={{ backgroundColor: '#ffffff', borderRadius: '8px', border: '1px solid #e2e8f0', overflow: 'hidden', maxHeight: '500px', overflowY: 'auto' }}>
+                                <div style={{ padding: '12px 24px', borderBottom: '1px solid #c3c6d7', backgroundColor: '#f2f4f6' }}>
+                                    <h3 style={{ margin: 0, fontSize: '18px', fontWeight: 600, lineHeight: '26px', fontFamily: "'Hanken Grotesk', sans-serif", color: '#191c1e' }}>{t("Metadata")}</h3>
+                                </div>
+                                <div style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingBottom: '8px', borderBottom: '1px solid #c3c6d7' }}>
+                                        <span style={{ fontSize: '14px', color: '#434655' }}>{t("Created By")}</span>
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                                            <div style={{ width: '24px', height: '24px', borderRadius: '50%', backgroundColor: '#2563eb', color: '#eeefff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '10px', fontWeight: 700 }}>
+                                                {model.created_by_name ? model.created_by_name.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase() : ''}
+                                            </div>
+                                            <span style={{ fontSize: '14px', fontWeight: 500, color: '#191c1e' }}>{model.created_by_name}</span>
+                                        </div>
+                                    </div>
+                                    {model.customer_name && (
+                                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingBottom: '8px', borderBottom: '1px solid #c3c6d7' }}>
+                                            <span style={{ fontSize: '14px', color: '#434655' }}>{t("Customer")}</span>
+                                            <span style={{ fontSize: '14px', fontWeight: 500, color: '#191c1e' }}>{model.customer_name}</span>
+                                        </div>
+                                    )}
+                                    {model.order_code && (
+                                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingBottom: '8px', borderBottom: '1px solid #c3c6d7' }}>
+                                            <span style={{ fontSize: '14px', color: '#434655' }}>{t("Sales ID")}</span>
+                                            <span style={{ fontSize: '14px', fontWeight: 500, color: '#004ac6', fontFamily: 'monospace' }}>{model.order_code}</span>
+                                        </div>
+                                    )}
+                                    {model.received_by_name && (
+                                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingBottom: '8px', borderBottom: '1px solid #c3c6d7' }}>
+                                            <span style={{ fontSize: '14px', color: '#434655' }}>{t("Received By")}</span>
+                                            <span style={{ fontSize: '14px', fontWeight: 500, color: '#191c1e' }}>{model.received_by_name}</span>
+                                        </div>
+                                    )}
+                                    {model.date && (
+                                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingBottom: '8px', borderBottom: '1px solid #c3c6d7' }}>
+                                            <span style={{ fontSize: '14px', color: '#434655' }}>{t("Return Date")}</span>
+                                            <span style={{ fontSize: '14px', fontWeight: 500, color: '#191c1e' }}>{format(new Date(model.date), "MMM dd, yyyy", { locale: dateLocale })}</span>
+                                        </div>
+                                    )}
+                                    {model.invoice_count_value && (
+                                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingBottom: '8px', borderBottom: '1px solid #c3c6d7' }}>
+                                            <span style={{ fontSize: '14px', color: '#434655' }}>{t("Invoice Count Value (ICU)")}</span>
+                                            <span style={{ fontSize: '14px', fontWeight: 500, color: '#191c1e' }}>{model.invoice_count_value}</span>
+                                        </div>
+                                    )}
+                                    {model.updated_at && (
+                                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '8px' }}>
+                                            <span style={{ fontSize: '14px', color: '#434655', flexShrink: 0 }}>{t("Last Updated")}</span>
+                                            <span style={{ fontSize: '14px', fontWeight: 500, color: '#191c1e', textAlign: 'right' }}>{formatInStoreTimezone(model.updated_at)}</span>
+                                        </div>
+                                    )}
+                                    {model.updated_by_name && (
+                                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                            <span style={{ fontSize: '14px', color: '#434655' }}>{t("Updated By")}</span>
+                                            <span style={{ fontSize: '14px', fontWeight: 500, color: '#191c1e' }}>{model.updated_by_name}</span>
+                                        </div>
+                                    )}
+                                </div>
+                            </section>
+                        </div>
+                    </div>
+                </div>
             </Modal.Body>
-            {/*
-                <Modal.Footer>
-                    <Button variant="secondary" onClick={this.handleClose}>
-                        Close
-                </Button>
-                    <Button variant="primary" onClick={this.handleClose}>
-                        Save Changes
-                </Button>
-                </Modal.Footer>
-                */}
+            <Modal.Footer style={{ backgroundColor: '#ffffff', borderTop: '1px solid #c3c6d7', padding: '12px 32px', display: 'flex', justifyContent: 'flex-end', gap: '12px' }}>
+                <button onClick={handleClose} style={{ backgroundColor: '#d0e1fb', color: '#54647a', border: 'none', padding: '8px 24px', borderRadius: '4px', fontSize: '13px', fontWeight: 600, cursor: 'pointer' }}>
+                    {t("Cancel")}
+                </button>
+                <button onClick={openPrint} style={{ backgroundColor: '#004ac6', color: '#ffffff', border: 'none', padding: '8px 24px', borderRadius: '4px', fontSize: '13px', fontWeight: 700, cursor: 'pointer' }}>
+                    {t("Print Sales Return")}
+                </button>
+            </Modal.Footer>
         </Modal>
     </>);
 

@@ -1,11 +1,6 @@
 import React, { useState, forwardRef, useImperativeHandle } from "react";
-import { Modal, Table } from 'react-bootstrap';
-
-//let ThermalPrinterEncoder = require('thermal-printer-encoder');
-
-import { Button } from "react-bootstrap";
-
-
+import { Modal } from 'react-bootstrap';
+import AttachmentsViewer from '../utils/AttachmentsViewer.js';
 
 const DividentView = forwardRef((props, ref) => {
 
@@ -15,179 +10,244 @@ const DividentView = forwardRef((props, ref) => {
                 getDivident(id);
                 SetShow(true);
             }
-
         },
-
     }));
 
-
     let [model, setModel] = useState({});
-
-
     const [show, SetShow] = useState(false);
 
-    function handleClose() {
-        SetShow(false);
-    };
+    function handleClose() { SetShow(false); }
 
     function ObjectToSearchQueryParams(object) {
-        return Object.keys(object)
-            .map(function (key) {
-                return `search[${key}]=` + object[key];
-            })
-            .join("&");
+        return Object.keys(object).map(k => `search[${k}]=` + object[k]).join("&");
     }
 
     function getDivident(id) {
-        console.log("inside get Divident");
         const requestOptions = {
             method: 'GET',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': localStorage.getItem('access_token'),
-            },
+            headers: { 'Content-Type': 'application/json', 'Authorization': localStorage.getItem('access_token') },
         };
-
         let searchParams = {};
-        if (localStorage.getItem("store_id")) {
-            searchParams.store_id = localStorage.getItem("store_id");
-        }
+        if (localStorage.getItem("store_id")) searchParams.store_id = localStorage.getItem("store_id");
         let queryParams = ObjectToSearchQueryParams(searchParams);
-
 
         fetch('/v1/divident/' + id + "?" + queryParams, requestOptions)
             .then(async response => {
                 const isJson = response.headers.get('content-type')?.includes('application/json');
                 const data = isJson && await response.json();
-
-                // check for error response
-                if (!response.ok) {
-                    const error = (data && data.errors);
-                    return Promise.reject(error);
-                }
-
-                console.log("Response:");
-                console.log(data);
-
+                if (!response.ok) return Promise.reject(data && data.errors);
                 model = data.result;
-
                 setModel({ ...model });
             })
-            .catch(error => {
-                // setErrors(error);
-            });
+            .catch(() => {});
     }
 
+    const tzMap = {
+        'SA': 'Asia/Riyadh', 'AE': 'Asia/Dubai', 'KW': 'Asia/Kuwait',
+        'QA': 'Asia/Qatar', 'BH': 'Asia/Bahrain', 'OM': 'Asia/Muscat',
+        'IN': 'Asia/Kolkata', 'PK': 'Asia/Karachi', 'EG': 'Africa/Cairo',
+        'GB': 'Europe/London', 'US': 'America/New_York', 'AU': 'Australia/Sydney',
+    };
 
+    function formatPaymentMethod(method) {
+        if (!method) return '—';
+        return method.split('_').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
+    }
 
-
-
+    function formatInStoreTimezone(dateStr) {
+        if (!dateStr) return '';
+        const tz = tzMap[localStorage.getItem('store_country_code')] || 'UTC';
+        try {
+            const formatted = new Date(dateStr).toLocaleString('en-US', {
+                timeZone: tz, year: 'numeric', month: 'short', day: '2-digit',
+                hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true,
+            });
+            return `${formatted} (${tz.replace('_', ' ')})`;
+        } catch { return dateStr; }
+    }
 
     return (<>
         <Modal show={show} size="xl" onHide={handleClose} animation={false} scrollable={true}>
-            <Modal.Header>
-                <Modal.Title>Details of Divident #{model.description} </Modal.Title>
+            <Modal.Body className="p-0" style={{ backgroundColor: '#f7f9fb', fontFamily: "'Inter', sans-serif", position: 'relative' }}>
 
-                <div className="col align-self-end text-end">
-                    {props.openCreateForm ? <Button variant="primary" onClick={() => {
-                        handleClose();
-                        props.openCreateForm();
-                    }}>
-                        <i className="bi bi-plus"></i> Create
-                    </Button> : ""}
-                    &nbsp;&nbsp;
-                    {props.openUpdateForm ? <Button variant="primary" onClick={() => {
-                        handleClose();
-                        props.openUpdateForm(model.id);
-                    }}>
-                        <i className="bi bi-pencil"></i> Edit
-                    </Button> : ""}
+                {/* Close button */}
+                <button type="button" className="btn-close" onClick={handleClose} aria-label="Close"
+                    style={{ position: 'absolute', top: '16px', right: '16px', zIndex: 10 }} />
 
-                    <button
-                        type="button"
-                        className="btn-close"
-                        onClick={handleClose}
-                        aria-label="Close"
-                    ></button>
-
+                {/* Page Header */}
+                <div className="flex flex-col md:flex-row justify-between items-start md:items-center flex-wrap"
+                    style={{ padding: '24px 32px 20px', gap: '16px', borderBottom: '1px solid #c3c6d7' }}>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+                            <button onClick={handleClose} style={{ display: 'flex', alignItems: 'center', gap: '4px', border: '1px solid #c3c6d7', backgroundColor: '#ffffff', color: '#434655', padding: '6px 12px', borderRadius: '4px', fontSize: '13px', fontWeight: 500, cursor: 'pointer' }}>
+                                <i className="bi bi-arrow-left" style={{ fontSize: '14px' }}></i> Back
+                            </button>
+                            <h1 style={{ margin: 0, fontSize: '30px', lineHeight: '38px', fontWeight: 700, letterSpacing: '-0.02em', fontFamily: "'Hanken Grotesk', sans-serif", color: '#191c1e' }}>
+                                Drawing #{model.code}
+                            </h1>
+                            {model.payment_method && (
+                                <span style={{ backgroundColor: '#dbeafe', color: '#1d4ed8', border: '1px solid #bfdbfe', padding: '2px 8px', borderRadius: '2px', fontSize: '12px', fontWeight: 500 }}>
+                                    {formatPaymentMethod(model.payment_method)}
+                                </span>
+                            )}
+                        </div>
+                        {model.date && (
+                            <p style={{ margin: 0, fontSize: '14px', color: '#434655' }}>
+                                {formatInStoreTimezone(model.date)}
+                            </p>
+                        )}
+                    </div>
+                    <div className="flex flex-wrap items-center" style={{ gap: '8px', paddingRight: '32px' }}>
+                        {props.openCreateForm && (
+                            <button onClick={() => { handleClose(); props.openCreateForm(); }} style={{ display: 'flex', alignItems: 'center', gap: '4px', border: '1px solid #c3c6d7', backgroundColor: '#f7f9fb', color: '#191c1e', padding: '8px 24px', borderRadius: '4px', fontSize: '13px', fontWeight: 600, cursor: 'pointer' }}>
+                                <i className="bi bi-plus" style={{ fontSize: '18px' }}></i> Create
+                            </button>
+                        )}
+                        {props.openUpdateForm && (
+                            <button onClick={() => { handleClose(); props.openUpdateForm(model.id); }} style={{ display: 'flex', alignItems: 'center', gap: '4px', backgroundColor: '#004ac6', color: '#ffffff', border: 'none', padding: '8px 24px', borderRadius: '4px', fontSize: '13px', fontWeight: 600, cursor: 'pointer' }}>
+                                <i className="bi bi-pencil" style={{ fontSize: '18px' }}></i> Edit
+                            </button>
+                        )}
+                    </div>
                 </div>
-            </Modal.Header>
-            <Modal.Body>
-                <Table striped bordered hover responsive="lg">
-                    <tbody>
-                        <tr>
-                            <th>Code:</th><td> {model.code}</td>
-                            <th>Date:</th><td> {model.date}</td>
-                            <th>Description:</th><td> {model.description}</td>
-                            <th>Amount</th><td> {model.amount}</td>
-                            <th>WithdrawnByUser</th><td> {model.withdrawn_by_user_name}</td>
-                            <th>Payment Method:</th><td> {model.payment_method}</td>
-                        </tr>
-                        <tr>
-                            <th>Created At:</th><td> {model.created_at}</td>
-                            <th>Updated At:</th><td> {model.updated_at}</td>
-                            <th>Created By:</th><td> {model.created_by_name}</td>
-                            <th>Updated By:</th><td> {model.updated_by_name}</td>
-                        </tr>
-                    </tbody>
-                </Table>
-                <h4>Images</h4>
-                <div className="table-responsive" style={{ overflowX: "auto" }}>
-                    <table className="table table-striped table-sm table-bordered">
-                        <thead>
-                            <tr className="text-center">
-                                <th>SI No.</th>
-                                <th>Image</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {model.images && model.images.map((image, index) => (
-                                <tr key={index} className="text-center">
-                                    <td>{index + 1}</td>
-                                    <td>
-                                        <img alt="Divident" src={image + "?" + (Date.now())} key={image} style={{ width: 300, height: 300 }} />
-                                    </td>
-                                </tr>
-                            ))}
-                        </tbody>
-                    </table>
-                </div>
-                {/*
-                    <form className="row g-3 needs-validation" >
-                        
-                  
-                        <div className="col-md-6">
-                            <label className="form-label"
-                            >Delivered By*</label
-                            >
 
-                            <div className="input-group mb-3">
-                                <input type="text" className="form-control" id="validationCustom06" placeholder="Select User" aria-label="Select User" aria-describedby="button-addon4" />
-                                <UserCreate showCreateButton={true} />
-                                <div className="valid-feedback">Looks good!</div>
-                                <div className="invalid-feedback">
-                                    Please provide a valid User.
-                  </div>
+                <div className="p-md md:p-xl" style={{ display: 'flex', flexDirection: 'column', gap: '32px' }}>
+
+                    {/* Summary Cards */}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-lg">
+
+                        {/* Amount */}
+                        <div style={{ backgroundColor: '#ffffff', padding: '24px', borderRadius: '8px', border: '1px solid #e2e8f0', display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                            <span style={{ fontSize: '13px', fontWeight: 600, color: '#434655', lineHeight: '16px' }}>Amount</span>
+                            <span style={{ fontSize: '24px', fontWeight: 600, lineHeight: '32px', letterSpacing: '-0.01em', color: '#ba1a1a', fontFamily: "'Hanken Grotesk', sans-serif" }}>
+                                {model.amount != null ? Number(model.amount).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : '—'}
+                            </span>
+                            <div style={{ marginTop: '4px', fontSize: '12px', color: '#ba1a1a', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                                <i className="bi bi-arrow-up-circle" style={{ fontSize: '13px' }}></i>
+                                Drawing / Withdrawal
                             </div>
                         </div>
-                       
 
-                    </form>
-                    */}
+                        {/* Payment Method */}
+                        <div style={{ backgroundColor: '#ffffff', padding: '24px', borderRadius: '8px', border: '1px solid #e2e8f0', display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                            <span style={{ fontSize: '13px', fontWeight: 600, color: '#434655', lineHeight: '16px' }}>Payment Method</span>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '4px' }}>
+                                <i className="bi bi-wallet2" style={{ fontSize: '20px', color: '#505f76' }}></i>
+                                <span style={{ fontSize: '18px', fontWeight: 600, color: '#191c1e', fontFamily: "'Hanken Grotesk', sans-serif" }}>
+                                    {formatPaymentMethod(model.payment_method)}
+                                </span>
+                            </div>
+                        </div>
+
+                        {/* Withdrawn By */}
+                        <div style={{ backgroundColor: '#ffffff', padding: '24px', borderRadius: '8px', border: '1px solid #e2e8f0', display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                            <span style={{ fontSize: '13px', fontWeight: 600, color: '#434655', lineHeight: '16px' }}>Withdrawn By</span>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '4px' }}>
+                                <i className="bi bi-person-circle" style={{ fontSize: '20px', color: '#505f76' }}></i>
+                                <span style={{ fontSize: '16px', fontWeight: 600, color: '#191c1e', fontFamily: "'Hanken Grotesk', sans-serif" }}>
+                                    {model.withdrawn_by_user_name || '—'}
+                                </span>
+                            </div>
+                        </div>
+
+                        {/* Date */}
+                        <div style={{ backgroundColor: '#ffffff', padding: '24px', borderRadius: '8px', border: '1px solid #e2e8f0', display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                            <span style={{ fontSize: '13px', fontWeight: 600, color: '#434655', lineHeight: '16px' }}>Date</span>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '4px' }}>
+                                <i className="bi bi-calendar3" style={{ fontSize: '20px', color: '#505f76' }}></i>
+                                <span style={{ fontSize: '14px', fontWeight: 600, color: '#191c1e', fontFamily: "'Hanken Grotesk', sans-serif" }}>
+                                    {formatInStoreTimezone(model.date)}
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Main Body Grid */}
+                    <div className="grid grid-cols-1 lg:grid-cols-12 items-start" style={{ gap: '32px' }}>
+
+                        {/* Left: Details + Attachments */}
+                        <div className="lg:col-span-8" style={{ display: 'flex', flexDirection: 'column', gap: '32px' }}>
+
+                            {/* Drawing Details */}
+                            <section style={{ backgroundColor: '#ffffff', borderRadius: '8px', border: '1px solid #e2e8f0', overflow: 'hidden' }}>
+                                <div style={{ padding: '12px 24px', borderBottom: '1px solid #c3c6d7', display: 'flex', alignItems: 'center', gap: '8px', backgroundColor: '#f2f4f6' }}>
+                                    <i className="bi bi-receipt" style={{ color: '#505f76' }}></i>
+                                    <h3 style={{ margin: 0, fontSize: '18px', fontWeight: 600, lineHeight: '26px', fontFamily: "'Hanken Grotesk', sans-serif", color: '#191c1e' }}>Drawing Details</h3>
+                                </div>
+                                <div style={{ padding: '24px', display: 'flex', flexDirection: 'column' }}>
+                                    {[
+                                        { label: 'Code', value: model.code, mono: true },
+                                        { label: 'Amount', value: model.amount != null ? Number(model.amount).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : null, bold: true },
+                                        { label: 'Payment Method', value: formatPaymentMethod(model.payment_method) },
+                                        { label: 'Withdrawn By', value: model.withdrawn_by_user_name },
+                                        { label: 'Date', value: formatInStoreTimezone(model.date) },
+                                        { label: 'Description', value: model.description },
+                                    ].filter(r => r.value && r.value !== '—').map((r, i, arr) => (
+                                        <div key={r.label} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', padding: '10px 0', borderBottom: i < arr.length - 1 ? '1px solid #c3c6d7' : 'none', gap: '16px' }}>
+                                            <span style={{ fontSize: '14px', color: '#434655', flexShrink: 0, minWidth: '140px' }}>{r.label}</span>
+                                            <span style={{ fontSize: '14px', fontWeight: r.bold ? 700 : 500, color: r.mono ? '#004ac6' : '#191c1e', fontFamily: r.mono ? 'monospace' : 'inherit', textAlign: 'right' }}>{r.value}</span>
+                                        </div>
+                                    ))}
+                                </div>
+                            </section>
+
+                            {/* Attachments */}
+                            <AttachmentsViewer images={model.images} title="Attachments" />
+                        </div>
+
+                        {/* Right: Metadata */}
+                        <div className="lg:col-span-4">
+                            <section style={{ backgroundColor: '#ffffff', borderRadius: '8px', border: '1px solid #e2e8f0', overflow: 'hidden' }}>
+                                <div style={{ padding: '12px 24px', borderBottom: '1px solid #c3c6d7', backgroundColor: '#f2f4f6' }}>
+                                    <h3 style={{ margin: 0, fontSize: '18px', fontWeight: 600, lineHeight: '26px', fontFamily: "'Hanken Grotesk', sans-serif", color: '#191c1e' }}>Metadata</h3>
+                                </div>
+                                <div style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingBottom: '8px', borderBottom: '1px solid #c3c6d7' }}>
+                                        <span style={{ fontSize: '14px', color: '#434655' }}>Created By</span>
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                                            <div style={{ width: '24px', height: '24px', borderRadius: '50%', backgroundColor: '#2563eb', color: '#eeefff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '10px', fontWeight: 700 }}>
+                                                {model.created_by_name ? model.created_by_name.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase() : ''}
+                                            </div>
+                                            <span style={{ fontSize: '14px', fontWeight: 500, color: '#191c1e' }}>{model.created_by_name || '—'}</span>
+                                        </div>
+                                    </div>
+                                    {model.updated_by_name && (
+                                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingBottom: '8px', borderBottom: '1px solid #c3c6d7' }}>
+                                            <span style={{ fontSize: '14px', color: '#434655' }}>Updated By</span>
+                                            <span style={{ fontSize: '14px', fontWeight: 500, color: '#191c1e' }}>{model.updated_by_name}</span>
+                                        </div>
+                                    )}
+                                    {model.created_at && (
+                                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '8px', paddingBottom: '8px', borderBottom: '1px solid #c3c6d7' }}>
+                                            <span style={{ fontSize: '14px', color: '#434655', flexShrink: 0 }}>Created At</span>
+                                            <span style={{ fontSize: '14px', fontWeight: 500, color: '#191c1e', textAlign: 'right' }}>{formatInStoreTimezone(model.created_at)}</span>
+                                        </div>
+                                    )}
+                                    {model.updated_at && (
+                                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '8px' }}>
+                                            <span style={{ fontSize: '14px', color: '#434655', flexShrink: 0 }}>Last Updated</span>
+                                            <span style={{ fontSize: '14px', fontWeight: 500, color: '#191c1e', textAlign: 'right' }}>{formatInStoreTimezone(model.updated_at)}</span>
+                                        </div>
+                                    )}
+                                </div>
+                            </section>
+                        </div>
+                    </div>
+                </div>
             </Modal.Body>
-            {/*
-                <Modal.Footer>
-                    <Button variant="secondary" onClick={this.handleClose}>
-                        Close
-                </Button>
-                    <Button variant="primary" onClick={this.handleClose}>
-                        Save Changes
-                </Button>
-                </Modal.Footer>
-                */}
+
+            <Modal.Footer style={{ backgroundColor: '#ffffff', borderTop: '1px solid #c3c6d7', padding: '12px 32px', display: 'flex', justifyContent: 'flex-end', gap: '12px' }}>
+                <button onClick={handleClose} style={{ backgroundColor: '#d0e1fb', color: '#54647a', border: 'none', padding: '8px 24px', borderRadius: '4px', fontSize: '13px', fontWeight: 600, cursor: 'pointer' }}>
+                    Cancel
+                </button>
+                {props.openUpdateForm && (
+                    <button onClick={() => { handleClose(); props.openUpdateForm(model.id); }} style={{ backgroundColor: '#004ac6', color: '#ffffff', border: 'none', padding: '8px 24px', borderRadius: '4px', fontSize: '13px', fontWeight: 700, cursor: 'pointer' }}>
+                        Edit Drawing
+                    </button>
+                )}
+            </Modal.Footer>
         </Modal>
     </>);
-
 });
 
 export default DividentView;

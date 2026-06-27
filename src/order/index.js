@@ -1787,7 +1787,7 @@ const OrderIndex = forwardRef((props, ref) => {
             {showReportPreview && <ReportPreview ref={ReportPreviewRef} searchParams={searchParams} sortOrder={sortOrder} sortField={sortField} />}
 
             {showOrderCreateForm && <OrderCreate ref={CreateFormRef} handleUpdated={handleUpdated} refreshList={list} showToastMessage={props.showToastMessage} openCreateForm={openCreateForm} />}
-            {showOrderView && <OrderView ref={DetailsViewRef} openCreateForm={openCreateForm} />}
+            {showOrderView && <OrderView ref={DetailsViewRef} openCreateForm={openCreateForm} openUpdateForm={openUpdateForm} />}
             {showSalesReturnCreateForm && <SalesReturnCreate ref={SalesReturnCreateRef} showToastMessage={props.showToastMessage} refreshSalesList={list} />}
 
             {/* Error Modal */}

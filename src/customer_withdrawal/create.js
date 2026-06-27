@@ -52,6 +52,7 @@ const CustomerWithdrawalCreate = forwardRef((props, ref) => {
             setFormData({ ...formData });
             setSelectedCustomers([]);
             setSelectedVendors([]);
+            setPendingAttachments([]);
             findTotalPayments();
 
             if (id) {
@@ -612,6 +613,8 @@ const CustomerWithdrawalCreate = forwardRef((props, ref) => {
         }
 
 
+        formData.images_content = pendingAttachments.map(a => a.dataUrl.split(",")[1] || a.dataUrl);
+
         const requestOptions = {
             method: method,
             headers: {
@@ -921,6 +924,7 @@ const CustomerWithdrawalCreate = forwardRef((props, ref) => {
 
 
     const PreviewRef = useRef();
+    // eslint-disable-next-line no-unused-vars
     function openPreview() {
         if (!formData.date) {
             formData.date = formData.date_str;
@@ -1088,8 +1092,160 @@ const CustomerWithdrawalCreate = forwardRef((props, ref) => {
 
     const dragRef = useRef(null);
 
+    // ── Attachments state & helpers ────────────────────────────────────────
+    const [pendingAttachments, setPendingAttachments] = useState([]);
+    // Lightbox state
+    const [lightbox, setLightbox] = useState(null);
+    function openLightbox(items, index) { setLightbox({ items, index }); }
+    function closeLightbox() { setLightbox(null); }
+    function lightboxPrev() { setLightbox(lb => ({ ...lb, index: lb.index === 0 ? lb.items.length - 1 : lb.index - 1 })); }
+    function lightboxNext() { setLightbox(lb => ({ ...lb, index: lb.index === lb.items.length - 1 ? 0 : lb.index + 1 })); }
+
+    function addAttachments(files) {
+        const newItems = [];
+        let remaining = files.length;
+        Array.from(files).forEach(file => {
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                newItems.push({ name: file.name, type: file.type, size: file.size, dataUrl: e.target.result });
+                remaining--;
+                if (remaining === 0) setPendingAttachments(prev => [...prev, ...newItems]);
+            };
+            reader.readAsDataURL(file);
+        });
+    }
+
+    function removePendingAttachment(idx) {
+        if (!window.confirm('Remove this attachment? Unsaved files will be discarded.')) return;
+        setPendingAttachments(prev => prev.filter((_, i) => i !== idx));
+    }
+
+    function removeExistingAttachment(filename) {
+        if (!window.confirm('Delete this attachment permanently? This cannot be undone.')) return;
+        formData.images = (formData.images || []).filter(f => f !== filename);
+        setFormData({ ...formData });
+    }
+
+    async function downloadServerFile(url, filename) {
+        try {
+            const response = await fetch(url, { headers: { 'Authorization': localStorage.getItem('access_token') } });
+            if (!response.ok) throw new Error('Failed');
+            const blob = await response.blob();
+            const blobUrl = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = blobUrl; a.download = filename;
+            document.body.appendChild(a); a.click(); document.body.removeChild(a);
+            setTimeout(() => URL.revokeObjectURL(blobUrl), 1000);
+        } catch (e) { window.open(url, '_blank'); }
+    }
+    function getFileIcon(type, name) {
+        const ext = (name || '').toLowerCase().split('.').pop();
+        if (type && (type.startsWith('image/') || ['jpg','jpeg','png','gif','webp','bmp','pjpeg'].includes(ext))) return 'bi-file-image';
+        if (type === 'application/pdf' || ext === 'pdf') return 'bi-file-earmark-pdf';
+        if (['xlsx','xls','csv'].includes(ext)) return 'bi-file-earmark-spreadsheet';
+        if (['docx','doc'].includes(ext)) return 'bi-file-earmark-word';
+        if (['txt','rtf'].includes(ext)) return 'bi-file-earmark-text';
+        if (['zip','rar','7z'].includes(ext)) return 'bi-file-earmark-zip';
+        return 'bi-file-earmark';
+    }
+    function getFileLabel(filename) {
+        const ext = (filename || '').toLowerCase().split('.').pop();
+        if (['jpg','jpeg','png','gif','webp','bmp','pjpeg'].includes(ext)) return 'Image';
+        if (ext === 'pdf') return 'PDF Document';
+        if (['xlsx','xls'].includes(ext)) return 'Spreadsheet';
+        if (['docx','doc'].includes(ext)) return 'Word Document';
+        if (['txt','rtf'].includes(ext)) return 'Text File';
+        if (['zip','rar','7z'].includes(ext)) return 'Archive';
+        if (ext) return ext.toUpperCase() + ' File';
+        return 'File';
+    }
+    function isImageFile(filename, type) {
+        const ext = (filename || '').toLowerCase().split('.').pop();
+        return (type && type.startsWith('image/')) || ['jpg','jpeg','png','gif','webp','bmp','pjpeg'].includes(ext);
+    }
+    function downloadDataUrl(dataUrl, name) {
+        const a = document.createElement("a");
+        a.href = dataUrl;
+        a.download = name;
+        a.click();
+    }
+
+    function formatBytes(bytes) {
+        if (!bytes) return "";
+        if (bytes < 1024) return bytes + " B";
+        if (bytes < 1048576) return (bytes / 1024).toFixed(1) + " KB";
+        return (bytes / 1048576).toFixed(1) + " MB";
+    }
+    // ──────────────────────────────────────────────────────────────────────
+
+    // ── Design tokens ──────────────────────────────────────────────────────
+    const CARD = { background: '#ffffff', border: '1px solid #c3c6d7', borderRadius: '8px', padding: '24px', marginBottom: '20px' };
+    const INPUT = { border: '1px solid #c3c6d7', borderRadius: '4px', padding: '7px 12px', fontSize: '13px', fontFamily: '"Inter", sans-serif', width: '100%', outline: 'none', color: '#191c1e', background: '#fff' };
+
+    const Label = ({ children, required }) => (
+        <label style={{ display: 'block', fontFamily: '"Inter", sans-serif', fontSize: '13px', fontWeight: 600, color: '#191c1e', marginBottom: '4px' }}>
+            {children}{required && <span style={{ color: '#ba1a1a', marginLeft: '2px' }}>*</span>}
+        </label>
+    );
+    const ErrMsg = ({ children }) => (
+        <div style={{ color: '#ba1a1a', fontSize: '12px', fontFamily: '"Inter", sans-serif', marginTop: '3px' }}>{children}</div>
+    );
+    const SectionTitle = ({ children, icon }) => (
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '20px' }}>
+            {icon && <i className={`bi ${icon}`} style={{ fontSize: '18px', color: '#004ac6' }}></i>}
+            <h3 style={{ fontFamily: '"Hanken Grotesk", sans-serif', fontSize: '16px', fontWeight: 600, color: '#191c1e', margin: 0 }}>{children}</h3>
+        </div>
+    );
+
+    const NAV_TABS = [
+        { id: 'party',       label: 'Customer / Vendor', icon: 'bi-people'      },
+        { id: 'payments',    label: 'Payments',           icon: 'bi-credit-card' },
+        { id: 'attachments', label: 'Attachments',        icon: 'bi-paperclip'  },
+    ];
+
+    const [activeTab, setActiveTab] = useState("party");
+    // ──────────────────────────────────────────────────────────────────────
+
+    function getErrorTab(key) {
+        const k = key.toLowerCase();
+        if (['image','photo','attachment'].some(f => k.includes(f))) return 'attachments';
+        if (['payment','amount','date','discount','method','bank','description','reference'].some(f => k.includes(f))) return 'payments';
+        return 'party';
+    }
+
+    const allErrors = Object.entries(errors).filter(([, v]) => v);
+    const totalErrors = allErrors.length;
+
+    const tabIds = NAV_TABS.map(t => t.id);
+    const currentTabIndex = tabIds.indexOf(activeTab);
+    const prevTab = tabIds[currentTabIndex - 1];
+    const nextTab = tabIds[currentTabIndex + 1];
+
     return (
         <>
+            {/* Attachment lightbox */}
+            {lightbox && (
+                <div onClick={closeLightbox} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.92)', zIndex: 99999, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <button onClick={e => { e.stopPropagation(); closeLightbox(); }} style={{ position: 'absolute', top: 16, right: 20, background: 'none', border: 'none', color: '#fff', fontSize: 28, cursor: 'pointer', zIndex: 2 }}>×</button>
+                    {lightbox.items.length > 1 && (
+                        <>
+                            <button onClick={e => { e.stopPropagation(); lightboxPrev(); }} style={{ position: 'absolute', left: 16, top: '50%', transform: 'translateY(-50%)', background: 'rgba(255,255,255,0.15)', border: 'none', color: '#fff', fontSize: 28, width: 44, height: 44, borderRadius: '50%', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>‹</button>
+                            <button onClick={e => { e.stopPropagation(); lightboxNext(); }} style={{ position: 'absolute', right: 16, top: '50%', transform: 'translateY(-50%)', background: 'rgba(255,255,255,0.15)', border: 'none', color: '#fff', fontSize: 28, width: 44, height: 44, borderRadius: '50%', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>›</button>
+                        </>
+                    )}
+                    <div onClick={e => e.stopPropagation()} style={{ maxWidth: '90vw', maxHeight: '90vh', position: 'relative' }}>
+                        {lightbox.items[lightbox.index]?.isImg
+                            ? <img src={lightbox.items[lightbox.index].url} alt="" style={{ maxWidth: '88vw', maxHeight: '86vh', objectFit: 'contain', borderRadius: 4 }} />
+                            : <iframe src={lightbox.items[lightbox.index]?.url} title="attachment" style={{ width: '80vw', height: '80vh', border: 'none', borderRadius: 4, background: '#fff' }} />
+                        }
+                        {lightbox.items.length > 1 && (
+                            <div style={{ textAlign: 'center', color: '#ccc', fontSize: 13, marginTop: 8 }}>
+                                {lightbox.index + 1} / {lightbox.items.length}
+                            </div>
+                        )}
+                    </div>
+                </div>
+            )}
             <Modal show={showInvoiceTypeSelection} onHide={() => {
                 showInvoiceTypeSelection = false;
                 setShowInvoiceTypeSelection(showInvoiceTypeSelection);
@@ -1156,466 +1312,173 @@ const CustomerWithdrawalCreate = forwardRef((props, ref) => {
             <CustomerCreate ref={CustomerCreateFormRef} openDetailsView={openCustomerDetailsView} showToastMessage={props.showToastMessage} />
             <VendorCreate ref={VendorCreateFormRef} showToastMessage={props.showToastMessage} />
             <CustomerView ref={CustomerDetailsViewRef} showToastMessage={props.showToastMessage} />
-            <Modal show={show} fullscreen onHide={handleClose} animation={false} backdrop="static" scrollable={true}>
-                <Modal.Header>
-                    <Modal.Title>
-                        {formData.id ? "Update Payable #" + formData.code : "Create New Payable"}
+
+            <Modal show={show} fullscreen onHide={handleClose} animation={false} backdrop="static" dialogClassName="pw-modal">
+                <Modal.Header style={{ background: '#ffffff', borderBottom: '1px solid #c3c6d7', padding: '10px 20px', flexShrink: 0, display: 'flex', alignItems: 'center', gap: '12px' }}>
+                    <button type="button" onClick={handleClose}
+                        style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#434655', display: 'inline-flex', alignItems: 'center', gap: '4px', fontSize: '13px', fontWeight: 600, fontFamily: 'Inter, sans-serif', padding: '4px 8px', borderRadius: '4px', flexShrink: 0 }}
+                        onMouseEnter={e => e.currentTarget.style.background = '#f0f2f4'}
+                        onMouseLeave={e => e.currentTarget.style.background = 'none'}>
+                        <i className="bi bi-arrow-left" style={{ fontSize: '16px' }}></i> Back
+                    </button>
+                    <Modal.Title style={{ fontFamily: '"Hanken Grotesk", sans-serif', fontSize: '17px', fontWeight: 700, color: '#191c1e', letterSpacing: '-0.01em', flex: 1 }}>
+                        {formData.id ? "Update Payment" : "Create New Payment"}
                     </Modal.Title>
-
-
-                    <div className="col align-self-end text-end">
-                        &nbsp;&nbsp;
-                        <Button variant="primary" onClick={openPreview}>
-                            <i className="bi bi-printer"></i> Print
-                        </Button>
-                        &nbsp;&nbsp;
-
-                        {formData.id ? <Button variant="primary" onClick={() => {
-                            handleClose();
-                            if (props.openDetailsView)
-                                props.openDetailsView(formData.id);
-                        }}>
-                            <i className="bi bi-eye"></i> View Detail
-                        </Button> : ""}
-                        &nbsp;&nbsp;
-                        <Button variant="primary" onClick={handleCreate} >
-                            {isProcessing ?
-                                <Spinner
-                                    as="span"
-                                    animation="border"
-                                    size="sm"
-                                    role="status"
-                                    aria-hidden={true}
-                                />
-
-                                : ""
-                            }
-                            {formData.id && !isProcessing ? "Update" : !isProcessing ? "Create" : ""}
-                        </Button>
-                        <button
-                            type="button"
-                            className="btn-close"
-                            onClick={handleClose}
-                            aria-label="Close"
-                        ></button>
+                    <div className="d-flex align-items-center gap-2">
+                        {formData.id && (
+                            <button type="button"
+                                style={{ background: '#d0e1fb', color: '#54647a', border: 'none', borderRadius: '4px', padding: '6px 14px', fontSize: '13px', fontWeight: 600, fontFamily: '"Inter", sans-serif', cursor: 'pointer' }}
+                                onClick={() => { handleClose(); if (props.openDetailsView) props.openDetailsView(formData.id); }}>
+                                <i className="bi bi-eye me-1"></i>View Detail
+                            </button>
+                        )}
+                        <button type="button"
+                            style={{ background: '#004ac6', color: '#ffffff', border: 'none', borderRadius: '4px', padding: '6px 18px', fontSize: '13px', fontWeight: 600, fontFamily: '"Inter", sans-serif', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '6px' }}
+                            onClick={handleCreate} disabled={isProcessing}>
+                            {isProcessing && <Spinner as="span" animation="border" size="sm" role="status" aria-hidden={true} />}
+                            {formData.id ? 'Update' : 'Create'}
+                        </button>
+                        <button type="button" className="btn-close ms-1" onClick={handleClose} aria-label="Close" />
                     </div>
                 </Modal.Header>
-                <Modal.Body>
-                    <form className="row g-3 needs-validation" onSubmit={handleCreate}>
+                <style>{`
+                  @keyframes fadeInDown { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
+                  input[type="number"]::-webkit-outer-spin-button,
+                  input[type="number"]::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+                  input[type="number"] { -moz-appearance: textfield; }
+                  .pw-modal .modal-content { display: flex; flex-direction: column; height: 100%; }
+                  .pw-body { padding: 0 !important; overflow: hidden !important; display: flex !important; flex-direction: column !important; flex: 1 !important; min-height: 0 !important; }
+                  .pw-form { display: flex; width: 100%; flex: 1; min-height: 0; }
+                  .pw-sidebar { width: 200px; background: #f2f4f6; border-right: 1px solid #c3c6d7; padding: 16px 10px; flex-shrink: 0; overflow-y: auto; display: flex; flex-direction: column; gap: 4px; }
+                  .pw-sidebar-header { margin-bottom: 16px; }
+                  .pw-content { flex: 1; display: flex; flex-direction: column; background: #f7f9fb; min-width: 0; overflow: hidden; }
+                  .pw-tab-wrap { max-width: 100%; }
+                  .pw-price-cards .col-md-4 { margin-bottom: 16px; }
+                  @media (max-width: 767px) {
+                    .pw-form { flex-direction: column; }
+                    .pw-sidebar { width: 100%; height: auto; flex-direction: row; overflow-x: auto; overflow-y: hidden; border-right: none; border-bottom: 1px solid #c3c6d7; padding: 6px 8px; gap: 4px; }
+                    .pw-sidebar-header { display: none; }
+                    .pw-sidebar button { flex-shrink: 0; white-space: nowrap; padding: 8px 12px !important; }
+                    .pw-content-scroll { padding: 14px 16px !important; }
+                    .pw-tab-wrap { max-width: 100%; }
+                  }
+                  @media (min-width: 768px) and (max-width: 1100px) {
+                    .pw-sidebar { width: 170px; }
+                    .pw-content-scroll { padding: 16px 20px; }
+                    .pw-tab-wrap { max-width: 100%; }
+                  }
+                  @media (min-height: 600px) and (max-height: 800px) {
+                    .pw-content-scroll { padding: 14px 24px; }
+                  }
+                  @media (max-width: 767px) {
+                    .pw-card { padding: 14px !important; margin-bottom: 12px !important; }
+                  }
+                  @media (min-width: 768px) and (max-width: 1100px) {
+                    .pw-card { padding: 16px !important; margin-bottom: 14px !important; }
+                  }
+                `}</style>
+                <Modal.Body className="pw-body">
+                    <form onSubmit={handleCreate} className="pw-form">
 
-                        <div className="row mt-2" >
-                            <div className="col-md-2">
-                                <label className="form-label">Type*</label>
-
-                                <div className="input-group mb-3">
-                                    <select
-                                        value={formData.type}
-                                        onChange={(e) => {
-
-                                            if (!e.target.value) {
-                                                formData.type = "";
-                                                errors["type"] = "Invalid type";
-                                                setErrors({ ...errors });
-                                                return;
-                                            }
-
-                                            delete errors["type"];
-                                            setErrors({ ...errors });
-
-                                            if (ValidateTypeChange(e.target.value)) {
-                                                formData.type = e.target.value;
-                                                setFormData({ ...formData });
-                                                console.log(formData);
-                                            }
-
-
-                                        }}
-                                        className="form-control"
-                                    >
-                                        <option value="customer" SELECTED>Customer</option>
-                                        <option value="vendor">Vendor</option>
-
-                                    </select>
+                        {/* Left Nav Sidebar */}
+                        <aside className="pw-sidebar">
+                            <div className="pw-sidebar-header">
+                                <div style={{ fontFamily: '"Hanken Grotesk", sans-serif', fontSize: '15px', fontWeight: 700, color: '#191c1e', marginBottom: '2px' }}>
+                                    {formData.id ? 'Edit Payment' : 'New Payment'}
                                 </div>
-                                {errors.type && (
-                                    <div style={{ color: "red" }}>
-                                        {errors.type}
+                                <div style={{ fontFamily: '"Inter", sans-serif', fontSize: '11px', color: '#434655' }}>Payment Wizard</div>
+                            </div>
+                            {NAV_TABS.map((tab) => (
+                                <button key={tab.id} type="button"
+                                    onClick={() => setActiveTab(tab.id)}
+                                    style={{
+                                        display: 'flex', alignItems: 'center', gap: '8px',
+                                        padding: '9px 10px', borderRadius: '6px', border: 'none', cursor: 'pointer', textAlign: 'left', width: '100%',
+                                        background: activeTab === tab.id ? '#2563eb' : 'transparent',
+                                        color: activeTab === tab.id ? '#eeefff' : '#434655',
+                                        fontFamily: '"Inter", sans-serif', fontSize: '13px', fontWeight: activeTab === tab.id ? 700 : 500,
+                                    }}
+                                    onMouseEnter={(e) => { if (activeTab !== tab.id) e.currentTarget.style.background = '#e0e3e5'; }}
+                                    onMouseLeave={(e) => { if (activeTab !== tab.id) e.currentTarget.style.background = 'transparent'; }}
+                                >
+                                    <i className={`bi ${tab.icon}`} style={{ fontSize: '15px', flexShrink: 0 }}></i>
+                                    <span style={{ flex: 1 }}>{tab.label}</span>
+                                </button>
+                            ))}
+                        </aside>
+
+                        {/* Main Content Area */}
+                        <div className="pw-content">
+                            <div style={{ flex: 1, overflowY: "auto", padding: "20px 28px", paddingBottom: "8px" }}>
+                            <div style={{ overflow: "hidden", maxHeight: totalErrors > 0 ? "500px" : "0", marginBottom: totalErrors > 0 ? "16px" : "0", transition: "max-height 0.25s ease, margin-bottom 0.2s ease" }}>
+                              <div style={{ background: "#ffdad6", border: "1px solid #f4adaa", borderRadius: "8px", padding: "12px 16px" }}>
+                                <div style={{ fontFamily: "Inter, sans-serif", fontWeight: 700, color: "#93000a", marginBottom: "8px", fontSize: "13px", display: "flex", alignItems: "center", gap: "6px" }}>
+                                  <i className="bi bi-exclamation-circle-fill" style={{ fontSize: "14px" }}></i>
+                                  {totalErrors} error{totalErrors > 1 ? "s" : ""} — please fix before saving:
+                                </div>
+                                {NAV_TABS.map((tab) => {
+                                  const tabErrs = allErrors.filter(([k]) => getErrorTab(k) === tab.id);
+                                  if (!tabErrs.length) return null;
+                                  return (
+                                    <div key={tab.id} style={{ marginBottom: "6px" }}>
+                                      <button type="button" onClick={() => setActiveTab(tab.id)}
+                                        style={{ background: "none", border: "none", padding: 0, fontFamily: "Inter, sans-serif", fontWeight: 700, color: "#004ac6", cursor: "pointer", fontSize: "12px", textDecoration: "underline", display: "inline-flex", alignItems: "center", gap: "4px", marginBottom: "2px" }}>
+                                        <i className={`bi ${tab.icon}`} style={{ fontSize: "11px" }}></i> {tab.label}:
+                                      </button>
+                                      {tabErrs.map(([k, v]) => (
+                                        <div key={k} style={{ fontFamily: "Inter, sans-serif", fontSize: "12px", color: "#93000a", paddingLeft: "14px" }}>• {v}</div>
+                                      ))}
                                     </div>
-                                )}
+                                  );
+                                })}
+                              </div>
                             </div>
+                            <div className="pw-tab-wrap">
 
-                            <div className="col-md-4">
-                                <label className="form-label">Date*</label>
+                                {/* ── Party Tab ── */}
+                                {activeTab === 'party' && (
+                                    <>
+                                        <div style={CARD}>
+                                            <SectionTitle icon="bi-calendar3">Date & Type</SectionTitle>
 
-                                <div className="input-group mb-3">
-                                    <DatePicker
-                                        id="date_str"
-                                        selected={formData.date_str ? new Date(formData.date_str) : null}
-                                        value={formData.date_str ? format(
-                                            new Date(formData.date_str),
-                                            "MMMM d, yyyy h:mm aa"
-                                        ) : null}
-                                        className="form-control"
-                                        dateFormat="MMMM d, yyyy h:mm aa"
-                                        showTimeSelect
-                                        timeIntervals="1"
-                                        onChange={(value) => {
-                                            console.log("Value", value);
-                                            formData.date_str = value;
-                                            // formData.date_str = format(new Date(value), "MMMM d yyyy h:mm aa");
-                                            setFormData({ ...formData });
-                                        }}
-                                    />
+                                            <div className="row g-3">
+                                                <div className="col-md-4">
+                                                    <Label required>Type</Label>
+                                                    <select
+                                                        value={formData.type}
+                                                        onChange={(e) => {
+                                                            if (!e.target.value) {
+                                                                formData.type = "";
+                                                                errors["type"] = "Invalid type";
+                                                                setErrors({ ...errors });
+                                                                return;
+                                                            }
 
-                                    {errors.date_str && (
-                                        <div style={{ color: "red" }}>
-                                            {errors.date_str}
-                                        </div>
-                                    )}
-                                </div>
-                            </div>
-                        </div>
+                                                            delete errors["type"];
+                                                            setErrors({ ...errors });
 
+                                                            if (ValidateTypeChange(e.target.value)) {
+                                                                formData.type = e.target.value;
+                                                                setFormData({ ...formData });
+                                                                console.log(formData);
+                                                            }
+                                                        }}
+                                                        style={INPUT}
+                                                    >
+                                                        <option value="customer" SELECTED>Customer</option>
+                                                        <option value="vendor">Vendor</option>
+                                                    </select>
+                                                    {errors.type && <ErrMsg>{errors.type}</ErrMsg>}
+                                                </div>
 
-                        <div className="row">
-                            {formData.type === "customer" && <>
-                                <div className="col-md-10" style={{ border: "solid 0px" }}>
-                                    <label className="form-label">Customer*</label>
-                                    <Typeahead
-                                        id="customer_id"
-                                        labelKey="search_label"
-                                        isLoading={false}
-                                        filterBy={() => true}
-                                        isInvalid={errors.customer_id ? true : false}
-                                        open={openCustomerSearchResult}
-                                        onChange={(selectedItems) => {
-                                            errors.customer_id = "";
-                                            setErrors(errors);
-                                            if (selectedItems.length === 0) {
-                                                // errors.customer_id = "Invalid Customer selected";
-                                                //setErrors(errors);
-                                                formData.customer_id = "";
-                                                formData.customer_name = "";
-                                                setFormData({ ...formData });
-                                                setSelectedCustomers([]);
-                                                return;
-                                            }
-                                            formData.customer_id = selectedItems[0].id;
-                                            if (selectedItems[0].use_remarks_in_sales && selectedItems[0].remarks) {
-                                                formData.remarks = selectedItems[0].remarks;
-                                            }
-
-                                            setFormData({ ...formData });
-                                            setSelectedCustomers(selectedItems);
-                                            openCustomerSearchResult = false;
-                                            setOpenCustomerSearchResult(false);
-                                        }}
-
-                                        options={customerOptions}
-                                        placeholder="Customer Name / Mob / VAT # / ID"
-                                        selected={selectedCustomers}
-                                        highlightOnlyResult={true}
-                                        ref={customerSearchRef}
-                                        onKeyDown={(e) => {
-                                            if (e.key === "Escape") {
-                                                delete errors.customer_id;
-                                                //setErrors(errors);
-                                                formData.customerName = "";
-                                                formData.customer_id = "";
-                                                formData.customer_name = "";
-                                                setFormData({ ...formData });
-                                                setSelectedCustomers([]);
-                                                setCustomerOptions([]);
-                                                openCustomerSearchResult = false;
-                                                setOpenCustomerSearchResult(false);
-                                                customerSearchRef.current?.clear();
-                                            }
-                                        }}
-                                        onInputChange={(searchTerm, e) => {
-                                            if (searchTerm) {
-                                                formData.customerName = searchTerm;
-                                            }
-                                            if (timerRef.current) clearTimeout(timerRef.current);
-                                            timerRef.current = setTimeout(() => {
-                                                suggestCustomers(searchTerm);
-                                            }, 350);
-                                        }}
-
-                                        renderMenu={(results, menuProps, state) => {
-                                            const searchWords = state.text.toLowerCase().split(" ").filter(Boolean);
-
-                                            return (
-                                                <Menu {...menuProps}>
-                                                    {/* Header */}
-                                                    <MenuItem disabled>
-                                                        <div style={{ display: 'flex', fontWeight: 'bold', padding: '4px 8px', borderBottom: '1px solid #ddd' }}>
-                                                            <div style={{ width: '10%' }}>ID</div>
-                                                            <div style={{ width: '47%' }}>Name</div>
-                                                            <div style={{ width: '10%' }}>Phone</div>
-                                                            <div style={{ width: '13%' }}>VAT</div>
-                                                            <div style={{ width: '10%' }}>Credit Balance</div>
-                                                            <div style={{ width: '10%' }}>Credit Limit</div>
-                                                        </div>
-                                                    </MenuItem>
-
-                                                    {/* Rows */}
-                                                    {results.map((option, index) => {
-                                                        const onlyOneResult = results.length === 1;
-                                                        const isActive = state.activeIndex === index || onlyOneResult;
-                                                        return (
-                                                            <MenuItem option={option} position={index} key={index}>
-                                                                <div style={{ display: 'flex', padding: '4px 8px' }}>
-                                                                    <div style={{ ...columnStyle, width: '10%' }}>
-                                                                        {highlightWords(
-                                                                            option.code,
-                                                                            searchWords,
-                                                                            isActive
-                                                                        )}
-                                                                    </div>
-                                                                    <div style={{ ...columnStyle, width: '47%' }}>
-                                                                        {highlightWords(
-                                                                            option.name_in_arabic
-                                                                                ? `${option.name} - ${option.name_in_arabic}`
-                                                                                : option.name,
-                                                                            searchWords,
-                                                                            isActive
-                                                                        )}
-                                                                    </div>
-                                                                    <div style={{ ...columnStyle, width: '10%' }}>
-                                                                        {highlightWords(option.phone, searchWords, isActive)}
-                                                                    </div>
-                                                                    <div style={{ ...columnStyle, width: '13%' }}>
-                                                                        {highlightWords(option.vat_no, searchWords, isActive)}
-                                                                    </div>
-                                                                    <div style={{ ...columnStyle, width: '10%' }}>
-                                                                        {option.credit_balance && (
-                                                                            <Amount amount={trimTo2Decimals(option.credit_balance)} />
-                                                                        )}
-                                                                    </div>
-                                                                    <div style={{ ...columnStyle, width: '10%' }}>
-                                                                        {option.credit_limit && (
-                                                                            <Amount amount={trimTo2Decimals(option.credit_limit)} />
-                                                                        )}
-                                                                    </div>
-                                                                </div>
-                                                            </MenuItem>
-                                                        );
-                                                    })}
-                                                </Menu>
-                                            );
-                                        }}
-                                    />
-                                    <Button hide={true.toString()} onClick={openCustomerCreateForm} className="btn btn-outline-secondary btn-primary btn-sm" type="button" id="button-addon1"> <i className="bi bi-plus-lg"></i> New</Button>
-
-
-                                    {errors.customer_id && (
-                                        <div style={{ color: "red" }}>
-                                            {errors.customer_id}
-                                        </div>
-                                    )}
-
-                                </div>
-                                <div className="col-md-1">
-                                    <Button className="btn btn-primary" style={{ marginTop: "30px" }} onClick={openCustomers}>
-                                        <i className="bi bi-list"></i>
-                                    </Button>
-                                </div>
-                            </>}
-
-
-                            {formData.type === "vendor" && <>
-                                <div className="col-md-10" style={{ border: "solid 0px" }}>
-                                    <label className="form-label">Vendor*</label>
-                                    <Typeahead
-                                        id="vendor_id"
-                                        labelKey="search_label"
-                                        isLoading={false}
-                                        filterBy={() => true}
-                                        isInvalid={errors.vendor_id ? true : false}
-                                        open={openVendorSearchResult}
-                                        onChange={(selectedItems) => {
-                                            delete errors.vendor_id;
-                                            setErrors(errors);
-                                            if (selectedItems.length === 0) {
-                                                formData.vendor_id = "";
-                                                setFormData({ ...formData });
-                                                setSelectedVendors([]);
-                                                return;
-                                            }
-
-                                            formData.vendor_id = selectedItems[0].id;
-
-                                            if (selectedItems[0].use_remarks_in_sales && selectedItems[0].remarks) {
-                                                formData.remarks = selectedItems[0].remarks;
-                                            }
-
-                                            setFormData({ ...formData });
-                                            setSelectedVendors(selectedItems);
-
-                                            openVendorSearchResult = false;
-                                            setOpenVendorSearchResult(false);
-                                        }}
-                                        options={vendorOptions}
-                                        placeholder="Vendor Name | Mob | VAT # | ID"
-                                        selected={selectedVendors}
-                                        highlightOnlyResult={true}
-                                        ref={vendorSearchRef}
-                                        onKeyDown={(e) => {
-                                            if (e.key === "Escape") {
-                                                delete errors.vendor_id;
-                                                //setErrors(errors);
-                                                formData.vendor_id = "";
-                                                formData.vendor_name = "";
-
-                                                setFormData({ ...formData });
-                                                setSelectedVendors([]);
-                                                setVendorOptions([]);
-                                                openVendorSearchResult = false;
-                                                setOpenVendorSearchResult(false);
-                                                vendorSearchRef.current?.clear();
-                                            }
-                                        }}
-                                        onInputChange={(searchTerm, e) => {
-                                            if (searchTerm) {
-                                                formData.vendorName = searchTerm;
-                                            }
-                                            if (timerRef.current) clearTimeout(timerRef.current);
-                                            timerRef.current = setTimeout(() => {
-                                                suggestVendors(searchTerm);
-                                            }, 350);
-                                        }}
-
-                                        renderMenu={(results, menuProps, state) => {
-                                            const searchWords = state.text.toLowerCase().split(" ").filter(Boolean);
-
-                                            return (
-                                                <Menu {...menuProps}>
-                                                    {/* Header */}
-                                                    <MenuItem disabled>
-                                                        <div style={{ display: 'flex', fontWeight: 'bold', padding: '4px 8px', borderBottom: '1px solid #ddd' }}>
-                                                            <div style={{ width: '10%' }}>ID</div>
-                                                            <div style={{ width: '47%' }}>Name</div>
-                                                            <div style={{ width: '10%' }}>Phone</div>
-                                                            <div style={{ width: '13%' }}>VAT</div>
-                                                            <div style={{ width: '10%' }}>Credit Balance</div>
-                                                            <div style={{ width: '10%' }}>Credit Limit</div>
-                                                        </div>
-                                                    </MenuItem>
-
-                                                    {/* Rows */}
-                                                    {results.map((option, index) => {
-                                                        const onlyOneResult = results.length === 1;
-                                                        const isActive = state.activeIndex === index || onlyOneResult;
-                                                        return (
-                                                            <MenuItem option={option} position={index} key={index}>
-                                                                <div style={{ display: 'flex', padding: '4px 8px' }}>
-                                                                    <div style={{ ...columnStyle, width: '10%' }}>
-                                                                        {highlightWords(
-                                                                            option.code,
-                                                                            searchWords,
-                                                                            isActive
-                                                                        )}
-                                                                    </div>
-                                                                    <div style={{ ...columnStyle, width: '47%' }}>
-                                                                        {highlightWords(
-                                                                            option.name_in_arabic
-                                                                                ? `${option.name} - ${option.name_in_arabic}`
-                                                                                : option.name,
-                                                                            searchWords,
-                                                                            isActive
-                                                                        )}
-                                                                    </div>
-                                                                    <div style={{ ...columnStyle, width: '10%' }}>
-                                                                        {highlightWords(option.phone, searchWords, isActive)}
-                                                                    </div>
-                                                                    <div style={{ ...columnStyle, width: '13%' }}>
-                                                                        {highlightWords(option.vat_no, searchWords, isActive)}
-                                                                    </div>
-                                                                    <div style={{ ...columnStyle, width: '10%' }}>
-                                                                        {option.credit_balance && (
-                                                                            <Amount amount={trimTo2Decimals(option.credit_balance)} />
-                                                                        )}
-                                                                    </div>
-                                                                    <div style={{ ...columnStyle, width: '10%' }}>
-                                                                        {option.credit_limit && (
-                                                                            <Amount amount={trimTo2Decimals(option.credit_limit)} />
-                                                                        )}
-                                                                    </div>
-                                                                </div>
-                                                            </MenuItem>
-                                                        );
-                                                    })}
-                                                </Menu>
-                                            );
-                                        }}
-                                    />
-                                    <Button hide={true.toString()} onClick={openVendorCreateForm} className="btn btn-outline-secondary btn-primary btn-sm" type="button" id="button-addon1"> <i className="bi bi-plus-lg"></i> New</Button>
-
-                                    {errors.vendor_id && (
-                                        <div style={{ color: "red" }}>
-                                            {errors.vendor_id}
-                                        </div>
-                                    )}
-                                </div>
-                                <div className="col-md-1">
-                                    <Button className="btn btn-primary" style={{ marginTop: "30px" }} onClick={openVendors}>
-                                        <i className="bi bi-list"></i>
-                                    </Button>
-                                </div>
-                            </>}
-                        </div>
-
-
-                        <div className="col-md-12">
-                            <label className="form-label">Payments</label>
-                            {errors.payments && (
-                                <div style={{ color: "red" }}>
-                                    {errors.payments}
-                                </div>
-                            )}
-
-                            <div className="table-responsive" style={{}}>
-                                <Button variant="secondary" style={{ alignContent: "right", marginBottom: "10px" }} onClick={addNewPayment}>
-                                    Create new payment
-                                </Button>
-                                <table className="table table-striped table-sm table-bordered">
-                                    {formData.payments && formData.payments.length > 0 &&
-                                        <thead style={{ textAlign: "center" }}>
-                                            <th style={{ minWidth: "190px" }}>
-                                                Date
-                                            </th>
-                                            <th style={{ minWidth: "130px" }}>
-                                                Amount
-                                            </th>
-                                            <th style={{ minWidth: "130px" }}>
-                                                Discount
-                                            </th>
-                                            <th style={{ minWidth: "180px" }}>
-                                                Invoice
-                                            </th>
-                                            <th style={{ minWidth: "130px" }}>
-                                                Payment method
-                                            </th>
-                                            <th style={{ minWidth: "140px" }}>
-                                                Bank Reference #
-                                            </th>
-                                            <th style={{ minWidth: "140px" }} >
-                                                Description
-                                            </th>
-                                            <th style={{ minWidth: "100px" }}>
-                                                Action
-                                            </th>
-                                        </thead>}
-                                    <tbody>
-                                        {formData.payments &&
-                                            formData.payments.filter(payment => !payment.deleted).map((payment, key) => (
-                                                <tr key={key}>
-                                                    <td>
+                                                <div className="col-md-6">
+                                                    <Label required>Date</Label>
+                                                    <div className="input-group">
                                                         <DatePicker
-                                                            id="payment_date_str"
-                                                            selected={formData.payments[key].date_str ? new Date(formData.payments[key].date_str) : null}
-                                                            value={formData.payments[key].date_str ? format(
-                                                                new Date(formData.payments[key].date_str),
+                                                            id="date_str"
+                                                            selected={formData.date_str ? new Date(formData.date_str) : null}
+                                                            value={formData.date_str ? format(
+                                                                new Date(formData.date_str),
                                                                 "MMMM d, yyyy h:mm aa"
                                                             ) : null}
                                                             className="form-control"
@@ -1624,561 +1487,851 @@ const CustomerWithdrawalCreate = forwardRef((props, ref) => {
                                                             timeIntervals="1"
                                                             onChange={(value) => {
                                                                 console.log("Value", value);
-                                                                formData.payments[key].date_str = value;
+                                                                formData.date_str = value;
                                                                 setFormData({ ...formData });
                                                             }}
                                                         />
-                                                        {errors["customer_payable_payment_date_" + key] && (
-                                                            <div style={{ color: "red" }}>
+                                                    </div>
+                                                    {errors.date_str && <ErrMsg>{errors.date_str}</ErrMsg>}
+                                                </div>
+                                            </div>
+                                        </div>
 
-                                                                {errors["customer_payable_payment_date_" + key]}
-                                                            </div>
-                                                        )}
-                                                    </td>
-                                                    <td >
-                                                        <input type='number' id={`${"customer_payable_payment_amount_" + key}`} name={`${"customer_payable_payment_amount_" + key}`} value={formData.payments[key].amount} className="form-control "
-                                                            ref={(el) => {
-                                                                if (!inputRefs.current[key]) inputRefs.current[key] = {};
-                                                                inputRefs.current[key][`${"customer_payable_payment_amount_" + key}`] = el;
-                                                            }}
-                                                            onFocus={() => {
-                                                                if (timerRef.current) clearTimeout(timerRef.current);
-                                                                timerRef.current = setTimeout(() => {
-                                                                    inputRefs.current[key][`${"customer_payable_payment_amount_" + key}`].select();
-                                                                }, 100);
-                                                            }}
-                                                            onKeyDown={(e) => {
-                                                                if (timerRef.current) clearTimeout(timerRef.current);
-
-                                                                if (e.key === "ArrowLeft") {
-                                                                    timerRef.current = setTimeout(() => {
-                                                                        if (key > 0) {
-                                                                            inputRefs.current[key - 1][`${"customer_payable_description_" + (key - 1)}`]?.focus();
-                                                                        }
-                                                                    }, 100);
-                                                                } else if (e.key === "Enter") {
-                                                                    timerRef.current = setTimeout(() => {
-                                                                        inputRefs.current[key][`${"customer_payable_payment_method_" + key}`].focus();
-                                                                    }, 100);
-                                                                }
-                                                            }}
-
-                                                            onChange={(e) => {
-                                                                errors["customer_payable_payment_amount_" + key] = "";
-                                                                setErrors({ ...errors });
-
-                                                                if (!e.target.value) {
-                                                                    formData.payments[key].amount = e.target.value;
+                                        {formData.type === "customer" && (
+                                            <div style={CARD}>
+                                                <SectionTitle icon="bi-person">Customer</SectionTitle>
+                                                <div className="row g-3 align-items-end">
+                                                    <div className="col">
+                                                        <Label required>Customer</Label>
+                                                        <Typeahead
+                                                            id="customer_id"
+                                                            labelKey="search_label"
+                                                            isLoading={false}
+                                                            filterBy={() => true}
+                                                            isInvalid={errors.customer_id ? true : false}
+                                                            open={openCustomerSearchResult}
+                                                            onChange={(selectedItems) => {
+                                                                errors.customer_id = "";
+                                                                setErrors(errors);
+                                                                if (selectedItems.length === 0) {
+                                                                    formData.customer_id = "";
+                                                                    formData.customer_name = "";
                                                                     setFormData({ ...formData });
-                                                                    findTotalPayments();
-                                                                    //  validatePaymentAmounts();
+                                                                    setSelectedCustomers([]);
                                                                     return;
                                                                 }
+                                                                formData.customer_id = selectedItems[0].id;
+                                                                if (selectedItems[0].use_remarks_in_sales && selectedItems[0].remarks) {
+                                                                    formData.remarks = selectedItems[0].remarks;
+                                                                }
 
-                                                                formData.payments[key].amount = parseFloat(e.target.value);
-
-                                                                // validatePaymentAmounts();
-                                                                findTotalPayments();
                                                                 setFormData({ ...formData });
-                                                                console.log(formData);
+                                                                setSelectedCustomers(selectedItems);
+                                                                openCustomerSearchResult = false;
+                                                                setOpenCustomerSearchResult(false);
+                                                            }}
+
+                                                            options={customerOptions}
+                                                            placeholder="Customer Name / Mob / VAT # / ID"
+                                                            selected={selectedCustomers}
+                                                            highlightOnlyResult={true}
+                                                            ref={customerSearchRef}
+                                                            onKeyDown={(e) => {
+                                                                if (e.key === "Escape") {
+                                                                    delete errors.customer_id;
+                                                                    formData.customerName = "";
+                                                                    formData.customer_id = "";
+                                                                    formData.customer_name = "";
+                                                                    setFormData({ ...formData });
+                                                                    setSelectedCustomers([]);
+                                                                    setCustomerOptions([]);
+                                                                    openCustomerSearchResult = false;
+                                                                    setOpenCustomerSearchResult(false);
+                                                                    customerSearchRef.current?.clear();
+                                                                }
+                                                            }}
+                                                            onInputChange={(searchTerm, e) => {
+                                                                if (searchTerm) {
+                                                                    formData.customerName = searchTerm;
+                                                                }
+                                                                if (timerRef.current) clearTimeout(timerRef.current);
+                                                                timerRef.current = setTimeout(() => {
+                                                                    suggestCustomers(searchTerm);
+                                                                }, 350);
+                                                            }}
+
+                                                            renderMenu={(results, menuProps, state) => {
+                                                                const searchWords = state.text.toLowerCase().split(" ").filter(Boolean);
+
+                                                                return (
+                                                                    <Menu {...menuProps}>
+                                                                        {/* Header */}
+                                                                        <MenuItem disabled>
+                                                                            <div style={{ display: 'flex', fontWeight: 'bold', padding: '4px 8px', borderBottom: '1px solid #ddd' }}>
+                                                                                <div style={{ width: '10%' }}>ID</div>
+                                                                                <div style={{ width: '47%' }}>Name</div>
+                                                                                <div style={{ width: '10%' }}>Phone</div>
+                                                                                <div style={{ width: '13%' }}>VAT</div>
+                                                                                <div style={{ width: '10%' }}>Credit Balance</div>
+                                                                                <div style={{ width: '10%' }}>Credit Limit</div>
+                                                                            </div>
+                                                                        </MenuItem>
+
+                                                                        {/* Rows */}
+                                                                        {results.map((option, index) => {
+                                                                            const onlyOneResult = results.length === 1;
+                                                                            const isActive = state.activeIndex === index || onlyOneResult;
+                                                                            return (
+                                                                                <MenuItem option={option} position={index} key={index}>
+                                                                                    <div style={{ display: 'flex', padding: '4px 8px' }}>
+                                                                                        <div style={{ ...columnStyle, width: '10%' }}>
+                                                                                            {highlightWords(
+                                                                                                option.code,
+                                                                                                searchWords,
+                                                                                                isActive
+                                                                                            )}
+                                                                                        </div>
+                                                                                        <div style={{ ...columnStyle, width: '47%' }}>
+                                                                                            {highlightWords(
+                                                                                                option.name_in_arabic
+                                                                                                    ? `${option.name} - ${option.name_in_arabic}`
+                                                                                                    : option.name,
+                                                                                                searchWords,
+                                                                                                isActive
+                                                                                            )}
+                                                                                        </div>
+                                                                                        <div style={{ ...columnStyle, width: '10%' }}>
+                                                                                            {highlightWords(option.phone, searchWords, isActive)}
+                                                                                        </div>
+                                                                                        <div style={{ ...columnStyle, width: '13%' }}>
+                                                                                            {highlightWords(option.vat_no, searchWords, isActive)}
+                                                                                        </div>
+                                                                                        <div style={{ ...columnStyle, width: '10%' }}>
+                                                                                            {option.credit_balance && (
+                                                                                                <Amount amount={trimTo2Decimals(option.credit_balance)} />
+                                                                                            )}
+                                                                                        </div>
+                                                                                        <div style={{ ...columnStyle, width: '10%' }}>
+                                                                                            {option.credit_limit && (
+                                                                                                <Amount amount={trimTo2Decimals(option.credit_limit)} />
+                                                                                            )}
+                                                                                        </div>
+                                                                                    </div>
+                                                                                </MenuItem>
+                                                                            );
+                                                                        })}
+                                                                    </Menu>
+                                                                );
                                                             }}
                                                         />
-                                                        {errors["customer_payable_payment_amount_" + key] && (
-                                                            <div style={{ color: "red", fontSize: "10px" }}>
-
-                                                                {errors["customer_payable_payment_amount_" + key]}
-                                                            </div>
-                                                        )}
-                                                    </td>
-                                                    <td>
-                                                        <input
-                                                            type='number'
-                                                            id={`${"customer_payable_payment_discount_" + key}`}
-                                                            name={`${"customer_payable_payment_discount_" + key}`}
-                                                            value={formData.payments[key].discount}
-                                                            className="form-control "
-                                                            ref={(el) => {
-                                                                if (!inputRefs.current[key]) inputRefs.current[key] = {};
-                                                                inputRefs.current[key][`${"customer_payable_payment_discount_" + key}`] = el;
-                                                            }}
-                                                            onFocus={() => {
-                                                                if (timerRef.current) clearTimeout(timerRef.current);
-                                                                timerRef.current = setTimeout(() => {
-                                                                    inputRefs.current[key][`${"customer_payable_payment_discount_" + key}`].select();
-                                                                }, 100);
-                                                            }}
-                                                            onKeyDown={(e) => {
-                                                                if (timerRef.current) clearTimeout(timerRef.current);
-
-                                                                if (e.key === "ArrowLeft") {
-                                                                    timerRef.current = setTimeout(() => {
-                                                                        inputRefs.current[key][`${"customer_payable_payment_amount_" + (key)}`]?.focus();
-                                                                    }, 100);
-                                                                } else if (e.key === "Enter") {
-                                                                    timerRef.current = setTimeout(() => {
-                                                                        inputRefs.current[key][`${"customer_payable_payment_method_" + key}`].focus();
-                                                                    }, 100);
-                                                                }
-                                                            }}
-
-                                                            onChange={(e) => {
-                                                                errors["customer_payable_payment_discount_" + key] = "";
-                                                                setErrors({ ...errors });
-
-                                                                if (!e.target.value) {
-                                                                    formData.payments[key].discount = e.target.value;
-                                                                    setFormData({ ...formData });
-                                                                    findTotalPayments();
-                                                                    //  validatePaymentAmounts();
-                                                                    return;
-                                                                }
-
-                                                                formData.payments[key].discount = parseFloat(e.target.value);
-
-                                                                // validatePaymentAmounts();
-                                                                findTotalPayments();
-                                                                setFormData({ ...formData });
-                                                                console.log(formData);
-                                                            }}
-                                                        />
-                                                        {errors["customer_payable_payment_discount_" + key] && (
-                                                            <div style={{ color: "red", fontSize: "10px" }}>
-                                                                {errors["customer_payable_payment_discount_" + key]}
-                                                            </div>
-                                                        )}
-                                                    </td>
-                                                    <td>
-                                                        <div className="row" style={{ border: "solid 0px" }}>
-                                                            <div className="" style={{ border: "solid 0px", maxWidth: "140px", fontSize: "12px" }}>
-                                                                <span style={{ cursor: "pointer", color: "blue" }} onClick={() => {
-                                                                    if (formData.payments[key].invoice_type === "purchase") {
-                                                                        openPurchaseUpdateForm(formData.payments[key].invoice_id);
-                                                                    } else if (formData.payments[key].invoice_type === "quotation_sales_return") {
-                                                                        openQuotationSalesReturnUpdateForm(formData.payments[key].invoice_id);
-                                                                    } else if (formData.payments[key].invoice_type === "sales_return") {
-                                                                        openSalesReturnUpdateForm(formData.payments[key].invoice_id);
-                                                                    }
-
-                                                                }}>{formData.payments[key].invoice_code}</span>
-                                                                {formData.payments[key].invoice_code && <span className="text-danger"
-                                                                    style={{ cursor: "pointer", fontSize: "0.75rem", marginLeft: "3px" }}
-                                                                    onClick={() => {
-                                                                        confirmInvoiceRemoval(key)
-                                                                    }}
-                                                                >
-                                                                    ❌
-                                                                </span>}
-                                                            </div>
-                                                            <div className="" style={{ border: "solid 0px", width: "40px" }}>
-                                                                <Button className="btn btn-primary" style={{ marginLeft: "-12px" }} onClick={() => {
-                                                                    openInvoiceTypeSelection(key);
-                                                                }}>
-                                                                    <i className="bi bi-list"></i>
-                                                                </Button>
-                                                            </div>
-                                                        </div>
-                                                        {errors["customer_payable_payment_invoice_" + key] && (
-                                                            <div style={{ color: "red" }}>
-
-                                                                {errors["customer_payable_payment_invoice_" + key]}
-                                                            </div>
-                                                        )}
-                                                    </td>
-                                                    <td >
-                                                        <select
-                                                            id={`${"customer_payable_payment_method_" + key}`} name={`${"customer_payable_payment_method_" + key}`}
-                                                            value={formData.payments[key].method} className="form-control "
-                                                            ref={(el) => {
-                                                                if (!inputRefs.current[key]) inputRefs.current[key] = {};
-                                                                inputRefs.current[key][`${"customer_payable_payment_method_" + key}`] = el;
-                                                            }}
-                                                            onFocus={() => {
-                                                                /*
-                                                                if (timerRef.current) clearTimeout(timerRef.current);
-                                                                timerRef.current = setTimeout(() => {
-                                                                    inputRefs.current[key][`${"customer_payable_payment_method_" + key}`].select();
-                                                                }, 100);*/
-                                                            }}
-                                                            onKeyDown={(e) => {
-                                                                if (timerRef.current) clearTimeout(timerRef.current);
-                                                                if (e.key === "ArrowLeft") {
-                                                                    timerRef.current = setTimeout(() => {
-                                                                        inputRefs.current[key][`${"customer_payable_payment_discount_" + key}`].focus();
-                                                                    }, 100);
-                                                                }
-                                                            }}
-                                                            onChange={(e) => {
-                                                                // errors["payment_method"] = [];
-                                                                errors["customer_payable_payment_method_" + key] = "";
-                                                                setErrors({ ...errors });
-
-                                                                if (!e.target.value) {
-                                                                    errors["customer_payable_payment_method_" + key] = "Payment method is required";
-                                                                    setErrors({ ...errors });
-
-                                                                    formData.payments[key].method = "";
-                                                                    setFormData({ ...formData });
-                                                                    return;
-                                                                }
-
-
-                                                                formData.payments[key].method = e.target.value;
-                                                                setFormData({ ...formData });
-                                                                console.log(formData);
-                                                            }}
-                                                        >
-                                                            <option value="">Select</option>
-                                                            <option value="cash">Cash</option>
-                                                            <option value="debit_card">Debit Card</option>
-                                                            <option value="credit_card">Credit Card</option>
-                                                            <option value="bank_card">Bank Card</option>
-                                                            <option value="bank_transfer">Bank Transfer</option>
-                                                            <option value="bank_cheque">Bank Cheque</option>
-                                                        </select>
-                                                        {errors["customer_payable_payment_method_" + key] && (
-                                                            <div style={{ color: "red" }}>
-
-                                                                {errors["customer_payable_payment_method_" + key]}
-                                                            </div>
-                                                        )}
-                                                    </td>
-                                                    <td >
-                                                        <input type='text' id={`${"customer_payable_bank_reference_" + key}`} name={`${"customer_payable_bank_reference_" + key}`}
-                                                            value={formData.payments[key].bank_reference} className="form-control "
-                                                            ref={(el) => {
-                                                                if (!inputRefs.current[key]) inputRefs.current[key] = {};
-                                                                inputRefs.current[key][`${"customer_payable_bank_reference_" + key}`] = el;
-                                                            }}
-                                                            onFocus={() => {
-                                                                if (timerRef.current) clearTimeout(timerRef.current);
-                                                                timerRef.current = setTimeout(() => {
-                                                                    inputRefs.current[key][`${"customer_payable_bank_reference_" + key}`].select();
-                                                                }, 100);
-                                                            }}
-                                                            onKeyDown={(e) => {
-                                                                if (timerRef.current) clearTimeout(timerRef.current);
-                                                                if (e.key === "ArrowLeft") {
-                                                                    timerRef.current = setTimeout(() => {
-                                                                        inputRefs.current[key][`${"customer_payable_payment_method_" + key}`].focus();
-                                                                    }, 100);
-                                                                }
-                                                            }}
-                                                            onChange={(e) => {
-                                                                errors["customer_payable_bank_reference_" + key] = "";
-                                                                setErrors({ ...errors });
-
-                                                                if (!e.target.value) {
-                                                                    formData.payments[key].bank_reference = e.target.value;
-                                                                    setFormData({ ...formData });
-
-                                                                    return;
-                                                                }
-
-                                                                formData.payments[key].bank_reference = e.target.value;
-                                                                setFormData({ ...formData });
-                                                            }}
-                                                        />
-                                                        {errors["customer_payable_bank_reference_" + key] && (
-                                                            <div style={{ color: "red" }}>
-                                                                {errors["customer_payable_bank_reference_" + key]}
-                                                            </div>
-                                                        )}
-                                                    </td>
-                                                    <td>
-                                                        <input type='text' id={`${"customer_payable_description_" + key}`} name={`${"customer_payable_description_" + key}`}
-                                                            value={formData.payments[key].description} className="form-control "
-                                                            ref={(el) => {
-                                                                if (!inputRefs.current[key]) inputRefs.current[key] = {};
-                                                                inputRefs.current[key][`${"customer_payable_description_" + key}`] = el;
-                                                            }}
-                                                            onFocus={() => {
-                                                                if (timerRef.current) clearTimeout(timerRef.current);
-                                                                timerRef.current = setTimeout(() => {
-                                                                    inputRefs.current[key][`${"customer_payable_description_" + key}`].select();
-                                                                }, 100);
-                                                            }}
-                                                            onKeyDown={(e) => {
-                                                                if (timerRef.current) clearTimeout(timerRef.current);
-
-                                                                if (e.key === "Enter") {
-                                                                    if ((key + 1) < formData.payments?.length && formData.payments?.length > 1) {
-                                                                        console.log("Moving to next line");
-                                                                        timerRef.current = setTimeout(() => {
-                                                                            inputRefs.current[key + 1][`${"customer_payable_payment_amount_" + (key + 1)}`]?.focus();
-                                                                        }, 100);
-                                                                    } else {
-                                                                        if ((key + 1) === formData.payments?.length) {
-                                                                            timerRef.current = setTimeout(() => {
-                                                                                inputRefs.current[0][`${"customer_payable_payment_amount_0"}`]?.focus();
-                                                                            }, 100);
-                                                                        } else {
-                                                                            timerRef.current = setTimeout(() => {
-                                                                                inputRefs.current[key][`${"customer_payable_payment_amount_" + (key)}`]?.focus();
-                                                                            }, 100);
-                                                                        }
-
-                                                                    }
-                                                                } else if (e.key === "ArrowLeft") {
-                                                                    timerRef.current = setTimeout(() => {
-                                                                        inputRefs.current[key][`${"customer_payable_bank_reference_" + key}`].focus();
-                                                                    }, 100);
-                                                                }
-                                                            }}
-
-                                                            onChange={(e) => {
-                                                                errors["customer_payable_description_" + key] = "";
-                                                                setErrors({ ...errors });
-
-                                                                if (!e.target.value) {
-                                                                    formData.payments[key].description = e.target.value;
-                                                                    setFormData({ ...formData });
-
-                                                                    return;
-                                                                }
-
-                                                                formData.payments[key].description = e.target.value;
-                                                                setFormData({ ...formData });
-                                                            }}
-                                                        />
-                                                        {errors["customer_payable_description_" + key] && (
-                                                            <div style={{ color: "red" }}>
-                                                                {errors["customer_payable_description_" + key]}
-                                                            </div>
-                                                        )}
-                                                    </td>
-                                                    <td >
-                                                        <Button variant="danger" onClick={(event) => {
-                                                            removePayment(key);
-                                                        }}>
-                                                            Remove
+                                                        {errors.customer_id && <ErrMsg>{errors.customer_id}</ErrMsg>}
+                                                    </div>
+                                                    <div className="col-auto d-flex gap-2">
+                                                        <Button hide={true.toString()} onClick={openCustomerCreateForm} className="btn btn-outline-secondary btn-primary btn-sm" type="button" id="button-addon1">
+                                                            <i className="bi bi-plus-lg"></i> New
                                                         </Button>
-
-                                                    </td>
-                                                </tr>
-                                            ))}
-                                        <tr>
-                                            <td className="text-end">
-                                                <b>Total</b>
-                                            </td>
-
-                                            <td><b style={{ marginLeft: "14px" }}>{trimTo2Decimals(totalPaymentAmount)}</b>
-                                                {errors["total_payment"] && (
-                                                    <div style={{ color: "red" }}>
-                                                        {errors["total_payment"]}
+                                                        <Button className="btn btn-primary" onClick={openCustomers}>
+                                                            <i className="bi bi-list"></i>
+                                                        </Button>
                                                     </div>
-                                                )}
-                                            </td>
-                                            <td colSpan={6}>
+                                                </div>
+                                            </div>
+                                        )}
 
-                                            </td>
+                                        {formData.type === "vendor" && (
+                                            <div style={CARD}>
+                                                <SectionTitle icon="bi-building">Vendor</SectionTitle>
+                                                <div className="row g-3 align-items-end">
+                                                    <div className="col">
+                                                        <Label required>Vendor</Label>
+                                                        <Typeahead
+                                                            id="vendor_id"
+                                                            labelKey="search_label"
+                                                            isLoading={false}
+                                                            filterBy={() => true}
+                                                            isInvalid={errors.vendor_id ? true : false}
+                                                            open={openVendorSearchResult}
+                                                            onChange={(selectedItems) => {
+                                                                delete errors.vendor_id;
+                                                                setErrors(errors);
+                                                                if (selectedItems.length === 0) {
+                                                                    formData.vendor_id = "";
+                                                                    setFormData({ ...formData });
+                                                                    setSelectedVendors([]);
+                                                                    return;
+                                                                }
 
-                                        </tr>
-                                        <tr>
-                                            <td className="text-end">
-                                                <b>Total Discount</b>
-                                            </td>
+                                                                formData.vendor_id = selectedItems[0].id;
 
-                                            <td><b style={{ marginLeft: "14px" }}>{trimTo2Decimals(totalDiscountAmount)}</b>
-                                                {errors["total_discount"] && (
-                                                    <div style={{ color: "red" }}>
-                                                        {errors["total_discount"]}
+                                                                if (selectedItems[0].use_remarks_in_sales && selectedItems[0].remarks) {
+                                                                    formData.remarks = selectedItems[0].remarks;
+                                                                }
+
+                                                                setFormData({ ...formData });
+                                                                setSelectedVendors(selectedItems);
+
+                                                                openVendorSearchResult = false;
+                                                                setOpenVendorSearchResult(false);
+                                                            }}
+                                                            options={vendorOptions}
+                                                            placeholder="Vendor Name | Mob | VAT # | ID"
+                                                            selected={selectedVendors}
+                                                            highlightOnlyResult={true}
+                                                            ref={vendorSearchRef}
+                                                            onKeyDown={(e) => {
+                                                                if (e.key === "Escape") {
+                                                                    delete errors.vendor_id;
+                                                                    formData.vendor_id = "";
+                                                                    formData.vendor_name = "";
+
+                                                                    setFormData({ ...formData });
+                                                                    setSelectedVendors([]);
+                                                                    setVendorOptions([]);
+                                                                    openVendorSearchResult = false;
+                                                                    setOpenVendorSearchResult(false);
+                                                                    vendorSearchRef.current?.clear();
+                                                                }
+                                                            }}
+                                                            onInputChange={(searchTerm, e) => {
+                                                                if (searchTerm) {
+                                                                    formData.vendorName = searchTerm;
+                                                                }
+                                                                if (timerRef.current) clearTimeout(timerRef.current);
+                                                                timerRef.current = setTimeout(() => {
+                                                                    suggestVendors(searchTerm);
+                                                                }, 350);
+                                                            }}
+
+                                                            renderMenu={(results, menuProps, state) => {
+                                                                const searchWords = state.text.toLowerCase().split(" ").filter(Boolean);
+
+                                                                return (
+                                                                    <Menu {...menuProps}>
+                                                                        {/* Header */}
+                                                                        <MenuItem disabled>
+                                                                            <div style={{ display: 'flex', fontWeight: 'bold', padding: '4px 8px', borderBottom: '1px solid #ddd' }}>
+                                                                                <div style={{ width: '10%' }}>ID</div>
+                                                                                <div style={{ width: '47%' }}>Name</div>
+                                                                                <div style={{ width: '10%' }}>Phone</div>
+                                                                                <div style={{ width: '13%' }}>VAT</div>
+                                                                                <div style={{ width: '10%' }}>Credit Balance</div>
+                                                                                <div style={{ width: '10%' }}>Credit Limit</div>
+                                                                            </div>
+                                                                        </MenuItem>
+
+                                                                        {/* Rows */}
+                                                                        {results.map((option, index) => {
+                                                                            const onlyOneResult = results.length === 1;
+                                                                            const isActive = state.activeIndex === index || onlyOneResult;
+                                                                            return (
+                                                                                <MenuItem option={option} position={index} key={index}>
+                                                                                    <div style={{ display: 'flex', padding: '4px 8px' }}>
+                                                                                        <div style={{ ...columnStyle, width: '10%' }}>
+                                                                                            {highlightWords(
+                                                                                                option.code,
+                                                                                                searchWords,
+                                                                                                isActive
+                                                                                            )}
+                                                                                        </div>
+                                                                                        <div style={{ ...columnStyle, width: '47%' }}>
+                                                                                            {highlightWords(
+                                                                                                option.name_in_arabic
+                                                                                                    ? `${option.name} - ${option.name_in_arabic}`
+                                                                                                    : option.name,
+                                                                                                searchWords,
+                                                                                                isActive
+                                                                                            )}
+                                                                                        </div>
+                                                                                        <div style={{ ...columnStyle, width: '10%' }}>
+                                                                                            {highlightWords(option.phone, searchWords, isActive)}
+                                                                                        </div>
+                                                                                        <div style={{ ...columnStyle, width: '13%' }}>
+                                                                                            {highlightWords(option.vat_no, searchWords, isActive)}
+                                                                                        </div>
+                                                                                        <div style={{ ...columnStyle, width: '10%' }}>
+                                                                                            {option.credit_balance && (
+                                                                                                <Amount amount={trimTo2Decimals(option.credit_balance)} />
+                                                                                            )}
+                                                                                        </div>
+                                                                                        <div style={{ ...columnStyle, width: '10%' }}>
+                                                                                            {option.credit_limit && (
+                                                                                                <Amount amount={trimTo2Decimals(option.credit_limit)} />
+                                                                                            )}
+                                                                                        </div>
+                                                                                    </div>
+                                                                                </MenuItem>
+                                                                            );
+                                                                        })}
+                                                                    </Menu>
+                                                                );
+                                                            }}
+                                                        />
+                                                        {errors.vendor_id && <ErrMsg>{errors.vendor_id}</ErrMsg>}
                                                     </div>
-                                                )}
-                                            </td>
-                                            <td colSpan={6}>
-                                            </td>
-
-                                        </tr>
-                                        <tr>
-                                            <td className="text-end">
-                                                <b>Net Total</b>
-                                            </td>
-                                            <td><b style={{ marginLeft: "14px" }}>{trimTo2Decimals(netTotalPaymentAmount)}</b>
-                                                {errors["net_total_payment"] && (
-                                                    <div style={{ color: "red" }}>
-                                                        {errors["net_total_payment"]}
+                                                    <div className="col-auto d-flex gap-2">
+                                                        <Button hide={true.toString()} onClick={openVendorCreateForm} className="btn btn-outline-secondary btn-primary btn-sm" type="button" id="button-addon1">
+                                                            <i className="bi bi-plus-lg"></i> New
+                                                        </Button>
+                                                        <Button className="btn btn-primary" onClick={openVendors}>
+                                                            <i className="bi bi-list"></i>
+                                                        </Button>
                                                     </div>
-                                                )}
-                                            </td>
-                                            <td colSpan={6}>
+                                                </div>
+                                            </div>
+                                        )}
 
-                                            </td>
-
-                                        </tr>
-                                    </tbody>
-                                </table>
-
-                            </div>
-                        </div>
-
-                        {/*<div className="col-md-3">
-                            <label className="form-label">Amount*</label>
-
-                            <div className="input-group mb-3">
-                                <input
-                                    id="customer_withdrawal_amount"
-                                    name="customer_withdrawal_amount"
-                                    value={formData.amount ? formData.amount : ""}
-                                    type='number'
-                                    onChange={(e) => {
-                                        errors["amount"] = "";
-                                        setErrors({ ...errors });
-                                        formData.amount = parseFloat(e.target.value);
-                                        setFormData({ ...formData });
-                                        console.log(formData);
-                                    }}
-                                    className="form-control"
-
-                                    placeholder="Amount"
-                                />
-
-
-                            </div>
-                            {errors.amount && (
-                                <div style={{ color: "red" }}>
-                                    {errors.amount}
-                                </div>
-                            )}
-                        </div>
-
-                        <div className="col-md-2">
-                            <label className="form-label">Payment method*</label>
-
-                            <div className="input-group mb-3">
-                                <select
-                                    value={formData.payment_method}
-                                    onChange={(e) => {
-                                        console.log("Inside onchange payment method");
-                                        if (!e.target.value) {
-                                            formData.payment_method = "";
-                                            errors["status"] = "Invalid Payment Method";
-                                            setErrors({ ...errors });
-                                            return;
-                                        }
-
-                                        errors["payment_method"] = "";
-                                        setErrors({ ...errors });
-
-                                        formData.payment_method = e.target.value;
-                                        setFormData({ ...formData });
-                                        console.log(formData);
-                                    }}
-                                    className="form-control"
-                                >
-                                    <option value="" SELECTED>Select</option>
-                                    <option value="cash">Cash</option>
-                                    <option value="debit_card">Debit Card</option>
-                                    <option value="credit_card">Credit Card</option>
-                                    <option value="bank_card">Bank Card</option>
-                                    <option value="bank_transfer">Bank Transfer</option>
-                                    <option value="bank_cheque">Bank Cheque</option>
-                                </select>
-
-                            </div>
-                            {errors.payment_method && (
-                                <div style={{ color: "red" }}>
-
-                                    {errors.payment_method}
-                                </div>
-                            )}
-                        </div>
-
-                        <div className="col-md-3">
-                            <label className="form-label">Bank Ref. No.</label>
-                            <div className="input-group mb-3">
-                                <input
-                                    id="customer_withdrawal_bank_ref"
-                                    name="customer_withdrawal_bank_ref"
-                                    value={formData.bank_reference_no ? formData.bank_reference_no : ""}
-                                    type='text'
-                                    onChange={(e) => {
-                                        errors["bank_reference_no"] = "";
-                                        setErrors({ ...errors });
-                                        formData.bank_reference_no = e.target.value;
-                                        setFormData({ ...formData });
-                                        console.log(formData);
-                                    }}
-                                    className="form-control"
-
-                                    placeholder="Bank reference no."
-                                />
-                            </div>
-                            {errors.bank_reference_no && (
-                                <div style={{ color: "red" }}>
-                                    {errors.bank_reference_no}
-                                </div>
-                            )}
-                        </div>
-                        <div className="col-md-3">
-                            <label className="form-label">Description</label>
-                            <div className="input-group mb-3">
-                                <textarea
-                                    value={formData.description ? formData.description : ""}
-                                    type='string'
-                                    onChange={(e) => {
-                                        errors["description"] = "";
-                                        setErrors({ ...errors });
-                                        formData.description = e.target.value;
-                                        setFormData({ ...formData });
-                                        console.log(formData);
-                                    }}
-                                    className="form-control description"
-                                    id="description"
-                                    placeholder="Description"
-                                />
-                                {errors.description && (
-                                    <div style={{ color: "red" }}>
-                                        {errors.description}
-                                    </div>
+                                        <div style={CARD}>
+                                            <SectionTitle icon="bi-chat-left-text">Remarks</SectionTitle>
+                                            <div className="row g-3">
+                                                <div className="col-md-8">
+                                                    <Label>Remarks</Label>
+                                                    <textarea
+                                                        value={formData.remarks ? formData.remarks : ""}
+                                                        type='string'
+                                                        onChange={(e) => {
+                                                            errors["remarks"] = "";
+                                                            setErrors({ ...errors });
+                                                            formData.remarks = e.target.value;
+                                                            setFormData({ ...formData });
+                                                            console.log(formData);
+                                                        }}
+                                                        style={{ ...INPUT, resize: 'vertical', minHeight: '80px' }}
+                                                        id="remarks"
+                                                        placeholder="Remarks"
+                                                    />
+                                                    {errors.remarks && <ErrMsg>{errors.remarks}</ErrMsg>}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </>
                                 )}
-                            </div>
-                        </div>*/}
-                        <div className="col-md-3">
-                            <label className="form-label">Remarks</label>
-                            <div className="input-group mb-3">
-                                <textarea
-                                    value={formData.remarks ? formData.remarks : ""}
-                                    type='string'
-                                    onChange={(e) => {
-                                        errors["remarks"] = "";
-                                        setErrors({ ...errors });
-                                        formData.remarks = e.target.value;
-                                        setFormData({ ...formData });
-                                        console.log(formData);
-                                    }}
-                                    className="form-control"
-                                    id="remarks"
-                                    placeholder="Remarks"
-                                />
-                            </div>
-                            {errors.remarks && (
-                                <div style={{ color: "red" }}>
-                                    {errors.remarks}
-                                </div>
-                            )}
-                        </div>
-                        <Modal.Footer>
-                            <Button variant="secondary" onClick={handleClose}>
-                                Close
-                            </Button>
-                            <Button variant="primary" onClick={handleCreate} >
-                                {isProcessing ?
-                                    <Spinner
-                                        as="span"
-                                        animation="bcustomerwithdrawal"
-                                        size="sm"
-                                        role="status"
-                                        aria-hidden={true}
-                                    /> + " Processing..."
 
-                                    : formData.id ? "Update" : "Create"
-                                }
-                            </Button>
-                        </Modal.Footer>
+                                {/* ── Payments Tab ── */}
+                                {activeTab === 'payments' && (
+                                    <>
+                                        <div style={CARD}>
+                                            <SectionTitle icon="bi-credit-card">Payments</SectionTitle>
+
+                                            {errors.payments && <ErrMsg>{errors.payments}</ErrMsg>}
+
+                                            <div className="table-responsive">
+                                                <Button variant="secondary" style={{ marginBottom: '10px' }} onClick={addNewPayment}>
+                                                    Create new payment
+                                                </Button>
+                                                <table className="table table-striped table-sm table-bordered">
+                                                    {formData.payments && formData.payments.length > 0 &&
+                                                        <thead style={{ textAlign: "center" }}>
+                                                            <th style={{ minWidth: "190px" }}>
+                                                                Date
+                                                            </th>
+                                                            <th style={{ minWidth: "130px" }}>
+                                                                Amount
+                                                            </th>
+                                                            <th style={{ minWidth: "130px" }}>
+                                                                Discount
+                                                            </th>
+                                                            <th style={{ minWidth: "180px" }}>
+                                                                Invoice
+                                                            </th>
+                                                            <th style={{ minWidth: "130px" }}>
+                                                                Payment method
+                                                            </th>
+                                                            <th style={{ minWidth: "140px" }}>
+                                                                Bank Reference #
+                                                            </th>
+                                                            <th style={{ minWidth: "140px" }} >
+                                                                Description
+                                                            </th>
+                                                            <th style={{ minWidth: "100px" }}>
+                                                                Action
+                                                            </th>
+                                                        </thead>}
+                                                    <tbody>
+                                                        {formData.payments &&
+                                                            formData.payments.filter(payment => !payment.deleted).map((payment, key) => (
+                                                                <tr key={key} style={{ verticalAlign: 'top' }}>
+                                                                    <td>
+                                                                        <DatePicker
+                                                                            id="payment_date_str"
+                                                                            selected={formData.payments[key].date_str ? new Date(formData.payments[key].date_str) : null}
+                                                                            value={formData.payments[key].date_str ? format(
+                                                                                new Date(formData.payments[key].date_str),
+                                                                                "MMMM d, yyyy h:mm aa"
+                                                                            ) : null}
+                                                                            style={INPUT}
+                                                                            dateFormat="MMMM d, yyyy h:mm aa"
+                                                                            showTimeSelect
+                                                                            timeIntervals="1"
+                                                                            onChange={(value) => {
+                                                                                console.log("Value", value);
+                                                                                formData.payments[key].date_str = value;
+                                                                                setFormData({ ...formData });
+                                                                            }}
+                                                                        />
+                                                                        {errors["customer_payable_payment_date_" + key] && (
+                                                                            <ErrMsg>{errors["customer_payable_payment_date_" + key]}</ErrMsg>
+                                                                        )}
+                                                                    </td>
+                                                                    <td >
+                                                                        <input type='number' id={`${"customer_payable_payment_amount_" + key}`} name={`${"customer_payable_payment_amount_" + key}`} value={formData.payments[key].amount} style={INPUT}
+                                                                            ref={(el) => {
+                                                                                if (!inputRefs.current[key]) inputRefs.current[key] = {};
+                                                                                inputRefs.current[key][`${"customer_payable_payment_amount_" + key}`] = el;
+                                                                            }}
+                                                                            onFocus={() => {
+                                                                                if (timerRef.current) clearTimeout(timerRef.current);
+                                                                                timerRef.current = setTimeout(() => {
+                                                                                    inputRefs.current[key][`${"customer_payable_payment_amount_" + key}`].select();
+                                                                                }, 100);
+                                                                            }}
+                                                                            onKeyDown={(e) => {
+                                                                                if (timerRef.current) clearTimeout(timerRef.current);
+
+                                                                                if (e.key === "ArrowLeft") {
+                                                                                    timerRef.current = setTimeout(() => {
+                                                                                        if (key > 0) {
+                                                                                            inputRefs.current[key - 1][`${"customer_payable_description_" + (key - 1)}`]?.focus();
+                                                                                        }
+                                                                                    }, 100);
+                                                                                } else if (e.key === "Enter") {
+                                                                                    timerRef.current = setTimeout(() => {
+                                                                                        inputRefs.current[key][`${"customer_payable_payment_method_" + key}`].focus();
+                                                                                    }, 100);
+                                                                                }
+                                                                            }}
+
+                                                                            onChange={(e) => {
+                                                                                errors["customer_payable_payment_amount_" + key] = "";
+                                                                                setErrors({ ...errors });
+
+                                                                                if (!e.target.value) {
+                                                                                    formData.payments[key].amount = e.target.value;
+                                                                                    setFormData({ ...formData });
+                                                                                    findTotalPayments();
+                                                                                    //  validatePaymentAmounts();
+                                                                                    return;
+                                                                                }
+
+                                                                                formData.payments[key].amount = parseFloat(e.target.value);
+
+                                                                                // validatePaymentAmounts();
+                                                                                findTotalPayments();
+                                                                                setFormData({ ...formData });
+                                                                                console.log(formData);
+                                                                            }}
+                                                                        />
+                                                                        {errors["customer_payable_payment_amount_" + key] && (
+                                                                            <ErrMsg>{errors["customer_payable_payment_amount_" + key]}</ErrMsg>
+                                                                        )}
+                                                                    </td>
+                                                                    <td>
+                                                                        <input
+                                                                            type='number'
+                                                                            id={`${"customer_payable_payment_discount_" + key}`}
+                                                                            name={`${"customer_payable_payment_discount_" + key}`}
+                                                                            value={formData.payments[key].discount}
+                                                                            style={INPUT}
+                                                                            ref={(el) => {
+                                                                                if (!inputRefs.current[key]) inputRefs.current[key] = {};
+                                                                                inputRefs.current[key][`${"customer_payable_payment_discount_" + key}`] = el;
+                                                                            }}
+                                                                            onFocus={() => {
+                                                                                if (timerRef.current) clearTimeout(timerRef.current);
+                                                                                timerRef.current = setTimeout(() => {
+                                                                                    inputRefs.current[key][`${"customer_payable_payment_discount_" + key}`].select();
+                                                                                }, 100);
+                                                                            }}
+                                                                            onKeyDown={(e) => {
+                                                                                if (timerRef.current) clearTimeout(timerRef.current);
+
+                                                                                if (e.key === "ArrowLeft") {
+                                                                                    timerRef.current = setTimeout(() => {
+                                                                                        inputRefs.current[key][`${"customer_payable_payment_amount_" + (key)}`]?.focus();
+                                                                                    }, 100);
+                                                                                } else if (e.key === "Enter") {
+                                                                                    timerRef.current = setTimeout(() => {
+                                                                                        inputRefs.current[key][`${"customer_payable_payment_method_" + key}`].focus();
+                                                                                    }, 100);
+                                                                                }
+                                                                            }}
+
+                                                                            onChange={(e) => {
+                                                                                errors["customer_payable_payment_discount_" + key] = "";
+                                                                                setErrors({ ...errors });
+
+                                                                                if (!e.target.value) {
+                                                                                    formData.payments[key].discount = e.target.value;
+                                                                                    setFormData({ ...formData });
+                                                                                    findTotalPayments();
+                                                                                    //  validatePaymentAmounts();
+                                                                                    return;
+                                                                                }
+
+                                                                                formData.payments[key].discount = parseFloat(e.target.value);
+
+                                                                                // validatePaymentAmounts();
+                                                                                findTotalPayments();
+                                                                                setFormData({ ...formData });
+                                                                                console.log(formData);
+                                                                            }}
+                                                                        />
+                                                                        {errors["customer_payable_payment_discount_" + key] && (
+                                                                            <ErrMsg>{errors["customer_payable_payment_discount_" + key]}</ErrMsg>
+                                                                        )}
+                                                                    </td>
+                                                                    <td>
+                                                                        <div className="row" style={{ border: "solid 0px" }}>
+                                                                            <div className="" style={{ border: "solid 0px", maxWidth: "140px", fontSize: "12px" }}>
+                                                                                <span style={{ cursor: "pointer", color: "blue" }} onClick={() => {
+                                                                                    if (formData.payments[key].invoice_type === "purchase") {
+                                                                                        openPurchaseUpdateForm(formData.payments[key].invoice_id);
+                                                                                    } else if (formData.payments[key].invoice_type === "quotation_sales_return") {
+                                                                                        openQuotationSalesReturnUpdateForm(formData.payments[key].invoice_id);
+                                                                                    } else if (formData.payments[key].invoice_type === "sales_return") {
+                                                                                        openSalesReturnUpdateForm(formData.payments[key].invoice_id);
+                                                                                    }
+
+                                                                                }}>{formData.payments[key].invoice_code}</span>
+                                                                                {formData.payments[key].invoice_code && <span className="text-danger"
+                                                                                    style={{ cursor: "pointer", fontSize: "0.75rem", marginLeft: "3px" }}
+                                                                                    onClick={() => {
+                                                                                        confirmInvoiceRemoval(key)
+                                                                                    }}
+                                                                                >
+                                                                                    ❌
+                                                                                </span>}
+                                                                            </div>
+                                                                            <div className="" style={{ border: "solid 0px", width: "40px" }}>
+                                                                                <Button className="btn btn-primary" style={{ marginLeft: "-12px" }} onClick={() => {
+                                                                                    openInvoiceTypeSelection(key);
+                                                                                }}>
+                                                                                    <i className="bi bi-list"></i>
+                                                                                </Button>
+                                                                            </div>
+                                                                        </div>
+                                                                        {errors["customer_payable_payment_invoice_" + key] && (
+                                                                            <ErrMsg>{errors["customer_payable_payment_invoice_" + key]}</ErrMsg>
+                                                                        )}
+                                                                    </td>
+                                                                    <td >
+                                                                        <select
+                                                                            id={`${"customer_payable_payment_method_" + key}`} name={`${"customer_payable_payment_method_" + key}`}
+                                                                            value={formData.payments[key].method} style={INPUT}
+                                                                            ref={(el) => {
+                                                                                if (!inputRefs.current[key]) inputRefs.current[key] = {};
+                                                                                inputRefs.current[key][`${"customer_payable_payment_method_" + key}`] = el;
+                                                                            }}
+                                                                            onFocus={() => {
+                                                                                /*
+                                                                                if (timerRef.current) clearTimeout(timerRef.current);
+                                                                                timerRef.current = setTimeout(() => {
+                                                                                    inputRefs.current[key][`${"customer_payable_payment_method_" + key}`].select();
+                                                                                }, 100);*/
+                                                                            }}
+                                                                            onKeyDown={(e) => {
+                                                                                if (timerRef.current) clearTimeout(timerRef.current);
+                                                                                if (e.key === "ArrowLeft") {
+                                                                                    timerRef.current = setTimeout(() => {
+                                                                                        inputRefs.current[key][`${"customer_payable_payment_discount_" + key}`].focus();
+                                                                                    }, 100);
+                                                                                }
+                                                                            }}
+                                                                            onChange={(e) => {
+                                                                                // errors["payment_method"] = [];
+                                                                                errors["customer_payable_payment_method_" + key] = "";
+                                                                                setErrors({ ...errors });
+
+                                                                                if (!e.target.value) {
+                                                                                    errors["customer_payable_payment_method_" + key] = "Payment method is required";
+                                                                                    setErrors({ ...errors });
+
+                                                                                    formData.payments[key].method = "";
+                                                                                    setFormData({ ...formData });
+                                                                                    return;
+                                                                                }
+
+
+                                                                                formData.payments[key].method = e.target.value;
+                                                                                setFormData({ ...formData });
+                                                                                console.log(formData);
+                                                                            }}
+                                                                        >
+                                                                            <option value="">Select</option>
+                                                                            <option value="cash">Cash</option>
+                                                                            <option value="debit_card">Debit Card</option>
+                                                                            <option value="credit_card">Credit Card</option>
+                                                                            <option value="bank_card">Bank Card</option>
+                                                                            <option value="bank_transfer">Bank Transfer</option>
+                                                                            <option value="bank_cheque">Bank Cheque</option>
+                                                                        </select>
+                                                                        {errors["customer_payable_payment_method_" + key] && (
+                                                                            <ErrMsg>{errors["customer_payable_payment_method_" + key]}</ErrMsg>
+                                                                        )}
+                                                                    </td>
+                                                                    <td >
+                                                                        <input type='text' id={`${"customer_payable_bank_reference_" + key}`} name={`${"customer_payable_bank_reference_" + key}`}
+                                                                            value={formData.payments[key].bank_reference} style={INPUT}
+                                                                            ref={(el) => {
+                                                                                if (!inputRefs.current[key]) inputRefs.current[key] = {};
+                                                                                inputRefs.current[key][`${"customer_payable_bank_reference_" + key}`] = el;
+                                                                            }}
+                                                                            onFocus={() => {
+                                                                                if (timerRef.current) clearTimeout(timerRef.current);
+                                                                                timerRef.current = setTimeout(() => {
+                                                                                    inputRefs.current[key][`${"customer_payable_bank_reference_" + key}`].select();
+                                                                                }, 100);
+                                                                            }}
+                                                                            onKeyDown={(e) => {
+                                                                                if (timerRef.current) clearTimeout(timerRef.current);
+                                                                                if (e.key === "ArrowLeft") {
+                                                                                    timerRef.current = setTimeout(() => {
+                                                                                        inputRefs.current[key][`${"customer_payable_payment_method_" + key}`].focus();
+                                                                                    }, 100);
+                                                                                }
+                                                                            }}
+                                                                            onChange={(e) => {
+                                                                                errors["customer_payable_bank_reference_" + key] = "";
+                                                                                setErrors({ ...errors });
+
+                                                                                if (!e.target.value) {
+                                                                                    formData.payments[key].bank_reference = e.target.value;
+                                                                                    setFormData({ ...formData });
+
+                                                                                    return;
+                                                                                }
+
+                                                                                formData.payments[key].bank_reference = e.target.value;
+                                                                                setFormData({ ...formData });
+                                                                            }}
+                                                                        />
+                                                                        {errors["customer_payable_bank_reference_" + key] && (
+                                                                            <ErrMsg>{errors["customer_payable_bank_reference_" + key]}</ErrMsg>
+                                                                        )}
+                                                                    </td>
+                                                                    <td>
+                                                                        <input type='text' id={`${"customer_payable_description_" + key}`} name={`${"customer_payable_description_" + key}`}
+                                                                            value={formData.payments[key].description} style={INPUT}
+                                                                            ref={(el) => {
+                                                                                if (!inputRefs.current[key]) inputRefs.current[key] = {};
+                                                                                inputRefs.current[key][`${"customer_payable_description_" + key}`] = el;
+                                                                            }}
+                                                                            onFocus={() => {
+                                                                                if (timerRef.current) clearTimeout(timerRef.current);
+                                                                                timerRef.current = setTimeout(() => {
+                                                                                    inputRefs.current[key][`${"customer_payable_description_" + key}`].select();
+                                                                                }, 100);
+                                                                            }}
+                                                                            onKeyDown={(e) => {
+                                                                                if (timerRef.current) clearTimeout(timerRef.current);
+
+                                                                                if (e.key === "Enter") {
+                                                                                    if ((key + 1) < formData.payments?.length && formData.payments?.length > 1) {
+                                                                                        console.log("Moving to next line");
+                                                                                        timerRef.current = setTimeout(() => {
+                                                                                            inputRefs.current[key + 1][`${"customer_payable_payment_amount_" + (key + 1)}`]?.focus();
+                                                                                        }, 100);
+                                                                                    } else {
+                                                                                        if ((key + 1) === formData.payments?.length) {
+                                                                                            timerRef.current = setTimeout(() => {
+                                                                                                inputRefs.current[0][`${"customer_payable_payment_amount_0"}`]?.focus();
+                                                                                            }, 100);
+                                                                                        } else {
+                                                                                            timerRef.current = setTimeout(() => {
+                                                                                                inputRefs.current[key][`${"customer_payable_payment_amount_" + (key)}`]?.focus();
+                                                                                            }, 100);
+                                                                                        }
+
+                                                                                    }
+                                                                                } else if (e.key === "ArrowLeft") {
+                                                                                    timerRef.current = setTimeout(() => {
+                                                                                        inputRefs.current[key][`${"customer_payable_bank_reference_" + key}`].focus();
+                                                                                    }, 100);
+                                                                                }
+                                                                            }}
+
+                                                                            onChange={(e) => {
+                                                                                errors["customer_payable_description_" + key] = "";
+                                                                                setErrors({ ...errors });
+
+                                                                                if (!e.target.value) {
+                                                                                    formData.payments[key].description = e.target.value;
+                                                                                    setFormData({ ...formData });
+
+                                                                                    return;
+                                                                                }
+
+                                                                                formData.payments[key].description = e.target.value;
+                                                                                setFormData({ ...formData });
+                                                                            }}
+                                                                        />
+                                                                        {errors["customer_payable_description_" + key] && (
+                                                                            <ErrMsg>{errors["customer_payable_description_" + key]}</ErrMsg>
+                                                                        )}
+                                                                    </td>
+                                                                    <td >
+                                                                        <Button variant="danger" onClick={(event) => {
+                                                                            removePayment(key);
+                                                                        }}>
+                                                                            Remove
+                                                                        </Button>
+
+                                                                    </td>
+                                                                </tr>
+                                                            ))}
+                                                        <tr>
+                                                            <td className="text-end">
+                                                                <b>Total</b>
+                                                            </td>
+
+                                                            <td><b style={{ marginLeft: "14px" }}>{trimTo2Decimals(totalPaymentAmount)}</b>
+                                                                {errors["total_payment"] && (
+                                                                    <ErrMsg>{errors["total_payment"]}</ErrMsg>
+                                                                )}
+                                                            </td>
+                                                            <td colSpan={6}>
+
+                                                            </td>
+
+                                                        </tr>
+                                                        <tr>
+                                                            <td className="text-end">
+                                                                <b>Total Discount</b>
+                                                            </td>
+
+                                                            <td><b style={{ marginLeft: "14px" }}>{trimTo2Decimals(totalDiscountAmount)}</b>
+                                                                {errors["total_discount"] && (
+                                                                    <ErrMsg>{errors["total_discount"]}</ErrMsg>
+                                                                )}
+                                                            </td>
+                                                            <td colSpan={6}>
+                                                            </td>
+
+                                                        </tr>
+                                                        <tr>
+                                                            <td className="text-end">
+                                                                <b>Net Total</b>
+                                                            </td>
+                                                            <td><b style={{ marginLeft: "14px" }}>{trimTo2Decimals(netTotalPaymentAmount)}</b>
+                                                                {errors["net_total_payment"] && (
+                                                                    <ErrMsg>{errors["net_total_payment"]}</ErrMsg>
+                                                                )}
+                                                            </td>
+                                                            <td colSpan={6}>
+
+                                                            </td>
+
+                                                        </tr>
+                                                    </tbody>
+                                                </table>
+                                            </div>
+                                        </div>
+                                    </>
+                                )}
+
+                                {/* ── Attachments Tab ── */}
+                                {activeTab === 'attachments' && (
+                                    <>
+                                        <div style={CARD}>
+                                            <SectionTitle icon="bi-paperclip">Attachments</SectionTitle>
+
+                                            {/* Upload area */}
+                                            <label style={{ display: 'block', border: '2px dashed #c3c6d7', borderRadius: '8px', padding: '32px', background: '#f7f9fb', cursor: 'pointer', textAlign: 'center', marginBottom: '20px' }}>
+                                                <i className="bi bi-cloud-upload" style={{ fontSize: '32px', color: '#004ac6', display: 'block', marginBottom: '8px' }}></i>
+                                                <div style={{ fontFamily: '"Inter", sans-serif', fontSize: '14px', fontWeight: 600, color: '#191c1e', marginBottom: '4px' }}>Click or drag files here</div>
+                                                <div style={{ fontFamily: '"Inter", sans-serif', fontSize: '12px', color: '#737686' }}>Images, PDFs, and any file type</div>
+                                                <input
+                                                    type="file"
+                                                    accept="*/*"
+                                                    multiple
+                                                    style={{ display: 'none' }}
+                                                    onChange={(e) => { if (e.target.files && e.target.files.length > 0) { addAttachments(e.target.files); e.target.value = ''; } }}
+                                                />
+                                            </label>
+
+                                            {/* Existing saved files */}
+                                            {(formData.images || []).map((filename, idx) => {
+                                                const basename = filename.includes('/') ? filename.split('/').pop() : filename;
+                                                const url = `/images/${localStorage.getItem('store_id')}/customer_withdrawals/${basename}`;
+                                                const isImg = isImageFile(basename, "");
+                                                const label = getFileLabel(basename) + ' ' + (idx + 1);
+                                                const downloadName = 'attachment-' + (idx + 1) + '.' + basename.split('.').pop();
+                                                const allSaved = (formData.images || []).map((fn, i) => { const bn = fn.includes('/') ? fn.split('/').pop() : fn; return { url: `/images/${localStorage.getItem("store_id")}/customer_withdrawals/${bn}`, isImg: isImageFile(bn, ""), name: getFileLabel(bn) + " " + (i+1) }; });
+                                                return (
+                                                    <div key={idx} style={{ display: 'flex', alignItems: 'center', gap: '10px', background: '#f7f9fb', border: '1px solid #c3c6d7', borderRadius: '6px', padding: '8px 12px', marginBottom: '8px', fontFamily: '"Inter", sans-serif' }}>
+                                                        {isImg ? (
+                                                            <img src={url} alt={filename} onClick={() => openLightbox(allSaved, idx)} style={{ width: '36px', height: '36px', objectFit: 'cover', borderRadius: '4px', flexShrink: 0, cursor: 'pointer' }} />
+                                                        ) : (
+                                                            <i className={`bi ${getFileIcon(null, filename)}`} style={{ fontSize: '20px', color: '#004ac6', flexShrink: 0 }}></i>
+                                                        )}
+                                                        <span style={{ flex: 1, fontSize: '13px', color: '#191c1e', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{label}</span>
+                                                        <button type="button" onClick={() => isImg ? openLightbox(allSaved, idx) : window.open(url, '_blank')} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#004ac6', flexShrink: 0, padding: '0 4px', fontSize: '12px', fontWeight: 600, fontFamily: '"Inter", sans-serif', display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                                                            <i className="bi bi-eye" style={{ fontSize: '14px' }}></i>View
+                                                        </button>
+                                                        <button type="button" onClick={() => downloadServerFile(url, downloadName)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#004ac6', flexShrink: 0, padding: '0 4px', fontSize: '12px', fontWeight: 600, fontFamily: '"Inter", sans-serif', display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                                                            <i className="bi bi-download" style={{ fontSize: '14px' }}></i>Download
+                                                        </button>
+                                                        <button type="button" onClick={() => removeExistingAttachment(filename)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#ba1a1a', flexShrink: 0, padding: '0 4px' }}>
+                                                            <i className="bi bi-trash" style={{ fontSize: '15px' }}></i>
+                                                        </button>
+                                                    </div>
+                                                );
+                                            })}
+
+                                            {/* Pending (new) attachments */}
+                                            {pendingAttachments.map((att, idx) => (
+                                                <div key={idx} style={{ display: 'flex', alignItems: 'center', gap: '10px', background: '#f7f9fb', border: '1px solid #c3c6d7', borderRadius: '6px', padding: '8px 12px', marginBottom: '8px', fontFamily: '"Inter", sans-serif' }}>
+                                                    {isImageFile(att.name, att.type) ? (
+                                                        <img src={att.dataUrl} alt={att.name} style={{ width: '36px', height: '36px', objectFit: 'cover', borderRadius: '4px', flexShrink: 0 }} />
+                                                    ) : (
+                                                        <i className={`bi ${getFileIcon(att.type, att.name)}`} style={{ fontSize: '20px', color: '#004ac6', flexShrink: 0 }}></i>
+                                                    )}
+                                                    <span style={{ flex: 1, fontSize: '13px', color: '#191c1e', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{att.name}</span>
+                                                    <span style={{ fontSize: '11px', color: '#737686', flexShrink: 0 }}>{formatBytes(att.size)}</span>
+                                                    {isImageFile(att.name, att.type) && (
+                                                        <button type="button" onClick={() => { const pendingImgItems = pendingAttachments.map(f => ({ url: f.dataUrl, isImg: isImageFile(f.name, f.type), name: f.name })); openLightbox(pendingImgItems, idx); }} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#004ac6', flexShrink: 0, padding: '0 4px', fontSize: '12px', fontWeight: 600, fontFamily: '"Inter", sans-serif', display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                                                            <i className="bi bi-eye" style={{ fontSize: '14px' }}></i>View
+                                                        </button>
+                                                    )}
+                                                    <button type="button" onClick={() => downloadDataUrl(att.dataUrl, att.name)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#004ac6', flexShrink: 0, padding: '0 4px', fontSize: '12px', fontWeight: 600, fontFamily: '"Inter", sans-serif', display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                                                        <i className="bi bi-download" style={{ fontSize: '14px' }}></i>Download
+                                                    </button>
+                                                    <button type="button" onClick={() => removePendingAttachment(idx)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#ba1a1a', flexShrink: 0, padding: '0 4px' }}>
+                                                        <i className="bi bi-trash" style={{ fontSize: '15px' }}></i>
+                                                    </button>
+                                                </div>
+                                            ))}
+
+                                            {/* Empty state */}
+                                            {(formData.images || []).length === 0 && pendingAttachments.length === 0 && (
+                                                <div style={{ color: '#737686', fontFamily: '"Inter", sans-serif', fontSize: '13px', textAlign: 'center', padding: '8px 0' }}>
+                                                    No attachments yet.
+                                                </div>
+                                            )}
+                                        </div>
+                                    </>
+                                )}
+
+                            </div>
+                            </div>{/* end scrollable inner div */}
+                            <div style={{ flexShrink: 0, padding: "12px 28px", borderTop: "1px solid #c3c6d7", background: "#ffffff" }}>
+                              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                                <button type="button" disabled={!prevTab} onClick={() => prevTab && setActiveTab(prevTab)} style={{ background: prevTab ? "#d0e1fb" : "#f0f2f4", color: prevTab ? "#54647a" : "#9aa0b0", border: "none", borderRadius: "4px", padding: "7px 16px", fontSize: "13px", fontWeight: 600, fontFamily: "Inter, sans-serif", cursor: prevTab ? "pointer" : "default", display: "inline-flex", alignItems: "center", gap: "6px" }}>
+                                  <i className="bi bi-arrow-left"></i>
+                                  {prevTab ? NAV_TABS.find(t => t.id === prevTab)?.label : "Previous"}
+                                </button>
+                                <span style={{ fontFamily: "Inter, sans-serif", fontSize: "12px", color: "#737686" }}>{currentTabIndex + 1} / {tabIds.length}</span>
+                                <button type="button" disabled={!nextTab} onClick={() => nextTab && setActiveTab(nextTab)} style={{ background: nextTab ? "#004ac6" : "#f0f2f4", color: nextTab ? "#ffffff" : "#9aa0b0", border: "none", borderRadius: "4px", padding: "7px 16px", fontSize: "13px", fontWeight: 600, fontFamily: "Inter, sans-serif", cursor: nextTab ? "pointer" : "default", display: "inline-flex", alignItems: "center", gap: "6px" }}>
+                                  {nextTab ? NAV_TABS.find(t => t.id === nextTab)?.label : "Next"}
+                                  <i className="bi bi-arrow-right"></i>
+                                </button>
+                              </div>
+                            </div>{/* end sticky nav bar wrapper */}
+                        </div>
+
                     </form>
                 </Modal.Body>
 
-            </Modal >
+            </Modal>
 
 
         </>
