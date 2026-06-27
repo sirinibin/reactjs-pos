@@ -685,7 +685,6 @@ const ProductCreate = forwardRef((props, ref) => {
 
         const msg = wasNew ? "Product created successfully!" : "Product updated successfully!";
         showFlash(msg, "success");
-        if (props.showToastMessage) props.showToastMessage(msg, "success");
 
         try {
           await ImageGalleryRef.current.uploadAllImages();
@@ -719,7 +718,6 @@ const ProductCreate = forwardRef((props, ref) => {
         setErrors({ ...error });
         console.error("There was an error!", error);
         showFlash("Failed to save product. Please fix the errors and try again.", "danger");
-        if (props.showToastMessage) props.showToastMessage("Failed to process product!", "danger");
       });
   }
 
@@ -1613,8 +1611,10 @@ const ProductCreate = forwardRef((props, ref) => {
   const ERROR_TAB_MAP = {
     name: 'basic', name_in_arabic: 'basic', brand_id: 'basic', country_code: 'basic',
     part_number: 'basic', prefix_part_number: 'basic', rack: 'basic', category_id: 'basic', allow_duplicates: 'basic',
-    purchase_unit_price_0: 'pricing', wholesale_unit_price: 'pricing', retail_unit_price: 'pricing',
-    purchase_unit_price_with_vat_0: 'pricing', wholesale_unit_price_with_vat: 'pricing', retail_unit_price_with_vat: 'pricing',
+    purchase_unit_price_0: 'pricing', wholesale_unit_price: 'pricing',
+    purchase_unit_price_with_vat_0: 'pricing', wholesale_unit_price_with_vat: 'pricing',
+    retail_unit_price: 'pricing', retail_unit_price_0: 'pricing',
+    retail_unit_price_with_vat: 'pricing', retail_unit_price_with_vat_0: 'pricing',
   };
   const getErrorTab = (key) => {
     if (ERROR_TAB_MAP[key]) return ERROR_TAB_MAP[key];
@@ -2012,6 +2012,23 @@ const ProductCreate = forwardRef((props, ref) => {
                     {errors.allow_duplicates && <ErrMsg>{errors.allow_duplicates}</ErrMsg>}
                   </div>
 
+                  <div className="pw-card" style={CARD}>
+                    <SectionTitle icon="bi-journal-text">Note</SectionTitle>
+                    <textarea
+                      id="product_note"
+                      name="product_note"
+                      value={formData.note || ''}
+                      rows={4}
+                      onChange={(e) => {
+                        formData.note = e.target.value;
+                        setFormData({ ...formData });
+                      }}
+                      onKeyDown={(e) => { if (e.key === 'Enter') e.stopPropagation(); }}
+                      style={{ ...INPUT, resize: 'vertical', minHeight: '88px' }}
+                      placeholder="Optional note about this product…"
+                    />
+                  </div>
+
                 </div>
               )}
 
@@ -2129,7 +2146,7 @@ const ProductCreate = forwardRef((props, ref) => {
                               style={PRICE_INPUT} placeholder="0.00"
                               onChange={(e) => {
                                 if (timerRef.current) clearTimeout(timerRef.current);
-                                delete errors['retail_unit_price']; setErrors({ ...errors });
+                                delete errors['retail_unit_price']; delete errors['retail_unit_price_0']; setErrors({ ...errors });
                                 if (!e.target.value) { productStores[localStorage.getItem('store_id')].retail_unit_price = ''; setProductStores({ ...productStores }); return; }
                                 if (parseFloat(e.target.value) < 0) { errors['retail_unit_price_0'] = 'Retail Unit Price should not be < 0'; productStores[localStorage.getItem('store_id')].retail_unit_price = ''; setProductStores({ ...productStores }); setErrors({ ...errors }); return; }
                                 productStores[localStorage.getItem('store_id')].retail_unit_price = parseFloat(e.target.value); setProductStores({ ...productStores });
@@ -2149,7 +2166,7 @@ const ProductCreate = forwardRef((props, ref) => {
                               style={{ ...PRICE_INPUT, background: '#f2f4f6' }} placeholder="Calculated automatically"
                               onChange={(e) => {
                                 if (timerRef.current) clearTimeout(timerRef.current);
-                                delete errors['retail_unit_price_with_vat']; setErrors({ ...errors });
+                                delete errors['retail_unit_price_with_vat']; delete errors['retail_unit_price_with_vat_0']; setErrors({ ...errors });
                                 if (!e.target.value) { productStores[localStorage.getItem('store_id')].retail_unit_price_with_vat = ''; setProductStores({ ...productStores }); return; }
                                 if (parseFloat(e.target.value) < 0) { errors['retail_unit_price_with_vat_0'] = 'Retail Unit Price with VAT should not be < 0'; productStores[localStorage.getItem('store_id')].retail_unit_price_with_vat = ''; setProductStores({ ...productStores }); setErrors({ ...errors }); return; }
                                 productStores[localStorage.getItem('store_id')].retail_unit_price_with_vat = parseFloat(e.target.value); setProductStores({ ...productStores });
