@@ -90,6 +90,7 @@ const ProductCreate = forwardRef((props, ref) => {
 
       }
 
+      setActiveTab('basic');
       SetShow(true);
     },
   }));
@@ -226,6 +227,14 @@ const ProductCreate = forwardRef((props, ref) => {
   }, [store]);
 
   const [show, SetShow] = useState(false);
+  const [flash, setFlash] = useState(null); // { text, type: 'success'|'danger' }
+  const flashTimerRef = useRef(null);
+
+  function showFlash(text, type = 'success') {
+    if (flashTimerRef.current) clearTimeout(flashTimerRef.current);
+    setFlash({ text, type });
+    flashTimerRef.current = setTimeout(() => setFlash(null), 4000);
+  }
 
   function handleClose() {
     SetShow(false);
@@ -624,6 +633,7 @@ const ProductCreate = forwardRef((props, ref) => {
     }
 
     formData.barcode_base64 = "";
+    const wasNew = !formData.id;
     let endPoint = "/v1/product";
     let method = "POST";
     if (formData.id) {
@@ -673,22 +683,19 @@ const ProductCreate = forwardRef((props, ref) => {
         formData.id = data.result?.id;
         setFormData({ ...formData });
 
-        // alert("Starting Images upload")
-        await ImageGalleryRef.current.uploadAllImages();
-        //alert("Images upload done")
+        const msg = wasNew ? "Product created successfully!" : "Product updated successfully!";
+        showFlash(msg, "success");
+        if (props.showToastMessage) props.showToastMessage(msg, "success");
+
+        try {
+          await ImageGalleryRef.current.uploadAllImages();
+        } catch (imgErr) {
+          console.warn("Image upload error (product was saved):", imgErr);
+        }
 
         if (timerRef.current) clearTimeout(timerRef.current);
         timerRef.current = setTimeout(() => {
-          // alert("Going to product view")
           setProcessing(false);
-
-          console.log("Response after creating  product:");
-          console.log(data);
-          if (formData.id) {
-            if (props.showToastMessage) props.showToastMessage("Product updated successfully!", "success");
-          } else {
-            if (props.showToastMessage) props.showToastMessage("Product created successfully!", "success");
-          }
 
           if (props.refreshList) {
             props.refreshList();
@@ -711,6 +718,7 @@ const ProductCreate = forwardRef((props, ref) => {
         console.log(error);
         setErrors({ ...error });
         console.error("There was an error!", error);
+        showFlash("Failed to save product. Please fix the errors and try again.", "danger");
         if (props.showToastMessage) props.showToastMessage("Failed to process product!", "danger");
       });
   }
@@ -1568,6 +1576,59 @@ const ProductCreate = forwardRef((props, ref) => {
     }
   }, [loadWarehouses, show]);
 
+  // ── Design tokens (Enterprise Core) ──────────────────────────────────
+  const CARD = { background: '#ffffff', border: '1px solid #c3c6d7', borderRadius: '8px', padding: '24px', marginBottom: '20px' };
+  const TH = { padding: '8px 12px', textAlign: 'left', fontFamily: '"Inter", sans-serif', fontSize: '12px', fontWeight: 600, color: '#434655', textTransform: 'uppercase', letterSpacing: '0.05em', whiteSpace: 'nowrap' };
+  const TD = { padding: '8px 12px', fontFamily: '"Inter", sans-serif', fontSize: '13px', color: '#191c1e', verticalAlign: 'middle' };
+  const INPUT = { border: '1px solid #c3c6d7', borderRadius: '4px', padding: '7px 12px', fontSize: '13px', fontFamily: '"Inter", sans-serif', width: '100%', outline: 'none', color: '#191c1e', background: '#fff' };
+  const PRICE_INPUT = { border: '1px solid #c3c6d7', borderRadius: '4px', padding: '8px 12px', fontSize: '14px', fontFamily: '"Inter", sans-serif', width: '100%', outline: 'none', color: '#191c1e' };
+  const PRICE_CARD = { background: '#ffffff', border: '1px solid #c3c6d7', borderRadius: '8px', padding: '20px', height: '100%' };
+  const PRICE_CARD_LABEL = { fontFamily: '"Inter", sans-serif', fontSize: '11px', fontWeight: 600, color: '#434655', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '14px' };
+  const PRICE_SUB_LABEL = { fontFamily: '"Inter", sans-serif', fontSize: '12px', fontWeight: 500, color: '#737686', marginBottom: '4px' };
+  const ICON_BTN = { background: '#004ac6', color: '#ffffff', border: 'none', borderRadius: '4px', padding: '7px 10px', fontSize: '13px', cursor: 'pointer', flexShrink: 0, display: 'inline-flex', alignItems: 'center' };
+  const SEC_BTN = { background: '#d0e1fb', color: '#54647a', border: 'none', borderRadius: '4px', padding: '7px 16px', fontSize: '13px', fontWeight: 600, fontFamily: '"Inter", sans-serif', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '4px' };
+
+  const Label = ({ children, required }) => (
+    <label style={{ display: 'block', fontFamily: '"Inter", sans-serif', fontSize: '13px', fontWeight: 600, color: '#191c1e', marginBottom: '4px' }}>
+      {children}{required && <span style={{ color: '#ba1a1a', marginLeft: '2px' }}>*</span>}
+    </label>
+  );
+  const ErrMsg = ({ children }) => (
+    <div style={{ color: '#ba1a1a', fontSize: '12px', fontFamily: '"Inter", sans-serif', marginTop: '3px' }}>{children}</div>
+  );
+  const SectionTitle = ({ children, icon }) => (
+    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '20px' }}>
+      {icon && <i className={`bi ${icon}`} style={{ fontSize: '18px', color: '#004ac6' }}></i>}
+      <h3 style={{ fontFamily: '"Hanken Grotesk", sans-serif', fontSize: '16px', fontWeight: 600, color: '#191c1e', margin: 0 }}>{children}</h3>
+    </div>
+  );
+
+  const NAV_TABS = [
+    { id: 'basic',     label: 'Basic Info',         icon: 'bi-info-circle'  },
+    { id: 'pricing',   label: 'Pricing',             icon: 'bi-currency-dollar' },
+    { id: 'inventory', label: 'Inventory / Stock',   icon: 'bi-box-seam'    },
+    { id: 'linked',    label: 'Linked Products',     icon: 'bi-link-45deg'  },
+  ];
+
+  const ERROR_TAB_MAP = {
+    name: 'basic', name_in_arabic: 'basic', brand_id: 'basic', country_code: 'basic',
+    part_number: 'basic', prefix_part_number: 'basic', rack: 'basic', category_id: 'basic', allow_duplicates: 'basic',
+    purchase_unit_price_0: 'pricing', wholesale_unit_price: 'pricing', retail_unit_price: 'pricing',
+    purchase_unit_price_with_vat_0: 'pricing', wholesale_unit_price_with_vat: 'pricing', retail_unit_price_with_vat: 'pricing',
+  };
+  const getErrorTab = (key) => {
+    if (ERROR_TAB_MAP[key]) return ERROR_TAB_MAP[key];
+    if (key.startsWith('set_') || key.startsWith('adjustment_') || key.startsWith('damaged_')) return 'inventory';
+    return 'basic';
+  };
+  const allErrors = Object.entries(errors).filter(([, v]) => v);
+  const tabErrorCounts = NAV_TABS.reduce((acc, tab) => {
+    acc[tab.id] = allErrors.filter(([k]) => getErrorTab(k) === tab.id).length;
+    return acc;
+  }, {});
+  const totalErrors = allErrors.length;
+  // ─────────────────────────────────────────────────────────────────────
+
   return (
     <>
       <ProductHistory ref={ProductHistoryRef} showToastMessage={props.showToastMessage} />
@@ -1599,2474 +1660,921 @@ const ProductCreate = forwardRef((props, ref) => {
         showToastMessage={props.showToastMessage}
       />
 
-      <Modal
-        show={show}
-        fullscreen
-        onHide={handleClose}
-        animation={false}
-        backdrop="static"
-        scrollable={true}
+      {flash && (
+        <div style={{
+          position: 'fixed', top: '20px', right: '24px', zIndex: 99999,
+          background: flash.type === 'success' ? '#dcfce7' : '#ffdad6',
+          border: `1px solid ${flash.type === 'success' ? '#86efac' : '#f4adaa'}`,
+          borderRadius: '8px', padding: '12px 18px',
+          fontFamily: '"Inter", sans-serif', fontSize: '13px', fontWeight: 600,
+          color: flash.type === 'success' ? '#15803d' : '#93000a',
+          display: 'flex', alignItems: 'center', gap: '10px',
+          boxShadow: '0 4px 16px rgba(0,0,0,0.14)',
+          minWidth: '280px', maxWidth: '380px',
+          animation: 'fadeInDown 0.2s ease',
+        }}>
+          <i className={`bi ${flash.type === 'success' ? 'bi-check-circle-fill' : 'bi-exclamation-circle-fill'}`}
+            style={{ fontSize: '16px', flexShrink: 0 }}></i>
+          <span style={{ flex: 1 }}>{flash.text}</span>
+          <button type="button" onClick={() => setFlash(null)}
+            style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'inherit', fontSize: '18px', lineHeight: 1, padding: 0, marginLeft: '4px', opacity: 0.7 }}>
+            ×
+          </button>
+        </div>
+      )}
 
-      >
-        <Modal.Header>
-          <Modal.Title>
-            {formData.id
-              ? "Update Product #" + formData.name
-              : "Create New Product"}
+      <Modal show={show} fullscreen onHide={handleClose} animation={false} backdrop="static" dialogClassName="pw-modal">
+        <Modal.Header style={{ background: '#ffffff', borderBottom: '1px solid #c3c6d7', padding: '10px 20px', flexShrink: 0 }}>
+          <Modal.Title style={{ fontFamily: '"Hanken Grotesk", sans-serif', fontSize: '17px', fontWeight: 700, color: '#191c1e', letterSpacing: '-0.01em' }}>
+            {formData.id ? `Update Product — ${formData.name}` : 'Create New Product'}
           </Modal.Title>
-
-          <div className="col align-self-end text-end">
-            {formData.id ? (
-              <Button
-                variant="primary"
-                onClick={() => {
-                  handleClose();
-                  if (props.openDetailsView)
-                    props.openDetailsView(formData.id);
-                }}
-              >
-                <i className="bi bi-eye"></i> View Detail
-              </Button>
-            ) : (
-              ""
+          <div className="d-flex align-items-center gap-2">
+            {formData.id && (
+              <button type="button"
+                style={{ background: '#d0e1fb', color: '#54647a', border: 'none', borderRadius: '4px', padding: '6px 14px', fontSize: '13px', fontWeight: 600, fontFamily: '"Inter", sans-serif', cursor: 'pointer' }}
+                onClick={() => { handleClose(); if (props.openDetailsView) props.openDetailsView(formData.id); }}>
+                <i className="bi bi-eye me-1"></i>View Detail
+              </button>
             )}
-            &nbsp;&nbsp;
-            <Button variant="primary" onClick={handleCreate}>
-              {isProcessing ?
-                <Spinner
-                  as="span"
-                  animation="border"
-                  size="sm"
-                  role="status"
-                  aria-hidden={true}
-                />
-
-                : ""
-              }
-              {formData.id && !isProcessing ? "Update" : !isProcessing ? "Create" : ""}
-            </Button>
-            <button
-              type="button"
-              className="btn-close"
-              onClick={handleClose}
-              aria-label="Close"
-            ></button>
+            <button type="button"
+              style={{ background: '#004ac6', color: '#ffffff', border: 'none', borderRadius: '4px', padding: '6px 18px', fontSize: '13px', fontWeight: 600, fontFamily: '"Inter", sans-serif', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '6px' }}
+              onClick={handleCreate} disabled={isProcessing}>
+              {isProcessing && <Spinner as="span" animation="border" size="sm" role="status" aria-hidden={true} />}
+              {formData.id ? 'Update' : 'Create'}
+            </button>
+            <button type="button" className="btn-close ms-1" onClick={handleClose} aria-label="Close" />
           </div>
         </Modal.Header>
-        <Modal.Body>
-          <form className="row g-3 needs-validation" onSubmit={handleCreate}>
-            <div className="col-md-6">
-              <label className="form-label">Name*</label>
-              <div className="input-group mb-3">
-                <input
-                  id="product_name"
-                  name="product_name"
-                  value={formData.name ? formData.name : ""}
-                  type="string"
-                  onChange={(e) => {
-                    errors["name"] = "";
-                    setErrors({ ...errors });
-                    formData.name = e.target.value;
-                    setFormData({ ...formData });
+        <style>{`
+          @keyframes fadeInDown { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
+          .pw-modal .modal-content { display: flex; flex-direction: column; height: 100%; }
+          .pw-body { padding: 0 !important; overflow: hidden !important; display: flex !important; flex-direction: column !important; flex: 1 !important; min-height: 0 !important; }
+          .pw-form { display: flex; width: 100%; flex: 1; min-height: 0; }
+          .pw-sidebar { width: 200px; background: #f2f4f6; border-right: 1px solid #c3c6d7; padding: 16px 10px; flex-shrink: 0; overflow-y: auto; display: flex; flex-direction: column; gap: 4px; }
+          .pw-sidebar-header { margin-bottom: 16px; }
+          .pw-content { flex: 1; overflow-y: auto; padding: 20px 28px; background: #f7f9fb; min-width: 0; }
+          .pw-tab-wrap { max-width: 900px; }
+          .pw-price-cards .col-md-4 { margin-bottom: 16px; }
+          @media (max-width: 767px) {
+            .pw-form { flex-direction: column; }
+            .pw-sidebar { width: 100%; height: auto; flex-direction: row; overflow-x: auto; overflow-y: hidden; border-right: none; border-bottom: 1px solid #c3c6d7; padding: 6px 8px; gap: 4px; }
+            .pw-sidebar-header { display: none; }
+            .pw-sidebar button { flex-shrink: 0; white-space: nowrap; padding: 8px 12px !important; }
+            .pw-content { padding: 14px 16px !important; }
+            .pw-tab-wrap { max-width: 100%; }
+          }
+          @media (min-width: 768px) and (max-width: 1100px) {
+            .pw-sidebar { width: 170px; }
+            .pw-content { padding: 16px 20px; }
+            .pw-tab-wrap { max-width: 100%; }
+          }
+          @media (min-height: 600px) and (max-height: 800px) {
+            .pw-content { padding: 14px 24px; }
+          }
+          @media (max-width: 767px) {
+            .pw-card { padding: 14px !important; margin-bottom: 12px !important; }
+          }
+          @media (min-width: 768px) and (max-width: 1100px) {
+            .pw-card { padding: 16px !important; margin-bottom: 14px !important; }
+          }
+        `}</style>
+        <Modal.Body className="pw-body">
+          <form onSubmit={handleCreate} className="pw-form">
 
-                    // Auto-translate to Arabic]
-
-                    if (timerRef.current) clearTimeout(timerRef.current);
-                    timerRef.current = setTimeout(async () => {
-                      translateText(e.target.value);
-                    }, 100);
-
-                  }}
-                  className="form-control"
-                  placeholder="Name"
-                />
-                {errors.name && (
-                  <div style={{ color: "red" }}>
-                    <i className="bi bi-x-lg"> </i>
-                    {errors.name}
-                  </div>
-                )}
+            {/* Left Nav Sidebar */}
+            <aside className="pw-sidebar">
+              <div className="pw-sidebar-header">
+                <div style={{ fontFamily: '"Hanken Grotesk", sans-serif', fontSize: '15px', fontWeight: 700, color: '#191c1e', marginBottom: '2px' }}>
+                  {formData.id ? 'Edit Product' : 'New Product'}
+                </div>
+                <div style={{ fontFamily: '"Inter", sans-serif', fontSize: '11px', color: '#434655' }}>Product Wizard</div>
               </div>
-            </div>
-
-            <div className="col-md-6">
-              <label className="form-label">Name In Arabic</label>
-              <div className="input-group mb-3">
-                <input
-                  id="product_name_arabic"
-                  name="product_name_arabic"
-                  value={formData.name_in_arabic ? formData.name_in_arabic : ""}
-                  type="string"
-                  onChange={(e) => {
-                    errors["name_in_arabic"] = "";
-                    setErrors({ ...errors });
-                    formData.name_in_arabic = e.target.value;
-                    setFormData({ ...formData });
+              {NAV_TABS.map((tab) => (
+                <button key={tab.id} type="button"
+                  onClick={() => setActiveTab(tab.id)}
+                  style={{
+                    display: 'flex', alignItems: 'center', gap: '8px',
+                    padding: '9px 10px', borderRadius: '6px', border: 'none', cursor: 'pointer', textAlign: 'left', width: '100%',
+                    background: activeTab === tab.id ? '#2563eb' : 'transparent',
+                    color: activeTab === tab.id ? '#eeefff' : '#434655',
+                    fontFamily: '"Inter", sans-serif', fontSize: '13px', fontWeight: activeTab === tab.id ? 700 : 500,
                   }}
-                  className="form-control"
-                  placeholder="Name In Arabic"
-                />
-                {errors.name_in_arabic && (
-                  <div style={{ color: "red" }}>
-                    <i className="bi bi-x-lg"> </i>
-                    {errors.name_in_arabic}
-                  </div>
-                )}
-              </div>
-            </div>
-
-            {/* Row 2: Brand / Country / Prefix / Part No. / Rack — all in one explicit flex row */}
-            <div className="col-12">
-              <div className="d-flex gap-3 align-items-end" style={{ overflowX: "auto" }}>
-
-                <div style={{ flex: "0 0 240px", width: "240px" }}>
-                  <label className="form-label">Brand</label>
-                  <div className="d-flex align-items-center gap-1">
-                    <div style={{ flex: 1, minWidth: 0 }}>
-                      <Typeahead
-                        id="brand_id"
-                        labelKey="name"
-                        positionFixed={true}
-                        isLoading={isBrandsLoading}
-                        onChange={(selectedItems) => {
-                          errors.brand_id = "";
-                          setErrors(errors);
-                          if (selectedItems.length === 0) {
-                            errors.brand_id = "Invalid brand selected";
-                            setErrors(errors);
-                            formData.brand_id = "";
-                            formData.brand_code = "";
-                            formData.brand_name = "";
-                            makePartNumberPrefix();
-                            setFormData({ ...formData });
-                            setSelectedBrands([]);
-                            return;
-                          }
-                          formData.brand_id = selectedItems[0].id;
-                          formData.brand_code = selectedItems[0].code;
-                          formData.brand_name = selectedItems[0].name;
-                          makePartNumberPrefix();
-                          setFormData({ ...formData });
-                          setSelectedBrands(selectedItems);
-                        }}
-                        options={brandOptions}
-                        placeholder="Brand name"
-                        selected={selectedBrands}
-                        highlightOnlyResult={true}
-                        ref={brandSearchRef}
-                        onKeyDown={(e) => {
-                          if (e.key === "Escape") {
-                            setBrandOptions([]);
-                            brandSearchRef.current?.clear();
-                          }
-                        }}
-                        onInputChange={(searchTerm, e) => {
-                          suggestBrands(searchTerm);
-                        }}
-                      />
-                    </div>
-                    <Button
-                      hide={true.toString()}
-                      onClick={openProductBrandCreateForm}
-                      className="btn btn-primary btn-sm"
-                      type="button"
-                      style={{ whiteSpace: "nowrap", flexShrink: 0 }}
-                    >
-                      <i className="bi bi-plus-lg"></i> New
-                    </Button>
-                  </div>
-                </div>
-
-                <div style={{ flex: "0 0 200px", width: "200px" }}>
-                  <label className="form-label">Country</label>
-                  <div className="input-group">
-                    <Typeahead
-                      id="country_code"
-                      labelKey="label"
-                      positionFixed={true}
-                      onChange={(selectedItems) => {
-                        errors.country_code = "";
-                        setErrors(errors);
-                        if (selectedItems.length === 0) {
-                          errors.country_code = "Invalid country selected";
-                          setErrors(errors);
-                          formData.country_code = "";
-                          formData.country_name = "";
-                          makePartNumberPrefix();
-                          setFormData({ ...formData });
-                          setSelectedCountries([]);
-                          return;
-                        }
-                        formData.country_code = selectedItems[0].value;
-                        formData.country_name = selectedItems[0].label;
-                        makePartNumberPrefix();
-                        setFormData({ ...formData });
-                        setSelectedCountries(selectedItems);
-                      }}
-                      options={countryOptions}
-                      placeholder="Country name"
-                      selected={selectedCountries}
-                      highlightOnlyResult={true}
-                      ref={countrySearchRef}
-                      onKeyDown={(e) => {
-                        if (e.key === "Escape") {
-                          countrySearchRef.current?.clear();
-                        }
-                      }}
-                      onInputChange={(searchTerm, e) => {
-                        //suggestBrands(searchTerm);
-                      }}
-                    />
-                  </div>
-                </div>
-
-                <div style={{ flex: "0 0 150px", width: "150px" }}>
-                  <label className="form-label">Part no. prefix</label>
-                  <div className="input-group">
-                    <input
-                      id="product_prefix_part_no"
-                      name="product_prefix_part_no"
-                      value={formData.prefix_part_number ? formData.prefix_part_number : ""}
-                      type="string"
-                      onChange={(e) => {
-                        errors["part_number"] = "";
-                        setErrors({ ...errors });
-                        formData.prefix_part_number = e.target.value;
-                        setFormData({ ...formData });
-                        console.log(formData);
-                      }}
-                      className="form-control"
-                      placeholder="Prefix"
-                    />
-                    {errors.prefix_part_number && (
-                      <div style={{ color: "red" }}>
-                        <i className="bi bi-x-lg"> </i>
-                        {errors.prefix_part_number}
-                      </div>
-                    )}
-                  </div>
-                </div>
-
-                <div style={{ flex: "0 0 250px", width: "250px" }}>
-                  <label className="form-label">Part No.</label>
-                  <div className="input-group">
-                    <input
-                      id="product_part_no"
-                      name="product_part_no"
-                      value={formData.part_number ? formData.part_number : ""}
-                      type="string"
-                      onChange={(e) => {
-                        errors["part_number"] = "";
-                        setErrors({ ...errors });
-                        formData.part_number = e.target.value;
-                        setFormData({ ...formData });
-                        console.log(formData);
-                      }}
-                      className="form-control"
-                      placeholder="Part Number"
-                    />
-                    {errors.part_number && (
-                      <div style={{ color: "red" }}>
-                        <i className="bi bi-x-lg"> </i>
-                        {errors.part_number}
-                      </div>
-                    )}
-                  </div>
-                </div>
-
-                {!store?.settings?.enable_warehouse_module && (
-                  <div style={{ flex: "0 0 200px", width: "200px" }}>
-                    <label className="form-label">Rack / Location</label>
-                    <div className="input-group">
-                      <input
-                        id="product_rack"
-                        name="product_rack"
-                        value={formData.rack ? formData.rack : ""}
-                        type="string"
-                        onChange={(e) => {
-                          formData.rack = e.target.value;
-                          setFormData({ ...formData });
-                        }}
-                        className="form-control"
-                        placeholder="Rack/Location"
-                      />
-                      {errors.rack && <div style={{ color: "red" }}>{errors.rack}</div>}
-                    </div>
-                  </div>
-                )}
-
-                {/* Unit Prices */}
-                <div style={{ flex: "0 0 auto" }}>
-                  <label className="form-label">Unit Prices</label>
-                  <table className="table table-striped table-sm table-bordered" style={{ marginBottom: 0 }}>
-                    <tbody>
-                      <tr className="text-center">
-                        <th>Purchase Unit Price</th>
-                        <th>Wholesale Unit Price</th>
-                        <th>Retail Unit Price</th>
-                      </tr>
-                      <tr className="text-center">
-                        {!localStorage.getItem('store_id') ? <td style={{ width: "150px" }}>{store.name}</td> : ""}
-                        <td style={{ width: "150px" }}>
-                          <input
-                            id={`${"product_purchase_unit_price_0"}`}
-                            name={`${"product_purchase_unit_price_0"}`}
-                            type="number"
-                            value={productStores[localStorage.getItem('store_id')]?.purchase_unit_price}
-                            disabled={formData.set?.purchase_total}
-                            ref={(el) => {
-                              if (!inputRefs.current[0]) inputRefs.current[0] = {};
-                              inputRefs.current[0][`${"product_purchase_unit_price_0"}`] = el;
-                            }}
-                            onFocus={() => {
-                              if (timerRef.current) clearTimeout(timerRef.current);
-                              timerRef.current = setTimeout(() => {
-                                inputRefs.current[0][`${"product_purchase_unit_price_0"}`]?.select();
-                              }, 100);
-                            }}
-                            onKeyDown={(e) => {
-                              if (timerRef.current) clearTimeout(timerRef.current);
-                              if (e.key === "Enter") {
-                                timerRef.current = setTimeout(() => {
-                                  inputRefs.current[0][`${"product_wholesale_unit_price_0"}`]?.select();
-                                }, 100);
-
-                              } /*else if (e.key ===  "ArrowLeft") {
-                                timerRef.current = setTimeout(() => {
-                                  inputRefs.current[index][`${"sales_product_unit_price_with_vat_" + index}`].focus();
-                                }, 100);
-                              }*/
-                            }}
-                            className="form-control"
-                            placeholder="Purchase Unit Price"
-                            onChange={(e) => {
-                              if (timerRef.current) clearTimeout(timerRef.current);
-
-                              delete errors["purchase_unit_price_0"];
-                              setErrors({ ...errors });
-
-                              if (!e.target.value) {
-                                productStores[localStorage.getItem('store_id')].purchase_unit_price = "";
-                                setProductStores({ ...productStores });
-                                console.log("errors:", errors);
-                                return;
-                              }
-                              if (parseFloat(e.target.value) < 0) {
-                                productStores[localStorage.getItem('store_id')].purchase_unit_price = "";
-                                setProductStores({ ...productStores });
-
-                                errors["purchase_unit_price_0"] =
-                                  "Purchase Unit Price should not be < 0";
-                                setErrors({ ...errors });
-                                return;
-                              }
-
-                              productStores[localStorage.getItem('store_id')].purchase_unit_price = parseFloat(e.target.value);
-                              setProductStores({ ...productStores });
-
-                              timerRef.current = setTimeout(() => {
-                                productStores[localStorage.getItem('store_id')].purchase_unit_price_with_vat = parseFloat(trimTo8Decimals(productStores[localStorage.getItem('store_id')].purchase_unit_price * (1 + (store.vat_percent / 100))));
-                                setProductStores({ ...productStores });
-                              }, 100);
-
-                            }}
-                          />{" "}
-                          {errors["purchase_unit_price_0"] && (
-                            <div style={{ color: "red" }}>
-                              {errors["purchase_unit_price_0"]}
-                            </div>
-                          )}
-                        </td>
-                        <td style={{ width: "150px" }}>
-                          <input
-                            id={`${"product_wholesale_unit_price"}`}
-                            name={`${"product_wholesale_unit_price"}`}
-                            type="number"
-                            value={
-                              productStores[localStorage.getItem('store_id')]?.wholesale_unit_price || productStores[localStorage.getItem('store_id')]?.wholesale_unit_price === 0
-                                ? productStores[localStorage.getItem('store_id')]?.wholesale_unit_price
-                                : ""
-                            }
-                            ref={(el) => {
-                              if (!inputRefs.current[0]) inputRefs.current[0] = {};
-                              inputRefs.current[0][`${"product_wholesale_unit_price_0"}`] = el;
-                            }}
-                            onFocus={() => {
-                              if (timerRef.current) clearTimeout(timerRef.current);
-                              timerRef.current = setTimeout(() => {
-                                inputRefs.current[0][`${"product_wholesale_unit_price_0"}`]?.select();
-                              }, 100);
-                            }}
-                            onKeyDown={(e) => {
-                              if (timerRef.current) clearTimeout(timerRef.current);
-                              if (e.key === "Enter") {
-                                timerRef.current = setTimeout(() => {
-                                  inputRefs.current[0][`${"product_retail_unit_price_0"}`]?.select();
-                                }, 100);
-
-                              } else if (e.key === "ArrowLeft") {
-                                timerRef.current = setTimeout(() => {
-                                  inputRefs.current[0][`${"product_purchase_unit_price_0"}`].focus();
-                                }, 100);
-                              }
-                            }}
-                            className="form-control"
-                            placeholder="Wholesale Unit Price"
-                            onChange={(e) => {
-                              if (timerRef.current) clearTimeout(timerRef.current);
-
-                              delete errors["wholesale_unit_price"];
-                              setErrors({ ...errors });
-
-                              if (!e.target.value) {
-                                productStores[localStorage.getItem('store_id')].wholesale_unit_price = "";
-                                setProductStores({ ...productStores });
-                                return;
-                              }
-
-                              if (parseFloat(e.target.value) < 0) {
-                                productStores[localStorage.getItem('store_id')].wholesale_unit_price = "";
-                                setProductStores({ ...productStores });
-
-                                errors["wholesale_unit_price"] =
-                                  "Wholesale unit price should not be < 0";
-                                setErrors({ ...errors });
-                                return;
-                              }
-
-                              productStores[localStorage.getItem('store_id')].wholesale_unit_price = parseFloat(e.target.value);
-
-                              setProductStores({ ...productStores });
-                              timerRef.current = setTimeout(() => {
-                                productStores[localStorage.getItem('store_id')].wholesale_unit_price_with_vat = parseFloat(trimTo8Decimals(productStores[localStorage.getItem('store_id')].wholesale_unit_price * (1 + (store.vat_percent / 100))));
-                                setProductStores({ ...productStores });
-                              }, 100);
-
-                            }}
-                          />
-                          {errors["wholesale_unit_price"] && (
-                            <div style={{ color: "red" }}>
-                              {errors["wholesale_unit_price"]}
-                            </div>
-                          )}
-                        </td>
-                        <td style={{ width: "150px" }}>
-                          <input
-                            id={`${"product_retail_unit_price"}`}
-                            name={`${"product_retail_unit_price"}`}
-                            type="number"
-                            disabled={formData.set?.total}
-                            value={
-                              productStores[localStorage.getItem('store_id')]?.retail_unit_price || productStores[localStorage.getItem('store_id')]?.retail_unit_price === 0
-                                ? productStores[localStorage.getItem('store_id')]?.retail_unit_price
-                                : ""
-                            }
-                            ref={(el) => {
-                              if (!inputRefs.current[0]) inputRefs.current[0] = {};
-                              inputRefs.current[0][`${"product_retail_unit_price_0"}`] = el;
-                            }}
-                            onFocus={() => {
-                              if (timerRef.current) clearTimeout(timerRef.current);
-                              timerRef.current = setTimeout(() => {
-                                inputRefs.current[0][`${"product_retail_unit_price_0"}`]?.select();
-                              }, 100);
-                            }}
-                            onKeyDown={(e) => {
-                              if (timerRef.current) clearTimeout(timerRef.current);
-                              if (e.key === "ArrowLeft") {
-                                timerRef.current = setTimeout(() => {
-                                  inputRefs.current[0][`${"product_wholesale_unit_price_0"}`].focus();
-                                }, 100);
-                              }
-                            }}
-                            className="form-control"
-                            placeholder="Retail Unit Price"
-                            onChange={(e) => {
-                              if (timerRef.current) clearTimeout(timerRef.current);
-
-                              delete errors["retail_unit_price"];
-                              setErrors({ ...errors });
-                              if (!e.target.value) {
-                                productStores[localStorage.getItem('store_id')].retail_unit_price = "";
-                                setProductStores({ ...productStores });
-                                return;
-                              }
-
-                              if (parseFloat(e.target.value) < 0) {
-                                errors["retail_unit_price_0"] =
-                                  "Retail Unit Price should not be < 0";
-                                productStores[localStorage.getItem('store_id')].retail_unit_price = "";
-
-                                setProductStores({ ...productStores });
-                                setErrors({ ...errors });
-                                console.log("errors:", errors);
-                                return;
-                              }
-
-                              console.log("e.target.value:", e.target.value);
-
-                              productStores[localStorage.getItem('store_id')].retail_unit_price = parseFloat(e.target.value);
-                              setProductStores({ ...productStores });
-
-                              timerRef.current = setTimeout(() => {
-                                productStores[localStorage.getItem('store_id')].retail_unit_price_with_vat = parseFloat(trimTo8Decimals(productStores[localStorage.getItem('store_id')].retail_unit_price * (1 + (store.vat_percent / 100))));
-                                setProductStores({ ...productStores });
-                              }, 100);
-
-                            }}
-                          />{" "}
-                          {errors["retail_unit_price"] && (
-                            <div style={{ color: "red" }}>
-                              {errors["retail_unit_price"]}
-                            </div>
-                          )}
-                        </td>
-                      </tr>
-                      <tr className="text-center">
-                        <th>Purchase Unit Price(with VAT)</th>
-                        <th>Wholesale Unit Price(with VAT)</th>
-                        <th>Retail Unit Price(with VAT)</th>
-                      </tr>
-                      <tr className="text-center">
-                        {!localStorage.getItem('store_id') ? <td style={{ width: "150px" }}>{store.name}</td> : ""}
-                        <td style={{ width: "150px" }}>
-                          <input
-                            id={`${"product_purchase_unit_price_with_vat_0"}`}
-                            name={`${"product_purchase_unit_price_with_vat_0"}`}
-                            disabled={formData.set?.purchase_total_with_vat}
-                            type="number"
-                            value={
-                              productStores[localStorage.getItem('store_id')]?.purchase_unit_price_with_vat || productStores[localStorage.getItem('store_id')]?.purchase_unit_price_with_vat === 0
-                                ? productStores[localStorage.getItem('store_id')]?.purchase_unit_price_with_vat
-                                : ""
-                            }
-                            ref={(el) => {
-                              if (!inputRefs.current[0]) inputRefs.current[0] = {};
-                              inputRefs.current[0][`${"product_purchase_unit_price_with_vat_0"}`] = el;
-                            }}
-                            onFocus={() => {
-                              if (timerRef.current) clearTimeout(timerRef.current);
-                              timerRef.current = setTimeout(() => {
-                                inputRefs.current[0][`${"product_purchase_unit_price_with_vat_0"}`]?.select();
-                              }, 100);
-                            }}
-                            onKeyDown={(e) => {
-                              if (timerRef.current) clearTimeout(timerRef.current);
-                              if (e.key === "Enter") {
-                                timerRef.current = setTimeout(() => {
-                                  inputRefs.current[0][`${"product_wholesale_unit_price_with_vat_0"}`]?.select();
-                                }, 100);
-
-                              } /*else if (e.key ===  "ArrowLeft") {
-                                timerRef.current = setTimeout(() => {
-                                  inputRefs.current[index][`${"sales_product_unit_price_with_vat_" + index}`].focus();
-                                }, 100);
-                              }*/
-
-                              if (e.key === "ArrowLeft") {
-                                timerRef.current = setTimeout(() => {
-                                  inputRefs.current[0][`${"product_retail_unit_price_0"}`].focus();
-                                }, 100);
-                              }
-
-                            }}
-                            className="form-control"
-                            placeholder="Purchase Unit Price with VAT"
-                            onChange={(e) => {
-                              if (timerRef.current) clearTimeout(timerRef.current);
-
-                              delete errors["purchase_unit_price_with_vat_0"];
-                              setErrors({ ...errors });
-
-                              if (!e.target.value) {
-                                productStores[localStorage.getItem('store_id')].purchase_unit_price_with_vat = "";
-                                setProductStores({ ...productStores });
-                                console.log("errors:", errors);
-                                return;
-                              }
-                              if (parseFloat(e.target.value) < 0) {
-                                productStores[localStorage.getItem('store_id')].purchase_unit_price_with_vat = "";
-                                setProductStores({ ...productStores });
-
-                                errors["purchase_unit_price_with_vat_0"] =
-                                  "Purchase Unit Price with VAT should not be < 0";
-                                setErrors({ ...errors });
-                                return;
-                              }
-
-                              productStores[localStorage.getItem('store_id')].purchase_unit_price_with_vat = parseFloat(e.target.value);
-                              setProductStores({ ...productStores });
-
-                              timerRef.current = setTimeout(() => {
-                                productStores[localStorage.getItem('store_id')].purchase_unit_price = parseFloat(trimTo8Decimals(productStores[localStorage.getItem('store_id')].purchase_unit_price_with_vat / (1 + (store.vat_percent / 100))));
-                                setProductStores({ ...productStores });
-                              }, 100);
-
-                            }}
-                          />{" "}
-                          {errors["purchase_unit_price_with_vat_0"] && (
-                            <div style={{ color: "red" }}>
-                              {errors["purchase_unit_price_with_vat_0"]}
-                            </div>
-                          )}
-                        </td>
-                        <td style={{ width: "150px" }}>
-                          <input
-                            id={`${"product_wholesale_unit_price_with_vat"}`}
-                            name={`${"product_wholesale_unit_price_with_vat"}`}
-                            type="number"
-                            value={
-                              productStores[localStorage.getItem('store_id')]?.wholesale_unit_price_with_vat || productStores[localStorage.getItem('store_id')]?.wholesale_unit_price_with_vat === 0
-                                ? productStores[localStorage.getItem('store_id')]?.wholesale_unit_price_with_vat
-                                : ""
-                            }
-                            ref={(el) => {
-                              if (!inputRefs.current[0]) inputRefs.current[0] = {};
-                              inputRefs.current[0][`${"product_wholesale_unit_price_with_vat_0"}`] = el;
-                            }}
-                            onFocus={() => {
-                              if (timerRef.current) clearTimeout(timerRef.current);
-                              timerRef.current = setTimeout(() => {
-                                inputRefs.current[0][`${"product_wholesale_unit_price_with_vat_0"}`]?.select();
-                              }, 100);
-                            }}
-                            onKeyDown={(e) => {
-                              if (timerRef.current) clearTimeout(timerRef.current);
-                              if (e.key === "Enter") {
-                                timerRef.current = setTimeout(() => {
-                                  inputRefs.current[0][`${"product_retail_unit_price_with_vat_0"}`]?.select();
-                                }, 100);
-
-                              } else if (e.key === "ArrowLeft") {
-                                timerRef.current = setTimeout(() => {
-                                  inputRefs.current[0][`${"product_purchase_unit_price_with_vat_0"}`].focus();
-                                }, 100);
-                              }
-                            }}
-                            className="form-control"
-                            placeholder="Wholesale Unit Price with VAT"
-                            onChange={(e) => {
-                              if (timerRef.current) clearTimeout(timerRef.current);
-
-                              delete errors["wholesale_unit_price_with_vat"];
-                              setErrors({ ...errors });
-
-                              if (!e.target.value) {
-                                productStores[localStorage.getItem('store_id')].wholesale_unit_price_with_vat = "";
-                                setProductStores({ ...productStores });
-                                return;
-                              }
-
-                              if (parseFloat(e.target.value) < 0) {
-                                productStores[localStorage.getItem('store_id')].wholesale_unit_price_with_vat = "";
-                                setProductStores({ ...productStores });
-
-                                errors["wholesale_unit_price_with_vat"] =
-                                  "Wholesale unit price with VAT should not be < 0";
-                                setErrors({ ...errors });
-                                return;
-                              }
-
-                              productStores[localStorage.getItem('store_id')].wholesale_unit_price_with_vat = parseFloat(e.target.value);
-                              setProductStores({ ...productStores });
-
-                              timerRef.current = setTimeout(() => {
-                                productStores[localStorage.getItem('store_id')].wholesale_unit_price = parseFloat(trimTo8Decimals(productStores[localStorage.getItem('store_id')].wholesale_unit_price_with_vat / (1 + (store.vat_percent / 100))));
-                                setProductStores({ ...productStores });
-                              }, 100);
-
-                            }}
-                          />
-                          {errors["wholesale_unit_price_with_vat"] && (
-                            <div style={{ color: "red" }}>
-                              {errors["wholesale_unit_price_with_vat"]}
-                            </div>
-                          )}
-                        </td>
-                        <td style={{ width: "150px" }}>
-                          <input
-                            id={`${"product_retail_unit_price_with_vat"}`}
-                            name={`${"product_retail_unit_price_with_vat"}`}
-                            type="number"
-                            disabled={formData.set?.total}
-                            value={
-                              productStores[localStorage.getItem('store_id')]?.retail_unit_price_with_vat || productStores[localStorage.getItem('store_id')]?.retail_unit_price_with_vat === 0
-                                ? productStores[localStorage.getItem('store_id')]?.retail_unit_price_with_vat
-                                : ""
-                            }
-                            ref={(el) => {
-                              if (!inputRefs.current[0]) inputRefs.current[0] = {};
-                              inputRefs.current[0][`${"product_retail_unit_price_with_vat_0"}`] = el;
-                            }}
-                            onFocus={() => {
-                              if (timerRef.current) clearTimeout(timerRef.current);
-                              timerRef.current = setTimeout(() => {
-                                inputRefs.current[0][`${"product_retail_unit_price_with_vat_0"}`]?.select();
-                              }, 100);
-                            }}
-                            onKeyDown={(e) => {
-                              if (timerRef.current) clearTimeout(timerRef.current);
-                              if (e.key === "ArrowLeft") {
-                                timerRef.current = setTimeout(() => {
-                                  inputRefs.current[0][`${"product_wholesale_unit_price_with_vat_0"}`].focus();
-                                }, 100);
-                              }
-                            }}
-                            className="form-control"
-                            placeholder="Retail Unit Price with VAT"
-                            onChange={(e) => {
-                              if (timerRef.current) clearTimeout(timerRef.current);
-
-                              delete errors["retail_unit_price_with_vat"];
-                              setErrors({ ...errors });
-                              if (!e.target.value) {
-                                productStores[localStorage.getItem('store_id')].retail_unit_price_with_vat = "";
-                                setProductStores({ ...productStores });
-                                return;
-                              }
-
-                              if (parseFloat(e.target.value) < 0) {
-                                errors["retail_unit_price_with_vat_0"] =
-                                  "Retail Unit Price with VAT should not be < 0";
-                                productStores[localStorage.getItem('store_id')].retail_unit_price_with_vat = "";
-
-                                setProductStores({ ...productStores });
-                                setErrors({ ...errors });
-                                console.log("errors:", errors);
-                                return;
-                              }
-
-                              console.log("e.target.value:", e.target.value);
-
-                              productStores[localStorage.getItem('store_id')].retail_unit_price_with_vat = parseFloat(
-                                e.target.value
-                              );
-                              setProductStores({ ...productStores });
-
-                              timerRef.current = setTimeout(() => {
-                                productStores[localStorage.getItem('store_id')].retail_unit_price = parseFloat(trimTo8Decimals(productStores[localStorage.getItem('store_id')].retail_unit_price_with_vat / (1 + (store.vat_percent / 100))));
-                                setProductStores({ ...productStores });
-                              }, 100);
-
-                            }}
-                          />{" "}
-                          {errors["retail_unit_price_with_vat"] && (
-                            <div style={{ color: "red" }}>
-                              {errors["retail_unit_price_with_vat"]}
-                            </div>
-                          )}
-                        </td>
-                      </tr>
-                    </tbody>
-                  </table>
-                </div>
-
-                {/* Category */}
-                <div style={{ flex: "0 0 220px", width: "220px" }}>
-                  <label className="form-label">Category</label>
-                  <div className="d-flex align-items-center gap-1">
-                    <div style={{ flex: 1, minWidth: 0 }}>
-                      <Typeahead
-                        ref={categorySearchRef}
-                        id="category_id"
-                        labelKey="name"
-                        positionFixed={true}
-                        isInvalid={errors.category_id ? true : false}
-                        onChange={(selectedItems) => {
-                          errors.category_id = "";
-                          setErrors(errors);
-                          if (selectedItems.length === 0) {
-                            errors.category_id = "Invalid Category selected";
-                            setErrors(errors);
-                            setFormData({ ...formData });
-                            setSelectedCategories([]);
-                            return;
-                          }
-                          setFormData({ ...formData });
-                          setSelectedCategories(selectedItems);
-                        }}
-                        options={categoryOptions}
-                        placeholder="Select Categories"
-                        selected={selectedCategories}
-                        highlightOnlyResult={true}
-                        onInputChange={(searchTerm, e) => {
-                          suggestCategories(searchTerm);
-                        }}
-                        onKeyDown={(e) => {
-                          if (e.key === "Escape") {
-                            setCategoryOptions([]);
-                            categorySearchRef.current?.clear();
-                          }
-                        }}
-                      />
-                    </div>
-                    <Button
-                      hide={true.toString()}
-                      onClick={openProductCategoryCreateForm}
-                      className="btn btn-primary btn-sm"
-                      type="button"
-                      style={{ whiteSpace: "nowrap", flexShrink: 0 }}
-                    >
-                      <i className="bi bi-plus-lg"></i> New
-                    </Button>
-                  </div>
-                  {errors.category_id && (
-                    <div style={{ color: "red" }}>{errors.category_id}</div>
+                  onMouseEnter={(e) => { if (activeTab !== tab.id) e.currentTarget.style.background = '#e0e3e5'; }}
+                  onMouseLeave={(e) => { if (activeTab !== tab.id) e.currentTarget.style.background = 'transparent'; }}
+                >
+                  <i className={`bi ${tab.icon}`} style={{ fontSize: '15px', flexShrink: 0 }}></i>
+                  <span style={{ flex: 1 }}>{tab.label}</span>
+                  {tabErrorCounts[tab.id] > 0 && (
+                    <span style={{
+                      background: '#ba1a1a', color: '#fff', borderRadius: '50%',
+                      width: '18px', height: '18px', fontSize: '10px', fontWeight: 700,
+                      display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+                      flexShrink: 0,
+                    }}>
+                      {tabErrorCounts[tab.id]}
+                    </span>
                   )}
-                </div>
+                </button>
+              ))}
+            </aside>
 
-                {/* Unit */}
-                <div style={{ flex: "0 0 130px", width: "130px" }}>
-                  <label className="form-label">Unit*</label>
-                  <select
-                    className="form-control"
-                    value={formData.unit}
-                    onChange={(e) => {
-                      formData.unit = e.target.value;
-                      setFormData({ ...formData });
-                    }}
-                  >
-                    <option value="">PC</option>
-                    <option value="drum">Drum</option>
-                    <option value="set">Set</option>
-                    <option value="Kg">Kg</option>
-                    <option value="Meter(s)">Meter(s)</option>
-                    <option value="CMT">Centi Meter(s)</option>
-                    <option value="MMT">Milli Meter(s)</option>
-                    <option value="Gm">Gm</option>
-                    <option value="L">Liter (L)</option>
-                    <option value="Mg">Mg</option>
-                  </select>
-                </div>
+            {/* Main Content Area */}
+            <div className="pw-content">
 
-
-              </div>
-            </div>
-
-            {store?.settings?.enable_warehouse_module && (
-              <div className="col-12">
-                <div className="d-flex align-items-start gap-4 flex-wrap">
-                  <div>
-                    <label className="form-label">Rack / Location</label>
-                    <table className="table table-sm table-bordered" style={{ maxWidth: "500px" }}>
-                      <tbody>
-                        <tr>
-                          <td style={{ width: "220px" }}><b>Main Store</b></td>
-                          <td>
-                            <input
-                              type="text"
-                              className="form-control form-control-sm"
-                              value={productStores[localStorage.getItem('store_id')]?.warehouse_racks?.main_store || ""}
-                              onChange={(e) => {
-                                const storeId = localStorage.getItem('store_id');
-                                if (!productStores[storeId].warehouse_racks) {
-                                  productStores[storeId].warehouse_racks = {};
-                                }
-                                productStores[storeId].warehouse_racks.main_store = e.target.value;
-                                setProductStores({ ...productStores });
-                              }}
-                              placeholder="Rack/Location"
-                            />
-                          </td>
-                        </tr>
-                        {warehouseList.map((wh) => (
-                          <tr key={wh.id}>
-                            <td><b>{wh.name} ({wh.code})</b></td>
-                            <td>
-                              <input
-                                type="text"
-                                className="form-control form-control-sm"
-                                value={productStores[localStorage.getItem('store_id')]?.warehouse_racks?.[wh.code] || ""}
-                                onChange={(e) => {
-                                  const storeId = localStorage.getItem('store_id');
-                                  if (!productStores[storeId].warehouse_racks) {
-                                    productStores[storeId].warehouse_racks = {};
-                                  }
-                                  productStores[storeId].warehouse_racks[wh.code] = e.target.value;
-                                  setProductStores({ ...productStores });
-                                }}
-                                placeholder="Rack/Location"
-                              />
-                            </td>
-                          </tr>
+              {/* ── Error Summary (always visible across all tabs) ── */}
+              {totalErrors > 0 && (
+                <div style={{ background: '#ffdad6', border: '1px solid #f4adaa', borderRadius: '8px', padding: '12px 16px', marginBottom: '16px' }}>
+                  <div style={{ fontFamily: '"Inter", sans-serif', fontWeight: 700, color: '#93000a', marginBottom: '8px', fontSize: '13px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    <i className="bi bi-exclamation-circle-fill" style={{ fontSize: '14px' }}></i>
+                    {totalErrors} error{totalErrors > 1 ? 's' : ''} — please fix before saving:
+                  </div>
+                  {NAV_TABS.map((tab) => {
+                    const tabErrs = allErrors.filter(([k]) => getErrorTab(k) === tab.id);
+                    if (!tabErrs.length) return null;
+                    return (
+                      <div key={tab.id} style={{ marginBottom: '6px' }}>
+                        <button type="button" onClick={() => setActiveTab(tab.id)}
+                          style={{ background: 'none', border: 'none', padding: 0, fontFamily: '"Inter", sans-serif', fontWeight: 700, color: '#004ac6', cursor: 'pointer', fontSize: '12px', textDecoration: 'underline', display: 'block', marginBottom: '2px' }}>
+                          {tab.label}:
+                        </button>
+                        {tabErrs.map(([k, v]) => (
+                          <div key={k} style={{ fontFamily: '"Inter", sans-serif', fontSize: '12px', color: '#93000a', paddingLeft: '10px' }}>• {v}</div>
                         ))}
-                      </tbody>
-                    </table>
-                  </div>
+                      </div>
+                    );
+                  })}
                 </div>
-              </div>
-            )}
-
-            <div className="col-auto" style={{ alignSelf: "center" }}>
-              <div className="d-flex align-items-center gap-2">
-                <input
-                  type="checkbox"
-                  style={{ width: "18px", height: "18px" }}
-                  value={formData.allow_duplicates}
-                  checked={formData.allow_duplicates}
-                  onChange={(e) => {
-                    errors["formData.allow_duplicates"] = "";
-                    formData.allow_duplicates = !formData.allow_duplicates;
-                    setFormData({ ...formData });
-                  }}
-                  id="formData.allow_duplicates"
-                />
-                <label htmlFor="formData.allow_duplicates" style={{ marginBottom: 0, cursor: "pointer" }}>
-                  Allow duplicates in Sales, Purchases etc
-                </label>
-              </div>
-              {errors.allow_duplicates && (
-                <div style={{ color: "red" }}>{errors.allow_duplicates}</div>
               )}
-            </div>
 
+              {/* ===== TAB 1: BASIC INFO ===== */}
+              {activeTab === 'basic' && (
+                <div className="pw-tab-wrap">
 
-            <div className="row">
-              <div className="col-auto" style={{ minWidth: "700px" }}>
-                <h4>Stock Adjustments</h4>
-                <div className="table-responsive" style={{ overflowX: "auto" }}>
-                  <table className="table table-striped table-sm table-bordered">
-                    <thead>
-                      <tr className="text-center">
-                        <th>Damaged/Missing Stock</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      <tr className="text-center">
-                        <td style={{ width: "150px" }}>
-                          <input
-                            id={`${"product_damaged_stock_0"}`}
-                            name={`${"product_damaged_stock_0"}`}
-                            value={damagedStock}
-                            type="number"
-                            onChange={(e) => {
-                              errors["damaged_stock_0"] = "";
-                              setErrors({ ...errors });
+                  <div className="pw-card" style={CARD}>
+                    <SectionTitle icon="bi-person-badge">Product Identity</SectionTitle>
+                    <div className="row g-3">
+                      <div className="col-md-6">
+                        <Label required>Name</Label>
+                        <input id="product_name" name="product_name" type="text"
+                          value={formData.name || ''}
+                          onChange={(e) => {
+                            errors['name'] = ''; setErrors({ ...errors });
+                            formData.name = e.target.value; setFormData({ ...formData });
+                            if (timerRef.current) clearTimeout(timerRef.current);
+                            timerRef.current = setTimeout(() => { translateText(e.target.value); }, 100);
+                          }}
+                          style={INPUT} placeholder="Product name"
+                        />
+                        {errors.name && <ErrMsg>{errors.name}</ErrMsg>}
+                      </div>
+                      <div className="col-md-6">
+                        <Label>Name in Arabic</Label>
+                        <input id="product_name_arabic" name="product_name_arabic" type="text"
+                          value={formData.name_in_arabic || ''}
+                          onChange={(e) => { errors['name_in_arabic'] = ''; setErrors({ ...errors }); formData.name_in_arabic = e.target.value; setFormData({ ...formData }); }}
+                          style={{ ...INPUT, direction: 'rtl' }} placeholder="الاسم بالعربية"
+                        />
+                        {errors.name_in_arabic && <ErrMsg>{errors.name_in_arabic}</ErrMsg>}
+                      </div>
+                    </div>
+                  </div>
 
-                              /*if (!e.target.value) {
-                                 productStores[localStorage.getItem('store_id')].damaged_stock = "";
-                                 setProductStores({ ...productStores });
-                                 //errors["stock_" + index] = "Invalid Stock value";
-                                 //setErrors({ ...errors });
-                                 return;
-                               }
-       
-                               productStores[localStorage.getItem('store_id')].damaged_stock = parseFloat(e.target.value);
-                               */
-                              setDamagedStock(parseFloat(e.target.value));
-                              setOperationType(null); // reset choice
+                  <div className="pw-card" style={CARD}>
+                    <SectionTitle icon="bi-tags">Classification</SectionTitle>
+                    <div className="row g-3">
+                      <div className="col-md-4">
+                        <Label>Brand</Label>
+                        <div className="d-flex gap-1">
+                          <div style={{ flex: 1, minWidth: 0 }}>
+                            <Typeahead id="brand_id" labelKey="name" positionFixed={true} isLoading={isBrandsLoading}
+                              onChange={(selectedItems) => {
+                                errors.brand_id = ''; setErrors(errors);
+                                if (selectedItems.length === 0) { formData.brand_id = ''; formData.brand_code = ''; formData.brand_name = ''; makePartNumberPrefix(); setFormData({ ...formData }); setSelectedBrands([]); return; }
+                                formData.brand_id = selectedItems[0].id; formData.brand_code = selectedItems[0].code; formData.brand_name = selectedItems[0].name;
+                                makePartNumberPrefix(); setFormData({ ...formData }); setSelectedBrands(selectedItems);
+                              }}
+                              options={brandOptions} placeholder="Brand name" selected={selectedBrands} highlightOnlyResult={true} ref={brandSearchRef}
+                              onKeyDown={(e) => { if (e.key === 'Escape') { setBrandOptions([]); brandSearchRef.current?.clear(); } }}
+                              onInputChange={(searchTerm) => { suggestBrands(searchTerm); }}
+                            />
+                          </div>
+                          <button type="button" onClick={openProductBrandCreateForm} style={ICON_BTN} title="New Brand">
+                            <i className="bi bi-plus-lg"></i>
+                          </button>
+                        </div>
+                      </div>
+                      <div className="col-md-4">
+                        <Label>Country of Origin</Label>
+                        <Typeahead id="country_code" labelKey="label" positionFixed={true}
+                          onChange={(selectedItems) => {
+                            errors.country_code = ''; setErrors(errors);
+                            if (selectedItems.length === 0) { formData.country_code = ''; formData.country_name = ''; makePartNumberPrefix(); setFormData({ ...formData }); setSelectedCountries([]); return; }
+                            formData.country_code = selectedItems[0].value; formData.country_name = selectedItems[0].label;
+                            makePartNumberPrefix(); setFormData({ ...formData }); setSelectedCountries(selectedItems);
+                          }}
+                          options={countryOptions} placeholder="Country name" selected={selectedCountries} highlightOnlyResult={true} ref={countrySearchRef}
+                          onKeyDown={(e) => { if (e.key === 'Escape') { countrySearchRef.current?.clear(); } }}
+                          onInputChange={() => {}}
+                        />
+                      </div>
+                      <div className="col-md-2">
+                        <Label>Part No. Prefix</Label>
+                        <input id="product_prefix_part_no" name="product_prefix_part_no" type="text"
+                          value={formData.prefix_part_number || ''}
+                          onChange={(e) => { errors['part_number'] = ''; setErrors({ ...errors }); formData.prefix_part_number = e.target.value; setFormData({ ...formData }); }}
+                          style={INPUT} placeholder="Prefix"
+                        />
+                        {errors.prefix_part_number && <ErrMsg>{errors.prefix_part_number}</ErrMsg>}
+                      </div>
+                      <div className="col-md-2">
+                        <Label>Part No.</Label>
+                        <input id="product_part_no" name="product_part_no" type="text"
+                          value={formData.part_number || ''}
+                          onChange={(e) => { errors['part_number'] = ''; setErrors({ ...errors }); formData.part_number = e.target.value; setFormData({ ...formData }); }}
+                          style={INPUT} placeholder="Part Number"
+                        />
+                        {errors.part_number && <ErrMsg>{errors.part_number}</ErrMsg>}
+                      </div>
+                      <div className="col-md-4">
+                        <Label>Category</Label>
+                        <div className="d-flex gap-1">
+                          <div style={{ flex: 1, minWidth: 0 }}>
+                            <Typeahead ref={categorySearchRef} id="category_id" labelKey="name" positionFixed={true}
+                              isInvalid={errors.category_id ? true : false}
+                              onChange={(selectedItems) => {
+                                errors.category_id = ''; setErrors(errors);
+                                if (selectedItems.length === 0) { errors.category_id = 'Invalid Category selected'; setErrors(errors); setSelectedCategories([]); return; }
+                                setFormData({ ...formData }); setSelectedCategories(selectedItems);
+                              }}
+                              options={categoryOptions} placeholder="Select Category" selected={selectedCategories} highlightOnlyResult={true}
+                              onInputChange={(searchTerm) => { suggestCategories(searchTerm); }}
+                              onKeyDown={(e) => { if (e.key === 'Escape') { setCategoryOptions([]); categorySearchRef.current?.clear(); } }}
+                            />
+                          </div>
+                          <button type="button" onClick={openProductCategoryCreateForm} style={ICON_BTN} title="New Category">
+                            <i className="bi bi-plus-lg"></i>
+                          </button>
+                        </div>
+                        {errors.category_id && <ErrMsg>{errors.category_id}</ErrMsg>}
+                      </div>
+                      <div className="col-md-2">
+                        <Label required>Unit</Label>
+                        <select className="form-select form-select-sm" value={formData.unit}
+                          onChange={(e) => { formData.unit = e.target.value; setFormData({ ...formData }); }}>
+                          <option value="">PC</option>
+                          <option value="drum">Drum</option>
+                          <option value="set">Set</option>
+                          <option value="Kg">Kg</option>
+                          <option value="Meter(s)">Meter(s)</option>
+                          <option value="CMT">Centi Meter(s)</option>
+                          <option value="MMT">Milli Meter(s)</option>
+                          <option value="Gm">Gm</option>
+                          <option value="L">Liter (L)</option>
+                          <option value="Mg">Mg</option>
+                        </select>
+                      </div>
+                    </div>
+                  </div>
 
-                            }}
-                            className="form-control"
-                            placeholder="Damaged stock"
+                  {!store?.settings?.enable_warehouse_module && (
+                    <div className="pw-card" style={CARD}>
+                      <SectionTitle icon="bi-geo-alt">Rack / Location</SectionTitle>
+                      <div className="row">
+                        <div className="col-md-4">
+                          <Label>Rack / Location</Label>
+                          <input id="product_rack" name="product_rack" type="text"
+                            value={formData.rack || ''}
+                            onChange={(e) => { formData.rack = e.target.value; setFormData({ ...formData }); }}
+                            style={INPUT} placeholder="Rack / Location"
                           />
-                          {errors["damaged_stock_0"] && (
-                            <div style={{ color: "red" }}>
-                              {errors["damaged_stock_0"]}
-                            </div>
-                          )}
-                        </td>
-                      </tr>
-                      <tr>
-                        <td colSpan={1}>
-                          {damagedStock && !operationType && (
-                            <div className="mt-2">
-                              <button className="btn btn-success me-2" onClick={(e) => {
-                                e.preventDefault();
-                                if (!productStores[localStorage.getItem('store_id')].stocks_added) {
-                                  productStores[localStorage.getItem('store_id')].stocks_added = 0.00;
-                                }
+                          {errors.rack && <ErrMsg>{errors.rack}</ErrMsg>}
+                        </div>
+                      </div>
+                    </div>
+                  )}
 
-                                if (!productStores[localStorage.getItem('store_id')].stock) {
-                                  productStores[localStorage.getItem('store_id')].stock = 0.00;
-                                }
-
-                                // productStores[localStorage.getItem('store_id')].stocks_added += parseFloat(damagedStock);
-                                //productStores[localStorage.getItem('store_id')].stock += parseFloat(damagedStock);
-                                addStockAdjustment(parseFloat(damagedStock), "added")
-                                setProductStores({ ...productStores });
-                                damagedStock = "";
-                                setDamagedStock(damagedStock);
-
-
-
-                              }}>Add</button>
-                              <button className="btn btn-danger" onClick={(e) => {
-                                e.preventDefault();
-
-                                if (!productStores[localStorage.getItem('store_id')].stocks_removed) {
-                                  productStores[localStorage.getItem('store_id')].stocks_removed = 0.00;
-                                }
-
-                                if (!productStores[localStorage.getItem('store_id')].stock) {
-                                  productStores[localStorage.getItem('store_id')].stock = 0.00;
-                                }
-
-                                //productStores[localStorage.getItem('store_id')].stocks_removed += parseFloat(damagedStock);
-                                //productStores[localStorage.getItem('store_id')].stock -= parseFloat(damagedStock);
-                                addStockAdjustment(parseFloat(damagedStock), "removed")
-                                setProductStores({ ...productStores });
-                                damagedStock = "";
-                                setDamagedStock(damagedStock);
-
-
-
-                              }}>Remove</button>
-                            </div>
-                          )}
-
-                          <div className="">
-                            <div class="table-responsive" style={{ maxWidth: "1200px" }}>
-                              <Button variant="secondary" style={{ alignContent: "right", marginBottom: "10px" }} onClick={() => {
-                                addStockAdjustment();
-                              }}>
-                                Create Stock Adjustment
-                              </Button>
-                              <table class="table table-striped table-sm table-bordered">
-                                {productStores[localStorage.getItem('store_id')]?.stock_adjustments && productStores[localStorage.getItem('store_id')].stock_adjustments?.length > 0 &&
-                                  <thead>
-                                    <th style={{ textAlign: "center" }}>
-                                      Date
-                                    </th>
-                                    <th style={{ textAlign: "center" }}>
-                                      Quantity
-                                    </th>
-                                    <th style={{ textAlign: "center" }}>
-                                      Add/Remove
-                                    </th>
-                                    <th style={{ textAlign: "center" }}>Warehouse/Store</th>
-                                    <th style={{ textAlign: "center" }}>Reason</th>
-                                    <th style={{ textAlign: "center" }}>
-                                      Action
-                                    </th>
-                                  </thead>}
-                                <tbody>
-                                  {productStores[localStorage.getItem('store_id')]?.stock_adjustments &&
-                                    productStores[localStorage.getItem('store_id')].stock_adjustments.filter(adjustment => !adjustment.deleted).map((adjustment, key) => (
-                                      <tr key={key}>
-                                        <td style={{ width: "180px" }}>
-
-                                          <DatePicker
-                                            id="payment_date_str"
-                                            selected={productStores[localStorage.getItem('store_id')].stock_adjustments[key].date_str ? new Date(productStores[localStorage.getItem('store_id')].stock_adjustments[key].date_str) : null}
-                                            value={productStores[localStorage.getItem('store_id')].stock_adjustments[key].date_str ? format(
-                                              new Date(productStores[localStorage.getItem('store_id')].stock_adjustments[key].date_str),
-                                              "MMMM d, yyyy h:mm aa"
-                                            ) : null}
-                                            className="form-control"
-                                            dateFormat="MMMM d, yyyy h:mm aa"
-                                            showTimeSelect
-                                            timeIntervals="1"
-                                            onChange={(value) => {
-                                              console.log("Value", value);
-                                              productStores[localStorage.getItem('store_id')].stock_adjustments[key].date_str = value;
-                                              setProductStores({ ...productStores });
-                                              //setFormData({ ...formData });
-                                            }}
-                                          />
-                                          {errors["adjustment_date_" + key] && (
-                                            <div style={{ color: "red" }}>
-
-                                              {errors["adjustment_date_" + key]}
-                                            </div>
-                                          )}
-                                        </td>
-                                        <td style={{ width: "80px" }}>
-                                          <input
-                                            type='number'
-                                            id={`${"adjustment_quantity_" + key}`}
-                                            name={`${"adjustment_quantity_" + key}`}
-                                            value={productStores[localStorage.getItem('store_id')].stock_adjustments[key].quantity}
-                                            className="form-control"
-                                            ref={(el) => {
-                                              if (!inputRefs.current[key]) inputRefs.current[key] = {};
-                                              inputRefs.current[key][`${"adjustment_quantity_" + key}`] = el;
-                                            }}
-                                            onFocus={() => {
-                                              if (timerRef.current) clearTimeout(timerRef.current);
-                                              timerRef.current = setTimeout(() => {
-                                                inputRefs.current[key][`${"adjustment_quantity_" + key}`]?.select();
-                                              }, 20);
-                                            }}
-                                            onChange={(e) => {
-                                              delete errors["adjustment_quantity_" + key];
-                                              setErrors({ ...errors });
-
-
-                                              if (!e.target.value) {
-                                                productStores[localStorage.getItem('store_id')].stock_adjustments[key].quantity = e.target.value;
-                                                setProductStores({ ...productStores });
-                                                //setFormData({ ...formData });
-                                                //validatePaymentAmounts();
-                                                return;
-                                              }
-
-                                              productStores[localStorage.getItem('store_id')].stock_adjustments[key].quantity = parseFloat(e.target.value);
-
-                                              /*
-      
-                                              if (productStores[localStorage.getItem('store_id')]?.stock_adjustments[key]?.type === "added") {
-                                               // productStores[localStorage.getItem('store_id')].stocks_added += parseFloat(e.target.value);
-                                                productStores[localStorage.getItem('store_id')].stock += parseFloat(e.target.value);
-                                                //alert("Added:" + productStores[localStorage.getItem('store_id')].stocks_added);
-                                              } else if (productStores[localStorage.getItem('store_id')]?.stock_adjustments[key]?.type === "removed") {
-                                               // productStores[localStorage.getItem('store_id')].stocks_removed += parseFloat(e.target.value);
-                                                productStores[localStorage.getItem('store_id')].stock -= parseFloat(e.target.value);
-                                              }*/
-
-
-                                              setProductStores({ ...productStores });
-
-                                              findStocksAdded();
-                                              findStocksRemoved();
-
-                                              // validatePaymentAmounts();
-                                              //setFormData({ ...formData });
-                                              console.log(formData);
-                                            }}
-                                          />
-                                          {errors["adjustment_quantity_" + key] && (
-                                            <div style={{ color: "red" }}>
-                                              {errors["adjustment_quantity_" + key]}
-                                            </div>
-                                          )}
-                                        </td>
-                                        <td style={{ width: "100px" }}>
-                                          <select
-                                            value={productStores[localStorage.getItem('store_id')].stock_adjustments[key].type} className="form-control "
-                                            onChange={(e) => {
-                                              // errors["payment_method"] = [];
-                                              delete errors["adjustment_type_" + key];
-                                              setErrors({ ...errors });
-
-                                              if (!e.target.value) {
-                                                errors["adjustment_type_" + key] = "Type is required";
-                                                setErrors({ ...errors });
-
-                                                productStores[localStorage.getItem('store_id')].stock_adjustments[key].type = "";
-                                                //  setFormData({ ...formData });
-                                                setProductStores({ ...productStores });
-                                                return;
-                                              }
-
-                                              // errors["payment_method"] = "";
-                                              //setErrors({ ...errors });
-
-                                              productStores[localStorage.getItem('store_id')].stock_adjustments[key].type = e.target.value;
-                                              setProductStores({ ...productStores });
-                                              findStocksAdded();
-                                              findStocksRemoved();
-
-                                              //setFormData({ ...formData });
-                                              console.log(formData);
-                                            }}
-                                          >
-                                            <option value="">Select</option>
-                                            <option value="adding">Adding</option>
-                                            <option value="removing">Removing</option>
-                                          </select>
-                                          {errors["adjustment_type_" + key] && (
-                                            <div style={{ color: "red" }}>
-                                              {errors["adjustment_type_" + key]}
-                                            </div>
-                                          )}
-                                        </td>
-                                        <td style={{ width: "130px" }} >
-                                          <select
-                                            id={`adjustment_warehouse_${key}`}
-                                            name={`adjustment_warehouse_${key}`}
-                                            className="form-control"
-                                            value={productStores[localStorage.getItem('store_id')].stock_adjustments[key].warehouse_id || "main_store"}
-                                            onChange={(e) => {
-                                              const selectedValue = e.target.value;
-
-                                              if (selectedValue === "main_store") {
-                                                productStores[localStorage.getItem('store_id')].stock_adjustments[key].warehouse_id = null;
-                                                productStores[localStorage.getItem('store_id')].stock_adjustments[key].warehouse_code = "";
-                                              } else {
-                                                const selectedWarehouse = warehouseList.find(w => w.id === selectedValue);
-                                                if (selectedWarehouse) {
-                                                  productStores[localStorage.getItem('store_id')].stock_adjustments[key].warehouse_id = selectedWarehouse.id;
-                                                  productStores[localStorage.getItem('store_id')].stock_adjustments[key].warehouse_code = selectedWarehouse.code;
-                                                }
-                                              }
-
-                                              setProductStores({ ...productStores });
-                                            }}
-                                          >
-                                            <option value="main_store">Main Store</option>
-                                            {warehouseList.map((warehouse) => (
-                                              <option key={warehouse.id} value={warehouse.id}>
-                                                {warehouse.name} ({warehouse.code})
-                                              </option>
-                                            ))}
-                                          </select>
-                                          {errors[`adjustment_warehouse_${key}`] && (
-                                            <div style={{ color: "red" }}>
-                                              {errors[`adjustment_warehouse_${key}`]}
-                                            </div>
-                                          )}
-                                        </td>
-                                        <td style={{ width: "160px" }}>
-                                          <textarea
-                                            id={`adjustment_reason_${key}`}
-                                            name={`adjustment_reason_${key}`}
-                                            value={productStores[localStorage.getItem('store_id')].stock_adjustments[key].reason || ""}
-                                            className="form-control"
-                                            placeholder="Reason"
-                                            rows={2}
-                                            style={{ resize: "vertical" }}
-                                            onKeyDown={(e) => {
-                                              if (e.key === "Enter") e.stopPropagation();
-                                            }}
-                                            onChange={(e) => {
-                                              productStores[localStorage.getItem('store_id')].stock_adjustments[key].reason = e.target.value;
-                                              setProductStores({ ...productStores });
-                                            }}
-                                          />
-                                        </td>
-                                        <td style={{ width: "36px", textAlign: "center" }}>
-                                          <button
-                                            type="button"
-                                            className="btn btn-sm btn-outline-danger"
-                                            title="Remove"
-                                            onClick={() => removeStockAdjustment(key)}
-                                          >
-                                            <i className="bi bi-trash"></i>
-                                          </button>
-                                        </td>
-                                      </tr>
-                                    ))}
-                                </tbody>
-                              </table>
-                            </div>
-                          </div>
-
-
-
-                          <div className="mt-4">
-                            <h6>Stock Adjustment Summary:</h6>
-                            <ul className="list-unstyled">
-                              <li>
-                                ✅ Total Added: {productStores[localStorage.getItem('store_id')]?.stocks_added ? productStores[localStorage.getItem('store_id')]?.stocks_added : 0.00}
-                              </li>
-                              <li>
-                                ❌ Total Removed:  {productStores[localStorage.getItem('store_id')]?.stocks_removed ? productStores[localStorage.getItem('store_id')]?.stocks_removed : 0.00}
-                              </li>
-                            </ul>
-                          </div>
-                        </td>
-                      </tr>
-                    </tbody>
-                  </table>
-                </div>
-              </div>
-
-              <div className="col-md-2">
-                <h4>Stock</h4>
-                <div className="table-responsive" style={{ maxWidth: "400px", marginBottom: "16px" }}>
-                  <table className="table table-bordered table-sm mb-0">
-                    <thead>
-                      <tr>
-                        <th>Main Store / Warehouse</th>
-                        <th>Stock</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {(() => {
-                        const storeId = localStorage.getItem('store_id');
-                        const productStore = productStores?.[storeId] || {};
-                        const warehousesStocks = productStore.warehouse_stocks || {};
-                        const mainStoreStock = productStore.stock ?? 0;
-
-                        let rows = [];
-                        // Main Store first
-                        const mainStock = warehousesStocks["main_store"] !== undefined ? warehousesStocks["main_store"] : mainStoreStock;
-                        rows.push(
-                          <tr key="main_store">
-                            <td>Main Store</td>
-                            <td>{mainStock}</td>
-                          </tr>
-                        );
-
-                        // Other warehouses from warehouseList
-                        warehouseList.forEach((wh) => {
-                          if (wh.code !== "main_store") {
-                            const whStock = warehousesStocks[wh.code] !== undefined ? warehousesStocks[wh.code] : 0;
-                            rows.push(
-                              <tr key={wh.code}>
-                                <td>{wh.name} ({wh.code})</td>
-                                <td>{whStock}</td>
+                  {store?.settings?.enable_warehouse_module && (
+                    <div className="pw-card" style={CARD}>
+                      <SectionTitle icon="bi-geo-alt">Rack / Location</SectionTitle>
+                      <div style={{ overflowX: 'auto', maxWidth: '560px' }}>
+                        <table style={{ borderCollapse: 'collapse', width: '100%' }}>
+                          <thead>
+                            <tr style={{ background: '#eceef0' }}>
+                              <th style={TH}>Storage Facility</th>
+                              <th style={TH}>Rack / Location</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            <tr style={{ borderBottom: '1px solid #c3c6d7' }}>
+                              <td style={{ ...TD, fontWeight: 600 }}>Main Store</td>
+                              <td style={TD}>
+                                <input type="text" style={INPUT}
+                                  value={productStores[localStorage.getItem('store_id')]?.warehouse_racks?.main_store || ''}
+                                  onChange={(e) => { const storeId = localStorage.getItem('store_id'); if (!productStores[storeId].warehouse_racks) productStores[storeId].warehouse_racks = {}; productStores[storeId].warehouse_racks.main_store = e.target.value; setProductStores({ ...productStores }); }}
+                                  placeholder="Rack/Location"
+                                />
+                              </td>
+                            </tr>
+                            {warehouseList.map((wh) => (
+                              <tr key={wh.id} style={{ borderBottom: '1px solid #c3c6d7' }}>
+                                <td style={{ ...TD, fontWeight: 600 }}>{wh.name} ({wh.code})</td>
+                                <td style={TD}>
+                                  <input type="text" style={INPUT}
+                                    value={productStores[localStorage.getItem('store_id')]?.warehouse_racks?.[wh.code] || ''}
+                                    onChange={(e) => { const storeId = localStorage.getItem('store_id'); if (!productStores[storeId].warehouse_racks) productStores[storeId].warehouse_racks = {}; productStores[storeId].warehouse_racks[wh.code] = e.target.value; setProductStores({ ...productStores }); }}
+                                    placeholder="Rack/Location"
+                                  />
+                                </td>
                               </tr>
-                            );
-                          }
-                        });
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    </div>
+                  )}
 
-                        // Add total row at the end
-                        rows.push(
-                          <tr key="total" style={{ fontWeight: "bold", background: "#f6f6f6" }}>
-                            <td>Total Stock</td>
-                            <td>{productStores[localStorage.getItem('store_id')]?.stock}</td>
-                          </tr>
-                        );
+                  <div className="pw-card" style={{ ...CARD, padding: '16px 24px' }}>
+                    <div className="d-flex align-items-start gap-2">
+                      <input type="checkbox" id="allow_duplicates"
+                        style={{ width: '16px', height: '16px', accentColor: '#004ac6', cursor: 'pointer', flexShrink: 0, marginTop: '2px' }}
+                        checked={formData.allow_duplicates || false}
+                        onChange={() => { formData.allow_duplicates = !formData.allow_duplicates; setFormData({ ...formData }); }}
+                      />
+                      <div>
+                        <label htmlFor="allow_duplicates" style={{ fontFamily: '"Inter", sans-serif', fontSize: '13px', fontWeight: 500, color: '#191c1e', cursor: 'pointer', marginBottom: '2px', display: 'block' }}>
+                          Allow duplicates in Sales, Purchases etc.
+                        </label>
+                        <p style={{ fontFamily: '"Inter", sans-serif', fontSize: '12px', color: '#737686', marginBottom: 0 }}>
+                          System will not flag redundant entries for this product.
+                        </p>
+                      </div>
+                    </div>
+                    {errors.allow_duplicates && <ErrMsg>{errors.allow_duplicates}</ErrMsg>}
+                  </div>
 
-                        return rows;
-                      })()}
-                    </tbody>
-                  </table>
                 </div>
-              </div>
-            </div>
+              )}
 
-            <div className="col-12"><h4>SET</h4></div>
-            <div className="col-md-2">
-              <label className="form-label">Set Name</label>
-              <div className="input-group mb-3">
-                <input
-                  id="set_name"
-                  name="set_name"
-                  value={formData.set?.name ? formData.set.name : ""}
-                  type="string"
-                  onChange={(e) => {
-                    errors["set_name"] = "";
-                    setErrors({ ...errors });
-                    formData.set.name = e.target.value;
-                    formData.name = e.target.value;
-                    setFormData({ ...formData });
-                    console.log(formData);
-                  }}
-                  className="form-control"
-                  placeholder="Set Name"
+              {/* ===== TAB 2: PRICING ===== */}
+              {activeTab === 'pricing' && (
+                <div className="pw-tab-wrap">
+                  <div className="pw-card" style={CARD}>
+                    <SectionTitle icon="bi-currency-dollar">Unit Prices</SectionTitle>
+                    <div className="row g-4 pw-price-cards">
 
-                />
-                {errors.set_name && (
-                  <div style={{ color: "red" }}>
-                    <i className="bi bi-x-lg"> </i>
-                    {errors.set_name}
-                  </div>
-                )}
-              </div>
-            </div>
-
-            <div className="col-md-10">
-              <label className="form-label">Select Products</label>
-              <Typeahead
-                id="set_product_id"
-                labelKey="search_label"
-                emptyLabel=""
-                ref={productSetSearchRef}
-
-                onChange={(selectedItems) => {
-                  if (timerRef.current) clearTimeout(timerRef.current);
-
-                  if (selectedItems.length === 0) {
-                    return;
-                  }
-
-                  AddProductToSet(selectedItems[0])
-                  // setSelectedLinkedProducts(selectedItems);
-
-
-                  timerRef.current = setTimeout(() => {
-                    setOpenProductSetSearchResult(false);
-                    setProductSetOptions([]);
-                    productSetSearchRef.current?.clear();
-                    inputRefs.current[(formData.set.products.length - 1)][`${"set_product_quantity_" + (formData.set.products.length - 1)}`].select();
-                  }, 300);
-
-                  /*
-                  if (timerRef.current) clearTimeout(timerRef.current);
-                  timerRef.current = setTimeout(() => {
-                    inputRefs.current[0][`${"set_product_unit_price_0"}`].select();
-                  }, 100);*/
-
-
-                  /*
-                  setProductOptions([]);
-                  setOpenProductSearchResult(false);
-                  productSearchRef.current?.clear();
-                  */
-                  /*
-                  searchByMultipleValuesField(
-                    "category_id",
-                    selectedItems
-                  );*/
-                }}
-                options={productSetOptions}
-                placeholder="Select Products"
-                highlightOnlyResult={true}
-                open={openProductSetSearchResult}
-                onKeyDown={(e) => {
-                  if (timerRef.current) clearTimeout(timerRef.current);
-                  if (e.key === "Escape") {
-                    timerRef.current = setTimeout(() => {
-                      setOpenProductSetSearchResult(false);
-                      setProductSetOptions([]);
-                      productSetSearchRef.current?.clear();
-                    }, 100);
-                  }
-
-                  timerRef.current = setTimeout(() => {
-                    productSetSearchRef.current?.focus();
-                  }, 100);
-
-                }}
-                onInputChange={(searchTerm, e) => {
-                  suggestProducts(searchTerm, "set");
-
-                }}
-
-                renderMenu={(results, menuProps, state) => {
-                  const searchWords = state.text.toLowerCase().split(" ").filter(Boolean);
-
-                  return (
-                    <Menu {...menuProps}>
-                      {/* Header */}
-                      <MenuItem disabled style={{ position: 'sticky', top: 0, padding: 0, margin: 0 }}>
-                        <div style={{
-                          background: '#f8f9fa',
-                          zIndex: 2,
-                          display: 'flex',
-                          fontWeight: 'bold',
-                          padding: '4px 8px',
-                          border: "solid 0px",
-                          borderBottom: '1px solid #ddd',
-                        }}>
-                          <div style={{ width: '3%', border: "solid 0px", }}></div>
-                          <div style={{ width: '14%', border: "solid 0px", }}>Part Number</div>
-                          <div style={{ width: '29%', border: "solid 0px", }}>Name</div>
-                          <div style={{ width: '10%', border: "solid 0px", }}>S.Unit Price</div>
-                          <div style={{ width: '13%', border: "solid 0px", }}>Stock</div>
-                          <div style={{ width: '5%', border: "solid 0px", }}>Photos</div>
-                          <div style={{ width: '8%', border: "solid 0px", }}>Brand</div>
-                          <div style={{ width: '10%' }}>P.Unit Price</div>
-                          <div style={{ width: '8%', border: "solid 0px", }}>Country</div>
+                      {/* Purchase Price Card */}
+                      <div className="col-md-4">
+                        <div style={PRICE_CARD}>
+                          <div style={PRICE_CARD_LABEL}>Purchase Unit Price</div>
+                          <div style={{ marginBottom: '16px' }}>
+                            <div style={PRICE_SUB_LABEL}>Excl. VAT</div>
+                            <input id="product_purchase_unit_price_0" name="product_purchase_unit_price_0" type="number"
+                              value={productStores[localStorage.getItem('store_id')]?.purchase_unit_price}
+                              disabled={formData.set?.purchase_total}
+                              ref={(el) => { if (!inputRefs.current[0]) inputRefs.current[0] = {}; inputRefs.current[0]['product_purchase_unit_price_0'] = el; }}
+                              onFocus={() => { if (timerRef.current) clearTimeout(timerRef.current); timerRef.current = setTimeout(() => { inputRefs.current[0]['product_purchase_unit_price_0']?.select(); }, 100); }}
+                              onKeyDown={(e) => { if (timerRef.current) clearTimeout(timerRef.current); if (e.key === 'Enter') { timerRef.current = setTimeout(() => { inputRefs.current[0]['product_wholesale_unit_price_0']?.select(); }, 100); } }}
+                              style={PRICE_INPUT} placeholder="0.00"
+                              onChange={(e) => {
+                                if (timerRef.current) clearTimeout(timerRef.current);
+                                delete errors['purchase_unit_price_0']; setErrors({ ...errors });
+                                if (!e.target.value) { productStores[localStorage.getItem('store_id')].purchase_unit_price = ''; setProductStores({ ...productStores }); return; }
+                                if (parseFloat(e.target.value) < 0) { productStores[localStorage.getItem('store_id')].purchase_unit_price = ''; setProductStores({ ...productStores }); errors['purchase_unit_price_0'] = 'Purchase Unit Price should not be < 0'; setErrors({ ...errors }); return; }
+                                productStores[localStorage.getItem('store_id')].purchase_unit_price = parseFloat(e.target.value); setProductStores({ ...productStores });
+                                timerRef.current = setTimeout(() => { productStores[localStorage.getItem('store_id')].purchase_unit_price_with_vat = parseFloat(trimTo8Decimals(productStores[localStorage.getItem('store_id')].purchase_unit_price * (1 + (store.vat_percent / 100)))); setProductStores({ ...productStores }); }, 100);
+                              }}
+                            />
+                            {errors['purchase_unit_price_0'] && <ErrMsg>{errors['purchase_unit_price_0']}</ErrMsg>}
+                          </div>
+                          <div style={{ borderTop: '1px solid #e0e3e5', paddingTop: '14px' }}>
+                            <div style={PRICE_SUB_LABEL}>Incl. VAT</div>
+                            <input id="product_purchase_unit_price_with_vat_0" name="product_purchase_unit_price_with_vat_0" type="number"
+                              disabled={formData.set?.purchase_total_with_vat}
+                              value={productStores[localStorage.getItem('store_id')]?.purchase_unit_price_with_vat || productStores[localStorage.getItem('store_id')]?.purchase_unit_price_with_vat === 0 ? productStores[localStorage.getItem('store_id')]?.purchase_unit_price_with_vat : ''}
+                              ref={(el) => { if (!inputRefs.current[0]) inputRefs.current[0] = {}; inputRefs.current[0]['product_purchase_unit_price_with_vat_0'] = el; }}
+                              onFocus={() => { if (timerRef.current) clearTimeout(timerRef.current); timerRef.current = setTimeout(() => { inputRefs.current[0]['product_purchase_unit_price_with_vat_0']?.select(); }, 100); }}
+                              onKeyDown={(e) => { if (timerRef.current) clearTimeout(timerRef.current); if (e.key === 'Enter') { timerRef.current = setTimeout(() => { inputRefs.current[0]['product_wholesale_unit_price_with_vat_0']?.select(); }, 100); } if (e.key === 'ArrowLeft') { timerRef.current = setTimeout(() => { inputRefs.current[0]['product_retail_unit_price_0'].focus(); }, 100); } }}
+                              style={{ ...PRICE_INPUT, background: '#f2f4f6' }} placeholder="Calculated automatically"
+                              onChange={(e) => {
+                                if (timerRef.current) clearTimeout(timerRef.current);
+                                delete errors['purchase_unit_price_with_vat_0']; setErrors({ ...errors });
+                                if (!e.target.value) { productStores[localStorage.getItem('store_id')].purchase_unit_price_with_vat = ''; setProductStores({ ...productStores }); return; }
+                                if (parseFloat(e.target.value) < 0) { productStores[localStorage.getItem('store_id')].purchase_unit_price_with_vat = ''; setProductStores({ ...productStores }); errors['purchase_unit_price_with_vat_0'] = 'Purchase Unit Price with VAT should not be < 0'; setErrors({ ...errors }); return; }
+                                productStores[localStorage.getItem('store_id')].purchase_unit_price_with_vat = parseFloat(e.target.value); setProductStores({ ...productStores });
+                                timerRef.current = setTimeout(() => { productStores[localStorage.getItem('store_id')].purchase_unit_price = parseFloat(trimTo8Decimals(productStores[localStorage.getItem('store_id')].purchase_unit_price_with_vat / (1 + (store.vat_percent / 100)))); setProductStores({ ...productStores }); }, 100);
+                              }}
+                            />
+                            {errors['purchase_unit_price_with_vat_0'] && <ErrMsg>{errors['purchase_unit_price_with_vat_0']}</ErrMsg>}
+                          </div>
                         </div>
-                      </MenuItem>
+                      </div>
 
-                      {/* Rows */}
-                      {results.map((option, index) => {
-                        const onlyOneResult = results.length === 1;
-                        const isActive = state.activeIndex === index || onlyOneResult;
-                        let checked = IsProductExistsInSet(option.id);
-                        return (
-                          <MenuItem option={option} position={index} key={index} style={{ padding: "0px" }}>
-                            <div style={{ display: 'flex', padding: '4px 8px' }}>
-                              <div
-                                className="form-check"
-                                style={{ ...columnStyle, width: '3%' }}
-                                onClick={e => {
-                                  e.stopPropagation();     // Stop click bubbling to parent MenuItem
-                                  checked = !checked;
-
-                                  if (timerRef.current) clearTimeout(timerRef.current);
-                                  timerRef.current = setTimeout(() => {
-                                    if (checked) {
-                                      AddProductToSet(option);
-                                    } else {
-                                      RemoveProductFromSetByObj(option);
-                                    }
-                                  }, 100);
-
-                                }}
-                              >
-                                <input
-                                  className="form-check-input"
-                                  type="checkbox"
-                                  value={checked}
-                                  checked={checked}
-                                  onClick={e => {
-                                    e.stopPropagation();     // Stop click bubbling to parent MenuItem
-                                  }}
-                                  onChange={e => {
-                                    e.preventDefault();      // Prevent default selection behavior
-                                    e.stopPropagation();
-
-                                    checked = !checked;
-
-                                    if (timerRef.current) clearTimeout(timerRef.current);
-                                    timerRef.current = setTimeout(() => {
-                                      if (checked) {
-                                        AddProductToSet(option);
-                                      } else {
-                                        RemoveProductFromSetByObj(option);
-                                      }
-                                    }, 100);
-                                  }}
-                                />
-                              </div>
-                              <div style={{ ...columnStyle, width: '14%' }}>
-                                {highlightWords(
-                                  option.prefix_part_number
-                                    ? `${option.prefix_part_number} - ${option.part_number}`
-                                    : option.part_number,
-                                  searchWords,
-                                  isActive
-                                )}
-                              </div>
-                              <div style={{ ...columnStyle, width: '29%' }}>
-                                {highlightWords(
-                                  option.name_in_arabic
-                                    ? `${option.name} - ${option.name_in_arabic}`
-                                    : option.name,
-                                  searchWords,
-                                  isActive
-                                )}
-                              </div>
-                              <div style={{ ...columnStyle, width: '10%' }}>
-                                {option.product_stores?.[localStorage.getItem("store_id")]?.retail_unit_price && (
-                                  <>
-                                    <Amount amount={trimTo2Decimals(option.product_stores?.[localStorage.getItem("store_id")]?.retail_unit_price)} />+
-                                  </>
-                                )}
-                                {option.product_stores?.[localStorage.getItem("store_id")]?.retail_unit_price_with_vat && (
-                                  <>
-                                    |<Amount amount={trimTo2Decimals(option.product_stores?.[localStorage.getItem("store_id")]?.retail_unit_price_with_vat)} />
-                                  </>
-                                )}
-                              </div>
-                              <div style={{ ...columnStyle, width: '13%' }}>
-                                {(() => {
-                                  const storeId = localStorage.getItem("store_id");
-                                  const productStore = option.product_stores?.[storeId];
-                                  const warehouseStocks = productStore?.warehouse_stocks || {};
-                                  const mainStock = warehouseStocks["main_store"] ?? 0;
-                                  let warehouseDetail = "";
-                                  if (store.settings?.enable_warehouse_module) {
-                                    const whEntries = Object.entries(warehouseStocks)
-                                      .filter(([key]) => key !== "main_store")
-                                      .map(([key, value]) => {
-                                        let name = key.toUpperCase();
-                                        return `${name}: ${value}`;
-                                      });
-                                    if (whEntries.length > 0) {
-                                      warehouseDetail = ` (${whEntries.join(", ")})`;
-                                    }
-                                  }
-                                  return (
-                                    <span>
-                                      {mainStock}
-                                      {warehouseDetail}
-                                    </span>
-                                  );
-                                })()}
-                              </div>
-                              <div style={{ ...columnStyle, width: '5%' }}>
-                                <button
-                                  type="button"
-                                  className={isActive ? "btn btn-outline-light btn-sm" : "btn btn-outline-primary btn-sm"}
-                                  onClick={(e) => {
-                                    e.preventDefault();
-                                    e.stopPropagation();
-                                    openProductImages(option.id);
-                                  }}
-                                >
-                                  <i className="bi bi-images" aria-hidden="true" />
-                                </button>
-                              </div>
-                              <div style={{ ...columnStyle, width: '8%' }}>
-                                {highlightWords(option.brand_name, searchWords, isActive)}
-                              </div>
-                              <div style={{ ...columnStyle, width: '10%' }}>
-                                {option.product_stores?.[localStorage.getItem("store_id")]?.purchase_unit_price && (
-                                  <>
-                                    <Amount amount={trimTo2Decimals(option.product_stores?.[localStorage.getItem("store_id")]?.purchase_unit_price)} />+
-                                  </>
-                                )}
-                                {option.product_stores?.[localStorage.getItem("store_id")]?.purchase_unit_price_with_vat && (
-                                  <>
-                                    |<Amount amount={trimTo2Decimals(option.product_stores?.[localStorage.getItem("store_id")]?.purchase_unit_price_with_vat)} />
-                                  </>
-                                )}
-                              </div>
-                              <div style={{ ...columnStyle, width: '8%' }}>
-                                {highlightWords(option.country_name, searchWords, isActive)}
-                              </div>
-                            </div>
-                          </MenuItem>
-                        );
-                      })}
-                    </Menu>
-                  );
-                }}
-              />
-            </div>
-
-            {formData.set?.products?.length > 0 && <div className="col-md-12">
-              <label className="form-label">Set Products</label>
-              <div class="table-responsive" style={{}}>
-                <table class="table table-striped table-sm table-bordered">
-                  {formData.set?.products && formData.set?.products?.length > 0 &&
-                    <thead className="text-center">
-                      <th style={{ width: "11%" }}>
-                        Part No.
-                      </th>
-                      <th style={{ width: "19%" }}>
-                        Name
-                      </th>
-                      <th style={{ width: "5%" }} >Info</th>
-                      <th style={{ width: "8%" }}>
-                        Qty
-                      </th>
-                      <th style={{ width: "4%" }}>
-                        Unit
-                      </th>
-                      <th style={{ width: "8%" }}>
-                        Purchase Unit Price
-                      </th>
-                      <th style={{ width: "8%" }}>
-                        Purchase Unit Price(with VAT)
-                      </th>
-                      <th style={{ width: "8%" }}>
-                        Purchase Price %
-                      </th>
-                      <th style={{ width: "8%" }}>
-                        Retail Unit Price
-                      </th>
-                      <th style={{ width: "8%" }}>
-                        Retail Unit Price(with VAT)
-                      </th>
-                      <th style={{ width: "8%" }}>
-                        Retail Price %
-                      </th>
-                      <th style={{ width: "5%" }}>
-                        Action
-                      </th>
-                    </thead>}
-                  <tbody>
-                    {formData.set?.products &&
-                      formData.set?.products.map((product, key) => (
-                        <tr key={key}>
-                          <td >
-                            <span style={{ color: "blue", cursor: "pointer" }} onClick={() => {
-                              openUpdateForm(product.product_id);
-                            }}>{product.part_number}</span>
-                          </td>
-                          <td >
-                            <span style={{ color: "blue", cursor: "pointer" }} onClick={() => {
-                              openUpdateForm(product.product_id);
-                            }}>{product.name}</span>
-                          </td>
-                          <td style={{ verticalAlign: 'middle', padding: '0.25rem' }}>
-                            <div style={{ zIndex: "9999 !important", position: "absolute !important" }}>
-                              <Dropdown drop="top">
-                                <Dropdown.Toggle variant="secondary" id="dropdown-secondary" style={{}}>
-                                  <i className="bi bi-info"></i>
-                                </Dropdown.Toggle>
-
-                                <Dropdown.Menu style={{ zIndex: 9999, position: "absolute" }} popperConfig={{ modifiers: [{ name: 'preventOverflow', options: { boundary: 'viewport' } }] }}>
-                                  <Dropdown.Item onClick={() => openLinkedProducts(product)}>
-                                    <i className="bi bi-link"></i>&nbsp;
-                                    Linked Products ({getShortcut('linkedProducts')})
-                                  </Dropdown.Item>
-
-                                  <Dropdown.Item onClick={() => openProductHistory(product)}>
-                                    <i className="bi bi-clock-history"></i>&nbsp;
-                                    History ({getShortcut('productHistory')})
-                                  </Dropdown.Item>
-
-                                  <Dropdown.Item onClick={() => openSalesHistory(product)}>
-                                    <i className="bi bi-clock-history"></i>&nbsp;
-                                    Sales History ({getShortcut('salesHistory')})
-                                  </Dropdown.Item>
-
-                                  <Dropdown.Item onClick={() => openSalesReturnHistory(product)}>
-                                    <i className="bi bi-clock-history"></i>&nbsp;
-                                    Sales Return History ({getShortcut('salesReturnHistory')})
-                                  </Dropdown.Item>
-
-                                  <Dropdown.Item onClick={() => openPurchaseHistory(product)}>
-                                    <i className="bi bi-clock-history"></i>&nbsp;
-                                    Purchase History ({getShortcut('purchaseHistory')})
-                                  </Dropdown.Item>
-
-                                  <Dropdown.Item onClick={() => openPurchaseReturnHistory(product)}>
-                                    <i className="bi bi-clock-history"></i>&nbsp;
-                                    Purchase Return History ({getShortcut('purchaseReturnHistory')})
-                                  </Dropdown.Item>
-
-                                  <Dropdown.Item onClick={() => openDeliveryNoteHistory(product)}>
-                                    <i className="bi bi-clock-history"></i>&nbsp;
-                                    Delivery Note History ({getShortcut('deliveryNoteHistory')})
-                                  </Dropdown.Item>
-
-                                  <Dropdown.Item onClick={() => openQuotationHistory(product)}>
-                                    <i className="bi bi-clock-history"></i>&nbsp;
-                                    Quotation History ({getShortcut('quotationHistory')})
-                                  </Dropdown.Item>
-
-                                  <Dropdown.Item onClick={() => openQuotationSalesHistory(product)}>
-                                    <i className="bi bi-clock-history"></i>&nbsp;
-                                    Qtn. Sales History ({getShortcut('quotationSalesHistory')})
-                                  </Dropdown.Item>
-
-                                  <Dropdown.Item onClick={() => openQuotationSalesReturnHistory(product)}>
-                                    <i className="bi bi-clock-history"></i>&nbsp;
-                                    Qtn. Sales Return History ({getShortcut('quotationSalesReturnHistory')})
-                                  </Dropdown.Item>
-
-                                  <Dropdown.Item onClick={() => openProductImages(product.product_id)}>
-                                    <i className="bi bi-clock-history"></i>&nbsp;
-                                    Images ({getShortcut('images')})
-                                  </Dropdown.Item>
-                                </Dropdown.Menu>
-                              </Dropdown>
-                            </div>
-                          </td>
-
-                          <td >
-                            <input type='number'
-                              id={`${"set_product_quantity_" + key}`}
-                              name={`${"set_product_quantity_" + key}`}
-                              value={formData.set.products[key].quantity}
-                              className="form-control"
-                              ref={(el) => {
-                                if (!inputRefs.current[key]) inputRefs.current[key] = {};
-                                inputRefs.current[key][`${"set_product_quantity_" + key}`] = el;
-                              }}
-                              onFocus={() => {
-                                if (timerRef.current) clearTimeout(timerRef.current);
-                                timerRef.current = setTimeout(() => {
-                                  inputRefs.current[key][`${"set_product_quantity_" + key}`].select();
-                                }, 100);
-                              }}
-                              onKeyDown={(e) => {
-                                RunKeyActions(e, product);
-                                if (timerRef.current) clearTimeout(timerRef.current);
-
-                                if (e.key === "ArrowLeft") {
-                                  if ((key + 1) === formData.set.products.length) {
-                                    timerRef.current = setTimeout(() => {
-                                      productSetSearchRef.current?.focus();
-                                    }, 100);
-                                  } else {
-                                    timerRef.current = setTimeout(() => {
-                                      inputRefs.current[(key + 1)][`${"set_product_unit_price_with_vat_" + (key + 1)}`].focus();
-                                    }, 100);
-                                  }
-                                }
-                              }}
-
+                      {/* Wholesale Price Card */}
+                      <div className="col-md-4">
+                        <div style={PRICE_CARD}>
+                          <div style={PRICE_CARD_LABEL}>Wholesale Unit Price</div>
+                          <div style={{ marginBottom: '16px' }}>
+                            <div style={PRICE_SUB_LABEL}>Excl. VAT</div>
+                            <input id="product_wholesale_unit_price" name="product_wholesale_unit_price" type="number"
+                              value={productStores[localStorage.getItem('store_id')]?.wholesale_unit_price || productStores[localStorage.getItem('store_id')]?.wholesale_unit_price === 0 ? productStores[localStorage.getItem('store_id')]?.wholesale_unit_price : ''}
+                              ref={(el) => { if (!inputRefs.current[0]) inputRefs.current[0] = {}; inputRefs.current[0]['product_wholesale_unit_price_0'] = el; }}
+                              onFocus={() => { if (timerRef.current) clearTimeout(timerRef.current); timerRef.current = setTimeout(() => { inputRefs.current[0]['product_wholesale_unit_price_0']?.select(); }, 100); }}
+                              onKeyDown={(e) => { if (timerRef.current) clearTimeout(timerRef.current); if (e.key === 'Enter') { timerRef.current = setTimeout(() => { inputRefs.current[0]['product_retail_unit_price_0']?.select(); }, 100); } else if (e.key === 'ArrowLeft') { timerRef.current = setTimeout(() => { inputRefs.current[0]['product_purchase_unit_price_0'].focus(); }, 100); } }}
+                              style={PRICE_INPUT} placeholder="0.00"
                               onChange={(e) => {
-                                errors["set_product_quantity_" + key] = "";
-                                setErrors({ ...errors });
-
-                                if (e.target.value === 0) {
-                                  formData.set.products[key].quantity = 0;
-                                  setFormData({ ...formData });
-                                  findSetTotal();
-                                  return;
-                                }
-
-                                if (!e.target.value) {
-                                  formData.set.products[key].quantity = "";
-                                  setFormData({ ...formData });
-                                  findSetTotal();
-                                  return;
-                                }
-
-                                formData.set.products[key].quantity = parseFloat(e.target.value);
-                                setFormData({ ...formData });
-                                findSetTotal();
-                                console.log(formData);
+                                if (timerRef.current) clearTimeout(timerRef.current);
+                                delete errors['wholesale_unit_price']; setErrors({ ...errors });
+                                if (!e.target.value) { productStores[localStorage.getItem('store_id')].wholesale_unit_price = ''; setProductStores({ ...productStores }); return; }
+                                if (parseFloat(e.target.value) < 0) { productStores[localStorage.getItem('store_id')].wholesale_unit_price = ''; setProductStores({ ...productStores }); errors['wholesale_unit_price'] = 'Wholesale unit price should not be < 0'; setErrors({ ...errors }); return; }
+                                productStores[localStorage.getItem('store_id')].wholesale_unit_price = parseFloat(e.target.value); setProductStores({ ...productStores });
+                                timerRef.current = setTimeout(() => { productStores[localStorage.getItem('store_id')].wholesale_unit_price_with_vat = parseFloat(trimTo8Decimals(productStores[localStorage.getItem('store_id')].wholesale_unit_price * (1 + (store.vat_percent / 100)))); setProductStores({ ...productStores }); }, 100);
                               }}
                             />
-                            {errors["set_product_quantity_" + key] && (
-                              <div style={{ color: "red" }}>
-
-                                {errors["set_product_quantity_" + key]}
-                              </div>
-                            )}
-                          </td>
-                          <td>
-                            {formData.set.products[key].unit ? formData.set.products[key].unit[0]?.toUpperCase() : 'P'}
-                          </td>
-                          <td >
-                            <input type='number'
-                              id={`${"set_product_purchase_unit_price_" + key}`}
-                              name={`${"set_product_purchase_unit_price_" + key}`}
-                              value={formData.set.products[key].purchase_unit_price}
-                              className="form-control"
-                              ref={(el) => {
-                                if (!inputRefs.current[key]) inputRefs.current[key] = {};
-                                inputRefs.current[key][`${"set_product_purchase_unit_price_" + key}`] = el;
-                              }}
-                              onFocus={() => {
-                                if (timerRef.current) clearTimeout(timerRef.current);
-                                timerRef.current = setTimeout(() => {
-                                  inputRefs.current[key][`${"set_product_purchase_unit_price_" + key}`].select();
-                                }, 100);
-                              }}
-                              onKeyDown={(e) => {
-                                RunKeyActions(e, product);
-                                if (timerRef.current) clearTimeout(timerRef.current);
-
-                                if (e.key === "ArrowLeft") {
-                                  timerRef.current = setTimeout(() => {
-                                    inputRefs.current[(key)][`${"set_product_quantity_" + (key)}`].focus();
-                                    // productSetSearchRef.current?.focus();
-                                  }, 100);
-                                }
-                              }}
-
-                              onChange={(e) => {
-                                errors["set_product_purchase_unit_price_" + key] = "";
-                                setErrors({ ...errors });
-
-                                if (e.target.value === 0) {
-                                  formData.set.products[key].purchase_unit_price_with_vat = 0;
-                                  formData.set.products[key].purchase_unit_price = 0;
-                                  findSetTotal();
-                                  setFormData({ ...formData });
-                                  return;
-                                }
-
-                                if (!e.target.value) {
-                                  formData.set.products[key].purchase_unit_price_with_vat = "";
-                                  formData.set.products[key].purchase_unit_price = "";
-                                  findSetTotal();
-                                  setFormData({ ...formData });
-                                  return;
-                                }
-
-                                formData.set.products[key].purchase_unit_price = parseFloat(e.target.value);
-                                formData.set.products[key].purchase_unit_price_with_vat = parseFloat(trimTo8Decimals(formData.set.products[key].purchase_unit_price * (1 + (store.vat_percent / 100))));
-                                setFormData({ ...formData });
-                                findSetTotal();
-                                console.log(formData);
-                              }}
-                            />
-                            {errors["set_product_purchase_unit_price_" + key] && (
-                              <div style={{ color: "red" }}>
-                                {errors["set_product_purchase_unit_price_" + key]}
-                              </div>
-                            )}
-                          </td>
-                          <td >
-                            <input type='number'
-                              id={`${"set_product_purchase_unit_price_with_vat_" + key}`}
-                              name={`${"set_product_purchase_unit_price_with_vat_" + key}`}
-                              value={formData.set.products[key].purchase_unit_price_with_vat}
-                              className="form-control "
-                              ref={(el) => {
-                                if (!inputRefs.current[key]) inputRefs.current[key] = {};
-                                inputRefs.current[key][`${"set_product_purchase_unit_price_with_vat_" + key}`] = el;
-                              }}
-                              onFocus={() => {
-                                if (timerRef.current) clearTimeout(timerRef.current);
-                                timerRef.current = setTimeout(() => {
-                                  inputRefs.current[key][`${"set_product_purchase_unit_price_with_vat_" + key}`]?.select();
-                                }, 100);
-                              }}
-                              onKeyDown={(e) => {
-                                RunKeyActions(e, product);
-                                if (timerRef.current) clearTimeout(timerRef.current);
-
-                                if (e.key === "Enter") {
-                                  if ((key + 1) === formData.set.products.length) {
-                                    timerRef.current = setTimeout(() => {
-                                      productSetSearchRef.current?.focus();
-                                    }, 100);
-                                  } else {
-                                    console.log("moviing to next line")
-                                    if (key === 0) {
-                                      timerRef.current = setTimeout(() => {
-                                        productSetSearchRef.current?.focus();
-                                      }, 100);
-                                    } else {
-                                      timerRef.current = setTimeout(() => {
-                                        inputRefs.current[key][`${"set_product_unit_price_" + key}`].focus();
-                                      }, 100);
-                                    }
-                                  }
-                                } else if (e.key === "ArrowLeft") {
-                                  timerRef.current = setTimeout(() => {
-                                    inputRefs.current[key][`${"set_product_purchase_unit_price_" + key}`].focus();
-                                  }, 100);
-                                }
-                              }}
-
-                              onChange={(e) => {
-                                errors["set_product_purchase_unit_price_with_vat_" + key] = "";
-                                setErrors({ ...errors });
-
-                                if (e.target.value === 0) {
-                                  formData.set.products[key].purchase_unit_price_with_vat = 0;
-                                  formData.set.products[key].purchase_unit_price = 0;
-                                  findSetTotal();
-                                  setFormData({ ...formData });
-                                  return;
-                                }
-
-                                if (!e.target.value) {
-                                  formData.set.products[key].purchase_unit_price_with_vat = "";
-                                  formData.set.products[key].purchase_unit_price = ""
-                                  findSetTotal();
-                                  setFormData({ ...formData });
-                                  return;
-                                }
-
-                                formData.set.products[key].purchase_unit_price_with_vat = parseFloat(e.target.value);
-                                formData.set.products[key].purchase_unit_price = parseFloat(trimTo8Decimals(formData.set.products[key].purchase_unit_price_with_vat / (1 + (store.vat_percent / 100))));
-                                setFormData({ ...formData });
-                                findSetTotal();
-                                console.log(formData);
-                              }}
-                            />
-                            {errors["set_product_purchase_unit_price_with_vat_" + key] && (
-                              <div style={{ color: "red" }}>
-
-                                {errors["set_product_purchase_unit_price_with_vat_" + key]}
-                              </div>
-                            )}
-                          </td>
-                          <td >
-                            {trimTo2Decimals(formData.set.products[key].purchase_price_percent) + "%"}
-                            <OverlayTrigger placement="right" overlay={renderPercentTooltip({ value: formData.set.products[key].purchase_price_percent })}>
-                              <span style={{ textDecoration: 'underline dotted', cursor: 'pointer' }}>ℹ️</span>
-                            </OverlayTrigger>
-                          </td>
-                          <td style={{ width: "140px" }}>
-                            <input type='number'
-                              id={`${"set_product_unit_price_" + key}`}
-                              name={`${"set_product_unit_price_" + key}`}
-                              value={formData.set.products[key].retail_unit_price}
-                              className="form-control"
-                              ref={(el) => {
-                                if (!inputRefs.current[key]) inputRefs.current[key] = {};
-                                inputRefs.current[key][`${"set_product_unit_price_" + key}`] = el;
-                              }}
-                              onFocus={() => {
-                                if (timerRef.current) clearTimeout(timerRef.current);
-                                timerRef.current = setTimeout(() => {
-                                  inputRefs.current[key][`${"set_product_unit_price_" + key}`].select();
-                                }, 100);
-                              }}
-                              onKeyDown={(e) => {
-                                RunKeyActions(e, product);
-                                if (timerRef.current) clearTimeout(timerRef.current);
-
-                                if (e.key === "ArrowLeft") {
-                                  timerRef.current = setTimeout(() => {
-                                    inputRefs.current[(key)][`${"set_product_purchase_unit_price_with_vat_" + (key)}`].focus();
-                                    // productSetSearchRef.current?.focus();
-                                  }, 100);
-                                }
-                              }}
-
-                              onChange={(e) => {
-                                errors["set_product_unit_price_" + key] = "";
-                                setErrors({ ...errors });
-
-                                if (e.target.value === 0) {
-                                  formData.set.products[key].retail_unit_price_with_vat = 0;
-                                  formData.set.products[key].retail_unit_price = 0;
-                                  findSetTotal();
-                                  setFormData({ ...formData });
-                                  return;
-                                }
-
-                                if (!e.target.value) {
-                                  formData.set.products[key].retail_unit_price_with_vat = "";
-                                  formData.set.products[key].retail_unit_price = "";
-                                  findSetTotal();
-                                  setFormData({ ...formData });
-                                  return;
-                                }
-
-                                formData.set.products[key].retail_unit_price = parseFloat(e.target.value);
-                                formData.set.products[key].retail_unit_price_with_vat = parseFloat(trimTo8Decimals(formData.set.products[key].retail_unit_price * (1 + (store.vat_percent / 100))));
-                                setFormData({ ...formData });
-                                findSetTotal();
-                                console.log(formData);
-                              }}
-                            />
-                            {errors["set_product_unit_price_" + key] && (
-                              <div style={{ color: "red" }}>
-
-                                {errors["set_product_unit_price_" + key]}
-                              </div>
-                            )}
-                          </td>
-                          <td >
-                            <input type='number'
-                              id={`${"set_product_unit_price_with_vat_" + key}`}
-                              name={`${"set_product_unit_price_with_vat_" + key}`}
-                              value={formData.set.products[key].retail_unit_price_with_vat}
-                              className="form-control "
-                              ref={(el) => {
-                                if (!inputRefs.current[key]) inputRefs.current[key] = {};
-                                inputRefs.current[key][`${"set_product_unit_price_with_vat_" + key}`] = el;
-                              }}
-                              onFocus={() => {
-                                if (timerRef.current) clearTimeout(timerRef.current);
-                                timerRef.current = setTimeout(() => {
-                                  inputRefs.current[key][`${"set_product_unit_price_with_vat_" + key}`]?.select();
-                                }, 100);
-                              }}
-                              onKeyDown={(e) => {
-                                RunKeyActions(e, product);
-                                if (timerRef.current) clearTimeout(timerRef.current);
-
-                                if (e.key === "Enter") {
-                                  if ((key + 1) === formData.set.products.length) {
-                                    timerRef.current = setTimeout(() => {
-                                      productSetSearchRef.current?.focus();
-                                    }, 100);
-                                  } else {
-                                    console.log("moviing to next line")
-                                    if (key === 0) {
-                                      timerRef.current = setTimeout(() => {
-                                        productSetSearchRef.current?.focus();
-                                      }, 100);
-                                    } else {
-                                      timerRef.current = setTimeout(() => {
-                                        inputRefs.current[key - 1][`${"set_product_quantity_" + (key - 1)}`]?.focus();
-                                      }, 100);
-                                    }
-                                  }
-                                } else if (e.key === "ArrowLeft") {
-                                  timerRef.current = setTimeout(() => {
-                                    inputRefs.current[key][`${"set_product_unit_price_" + key}`].focus();
-                                  }, 100);
-                                }
-                              }}
-
-                              onChange={(e) => {
-                                errors["set_product_unit_price_with_vat_" + key] = "";
-                                setErrors({ ...errors });
-
-                                if (e.target.value === 0) {
-                                  formData.set.products[key].retail_unit_price_with_vat = 0;
-                                  formData.set.products[key].retail_unit_price = 0;
-                                  findSetTotal();
-                                  setFormData({ ...formData });
-                                  return;
-                                }
-
-                                if (!e.target.value) {
-                                  formData.set.products[key].retail_unit_price_with_vat = "";
-                                  formData.set.products[key].retail_unit_price = ""
-                                  findSetTotal();
-                                  setFormData({ ...formData });
-                                  return;
-                                }
-
-                                formData.set.products[key].retail_unit_price_with_vat = parseFloat(e.target.value);
-                                formData.set.products[key].retail_unit_price = parseFloat(trimTo8Decimals(formData.set.products[key].retail_unit_price_with_vat / (1 + (store.vat_percent / 100))));
-                                setFormData({ ...formData });
-                                findSetTotal();
-                                console.log(formData);
-                              }}
-                            />
-                            {errors["set_product_unit_price_with_vat_" + key] && (
-                              <div style={{ color: "red" }}>
-
-                                {errors["set_product_unit_price_with_vat_" + key]}
-                              </div>
-                            )}
-                          </td>
-                          <td>
-                            {trimTo2Decimals(formData.set.products[key].retail_price_percent) + "%"}
-                            <OverlayTrigger placement="right" overlay={renderPercentTooltip({ value: formData.set.products[key].retail_price_percent })}>
-                              <span style={{ textDecoration: 'underline dotted', cursor: 'pointer' }}>ℹ️</span>
-                            </OverlayTrigger>
-                          </td>
-                          <td>
-                            <Button variant="danger" onClick={(event) => {
-                              RemoveProductFromSet(key);
-                            }}>
-                              <i className="bi bi-trash"></i>
-                            </Button>
-                          </td>
-
-                        </tr>
-                      )).reverse()}
-                    <tr>
-                      <td></td>
-                      <td></td>
-
-                      <td class="text-end">
-                        <b>Total</b>
-                      </td>
-                      <td> {formData.set?.total_quantity ? trimTo4Decimals(formData.set?.total_quantity) : ""} </td>
-                      <td></td>
-                      <td><b style={{ marginLeft: "14px" }}>{formData.set?.purchase_total ? trimTo4Decimals(formData.set?.purchase_total) : ""}</b>
-                        {errors["set_purchase_total"] && (
-                          <div style={{ color: "red" }}>
-                            {errors["set_purchase_total"]}
+                            {errors['wholesale_unit_price'] && <ErrMsg>{errors['wholesale_unit_price']}</ErrMsg>}
                           </div>
-                        )}
-                      </td>
-                      <td><b style={{ marginLeft: "14px" }}>{formData.set?.purchase_total_with_vat ? trimTo4Decimals(formData.set?.purchase_total_with_vat) : ""}</b>
-                        {errors["set_purchase_total_with_vat"] && (
-                          <div style={{ color: "red" }}>
-                            {errors["set_purchase_total_with_vat"]}
+                          <div style={{ borderTop: '1px solid #e0e3e5', paddingTop: '14px' }}>
+                            <div style={PRICE_SUB_LABEL}>Incl. VAT</div>
+                            <input id="product_wholesale_unit_price_with_vat" name="product_wholesale_unit_price_with_vat" type="number"
+                              value={productStores[localStorage.getItem('store_id')]?.wholesale_unit_price_with_vat || productStores[localStorage.getItem('store_id')]?.wholesale_unit_price_with_vat === 0 ? productStores[localStorage.getItem('store_id')]?.wholesale_unit_price_with_vat : ''}
+                              ref={(el) => { if (!inputRefs.current[0]) inputRefs.current[0] = {}; inputRefs.current[0]['product_wholesale_unit_price_with_vat_0'] = el; }}
+                              onFocus={() => { if (timerRef.current) clearTimeout(timerRef.current); timerRef.current = setTimeout(() => { inputRefs.current[0]['product_wholesale_unit_price_with_vat_0']?.select(); }, 100); }}
+                              onKeyDown={(e) => { if (timerRef.current) clearTimeout(timerRef.current); if (e.key === 'Enter') { timerRef.current = setTimeout(() => { inputRefs.current[0]['product_retail_unit_price_with_vat_0']?.select(); }, 100); } else if (e.key === 'ArrowLeft') { timerRef.current = setTimeout(() => { inputRefs.current[0]['product_purchase_unit_price_with_vat_0'].focus(); }, 100); } }}
+                              style={{ ...PRICE_INPUT, background: '#f2f4f6' }} placeholder="Calculated automatically"
+                              onChange={(e) => {
+                                if (timerRef.current) clearTimeout(timerRef.current);
+                                delete errors['wholesale_unit_price_with_vat']; setErrors({ ...errors });
+                                if (!e.target.value) { productStores[localStorage.getItem('store_id')].wholesale_unit_price_with_vat = ''; setProductStores({ ...productStores }); return; }
+                                if (parseFloat(e.target.value) < 0) { productStores[localStorage.getItem('store_id')].wholesale_unit_price_with_vat = ''; setProductStores({ ...productStores }); errors['wholesale_unit_price_with_vat'] = 'Wholesale unit price with VAT should not be < 0'; setErrors({ ...errors }); return; }
+                                productStores[localStorage.getItem('store_id')].wholesale_unit_price_with_vat = parseFloat(e.target.value); setProductStores({ ...productStores });
+                                timerRef.current = setTimeout(() => { productStores[localStorage.getItem('store_id')].wholesale_unit_price = parseFloat(trimTo8Decimals(productStores[localStorage.getItem('store_id')].wholesale_unit_price_with_vat / (1 + (store.vat_percent / 100)))); setProductStores({ ...productStores }); }, 100);
+                              }}
+                            />
+                            {errors['wholesale_unit_price_with_vat'] && <ErrMsg>{errors['wholesale_unit_price_with_vat']}</ErrMsg>}
                           </div>
-                        )}
-                      </td>
-                      <td></td>
-                      <td><b style={{ marginLeft: "14px" }}>{formData.set?.total ? trimTo4Decimals(formData.set?.total) : ""}</b>
-                        {errors["set_total"] && (
-                          <div style={{ color: "red" }}>
-                            {errors["set_total"]}
-                          </div>
-                        )}
-                      </td>
-                      <td><b style={{ marginLeft: "14px" }}>{formData.set?.total_with_vat ? trimTo4Decimals(formData.set?.total_with_vat) : ""}</b>
-                        {errors["set_total_with_vat"] && (
-                          <div style={{ color: "red" }}>
-                            {errors["set_total_with_vat"]}
-                          </div>
-                        )}
-                      </td>
-                      <td></td>
-                      <td></td>
-                    </tr>
-                  </tbody>
-                </table>
-
-              </div>
-            </div>}
-
-            <h4>Link Products</h4>
-            <div className="col-md-12">
-              {/*<label className="form-label">Linked Products</label>*/}
-              <Typeahead
-                id="linked_product_id"
-                labelKey="search_label"
-                emptyLabel=""
-                filterBy={() => true}
-                ref={productSearchRef}
-                onChange={(selectedItems) => {
-
-                  // alert(selectedItems[selectedItems.length - 1].part_number);
-                  if (selectedItems.length > selectedLinkedProducts.length) {
-                    if (!IsProductExistsInLinkedProducts(selectedItems[selectedItems.length - 1].id)) {
-                      setSelectedLinkedProducts(selectedItems);
-                    }
-                  } else {
-                    setSelectedLinkedProducts(selectedItems);
-                  }
-
-
-
-                  setOpenProductSearchResult(false);
-                  /*
-                  setProductOptions([]);
-                  setOpenProductSearchResult(false);
-                  productSearchRef.current?.clear();
-                  */
-                  /*
-                  searchByMultipleValuesField(
-                    "category_id",
-                    selectedItems
-                  );*/
-                }}
-                options={productOptions}
-                placeholder="Select Products"
-                selected={selectedLinkedProducts}
-                highlightOnlyResult={true}
-                open={openProductSearchResult}
-                onKeyDown={(e) => {
-                  if (e.key === "Escape") {
-                    setProductOptions([]);
-                    setOpenProductSearchResult(false);
-                    // productSearchRef.current?.clear();
-                  }
-                }}
-                onInputChange={(searchTerm, e) => {
-                  if (timerRef.current) clearTimeout(timerRef.current);
-                  timerRef.current = setTimeout(() => {
-                    suggestProducts(searchTerm);
-                  }, 100);
-
-                }}
-                renderMenu={(results, menuProps, state) => {
-                  const searchWords = state.text.toLowerCase().split(" ").filter(Boolean);
-
-                  return (
-                    <Menu {...menuProps}>
-                      {/* Header */}
-                      <MenuItem disabled style={{ position: 'sticky', top: 0, padding: 0, margin: 0 }}>
-                        <div style={{
-                          background: '#f8f9fa',
-                          zIndex: 2,
-                          display: 'flex',
-                          fontWeight: 'bold',
-                          padding: '4px 8px',
-                          border: "solid 0px",
-                          borderBottom: '1px solid #ddd',
-                        }}>
-                          <div style={{ width: '3%', border: "solid 0px", }}></div>
-                          <div style={{ width: '14%', border: "solid 0px", }}>Part Number</div>
-                          <div style={{ width: '29%', border: "solid 0px", }}>Name</div>
-                          <div style={{ width: '12%', border: "solid 0px", }}>S.Unit Price</div>
-                          <div style={{ width: '5%', border: "solid 0px", }}>Stock</div>
-                          <div style={{ width: '5%', border: "solid 0px", }}>Photos</div>
-                          <div style={{ width: '10%', border: "solid 0px", }}>Brand</div>
-                          <div style={{ width: '12%' }}>P.Unit Price</div>
-                          <div style={{ width: '10%', border: "solid 0px", }}>Country</div>
                         </div>
-                      </MenuItem>
+                      </div>
 
-                      {/* Rows */}
-                      {results.map((option, index) => {
-                        const onlyOneResult = results.length === 1;
-                        const isActive = state.activeIndex === index || onlyOneResult;
-                        let checked = IsProductExistsInLinkedProducts(option.id);
-                        return (
-                          <MenuItem option={option} position={index} key={index} style={{ padding: "0px" }}>
-                            <div style={{ display: 'flex', padding: '4px 8px' }}>
-                              <div
-                                className="form-check"
-                                style={{ ...columnStyle, width: '3%' }}
-                                onClick={e => {
-                                  e.stopPropagation();     // Stop click bubbling to parent MenuItem
-                                  checked = !checked;
+                      {/* Retail Price Card */}
+                      <div className="col-md-4">
+                        <div style={PRICE_CARD}>
+                          <div style={PRICE_CARD_LABEL}>Retail Unit Price</div>
+                          <div style={{ marginBottom: '16px' }}>
+                            <div style={PRICE_SUB_LABEL}>Excl. VAT</div>
+                            <input id="product_retail_unit_price" name="product_retail_unit_price" type="number"
+                              disabled={formData.set?.total}
+                              value={productStores[localStorage.getItem('store_id')]?.retail_unit_price || productStores[localStorage.getItem('store_id')]?.retail_unit_price === 0 ? productStores[localStorage.getItem('store_id')]?.retail_unit_price : ''}
+                              ref={(el) => { if (!inputRefs.current[0]) inputRefs.current[0] = {}; inputRefs.current[0]['product_retail_unit_price_0'] = el; }}
+                              onFocus={() => { if (timerRef.current) clearTimeout(timerRef.current); timerRef.current = setTimeout(() => { inputRefs.current[0]['product_retail_unit_price_0']?.select(); }, 100); }}
+                              onKeyDown={(e) => { if (timerRef.current) clearTimeout(timerRef.current); if (e.key === 'ArrowLeft') { timerRef.current = setTimeout(() => { inputRefs.current[0]['product_wholesale_unit_price_0'].focus(); }, 100); } }}
+                              style={PRICE_INPUT} placeholder="0.00"
+                              onChange={(e) => {
+                                if (timerRef.current) clearTimeout(timerRef.current);
+                                delete errors['retail_unit_price']; setErrors({ ...errors });
+                                if (!e.target.value) { productStores[localStorage.getItem('store_id')].retail_unit_price = ''; setProductStores({ ...productStores }); return; }
+                                if (parseFloat(e.target.value) < 0) { errors['retail_unit_price_0'] = 'Retail Unit Price should not be < 0'; productStores[localStorage.getItem('store_id')].retail_unit_price = ''; setProductStores({ ...productStores }); setErrors({ ...errors }); return; }
+                                productStores[localStorage.getItem('store_id')].retail_unit_price = parseFloat(e.target.value); setProductStores({ ...productStores });
+                                timerRef.current = setTimeout(() => { productStores[localStorage.getItem('store_id')].retail_unit_price_with_vat = parseFloat(trimTo8Decimals(productStores[localStorage.getItem('store_id')].retail_unit_price * (1 + (store.vat_percent / 100)))); setProductStores({ ...productStores }); }, 100);
+                              }}
+                            />
+                            {errors['retail_unit_price'] && <ErrMsg>{errors['retail_unit_price']}</ErrMsg>}
+                          </div>
+                          <div style={{ borderTop: '1px solid #e0e3e5', paddingTop: '14px' }}>
+                            <div style={PRICE_SUB_LABEL}>Incl. VAT</div>
+                            <input id="product_retail_unit_price_with_vat" name="product_retail_unit_price_with_vat" type="number"
+                              disabled={formData.set?.total}
+                              value={productStores[localStorage.getItem('store_id')]?.retail_unit_price_with_vat || productStores[localStorage.getItem('store_id')]?.retail_unit_price_with_vat === 0 ? productStores[localStorage.getItem('store_id')]?.retail_unit_price_with_vat : ''}
+                              ref={(el) => { if (!inputRefs.current[0]) inputRefs.current[0] = {}; inputRefs.current[0]['product_retail_unit_price_with_vat_0'] = el; }}
+                              onFocus={() => { if (timerRef.current) clearTimeout(timerRef.current); timerRef.current = setTimeout(() => { inputRefs.current[0]['product_retail_unit_price_with_vat_0']?.select(); }, 100); }}
+                              onKeyDown={(e) => { if (timerRef.current) clearTimeout(timerRef.current); if (e.key === 'ArrowLeft') { timerRef.current = setTimeout(() => { inputRefs.current[0]['product_wholesale_unit_price_with_vat_0'].focus(); }, 100); } }}
+                              style={{ ...PRICE_INPUT, background: '#f2f4f6' }} placeholder="Calculated automatically"
+                              onChange={(e) => {
+                                if (timerRef.current) clearTimeout(timerRef.current);
+                                delete errors['retail_unit_price_with_vat']; setErrors({ ...errors });
+                                if (!e.target.value) { productStores[localStorage.getItem('store_id')].retail_unit_price_with_vat = ''; setProductStores({ ...productStores }); return; }
+                                if (parseFloat(e.target.value) < 0) { errors['retail_unit_price_with_vat_0'] = 'Retail Unit Price with VAT should not be < 0'; productStores[localStorage.getItem('store_id')].retail_unit_price_with_vat = ''; setProductStores({ ...productStores }); setErrors({ ...errors }); return; }
+                                productStores[localStorage.getItem('store_id')].retail_unit_price_with_vat = parseFloat(e.target.value); setProductStores({ ...productStores });
+                                timerRef.current = setTimeout(() => { productStores[localStorage.getItem('store_id')].retail_unit_price = parseFloat(trimTo8Decimals(productStores[localStorage.getItem('store_id')].retail_unit_price_with_vat / (1 + (store.vat_percent / 100)))); setProductStores({ ...productStores }); }, 100);
+                              }}
+                            />
+                            {errors['retail_unit_price_with_vat'] && <ErrMsg>{errors['retail_unit_price_with_vat']}</ErrMsg>}
+                          </div>
+                        </div>
+                      </div>
 
-                                  if (timerRef.current) clearTimeout(timerRef.current);
-                                  timerRef.current = setTimeout(() => {
-                                    if (checked) {
-                                      // addProduct(option);
-                                      selectedLinkedProducts.push(option);
-                                      setSelectedLinkedProducts([...selectedLinkedProducts]);
-                                    } else {
-                                      removeProductFromLinkedProducts(option);
-                                    }
-                                  }, 100);
-
-                                }}
-                              >
-                                <input
-                                  className="form-check-input"
-                                  type="checkbox"
-                                  value={checked}
-                                  checked={checked}
-                                  onClick={e => {
-                                    e.stopPropagation();     // Stop click bubbling to parent MenuItem
-                                  }}
-                                  onChange={e => {
-                                    e.preventDefault();      // Prevent default selection behavior
-                                    e.stopPropagation();
-
-                                    checked = !checked;
-
-                                    if (timerRef.current) clearTimeout(timerRef.current);
-                                    timerRef.current = setTimeout(() => {
-                                      if (checked) {
-                                        // addProduct(option);
-                                        selectedLinkedProducts.push(option);
-                                        setSelectedLinkedProducts([...selectedLinkedProducts]);
-                                      } else {
-                                        removeProductFromLinkedProducts(option);
-                                      }
-                                    }, 100);
-                                  }}
-                                />
-                              </div>
-                              <div style={{ ...columnStyle, width: '14%' }}>
-                                {highlightWords(
-                                  option.prefix_part_number
-                                    ? `${option.prefix_part_number}-${option.part_number}`
-                                    : option.part_number,
-                                  searchWords,
-                                  isActive
-                                )}
-                              </div>
-                              <div style={{ ...columnStyle, width: '29%' }}>
-                                {highlightWords(
-                                  option.name_in_arabic
-                                    ? `${option.name} - ${option.name_in_arabic}`
-                                    : option.name,
-                                  searchWords,
-                                  isActive
-                                )}
-                              </div>
-                              <div style={{ ...columnStyle, width: '12%' }}>
-                                {option.product_stores?.[localStorage.getItem("store_id")]?.retail_unit_price && (
-                                  <>
-                                    <Amount amount={trimTo2Decimals(option.product_stores?.[localStorage.getItem("store_id")]?.retail_unit_price)} />+
-                                  </>
-                                )}
-                                {option.product_stores?.[localStorage.getItem("store_id")]?.retail_unit_price_with_vat && (
-                                  <>
-                                    |<Amount amount={trimTo2Decimals(option.product_stores?.[localStorage.getItem("store_id")]?.retail_unit_price_with_vat)} />
-                                  </>
-                                )}
-                              </div>
-                              <div style={{ ...columnStyle, width: '5%' }}>
-                                {(() => {
-                                  const storeId = localStorage.getItem("store_id");
-                                  const productStore = option.product_stores?.[storeId];
-                                  const totalStock = productStore?.stock ?? 0;
-                                  const warehouseStocks = productStore?.warehouse_stocks ?? {};
-
-                                  // Build warehouse stock details string
-                                  const warehouseDetails = (() => {
-                                    // Always show MS first
-                                    let details = [];
-                                    if (warehouseStocks["main_store"] !== undefined) {
-                                      details.push(`MS: ${warehouseStocks["main_store"]}`);
-                                    }
-                                    Object.entries(warehouseStocks)
-                                      .filter(([key]) => key !== "main_store")
-                                      .forEach(([key, value]) => {
-                                        details.push(`${key.replace(/^w/, "WH").toUpperCase()}: ${value}`);
-                                      });
-                                    return details.join(", ");
-                                  })();
-
-                                  // Final display string
-                                  return (
-                                    <span>
-                                      {totalStock}
-                                      {warehouseDetails && store.settings.enable_warehouse_module ? ` (${warehouseDetails})` : ""}
-                                    </span>
-                                  );
-                                })()}
-                              </div>
-                              <div style={{ ...columnStyle, width: '5%' }}>
-                                <button
-                                  type="button"
-                                  className={isActive ? "btn btn-outline-light btn-sm" : "btn btn-outline-primary btn-sm"}
-                                  onClick={(e) => {
-                                    e.preventDefault();
-                                    e.stopPropagation();
-                                    openProductImages(option.id);
-                                  }}
-                                >
-                                  <i className="bi bi-images" aria-hidden="true" />
-                                </button>
-                              </div>
-                              <div style={{ ...columnStyle, width: '10%' }}>
-                                {highlightWords(option.brand_name, searchWords, isActive)}
-                              </div>
-                              <div style={{ ...columnStyle, width: '12%' }}>
-                                {option.product_stores?.[localStorage.getItem("store_id")]?.purchase_unit_price && (
-                                  <>
-                                    <Amount amount={trimTo2Decimals(option.product_stores?.[localStorage.getItem("store_id")]?.purchase_unit_price)} />+
-                                  </>
-                                )}
-                                {option.product_stores?.[localStorage.getItem("store_id")]?.purchase_unit_price_with_vat && (
-                                  <>
-                                    |<Amount amount={trimTo2Decimals(option.product_stores?.[localStorage.getItem("store_id")]?.purchase_unit_price_with_vat)} />
-                                  </>
-                                )}
-                              </div>
-                              <div style={{ ...columnStyle, width: '10%' }}>
-                                {highlightWords(option.country_name, searchWords, isActive)}
-                              </div>
-                            </div>
-                          </MenuItem>
-                        );
-                      })}
-                    </Menu>
-                  );
-                }}
-                multiple
-              />
-            </div>
-            <div className="col-md-12">
-              <label className="form-label">Product photos</label>
-              <ImageGallery
-                ref={ImageGalleryRef}
-                id={formData.id}
-                storeID={formData.store_id}
-                storedImages={formData.images}
-                modelName={"product"}
-                handleDelete={handleDeleteImage}
-              />
-            </div>
-
-            {/*<div className="col-md-6">
-              <label className="form-label">Image</label>
-
-              <div className="input-group mb-3">
-                <input
-                  id="product_image"
-                  name="product_image"
-                  value={selectedImage ? selectedImage : ""}
-                  type="file"
-                  onChange={(e) => {
-                    errors["image"] = "";
-                    setErrors({ ...errors });
-
-                    if (!e.target.value) {
-                      errors["image"] = "Invalid Image File";
-                      setErrors({ ...errors });
-                      return;
-                    }
-
-                    selectedImage = e.target.value;
-                    setSelectedImage(selectedImage);
-
-                    let file = document.querySelector("#image").files[0];
-
-                    let targetHeight = 400;
-                    let targetWidth = 400;
-
-                    let url = URL.createObjectURL(file);
-                    let img = new Image();
-
-                    img.onload = function () {
-                      let originaleWidth = img.width;
-                      let originalHeight = img.height;
-
-                      let targetDimensions = getTargetDimension(
-                        originaleWidth,
-                        originalHeight,
-                        targetWidth,
-                        targetHeight
-                      );
-                      targetWidth = targetDimensions.targetWidth;
-                      targetHeight = targetDimensions.targetHeight;
-
-                      resizeFIle(file, targetWidth, targetHeight, (result) => {
-                        formData.images_content[0] = result;
-                        setFormData({ ...formData });
-
-                        console.log(
-                          "formData.images_content[0]:",
-                          formData.images_content[0]
-                        );
-                      });
-                    };
-                    img.src = url;
-
-
-                  }}
-                  className="form-control"
-                />
-                {errors.image && (
-                  <div style={{ color: "red" }}>
-                    {errors.image}
+                    </div>
                   </div>
-                )}
+                </div>
+              )}
 
-              </div>
-            </div>*/}
+              {/* ===== TAB 3: INVENTORY / STOCK ===== */}
+              {activeTab === 'inventory' && (
+                <div>
 
-            <Modal.Footer>
-              <Button variant="secondary" onClick={handleClose}>
-                Close
-              </Button>
-              <Button variant="primary" onClick={handleCreate}>
-                {isProcessing
-                  ? (
-                    <Spinner
-                      as="span"
-                      animation="bproduct"
-                      size="sm"
-                      role="status"
-                      aria-hidden={true}
+                  <div className="pw-card" style={CARD}>
+                    <SectionTitle icon="bi-boxes">Current Stock Levels</SectionTitle>
+                    <div style={{ overflowX: 'auto', maxWidth: '500px' }}>
+                      <table style={{ borderCollapse: 'collapse', width: '100%' }}>
+                        <thead>
+                          <tr style={{ background: '#eceef0' }}>
+                            <th style={TH}>Location</th>
+                            <th style={TH}>Stock</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {(() => {
+                            const storeId = localStorage.getItem('store_id');
+                            const productStore = productStores?.[storeId] || {};
+                            const warehousesStocks = productStore.warehouse_stocks || {};
+                            const mainStoreStock = productStore.stock ?? 0;
+                            let rows = [];
+                            const mainStock = warehousesStocks['main_store'] !== undefined ? warehousesStocks['main_store'] : mainStoreStock;
+                            rows.push(<tr key="main_store" style={{ borderBottom: '1px solid #e0e3e5' }}><td style={TD}>Main Store</td><td style={TD}>{mainStock}</td></tr>);
+                            warehouseList.forEach((wh) => {
+                              if (wh.code !== 'main_store') {
+                                const whStock = warehousesStocks[wh.code] !== undefined ? warehousesStocks[wh.code] : 0;
+                                rows.push(<tr key={wh.code} style={{ borderBottom: '1px solid #e0e3e5' }}><td style={TD}>{wh.name} ({wh.code})</td><td style={TD}>{whStock}</td></tr>);
+                              }
+                            });
+                            rows.push(<tr key="total" style={{ fontWeight: 700, background: '#eceef0' }}><td style={TD}>Total Stock</td><td style={TD}>{productStores[localStorage.getItem('store_id')]?.stock}</td></tr>);
+                            return rows;
+                          })()}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+
+                  <div className="pw-card" style={CARD}>
+                    <SectionTitle icon="bi-arrow-left-right">Stock Adjustments</SectionTitle>
+                    <div style={{ marginBottom: '16px' }}>
+                      <Label>Quick Adjust (Damaged / Missing Stock)</Label>
+                      <div className="d-flex align-items-center gap-2 mt-1">
+                        <input id="product_damaged_stock_0" name="product_damaged_stock_0" type="number"
+                          value={damagedStock} style={{ ...INPUT, maxWidth: '180px' }} placeholder="Enter quantity"
+                          onChange={(e) => { errors['damaged_stock_0'] = ''; setErrors({ ...errors }); setDamagedStock(parseFloat(e.target.value)); setOperationType(null); }}
+                        />
+                        {damagedStock && !operationType && (
+                          <>
+                            <button type="button" className="btn btn-sm btn-success" onClick={(e) => { e.preventDefault(); if (!productStores[localStorage.getItem('store_id')].stocks_added) productStores[localStorage.getItem('store_id')].stocks_added = 0; if (!productStores[localStorage.getItem('store_id')].stock) productStores[localStorage.getItem('store_id')].stock = 0; addStockAdjustment(parseFloat(damagedStock), 'adding'); setProductStores({ ...productStores }); damagedStock = ''; setDamagedStock(damagedStock); }}>Add</button>
+                            <button type="button" className="btn btn-sm btn-danger" onClick={(e) => { e.preventDefault(); if (!productStores[localStorage.getItem('store_id')].stocks_removed) productStores[localStorage.getItem('store_id')].stocks_removed = 0; if (!productStores[localStorage.getItem('store_id')].stock) productStores[localStorage.getItem('store_id')].stock = 0; addStockAdjustment(parseFloat(damagedStock), 'removing'); setProductStores({ ...productStores }); damagedStock = ''; setDamagedStock(damagedStock); }}>Remove</button>
+                          </>
+                        )}
+                      </div>
+                    </div>
+
+                    <button type="button" style={{ ...SEC_BTN, marginBottom: '12px' }} onClick={() => addStockAdjustment()}>
+                      <i className="bi bi-plus-lg"></i>Create Stock Adjustment
+                    </button>
+
+                    {productStores[localStorage.getItem('store_id')]?.stock_adjustments?.filter(a => !a.deleted).length > 0 && (
+                      <div style={{ overflowX: 'auto' }}>
+                        <table style={{ borderCollapse: 'collapse', width: '100%', minWidth: '700px' }}>
+                          <thead>
+                            <tr style={{ background: '#eceef0' }}>
+                              <th style={TH}>Date</th><th style={TH}>Qty</th><th style={TH}>Add/Remove</th>
+                              <th style={TH}>Warehouse/Store</th><th style={TH}>Reason</th><th style={TH}></th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {productStores[localStorage.getItem('store_id')].stock_adjustments.filter(a => !a.deleted).map((adjustment, key) => (
+                              <tr key={key} style={{ borderBottom: '1px solid #e0e3e5' }}>
+                                <td style={{ ...TD, width: '200px' }}>
+                                  <DatePicker id="payment_date_str"
+                                    selected={productStores[localStorage.getItem('store_id')].stock_adjustments[key].date_str ? new Date(productStores[localStorage.getItem('store_id')].stock_adjustments[key].date_str) : null}
+                                    value={productStores[localStorage.getItem('store_id')].stock_adjustments[key].date_str ? format(new Date(productStores[localStorage.getItem('store_id')].stock_adjustments[key].date_str), 'MMMM d, yyyy h:mm aa') : null}
+                                    className="form-control form-control-sm" dateFormat="MMMM d, yyyy h:mm aa" showTimeSelect timeIntervals="1"
+                                    onChange={(value) => { productStores[localStorage.getItem('store_id')].stock_adjustments[key].date_str = value; setProductStores({ ...productStores }); }}
+                                  />
+                                  {errors['adjustment_date_' + key] && <ErrMsg>{errors['adjustment_date_' + key]}</ErrMsg>}
+                                </td>
+                                <td style={{ ...TD, width: '90px' }}>
+                                  <input type="number" id={`adjustment_quantity_${key}`} name={`adjustment_quantity_${key}`}
+                                    value={productStores[localStorage.getItem('store_id')].stock_adjustments[key].quantity}
+                                    className="form-control form-control-sm"
+                                    ref={(el) => { if (!inputRefs.current[key]) inputRefs.current[key] = {}; inputRefs.current[key][`adjustment_quantity_${key}`] = el; }}
+                                    onFocus={() => { if (timerRef.current) clearTimeout(timerRef.current); timerRef.current = setTimeout(() => { inputRefs.current[key][`adjustment_quantity_${key}`]?.select(); }, 20); }}
+                                    onChange={(e) => {
+                                      delete errors[`adjustment_quantity_${key}`]; setErrors({ ...errors });
+                                      if (!e.target.value) { productStores[localStorage.getItem('store_id')].stock_adjustments[key].quantity = e.target.value; setProductStores({ ...productStores }); return; }
+                                      productStores[localStorage.getItem('store_id')].stock_adjustments[key].quantity = parseFloat(e.target.value); setProductStores({ ...productStores });
+                                      findStocksAdded(); findStocksRemoved();
+                                    }}
+                                  />
+                                  {errors[`adjustment_quantity_${key}`] && <ErrMsg>{errors[`adjustment_quantity_${key}`]}</ErrMsg>}
+                                </td>
+                                <td style={{ ...TD, width: '110px' }}>
+                                  <select value={productStores[localStorage.getItem('store_id')].stock_adjustments[key].type} className="form-control form-control-sm"
+                                    onChange={(e) => {
+                                      delete errors[`adjustment_type_${key}`]; setErrors({ ...errors });
+                                      if (!e.target.value) { errors[`adjustment_type_${key}`] = 'Type is required'; setErrors({ ...errors }); productStores[localStorage.getItem('store_id')].stock_adjustments[key].type = ''; setProductStores({ ...productStores }); return; }
+                                      productStores[localStorage.getItem('store_id')].stock_adjustments[key].type = e.target.value; setProductStores({ ...productStores }); findStocksAdded(); findStocksRemoved();
+                                    }}>
+                                    <option value="">Select</option>
+                                    <option value="adding">Adding</option>
+                                    <option value="removing">Removing</option>
+                                  </select>
+                                  {errors[`adjustment_type_${key}`] && <ErrMsg>{errors[`adjustment_type_${key}`]}</ErrMsg>}
+                                </td>
+                                <td style={{ ...TD, width: '140px' }}>
+                                  <select id={`adjustment_warehouse_${key}`} name={`adjustment_warehouse_${key}`} className="form-control form-control-sm"
+                                    value={productStores[localStorage.getItem('store_id')].stock_adjustments[key].warehouse_id || 'main_store'}
+                                    onChange={(e) => {
+                                      const selectedValue = e.target.value;
+                                      if (selectedValue === 'main_store') { productStores[localStorage.getItem('store_id')].stock_adjustments[key].warehouse_id = null; productStores[localStorage.getItem('store_id')].stock_adjustments[key].warehouse_code = ''; }
+                                      else { const wh = warehouseList.find(w => w.id === selectedValue); if (wh) { productStores[localStorage.getItem('store_id')].stock_adjustments[key].warehouse_id = wh.id; productStores[localStorage.getItem('store_id')].stock_adjustments[key].warehouse_code = wh.code; } }
+                                      setProductStores({ ...productStores });
+                                    }}>
+                                    <option value="main_store">Main Store</option>
+                                    {warehouseList.map((w) => <option key={w.id} value={w.id}>{w.name} ({w.code})</option>)}
+                                  </select>
+                                </td>
+                                <td style={{ ...TD, width: '160px' }}>
+                                  <textarea id={`adjustment_reason_${key}`} name={`adjustment_reason_${key}`}
+                                    value={productStores[localStorage.getItem('store_id')].stock_adjustments[key].reason || ''}
+                                    className="form-control form-control-sm" placeholder="Reason" rows={2} style={{ resize: 'vertical' }}
+                                    onKeyDown={(e) => { if (e.key === 'Enter') e.stopPropagation(); }}
+                                    onChange={(e) => { productStores[localStorage.getItem('store_id')].stock_adjustments[key].reason = e.target.value; setProductStores({ ...productStores }); }}
+                                  />
+                                </td>
+                                <td style={{ ...TD, width: '40px', textAlign: 'center' }}>
+                                  <button type="button" className="btn btn-sm btn-outline-danger" onClick={() => removeStockAdjustment(key)}>
+                                    <i className="bi bi-trash"></i>
+                                  </button>
+                                </td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    )}
+
+                    <div style={{ marginTop: '16px', padding: '12px 16px', background: '#f2f4f6', borderRadius: '6px', border: '1px solid #c3c6d7', display: 'flex', gap: '24px' }}>
+                      <span style={{ fontFamily: '"Inter", sans-serif', fontSize: '13px', color: '#16a34a', fontWeight: 600 }}>+ Added: {productStores[localStorage.getItem('store_id')]?.stocks_added || 0}</span>
+                      <span style={{ fontFamily: '"Inter", sans-serif', fontSize: '13px', color: '#dc2626', fontWeight: 600 }}>− Removed: {productStores[localStorage.getItem('store_id')]?.stocks_removed || 0}</span>
+                    </div>
+                  </div>
+
+                  <div className="pw-card" style={CARD}>
+                    <SectionTitle icon="bi-collection">SET Configuration</SectionTitle>
+                    <div className="row g-3">
+                      <div className="col-md-3">
+                        <Label>Set Name</Label>
+                        <input id="set_name" name="set_name" type="text"
+                          value={formData.set?.name || ''}
+                          style={INPUT} placeholder="Set Name"
+                          onChange={(e) => { errors['set_name'] = ''; setErrors({ ...errors }); formData.set.name = e.target.value; formData.name = e.target.value; setFormData({ ...formData }); }}
+                        />
+                        {errors.set_name && <ErrMsg>{errors.set_name}</ErrMsg>}
+                      </div>
+                      <div className="col-md-9">
+                        <Label>Add Products to SET</Label>
+                        <Typeahead id="set_product_id" labelKey="search_label" emptyLabel="" ref={productSetSearchRef}
+                          onChange={(selectedItems) => {
+                            if (timerRef.current) clearTimeout(timerRef.current);
+                            if (selectedItems.length === 0) return;
+                            AddProductToSet(selectedItems[0]);
+                            timerRef.current = setTimeout(() => { setOpenProductSetSearchResult(false); setProductSetOptions([]); productSetSearchRef.current?.clear(); inputRefs.current[(formData.set.products.length - 1)]?.[`set_product_quantity_${formData.set.products.length - 1}`]?.select(); }, 300);
+                          }}
+                          options={productSetOptions} placeholder="Search and select products..." highlightOnlyResult={true}
+                          open={openProductSetSearchResult}
+                          onKeyDown={(e) => {
+                            if (timerRef.current) clearTimeout(timerRef.current);
+                            if (e.key === 'Escape') { timerRef.current = setTimeout(() => { setOpenProductSetSearchResult(false); setProductSetOptions([]); productSetSearchRef.current?.clear(); }, 100); }
+                            timerRef.current = setTimeout(() => { productSetSearchRef.current?.focus(); }, 100);
+                          }}
+                          onInputChange={(searchTerm) => { suggestProducts(searchTerm, 'set'); }}
+                          renderMenu={(results, menuProps, state) => {
+                            const searchWords = state.text.toLowerCase().split(' ').filter(Boolean);
+                            return (
+                              <Menu {...menuProps}>
+                                <MenuItem disabled style={{ position: 'sticky', top: 0, padding: 0, margin: 0 }}>
+                                  <div style={{ background: '#f8f9fa', zIndex: 2, display: 'flex', fontWeight: 'bold', padding: '4px 8px', borderBottom: '1px solid #ddd' }}>
+                                    <div style={{ width: '3%' }}></div><div style={{ width: '14%' }}>Part Number</div><div style={{ width: '29%' }}>Name</div>
+                                    <div style={{ width: '10%' }}>S.Unit Price</div><div style={{ width: '13%' }}>Stock</div><div style={{ width: '5%' }}>Photos</div>
+                                    <div style={{ width: '8%' }}>Brand</div><div style={{ width: '10%' }}>P.Unit Price</div><div style={{ width: '8%' }}>Country</div>
+                                  </div>
+                                </MenuItem>
+                                {results.map((option, index) => {
+                                  const onlyOneResult = results.length === 1;
+                                  const isActive = state.activeIndex === index || onlyOneResult;
+                                  let checked = IsProductExistsInSet(option.id);
+                                  return (
+                                    <MenuItem option={option} position={index} key={index} style={{ padding: '0px' }}>
+                                      <div style={{ display: 'flex', padding: '4px 8px' }}>
+                                        <div className="form-check" style={{ ...columnStyle, width: '3%' }} onClick={e => { e.stopPropagation(); checked = !checked; if (timerRef.current) clearTimeout(timerRef.current); timerRef.current = setTimeout(() => { if (checked) AddProductToSet(option); else RemoveProductFromSetByObj(option); }, 100); }}>
+                                          <input className="form-check-input" type="checkbox" value={checked} checked={checked} onClick={e => e.stopPropagation()} onChange={e => { e.preventDefault(); e.stopPropagation(); checked = !checked; if (timerRef.current) clearTimeout(timerRef.current); timerRef.current = setTimeout(() => { if (checked) AddProductToSet(option); else RemoveProductFromSetByObj(option); }, 100); }} />
+                                        </div>
+                                        <div style={{ ...columnStyle, width: '14%' }}>{highlightWords(option.prefix_part_number ? `${option.prefix_part_number} - ${option.part_number}` : option.part_number, searchWords, isActive)}</div>
+                                        <div style={{ ...columnStyle, width: '29%' }}>{highlightWords(option.name_in_arabic ? `${option.name} - ${option.name_in_arabic}` : option.name, searchWords, isActive)}</div>
+                                        <div style={{ ...columnStyle, width: '10%' }}>{option.product_stores?.[localStorage.getItem('store_id')]?.retail_unit_price && <><Amount amount={trimTo2Decimals(option.product_stores?.[localStorage.getItem('store_id')]?.retail_unit_price)} />+</>}{option.product_stores?.[localStorage.getItem('store_id')]?.retail_unit_price_with_vat && <>|<Amount amount={trimTo2Decimals(option.product_stores?.[localStorage.getItem('store_id')]?.retail_unit_price_with_vat)} /></>}</div>
+                                        <div style={{ ...columnStyle, width: '13%' }}>{(() => { const storeId = localStorage.getItem('store_id'); const ps = option.product_stores?.[storeId]; const ws = ps?.warehouse_stocks || {}; const mainStock = ws['main_store'] ?? 0; let warehouseDetail = ''; if (store.settings?.enable_warehouse_module) { const whEntries = Object.entries(ws).filter(([k]) => k !== 'main_store').map(([k, v]) => `${k.toUpperCase()}: ${v}`); if (whEntries.length > 0) warehouseDetail = ` (${whEntries.join(', ')})`; } return <span>{mainStock}{warehouseDetail}</span>; })()}</div>
+                                        <div style={{ ...columnStyle, width: '5%' }}><button type="button" className={isActive ? 'btn btn-outline-light btn-sm' : 'btn btn-outline-primary btn-sm'} onClick={(e) => { e.preventDefault(); e.stopPropagation(); openProductImages(option.id); }}><i className="bi bi-images" /></button></div>
+                                        <div style={{ ...columnStyle, width: '8%' }}>{highlightWords(option.brand_name, searchWords, isActive)}</div>
+                                        <div style={{ ...columnStyle, width: '10%' }}>{option.product_stores?.[localStorage.getItem('store_id')]?.purchase_unit_price && <><Amount amount={trimTo2Decimals(option.product_stores?.[localStorage.getItem('store_id')]?.purchase_unit_price)} />+</>}{option.product_stores?.[localStorage.getItem('store_id')]?.purchase_unit_price_with_vat && <>|<Amount amount={trimTo2Decimals(option.product_stores?.[localStorage.getItem('store_id')]?.purchase_unit_price_with_vat)} /></>}</div>
+                                        <div style={{ ...columnStyle, width: '8%' }}>{highlightWords(option.country_name, searchWords, isActive)}</div>
+                                      </div>
+                                    </MenuItem>
+                                  );
+                                })}
+                              </Menu>
+                            );
+                          }}
+                        />
+                      </div>
+                    </div>
+
+                    {formData.set?.products?.length > 0 && (
+                      <div style={{ marginTop: '20px', overflowX: 'auto' }}>
+                        <table style={{ borderCollapse: 'collapse', width: '100%' }}>
+                          <thead>
+                            <tr style={{ background: '#eceef0' }}>
+                              <th style={TH}>Part No.</th><th style={TH}>Name</th><th style={TH}>Info</th>
+                              <th style={TH}>Qty</th><th style={TH}>Unit</th>
+                              <th style={TH}>Purchase Price</th><th style={TH}>Purchase (VAT)</th><th style={TH}>Purchase %</th>
+                              <th style={TH}>Retail Price</th><th style={TH}>Retail (VAT)</th><th style={TH}>Retail %</th>
+                              <th style={TH}></th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {formData.set.products.map((product, key) => (
+                              <tr key={key} style={{ borderBottom: '1px solid #e0e3e5' }}>
+                                <td style={TD}><span style={{ color: '#004ac6', cursor: 'pointer' }} onClick={() => openUpdateForm(product.product_id)}>{product.part_number}</span></td>
+                                <td style={TD}><span style={{ color: '#004ac6', cursor: 'pointer' }} onClick={() => openUpdateForm(product.product_id)}>{product.name}</span></td>
+                                <td style={{ ...TD, verticalAlign: 'middle', padding: '0.25rem' }}>
+                                  <div style={{ zIndex: '9999 !important', position: 'absolute !important' }}>
+                                    <Dropdown drop="top">
+                                      <Dropdown.Toggle variant="secondary" id="dropdown-secondary">
+                                        <i className="bi bi-info"></i>
+                                      </Dropdown.Toggle>
+                                      <Dropdown.Menu style={{ zIndex: 9999, position: 'absolute' }} popperConfig={{ modifiers: [{ name: 'preventOverflow', options: { boundary: 'viewport' } }] }}>
+                                        <Dropdown.Item onClick={() => openLinkedProducts(product)}><i className="bi bi-link"></i>&nbsp;Linked Products ({getShortcut('linkedProducts')})</Dropdown.Item>
+                                        <Dropdown.Item onClick={() => openProductHistory(product)}><i className="bi bi-clock-history"></i>&nbsp;History ({getShortcut('productHistory')})</Dropdown.Item>
+                                        <Dropdown.Item onClick={() => openSalesHistory(product)}><i className="bi bi-clock-history"></i>&nbsp;Sales History ({getShortcut('salesHistory')})</Dropdown.Item>
+                                        <Dropdown.Item onClick={() => openSalesReturnHistory(product)}><i className="bi bi-clock-history"></i>&nbsp;Sales Return History ({getShortcut('salesReturnHistory')})</Dropdown.Item>
+                                        <Dropdown.Item onClick={() => openPurchaseHistory(product)}><i className="bi bi-clock-history"></i>&nbsp;Purchase History ({getShortcut('purchaseHistory')})</Dropdown.Item>
+                                        <Dropdown.Item onClick={() => openPurchaseReturnHistory(product)}><i className="bi bi-clock-history"></i>&nbsp;Purchase Return History ({getShortcut('purchaseReturnHistory')})</Dropdown.Item>
+                                        <Dropdown.Item onClick={() => openDeliveryNoteHistory(product)}><i className="bi bi-clock-history"></i>&nbsp;Delivery Note History ({getShortcut('deliveryNoteHistory')})</Dropdown.Item>
+                                        <Dropdown.Item onClick={() => openQuotationHistory(product)}><i className="bi bi-clock-history"></i>&nbsp;Quotation History ({getShortcut('quotationHistory')})</Dropdown.Item>
+                                        <Dropdown.Item onClick={() => openQuotationSalesHistory(product)}><i className="bi bi-clock-history"></i>&nbsp;Qtn. Sales History ({getShortcut('quotationSalesHistory')})</Dropdown.Item>
+                                        <Dropdown.Item onClick={() => openQuotationSalesReturnHistory(product)}><i className="bi bi-clock-history"></i>&nbsp;Qtn. Sales Return History ({getShortcut('quotationSalesReturnHistory')})</Dropdown.Item>
+                                        <Dropdown.Item onClick={() => openProductImages(product.product_id)}><i className="bi bi-images"></i>&nbsp;Images ({getShortcut('images')})</Dropdown.Item>
+                                      </Dropdown.Menu>
+                                    </Dropdown>
+                                  </div>
+                                </td>
+                                <td style={TD}>
+                                  <input type="number" id={`set_product_quantity_${key}`} name={`set_product_quantity_${key}`}
+                                    value={formData.set.products[key].quantity} className="form-control form-control-sm"
+                                    ref={(el) => { if (!inputRefs.current[key]) inputRefs.current[key] = {}; inputRefs.current[key][`set_product_quantity_${key}`] = el; }}
+                                    onFocus={() => { if (timerRef.current) clearTimeout(timerRef.current); timerRef.current = setTimeout(() => { inputRefs.current[key][`set_product_quantity_${key}`].select(); }, 100); }}
+                                    onKeyDown={(e) => { RunKeyActions(e, product); if (timerRef.current) clearTimeout(timerRef.current); if (e.key === 'ArrowLeft') { if ((key + 1) === formData.set.products.length) { timerRef.current = setTimeout(() => { productSetSearchRef.current?.focus(); }, 100); } else { timerRef.current = setTimeout(() => { inputRefs.current[(key + 1)][`set_product_unit_price_with_vat_${key + 1}`].focus(); }, 100); } } }}
+                                    onChange={(e) => { errors[`set_product_quantity_${key}`] = ''; setErrors({ ...errors }); if (e.target.value === 0) { formData.set.products[key].quantity = 0; setFormData({ ...formData }); findSetTotal(); return; } if (!e.target.value) { formData.set.products[key].quantity = ''; setFormData({ ...formData }); findSetTotal(); return; } formData.set.products[key].quantity = parseFloat(e.target.value); setFormData({ ...formData }); findSetTotal(); }}
+                                  />
+                                  {errors[`set_product_quantity_${key}`] && <ErrMsg>{errors[`set_product_quantity_${key}`]}</ErrMsg>}
+                                </td>
+                                <td style={TD}>{formData.set.products[key].unit ? formData.set.products[key].unit[0]?.toUpperCase() : 'P'}</td>
+                                <td style={TD}>
+                                  <input type="number" id={`set_product_purchase_unit_price_${key}`} name={`set_product_purchase_unit_price_${key}`}
+                                    value={formData.set.products[key].purchase_unit_price} className="form-control form-control-sm"
+                                    ref={(el) => { if (!inputRefs.current[key]) inputRefs.current[key] = {}; inputRefs.current[key][`set_product_purchase_unit_price_${key}`] = el; }}
+                                    onFocus={() => { if (timerRef.current) clearTimeout(timerRef.current); timerRef.current = setTimeout(() => { inputRefs.current[key][`set_product_purchase_unit_price_${key}`].select(); }, 100); }}
+                                    onKeyDown={(e) => { RunKeyActions(e, product); if (timerRef.current) clearTimeout(timerRef.current); if (e.key === 'ArrowLeft') { timerRef.current = setTimeout(() => { inputRefs.current[key][`set_product_quantity_${key}`].focus(); }, 100); } }}
+                                    onChange={(e) => { errors[`set_product_purchase_unit_price_${key}`] = ''; setErrors({ ...errors }); if (e.target.value === 0) { formData.set.products[key].purchase_unit_price_with_vat = 0; formData.set.products[key].purchase_unit_price = 0; findSetTotal(); setFormData({ ...formData }); return; } if (!e.target.value) { formData.set.products[key].purchase_unit_price_with_vat = ''; formData.set.products[key].purchase_unit_price = ''; findSetTotal(); setFormData({ ...formData }); return; } formData.set.products[key].purchase_unit_price = parseFloat(e.target.value); formData.set.products[key].purchase_unit_price_with_vat = parseFloat(trimTo8Decimals(formData.set.products[key].purchase_unit_price * (1 + (store.vat_percent / 100)))); setFormData({ ...formData }); findSetTotal(); }}
+                                  />
+                                  {errors[`set_product_purchase_unit_price_${key}`] && <ErrMsg>{errors[`set_product_purchase_unit_price_${key}`]}</ErrMsg>}
+                                </td>
+                                <td style={TD}>
+                                  <input type="number" id={`set_product_purchase_unit_price_with_vat_${key}`} name={`set_product_purchase_unit_price_with_vat_${key}`}
+                                    value={formData.set.products[key].purchase_unit_price_with_vat} className="form-control form-control-sm"
+                                    ref={(el) => { if (!inputRefs.current[key]) inputRefs.current[key] = {}; inputRefs.current[key][`set_product_purchase_unit_price_with_vat_${key}`] = el; }}
+                                    onFocus={() => { if (timerRef.current) clearTimeout(timerRef.current); timerRef.current = setTimeout(() => { inputRefs.current[key][`set_product_purchase_unit_price_with_vat_${key}`]?.select(); }, 100); }}
+                                    onKeyDown={(e) => { RunKeyActions(e, product); if (timerRef.current) clearTimeout(timerRef.current); if (e.key === 'Enter') { if ((key + 1) === formData.set.products.length) { timerRef.current = setTimeout(() => { productSetSearchRef.current?.focus(); }, 100); } else { if (key === 0) { timerRef.current = setTimeout(() => { productSetSearchRef.current?.focus(); }, 100); } else { timerRef.current = setTimeout(() => { inputRefs.current[key][`set_product_unit_price_${key}`].focus(); }, 100); } } } else if (e.key === 'ArrowLeft') { timerRef.current = setTimeout(() => { inputRefs.current[key][`set_product_purchase_unit_price_${key}`].focus(); }, 100); } }}
+                                    onChange={(e) => { errors[`set_product_purchase_unit_price_with_vat_${key}`] = ''; setErrors({ ...errors }); if (e.target.value === 0) { formData.set.products[key].purchase_unit_price_with_vat = 0; formData.set.products[key].purchase_unit_price = 0; findSetTotal(); setFormData({ ...formData }); return; } if (!e.target.value) { formData.set.products[key].purchase_unit_price_with_vat = ''; formData.set.products[key].purchase_unit_price = ''; findSetTotal(); setFormData({ ...formData }); return; } formData.set.products[key].purchase_unit_price_with_vat = parseFloat(e.target.value); formData.set.products[key].purchase_unit_price = parseFloat(trimTo8Decimals(formData.set.products[key].purchase_unit_price_with_vat / (1 + (store.vat_percent / 100)))); setFormData({ ...formData }); findSetTotal(); }}
+                                  />
+                                  {errors[`set_product_purchase_unit_price_with_vat_${key}`] && <ErrMsg>{errors[`set_product_purchase_unit_price_with_vat_${key}`]}</ErrMsg>}
+                                </td>
+                                <td style={TD}>
+                                  {trimTo2Decimals(formData.set.products[key].purchase_price_percent) + '%'}
+                                  <OverlayTrigger placement="right" overlay={renderPercentTooltip({ value: formData.set.products[key].purchase_price_percent })}>
+                                    <span style={{ textDecoration: 'underline dotted', cursor: 'pointer' }}>ℹ️</span>
+                                  </OverlayTrigger>
+                                </td>
+                                <td style={TD}>
+                                  <input type="number" id={`set_product_unit_price_${key}`} name={`set_product_unit_price_${key}`}
+                                    value={formData.set.products[key].retail_unit_price} className="form-control form-control-sm"
+                                    ref={(el) => { if (!inputRefs.current[key]) inputRefs.current[key] = {}; inputRefs.current[key][`set_product_unit_price_${key}`] = el; }}
+                                    onFocus={() => { if (timerRef.current) clearTimeout(timerRef.current); timerRef.current = setTimeout(() => { inputRefs.current[key][`set_product_unit_price_${key}`].select(); }, 100); }}
+                                    onKeyDown={(e) => { RunKeyActions(e, product); if (timerRef.current) clearTimeout(timerRef.current); if (e.key === 'ArrowLeft') { timerRef.current = setTimeout(() => { inputRefs.current[key][`set_product_purchase_unit_price_with_vat_${key}`].focus(); }, 100); } }}
+                                    onChange={(e) => { errors[`set_product_unit_price_${key}`] = ''; setErrors({ ...errors }); if (e.target.value === 0) { formData.set.products[key].retail_unit_price_with_vat = 0; formData.set.products[key].retail_unit_price = 0; findSetTotal(); setFormData({ ...formData }); return; } if (!e.target.value) { formData.set.products[key].retail_unit_price_with_vat = ''; formData.set.products[key].retail_unit_price = ''; findSetTotal(); setFormData({ ...formData }); return; } formData.set.products[key].retail_unit_price = parseFloat(e.target.value); formData.set.products[key].retail_unit_price_with_vat = parseFloat(trimTo8Decimals(formData.set.products[key].retail_unit_price * (1 + (store.vat_percent / 100)))); setFormData({ ...formData }); findSetTotal(); }}
+                                  />
+                                  {errors[`set_product_unit_price_${key}`] && <ErrMsg>{errors[`set_product_unit_price_${key}`]}</ErrMsg>}
+                                </td>
+                                <td style={TD}>
+                                  <input type="number" id={`set_product_unit_price_with_vat_${key}`} name={`set_product_unit_price_with_vat_${key}`}
+                                    value={formData.set.products[key].retail_unit_price_with_vat} className="form-control form-control-sm"
+                                    ref={(el) => { if (!inputRefs.current[key]) inputRefs.current[key] = {}; inputRefs.current[key][`set_product_unit_price_with_vat_${key}`] = el; }}
+                                    onFocus={() => { if (timerRef.current) clearTimeout(timerRef.current); timerRef.current = setTimeout(() => { inputRefs.current[key][`set_product_unit_price_with_vat_${key}`]?.select(); }, 100); }}
+                                    onKeyDown={(e) => { RunKeyActions(e, product); if (timerRef.current) clearTimeout(timerRef.current); if (e.key === 'Enter') { if ((key + 1) === formData.set.products.length) { timerRef.current = setTimeout(() => { productSetSearchRef.current?.focus(); }, 100); } else { if (key === 0) { timerRef.current = setTimeout(() => { productSetSearchRef.current?.focus(); }, 100); } else { timerRef.current = setTimeout(() => { inputRefs.current[key - 1][`set_product_quantity_${key - 1}`]?.focus(); }, 100); } } } else if (e.key === 'ArrowLeft') { timerRef.current = setTimeout(() => { inputRefs.current[key][`set_product_unit_price_${key}`].focus(); }, 100); } }}
+                                    onChange={(e) => { errors[`set_product_unit_price_with_vat_${key}`] = ''; setErrors({ ...errors }); if (e.target.value === 0) { formData.set.products[key].retail_unit_price_with_vat = 0; formData.set.products[key].retail_unit_price = 0; findSetTotal(); setFormData({ ...formData }); return; } if (!e.target.value) { formData.set.products[key].retail_unit_price_with_vat = ''; formData.set.products[key].retail_unit_price = ''; findSetTotal(); setFormData({ ...formData }); return; } formData.set.products[key].retail_unit_price_with_vat = parseFloat(e.target.value); formData.set.products[key].retail_unit_price = parseFloat(trimTo8Decimals(formData.set.products[key].retail_unit_price_with_vat / (1 + (store.vat_percent / 100)))); setFormData({ ...formData }); findSetTotal(); }}
+                                  />
+                                  {errors[`set_product_unit_price_with_vat_${key}`] && <ErrMsg>{errors[`set_product_unit_price_with_vat_${key}`]}</ErrMsg>}
+                                </td>
+                                <td style={TD}>
+                                  {trimTo2Decimals(formData.set.products[key].retail_price_percent) + '%'}
+                                  <OverlayTrigger placement="right" overlay={renderPercentTooltip({ value: formData.set.products[key].retail_price_percent })}>
+                                    <span style={{ textDecoration: 'underline dotted', cursor: 'pointer' }}>ℹ️</span>
+                                  </OverlayTrigger>
+                                </td>
+                                <td style={TD}>
+                                  <Button variant="danger" size="sm" onClick={() => RemoveProductFromSet(key)}>
+                                    <i className="bi bi-trash"></i>
+                                  </Button>
+                                </td>
+                              </tr>
+                            )).reverse()}
+                            <tr style={{ fontWeight: 700, background: '#eceef0' }}>
+                              <td style={TD}></td><td style={TD}></td><td style={{ ...TD, textAlign: 'right' }}>Total</td>
+                              <td style={TD}>{formData.set?.total_quantity ? trimTo4Decimals(formData.set.total_quantity) : ''}</td>
+                              <td style={TD}></td>
+                              <td style={TD}>{formData.set?.purchase_total ? trimTo4Decimals(formData.set.purchase_total) : ''}{errors['set_purchase_total'] && <ErrMsg>{errors['set_purchase_total']}</ErrMsg>}</td>
+                              <td style={TD}>{formData.set?.purchase_total_with_vat ? trimTo4Decimals(formData.set.purchase_total_with_vat) : ''}</td>
+                              <td style={TD}></td>
+                              <td style={TD}>{formData.set?.total ? trimTo4Decimals(formData.set.total) : ''}{errors['set_total'] && <ErrMsg>{errors['set_total']}</ErrMsg>}</td>
+                              <td style={TD}>{formData.set?.total_with_vat ? trimTo4Decimals(formData.set.total_with_vat) : ''}</td>
+                              <td style={TD}></td><td style={TD}></td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+                    )}
+                  </div>
+
+                </div>
+              )}
+
+              {/* ===== TAB 4: LINKED PRODUCTS & PHOTOS ===== */}
+              {activeTab === 'linked' && (
+                <div>
+
+                  <div className="pw-card" style={CARD}>
+                    <SectionTitle icon="bi-link-45deg">Linked Products</SectionTitle>
+                    <Typeahead id="linked_product_id" labelKey="search_label" emptyLabel="" filterBy={() => true} ref={productSearchRef} multiple
+                      onChange={(selectedItems) => {
+                        if (selectedItems.length > selectedLinkedProducts.length) {
+                          if (!IsProductExistsInLinkedProducts(selectedItems[selectedItems.length - 1].id)) setSelectedLinkedProducts(selectedItems);
+                        } else { setSelectedLinkedProducts(selectedItems); }
+                        setOpenProductSearchResult(false);
+                      }}
+                      options={productOptions} placeholder="Search products to link..." selected={selectedLinkedProducts} highlightOnlyResult={true} open={openProductSearchResult}
+                      onKeyDown={(e) => { if (e.key === 'Escape') { setProductOptions([]); setOpenProductSearchResult(false); } }}
+                      onInputChange={(searchTerm) => { if (timerRef.current) clearTimeout(timerRef.current); timerRef.current = setTimeout(() => { suggestProducts(searchTerm); }, 100); }}
+                      renderMenu={(results, menuProps, state) => {
+                        const searchWords = state.text.toLowerCase().split(' ').filter(Boolean);
+                        return (
+                          <Menu {...menuProps}>
+                            <MenuItem disabled style={{ position: 'sticky', top: 0, padding: 0, margin: 0 }}>
+                              <div style={{ background: '#f8f9fa', zIndex: 2, display: 'flex', fontWeight: 'bold', padding: '4px 8px', borderBottom: '1px solid #ddd' }}>
+                                <div style={{ width: '3%' }}></div><div style={{ width: '14%' }}>Part Number</div><div style={{ width: '29%' }}>Name</div>
+                                <div style={{ width: '12%' }}>S.Unit Price</div><div style={{ width: '5%' }}>Stock</div><div style={{ width: '5%' }}>Photos</div>
+                                <div style={{ width: '10%' }}>Brand</div><div style={{ width: '12%' }}>P.Unit Price</div><div style={{ width: '10%' }}>Country</div>
+                              </div>
+                            </MenuItem>
+                            {results.map((option, index) => {
+                              const onlyOneResult = results.length === 1;
+                              const isActive = state.activeIndex === index || onlyOneResult;
+                              let checked = IsProductExistsInLinkedProducts(option.id);
+                              return (
+                                <MenuItem option={option} position={index} key={index} style={{ padding: '0px' }}>
+                                  <div style={{ display: 'flex', padding: '4px 8px' }}>
+                                    <div className="form-check" style={{ ...columnStyle, width: '3%' }} onClick={e => { e.stopPropagation(); checked = !checked; if (timerRef.current) clearTimeout(timerRef.current); timerRef.current = setTimeout(() => { if (checked) { selectedLinkedProducts.push(option); setSelectedLinkedProducts([...selectedLinkedProducts]); } else removeProductFromLinkedProducts(option); }, 100); }}>
+                                      <input className="form-check-input" type="checkbox" value={checked} checked={checked} onClick={e => e.stopPropagation()} onChange={e => { e.preventDefault(); e.stopPropagation(); checked = !checked; if (timerRef.current) clearTimeout(timerRef.current); timerRef.current = setTimeout(() => { if (checked) { selectedLinkedProducts.push(option); setSelectedLinkedProducts([...selectedLinkedProducts]); } else removeProductFromLinkedProducts(option); }, 100); }} />
+                                    </div>
+                                    <div style={{ ...columnStyle, width: '14%' }}>{highlightWords(option.prefix_part_number ? `${option.prefix_part_number}-${option.part_number}` : option.part_number, searchWords, isActive)}</div>
+                                    <div style={{ ...columnStyle, width: '29%' }}>{highlightWords(option.name_in_arabic ? `${option.name} - ${option.name_in_arabic}` : option.name, searchWords, isActive)}</div>
+                                    <div style={{ ...columnStyle, width: '12%' }}>{option.product_stores?.[localStorage.getItem('store_id')]?.retail_unit_price && <><Amount amount={trimTo2Decimals(option.product_stores?.[localStorage.getItem('store_id')]?.retail_unit_price)} />+</>}{option.product_stores?.[localStorage.getItem('store_id')]?.retail_unit_price_with_vat && <>|<Amount amount={trimTo2Decimals(option.product_stores?.[localStorage.getItem('store_id')]?.retail_unit_price_with_vat)} /></>}</div>
+                                    <div style={{ ...columnStyle, width: '5%' }}>{(() => { const storeId = localStorage.getItem('store_id'); const ps = option.product_stores?.[storeId]; const totalStock = ps?.stock ?? 0; const ws = ps?.warehouse_stocks ?? {}; const warehouseDetails = (() => { let details = []; if (ws['main_store'] !== undefined) details.push(`MS: ${ws['main_store']}`); Object.entries(ws).filter(([k]) => k !== 'main_store').forEach(([k, v]) => details.push(`${k.replace(/^w/, 'WH').toUpperCase()}: ${v}`)); return details.join(', '); })(); return <span>{totalStock}{warehouseDetails && store.settings.enable_warehouse_module ? ` (${warehouseDetails})` : ''}</span>; })()}</div>
+                                    <div style={{ ...columnStyle, width: '5%' }}><button type="button" className={isActive ? 'btn btn-outline-light btn-sm' : 'btn btn-outline-primary btn-sm'} onClick={(e) => { e.preventDefault(); e.stopPropagation(); openProductImages(option.id); }}><i className="bi bi-images" aria-hidden="true" /></button></div>
+                                    <div style={{ ...columnStyle, width: '10%' }}>{highlightWords(option.brand_name, searchWords, isActive)}</div>
+                                    <div style={{ ...columnStyle, width: '12%' }}>{option.product_stores?.[localStorage.getItem('store_id')]?.purchase_unit_price && <><Amount amount={trimTo2Decimals(option.product_stores?.[localStorage.getItem('store_id')]?.purchase_unit_price)} />+</>}{option.product_stores?.[localStorage.getItem('store_id')]?.purchase_unit_price_with_vat && <>|<Amount amount={trimTo2Decimals(option.product_stores?.[localStorage.getItem('store_id')]?.purchase_unit_price_with_vat)} /></>}</div>
+                                    <div style={{ ...columnStyle, width: '10%' }}>{highlightWords(option.country_name, searchWords, isActive)}</div>
+                                  </div>
+                                </MenuItem>
+                              );
+                            })}
+                          </Menu>
+                        );
+                      }}
                     />
-                  ) + " Processing..."
-                  : formData.id
-                    ? "Update"
-                    : "Create"}
-              </Button>
-            </Modal.Footer>
+                  </div>
+
+                  <div className="pw-card" style={CARD}>
+                    <SectionTitle icon="bi-images">Product Photos</SectionTitle>
+                    <ImageGallery ref={ImageGalleryRef} id={formData.id} storeID={formData.store_id} storedImages={formData.images} modelName="product" handleDelete={handleDeleteImage} />
+                  </div>
+
+                </div>
+              )}
+
+            </div>{/* end main content */}
           </form>
         </Modal.Body>
       </Modal >
