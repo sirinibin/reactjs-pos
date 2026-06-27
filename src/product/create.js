@@ -58,6 +58,10 @@ const ProductCreate = forwardRef((props, ref) => {
     async open(id, linkToProductID) {
       selectedCategories = [];
       setSelectedCategories(selectedCategories);
+      selectedBrands = [];
+      setSelectedBrands(selectedBrands);
+      selectedCountries = [];
+      setSelectedCountries(selectedCountries);
 
       formData = {
         images_content: [],
@@ -1721,6 +1725,7 @@ const ProductCreate = forwardRef((props, ref) => {
                       <Typeahead
                         id="brand_id"
                         labelKey="name"
+                        positionFixed={true}
                         isLoading={isBrandsLoading}
                         onChange={(selectedItems) => {
                           errors.brand_id = "";
@@ -1777,6 +1782,7 @@ const ProductCreate = forwardRef((props, ref) => {
                     <Typeahead
                       id="country_code"
                       labelKey="label"
+                      positionFixed={true}
                       onChange={(selectedItems) => {
                         errors.country_code = "";
                         setErrors(errors);
@@ -1897,6 +1903,7 @@ const ProductCreate = forwardRef((props, ref) => {
                         ref={categorySearchRef}
                         id="category_id"
                         labelKey="name"
+                        positionFixed={true}
                         isInvalid={errors.category_id ? true : false}
                         onChange={(selectedItems) => {
                           errors.category_id = "";

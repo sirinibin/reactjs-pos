@@ -5,6 +5,7 @@ import StoreView from "./view.js";
 import WhatsAppConnect from "./WhatsAppConnect.js";
 import WhatsAppContactsModal from "./WhatsAppContactsModal.js";
 import StoreBackup from "./StoreBackup.js";
+import StoreDuplicate from "./StoreDuplicate.js";
 
 import "react-datepicker/dist/react-datepicker.css";
 import { Button, Spinner, Dropdown } from "react-bootstrap";
@@ -362,6 +363,11 @@ function StoreIndex(props) {
         StoreBackupRef.current.open(store);
     }
 
+    const StoreDuplicateRef = useRef();
+    function openDuplicate(store) {
+        StoreDuplicateRef.current.open(store);
+    }
+
 
 
     return (
@@ -372,6 +378,7 @@ function StoreIndex(props) {
             <WhatsAppConnect ref={WhatsAppConnectRef} showToastMessage={props.showToastMessage} onConnected={list} onDisconnected={list} />
             <WhatsAppContactsModal ref={WhatsAppContactsRef} showToastMessage={props.showToastMessage} />
             <StoreBackup ref={StoreBackupRef} />
+            <StoreDuplicate ref={StoreDuplicateRef} onDuplicated={list} />
 
             <div className="container-fluid p-0">
                 <div className="row">
@@ -716,6 +723,11 @@ function StoreIndex(props) {
                                                                     {localStorage.getItem('user_role') === "Admin" && (
                                                                         <Dropdown.Item onClick={() => openUpdateForm(store.id)}>
                                                                             <i className="bi bi-pencil me-2"></i>Edit
+                                                                        </Dropdown.Item>
+                                                                    )}
+                                                                    {localStorage.getItem('user_role') === "Admin" && (
+                                                                        <Dropdown.Item onClick={() => openDuplicate(store)}>
+                                                                            <i className="bi bi-files me-2"></i>Duplicate
                                                                         </Dropdown.Item>
                                                                     )}
                                                                     <Dropdown.Divider />
