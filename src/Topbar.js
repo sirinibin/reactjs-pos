@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import Dropdown from 'react-bootstrap/Dropdown';
 import { useTranslation } from 'react-i18next';
 import LanguageSwitcher from './components/LanguageSwitcher';
+import { LANGUAGE_OPTIONS } from './i18n/config';
 import eventEmitter from './utils/eventEmitter';
 
 function formatTimeAgo(isoString) {
@@ -40,7 +41,7 @@ function saveDismissedMap(map) {
 }
 
 function Topbar(props) {
-    const { t } = useTranslation('common');
+    const { t, i18n } = useTranslation('common');
     const [notifications, setNotifications] = useState([]);
     const [, setTick] = useState(0); // used to re-render "time ago" every minute
     const notificationsRef = useRef([]);
@@ -235,7 +236,7 @@ function Topbar(props) {
                 </a>
 
                 <div className="navbar-collapse collapse">
-                    <Dropdown onToggle={(isOpen) => { if (isOpen) fetchStores(); }} className="ms-2" style={{ flex: "0 1 auto", minWidth: 0, overflow: "hidden" }}>
+                    <Dropdown onToggle={(isOpen) => { if (isOpen) fetchStores(); }} className="ms-2" style={{ flex: "0 1 auto", minWidth: 0 }}>
                         <Dropdown.Toggle
                             as="span"
                             style={{ cursor: "pointer", display: "inline-flex", alignItems: "center", gap: "6px", userSelect: "none", maxWidth: "100%", overflow: "hidden" }}
@@ -472,6 +473,34 @@ function Topbar(props) {
                                         <i className="bi bi-shop me-1"></i>{storeName}
                                     </div>
                                 )}
+                            </div>
+                        </div>
+
+                        {/* Language selector */}
+                        <div style={{ padding: "14px 16px", borderBottom: "1px solid #eee" }}>
+                            <div style={{ fontSize: "11px", color: "#999", textTransform: "uppercase", letterSpacing: "0.6px", marginBottom: "10px" }}>
+                                <i className="bi bi-translate me-1"></i>Language
+                            </div>
+                            <div style={{ display: "flex", flexWrap: "wrap", gap: "8px" }}>
+                                {LANGUAGE_OPTIONS.map(lang => (
+                                    <button
+                                        key={lang.code}
+                                        onClick={() => { i18n.changeLanguage(lang.code); setMobileMenuOpen(false); }}
+                                        style={{
+                                            padding: "5px 11px",
+                                            borderRadius: "16px",
+                                            border: "1px solid",
+                                            borderColor: i18n.language === lang.code ? "#3b7ddd" : "#dee2e6",
+                                            background: i18n.language === lang.code ? "#3b7ddd" : "transparent",
+                                            color: i18n.language === lang.code ? "#fff" : "#495057",
+                                            cursor: "pointer",
+                                            fontSize: "13px",
+                                            fontWeight: i18n.language === lang.code ? 600 : 400,
+                                        }}
+                                    >
+                                        {lang.nativeName}
+                                    </button>
+                                ))}
                             </div>
                         </div>
 
