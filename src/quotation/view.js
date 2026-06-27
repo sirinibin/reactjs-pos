@@ -306,7 +306,7 @@ const QuotationView = forwardRef((props, ref) => {
                             <h1 style={{ margin: 0, fontSize: '30px', lineHeight: '38px', fontWeight: 700, letterSpacing: '-0.02em', fontFamily: "'Hanken Grotesk', sans-serif", color: '#191c1e' }}>
                                 {t("Details of Quotation")} #{model.code}
                             </h1>
-                            {model.status && (
+                            {model.status && model.type === 'invoice' && (
                                 <span style={{ backgroundColor: '#dcfce7', color: '#15803d', border: '1px solid #bbf7d0', padding: '2px 8px', borderRadius: '2px', fontSize: '12px', fontWeight: 500, lineHeight: '14px' }}>
                                     {formatPaymentMethod(model.status)}
                                 </span>

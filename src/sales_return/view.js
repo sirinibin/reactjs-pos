@@ -447,9 +447,9 @@ const SalesReturnView = forwardRef((props, ref) => {
                             )}
                         </div>
 
-                        {/* Payment Method */}
+                        {/* Payment Methods */}
                         <div style={{ backgroundColor: '#ffffff', padding: '24px', borderRadius: '8px', border: '1px solid #e2e8f0', display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                            <span style={{ fontSize: '13px', fontWeight: 600, color: '#434655', lineHeight: '16px' }}>{t("Payment Method")}</span>
+                            <span style={{ fontSize: '13px', fontWeight: 600, color: '#434655', lineHeight: '16px' }}>{t("Payment Methods")}</span>
                             <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '4px' }}>
                                 <i className="bi bi-wallet2" style={{ fontSize: '20px', color: '#505f76' }}></i>
                                 <span style={{ fontSize: '18px', fontWeight: 600, lineHeight: '26px', color: '#191c1e', fontFamily: "'Hanken Grotesk', sans-serif" }}>
@@ -558,7 +558,7 @@ const SalesReturnView = forwardRef((props, ref) => {
                             {/* Payment History */}
                             {salesReturnPaymentList.length > 0 && (
                                 <section style={{ backgroundColor: '#ffffff', borderRadius: '8px', border: '1px solid #e2e8f0', overflow: 'hidden', maxHeight: '500px', overflowY: 'auto' }}>
-                                    <div style={{ padding: '12px 24px', borderBottom: '1px solid #c3c6d7', display: 'flex', alignItems: 'center', gap: '8px', backgroundColor: '#f2f4f6' }}>
+                                    <div style={{ padding: '12px 24px', borderBottom: '1px solid #c3c6d7', display: 'flex', alignItems: 'center', gap: '8px' }}>
                                         <i className="bi bi-clock-history" style={{ color: '#505f76' }}></i>
                                         <h3 style={{ margin: 0, fontSize: '18px', fontWeight: 600, lineHeight: '26px', fontFamily: "'Hanken Grotesk', sans-serif", color: '#191c1e' }}>{t("Payment History")}</h3>
                                     </div>
@@ -577,9 +577,9 @@ const SalesReturnView = forwardRef((props, ref) => {
                                                     </div>
                                                 </div>
                                                 <div style={{ display: 'flex', flexDirection: 'column' }}>
-                                                    <span style={{ fontSize: '12px', fontWeight: 500, color: '#434655', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{t("Processed At")}</span>
+                                                    <span style={{ fontSize: '12px', fontWeight: 500, color: '#434655', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{t("Date")}</span>
                                                     <span style={{ fontSize: '14px', color: '#191c1e' }}>
-                                                        {payment.created_at ? formatInStoreTimezone(payment.created_at) : '—'}
+                                                        {formatInStoreTimezone(payment.date || payment.created_at)}
                                                     </span>
                                                 </div>
                                             </div>

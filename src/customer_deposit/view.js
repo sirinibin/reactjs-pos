@@ -298,7 +298,7 @@ const CustomerDepositView = forwardRef((props, ref) => {
                                                 </div>
                                                 <div style={{ display: 'flex', flexDirection: 'column' }}>
                                                     <span style={{ fontSize: '12px', fontWeight: 500, color: '#434655', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Date</span>
-                                                    <span style={{ fontSize: '14px', color: '#191c1e' }}>{formatInStoreTimezone(payment.date || payment.created_at)}</span>
+                                                    <span style={{ fontSize: '14px', color: '#191c1e' }}>{formatInStoreTimezone(payment.date)}</span>
                                                 </div>
                                             </div>
                                         ))}

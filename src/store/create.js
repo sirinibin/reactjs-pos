@@ -1,5 +1,5 @@
 import React, { useState, useEffect, forwardRef, useImperativeHandle, useMemo, useRef } from "react";
-import { Modal, Button } from "react-bootstrap";
+import { Modal } from "react-bootstrap";
 
 import { Spinner } from "react-bootstrap";
 import Resizer from "react-image-file-resizer";
@@ -262,6 +262,14 @@ const StoreCreate = forwardRef((props, ref) => {
 
     let [errors, setErrors] = useState({});
     const [isProcessing, setProcessing] = useState(false);
+    const [activeTab, setActiveTab] = useState('general');
+    const [flash, setFlash] = useState(null);
+    const flashTimerRef = useRef(null);
+    function showFlash(text, type = 'success') {
+        if (flashTimerRef.current) clearTimeout(flashTimerRef.current);
+        setFlash({ text, type });
+        flashTimerRef.current = setTimeout(() => setFlash(null), 4000);
+    }
 
     const validateEmail = (email) => {
         const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -738,11 +746,9 @@ const StoreCreate = forwardRef((props, ref) => {
                 console.log("Response:");
                 console.log(data);
 
-                if (formData.id) {
-                    if (props.showToastMessage) props.showToastMessage("Store updated successfully!", "success");
-                } else {
-                    if (props.showToastMessage) props.showToastMessage("Store created successfully!", "success");
-                }
+                const msg = formData.id ? "Store updated successfully!" : "Store created successfully!";
+                showFlash(msg, "success");
+                if (props.showToastMessage) props.showToastMessage(msg, "success");
 
                 if (props.refreshList) {
                     props.refreshList();
@@ -763,6 +769,7 @@ const StoreCreate = forwardRef((props, ref) => {
                 console.log(error);
                 setErrors({ ...error });
                 console.error("There was an error!", error);
+                showFlash("Failed to save store. Please fix the errors and try again.", "danger");
                 if (props.showToastMessage) props.showToastMessage("Failed to process store!", "danger");
             });
     }
@@ -846,49 +853,260 @@ const StoreCreate = forwardRef((props, ref) => {
 
     const countrySearchRef = useRef();
 
+    const NAV_TABS = [
+        { id: 'general',        label: 'General Info',     icon: 'bi-building'          },
+        { id: 'address',        label: 'National Address', icon: 'bi-geo-alt'           },
+        { id: 'invoice_titles', label: 'Invoice Titles',   icon: 'bi-file-earmark-text' },
+        { id: 'serial_numbers', label: 'Serial Numbers',   icon: 'bi-hash'              },
+        { id: 'bank_account',   label: 'Bank Account',     icon: 'bi-bank'              },
+        { id: 'settings',       label: 'Settings',         icon: 'bi-gear'              },
+    ];
+    const ERROR_TAB_MAP = {
+        business_category: 'general', name: 'general', name_in_arabic: 'general',
+        code: 'general', branch_name: 'general', phone: 'general', vat_no: 'general',
+        vat_percent: 'general', email: 'general', address: 'general', address_in_arabic: 'general',
+        country_code: 'general', registration_number: 'general', zipcode: 'general',
+        logo_content: 'general',
+        national_address_building_no: 'address', national_address_street_name: 'address',
+        national_address_district_name: 'address', national_address_city_name: 'address',
+        national_address_zipcode: 'address',
+    };
+    const getErrorTab = (key) => {
+        if (ERROR_TAB_MAP[key]) return ERROR_TAB_MAP[key];
+        if (key.startsWith('national_address_')) return 'address';
+        if (key.startsWith('bank_')) return 'bank_account';
+        return 'general';
+    };
+    const allErrors = Object.entries(errors).filter(([, v]) => v);
+    const tabErrorCounts = NAV_TABS.reduce((acc, tab) => {
+        acc[tab.id] = allErrors.filter(([k]) => getErrorTab(k) === tab.id).length;
+        return acc;
+    }, {});
+    const totalErrors = allErrors.length;
+
     return (
         <>
-            <Modal show={show} size="xl" fullscreen onHide={handleClose} animation={false} backdrop="static" scrollable={true}>
-                <Modal.Header>
-                    <Modal.Title>
-                        {formData.id ? "Update Store #" + formData.name : "Create New Store"}
+            {flash && (
+                <div style={{ position: 'fixed', top: '20px', right: '24px', zIndex: 99999, background: flash.type === 'success' ? '#dcfce7' : '#ffdad6', border: `1px solid ${flash.type === 'success' ? '#86efac' : '#f4adaa'}`, borderRadius: '8px', padding: '12px 18px', fontFamily: '"Inter", sans-serif', fontSize: '13px', fontWeight: 600, color: flash.type === 'success' ? '#15803d' : '#93000a', display: 'flex', alignItems: 'center', gap: '10px', boxShadow: '0 4px 16px rgba(0,0,0,0.14)', minWidth: '280px', maxWidth: '380px', animation: 'fadeInDown 0.2s ease' }}>
+                    <i className={`bi ${flash.type === 'success' ? 'bi-check-circle-fill' : 'bi-exclamation-circle-fill'}`} style={{ fontSize: '16px', flexShrink: 0 }}></i>
+                    <span style={{ flex: 1 }}>{flash.text}</span>
+                    <button type="button" onClick={() => setFlash(null)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'inherit', fontSize: '18px', lineHeight: 1, padding: 0, marginLeft: '4px', opacity: 0.7 }}>×</button>
+                </div>
+            )}
+            <Modal show={show} size="xl" fullscreen onHide={handleClose} animation={false} backdrop="static" scrollable={true} dialogClassName="pw-modal">
+                <Modal.Header style={{ background: '#ffffff', borderBottom: '1px solid #c3c6d7', padding: '10px 20px', flexShrink: 0, display: 'flex', alignItems: 'center', gap: '12px' }}>
+                    <button type="button" onClick={handleClose}
+                        style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#434655', display: 'inline-flex', alignItems: 'center', gap: '4px', fontSize: '13px', fontWeight: 600, fontFamily: '"Inter", sans-serif', padding: '4px 8px', borderRadius: '4px', flexShrink: 0 }}
+                        onMouseEnter={e => e.currentTarget.style.background = '#f0f2f4'}
+                        onMouseLeave={e => e.currentTarget.style.background = 'none'}>
+                        <i className="bi bi-arrow-left" style={{ fontSize: '16px' }}></i> Back
+                    </button>
+                    <Modal.Title style={{ fontFamily: '"Hanken Grotesk", sans-serif', fontSize: '17px', fontWeight: 700, color: '#191c1e', letterSpacing: '-0.01em', flex: 1 }}>
+                        {formData.id ? `Update Store — ${formData.name}` : 'Create New Store'}
                     </Modal.Title>
-
-                    <div className="col align-self-end text-end">
-                        {formData.id ? <Button variant="primary" onClick={() => {
-                            handleClose();
-                            if (props.openDetailsView)
-                                props.openDetailsView(formData.id);
-                        }}>
-                            <i className="bi bi-eye"></i> View Detail
-                        </Button> : ""}
-                        &nbsp;&nbsp;
-                        <Button variant="primary" onClick={handleCreate} >
-                            {isProcessing ?
-                                <Spinner
-                                    as="span"
-                                    animation="border"
-                                    size="sm"
-                                    role="status"
-                                    aria-hidden={true}
-                                />
-
-                                : ""
-                            }
-                            {formData.id ? "Update" : "Create"}
-
-                        </Button>
-                        <button
-                            type="button"
-                            className="btn-close"
-                            onClick={handleClose}
-                            aria-label="Close"
-                        ></button>
+                    <div className="d-flex align-items-center gap-2">
+                        {formData.id && (
+                            <button type="button"
+                                style={{ background: '#d0e1fb', color: '#54647a', border: 'none', borderRadius: '4px', padding: '6px 14px', fontSize: '13px', fontWeight: 600, fontFamily: '"Inter", sans-serif', cursor: 'pointer' }}
+                                onClick={() => { handleClose(); if (props.openDetailsView) props.openDetailsView(formData.id); }}>
+                                <i className="bi bi-eye me-1"></i>View Detail
+                            </button>
+                        )}
+                        <button type="button"
+                            style={{ background: '#004ac6', color: '#ffffff', border: 'none', borderRadius: '4px', padding: '6px 18px', fontSize: '13px', fontWeight: 600, fontFamily: '"Inter", sans-serif', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '6px' }}
+                            onClick={handleCreate} disabled={isProcessing}>
+                            {isProcessing && <Spinner as="span" animation="border" size="sm" role="status" aria-hidden={true} />}
+                            {formData.id ? 'Update' : 'Create'}
+                        </button>
+                        <button type="button" className="btn-close ms-1" onClick={handleClose} aria-label="Close" />
                     </div>
                 </Modal.Header>
-                <Modal.Body>
-                    <form className="row g-3 needs-validation" onSubmit={handleCreate}>
-                        <h6><b>General details:</b></h6>
+                <style>{`
+                    @keyframes fadeInDown { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
+                    .pw-modal .modal-content { display: flex; flex-direction: column; height: 100%; }
+                    .pw-body { padding: 0 !important; overflow: hidden !important; display: flex !important; flex-direction: column !important; flex: 1 !important; min-height: 0 !important; }
+                    .pw-form { display: flex; width: 100%; flex: 1; min-height: 0; }
+                    .pw-sidebar { width: 210px; background: #f2f4f6; border-right: 1px solid #c3c6d7; padding: 16px 10px; flex-shrink: 0; overflow-y: auto; display: flex; flex-direction: column; gap: 4px; }
+                    .pw-sidebar-header { margin-bottom: 16px; }
+                    .pw-content { flex: 1; display: flex; flex-direction: column; background: #f7f9fb; min-width: 0; overflow: hidden; }
+                    .pw-content-scroll { flex: 1; overflow-y: auto; padding: 20px 28px; }
+                    .pw-tab-wrap { max-width: 960px; }
+                    .pw-card { background: #ffffff; border: 1px solid #c3c6d7; border-radius: 8px; padding: 24px; margin-bottom: 20px; }
+                    /* ── Tablet (768–1100px) ── */
+                    @media (min-width: 768px) and (max-width: 1100px) {
+                        .pw-sidebar { width: 170px; padding: 12px 8px; }
+                        .pw-sidebar button { font-size: 12px !important; padding: 8px 8px !important; }
+                        .pw-content-scroll { padding: 16px 18px; }
+                        .pw-tab-wrap { max-width: 100%; }
+                        .pw-card { padding: 18px; }
+                        .pw-check-grid { grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); }
+                    }
+                    /* ── Mobile (≤767px) ── */
+                    @media (max-width: 767px) {
+                        /* Layout */
+                        .pw-form { flex-direction: column; }
+                        .pw-sidebar {
+                            width: 100%; height: auto;
+                            flex-direction: row; overflow-x: auto; overflow-y: hidden;
+                            border-right: none; border-bottom: 1px solid #c3c6d7;
+                            padding: 6px 8px; gap: 4px; flex-shrink: 0;
+                        }
+                        .pw-sidebar-header { display: none; }
+                        .pw-sidebar button { flex-shrink: 0; white-space: nowrap; font-size: 12px !important; padding: 7px 10px !important; border-radius: 20px !important; }
+                        .pw-content { overflow: visible; }
+                        .pw-content-scroll { padding: 12px 14px !important; overflow: visible; }
+                        .pw-tab-wrap { max-width: 100%; }
+                        /* Cards */
+                        .pw-card { padding: 14px 12px !important; margin-bottom: 12px !important; }
+                        /* Form fields full-width on mobile */
+                        .pw-card .row.g-3 > [class*="col-"] { flex: 0 0 100% !important; max-width: 100% !important; }
+                        .pw-card .row > [class*="col-"] { flex: 0 0 100% !important; max-width: 100% !important; }
+                        /* Checkbox grid — 1 column */
+                        .pw-check-grid { grid-template-columns: 1fr !important; }
+                        /* WhatsApp row */
+                        .pw-field input, .pw-field select, .pw-field textarea { font-size: 14px !important; padding: 9px 12px !important; }
+                        /* Override 2-col override on mobile */
+                        .pw-card .row.g-3 > .col-md-2,
+                        .pw-card .row.g-3 > .col-md-1 { flex: 0 0 100% !important; max-width: 100% !important; }
+                        /* Modal header compact */
+                        .pw-modal .modal-header { padding: 8px 12px !important; gap: 8px !important; flex-wrap: wrap; }
+                        .pw-modal .modal-title { font-size: 14px !important; }
+                        .pw-modal .d-flex.align-items-center.gap-2 { gap: 6px !important; }
+                        .pw-modal .d-flex.align-items-center.gap-2 button { padding: 5px 10px !important; font-size: 12px !important; }
+                    }
+                    /* ── Small mobile (≤420px) ── */
+                    @media (max-width: 420px) {
+                        .pw-sidebar button { font-size: 11px !important; padding: 6px 8px !important; }
+                        .pw-card { padding: 12px 10px !important; }
+                        .pw-group-title { font-size: 11px; }
+                        .pw-check span { font-size: 13px; }
+                    }
+                    /* ── Field overrides ── */
+                    .pw-form input.form-control,
+                    .pw-form select.form-control,
+                    .pw-form textarea.form-control {
+                        border: 1px solid #c3c6d7 !important; border-radius: 4px !important;
+                        padding: 7px 12px !important; font-size: 13px !important;
+                        font-family: "Inter", sans-serif !important; color: #191c1e !important;
+                        background: #fff !important; box-shadow: none !important; width: 100% !important;
+                    }
+                    .pw-form input.form-control:focus,
+                    .pw-form select.form-control:focus,
+                    .pw-form textarea.form-control:focus {
+                        border-color: #004ac6 !important;
+                        box-shadow: 0 0 0 3px rgba(0,74,198,0.12) !important;
+                        outline: none !important;
+                    }
+                    .pw-form label.form-label {
+                        font-family: "Inter", sans-serif !important; font-size: 12px !important;
+                        font-weight: 600 !important; color: #434655 !important;
+                        margin-bottom: 5px !important; display: block;
+                    }
+                    .pw-form .input-group.mb-3 { margin-bottom: 0 !important; flex-wrap: nowrap; }
+                    .pw-form .input-group > .form-control { border-radius: 4px !important; }
+                    .pw-form .input-group-text {
+                        border: 1px solid #c3c6d7; background: #f2f4f6;
+                        font-size: 13px; font-family: "Inter", sans-serif;
+                    }
+                    /* ── Setting checkbox toggle ── */
+                    .pw-check {
+                        display: flex; align-items: flex-start; gap: 10px;
+                        padding: 8px 10px; border-radius: 6px; cursor: pointer;
+                        transition: background 0.12s; user-select: none; width: 100%;
+                        border: none; background: transparent; text-align: left;
+                    }
+                    .pw-check:hover { background: #f0f2f4; }
+                    .pw-check input[type="checkbox"] {
+                        width: 15px; height: 15px; flex-shrink: 0; margin-top: 1px;
+                        cursor: pointer; accent-color: #004ac6;
+                    }
+                    .pw-check span { font-family: "Inter", sans-serif; font-size: 13px; color: #191c1e; line-height: 18px; }
+                    /* ── Setting group heading ── */
+                    .pw-group-title {
+                        font-family: "Hanken Grotesk", sans-serif; font-size: 12px; font-weight: 700;
+                        color: #434655; text-transform: uppercase; letter-spacing: 0.07em;
+                        padding-bottom: 10px; margin-bottom: 8px;
+                        border-bottom: 1px solid #e0e3e5;
+                        display: flex; align-items: center; gap: 6px;
+                    }
+                    .pw-check-grid {
+                        display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 2px;
+                    }
+                    /* ── Inline styled field ── */
+                    .pw-field { display: flex; flex-direction: column; gap: 4px; }
+                    .pw-field label { font-family: "Inter", sans-serif; font-size: 12px; font-weight: 600; color: #434655; }
+                    .pw-field input, .pw-field select, .pw-field textarea {
+                        border: 1px solid #c3c6d7; border-radius: 4px; padding: 7px 12px;
+                        font-size: 13px; font-family: "Inter", sans-serif; color: #191c1e;
+                        background: #fff; outline: none; width: 100%;
+                    }
+                    .pw-field input:focus, .pw-field select:focus { border-color: #004ac6; box-shadow: 0 0 0 3px rgba(0,74,198,0.12); }
+                    .pw-field small { font-size: 11px; color: #6b7280; font-family: "Inter", sans-serif; }
+                    .pw-err { color: #ba1a1a; font-family: "Inter", sans-serif; font-size: 12px; margin-top: 3px; display: flex; align-items: center; gap: 4px; }
+                    /* Widen excessively narrow 2-col fields inside pw-cards */
+                    @media (min-width: 768px) {
+                        .pw-card .row.g-3 > .col-md-2 { flex: 0 0 25%; max-width: 25%; }
+                        .pw-card .row.g-3 > .col-md-1 { flex: 0 0 16.666%; max-width: 16.666%; }
+                    }
+                    /* Section dividers inside cards */
+                    .pw-card > .row.g-3 > [class*="col-"] {
+                        display: flex; flex-direction: column; gap: 4px;
+                    }
+                    .pw-card > .row.g-3 > [class*="col-"] > .input-group.mb-3 { gap: 0; }
+                    /* Serial number sub-headers */
+                    .pw-card h6 { font-family: "Hanken Grotesk", sans-serif; font-size: 13px; font-weight: 700; color: #191c1e; margin: 12px 0 8px; }
+                    .pw-card h6 b { font-weight: 700; }
+                    .pw-card > .row > [class*="col-"] > .input-group.mb-3 { margin-bottom: 0 !important; }
+                `}</style>
+                <Modal.Body className="pw-body">
+                    <form onSubmit={handleCreate} className="pw-form">
+                        <aside className="pw-sidebar">
+                            <div className="pw-sidebar-header">
+                                <div style={{ fontFamily: '"Hanken Grotesk", sans-serif', fontSize: '15px', fontWeight: 700, color: '#191c1e', marginBottom: '2px' }}>{formData.id ? 'Edit Store' : 'New Store'}</div>
+                                <div style={{ fontFamily: '"Inter", sans-serif', fontSize: '11px', color: '#434655' }}>Store Wizard</div>
+                            </div>
+                            {NAV_TABS.map((tab) => (
+                                <button key={tab.id} type="button" onClick={() => setActiveTab(tab.id)}
+                                    style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '9px 10px', borderRadius: '6px', border: 'none', cursor: 'pointer', textAlign: 'left', width: '100%', background: activeTab === tab.id ? '#2563eb' : 'transparent', color: activeTab === tab.id ? '#eeefff' : '#434655', fontFamily: '"Inter", sans-serif', fontSize: '13px', fontWeight: activeTab === tab.id ? 700 : 500 }}
+                                    onMouseEnter={(e) => { if (activeTab !== tab.id) e.currentTarget.style.background = '#e0e3e5'; }}
+                                    onMouseLeave={(e) => { if (activeTab !== tab.id) e.currentTarget.style.background = 'transparent'; }}>
+                                    <i className={`bi ${tab.icon}`} style={{ fontSize: '15px', flexShrink: 0 }}></i>
+                                    <span style={{ flex: 1 }}>{tab.label}</span>
+                                    {tabErrorCounts[tab.id] > 0 && (
+                                        <span style={{ background: '#ba1a1a', color: '#fff', borderRadius: '50%', width: '18px', height: '18px', fontSize: '10px', fontWeight: 700, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                                            {tabErrorCounts[tab.id]}
+                                        </span>
+                                    )}
+                                </button>
+                            ))}
+                        </aside>
+                        <div className="pw-content">
+                        <div className="pw-content-scroll">
+                        <div style={{ overflow: 'hidden', maxHeight: totalErrors > 0 ? '500px' : '0', marginBottom: totalErrors > 0 ? '16px' : '0', transition: 'max-height 0.25s ease, margin-bottom 0.2s ease' }}>
+                            <div style={{ background: '#ffdad6', border: '1px solid #f4adaa', borderRadius: '8px', padding: '12px 16px' }}>
+                                <div style={{ fontFamily: '"Inter", sans-serif', fontWeight: 700, color: '#93000a', marginBottom: '8px', fontSize: '13px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                    <i className="bi bi-exclamation-circle-fill" style={{ fontSize: '14px' }}></i>
+                                    {totalErrors} error{totalErrors > 1 ? 's' : ''} — please fix before saving:
+                                </div>
+                                {NAV_TABS.map((tab) => {
+                                    const tabErrs = allErrors.filter(([k]) => getErrorTab(k) === tab.id);
+                                    if (!tabErrs.length) return null;
+                                    return (
+                                        <div key={tab.id} style={{ marginBottom: '6px' }}>
+                                            <button type="button" onClick={() => setActiveTab(tab.id)} style={{ background: 'none', border: 'none', padding: 0, fontFamily: '"Inter", sans-serif', fontWeight: 700, color: '#004ac6', cursor: 'pointer', fontSize: '12px', textDecoration: 'underline', display: 'block', marginBottom: '2px' }}>
+                                                {tab.label}:
+                                            </button>
+                                            {tabErrs.map(([k, v]) => (
+                                                <div key={k} style={{ fontFamily: '"Inter", sans-serif', fontSize: '12px', color: '#93000a', paddingLeft: '10px' }}>• {v}</div>
+                                            ))}
+                                        </div>
+                                    );
+                                })}
+                            </div>
+                        </div>
+                        {activeTab === 'general' && (<div className="pw-tab-wrap"><div className="pw-card">
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '20px' }}><i className="bi bi-building" style={{ fontSize: '18px', color: '#004ac6' }}></i><h3 style={{ fontFamily: '"Hanken Grotesk", sans-serif', fontSize: '16px', fontWeight: 600, color: '#191c1e', margin: 0 }}>General Details</h3></div>
+                        <div className="row g-3">
                         <div className="col-md-2">
                             <label className="form-label">Zatca phase*</label>
 
@@ -919,7 +1137,7 @@ const StoreCreate = forwardRef((props, ref) => {
                                 </select>
                             </div>
                             {errors.zatca_phase && (
-                                <div style={{ color: "red" }}>
+                                <div className="pw-err">
                                     {errors.zatca_phase}
                                 </div>
                             )}
@@ -953,7 +1171,7 @@ const StoreCreate = forwardRef((props, ref) => {
                                 </select>
                             </div>
                             {errors.zatca_env && (
-                                <div style={{ color: "red" }}>
+                                <div className="pw-err">
                                     {errors.zatca_env}
                                 </div>
                             )}
@@ -979,7 +1197,7 @@ const StoreCreate = forwardRef((props, ref) => {
                                 />
                             </div>
                             {errors.business_category && (
-                                <div style={{ color: "red" }}>
+                                <div className="pw-err">
                                     {errors.business_category}
                                 </div>
                             )}
@@ -1006,7 +1224,7 @@ const StoreCreate = forwardRef((props, ref) => {
                                 />
                             </div>
                             {errors.name && (
-                                <div style={{ color: "red" }}>
+                                <div className="pw-err">
                                     {errors.name}
                                 </div>
                             )}
@@ -1032,7 +1250,7 @@ const StoreCreate = forwardRef((props, ref) => {
                                 />
                             </div>
                             {errors.name_in_arabic && (
-                                <div style={{ color: "red" }}>
+                                <div className="pw-err">
                                     {errors.name_in_arabic}
                                 </div>
                             )}
@@ -1077,7 +1295,7 @@ const StoreCreate = forwardRef((props, ref) => {
 
                             </div>
                             {errors.code && (
-                                <div style={{ color: "red" }}>
+                                <div className="pw-err">
                                     {errors.code}
                                 </div>
                             )}
@@ -1105,7 +1323,7 @@ const StoreCreate = forwardRef((props, ref) => {
 
                             </div>
                             {errors.branch_name && (
-                                <div style={{ color: "red" }}>
+                                <div className="pw-err">
                                     {errors.branch_name}
                                 </div>
                             )}
@@ -1132,7 +1350,7 @@ const StoreCreate = forwardRef((props, ref) => {
 
                             </div>
                             {errors.title && (
-                                <div style={{ color: "red" }}>
+                                <div className="pw-err">
 
                                     {errors.title}
                                 </div>
@@ -1161,7 +1379,7 @@ const StoreCreate = forwardRef((props, ref) => {
 
                             </div>
                             {errors.title_in_arabic && (
-                                <div style={{ color: "red" }}>
+                                <div className="pw-err">
 
                                     {errors.title_in_arabic}
                                 </div>
@@ -1203,7 +1421,7 @@ const StoreCreate = forwardRef((props, ref) => {
 
                             </div>
                             {errors.use_products_from_store_id && (
-                                <div style={{ color: "red" }}>
+                                <div className="pw-err">
 
                                     {errors.use_products_from_store_id}
                                 </div>
@@ -1232,7 +1450,7 @@ const StoreCreate = forwardRef((props, ref) => {
 
                             </div>
                             {errors.registration_number && (
-                                <div style={{ color: "red" }}>
+                                <div className="pw-err">
 
                                     {errors.registration_number}
                                 </div>
@@ -1262,7 +1480,7 @@ const StoreCreate = forwardRef((props, ref) => {
 
                             </div>
                             {errors.zipcode && (
-                                <div style={{ color: "red" }}>
+                                <div className="pw-err">
                                     {errors.zipcode}
                                 </div>
                             )}
@@ -1290,7 +1508,7 @@ const StoreCreate = forwardRef((props, ref) => {
 
                             </div>
                             {errors.phone && (
-                                <div style={{ color: "red" }}>
+                                <div className="pw-err">
 
                                     {errors.phone}
                                 </div>
@@ -1320,7 +1538,7 @@ const StoreCreate = forwardRef((props, ref) => {
 
                             </div>
                             {errors.vat_no && (
-                                <div style={{ color: "red" }}>
+                                <div className="pw-err">
 
                                     {errors.vat_no}
                                 </div>
@@ -1357,7 +1575,7 @@ const StoreCreate = forwardRef((props, ref) => {
 
                             </div>
                             {errors.vat_percent && (
-                                <div style={{ color: "red" }}>
+                                <div className="pw-err">
 
                                     {errors.vat_percent}
                                 </div>
@@ -1387,7 +1605,7 @@ const StoreCreate = forwardRef((props, ref) => {
 
                             </div>
                             {errors.email && (
-                                <div style={{ color: "red" }}>
+                                <div className="pw-err">
 
                                     {errors.email}
                                 </div>
@@ -1415,7 +1633,7 @@ const StoreCreate = forwardRef((props, ref) => {
 
                             </div>
                             {errors.address && (
-                                <div style={{ color: "red" }}>
+                                <div className="pw-err">
 
                                     {errors.address}
                                 </div>
@@ -1443,7 +1661,7 @@ const StoreCreate = forwardRef((props, ref) => {
 
                             </div>
                             {errors.address_in_arabic && (
-                                <div style={{ color: "red" }}>
+                                <div className="pw-err">
 
                                     {errors.address_in_arabic}
                                 </div>
@@ -1491,7 +1709,7 @@ const StoreCreate = forwardRef((props, ref) => {
                                 />
                             </div>
                             {errors.country_code && (
-                                <div style={{ color: "red" }}>
+                                <div className="pw-err">
                                     {errors.country_code}
                                 </div>
                             )}
@@ -1560,14 +1778,17 @@ const StoreCreate = forwardRef((props, ref) => {
 
                             </div>
                             {errors.logo_content && (
-                                <div style={{ color: "red" }}>
+                                <div className="pw-err">
 
                                     {errors.logo_content}
                                 </div>
                             )}
                         </div>
 
-                        <h6><b>National Address:</b></h6>
+                        </div></div></div>)}
+                        {activeTab === 'address' && (<div className="pw-tab-wrap"><div className="pw-card">
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '20px' }}><i className="bi bi-geo-alt" style={{ fontSize: '18px', color: '#004ac6' }}></i><h3 style={{ fontFamily: '"Hanken Grotesk", sans-serif', fontSize: '16px', fontWeight: 600, color: '#191c1e', margin: 0 }}>National Address</h3></div>
+                        <div className="row g-3">
                         <div className="col-md-2">
                             <label className="form-label">Short code</label>
 
@@ -1588,7 +1809,7 @@ const StoreCreate = forwardRef((props, ref) => {
                                 />
                             </div>
                             {errors.national_address_short_code && (
-                                <div style={{ color: "red" }}>
+                                <div className="pw-err">
 
                                     {errors.national_address_short_code}
                                 </div>
@@ -1615,7 +1836,7 @@ const StoreCreate = forwardRef((props, ref) => {
                                 />
                             </div>
                             {errors.national_address_building_no && (
-                                <div style={{ color: "red" }}>
+                                <div className="pw-err">
 
                                     {errors.national_address_building_no}
                                 </div>
@@ -1645,7 +1866,7 @@ const StoreCreate = forwardRef((props, ref) => {
 
                             </div>
                             {errors.national_address_street_name && (
-                                <div style={{ color: "red" }}>
+                                <div className="pw-err">
                                     {errors.national_address_street_name}
                                 </div>
                             )}
@@ -1674,7 +1895,7 @@ const StoreCreate = forwardRef((props, ref) => {
 
                             </div>
                             {errors.national_address_street_name_arabic && (
-                                <div style={{ color: "red" }}>
+                                <div className="pw-err">
 
                                     {errors.national_address_street_name_arabic}
                                 </div>
@@ -1705,7 +1926,7 @@ const StoreCreate = forwardRef((props, ref) => {
 
                             </div>
                             {errors.national_address_district_name && (
-                                <div style={{ color: "red" }}>
+                                <div className="pw-err">
 
                                     {errors.national_address_district_name}
                                 </div>
@@ -1734,7 +1955,7 @@ const StoreCreate = forwardRef((props, ref) => {
 
                             </div>
                             {errors.national_address_district_name_arabic && (
-                                <div style={{ color: "red" }}>
+                                <div className="pw-err">
 
                                     {errors.national_address_district_name_arabic}
                                 </div>
@@ -1766,7 +1987,7 @@ const StoreCreate = forwardRef((props, ref) => {
 
                             </div>
                             {errors.national_address_city_name && (
-                                <div style={{ color: "red" }}>
+                                <div className="pw-err">
 
                                     {errors.national_address_city_name}
                                 </div>
@@ -1796,7 +2017,7 @@ const StoreCreate = forwardRef((props, ref) => {
 
                             </div>
                             {errors.national_address_city_name_arabic && (
-                                <div style={{ color: "red" }}>
+                                <div className="pw-err">
 
                                     {errors.national_address_city_name_arabic}
                                 </div>
@@ -1826,7 +2047,7 @@ const StoreCreate = forwardRef((props, ref) => {
 
                             </div>
                             {errors.national_address_zipcode && (
-                                <div style={{ color: "red" }}>
+                                <div className="pw-err">
 
                                     {errors.national_address_zipcode}
                                 </div>
@@ -1856,7 +2077,7 @@ const StoreCreate = forwardRef((props, ref) => {
 
                             </div>
                             {errors.national_address_additional_no && (
-                                <div style={{ color: "red" }}>
+                                <div className="pw-err">
 
                                     {errors.national_address_additional_no}
                                 </div>
@@ -1886,7 +2107,7 @@ const StoreCreate = forwardRef((props, ref) => {
 
                             </div>
                             {errors.national_address_unit_no && (
-                                <div style={{ color: "red" }}>
+                                <div className="pw-err">
 
                                     {errors.national_address_unit_no}
                                 </div>
@@ -1897,6 +2118,9 @@ const StoreCreate = forwardRef((props, ref) => {
 
 
 
+                        </div></div></div>)}
+                        {activeTab === 'invoice_titles' && (<div className="pw-tab-wrap"><div className="pw-card">
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '20px' }}><i className="bi bi-file-earmark-text" style={{ fontSize: '18px', color: '#004ac6' }}></i><h3 style={{ fontFamily: '"Hanken Grotesk", sans-serif', fontSize: '16px', fontWeight: 600, color: '#191c1e', margin: 0 }}>Invoice Titles</h3></div>
                         <h6><b>Zatca Phase 1 Invoice Titles</b></h6>
                         <h6><b>Sales</b></h6>
                         <div className="row">
@@ -1919,7 +2143,7 @@ const StoreCreate = forwardRef((props, ref) => {
                                     />
                                 </div>
                                 {errors.settings?.invoice?.phase1?.sales_titles?.paid && (
-                                    <div style={{ color: "red" }}>
+                                    <div className="pw-err">
                                         {errors.settings.invoice.phase1.sales_titles.paid}
                                     </div>
                                 )}
@@ -1943,7 +2167,7 @@ const StoreCreate = forwardRef((props, ref) => {
                                     />
                                 </div>
                                 {errors.settings?.invoice?.phase1?.sales_titles?.credit && (
-                                    <div style={{ color: "red" }}>
+                                    <div className="pw-err">
                                         {errors.settings.invoice.phase1.sales_titles.credit}
                                     </div>
                                 )}
@@ -1967,7 +2191,7 @@ const StoreCreate = forwardRef((props, ref) => {
                                     />
                                 </div>
                                 {errors.settings?.invoice?.phase1?.sales_titles?.cash && (
-                                    <div style={{ color: "red" }}>
+                                    <div className="pw-err">
                                         {errors.settings.invoice.phase1.sales_titles.cash}
                                     </div>
                                 )}
@@ -1995,7 +2219,7 @@ const StoreCreate = forwardRef((props, ref) => {
                                     />
                                 </div>
                                 {errors.settings?.invoice?.phase1?.sales_return_titles?.paid && (
-                                    <div style={{ color: "red" }}>
+                                    <div className="pw-err">
                                         {errors.settings.invoice.phase1.sales_return_titles.paid}
                                     </div>
                                 )}
@@ -2019,7 +2243,7 @@ const StoreCreate = forwardRef((props, ref) => {
                                     />
                                 </div>
                                 {errors.settings?.invoice?.phase1?.sales_return_titles?.credit && (
-                                    <div style={{ color: "red" }}>
+                                    <div className="pw-err">
                                         {errors.settings.invoice.phase1.sales_return_titles.credit}
                                     </div>
                                 )}
@@ -2043,7 +2267,7 @@ const StoreCreate = forwardRef((props, ref) => {
                                     />
                                 </div>
                                 {errors.settings?.invoice?.phase1?.sales_return_titles?.cash && (
-                                    <div style={{ color: "red" }}>
+                                    <div className="pw-err">
                                         {errors.settings.invoice.phase1.sales_return_titles.cash}
                                     </div>
                                 )}
@@ -2072,7 +2296,7 @@ const StoreCreate = forwardRef((props, ref) => {
                                     />
                                 </div>
                                 {errors.settings?.invoice?.phase1?.purchase_titles?.paid && (
-                                    <div style={{ color: "red" }}>
+                                    <div className="pw-err">
                                         {errors.settings.invoice.phase1.purchase_titles.paid}
                                     </div>
                                 )}
@@ -2096,7 +2320,7 @@ const StoreCreate = forwardRef((props, ref) => {
                                     />
                                 </div>
                                 {errors.settings?.invoice?.phase1?.purchase_titles?.credit && (
-                                    <div style={{ color: "red" }}>
+                                    <div className="pw-err">
                                         {errors.settings.invoice.phase1.purchase_titles.credit}
                                     </div>
                                 )}
@@ -2120,7 +2344,7 @@ const StoreCreate = forwardRef((props, ref) => {
                                     />
                                 </div>
                                 {errors.settings?.invoice?.phase1?.purchase_titles?.cash && (
-                                    <div style={{ color: "red" }}>
+                                    <div className="pw-err">
                                         {errors.settings.invoice.phase1.purchase_titles.cash}
                                     </div>
                                 )}
@@ -2148,7 +2372,7 @@ const StoreCreate = forwardRef((props, ref) => {
                                     />
                                 </div>
                                 {errors.settings?.invoice?.phase1?.purchase_return_titles?.paid && (
-                                    <div style={{ color: "red" }}>
+                                    <div className="pw-err">
                                         {errors.settings.invoice.phase1.purchase_return_titles.paid}
                                     </div>
                                 )}
@@ -2172,7 +2396,7 @@ const StoreCreate = forwardRef((props, ref) => {
                                     />
                                 </div>
                                 {errors.settings?.invoice?.phase1?.purchase_return_titles?.credit && (
-                                    <div style={{ color: "red" }}>
+                                    <div className="pw-err">
                                         {errors.settings.invoice.phase1.purchase_return_titles.credit}
                                     </div>
                                 )}
@@ -2196,7 +2420,7 @@ const StoreCreate = forwardRef((props, ref) => {
                                     />
                                 </div>
                                 {errors.settings?.invoice?.phase1?.purchase_return_titles?.cash && (
-                                    <div style={{ color: "red" }}>
+                                    <div className="pw-err">
                                         {errors.settings.invoice.phase1.purchase_return_titles.cash}
                                     </div>
                                 )}
@@ -2226,7 +2450,7 @@ const StoreCreate = forwardRef((props, ref) => {
                                     />
                                 </div>
                                 {errors.settings?.invoice?.phase2?.sales_titles?.paid && (
-                                    <div style={{ color: "red" }}>
+                                    <div className="pw-err">
                                         {errors.settings.invoice.phase2.sales_titles.paid}
                                     </div>
                                 )}
@@ -2250,7 +2474,7 @@ const StoreCreate = forwardRef((props, ref) => {
                                     />
                                 </div>
                                 {errors.settings?.invoice?.phase2?.sales_titles?.credit && (
-                                    <div style={{ color: "red" }}>
+                                    <div className="pw-err">
                                         {errors.settings.invoice.phase2.sales_titles.credit}
                                     </div>
                                 )}
@@ -2274,7 +2498,7 @@ const StoreCreate = forwardRef((props, ref) => {
                                     />
                                 </div>
                                 {errors.settings?.invoice?.phase2?.sales_titles?.cash && (
-                                    <div style={{ color: "red" }}>
+                                    <div className="pw-err">
                                         {errors.settings.invoice.phase2.sales_titles.cash}
                                     </div>
                                 )}
@@ -2299,7 +2523,7 @@ const StoreCreate = forwardRef((props, ref) => {
                                     />
                                 </div>
                                 {errors.settings?.invoice?.phase2_b2b?.sales_titles?.paid && (
-                                    <div style={{ color: "red" }}>
+                                    <div className="pw-err">
                                         {errors.settings.invoice.phase2_b2b.sales_titles.paid}
                                     </div>
                                 )}
@@ -2323,7 +2547,7 @@ const StoreCreate = forwardRef((props, ref) => {
                                     />
                                 </div>
                                 {errors.settings?.invoice?.phase2_b2b?.sales_titles?.credit && (
-                                    <div style={{ color: "red" }}>
+                                    <div className="pw-err">
                                         {errors.settings.invoice.phase2_b2b.sales_titles.credit}
                                     </div>
                                 )}
@@ -2347,7 +2571,7 @@ const StoreCreate = forwardRef((props, ref) => {
                                     />
                                 </div>
                                 {errors.settings?.invoice?.phase2_b2b?.sales_titles?.cash && (
-                                    <div style={{ color: "red" }}>
+                                    <div className="pw-err">
                                         {errors.settings.invoice.phase2_b2b.sales_titles.cash}
                                     </div>
                                 )}
@@ -2375,7 +2599,7 @@ const StoreCreate = forwardRef((props, ref) => {
                                     />
                                 </div>
                                 {errors.settings?.invoice?.phase2?.sales_return_titles?.paid && (
-                                    <div style={{ color: "red" }}>
+                                    <div className="pw-err">
                                         {errors.settings.invoice.phase2.sales_return_titles.paid}
                                     </div>
                                 )}
@@ -2399,7 +2623,7 @@ const StoreCreate = forwardRef((props, ref) => {
                                     />
                                 </div>
                                 {errors.settings?.invoice?.phase2?.sales_return_titles?.credit && (
-                                    <div style={{ color: "red" }}>
+                                    <div className="pw-err">
                                         {errors.settings.invoice.phase2.sales_return_titles.credit}
                                     </div>
                                 )}
@@ -2423,7 +2647,7 @@ const StoreCreate = forwardRef((props, ref) => {
                                     />
                                 </div>
                                 {errors.settings?.invoice?.phase2?.sales_return_titles?.cash && (
-                                    <div style={{ color: "red" }}>
+                                    <div className="pw-err">
                                         {errors.settings.invoice.phase2.sales_return_titles.cash}
                                     </div>
                                 )}
@@ -2448,7 +2672,7 @@ const StoreCreate = forwardRef((props, ref) => {
                                     />
                                 </div>
                                 {errors.settings?.invoice?.phase2_b2b?.sales_return_titles?.paid && (
-                                    <div style={{ color: "red" }}>
+                                    <div className="pw-err">
                                         {errors.settings.invoice.phase2_b2b.sales_return_titles.paid}
                                     </div>
                                 )}
@@ -2472,7 +2696,7 @@ const StoreCreate = forwardRef((props, ref) => {
                                     />
                                 </div>
                                 {errors.settings?.invoice?.phase2_b2b?.sales_return_titles?.credit && (
-                                    <div style={{ color: "red" }}>
+                                    <div className="pw-err">
                                         {errors.settings.invoice.phase2_b2b.sales_return_titles.credit}
                                     </div>
                                 )}
@@ -2496,7 +2720,7 @@ const StoreCreate = forwardRef((props, ref) => {
                                     />
                                 </div>
                                 {errors.settings?.invoice?.phase2_b2b?.sales_return_titles?.cash && (
-                                    <div style={{ color: "red" }}>
+                                    <div className="pw-err">
                                         {errors.settings.invoice.phase2_b2b.sales_return_titles.cash}
                                     </div>
                                 )}
@@ -2526,7 +2750,7 @@ const StoreCreate = forwardRef((props, ref) => {
                                     />
                                 </div>
                                 {errors.settings?.invoice?.phase2?.purchase_titles?.paid && (
-                                    <div style={{ color: "red" }}>
+                                    <div className="pw-err">
                                         {errors.settings.invoice.phase2.purchase_titles.paid}
                                     </div>
                                 )}
@@ -2550,7 +2774,7 @@ const StoreCreate = forwardRef((props, ref) => {
                                     />
                                 </div>
                                 {errors.settings?.invoice?.phase2?.purchase_titles?.credit && (
-                                    <div style={{ color: "red" }}>
+                                    <div className="pw-err">
                                         {errors.settings.invoice.phase2.purchase_titles.credit}
                                     </div>
                                 )}
@@ -2574,7 +2798,7 @@ const StoreCreate = forwardRef((props, ref) => {
                                     />
                                 </div>
                                 {errors.settings?.invoice?.phase2?.purchase_titles?.cash && (
-                                    <div style={{ color: "red" }}>
+                                    <div className="pw-err">
                                         {errors.settings.invoice.phase2.purchase_titles.cash}
                                     </div>
                                 )}
@@ -2599,7 +2823,7 @@ const StoreCreate = forwardRef((props, ref) => {
                                     />
                                 </div>
                                 {errors.settings?.invoice?.phase2_b2b?.purchase_titles?.paid && (
-                                    <div style={{ color: "red" }}>
+                                    <div className="pw-err">
                                         {errors.settings.invoice.phase2_b2b.purchase_titles.paid}
                                     </div>
                                 )}
@@ -2623,7 +2847,7 @@ const StoreCreate = forwardRef((props, ref) => {
                                     />
                                 </div>
                                 {errors.settings?.invoice?.phase2_b2b?.purchase_titles?.credit && (
-                                    <div style={{ color: "red" }}>
+                                    <div className="pw-err">
                                         {errors.settings.invoice.phase2_b2b.purchase_titles.credit}
                                     </div>
                                 )}
@@ -2647,7 +2871,7 @@ const StoreCreate = forwardRef((props, ref) => {
                                     />
                                 </div>
                                 {errors.settings?.invoice?.phase2_b2b?.purchase_titles?.cash && (
-                                    <div style={{ color: "red" }}>
+                                    <div className="pw-err">
                                         {errors.settings.invoice.phase2_b2b.purchase_titles.cash}
                                     </div>
                                 )}
@@ -2675,7 +2899,7 @@ const StoreCreate = forwardRef((props, ref) => {
                                     />
                                 </div>
                                 {errors.settings?.invoice?.phase2?.purchase_return_titles?.paid && (
-                                    <div style={{ color: "red" }}>
+                                    <div className="pw-err">
                                         {errors.settings.invoice.phase2.purchase_return_titles.paid}
                                     </div>
                                 )}
@@ -2699,7 +2923,7 @@ const StoreCreate = forwardRef((props, ref) => {
                                     />
                                 </div>
                                 {errors.settings?.invoice?.phase2?.purchase_return_titles?.credit && (
-                                    <div style={{ color: "red" }}>
+                                    <div className="pw-err">
                                         {errors.settings.invoice.phase2.purchase_return_titles.credit}
                                     </div>
                                 )}
@@ -2723,7 +2947,7 @@ const StoreCreate = forwardRef((props, ref) => {
                                     />
                                 </div>
                                 {errors.settings?.invoice?.phase2?.purchase_return_titles?.cash && (
-                                    <div style={{ color: "red" }}>
+                                    <div className="pw-err">
                                         {errors.settings.invoice.phase2.purchase_return_titles.cash}
                                     </div>
                                 )}
@@ -2751,7 +2975,7 @@ const StoreCreate = forwardRef((props, ref) => {
                                     />
                                 </div>
                                 {errors.settings?.invoice?.quotation_title && (
-                                    <div style={{ color: "red" }}>
+                                    <div className="pw-err">
                                         {errors.settings.invoice.quotation_title}
                                     </div>
                                 )}
@@ -2775,7 +2999,7 @@ const StoreCreate = forwardRef((props, ref) => {
                                     />
                                 </div>
                                 {errors.settings?.invoice?.delivery_note_title && (
-                                    <div style={{ color: "red" }}>
+                                    <div className="pw-err">
                                         {errors.settings.invoice.delivery_note_title}
                                     </div>
                                 )}
@@ -2799,7 +3023,7 @@ const StoreCreate = forwardRef((props, ref) => {
                                     />
                                 </div>
                                 {errors.settings?.invoice?.stock_transfer_title && (
-                                    <div style={{ color: "red" }}>
+                                    <div className="pw-err">
                                         {errors.settings.invoice.stock_transfer_title}
                                     </div>
                                 )}
@@ -2823,7 +3047,7 @@ const StoreCreate = forwardRef((props, ref) => {
                                     />
                                 </div>
                                 {errors.settings?.invoice?.payable_title && (
-                                    <div style={{ color: "red" }}>
+                                    <div className="pw-err">
                                         {errors.settings.invoice.payable_title}
                                     </div>
                                 )}
@@ -2846,7 +3070,7 @@ const StoreCreate = forwardRef((props, ref) => {
                                     />
                                 </div>
                                 {errors.settings?.invoice?.receivable_title && (
-                                    <div style={{ color: "red" }}>
+                                    <div className="pw-err">
                                         {errors.settings.invoice.receivable_title}
                                     </div>
                                 )}
@@ -2875,7 +3099,7 @@ const StoreCreate = forwardRef((props, ref) => {
                                     />
                                 </div>
                                 {errors.settings?.invoice?.quotation_sales_titles?.paid && (
-                                    <div style={{ color: "red" }}>
+                                    <div className="pw-err">
                                         {errors.settings.invoice.quotation_sales_titles.paid}
                                     </div>
                                 )}
@@ -2899,7 +3123,7 @@ const StoreCreate = forwardRef((props, ref) => {
                                     />
                                 </div>
                                 {errors.settings?.invoice?.quotation_sales_titles?.credit && (
-                                    <div style={{ color: "red" }}>
+                                    <div className="pw-err">
                                         {errors.settings.invoice.quotation_sales_titles.credit}
                                     </div>
                                 )}
@@ -2923,7 +3147,7 @@ const StoreCreate = forwardRef((props, ref) => {
                                     />
                                 </div>
                                 {errors.settings?.invoice?.quotation_sales_titles?.cash && (
-                                    <div style={{ color: "red" }}>
+                                    <div className="pw-err">
                                         {errors.settings.invoice.quotation_sales_titles.cash}
                                     </div>
                                 )}
@@ -2951,7 +3175,7 @@ const StoreCreate = forwardRef((props, ref) => {
                                     />
                                 </div>
                                 {errors.settings?.invoice?.quotation_sales_return_titles?.paid && (
-                                    <div style={{ color: "red" }}>
+                                    <div className="pw-err">
                                         {errors.settings.invoice.quotation_sales_return_titles.paid}
                                     </div>
                                 )}
@@ -2975,7 +3199,7 @@ const StoreCreate = forwardRef((props, ref) => {
                                     />
                                 </div>
                                 {errors.settings?.invoice?.quotation_sales_return_titles?.credit && (
-                                    <div style={{ color: "red" }}>
+                                    <div className="pw-err">
                                         {errors.settings.invoice.quotation_sales_return_titles.credit}
                                     </div>
                                 )}
@@ -2998,7 +3222,7 @@ const StoreCreate = forwardRef((props, ref) => {
                                     />
                                 </div>
                                 {errors.settings?.invoice?.quotation_sales_return_titles?.cash && (
-                                    <div style={{ color: "red" }}>
+                                    <div className="pw-err">
                                         {errors.settings.invoice.quotation_sales_return_titles.cash}
                                     </div>
                                 )}
@@ -3006,7 +3230,10 @@ const StoreCreate = forwardRef((props, ref) => {
                         </div>
 
 
-                        <h6><b>Serial Numbers</b></h6>
+                        </div></div>)}
+                        {activeTab === 'serial_numbers' && (<div className="pw-tab-wrap"><div className="pw-card">
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '20px' }}><i className="bi bi-hash" style={{ fontSize: '18px', color: '#004ac6' }}></i><h3 style={{ fontFamily: '"Hanken Grotesk", sans-serif', fontSize: '16px', fontWeight: 600, color: '#191c1e', margin: 0 }}>Serial Numbers</h3></div>
+                        <div className="row g-3">
                         <h6><b>Stock Transfer ID's:</b> {formData.stock_transfer_serial_number?.prefix.toUpperCase()}-{String(formData.stock_transfer_serial_number?.start_from_count).padStart(formData.stock_transfer_serial_number?.padding_count, '0')}, {formData.stock_transfer_serial_number?.prefix.toUpperCase()}-{String((formData.stock_transfer_serial_number?.start_from_count + 1)).padStart(formData.stock_transfer_serial_number?.padding_count, '0')}...</h6>
                         <div className="col-md-2">
                             <label className="form-label">Prefix*</label>
@@ -3029,7 +3256,7 @@ const StoreCreate = forwardRef((props, ref) => {
 
                             </div>
                             {errors.stock_transfer_serial_number_prefix && (
-                                <div style={{ color: "red" }}>
+                                <div className="pw-err">
 
                                     {errors.stock_transfer_serial_number_prefix}
                                 </div>
@@ -3057,7 +3284,7 @@ const StoreCreate = forwardRef((props, ref) => {
 
                             </div>
                             {errors.formData?.stock_transfer_serial_number?.padding_count && (
-                                <div style={{ color: "red" }}>
+                                <div className="pw-err">
 
                                     {errors.stock_transfer_serial_number_padding_count}
                                 </div>
@@ -3082,7 +3309,7 @@ const StoreCreate = forwardRef((props, ref) => {
                                 />
                             </div>
                             {errors.stock_transfer_serial_number_start_from_count && (
-                                <div style={{ color: "red" }}>
+                                <div className="pw-err">
 
                                     {errors.stock_transfer_serial_number_start_from_count}
                                 </div>
@@ -3111,7 +3338,7 @@ const StoreCreate = forwardRef((props, ref) => {
 
                             </div>
                             {errors.sales_serial_number_prefix && (
-                                <div style={{ color: "red" }}>
+                                <div className="pw-err">
 
                                     {errors.sales_serial_number_prefix}
                                 </div>
@@ -3139,7 +3366,7 @@ const StoreCreate = forwardRef((props, ref) => {
 
                             </div>
                             {errors.formData?.sales_serial_number.padding_count && (
-                                <div style={{ color: "red" }}>
+                                <div className="pw-err">
 
                                     {errors.sales_serial_number_padding_count}
                                 </div>
@@ -3167,7 +3394,7 @@ const StoreCreate = forwardRef((props, ref) => {
 
                             </div>
                             {errors.sales_serial_number_start_from_count && (
-                                <div style={{ color: "red" }}>
+                                <div className="pw-err">
 
                                     {errors.sales_serial_number_start_from_count}
                                 </div>
@@ -3196,7 +3423,7 @@ const StoreCreate = forwardRef((props, ref) => {
 
                             </div>
                             {errors.sales_return_serial_number_prefix && (
-                                <div style={{ color: "red" }}>
+                                <div className="pw-err">
 
                                     {errors.sales_return_serial_number_prefix}
                                 </div>
@@ -3224,7 +3451,7 @@ const StoreCreate = forwardRef((props, ref) => {
 
                             </div>
                             {errors.sales_return_serial_number_padding_count && (
-                                <div style={{ color: "red" }}>
+                                <div className="pw-err">
                                     {errors.sales_return_serial_number_padding_count}
                                 </div>
                             )}
@@ -3253,7 +3480,7 @@ const StoreCreate = forwardRef((props, ref) => {
                                 />
                             </div>
                             {errors.sales_return_serial_number_start_from_count && (
-                                <div style={{ color: "red" }}>
+                                <div className="pw-err">
                                     {errors.sales_return_serial_number_start_from_count}
                                 </div>
                             )}
@@ -3282,7 +3509,7 @@ const StoreCreate = forwardRef((props, ref) => {
                             </div>
 
                             {errors.purchase_serial_number_prefix && (
-                                <div style={{ color: "red" }}>
+                                <div className="pw-err">
                                     {errors.purchase_serial_number_prefix}
                                 </div>
                             )}
@@ -3307,7 +3534,7 @@ const StoreCreate = forwardRef((props, ref) => {
                                 />
                             </div>
                             {errors.purchase_serial_number_padding_count && (
-                                <div style={{ color: "red" }}>
+                                <div className="pw-err">
                                     {errors.purchase_serial_number_padding_count}
                                 </div>
                             )}
@@ -3337,7 +3564,7 @@ const StoreCreate = forwardRef((props, ref) => {
 
                             </div>
                             {errors.purchase_serial_number_start_from_count && (
-                                <div style={{ color: "red" }}>
+                                <div className="pw-err">
                                     <i className="bi bi-x-lg"> </i>
                                     {errors.purchase_serial_number_start_from_count}
                                 </div>
@@ -3367,7 +3594,7 @@ const StoreCreate = forwardRef((props, ref) => {
 
                             </div>
                             {errors.purchase_return_serial_number_prefix && (
-                                <div style={{ color: "red" }}>
+                                <div className="pw-err">
                                     <i className="bi bi-x-lg"> </i>
                                     {errors.purchase_return_serial_number_prefix}
                                 </div>
@@ -3395,7 +3622,7 @@ const StoreCreate = forwardRef((props, ref) => {
 
                             </div>
                             {errors.purchase_return_serial_number_padding_count && (
-                                <div style={{ color: "red" }}>
+                                <div className="pw-err">
                                     <i className="bi bi-x-lg"> </i>
                                     {errors.purchase_return_serial_number_padding_count}
                                 </div>
@@ -3427,7 +3654,7 @@ const StoreCreate = forwardRef((props, ref) => {
                             </div>
 
                             {errors.purchase_return_serial_number_start_from_count && (
-                                <div style={{ color: "red" }}>
+                                <div className="pw-err">
                                     <i className="bi bi-x-lg"> </i>
                                     {errors.purchase_return_serial_number_start_from_count}
                                 </div>
@@ -3457,7 +3684,7 @@ const StoreCreate = forwardRef((props, ref) => {
 
                             </div>
                             {errors.quotation_serial_number_prefix && (
-                                <div style={{ color: "red" }}>
+                                <div className="pw-err">
                                     <i className="bi bi-x-lg"> </i>
                                     {errors.quotation_serial_number_prefix}
                                 </div>
@@ -3483,7 +3710,7 @@ const StoreCreate = forwardRef((props, ref) => {
                                 />
                             </div>
                             {errors.quotation_serial_number_padding_count && (
-                                <div style={{ color: "red" }}>
+                                <div className="pw-err">
                                     <i className="bi bi-x-lg"> </i>
                                     {errors.quotation_serial_number_padding_count}
                                 </div>
@@ -3514,7 +3741,7 @@ const StoreCreate = forwardRef((props, ref) => {
                                 />
                             </div>
                             {errors.quotation_serial_number_start_from_count && (
-                                <div style={{ color: "red" }}>
+                                <div className="pw-err">
                                     <i className="bi bi-x-lg"> </i>
                                     {errors.quotation_serial_number_start_from_count}
                                 </div>
@@ -3543,7 +3770,7 @@ const StoreCreate = forwardRef((props, ref) => {
 
                             </div>
                             {errors.quotation_sales_return_serial_number_prefix && (
-                                <div style={{ color: "red" }}>
+                                <div className="pw-err">
 
                                     {errors.quotation_sales_return_serial_number_prefix}
                                 </div>
@@ -3571,7 +3798,7 @@ const StoreCreate = forwardRef((props, ref) => {
 
                             </div>
                             {errors.quotation_sales_return_serial_number_padding_count && (
-                                <div style={{ color: "red" }}>
+                                <div className="pw-err">
                                     {errors.quotation_sales_return_serial_number_padding_count}
                                 </div>
                             )}
@@ -3600,7 +3827,7 @@ const StoreCreate = forwardRef((props, ref) => {
                                 />
                             </div>
                             {errors.quotation_sales_return_serial_number_start_from_count && (
-                                <div style={{ color: "red" }}>
+                                <div className="pw-err">
                                     {errors.quotation_sales_return_serial_number_start_from_count}
                                 </div>
                             )}
@@ -3629,7 +3856,7 @@ const StoreCreate = forwardRef((props, ref) => {
 
                             </div>
                             {errors.customer_serial_number_prefix && (
-                                <div style={{ color: "red" }}>
+                                <div className="pw-err">
                                     <i className="bi bi-x-lg"> </i>
                                     {errors.customer_serial_number_prefix}
                                 </div>
@@ -3655,7 +3882,7 @@ const StoreCreate = forwardRef((props, ref) => {
                                 />
                             </div>
                             {errors.customer_serial_number_padding_count && (
-                                <div style={{ color: "red" }}>
+                                <div className="pw-err">
                                     <i className="bi bi-x-lg"> </i>
                                     {errors.customer_serial_number_padding_count}
                                 </div>
@@ -3686,7 +3913,7 @@ const StoreCreate = forwardRef((props, ref) => {
                                 />
                             </div>
                             {errors.customer_serial_number_start_from_count && (
-                                <div style={{ color: "red" }}>
+                                <div className="pw-err">
                                     <i className="bi bi-x-lg"> </i>
                                     {errors.customer_serial_number_start_from_count}
                                 </div>
@@ -3714,7 +3941,7 @@ const StoreCreate = forwardRef((props, ref) => {
 
                             </div>
                             {errors.vendor_serial_number_prefix && (
-                                <div style={{ color: "red" }}>
+                                <div className="pw-err">
                                     <i className="bi bi-x-lg"> </i>
                                     {errors.vendor_serial_number_prefix}
                                 </div>
@@ -3740,7 +3967,7 @@ const StoreCreate = forwardRef((props, ref) => {
                                 />
                             </div>
                             {errors.vendor_serial_number_padding_count && (
-                                <div style={{ color: "red" }}>
+                                <div className="pw-err">
                                     <i className="bi bi-x-lg"> </i>
                                     {errors.vendor_serial_number_padding_count}
                                 </div>
@@ -3771,7 +3998,7 @@ const StoreCreate = forwardRef((props, ref) => {
                                 />
                             </div>
                             {errors.vendor_serial_number_start_from_count && (
-                                <div style={{ color: "red" }}>
+                                <div className="pw-err">
                                     <i className="bi bi-x-lg"> </i>
                                     {errors.vendor_serial_number_start_from_count}
                                 </div>
@@ -3799,7 +4026,7 @@ const StoreCreate = forwardRef((props, ref) => {
 
                             </div>
                             {errors.expense_serial_number_prefix && (
-                                <div style={{ color: "red" }}>
+                                <div className="pw-err">
                                     <i className="bi bi-x-lg"> </i>
                                     {errors.expense_serial_number_prefix}
                                 </div>
@@ -3825,7 +4052,7 @@ const StoreCreate = forwardRef((props, ref) => {
                                 />
                             </div>
                             {errors.expense_serial_number_padding_count && (
-                                <div style={{ color: "red" }}>
+                                <div className="pw-err">
                                     <i className="bi bi-x-lg"> </i>
                                     {errors.expense_serial_number_padding_count}
                                 </div>
@@ -3856,7 +4083,7 @@ const StoreCreate = forwardRef((props, ref) => {
                                 />
                             </div>
                             {errors.expense_serial_number_start_from_count && (
-                                <div style={{ color: "red" }}>
+                                <div className="pw-err">
                                     <i className="bi bi-x-lg"> </i>
                                     {errors.expense_serial_number_start_from_count}
                                 </div>
@@ -3884,7 +4111,7 @@ const StoreCreate = forwardRef((props, ref) => {
 
                             </div>
                             {errors.delivery_note_serial_number_prefix && (
-                                <div style={{ color: "red" }}>
+                                <div className="pw-err">
                                     <i className="bi bi-x-lg"> </i>
                                     {errors.delivery_note_serial_number_prefix}
                                 </div>
@@ -3910,7 +4137,7 @@ const StoreCreate = forwardRef((props, ref) => {
                                 />
                             </div>
                             {errors.delivery_note_serial_number_padding_count && (
-                                <div style={{ color: "red" }}>
+                                <div className="pw-err">
                                     <i className="bi bi-x-lg"> </i>
                                     {errors.delivery_note_serial_number_padding_count}
                                 </div>
@@ -3940,7 +4167,7 @@ const StoreCreate = forwardRef((props, ref) => {
                                 />
                             </div>
                             {errors.delivery_note_serial_number_start_from_count && (
-                                <div style={{ color: "red" }}>
+                                <div className="pw-err">
                                     <i className="bi bi-x-lg"> </i>
                                     {errors.delivery_note_serial_number_start_from_count}
                                 </div>
@@ -3967,7 +4194,7 @@ const StoreCreate = forwardRef((props, ref) => {
 
                             </div>
                             {errors.customer_deposit_serial_number_prefix && (
-                                <div style={{ color: "red" }}>
+                                <div className="pw-err">
                                     <i className="bi bi-x-lg"> </i>
                                     {errors.customer_deposit_serial_number_prefix}
                                 </div>
@@ -3993,7 +4220,7 @@ const StoreCreate = forwardRef((props, ref) => {
                                 />
                             </div>
                             {errors.customer_deposit_serial_number_padding_count && (
-                                <div style={{ color: "red" }}>
+                                <div className="pw-err">
                                     <i className="bi bi-x-lg"> </i>
                                     {errors.customer_deposit_serial_number_padding_count}
                                 </div>
@@ -4024,7 +4251,7 @@ const StoreCreate = forwardRef((props, ref) => {
                                 />
                             </div>
                             {errors.customer_deposit_serial_number_start_from_count && (
-                                <div style={{ color: "red" }}>
+                                <div className="pw-err">
                                     <i className="bi bi-x-lg"> </i>
                                     {errors.customer_deposit_serial_number_start_from_count}
                                 </div>
@@ -4052,7 +4279,7 @@ const StoreCreate = forwardRef((props, ref) => {
 
                             </div>
                             {errors.customer_withdrawal_serial_number_prefix && (
-                                <div style={{ color: "red" }}>
+                                <div className="pw-err">
                                     <i className="bi bi-x-lg"> </i>
                                     {errors.customer_withdrawal_serial_number_prefix}
                                 </div>
@@ -4078,7 +4305,7 @@ const StoreCreate = forwardRef((props, ref) => {
                                 />
                             </div>
                             {errors.customer_withdrawal_serial_number_padding_count && (
-                                <div style={{ color: "red" }}>
+                                <div className="pw-err">
                                     <i className="bi bi-x-lg"> </i>
                                     {errors.customer_withdrawal_serial_number_padding_count}
                                 </div>
@@ -4109,7 +4336,7 @@ const StoreCreate = forwardRef((props, ref) => {
                                 />
                             </div>
                             {errors.customer_withdrawal_serial_number_start_from_count && (
-                                <div style={{ color: "red" }}>
+                                <div className="pw-err">
                                     <i className="bi bi-x-lg"> </i>
                                     {errors.customer_withdrawal_serial_number_start_from_count}
                                 </div>
@@ -4137,7 +4364,7 @@ const StoreCreate = forwardRef((props, ref) => {
 
                             </div>
                             {errors.capital_deposit_serial_number_prefix && (
-                                <div style={{ color: "red" }}>
+                                <div className="pw-err">
                                     <i className="bi bi-x-lg"> </i>
                                     {errors.capital_deposit_serial_number_prefix}
                                 </div>
@@ -4163,7 +4390,7 @@ const StoreCreate = forwardRef((props, ref) => {
                                 />
                             </div>
                             {errors.capital_deposit_serial_number_padding_count && (
-                                <div style={{ color: "red" }}>
+                                <div className="pw-err">
                                     <i className="bi bi-x-lg"> </i>
                                     {errors.capital_deposit_serial_number_padding_count}
                                 </div>
@@ -4194,7 +4421,7 @@ const StoreCreate = forwardRef((props, ref) => {
                                 />
                             </div>
                             {errors.capital_deposit_serial_number_start_from_count && (
-                                <div style={{ color: "red" }}>
+                                <div className="pw-err">
                                     <i className="bi bi-x-lg"> </i>
                                     {errors.capital_deposit_serial_number_start_from_count}
                                 </div>
@@ -4222,7 +4449,7 @@ const StoreCreate = forwardRef((props, ref) => {
 
                             </div>
                             {errors.divident_serial_number_prefix && (
-                                <div style={{ color: "red" }}>
+                                <div className="pw-err">
                                     <i className="bi bi-x-lg"> </i>
                                     {errors.divident_serial_number_prefix}
                                 </div>
@@ -4248,7 +4475,7 @@ const StoreCreate = forwardRef((props, ref) => {
                                 />
                             </div>
                             {errors.divident_serial_number_padding_count && (
-                                <div style={{ color: "red" }}>
+                                <div className="pw-err">
                                     <i className="bi bi-x-lg"> </i>
                                     {errors.divident_serial_number_padding_count}
                                 </div>
@@ -4279,14 +4506,17 @@ const StoreCreate = forwardRef((props, ref) => {
                                 />
                             </div>
                             {errors.divident_serial_number_start_from_count && (
-                                <div style={{ color: "red" }}>
+                                <div className="pw-err">
                                     <i className="bi bi-x-lg"> </i>
                                     {errors.divident_serial_number_start_from_count}
                                 </div>
                             )}
                         </div>
 
-                        <h6><b>Bank Account:</b></h6>
+                        </div></div></div>)}
+                        {activeTab === 'bank_account' && (<div className="pw-tab-wrap"><div className="pw-card">
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '20px' }}><i className="bi bi-bank" style={{ fontSize: '18px', color: '#004ac6' }}></i><h3 style={{ fontFamily: '"Hanken Grotesk", sans-serif', fontSize: '16px', fontWeight: 600, color: '#191c1e', margin: 0 }}>Bank Account</h3></div>
+                        <div className="row g-3">
                         <div className="col-md-4">
                             <label className="form-label">Bank Name</label>
 
@@ -4310,7 +4540,7 @@ const StoreCreate = forwardRef((props, ref) => {
 
                             </div>
                             {errors.bank_account_bank_name && (
-                                <div style={{ color: "red" }}>
+                                <div className="pw-err">
                                     {errors.bank_account_bank_name}
                                 </div>
                             )}
@@ -4336,7 +4566,7 @@ const StoreCreate = forwardRef((props, ref) => {
                                 />
                             </div>
                             {errors.bank_account_customer_no && (
-                                <div style={{ color: "red" }}>
+                                <div className="pw-err">
                                     {errors.bank_account_customer_no}
                                 </div>
                             )}
@@ -4362,7 +4592,7 @@ const StoreCreate = forwardRef((props, ref) => {
                                 />
                             </div>
                             {errors.bank_account_iban && (
-                                <div style={{ color: "red" }}>
+                                <div className="pw-err">
                                     {errors.bank_account_iban}
                                 </div>
                             )}
@@ -4388,7 +4618,7 @@ const StoreCreate = forwardRef((props, ref) => {
                                 />
                             </div>
                             {errors.bank_account_account_name && (
-                                <div style={{ color: "red" }}>
+                                <div className="pw-err">
                                     {errors.bank_account_account_name}
                                 </div>
                             )}
@@ -4414,13 +4644,242 @@ const StoreCreate = forwardRef((props, ref) => {
                                 />
                             </div>
                             {errors.bank_account_account_no && (
-                                <div style={{ color: "red" }}>
+                                <div className="pw-err">
                                     {errors.bank_account_account_no}
                                 </div>
                             )}
                         </div>
 
-                        <h6><b>Settings</b></h6>
+                        </div></div></div>)}
+                        {activeTab === 'settings' && (<div className="pw-tab-wrap">
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '20px' }}><i className="bi bi-gear" style={{ fontSize: '18px', color: '#004ac6' }}></i><h3 style={{ fontFamily: '"Hanken Grotesk", sans-serif', fontSize: '16px', fontWeight: 600, color: '#191c1e', margin: 0 }}>Settings</h3></div>
+
+                        {/* ── Invoice & Display ── */}
+                        <div className="pw-card" style={{ marginBottom: '16px' }}>
+                            <div className="pw-group-title"><i className="bi bi-receipt" style={{ color: '#004ac6' }}></i> Invoice &amp; Display</div>
+                            <div className="pw-check-grid">
+                                <label className="pw-check" htmlFor="show_currency_symbol">
+                                    <input type="checkbox" id="show_currency_symbol" checked={!!formData.settings.show_currency_symbol} value={formData.settings.show_currency_symbol} onChange={() => { errors["show_currency_symbol"] = ""; formData.settings.show_currency_symbol = !formData.settings.show_currency_symbol; setFormData({ ...formData }); }} />
+                                    <span>Show Currency Symbol</span>
+                                </label>
+                                <label className="pw-check" htmlFor="show_seller_info_in_invoice">
+                                    <input type="checkbox" id="show_seller_info_in_invoice" checked={!!formData.settings.show_seller_info_in_invoice} value={formData.settings.show_seller_info_in_invoice} onChange={() => { errors["show_seller_info_in_invoice"] = ""; formData.settings.show_seller_info_in_invoice = !formData.settings.show_seller_info_in_invoice; setFormData({ ...formData }); }} />
+                                    <span>Show Seller Info in Invoice</span>
+                                </label>
+                                <label className="pw-check" htmlFor="show_address_in_invoice_footer">
+                                    <input type="checkbox" id="show_address_in_invoice_footer" checked={!!formData.settings.show_address_in_invoice_footer} value={formData.settings.show_address_in_invoice_footer} onChange={() => { errors["formData.show_address_in_invoice_footer"] = ""; formData.settings.show_address_in_invoice_footer = !formData.settings.show_address_in_invoice_footer; setFormData({ ...formData }); }} />
+                                    <span>Show Address in Invoice Footer</span>
+                                </label>
+                                <label className="pw-check" htmlFor="show_received_by_footer_in_invoice">
+                                    <input type="checkbox" id="show_received_by_footer_in_invoice" name="show_received_by_footer_in_invoice" checked={!!formData.settings.show_received_by_footer_in_invoice} value={formData.settings.show_received_by_footer_in_invoice} onChange={() => { errors["show_received_by_footer_in_invoice"] = ""; formData.settings.show_received_by_footer_in_invoice = !formData.settings.show_received_by_footer_in_invoice; setFormData({ ...formData }); }} />
+                                    <span>Show Received By Footer in Invoices</span>
+                                </label>
+                                <label className="pw-check" htmlFor="zatca_qr_on_left_bottom">
+                                    <input type="checkbox" id="zatca_qr_on_left_bottom" checked={!!formData.settings.zatca_qr_on_left_bottom} value={formData.settings.zatca_qr_on_left_bottom} onChange={() => { errors["formData.zatca_qr_on_left_bottom"] = ""; formData.settings.zatca_qr_on_left_bottom = !formData.settings.zatca_qr_on_left_bottom; setFormData({ ...formData }); }} />
+                                    <span>ZATCA QR on Left Bottom</span>
+                                </label>
+                                <label className="pw-check" htmlFor="enable_invoice_print_type_selection">
+                                    <input type="checkbox" id="enable_invoice_print_type_selection" checked={!!formData.settings.enable_invoice_print_type_selection} value={formData.settings.enable_invoice_print_type_selection} onChange={() => { errors["enable_invoice_print_type_selection"] = ""; formData.settings.enable_invoice_print_type_selection = !formData.settings.enable_invoice_print_type_selection; setFormData({ ...formData }); }} />
+                                    <span>Enable Invoice Print Type Selection</span>
+                                </label>
+                                <label className="pw-check" htmlFor="one_line_product_name_in_invoice">
+                                    <input type="checkbox" id="one_line_product_name_in_invoice" checked={!!formData.settings.one_line_product_name_in_invoice} value={formData.settings.one_line_product_name_in_invoice} onChange={() => { errors["one_line_product_name_in_invoice"] = ""; formData.settings.one_line_product_name_in_invoice = !formData.settings.one_line_product_name_in_invoice; setFormData({ ...formData }); }} />
+                                    <span>One Line Product Name in Invoice</span>
+                                </label>
+                                <label className="pw-check" htmlFor="one_line_product_name_in_print_invoice">
+                                    <input type="checkbox" id="one_line_product_name_in_print_invoice" checked={!!formData.settings.one_line_product_name_in_print_invoice} value={formData.settings.one_line_product_name_in_print_invoice} onChange={() => { errors["one_line_product_name_in_print_invoice"] = ""; formData.settings.one_line_product_name_in_print_invoice = !formData.settings.one_line_product_name_in_print_invoice; setFormData({ ...formData }); }} />
+                                    <span>One Line Product Name in Print Invoice</span>
+                                </label>
+                                <label className="pw-check" htmlFor="add_price_details_in_delivery_note">
+                                    <input type="checkbox" id="add_price_details_in_delivery_note" checked={!!formData.settings.add_price_details_in_delivery_note} value={formData.settings.add_price_details_in_delivery_note} onChange={() => { errors["add_price_details_in_delivery_note"] = ""; formData.settings.add_price_details_in_delivery_note = !formData.settings.add_price_details_in_delivery_note; setFormData({ ...formData }); }} />
+                                    <span>Add Price Details in Delivery Note</span>
+                                </label>
+                            </div>
+                        </div>
+
+                        {/* ── Sales & Purchasing ── */}
+                        <div className="pw-card" style={{ marginBottom: '16px' }}>
+                            <div className="pw-group-title"><i className="bi bi-cart3" style={{ color: '#004ac6' }}></i> Sales &amp; Purchasing</div>
+                            <div className="pw-check-grid" style={{ marginBottom: '16px' }}>
+                                <label className="pw-check" htmlFor="skip_product_selection_while_delivery_note_import">
+                                    <input type="checkbox" id="skip_product_selection_while_delivery_note_import" checked={!!formData.settings.skip_product_selection_while_delivery_note_import} value={formData.settings.skip_product_selection_while_delivery_note_import} onChange={() => { errors["skip_product_selection_while_delivery_note_import"] = ""; formData.settings.skip_product_selection_while_delivery_note_import = !formData.settings.skip_product_selection_while_delivery_note_import; setFormData({ ...formData }); }} />
+                                    <span>Skip Product Selection on Delivery Note Import</span>
+                                </label>
+                                <label className="pw-check" htmlFor="disable_purchases_on_accounts">
+                                    <input type="checkbox" id="disable_purchases_on_accounts" checked={!!formData.settings.disable_purchases_on_accounts} value={formData.settings.disable_purchases_on_accounts} onChange={() => { errors["disable_purchases_on_accounts"] = ""; formData.settings.disable_purchases_on_accounts = !formData.settings.disable_purchases_on_accounts; setFormData({ ...formData }); }} />
+                                    <span>Disable Purchases on Accounts</span>
+                                </label>
+                                <label className="pw-check" htmlFor="block_sale_when_purchase_price_is_higher">
+                                    <input type="checkbox" id="block_sale_when_purchase_price_is_higher" checked={!!formData.settings.block_sale_when_purchase_price_is_higher} value={formData.settings.block_sale_when_purchase_price_is_higher} onChange={() => { errors["block_sale_when_purchase_price_is_higher"] = ""; formData.settings.block_sale_when_purchase_price_is_higher = !formData.settings.block_sale_when_purchase_price_is_higher; setFormData({ ...formData }); }} />
+                                    <span>Block Sale When Purchase Price is Lower</span>
+                                </label>
+                                <label className="pw-check" htmlFor="enable_auto_sales_payment_close_on_purchase">
+                                    <input type="checkbox" id="enable_auto_sales_payment_close_on_purchase" checked={!!formData.settings.enable_auto_sales_payment_close_on_purchase} value={formData.settings.enable_auto_sales_payment_close_on_purchase} onChange={() => { errors["enable_auto_sales_payment_close_on_purchase"] = ""; formData.settings.enable_auto_sales_payment_close_on_purchase = !formData.settings.enable_auto_sales_payment_close_on_purchase; setFormData({ ...formData }); }} />
+                                    <span>Auto-close Sales Payment on Purchase</span>
+                                </label>
+                                <label className="pw-check" htmlFor="enable_auto_purchase_payment_close_on_sales">
+                                    <input type="checkbox" id="enable_auto_purchase_payment_close_on_sales" checked={!!formData.settings.enable_auto_purchase_payment_close_on_sales} value={formData.settings.enable_auto_purchase_payment_close_on_sales} onChange={() => { errors["enable_auto_purchase_payment_close_on_sales"] = ""; formData.settings.enable_auto_purchase_payment_close_on_sales = !formData.settings.enable_auto_purchase_payment_close_on_sales; setFormData({ ...formData }); }} />
+                                    <span>Auto-close Purchase Payment on Sales</span>
+                                </label>
+                                <label className="pw-check" htmlFor="enable_auto_payment_close_on_return">
+                                    <input type="checkbox" id="enable_auto_payment_close_on_return" checked={!!formData.settings.enable_auto_payment_close_on_return} value={formData.settings.enable_auto_payment_close_on_return} onChange={() => { errors["enable_auto_payment_close_on_return"] = ""; formData.settings.enable_auto_payment_close_on_return = !formData.settings.enable_auto_payment_close_on_return; setFormData({ ...formData }); }} />
+                                    <span>Auto-close Payment on Return</span>
+                                </label>
+                                <label className="pw-check" htmlFor="allow_adjust_same_date_payments">
+                                    <input type="checkbox" id="allow_adjust_same_date_payments" checked={!!formData.settings.allow_adjust_same_date_payments} value={formData.settings.allow_adjust_same_date_payments} onChange={() => { errors["allow_adjust_same_date_payments"] = ""; formData.settings.allow_adjust_same_date_payments = !formData.settings.allow_adjust_same_date_payments; setFormData({ ...formData }); }} />
+                                    <span>Allow Adjusting Same-Date Payments</span>
+                                </label>
+                            </div>
+                            <div style={{ maxWidth: '280px' }}>
+                                <div className="pw-field">
+                                    <label htmlFor="block_sales_after_pending_count">Block Sales After N Pending <span style={{ color: '#6b7280', fontWeight: 400 }}>(0 = disabled)</span></label>
+                                    <input type="number" min="0" id="block_sales_after_pending_count" placeholder="0" value={formData.settings.block_sales_after_pending_count || ""}
+                                        onChange={(e) => { const raw = e.target.value; formData.settings.block_sales_after_pending_count = raw === "" ? 0 : (parseInt(raw) || 0); setFormData({ ...formData }); }} />
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* ── Modules & Features ── */}
+                        <div className="pw-card" style={{ marginBottom: '16px' }}>
+                            <div className="pw-group-title"><i className="bi bi-grid-3x3-gap" style={{ color: '#004ac6' }}></i> Modules &amp; Features</div>
+                            <div className="pw-check-grid">
+                                <label className="pw-check" htmlFor="enable_warehouse_module">
+                                    <input type="checkbox" id="enable_warehouse_module" checked={!!formData.settings.enable_warehouse_module} value={formData.settings.enable_warehouse_module} onChange={() => { errors["enable_warehouse_module"] = ""; formData.settings.enable_warehouse_module = !formData.settings.enable_warehouse_module; setFormData({ ...formData }); }} />
+                                    <span>Enable Warehouse Module</span>
+                                </label>
+                                <label className="pw-check" htmlFor="enable_sales_page_selection">
+                                    <input type="checkbox" id="enable_sales_page_selection" checked={!!formData.settings.enable_sales_page_selection} value={formData.settings.enable_sales_page_selection} onChange={() => { formData.settings.enable_sales_page_selection = !formData.settings.enable_sales_page_selection; setFormData({ ...formData }); }} />
+                                    <span>Enable Sales Page Selection</span>
+                                </label>
+                                <label className="pw-check" htmlFor="enable_notification">
+                                    <input type="checkbox" id="enable_notification" checked={!!formData.settings.enable_notification} value={formData.settings.enable_notification} onChange={() => { formData.settings.enable_notification = !formData.settings.enable_notification; setFormData({ ...formData }); }} />
+                                    <span>Enable Notifications</span>
+                                </label>
+                                <label className="pw-check" htmlFor="enable_auto_translation_to_arabic">
+                                    <input type="checkbox" id="enable_auto_translation_to_arabic" checked={!!formData.settings.enable_auto_translation_to_arabic} value={formData.settings.enable_auto_translation_to_arabic} onChange={() => { errors["enable_auto_translation_to_arabic"] = ""; formData.settings.enable_auto_translation_to_arabic = !formData.settings.enable_auto_translation_to_arabic; setFormData({ ...formData }); }} />
+                                    <span>Enable Auto Translation to Arabic</span>
+                                </label>
+                            </div>
+                        </div>
+
+                        {/* ── Accounting & Financials ── */}
+                        <div className="pw-card" style={{ marginBottom: '16px' }}>
+                            <div className="pw-group-title"><i className="bi bi-calculator" style={{ color: '#004ac6' }}></i> Accounting &amp; Financials</div>
+                            <div className="pw-check-grid">
+                                <label className="pw-check" htmlFor="show_minus_on_liability_balance_in_balance_sheet">
+                                    <input type="checkbox" id="show_minus_on_liability_balance_in_balance_sheet" checked={!!formData.settings.show_minus_on_liability_balance_in_balance_sheet} value={formData.settings.show_minus_on_liability_balance_in_balance_sheet} onChange={() => { errors["show_minus_on_liability_balance_in_balance_sheet"] = ""; formData.settings.show_minus_on_liability_balance_in_balance_sheet = !formData.settings.show_minus_on_liability_balance_in_balance_sheet; setFormData({ ...formData }); }} />
+                                    <span>Show Minus on Liability Balance in Balance Sheet</span>
+                                </label>
+                                <label className="pw-check" htmlFor="hide_total_amount_row_in_balance_sheet">
+                                    <input type="checkbox" id="hide_total_amount_row_in_balance_sheet" checked={!!formData.settings.hide_total_amount_row_in_balance_sheet} value={formData.settings.hide_total_amount_row_in_balance_sheet} onChange={() => { errors["hide_total_amount_row_in_balance_sheet"] = ""; formData.settings.hide_total_amount_row_in_balance_sheet = !formData.settings.hide_total_amount_row_in_balance_sheet; setFormData({ ...formData }); }} />
+                                    <span>Hide Total Amount Row in Balance Sheet</span>
+                                </label>
+                                <label className="pw-check" htmlFor="quotation_invoice_accounting">
+                                    <input type="checkbox" id="quotation_invoice_accounting" checked={!!formData.settings.quotation_invoice_accounting} value={formData.settings.quotation_invoice_accounting} onChange={() => { errors["formData.quotation_invoice_accounting"] = ""; formData.settings.quotation_invoice_accounting = !formData.settings.quotation_invoice_accounting; setFormData({ ...formData }); }} />
+                                    <span>Enable Quotation Invoice Accounting</span>
+                                </label>
+                            </div>
+                        </div>
+
+                        {/* ── Stats Dashboard ── */}
+                        <div className="pw-card" style={{ marginBottom: '16px' }}>
+                            <div className="pw-group-title"><i className="bi bi-bar-chart-line" style={{ color: '#004ac6' }}></i> Stats Dashboard</div>
+                            <div className="pw-check-grid">
+                                <label className="pw-check" htmlFor="stats_show_overall_summary">
+                                    <input type="checkbox" id="stats_show_overall_summary" checked={!!formData.settings.stats_show_overall_summary} value={formData.settings.stats_show_overall_summary} onChange={() => { formData.settings.stats_show_overall_summary = !formData.settings.stats_show_overall_summary; setFormData({ ...formData }); }} />
+                                    <span>Show Overall Summary</span>
+                                </label>
+                                <label className="pw-check" htmlFor="stats_show_profit_loss_statement">
+                                    <input type="checkbox" id="stats_show_profit_loss_statement" checked={!!formData.settings.stats_show_profit_loss_statement} value={formData.settings.stats_show_profit_loss_statement} onChange={() => { formData.settings.stats_show_profit_loss_statement = !formData.settings.stats_show_profit_loss_statement; setFormData({ ...formData }); }} />
+                                    <span>Show Profit / Loss Statement</span>
+                                </label>
+                            </div>
+                        </div>
+
+                        {/* ── Quotation Settings ── */}
+                        <div className="pw-card" style={{ marginBottom: '16px' }}>
+                            <div className="pw-group-title"><i className="bi bi-file-earmark-text" style={{ color: '#004ac6' }}></i> Quotation Settings</div>
+                            <div className="pw-check-grid" style={{ marginBottom: '16px' }}>
+                                <label className="pw-check" htmlFor="update_product_stock_on_quotation_sales">
+                                    <input type="checkbox" id="update_product_stock_on_quotation_sales" checked={!!formData.settings.update_product_stock_on_quotation_sales} value={formData.settings.update_product_stock_on_quotation_sales} onChange={() => { errors["hide_quotation_invoice_vat"] = ""; formData.settings.update_product_stock_on_quotation_sales = !formData.settings.update_product_stock_on_quotation_sales; setFormData({ ...formData }); }} />
+                                    <span>Update Product Stock on Quotation Sales</span>
+                                </label>
+                                <label className="pw-check" htmlFor="hide_quotation_invoice_vat">
+                                    <input type="checkbox" id="hide_quotation_invoice_vat" checked={!!formData.settings.hide_quotation_invoice_vat} value={formData.settings.hide_quotation_invoice_vat} onChange={() => { errors["hide_quotation_invoice_vat"] = ""; formData.settings.hide_quotation_invoice_vat = !formData.settings.hide_quotation_invoice_vat; setFormData({ ...formData }); }} />
+                                    <span>Hide Quotation Invoice VAT</span>
+                                </label>
+                                <label className="pw-check" htmlFor="enable_monthly_serial_number">
+                                    <input type="checkbox" id="enable_monthly_serial_number" checked={!!formData.settings.enable_monthly_serial_number} value={formData.settings.enable_monthly_serial_number} onChange={() => { errors["enable_monthly_serial_number"] = ""; formData.settings.enable_monthly_serial_number = !formData.settings.enable_monthly_serial_number; setFormData({ ...formData }); }} />
+                                    <span>Enable Monthly Serial Number Reset</span>
+                                </label>
+                            </div>
+                            <div className="row g-3" style={{ maxWidth: '560px' }}>
+                                <div className="col-md-6">
+                                    <div className="pw-field">
+                                        <label htmlFor="default_quotation_validity_days">Default Quotation Validity (days)</label>
+                                        <input type="number" id="default_quotation_validity_days" placeholder="e.g. 30"
+                                            value={formData.settings.default_quotation_validity_days || ""}
+                                            onChange={(e) => {
+                                                if (!e.target.value) { formData.settings.default_quotation_validity_days = null; errors["default_quotation_validity_days"] = ""; setFormData({ ...formData }); setErrors({ ...errors }); return; }
+                                                if (parseInt(e.target.value) <= 0) { formData.settings.default_quotation_validity_days = parseInt(e.target.value); setFormData({ ...formData }); errors["default_quotation_validity_days"] = "Default quotation validity days should be > 0"; setErrors({ ...errors }); return; }
+                                                errors["default_quotation_validity_days"] = ""; setErrors({ ...errors }); formData.settings.default_quotation_validity_days = parseInt(e.target.value); setFormData({ ...formData });
+                                            }} />
+                                        {errors.default_quotation_validity_days && <span className="pw-err"><i className="bi bi-x-circle"></i> {errors.default_quotation_validity_days}</span>}
+                                    </div>
+                                </div>
+                                <div className="col-md-6">
+                                    <div className="pw-field">
+                                        <label htmlFor="default_quotation_delivery_days">Default Quotation Delivery (days)</label>
+                                        <input type="number" id="default_quotation_delivery_days" placeholder="e.g. 7"
+                                            value={formData.settings.default_quotation_delivery_days || ""}
+                                            onChange={(e) => {
+                                                if (!e.target.value) { formData.settings.default_quotation_delivery_days = null; errors["default_quotation_delivery_days"] = ""; setFormData({ ...formData }); setErrors({ ...errors }); return; }
+                                                if (parseInt(e.target.value) <= 0) { formData.settings.default_quotation_delivery_days = parseInt(e.target.value); setFormData({ ...formData }); errors["default_quotation_delivery_days"] = "Default quotation delivery days should be > 0"; setErrors({ ...errors }); return; }
+                                                errors["default_quotation_delivery_days"] = ""; setErrors({ ...errors }); formData.settings.default_quotation_delivery_days = parseInt(e.target.value); setFormData({ ...formData }); console.log(formData);
+                                            }} />
+                                        {errors.default_quotation_delivery_days && <span className="pw-err"><i className="bi bi-x-circle"></i> {errors.default_quotation_delivery_days}</span>}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* ── WhatsApp Integration ── */}
+                        <div className="pw-card" style={{ marginBottom: '0', border: '1px solid #c3d7b8', background: '#f6fbf4' }}>
+                            <div className="pw-group-title" style={{ borderBottomColor: '#c3d7b8' }}>
+                                <i className="bi bi-whatsapp" style={{ color: '#25d366', fontSize: '14px' }}></i>
+                                <span style={{ color: '#1a4d2e' }}>WhatsApp Integration (Evolution API)</span>
+                            </div>
+                            <div style={{ marginBottom: '14px' }}>
+                                <label className="pw-check" htmlFor="use_whatsapp_api" style={{ maxWidth: '420px', background: '#edf7ea', borderRadius: '6px', padding: '10px 12px' }}>
+                                    <input type="checkbox" id="use_whatsapp_api" checked={!!formData.settings.use_whatsapp_api} value={formData.settings.use_whatsapp_api} onChange={() => { formData.settings.use_whatsapp_api = !formData.settings.use_whatsapp_api; setFormData({ ...formData }); }} />
+                                    <span style={{ color: '#1a4d2e', fontWeight: 600 }}>Use WhatsApp API — send invoices as PDF attachments</span>
+                                </label>
+                                <p style={{ marginLeft: '12px', marginTop: '4px', fontSize: '12px', color: '#4b7a5c', fontFamily: '"Inter", sans-serif' }}>When enabled, invoices are sent as PDF files via your connected WhatsApp number instead of a link.</p>
+                            </div>
+                            <div className="row g-3">
+                                <div className="col-md-4">
+                                    <div className="pw-field">
+                                        <label htmlFor="evolution_api_url">Evolution API URL</label>
+                                        <input type="text" id="evolution_api_url" placeholder="http://localhost:8081" value={formData.settings.evolution_api_url || ""} onChange={(e) => { formData.settings.evolution_api_url = e.target.value; setFormData({ ...formData }); }} />
+                                        <small>Leave blank to use default (http://localhost:8081)</small>
+                                    </div>
+                                </div>
+                                <div className="col-md-4">
+                                    <div className="pw-field">
+                                        <label htmlFor="evolution_api_key">Evolution API Key</label>
+                                        <input type="text" id="evolution_api_key" placeholder="startpos-evo-local-key" value={formData.settings.evolution_api_key || ""} onChange={(e) => { formData.settings.evolution_api_key = e.target.value; setFormData({ ...formData }); }} />
+                                    </div>
+                                </div>
+                                <div className="col-md-4">
+                                    <div className="pw-field">
+                                        <label htmlFor="evolution_instance_name">Evolution Instance Name</label>
+                                        <input type="text" id="evolution_instance_name" placeholder="startpos" value={formData.settings.evolution_instance_name || ""} onChange={(e) => { formData.settings.evolution_instance_name = e.target.value; setFormData({ ...formData }); }} />
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="row g-3" style={{ display: 'none' }}>{/* legacy fields removed from display */}
 
 
                         <div className="col-md-2">
@@ -4441,7 +4900,7 @@ const StoreCreate = forwardRef((props, ref) => {
                             </div>
                             <label className="form-label"></label>
                             {errors.show_currency_symbol && (
-                                <div style={{ color: "red" }}>
+                                <div className="pw-err">
                                     {errors.show_currency_symbol}
                                 </div>
                             )}
@@ -4465,7 +4924,7 @@ const StoreCreate = forwardRef((props, ref) => {
                             </div>
                             <label className="form-label"></label>
                             {errors.enable_auto_translation_to_arabic && (
-                                <div style={{ color: "red" }}>
+                                <div className="pw-err">
                                     {errors.enable_auto_translation_to_arabic}
                                 </div>
                             )}
@@ -4489,7 +4948,7 @@ const StoreCreate = forwardRef((props, ref) => {
                             </div>
                             <label className="form-label"></label>
                             {errors.enable_warehouse_module && (
-                                <div style={{ color: "red" }}>
+                                <div className="pw-err">
                                     {errors.enable_warehouse_module}
                                 </div>
                             )}
@@ -4511,7 +4970,7 @@ const StoreCreate = forwardRef((props, ref) => {
                             </div>
                             <label className="form-label"></label>
                             {errors.add_price_details_in_delivery_note && (
-                                <div style={{ color: "red" }}>
+                                <div className="pw-err">
                                     {errors.add_price_details_in_delivery_note}
                                 </div>
                             )}
@@ -4533,7 +4992,7 @@ const StoreCreate = forwardRef((props, ref) => {
                             </div>
                             <label className="form-label"></label>
                             {errors.skip_product_selection_while_delivery_note_import && (
-                                <div style={{ color: "red" }}>
+                                <div className="pw-err">
                                     {errors.skip_product_selection_while_delivery_note_import}
                                 </div>
                             )}
@@ -4575,7 +5034,7 @@ const StoreCreate = forwardRef((props, ref) => {
                             </div>
                             <label className="form-label"></label>
                             {errors.disable_purchases_on_accounts && (
-                                <div style={{ color: "red" }}>
+                                <div className="pw-err">
                                     {errors.disable_purchases_on_accounts}
                                 </div>
                             )}
@@ -4697,7 +5156,7 @@ const StoreCreate = forwardRef((props, ref) => {
                             </div>
                             <label className="form-label"></label>
                             {errors.enable_auto_sales_payment_close_on_purchase && (
-                                <div style={{ color: "red" }}>
+                                <div className="pw-err">
                                     {errors.enable_auto_sales_payment_close_on_purchase}
                                 </div>
                             )}
@@ -4721,7 +5180,7 @@ const StoreCreate = forwardRef((props, ref) => {
                             </div>
                             <label className="form-label"></label>
                             {errors.enable_auto_purchase_payment_close_on_sales && (
-                                <div style={{ color: "red" }}>
+                                <div className="pw-err">
                                     {errors.enable_auto_purchase_payment_close_on_sales}
                                 </div>
                             )}
@@ -4746,7 +5205,7 @@ const StoreCreate = forwardRef((props, ref) => {
                             </div>
                             <label className="form-label"></label>
                             {errors.enable_auto_payment_close_on_return && (
-                                <div style={{ color: "red" }}>
+                                <div className="pw-err">
                                     {errors.enable_auto_payment_close_on_return}
                                 </div>
                             )}
@@ -4803,7 +5262,7 @@ const StoreCreate = forwardRef((props, ref) => {
                             </div>
                             <label className="form-label"></label>
                             {errors.update_product_stock_on_quotation_sales && (
-                                <div style={{ color: "red" }}>
+                                <div className="pw-err">
                                     {errors.update_product_stock_on_quotation_sales}
                                 </div>
                             )}
@@ -4827,7 +5286,7 @@ const StoreCreate = forwardRef((props, ref) => {
                             </div>
                             <label className="form-label"></label>
                             {errors.hide_quotation_invoice_vat && (
-                                <div style={{ color: "red" }}>
+                                <div className="pw-err">
                                     {errors.hide_quotation_invoice_vat}
                                 </div>
                             )}
@@ -4851,7 +5310,7 @@ const StoreCreate = forwardRef((props, ref) => {
                             </div>
                             <label className="form-label"></label>
                             {errors.allow_adjust_same_date_payments && (
-                                <div style={{ color: "red" }}>
+                                <div className="pw-err">
                                     {errors.allow_adjust_same_date_payments}
                                 </div>
                             )}
@@ -4876,7 +5335,7 @@ const StoreCreate = forwardRef((props, ref) => {
                             </div>
                             <label className="form-label"></label>
                             {errors.enable_invoice_print_type_selection && (
-                                <div style={{ color: "red" }}>
+                                <div className="pw-err">
                                     {errors.enable_invoice_print_type_selection}
                                 </div>
                             )}
@@ -4902,7 +5361,7 @@ const StoreCreate = forwardRef((props, ref) => {
                             </div>
                             <label className="form-label"></label>
                             {errors.show_minus_on_liability_balance_in_balance_sheet && (
-                                <div style={{ color: "red" }}>
+                                <div className="pw-err">
                                     {errors.show_minus_on_liability_balance_in_balance_sheet}
                                 </div>
                             )}
@@ -4928,7 +5387,7 @@ const StoreCreate = forwardRef((props, ref) => {
                             </div>
                             <label className="form-label"></label>
                             {errors.show_minus_on_liability_balance_in_balance_sheet && (
-                                <div style={{ color: "red" }}>
+                                <div className="pw-err">
                                     {errors.show_minus_on_liability_balance_in_balance_sheet}
                                 </div>
                             )}
@@ -4954,7 +5413,7 @@ const StoreCreate = forwardRef((props, ref) => {
                             </div>
                             <label className="form-label"></label>
                             {errors.hide_total_amount_row_in_balance_sheet && (
-                                <div style={{ color: "red" }}>
+                                <div className="pw-err">
                                     {errors.hide_total_amount_row_in_balance_sheet}
                                 </div>
                             )}
@@ -4980,7 +5439,7 @@ const StoreCreate = forwardRef((props, ref) => {
                             </div>
                             <label className="form-label"></label>
                             {errors.show_address_in_invoice_footer && (
-                                <div style={{ color: "red" }}>
+                                <div className="pw-err">
                                     {errors.show_address_in_invoice_footer}
                                 </div>
                             )}
@@ -5005,7 +5464,7 @@ const StoreCreate = forwardRef((props, ref) => {
                             </div>
                             <label className="form-label"></label>
                             {errors.show_received_by_footer_in_invoice && (
-                                <div style={{ color: "red" }}>
+                                <div className="pw-err">
                                     {errors.show_received_by_footer_in_invoice}
                                 </div>
                             )}
@@ -5031,7 +5490,7 @@ const StoreCreate = forwardRef((props, ref) => {
                             </div>
                             <label className="form-label"></label>
                             {errors.zatca_qr_on_left_bottom && (
-                                <div style={{ color: "red" }}>
+                                <div className="pw-err">
                                     {errors.zatca_qr_on_left_bottom}
                                 </div>
                             )}
@@ -5055,7 +5514,7 @@ const StoreCreate = forwardRef((props, ref) => {
                             </div>
                             <label className="form-label"></label>
                             {errors.quotation_invoice_accounting && (
-                                <div style={{ color: "red" }}>
+                                <div className="pw-err">
                                     {errors.quotation_invoice_accounting}
                                 </div>
                             )}
@@ -5079,7 +5538,7 @@ const StoreCreate = forwardRef((props, ref) => {
                             </div>
                             <label className="form-label"></label>
                             {errors.block_sale_when_purchase_price_is_higher && (
-                                <div style={{ color: "red" }}>
+                                <div className="pw-err">
                                     {errors.block_sale_when_purchase_price_is_higher}
                                 </div>
                             )}
@@ -5102,7 +5561,7 @@ const StoreCreate = forwardRef((props, ref) => {
                             </div>
                             <label className="form-label"></label>
                             {errors.one_line_product_name_in_invoice && (
-                                <div style={{ color: "red" }}>
+                                <div className="pw-err">
                                     {errors.one_line_product_name_in_invoice}
                                 </div>
                             )}
@@ -5125,7 +5584,7 @@ const StoreCreate = forwardRef((props, ref) => {
                             </div>
                             <label className="form-label"></label>
                             {errors.one_line_product_name_in_print_invoice && (
-                                <div style={{ color: "red" }}>
+                                <div className="pw-err">
                                     {errors.one_line_product_name_in_print_invoice}
                                 </div>
                             )}
@@ -5148,7 +5607,7 @@ const StoreCreate = forwardRef((props, ref) => {
                             </div>
                             <label className="form-label"></label>
                             {errors.enable_monthly_serial_number && (
-                                <div style={{ color: "red" }}>
+                                <div className="pw-err">
                                     {errors.enable_monthly_serial_number}
                                 </div>
                             )}
@@ -5191,75 +5650,16 @@ const StoreCreate = forwardRef((props, ref) => {
                                 />
 
                                 {errors.default_quotation_validity_days && (
-                                    <div style={{ color: "red" }}>
+                                    <div className="pw-err">
                                         {errors.default_quotation_validity_days}
                                     </div>
                                 )}
                             </div>
                         </div>
 
-                        <div className="col-md-3">
-                            <label className="form-label">Default quotation delivery (# of Days)*</label>
-                            <div className="input-group mb-3">
-                                <input
-                                    type="number"
-                                    className="text-center"
-                                    style={{ width: "50px" }}
-                                    value={formData.settings.default_quotation_delivery_days}
-                                    onChange={(e) => {
-                                        console.log("Inside onchange delivery days");
-                                        if (!e.target.value) {
-                                            formData.settings.default_quotation_delivery_days = null;
-                                            errors["default_quotation_delivery_days"] = "";
-                                            setFormData({ ...formData });
-                                            setErrors({ ...errors });
-                                            return;
-                                        }
-
-                                        if (parseInt(e.target.value) <= 0) {
-                                            formData.settings.default_quotation_delivery_days = parseInt(e.target.value);
-                                            setFormData({ ...formData });
-                                            errors["default_quotation_delivery_days"] =
-                                                "Default quotation delivery days should be > 0";
-                                            setErrors({ ...errors });
-                                            return;
-                                        }
-
-                                        errors["default_quotation_delivery_days"] = "";
-                                        setErrors({ ...errors });
-                                        formData.settings.default_quotation_delivery_days = parseInt(e.target.value);
-                                        setFormData({ ...formData });
-                                        console.log(formData);
-                                    }}
-                                />
-
-                                {errors.default_quotation_delivery_days && (
-                                    <div style={{ color: "red" }}>
-                                        {errors.default_quotation_delivery_days}
-                                    </div>
-                                )}
-                            </div>
-                        </div>
-
-                        <Modal.Footer>
-                            <Button variant="secondary" onClick={handleClose}>
-                                Close
-                            </Button>
-                            <Button variant="primary" onClick={handleCreate} >
-                                {isProcessing ?
-                                    <Spinner
-                                        as="span"
-                                        animation="border"
-                                        size="sm"
-                                        role="status"
-                                        aria-hidden={true}
-                                    />
-
-                                    : ""
-                                }
-                                {formData.id && !isProcessing ? "Update" : !isProcessing ? "Create" : ""}
-                            </Button>
-                        </Modal.Footer>
+                        </div></div>)}
+                        </div>{/* pw-content-scroll */}
+                        </div>{/* pw-content */}
                     </form>
                 </Modal.Body>
 
