@@ -65,6 +65,15 @@ function StoreIndex(props) {
     const [isListLoading, setIsListLoading] = useState(false);
     const [isRefreshInProcess, setIsRefreshInProcess] = useState(false);
 
+    // Deleted filter: "no" | "yes" | "all"
+    let [deletedFilter, setDeletedFilter] = useState("no");
+    // Per-row days input for mark-permanent-deletion (stored as strings so partial input works)
+    const [permanentDeletionDays, setPermanentDeletionDays] = useState({});
+    const [markingStoreId, setMarkingStoreId] = useState(null);
+    const [permDeletingStoreId, setPermDeletingStoreId] = useState(null);
+    const [abortingStoreId, setAbortingStoreId] = useState(null);
+    const [restoringStoreId, setRestoringStoreId] = useState(null);
+
 
 
 
@@ -104,11 +113,12 @@ function StoreIndex(props) {
             },
         };
         let Select =
-            "select=id,name,code,branch_name,country_code,created_by_name,created_at,vat_percent,zatca,phone,settings";
+            "select=id,name,code,branch_name,country_code,created_by_name,created_at,vat_percent,zatca,phone,settings,deleted,deleted_at,marked_for_permanent_deletion,marked_for_permanent_deletion_at,permanent_deletion_after_days";
 
         const d = new Date();
         let diff = d.getTimezoneOffset();
         searchParams["timezone_offset"] = parseFloat(diff / 60);
+        searchParams["deleted"] = deletedFilter;
 
         setSearchParams(searchParams);
         let queryParams = ObjectToSearchQueryParams(searchParams);
@@ -369,6 +379,120 @@ function StoreIndex(props) {
         StoreDuplicateRef.current.open(store);
     }
 
+    async function softDeleteStore(store) {
+        if (!window.confirm(`Delete "${store.name}"? It can be recovered later.`)) return;
+        try {
+            const res = await fetch(`/v1/store/${store.id}`, {
+                method: 'DELETE',
+                headers: { Authorization: localStorage.getItem('access_token') },
+            });
+            const data = await res.json().catch(() => ({}));
+            if (data.status) {
+                if (props.showToastMessage) props.showToastMessage('Store deleted', 'success');
+                list();
+            } else {
+                const errMsg = data.errors ? Object.values(data.errors).join(', ') : 'Delete failed';
+                if (props.showToastMessage) props.showToastMessage(errMsg, 'danger');
+            }
+        } catch (e) {
+            if (props.showToastMessage) props.showToastMessage('Error: ' + e.message, 'danger');
+        }
+    }
+
+    async function restoreStore(store) {
+        if (!window.confirm(`Restore "${store.name}"?`)) return;
+        setRestoringStoreId(store.id);
+        try {
+            const res = await fetch(`/v1/store/${store.id}/restore`, {
+                method: 'POST',
+                headers: { Authorization: localStorage.getItem('access_token') },
+            });
+            const data = await res.json().catch(() => ({}));
+            if (data.status) {
+                if (props.showToastMessage) props.showToastMessage('Store restored successfully', 'success');
+                list();
+            } else {
+                const errMsg = data.errors ? Object.values(data.errors).join(', ') : 'Restore failed';
+                if (props.showToastMessage) props.showToastMessage(errMsg, 'danger');
+            }
+        } catch (e) {
+            if (props.showToastMessage) props.showToastMessage('Error: ' + e.message, 'danger');
+        } finally {
+            setRestoringStoreId(null);
+        }
+    }
+
+    async function abortPermanentDeletion(store) {
+        if (!window.confirm(`Abort permanent deletion of "${store.name}"?`)) return;
+        setAbortingStoreId(store.id);
+        try {
+            const res = await fetch(`/v1/store/${store.id}/abort-permanent-deletion`, {
+                method: 'POST',
+                headers: { Authorization: localStorage.getItem('access_token') },
+            });
+            const data = await res.json().catch(() => ({}));
+            if (data.status) {
+                if (props.showToastMessage) props.showToastMessage('Permanent deletion aborted', 'success');
+                list();
+            } else {
+                const errMsg = data.errors ? Object.values(data.errors).join(', ') : 'Failed';
+                if (props.showToastMessage) props.showToastMessage(errMsg, 'danger');
+            }
+        } catch (e) {
+            if (props.showToastMessage) props.showToastMessage('Error: ' + e.message, 'danger');
+        } finally {
+            setAbortingStoreId(null);
+        }
+    }
+
+    async function markForPermanentDeletion(store) {
+        const days = parseInt(permanentDeletionDays[store.id]) > 0 ? parseInt(permanentDeletionDays[store.id]) : 14;
+        if (!window.confirm(`Mark "${store.name}" for permanent deletion after ${days} day(s)?`)) return;
+        setMarkingStoreId(store.id);
+        try {
+            const res = await fetch(`/v1/store/${store.id}/mark-permanent-deletion`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', Authorization: localStorage.getItem('access_token') },
+                body: JSON.stringify({ days }),
+            });
+            const data = await res.json().catch(() => ({}));
+            if (data.status) {
+                if (props.showToastMessage) props.showToastMessage(`Marked for permanent deletion after ${days} day(s)`, 'success');
+                list();
+            } else {
+                const errMsg = data.errors ? Object.values(data.errors).join(', ') : 'Failed';
+                if (props.showToastMessage) props.showToastMessage(errMsg, 'danger');
+            }
+        } catch (e) {
+            if (props.showToastMessage) props.showToastMessage('Error: ' + e.message, 'danger');
+        } finally {
+            setMarkingStoreId(null);
+        }
+    }
+
+    async function permanentlyDeleteStore(store) {
+        if (!window.confirm(`PERMANENTLY DELETE "${store.name}"?\n\nThis will:\n• Drop the store database\n• Delete all images\n• Delete all ZATCA files\n\nThis CANNOT be undone!`)) return;
+        setPermDeletingStoreId(store.id);
+        try {
+            const res = await fetch(`/v1/store/${store.id}/permanent`, {
+                method: 'DELETE',
+                headers: { Authorization: localStorage.getItem('access_token') },
+            });
+            const data = await res.json().catch(() => ({}));
+            if (data.status) {
+                if (props.showToastMessage) props.showToastMessage('Store permanently deleted', 'success');
+                list();
+            } else {
+                const errMsg = data.errors ? Object.values(data.errors).join(', ') : 'Failed';
+                if (props.showToastMessage) props.showToastMessage(errMsg, 'danger');
+            }
+        } catch (e) {
+            if (props.showToastMessage) props.showToastMessage('Error: ' + e.message, 'danger');
+        } finally {
+            setPermDeletingStoreId(null);
+        }
+    }
+
 
 
     return (
@@ -537,7 +661,7 @@ function StoreIndex(props) {
                                         </>
                                     )}
                                 </div>
-                                <div className="table-responsive" style={{ overflowX: "auto" }}>
+                                <div className="table-responsive" style={{ overflowX: "auto", paddingBottom: "250px", marginBottom: "-250px" }}>
                                     <table className="table table-striped table-sm table-bordered">
                                         <thead>
                                             <tr className="text-center">
@@ -619,6 +743,7 @@ function StoreIndex(props) {
                                                     </b>
                                                 </th>
                                                 <th>Actions</th>
+                                                <th>Deleted</th>
                                             </tr>
                                         </thead>
 
@@ -666,6 +791,24 @@ function StoreIndex(props) {
                                                     />
                                                 </th>
                                                 <th></th>
+                                                <th>
+                                                    <select
+                                                        className="form-select form-select-sm"
+                                                        value={deletedFilter}
+                                                        onChange={(e) => {
+                                                            deletedFilter = e.target.value;
+                                                            setDeletedFilter(deletedFilter);
+                                                            page = 1;
+                                                            setPage(page);
+                                                            list();
+                                                        }}
+                                                        style={{ width: "75px", height: "28px", padding: "2px 4px", fontSize: "12px" }}
+                                                    >
+                                                        <option value="no">NO</option>
+                                                        <option value="yes">YES</option>
+                                                        <option value="all">ALL</option>
+                                                    </select>
+                                                </th>
                                             </tr>
                                         </thead>
 
@@ -721,20 +864,112 @@ function StoreIndex(props) {
                                                                     <Dropdown.Item onClick={() => openDetailsView(store.id)}>
                                                                         <i className="bi bi-eye me-2"></i>View
                                                                     </Dropdown.Item>
-                                                                    {localStorage.getItem('user_role') === "Admin" && (
+                                                                    {localStorage.getItem('user_role') === "Admin" && !store.deleted && (
                                                                         <Dropdown.Item onClick={() => openUpdateForm(store.id)}>
                                                                             <i className="bi bi-pencil me-2"></i>Edit
                                                                         </Dropdown.Item>
                                                                     )}
-                                                                    {localStorage.getItem('user_role') === "Admin" && (
+                                                                    {localStorage.getItem('user_role') === "Admin" && !store.deleted && (
                                                                         <Dropdown.Item onClick={() => openDuplicate(store)}>
                                                                             <i className="bi bi-files me-2"></i>Duplicate
                                                                         </Dropdown.Item>
                                                                     )}
                                                                     <Dropdown.Divider />
-                                                                    <Dropdown.Item onClick={() => openBackup(store)}>
-                                                                        <i className="bi bi-archive me-2"></i>Backup Data
-                                                                    </Dropdown.Item>
+                                                                    {localStorage.getItem('user_role') === "Admin" && (
+                                                                        <Dropdown.Item onClick={() => openBackup(store)}>
+                                                                            <i className="bi bi-archive me-2"></i>Backup Data
+                                                                        </Dropdown.Item>
+                                                                    )}
+                                                                    {localStorage.getItem('user_role') === "Admin" && !store.deleted && (
+                                                                        <>
+                                                                            <Dropdown.Divider />
+                                                                            <Dropdown.Item className="text-danger" onClick={() => softDeleteStore(store)}>
+                                                                                <i className="bi bi-trash me-2"></i>Delete
+                                                                            </Dropdown.Item>
+                                                                        </>
+                                                                    )}
+                                                                    {localStorage.getItem('user_role') === "Admin" && store.deleted && (
+                                                                        <>
+                                                                            <Dropdown.Divider />
+                                                                            <Dropdown.Item
+                                                                                className="text-success"
+                                                                                disabled={restoringStoreId === store.id}
+                                                                                onClick={() => restoreStore(store)}
+                                                                            >
+                                                                                {restoringStoreId === store.id
+                                                                                    ? <Spinner size="sm" animation="border" />
+                                                                                    : <><i className="bi bi-arrow-counterclockwise me-2"></i>Restore</>
+                                                                                }
+                                                                            </Dropdown.Item>
+                                                                            {!store.marked_for_permanent_deletion ? (
+                                                                                <div className="px-3 py-1"
+                                                                                    onClick={(e) => e.stopPropagation()}
+                                                                                    onMouseDown={(e) => e.stopPropagation()}
+                                                                                >
+                                                                                    <div className="d-flex align-items-center gap-1 mb-1">
+                                                                                        <input
+                                                                                            type="number"
+                                                                                            min="1"
+                                                                                            value={permanentDeletionDays[store.id] ?? "14"}
+                                                                                            onChange={(e) => setPermanentDeletionDays(prev => ({ ...prev, [store.id]: e.target.value }))}
+                                                                                            onClick={(e) => e.stopPropagation()}
+                                                                                            onMouseDown={(e) => e.stopPropagation()}
+                                                                                            onKeyDown={(e) => e.stopPropagation()}
+                                                                                            className="form-control form-control-sm"
+                                                                                            style={{ width: "65px" }}
+                                                                                        />
+                                                                                        <span className="small text-muted">days</span>
+                                                                                    </div>
+                                                                                    <Button
+                                                                                        size="sm"
+                                                                                        variant="warning"
+                                                                                        className="w-100 mb-1"
+                                                                                        disabled={markingStoreId === store.id}
+                                                                                        onClick={() => markForPermanentDeletion(store)}
+                                                                                    >
+                                                                                        {markingStoreId === store.id
+                                                                                            ? <Spinner size="sm" animation="border" />
+                                                                                            : <><i className="bi bi-clock me-1"></i>Mark for Permanent Deletion after {permanentDeletionDays[store.id] ?? "14"} days</>
+
+                                                                                        }
+                                                                                    </Button>
+                                                                                    {store.created_at && (new Date() - new Date(store.created_at)) < 3 * 24 * 60 * 60 * 1000 && (
+                                                                                        <Button
+                                                                                            size="sm"
+                                                                                            variant="danger"
+                                                                                            className="w-100"
+                                                                                            disabled={permDeletingStoreId === store.id}
+                                                                                            onClick={() => permanentlyDeleteStore(store)}
+                                                                                        >
+                                                                                            {permDeletingStoreId === store.id
+                                                                                                ? <Spinner size="sm" animation="border" />
+                                                                                                : <><i className="bi bi-trash3-fill me-1"></i>Delete Permanently</>
+                                                                                            }
+                                                                                        </Button>
+                                                                                    )}
+                                                                                </div>
+                                                                            ) : (
+                                                                                <div className="px-3 py-1">
+                                                                                    <div className="small text-warning mb-1">
+                                                                                        <i className="bi bi-clock me-1"></i>
+                                                                                        Permanent Deletion in {store.permanent_deletion_after_days || 14}d
+                                                                                    </div>
+                                                                                    <Button
+                                                                                        size="sm"
+                                                                                        variant="outline-secondary"
+                                                                                        className="w-100"
+                                                                                        disabled={abortingStoreId === store.id}
+                                                                                        onClick={() => abortPermanentDeletion(store)}
+                                                                                    >
+                                                                                        {abortingStoreId === store.id
+                                                                                            ? <Spinner size="sm" animation="border" />
+                                                                                            : <><i className="bi bi-x-circle me-1"></i>Abort Permanent Deletion</>
+                                                                                        }
+                                                                                    </Button>
+                                                                                </div>
+                                                                            )}
+                                                                        </>
+                                                                    )}
                                                                 </Dropdown.Menu>
                                                             </Dropdown>
 
@@ -807,6 +1042,20 @@ function StoreIndex(props) {
                                                                     <i className="bi bi-whatsapp"></i>
                                                                 </Button>
                                                             ) : null}
+                                                        </td>
+                                                        <td style={{ width: "auto", whiteSpace: "nowrap" }}>
+                                                            {store.deleted ? (
+                                                                <>
+                                                                    <span className="badge bg-danger me-1">YES</span>
+                                                                    {store.marked_for_permanent_deletion && (
+                                                                        <span className="badge bg-warning text-dark">
+                                                                            Permanent Deletion in {store.permanent_deletion_after_days || 14}d
+                                                                        </span>
+                                                                    )}
+                                                                </>
+                                                            ) : (
+                                                                <span className="badge bg-success">NO</span>
+                                                            )}
                                                         </td>
                                                     </tr>
                                                 ))}

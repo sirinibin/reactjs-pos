@@ -426,14 +426,7 @@ const DeliveryNoteCreate = forwardRef((props, ref) => {
         setSelectedProducts([...selectedProducts]);
 
         if (deliverynote.customer_id && deliverynote.customer?.name) {
-          let selectedCustomers = [
-            {
-              id: deliverynote.customer_id,
-              name: deliverynote.customer.name,
-              search_label: deliverynote.customer.search_label,
-            }
-          ];
-          setSelectedCustomers([...selectedCustomers]);
+          setSelectedCustomers([deliverynote.customer]);
         }
 
 
@@ -538,7 +531,7 @@ const DeliveryNoteCreate = forwardRef((props, ref) => {
     searchTerm = searchTerm.replace(/\s+/g, " ").trim();
     if (!searchTerm) return;
 
-    let Select = "select=id,credit_balance,credit_limit,code,vat_no,remarks,name,phone,phone2,email,name_in_arabic,phone_in_arabic,search_label";
+    let Select = "select=id,credit_balance,credit_limit,code,vat_no,remarks,name,phone,phone2,email,name_in_arabic,phone_in_arabic,contact_person,search_label";
     let result = await fetch(
       "/v1/customer?limit=100&" + Select + queryString,
       requestOptions
@@ -1912,7 +1905,15 @@ const DeliveryNoteCreate = forwardRef((props, ref) => {
       <ProductView ref={ProductDetailsViewRef} openUpdateForm={openProductUpdateForm} openCreateForm={openProductCreateForm} />
       <ProductCreate ref={ProductCreateFormRef} showToastMessage={props.showToastMessage} openDetailsView={openProductDetailsView} />
       <Preview ref={PreviewRef} />
-      <CustomerCreate ref={CustomerCreateFormRef} showToastMessage={props.showToastMessage} />
+      <CustomerCreate ref={CustomerCreateFormRef} showToastMessage={props.showToastMessage}
+        onUpdated={(updatedCustomer) => {
+          if (updatedCustomer.id === formData.customer_id) {
+            setSelectedCustomers([updatedCustomer]);
+            formData.customer_name = updatedCustomer.name;
+            setFormData({ ...formData });
+          }
+        }}
+      />
       <UserCreate ref={UserCreateFormRef} showToastMessage={props.showToastMessage} />
       <SignatureCreate ref={SignatureCreateFormRef} showToastMessage={props.showToastMessage} />
       <Modal show={show} fullscreen onHide={handleClose} animation={false} backdrop="static" dialogClassName="pw-modal">
@@ -1959,6 +1960,54 @@ const DeliveryNoteCreate = forwardRef((props, ref) => {
           .pw-content { flex: 1; overflow-y: auto; padding: 20px 28px; background: #f7f9fb; min-width: 0; }
           .pw-tab-wrap { max-width: 900px; }
           .pw-price-cards .col-md-4 { margin-bottom: 16px; }
+
+          /* ── Delivery Note form ── */
+          .dn-form { padding: 20px 28px; }
+          .dn-customer-info { border-radius: 8px; }
+          .dn-product-row { display: flex; gap: 8px; align-items: flex-end; margin-bottom: 12px; }
+          .dn-table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+
+          /* ── Mobile (≤575px) ── */
+          @media (max-width: 575px) {
+            .dn-form { padding: 10px 12px !important; }
+            .pw-card { padding: 12px !important; margin-bottom: 10px !important; }
+            .pw-modal .modal-header { padding: 8px 12px !important; flex-wrap: wrap; gap: 6px !important; }
+            .pw-modal .modal-title { font-size: 14px !important; }
+            .dn-product-row { flex-wrap: wrap; }
+            .dn-product-row > div:first-child { flex: 1 0 100% !important; max-width: 100% !important; }
+            .dn-product-row > div:last-child { flex: 1 0 100% !important; }
+            .dn-table-wrap { max-height: 42vh !important; }
+          }
+
+          /* ── Tablet portrait (576–767px) ── */
+          @media (min-width: 576px) and (max-width: 767px) {
+            .dn-form { padding: 14px 16px !important; }
+            .pw-card { padding: 14px !important; margin-bottom: 12px !important; }
+            .pw-modal .modal-header { padding: 8px 16px !important; }
+            .dn-table-wrap { max-height: 44vh !important; }
+          }
+
+          /* ── Tablet landscape (768–991px) ── */
+          @media (min-width: 768px) and (max-width: 991px) {
+            .dn-form { padding: 16px 20px !important; }
+            .pw-card { padding: 16px !important; margin-bottom: 14px !important; }
+            .pw-modal .modal-header { padding: 8px 18px !important; }
+          }
+
+          /* ── Small desktop (992–1199px) ── */
+          @media (min-width: 992px) and (max-width: 1199px) {
+            .dn-form { padding: 18px 24px !important; }
+            .pw-card { padding: 18px !important; }
+          }
+
+          @media (min-width: 768px) and (max-width: 1100px) {
+            .pw-form { flex-direction: column; }
+            .pw-sidebar { width: 100%; height: auto; flex-direction: row; overflow-x: auto; overflow-y: hidden; border-right: none; border-bottom: 1px solid #c3c6d7; padding: 6px 8px; gap: 4px; }
+            .pw-sidebar-header { display: none; }
+            .pw-sidebar button { flex-shrink: 0; white-space: nowrap; padding: 8px 12px !important; }
+            .pw-content { padding: 16px 20px; }
+            .pw-tab-wrap { max-width: 100%; }
+          }
           @media (max-width: 767px) {
             .pw-form { flex-direction: column; }
             .pw-sidebar { width: 100%; height: auto; flex-direction: row; overflow-x: auto; overflow-y: hidden; border-right: none; border-bottom: 1px solid #c3c6d7; padding: 6px 8px; gap: 4px; }
@@ -1967,23 +2016,12 @@ const DeliveryNoteCreate = forwardRef((props, ref) => {
             .pw-content { padding: 14px 16px !important; }
             .pw-tab-wrap { max-width: 100%; }
           }
-          @media (min-width: 768px) and (max-width: 1100px) {
-            .pw-sidebar { width: 170px; }
-            .pw-content { padding: 16px 20px; }
-            .pw-tab-wrap { max-width: 100%; }
-          }
           @media (min-height: 600px) and (max-height: 800px) {
             .pw-content { padding: 14px 24px; }
           }
-          @media (max-width: 767px) {
-            .pw-card { padding: 14px !important; margin-bottom: 12px !important; }
-          }
-          @media (min-width: 768px) and (max-width: 1100px) {
-            .pw-card { padding: 16px !important; margin-bottom: 14px !important; }
-          }
         `}</style>
         <Modal.Body className="pw-body">
-          <form style={{ flex: 1, overflow: 'auto', padding: '20px 28px', background: '#f7f9fb' }} onSubmit={handleCreate}>
+          <form className="dn-form" style={{ flex: 1, overflow: 'auto', background: '#f7f9fb' }} onSubmit={handleCreate}>
             <div style={{ maxWidth: '100%', margin: '0 auto' }}>
 
               {/* Error summary */}
@@ -2001,12 +2039,15 @@ const DeliveryNoteCreate = forwardRef((props, ref) => {
                 </div>
               </div>
 
+              {/* Header Fields + Selected Customer side by side */}
+              <div className="row g-3 mb-3">
+                <div className="col-12 col-md-7">
               {/* Header Fields Card */}
-              <div style={CARD} className="pw-card">
+              <div style={CARD} className="pw-card h-100">
                 <SectionTitle icon="bi-file-text">Delivery Note Details</SectionTitle>
                 <div className="row g-3">
 
-                  <div className="col-md-11">
+                  <div className="col-12 col-md-8">
                     <Label>Customer</Label>
                     <div style={{ display: 'flex', gap: '8px', alignItems: 'flex-end' }}>
                     <div style={{ flex: 1, minWidth: 0 }}>
@@ -2074,7 +2115,7 @@ const DeliveryNoteCreate = forwardRef((props, ref) => {
                   const searchWords = state.text.toLowerCase().split(" ").filter(Boolean);
 
                   return (
-                    <Menu {...menuProps}>
+                    <Menu {...menuProps} style={{ ...(menuProps.style || {}), minWidth: '900px', width: 'max-content', maxWidth: '95vw', zIndex: 9999 }}>
                       {/* Header */}
                       <MenuItem disabled>
                         <div style={{ display: 'flex', fontWeight: 'bold', padding: '4px 8px', borderBottom: '1px solid #ddd' }}>
@@ -2135,29 +2176,29 @@ const DeliveryNoteCreate = forwardRef((props, ref) => {
                 }}
               />
               </div>{/* end flex-1 inner */}
-              <Button hide={true.toString()} onClick={openCustomerCreateForm} className="btn btn-outline-secondary btn-primary btn-sm" type="button" id="button-addon1" style={{ flexShrink: 0 }}><i className="bi bi-plus-lg"></i> New</Button>
-              <Button className="btn btn-primary" style={{ flexShrink: 0 }} onClick={openCustomers}>
-                <i className="bi bi-list"></i>
-              </Button>
+              <div style={{ display: 'flex', gap: '6px', flexShrink: 0 }}>
+                <Button hide={true.toString()} onClick={openCustomerCreateForm} className="btn" type="button"
+                  style={{ background: '#004ac6', color: '#fff', border: '1px solid transparent', borderRadius: '4px', padding: '9px 14px', fontSize: '13px', fontWeight: 600, fontFamily: '"Inter", sans-serif', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '5px', lineHeight: '1' }}>
+                  <i className="bi bi-plus-lg"></i> New
+                </Button>
+                {formData.customer_id && (
+                  <Button className="btn" title="Edit Customer" onClick={() => CustomerCreateFormRef.current.open(formData.customer_id)}
+                    style={{ background: '#004ac6', color: '#fff', border: '1px solid transparent', borderRadius: '4px', padding: '9px 14px', fontSize: '13px', fontWeight: 600, fontFamily: '"Inter", sans-serif', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', lineHeight: '1' }}>
+                    <i className="bi bi-pencil"></i>
+                  </Button>
+                )}
+                <Button className="btn" onClick={openCustomers}
+                  style={{ background: '#004ac6', color: '#fff', border: '1px solid transparent', borderRadius: '4px', padding: '9px 14px', fontSize: '13px', fontWeight: 600, fontFamily: '"Inter", sans-serif', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', lineHeight: '1' }}>
+                  <i className="bi bi-list"></i>
+                </Button>
+              </div>
                     </div>{/* end flex wrapper */}
               {errors.customer_id && (
                 <ErrMsg>{errors.customer_id}</ErrMsg>
               )}
                   </div>
 
-                  <div className="col-md-3">
-                    <Label>Product Barcode Scan</Label>
-                    <DebounceInput
-                      minLength={3}
-                      debounceTimeout={500}
-                      placeholder="Scan Barcode"
-                      style={INPUT}
-                      value={formData.barcode}
-                      onChange={event => getProductByBarCode(event.target.value)} />
-                    {errors.bar_code && <ErrMsg><i className="bi bi-x-lg"> </i>{errors.bar_code}</ErrMsg>}
-                  </div>
-
-                  <div className="col-md-3">
+                  <div className="col-12 col-sm-6 col-md-4">
                     <Label required>Date</Label>
                     <DatePicker
                       id="date_str"
@@ -2176,27 +2217,8 @@ const DeliveryNoteCreate = forwardRef((props, ref) => {
                     {errors.date_str && <ErrMsg>{errors.date_str}</ErrMsg>}
                   </div>
 
-                  <div className="col-md-3">
-                    <Label>Remarks</Label>
-                    <textarea
-                      value={formData.remarks}
-                      type='string'
-                      onChange={(e) => {
-                        delete errors["address"];
-                        setErrors({ ...errors });
-                        formData.remarks = e.target.value;
-                        setFormData({ ...formData });
-                        console.log(formData);
-                      }}
-                      style={{ ...INPUT, resize: 'vertical', minHeight: '38px' }}
-                      id="remarks"
-                      placeholder="Remarks"
-                    />
-                    {errors.remarks && <ErrMsg>{errors.remarks}</ErrMsg>}
-                  </div>
-
                   {store.settings?.enable_notification === true && (
-                    <div className="col-md-3">
+                    <div className="col-12 col-sm-6 col-md-4">
                       <Label>Notify At (Sales Reminder)</Label>
                       <DatePicker
                         id="notify_at"
@@ -2215,14 +2237,70 @@ const DeliveryNoteCreate = forwardRef((props, ref) => {
                   )}
 
                 </div>{/* end row */}
-              </div>{/* end CARD */}
+              </div>{/* end Details CARD */}
+                </div>{/* end col-md-7 */}
+
+                {/* Selected Customer column */}
+                <div className="col-12 col-md-5">
+                  {selectedCustomers.length > 0 && formData.customer_id && (() => {
+                    const c = selectedCustomers[0];
+                    return (
+                      <div className="dn-customer-info" style={{ background: 'rgba(0,74,198,0.04)', border: '1px solid rgba(0,74,198,0.18)', borderRadius: '8px', padding: '14px 16px', display: 'flex', flexDirection: 'column', gap: '6px', height: '100%' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                          <span style={{ fontSize: '10px', textTransform: 'uppercase', letterSpacing: '0.08em', color: '#004ac6', fontWeight: 700 }}>Selected Customer</span>
+                          {c.code && <span style={{ background: 'rgba(0,74,198,0.1)', color: '#004ac6', padding: '2px 7px', borderRadius: '4px', fontSize: '10px', fontWeight: 700, fontFamily: 'monospace' }}>{c.code}</span>}
+                        </div>
+                        <div style={{ fontSize: '13px', fontWeight: 700, color: '#191c1e', lineHeight: 1.3, wordBreak: 'break-word' }}>
+                          {c.name_in_arabic ? `${c.name} (${c.name_in_arabic})` : c.name}
+                        </div>
+                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '6px 10px', paddingTop: '8px', borderTop: '1px solid rgba(0,74,198,0.14)' }}>
+                          {c.vat_no && (
+                            <div>
+                              <span style={{ opacity: 0.55, display: 'block', fontSize: '9px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>VAT No.</span>
+                              <span style={{ fontFamily: 'monospace', color: '#191c1e', fontWeight: 600, fontSize: '11px' }}>{c.vat_no}</span>
+                            </div>
+                          )}
+                          {(c.phone || c.phone_in_arabic) && (
+                            <div>
+                              <span style={{ opacity: 0.55, display: 'block', fontSize: '9px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Phone 1</span>
+                              <span style={{ fontFamily: 'monospace', color: '#191c1e', fontWeight: 600, fontSize: '11px' }}>{c.phone}{c.phone_in_arabic && <> | <span style={{ color: '#5a70a0' }}>{c.phone_in_arabic}</span></>}</span>
+                            </div>
+                          )}
+                          {c.phone2 && (
+                            <div>
+                              <span style={{ opacity: 0.55, display: 'block', fontSize: '9px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Phone 2</span>
+                              <span style={{ fontFamily: 'monospace', color: '#191c1e', fontWeight: 600, fontSize: '11px' }}>{c.phone2}</span>
+                            </div>
+                          )}
+                          {c.contact_person && (
+                            <div>
+                              <span style={{ opacity: 0.55, display: 'block', fontSize: '9px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Contact Person</span>
+                              <span style={{ fontFamily: 'monospace', color: '#191c1e', fontWeight: 600, fontSize: '11px' }}>{c.contact_person}</span>
+                            </div>
+                          )}
+                          <div>
+                            <span style={{ opacity: 0.55, display: 'block', fontSize: '9px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Credit Balance</span>
+                            <span style={{ color: '#004ac6', fontWeight: 600, fontFamily: 'monospace', fontSize: '11px' }}><Amount amount={trimTo2Decimals(c.credit_balance)} /></span>
+                          </div>
+                          {c.credit_limit > 0 && (
+                            <div>
+                              <span style={{ opacity: 0.55, display: 'block', fontSize: '9px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Credit Limit</span>
+                              <span style={{ fontFamily: 'monospace', color: '#191c1e', fontWeight: 600, fontSize: '11px' }}><Amount amount={trimTo2Decimals(c.credit_limit)} /></span>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })()}
+                </div>{/* end col-md-5 */}
+              </div>{/* end row g-3 mb-3 */}
 
               {/* Product Table Card */}
               <div style={CARD} className="pw-card">
                 <SectionTitle icon="bi-box-seam">Products</SectionTitle>
 
-            <div style={{ display: 'flex', gap: '8px', alignItems: 'flex-end', marginBottom: '12px' }}>
-              <div style={{ flex: 1, minWidth: 0 }}>
+            <div className="dn-product-row">
+              <div style={{ flex: '0 0 33.33%', maxWidth: '400px', minWidth: '180px' }}>
               <Label required>Product</Label>
               <Typeahead
                 id="product_id"
@@ -2286,7 +2364,7 @@ const DeliveryNoteCreate = forwardRef((props, ref) => {
                   const searchWords = state.text.toLowerCase().split(" ").filter(Boolean);
 
                   return (
-                    <Menu {...menuProps}>
+                    <Menu {...menuProps} style={{ ...(menuProps.style || {}), minWidth: '900px', width: 'max-content', maxWidth: '95vw', zIndex: 9999 }}>
                       {/* Header */}
                       <MenuItem disabled style={{ position: 'sticky', top: 0, padding: 0, margin: 0 }}>
                         <div style={{
@@ -2517,22 +2595,55 @@ const DeliveryNoteCreate = forwardRef((props, ref) => {
                   );
                 }}
               />
-              {errors.product_id ? (
-                <ErrMsg><i className="bi bi-x-lg"> </i>{errors.product_id}</ErrMsg>
-              ) : null}
               </div>
-              <Button hide={true.toString()} onClick={openProductCreateForm} className="btn btn-outline-secondary btn-primary btn-sm" type="button" id="button-addon1" style={{ flexShrink: 0, alignSelf: 'flex-end' }}> <i className="bi bi-plus-lg"></i> New</Button>
-              <Button className="btn btn-primary" style={{ flexShrink: 0, alignSelf: 'flex-end' }} onClick={openProducts}>
-                <i className="bi bi-list"></i>
-              </Button>
+              <div style={{ display: 'flex', gap: '6px', flexShrink: 0, alignSelf: 'flex-end' }}>
+                <Button hide={true.toString()} onClick={openProductCreateForm} className="btn" type="button"
+                  style={{ background: '#004ac6', color: '#fff', border: '1px solid transparent', borderRadius: '4px', padding: '9px 14px', fontSize: '13px', fontWeight: 600, fontFamily: '"Inter", sans-serif', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '5px', lineHeight: '1' }}>
+                  <i className="bi bi-plus-lg"></i> New
+                </Button>
+                <Button className="btn" onClick={openProducts}
+                  style={{ background: '#004ac6', color: '#fff', border: '1px solid transparent', borderRadius: '4px', padding: '9px 14px', fontSize: '13px', fontWeight: 600, fontFamily: '"Inter", sans-serif', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', lineHeight: '1' }}>
+                  <i className="bi bi-list"></i>
+                </Button>
+              </div>
+              <div style={{ flex: '0 1 220px', minWidth: '140px' }}>
+                <Label>Barcode Scan</Label>
+                <DebounceInput
+                  minLength={3}
+                  debounceTimeout={500}
+                  placeholder="Scan Barcode"
+                  style={INPUT}
+                  value={formData.barcode}
+                  onChange={event => getProductByBarCode(event.target.value)} />
+                {errors.bar_code && <ErrMsg><i className="bi bi-x-lg"> </i>{errors.bar_code}</ErrMsg>}
+              </div>
+              <div style={{ flex: '0 1 220px', minWidth: '140px' }}>
+                <Label>Remarks</Label>
+                <textarea
+                  value={formData.remarks}
+                  onChange={(e) => {
+                    delete errors["address"];
+                    setErrors({ ...errors });
+                    formData.remarks = e.target.value;
+                    setFormData({ ...formData });
+                  }}
+                  style={{ ...INPUT, resize: 'vertical', minHeight: '38px' }}
+                  id="remarks"
+                  placeholder="Remarks"
+                />
+                {errors.remarks && <ErrMsg>{errors.remarks}</ErrMsg>}
+              </div>
             </div>
+            {errors.product_id ? (
+              <ErrMsg><i className="bi bi-x-lg"> </i>{errors.product_id}</ErrMsg>
+            ) : null}
             <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: "0" }}>
               <Button variant="light" size="sm" title="Table Settings" onClick={() => setShowDNSPSettings(true)}>
                 <i className="bi bi-gear"></i>
               </Button>
             </div>
 
-            <div className="table-responsive" style={{ overflowX: "auto", maxHeight: "55vh", overflowY: "auto", width: "100%" }}>
+            <div className="table-responsive dn-table-wrap" style={{ overflowX: "auto", maxHeight: "55vh", overflowY: "auto", width: "100%" }}>
               {enableProductSelection && <button
                 style={{ marginBottom: "3px" }}
                 className="btn btn-success mt-2"
