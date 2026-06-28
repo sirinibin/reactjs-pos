@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef, useMemo, forwardRef, useImperativeHandle, useCallback } from "react";
 import Preview from "./../order/preview.js";
-import { Modal, Button, OverlayTrigger, Tooltip, Popover } from "react-bootstrap";
+import { Modal, Button, OverlayTrigger, Popover } from "react-bootstrap";
 import CustomerCreate from "../customer/create.js";
 import ProductCreate from "../product/create.js";
 import UserCreate from "../user/create.js";
@@ -21,7 +21,6 @@ import QuotationSalesReturnHistory from "./../utils/product_quotation_sales_retu
 import DeliveryNoteHistory from "./../utils/product_delivery_note_history.js";
 import Products from "../utils/products.js";
 import Customers from "./../utils/customers.js";
-import ResizableTableCell from './../utils/ResizableTableCell';
 import ImageViewerModal from './../utils/ImageViewerModal';
 import * as bootstrap from 'bootstrap';
 //import OverflowTooltip from "../utils/OverflowTooltip.js";
@@ -1803,7 +1802,7 @@ const DeliveryNoteCreate = forwardRef((props, ref) => {
     setDnSummaryOrder(arr);
     localStorage.setItem('dn_summary_order', JSON.stringify(arr));
   };
-  const DN_COL_DEFAULTS = { delete: 32, si_no: 36, select: 36, part_number: 80, name: 100, info: 32, qty: 35, unit_price: 80, unit_price_with_vat: 80, purchase_unit_price: 80, purchase_unit_price_with_vat: 80, unit_discount: 70, unit_discount_with_vat: 70, price: 80, price_with_vat: 80 };
+  const DN_COL_DEFAULTS = useMemo(() => ({ delete: 32, si_no: 36, select: 36, part_number: 80, name: 100, info: 32, qty: 117, unit_price: 80, unit_price_with_vat: 80, purchase_unit_price: 80, purchase_unit_price_with_vat: 80, unit_discount: 70, unit_discount_with_vat: 70, price: 80, price_with_vat: 80 }), []);
   const [colWidths, setColWidths] = useState(() => {
     try { return JSON.parse(localStorage.getItem('dn_sp_col_widths') || '{}'); } catch { return {}; }
   });
@@ -1832,7 +1831,7 @@ const DeliveryNoteCreate = forwardRef((props, ref) => {
     document.body.style.userSelect = 'none';
     document.addEventListener('mousemove', onMouseMove);
     document.addEventListener('mouseup', onMouseUp);
-  }, [colWidths]);
+  }, [colWidths, DN_COL_DEFAULTS]);
   const defaultDNSPColumns = [
     { key: 'delete', label: 'Delete', visible: true },
     { key: 'si_no', label: 'SI No.', visible: true },
@@ -1884,22 +1883,12 @@ const DeliveryNoteCreate = forwardRef((props, ref) => {
 
 
   // ── Design tokens ──────────────────────────────────────────────────────────
-  const CARD = { background: '#ffffff', border: '1px solid #c3c6d7', borderRadius: '8px', padding: '24px', marginBottom: '20px' };
   const INPUT = { border: '1px solid #c3c6d7', borderRadius: '4px', padding: '7px 12px', fontSize: '13px', fontFamily: '"Inter", sans-serif', width: '100%', outline: 'none', color: '#191c1e', background: '#fff' };
 
   const Label = ({ children, required }) => (
     <label style={{ display: 'block', fontFamily: '"Inter", sans-serif', fontSize: '13px', fontWeight: 600, color: '#191c1e', marginBottom: '4px' }}>
       {children}{required && <span style={{ color: '#ba1a1a', marginLeft: '2px' }}>*</span>}
     </label>
-  );
-  const ErrMsg = ({ children }) => (
-    <div style={{ color: '#ba1a1a', fontSize: '12px', fontFamily: '"Inter", sans-serif', marginTop: '3px' }}>{children}</div>
-  );
-  const SectionTitle = ({ children, icon }) => (
-    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '20px' }}>
-      {icon && <i className={`bi ${icon}`} style={{ fontSize: '18px', color: '#004ac6' }}></i>}
-      <h3 style={{ fontFamily: '"Hanken Grotesk", sans-serif', fontSize: '16px', fontWeight: 600, color: '#191c1e', margin: 0 }}>{children}</h3>
-    </div>
   );
   // ───────────────────────────────────────────────────────────────────────────
 
@@ -2070,7 +2059,7 @@ const DeliveryNoteCreate = forwardRef((props, ref) => {
           <Modal.Title style={{ fontFamily: '"Hanken Grotesk", sans-serif', fontSize: '17px', fontWeight: 700, color: '#191c1e', letterSpacing: '-0.01em', flex: 1 }}>
             {formData.id ? 'Update Delivery Note' : 'Create New Delivery Note'}
           </Modal.Title>
-          <div className="d-flex align-items-center gap-2">
+          <div className="d-flex align-items-center gap-2 dn-hdr-actions">
             <Button variant="light" size="sm" onClick={openPreview} style={{ fontFamily: '"Inter", sans-serif', fontSize: '13px' }}>
               <i className="bi bi-display me-1"></i>Preview
             </Button>
@@ -2110,36 +2099,71 @@ const DeliveryNoteCreate = forwardRef((props, ref) => {
           .dn-product-row { display: flex; gap: 8px; align-items: stretch; margin-bottom: 12px; }
           .dn-table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
 
+          /* ── Header two-column split ── */
+          .dn-header-flex { display: flex; }
+          .dn-header-left { flex: 0 0 60%; }
+          .dn-header-right { flex: 1; min-width: 0; }
+          .dn-sub-row { display: flex; gap: 6px; flex-wrap: wrap; }
+          .dn-search-input { flex: 0 0 252px; min-width: 160px; }
+          .dn-date-input { flex: 0 0 175px; min-width: 130px; }
+          .dn-remarks { flex: 0 1 156px; min-width: 80px; }
+          .dn-summary-card { width: 100%; max-width: 380px; }
+          .dn-summary-popup { width: 300px; max-width: calc(100vw - 24px); }
+
           /* ── Mobile (≤575px) ── */
           @media (max-width: 575px) {
-            .dn-form { padding: 10px 12px !important; }
-            .pw-card { padding: 12px !important; margin-bottom: 10px !important; }
-            .pw-modal .modal-header { padding: 8px 12px !important; flex-wrap: wrap; gap: 6px !important; }
-            .pw-modal .modal-title { font-size: 14px !important; }
+            .dn-form { padding: 4px 4px !important; }
+            .pw-card { padding: 10px !important; margin-bottom: 8px !important; }
+            .pw-modal .modal-header { padding: 6px 8px !important; flex-wrap: wrap; gap: 4px !important; }
+            .pw-modal .modal-title { font-size: 12px !important; }
+            .dn-hdr-actions { flex-wrap: wrap; gap: 4px !important; }
+            .dn-hdr-actions .btn, .dn-hdr-actions button { font-size: 12px !important; padding: 4px 10px !important; }
             .dn-product-row { flex-wrap: wrap; }
             .dn-product-row > div:first-child { flex: 1 0 100% !important; max-width: 100% !important; }
             .dn-product-row > div:last-child { flex: 1 0 100% !important; }
-            .dn-table-wrap { max-height: 42vh !important; }
+            .dn-table-wrap { max-height: none !important; }
+            .dn-header-flex { flex-direction: column !important; }
+            .dn-header-left { flex: 1 1 100% !important; border-right: none !important; border-bottom: 1px solid #c3c6d7; }
+            .dn-header-right { flex: 1 1 100% !important; border-top: none; }
+            .dn-sub-row { flex-wrap: wrap; }
+            .dn-search-input { flex: 1 1 130px !important; min-width: 110px !important; }
+            .dn-date-input { flex: 1 1 110px !important; min-width: 100px !important; }
+            .dn-barcode-input { flex: 1 1 100px !important; min-width: 80px !important; }
+            .dn-remarks { flex: 1 1 100% !important; min-width: 0 !important; max-height: 54px !important; align-self: auto !important; }
+            .dn-summary-card { max-width: 100% !important; }
           }
 
           /* ── Tablet portrait (576–767px) ── */
           @media (min-width: 576px) and (max-width: 767px) {
-            .dn-form { padding: 14px 16px !important; }
-            .pw-card { padding: 14px !important; margin-bottom: 12px !important; }
-            .pw-modal .modal-header { padding: 8px 16px !important; }
-            .dn-table-wrap { max-height: 44vh !important; }
+            .dn-form { padding: 6px 8px !important; }
+            .pw-card { padding: 12px !important; margin-bottom: 10px !important; }
+            .pw-modal .modal-header { padding: 8px 12px !important; }
+            .dn-hdr-actions { flex-wrap: wrap; gap: 6px !important; }
+            .dn-table-wrap { max-height: none !important; }
+            .dn-header-flex { flex-direction: column !important; }
+            .dn-header-left { flex: 1 1 100% !important; border-right: none !important; border-bottom: 1px solid #c3c6d7; }
+            .dn-header-right { flex: 1 1 100% !important; }
+            .dn-search-input { flex: 1 1 150px !important; }
+            .dn-date-input { flex: 1 1 130px !important; }
+            .dn-barcode-input { flex: 1 1 120px !important; }
+            .dn-remarks { flex: 1 1 120px !important; }
+            .dn-summary-card { max-width: 100% !important; }
           }
 
           /* ── Tablet landscape (768–991px) ── */
           @media (min-width: 768px) and (max-width: 991px) {
-            .dn-form { padding: 16px 20px !important; }
-            .pw-card { padding: 16px !important; margin-bottom: 14px !important; }
-            .pw-modal .modal-header { padding: 8px 18px !important; }
+            .dn-form { padding: 6px 10px !important; }
+            .pw-card { padding: 14px !important; margin-bottom: 12px !important; }
+            .pw-modal .modal-header { padding: 8px 14px !important; }
+            .dn-header-left { flex: 0 0 55% !important; }
+            .dn-search-input { flex: 1 1 180px !important; }
+            .dn-date-input { flex: 1 1 140px !important; }
+            .dn-barcode-input { flex: 0 1 140px !important; }
           }
 
           /* ── Small desktop (992–1199px) ── */
           @media (min-width: 992px) and (max-width: 1199px) {
-            .dn-form { padding: 18px 24px !important; }
+            .dn-form { padding: 6px 14px !important; }
             .pw-card { padding: 18px !important; }
           }
 
@@ -2186,11 +2210,11 @@ const DeliveryNoteCreate = forwardRef((props, ref) => {
               {/* Combined Details + Products Card */}
               <div>
             <section style={{ backgroundColor: '#ffffff', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
-              <div style={{ display: 'flex', borderBottom: '1px solid #c3c6d7' }}>
-                <div style={{ flex: '0 0 60%', padding: '4px 10px', display: 'flex', gap: '6px', alignItems: 'stretch', backgroundColor: '#f2f4f6', borderRight: '1px solid #c3c6d7' }}>
+              <div className="dn-header-flex" style={{ borderBottom: '1px solid #c3c6d7' }}>
+                <div className="dn-header-left" style={{ padding: '4px 10px', display: 'flex', gap: '6px', alignItems: 'stretch', backgroundColor: '#f2f4f6', borderRight: '1px solid #c3c6d7' }}>
                   <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                  <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
-                    <div style={{ flex: '0 0 252px', minWidth: '160px' }}>
+                  <div className="dn-sub-row" style={{ alignItems: 'center' }}>
+                    <div className="dn-search-input">
                     <div style={{ flex: 1, minWidth: 0 }}>
                     <Typeahead
                 id="customer_search"
@@ -2333,7 +2357,7 @@ const DeliveryNoteCreate = forwardRef((props, ref) => {
                   <i className="bi bi-list"></i>
                 </Button>
                 {/* Date inline after buttons */}
-                <div style={{ flex: '0 0 175px', minWidth: '130px' }}>
+                <div className="dn-date-input">
                   <DatePicker
                     id="date_str"
                     selected={formData.date_str ? new Date(formData.date_str) : null}
@@ -2364,9 +2388,9 @@ const DeliveryNoteCreate = forwardRef((props, ref) => {
                 </div>
               )}
                   {/* Product search sub-row */}
-                  <div style={{ display: 'flex', gap: '6px', alignItems: 'flex-end' }}>
+                  <div className="dn-sub-row" style={{ alignItems: 'flex-end' }}>
                 {/* Product search */}
-                <div style={{ flex: '0 0 252px', minWidth: '160px' }}>
+                <div className="dn-search-input">
                   <Typeahead
                     id="product_id"
                     filterBy={() => true}
@@ -2528,7 +2552,7 @@ const DeliveryNoteCreate = forwardRef((props, ref) => {
                   style={{ background: '#004ac6', color: '#fff', border: '1px solid transparent', borderRadius: '4px', padding: '7px 12px', fontSize: '13px', fontWeight: 600, fontFamily: '"Inter", sans-serif', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', lineHeight: '1', flexShrink: 0 }}>
                   <i className="bi bi-list"></i>
                 </Button>
-                <div style={{ flex: '0 1 160px', minWidth: '100px' }}>
+                <div className="dn-barcode-input" style={{ flex: '0 1 160px', minWidth: '100px' }}>
                   <DebounceInput minLength={3} debounceTimeout={500} placeholder="Scan Barcode" style={INPUT} value={formData.barcode} onChange={event => getProductByBarCode(event.target.value)} />
                 </div>
                 {enableProductSelection && (
@@ -2538,7 +2562,7 @@ const DeliveryNoteCreate = forwardRef((props, ref) => {
                 )}
                   </div>{/* end product sub-row */}
                   </div>{/* end stacked rows */}
-                  <div style={{ flex: '0 1 156px', minWidth: '80px', display: 'flex', flexDirection: 'column', alignSelf: 'stretch', maxHeight: '76px' }}>
+                  <div className="dn-remarks" style={{ display: 'flex', flexDirection: 'column', alignSelf: 'stretch', maxHeight: '76px' }}>
                     <textarea value={formData.remarks} onChange={(e) => { delete errors["address"]; setErrors({ ...errors }); formData.remarks = e.target.value; setFormData({ ...formData }); }} onKeyDown={(e) => { if (e.key === 'Enter') { e.stopPropagation(); e.nativeEvent.stopImmediatePropagation(); } }} style={{ ...INPUT, resize: 'none', flex: 1 }} id="remarks" placeholder="Remarks" />
                   </div>
                 </div>{/* end left column */}
@@ -2546,7 +2570,7 @@ const DeliveryNoteCreate = forwardRef((props, ref) => {
                 {selectedCustomers.length > 0 && formData.customer_id ? (() => {
                   const c = selectedCustomers[0];
                   return (
-                    <div style={{ flex: 1, padding: '6px 14px', background: 'rgba(0,74,198,0.04)', display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: '3px 10px', overflow: 'hidden' }}>
+                    <div className="dn-header-right" style={{ padding: '6px 14px', background: 'rgba(0,74,198,0.04)', display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: '3px 10px', overflow: 'hidden' }}>
                       {c.code && <span style={{ background: 'rgba(0,74,198,0.1)', color: '#004ac6', padding: '1px 7px', borderRadius: '4px', fontWeight: 700, fontFamily: 'monospace', fontSize: '11px', flexShrink: 0 }}>{c.code}</span>}
                       <span style={{ fontWeight: 700, color: '#191c1e', fontSize: '13px', flexShrink: 0 }}>{c.name_in_arabic ? `${c.name} | ${c.name_in_arabic}` : c.name}</span>
                       {(c.phone || c.phone_in_arabic || c.phone2 || c.vat_no || c.contact_person || c.credit_balance !== undefined) && <span style={{ width: '1px', height: '14px', background: 'rgba(0,74,198,0.2)', flexShrink: 0 }} />}
@@ -2560,7 +2584,7 @@ const DeliveryNoteCreate = forwardRef((props, ref) => {
                       {c.credit_limit > 0 && <span style={{ color: '#434655', fontFamily: 'monospace', fontSize: '11px', whiteSpace: 'nowrap' }}>Limit: <Amount amount={trimTo2Decimals(c.credit_limit)} /></span>}
                     </div>
                   );
-                })() : <div style={{ flex: 1 }} />}
+                })() : <div className="dn-header-right" />}
               </div>{/* end two-column header */}
               <div style={{ overflowX: 'auto', maxHeight: '55vh', overflowY: 'auto' }}>
               <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: '600px', tableLayout: 'fixed' }}>
@@ -2632,10 +2656,10 @@ const DeliveryNoteCreate = forwardRef((props, ref) => {
                           />
                         </td>) : null;
                         // eslint-disable-next-line no-lone-blocks
-                        {/*<td style={{ verticalAlign: 'middle', padding: '0.25rem', width: "auto", whiteSpace: "nowrap" }}>
+                        {/*<td style={{ verticalAlign: 'middle', padding: '4px 8px', width: "auto", whiteSpace: "nowrap" }}>
                         <OverflowTooltip maxWidth={120} value={product.prefix_part_number ? product.prefix_part_number + " - " + product.part_number : product.part_number} />
                       </td>*/}
-                        if (col.key === 'part_number') return (<td key="part_number" style={{ verticalAlign: 'middle', padding: '0.25rem' }}>
+                        if (col.key === 'part_number') return (<td key="part_number" style={{ verticalAlign: 'middle', padding: '4px 8px' }}>
                           <input type="text" id={`${"delivery_note_product_part_number" + index}`}
                             name={`${"delivery_note_product_part_number" + index}`}
                             onWheel={(e) => e.target.blur()}
@@ -2673,7 +2697,7 @@ const DeliveryNoteCreate = forwardRef((props, ref) => {
                             ></i>
                           )}
                         </td>);
-                        if (col.key === 'name') return (<td key="name" style={{ verticalAlign: 'middle', padding: '0.25rem' }}>
+                        if (col.key === 'name') return (<td key="name" style={{ verticalAlign: 'middle', padding: '4px 8px' }}>
                           <div className="input-group">
                             <input type="text"
                               id={`${"delivery_note_product_name" + index}`}
@@ -2785,14 +2809,15 @@ const DeliveryNoteCreate = forwardRef((props, ref) => {
                         </td>);
                         if (col.key === 'qty') return (<td key="qty" style={{
                           verticalAlign: 'middle',
-                          padding: '0.25rem',
+                          padding: '4px 8px',
                           whiteSpace: 'nowrap',
                           position: 'relative',
+                          textAlign: 'left',
                         }} >
                           <div className="d-flex align-items-center" style={{ minWidth: 0 }}>
                             <div className="input-group flex-nowrap" style={{ width: 'auto', minWidth: 0 }}>
                               <input type="number"
-                                style={{ width: "52px", minWidth: "36px" }}
+                                style={{ width: "81px", minWidth: "54px" }}
                                 id={`${"delivery_note_quantity_" + index}`}
                                 name={`${"delivery_note_quantity_" + index}`}
                                 value={product.quantity}
@@ -2869,7 +2894,7 @@ const DeliveryNoteCreate = forwardRef((props, ref) => {
                                   }, 100);
 
                                 }} />
-                              <span className="input-group-text" id="basic-addon2"> {selectedProducts[index].unit ? selectedProducts[index].unit[0] : "P"}</span>
+                              <span className="input-group-text" id="basic-addon2" style={{ borderRadius: '0 4px 4px 0', marginRight: '8px' }}> {selectedProducts[index].unit ? selectedProducts[index].unit[0] : "P"}</span>
                             </div>
                             {(errors[`quantity_${index}`] || warnings[`quantity_${index}`]) && (
                               <i
@@ -2888,7 +2913,7 @@ const DeliveryNoteCreate = forwardRef((props, ref) => {
                             )}
                           </div>
                         </td>);
-                        if (col.key === 'unit_price' && store.settings?.add_price_details_in_delivery_note) return (<td key="unit_price" style={{ verticalAlign: 'middle', padding: '0.25rem' }}>
+                        if (col.key === 'unit_price' && store.settings?.add_price_details_in_delivery_note) return (<td key="unit_price" style={{ verticalAlign: 'middle', padding: '4px 8px', borderLeft: '1px solid #e2e8f0' }}>
                           <input type="number"
                             style={{ minWidth: "60px", maxWidth: "120px" }}
                             value={product.unit_price}
@@ -2922,7 +2947,7 @@ const DeliveryNoteCreate = forwardRef((props, ref) => {
                               reCalculate();
                             }} />
                         </td>);
-                        if (col.key === 'unit_price_with_vat' && store.settings?.add_price_details_in_delivery_note) return (<td key="unit_price_with_vat" style={{ verticalAlign: 'middle', padding: '0.25rem' }}>
+                        if (col.key === 'unit_price_with_vat' && store.settings?.add_price_details_in_delivery_note) return (<td key="unit_price_with_vat" style={{ verticalAlign: 'middle', padding: '4px 8px' }}>
                           <input type="number"
                             style={{ minWidth: "60px", maxWidth: "120px" }}
                             value={product.unit_price_with_vat}
@@ -2952,7 +2977,7 @@ const DeliveryNoteCreate = forwardRef((props, ref) => {
                               reCalculate();
                             }} />
                         </td>);
-                        if (col.key === 'purchase_unit_price' && store.settings?.add_price_details_in_delivery_note) return (<td key="purchase_unit_price" style={{ verticalAlign: 'middle', padding: '0.25rem' }}>
+                        if (col.key === 'purchase_unit_price' && store.settings?.add_price_details_in_delivery_note) return (<td key="purchase_unit_price" style={{ verticalAlign: 'middle', padding: '4px 8px' }}>
                           <input type="number"
                             style={{ minWidth: "60px", maxWidth: "120px" }}
                             value={product.purchase_unit_price}
@@ -2978,7 +3003,7 @@ const DeliveryNoteCreate = forwardRef((props, ref) => {
                               setSelectedProducts([...selectedProducts]);
                             }} />
                         </td>);
-                        if (col.key === 'purchase_unit_price_with_vat' && store.settings?.add_price_details_in_delivery_note) return (<td key="purchase_unit_price_with_vat" style={{ verticalAlign: 'middle', padding: '0.25rem' }}>
+                        if (col.key === 'purchase_unit_price_with_vat' && store.settings?.add_price_details_in_delivery_note) return (<td key="purchase_unit_price_with_vat" style={{ verticalAlign: 'middle', padding: '4px 8px' }}>
                           <input type="number"
                             style={{ minWidth: "60px", maxWidth: "120px" }}
                             value={product.purchase_unit_price_with_vat}
@@ -3004,7 +3029,7 @@ const DeliveryNoteCreate = forwardRef((props, ref) => {
                               setSelectedProducts([...selectedProducts]);
                             }} />
                         </td>);
-                        if (col.key === 'unit_discount' && store.settings?.add_price_details_in_delivery_note) return (<td key="unit_discount" style={{ verticalAlign: 'middle', padding: '0.25rem' }}>
+                        if (col.key === 'unit_discount' && store.settings?.add_price_details_in_delivery_note) return (<td key="unit_discount" style={{ verticalAlign: 'middle', padding: '4px 8px' }}>
                           <input type="number"
                             style={{ minWidth: "60px", maxWidth: "100px" }}
                             value={product.unit_discount}
@@ -3033,7 +3058,7 @@ const DeliveryNoteCreate = forwardRef((props, ref) => {
                               reCalculate();
                             }} />
                         </td>);
-                        if (col.key === 'unit_discount_with_vat' && store.settings?.add_price_details_in_delivery_note) return (<td key="unit_discount_with_vat" style={{ verticalAlign: 'middle', padding: '0.25rem' }}>
+                        if (col.key === 'unit_discount_with_vat' && store.settings?.add_price_details_in_delivery_note) return (<td key="unit_discount_with_vat" style={{ verticalAlign: 'middle', padding: '4px 8px' }}>
                           <input type="number"
                             style={{ minWidth: "60px", maxWidth: "100px" }}
                             value={product.unit_discount_with_vat}
@@ -3062,7 +3087,7 @@ const DeliveryNoteCreate = forwardRef((props, ref) => {
                               reCalculate();
                             }} />
                         </td>);
-                        if (col.key === 'price' && store.settings?.add_price_details_in_delivery_note) return (<td key="price" style={{ verticalAlign: 'middle', padding: '0.25rem' }}>
+                        if (col.key === 'price' && store.settings?.add_price_details_in_delivery_note) return (<td key="price" style={{ verticalAlign: 'middle', padding: '4px 8px' }}>
                           <input type="number"
                             style={{ minWidth: "60px", maxWidth: "120px" }}
                             value={product.line_total !== undefined ? product.line_total : trimTo2Decimals(((product.unit_price || 0) - (product.unit_discount || 0)) * (product.quantity || 0))}
@@ -3098,7 +3123,7 @@ const DeliveryNoteCreate = forwardRef((props, ref) => {
                               reCalculate();
                             }} />
                         </td>);
-                        if (col.key === 'price_with_vat' && store.settings?.add_price_details_in_delivery_note) return (<td key="price_with_vat" style={{ verticalAlign: 'middle', padding: '0.25rem' }}>
+                        if (col.key === 'price_with_vat' && store.settings?.add_price_details_in_delivery_note) return (<td key="price_with_vat" style={{ verticalAlign: 'middle', padding: '4px 8px' }}>
                           <input type="number"
                             style={{ minWidth: "60px", maxWidth: "120px" }}
                             value={product.line_total_with_vat !== undefined ? product.line_total_with_vat : trimTo2Decimals(((product.unit_price_with_vat || 0) - (product.unit_discount_with_vat || 0)) * (product.quantity || 0))}
@@ -3146,7 +3171,7 @@ const DeliveryNoteCreate = forwardRef((props, ref) => {
             {store.settings?.add_price_details_in_delivery_note && (
               <div style={{ display: 'flex', justifyContent: 'flex-end', padding: '8px 0 0 0', position: 'relative' }}>
                 {showDNSummarySettings && (
-                  <div style={{ position: 'fixed', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', zIndex: 1060, background: '#fff', border: '1px solid #dee2e6', borderRadius: '8px', padding: '16px', width: '300px', boxShadow: '0 8px 32px rgba(0,0,0,0.22)' }}>
+                  <div className="dn-summary-popup" style={{ position: 'fixed', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', zIndex: 1060, background: '#fff', border: '1px solid #dee2e6', borderRadius: '8px', padding: '16px', boxShadow: '0 8px 32px rgba(0,0,0,0.22)' }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
                       <strong style={{ fontSize: '13px' }}>Customize Summary</strong>
                       <button type="button" className="btn-close" style={{ fontSize: '10px' }} onClick={() => setShowDNSummarySettings(false)}></button>
@@ -3171,7 +3196,7 @@ const DeliveryNoteCreate = forwardRef((props, ref) => {
                     }}>Reset to Default</button>
                   </div>
                 )}
-                <div style={{ width: '100%', maxWidth: '380px', display: 'flex', flexDirection: 'column', gap: '0', backgroundColor: '#ffffff', borderRadius: '8px', border: '1px solid #e2e8f0', overflow: 'hidden' }}>
+                <div className="dn-summary-card" style={{ display: 'flex', flexDirection: 'column', gap: '0', backgroundColor: '#ffffff', borderRadius: '8px', border: '1px solid #e2e8f0', overflow: 'hidden' }}>
                   <div style={{ padding: '6px 16px', borderBottom: '1px solid #c3c6d7', backgroundColor: '#f2f4f6', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                     <span style={{ fontSize: '13px', fontWeight: 600, color: '#191c1e', fontFamily: "'Hanken Grotesk', sans-serif" }}>Summary</span>
                     <button type="button" title="Customize Summary" onClick={() => setShowDNSummarySettings(v => !v)}
