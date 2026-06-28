@@ -23,7 +23,7 @@ const ImageGallery = forwardRef((props, ref) => {
                 setImages(formatted);
             }
         }
-    }, [props.storedImages]);
+    }, [props.storedImages]); // eslint-disable-line react-hooks/exhaustive-deps
 
     const zoomImgRef = useRef(null);
     const [zoomLevel, setZoomLevel] = useState(1);
