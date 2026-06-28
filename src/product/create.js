@@ -1614,7 +1614,7 @@ const ProductCreate = forwardRef((props, ref) => {
   const NAV_TABS = [
     { id: 'basic',     label: 'Basic Info',         icon: 'bi-info-circle'  },
     { id: 'inventory', label: 'Inventory / Stock',   icon: 'bi-box-seam'    },
-    { id: 'linked',    label: 'Linked Products',     icon: 'bi-link-45deg'  },
+    { id: 'linked',    label: 'Linked Products & Photos', icon: 'bi-link-45deg'  },
   ];
 
   const ERROR_TAB_MAP = {
@@ -1795,6 +1795,19 @@ const ProductCreate = forwardRef((props, ref) => {
                       return (
                         <span style={{ display: 'block', fontSize: '10px', fontWeight: 500, opacity: 0.75, marginTop: '1px' }}>
                           {stock} in stock
+                        </span>
+                      );
+                    })()}
+                    {tab.id === 'linked' && (() => {
+                      const photos = formData.images?.length || 0;
+                      const linked = selectedLinkedProducts?.length || 0;
+                      if (!photos && !linked) return null;
+                      const parts = [];
+                      if (linked) parts.push(`${linked} linked`);
+                      if (photos) parts.push(`${photos} photo${photos !== 1 ? 's' : ''}`);
+                      return (
+                        <span style={{ display: 'block', fontSize: '10px', fontWeight: 500, opacity: 0.75, marginTop: '1px' }}>
+                          {parts.join(' · ')}
                         </span>
                       );
                     })()}
