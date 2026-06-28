@@ -1233,7 +1233,7 @@ const DeliveryNoteCreate = forwardRef((props, ref) => {
         quantity: product.quantity,
         stores: product.stores,
         unit: product.unit,
-        stock: product.product_stores[localStorage.getItem("store_id")]?.stock ? product.product_stores[localStorage.getItem("store_id")]?.stock : 0,
+        stock: product.product_stores?.[localStorage.getItem("store_id")]?.stock || 0,
       };
 
       item.unit_price = parseFloat(product.unit_price) || 0;
@@ -1964,7 +1964,7 @@ const DeliveryNoteCreate = forwardRef((props, ref) => {
           /* ── Delivery Note form ── */
           .dn-form { padding: 20px 28px; }
           .dn-customer-info { border-radius: 8px; }
-          .dn-product-row { display: flex; gap: 8px; align-items: flex-end; margin-bottom: 12px; }
+          .dn-product-row { display: flex; gap: 8px; align-items: stretch; margin-bottom: 12px; }
           .dn-table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
 
           /* ── Mobile (≤575px) ── */
@@ -2300,7 +2300,7 @@ const DeliveryNoteCreate = forwardRef((props, ref) => {
                 <SectionTitle icon="bi-box-seam">Products</SectionTitle>
 
             <div className="dn-product-row">
-              <div style={{ flex: '0 0 33.33%', maxWidth: '400px', minWidth: '180px' }}>
+              <div style={{ flex: '0 0 33.33%', maxWidth: '400px', minWidth: '180px', display: 'flex', flexDirection: 'column', justifyContent: 'flex-end' }}>
               <Label required>Product</Label>
               <Typeahead
                 id="product_id"
@@ -2606,7 +2606,7 @@ const DeliveryNoteCreate = forwardRef((props, ref) => {
                   <i className="bi bi-list"></i>
                 </Button>
               </div>
-              <div style={{ flex: '0 1 220px', minWidth: '140px' }}>
+              <div style={{ flex: '0 1 220px', minWidth: '140px', display: 'flex', flexDirection: 'column', justifyContent: 'flex-end' }}>
                 <Label>Barcode Scan</Label>
                 <DebounceInput
                   minLength={3}
@@ -2617,17 +2617,18 @@ const DeliveryNoteCreate = forwardRef((props, ref) => {
                   onChange={event => getProductByBarCode(event.target.value)} />
                 {errors.bar_code && <ErrMsg><i className="bi bi-x-lg"> </i>{errors.bar_code}</ErrMsg>}
               </div>
-              <div style={{ flex: '0 1 220px', minWidth: '140px' }}>
+              <div style={{ flex: '0 1 220px', minWidth: '140px', display: 'flex', flexDirection: 'column', justifyContent: 'flex-end' }}>
                 <Label>Remarks</Label>
                 <textarea
                   value={formData.remarks}
+                  rows={2}
                   onChange={(e) => {
                     delete errors["address"];
                     setErrors({ ...errors });
                     formData.remarks = e.target.value;
                     setFormData({ ...formData });
                   }}
-                  style={{ ...INPUT, resize: 'vertical', minHeight: '38px' }}
+                  style={{ ...INPUT, resize: 'vertical', height: '60px' }}
                   id="remarks"
                   placeholder="Remarks"
                 />

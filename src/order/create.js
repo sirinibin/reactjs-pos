@@ -4991,7 +4991,7 @@ const OrderCreate = forwardRef((props, ref) => {
                         <Modal.Title>
                             {isUpdateForm ? t("Update Sales") + " #" + formData.code : t("Create New Sales Order")}
                         </Modal.Title>
-                        {!isUpdateForm && store?.zatca?.phase === "2" && <div style={{ marginLeft: "20px" }}>
+                        {!isUpdateForm && store?.zatca?.phase === "2" && store?.zatca?.connected && <div style={{ marginLeft: "20px" }}>
                             <input type="checkbox" className="form-check-input" id="sales_report_to_zatca" name="report_to_zatca" checked={formData.enable_report_to_zatca} onChange={(e) => {
                                 formData.enable_report_to_zatca = !formData.enable_report_to_zatca;
                                 setFormData({ ...formData });
@@ -5078,7 +5078,7 @@ const OrderCreate = forwardRef((props, ref) => {
                         <h1 className="font-headline-md text-headline-md text-on-surface m-0">
                             {isUpdateForm ? t("Update Sales") + " #" + formData.code : t("New Sales Order")}
                         </h1>
-                        {!isUpdateForm && store?.zatca?.phase === "2" && (
+                        {!isUpdateForm && store?.zatca?.phase === "2" && store?.zatca?.connected && (
                             <label style={{ display: "flex", alignItems: "center", gap: "6px", marginLeft: "16px", cursor: "pointer" }}>
                                 <input
                                     type="checkbox"

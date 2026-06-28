@@ -359,12 +359,13 @@ const StoreDuplicate = forwardRef((props, ref) => {
                                     </tbody>
                                 </Table>
 
-                                {store?.zatca?.phase === "2" && store?.zatca?.connected && (
+                                {store?.zatca?.phase === "2" && (
                                     <Alert variant="warning" className="mt-3 py-2 mb-0">
                                         <i className="bi bi-shield-exclamation me-2"></i>
-                                        <strong>Zatca Phase 2 notice:</strong> The duplicated store will be set to{" "}
-                                        <strong>SandBox (NonProduction)</strong> mode and marked as{" "}
-                                        <strong>Not Connected</strong>. You can connect it to Zatca later if needed.
+                                        <strong>ZATCA Phase 2 notice:</strong>{" "}
+                                        The duplicated store will keep the <strong>{store?.zatca?.env || "current"}</strong> environment
+                                        but will be marked as <strong>Not Connected</strong> and all ZATCA credentials
+                                        will be cleared. You must reconnect manually before new invoices can be reported to ZATCA.
                                     </Alert>
                                 )}
                             </div>

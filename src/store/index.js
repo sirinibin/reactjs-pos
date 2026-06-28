@@ -902,42 +902,41 @@ function StoreIndex(props) {
                                                                                 }
                                                                             </Dropdown.Item>
                                                                             {!store.marked_for_permanent_deletion ? (
-                                                                                <div className="px-3 py-1"
-                                                                                    onClick={(e) => e.stopPropagation()}
-                                                                                    onMouseDown={(e) => e.stopPropagation()}
-                                                                                >
-                                                                                    <div className="d-flex align-items-center gap-1 mb-1">
-                                                                                        <input
-                                                                                            type="number"
-                                                                                            min="1"
-                                                                                            value={permanentDeletionDays[store.id] ?? "14"}
-                                                                                            onChange={(e) => setPermanentDeletionDays(prev => ({ ...prev, [store.id]: e.target.value }))}
-                                                                                            onClick={(e) => e.stopPropagation()}
-                                                                                            onMouseDown={(e) => e.stopPropagation()}
-                                                                                            onKeyDown={(e) => e.stopPropagation()}
-                                                                                            className="form-control form-control-sm"
-                                                                                            style={{ width: "65px" }}
-                                                                                        />
-                                                                                        <span className="small text-muted">days</span>
-                                                                                    </div>
-                                                                                    <Button
-                                                                                        size="sm"
-                                                                                        variant="warning"
-                                                                                        className="w-100 mb-1"
-                                                                                        disabled={markingStoreId === store.id}
-                                                                                        onClick={() => markForPermanentDeletion(store)}
+                                                                                <>
+                                                                                    <div className="px-3 py-1"
+                                                                                        onClick={(e) => e.stopPropagation()}
+                                                                                        onMouseDown={(e) => e.stopPropagation()}
                                                                                     >
-                                                                                        {markingStoreId === store.id
-                                                                                            ? <Spinner size="sm" animation="border" />
-                                                                                            : <><i className="bi bi-clock me-1"></i>Mark for Permanent Deletion after {permanentDeletionDays[store.id] ?? "14"} days</>
-
-                                                                                        }
-                                                                                    </Button>
-                                                                                    {store.created_at && (new Date() - new Date(store.created_at)) < 3 * 24 * 60 * 60 * 1000 && (
+                                                                                        <div className="d-flex align-items-center gap-1 mb-1">
+                                                                                            <input
+                                                                                                type="number"
+                                                                                                min="1"
+                                                                                                value={permanentDeletionDays[store.id] ?? "14"}
+                                                                                                onChange={(e) => setPermanentDeletionDays(prev => ({ ...prev, [store.id]: e.target.value }))}
+                                                                                                onClick={(e) => e.stopPropagation()}
+                                                                                                onMouseDown={(e) => e.stopPropagation()}
+                                                                                                onKeyDown={(e) => e.stopPropagation()}
+                                                                                                className="form-control form-control-sm"
+                                                                                                style={{ width: "65px" }}
+                                                                                            />
+                                                                                            <span className="small text-muted">days</span>
+                                                                                        </div>
                                                                                         <Button
                                                                                             size="sm"
-                                                                                            variant="danger"
-                                                                                            className="w-100"
+                                                                                            variant="warning"
+                                                                                            className="w-100 mb-1"
+                                                                                            disabled={markingStoreId === store.id}
+                                                                                            onClick={() => markForPermanentDeletion(store)}
+                                                                                        >
+                                                                                            {markingStoreId === store.id
+                                                                                                ? <Spinner size="sm" animation="border" />
+                                                                                                : <><i className="bi bi-clock me-1"></i>Mark for Permanent Deletion after {permanentDeletionDays[store.id] ?? "14"} days</>
+                                                                                            }
+                                                                                        </Button>
+                                                                                    </div>
+                                                                                    {store.created_at && (new Date() - new Date(store.created_at)) < 3 * 24 * 60 * 60 * 1000 && (
+                                                                                        <Dropdown.Item
+                                                                                            className="text-danger"
                                                                                             disabled={permDeletingStoreId === store.id}
                                                                                             onClick={() => permanentlyDeleteStore(store)}
                                                                                         >
@@ -945,9 +944,9 @@ function StoreIndex(props) {
                                                                                                 ? <Spinner size="sm" animation="border" />
                                                                                                 : <><i className="bi bi-trash3-fill me-1"></i>Delete Permanently</>
                                                                                             }
-                                                                                        </Button>
+                                                                                        </Dropdown.Item>
                                                                                     )}
-                                                                                </div>
+                                                                                </>
                                                                             ) : (
                                                                                 <div className="px-3 py-1">
                                                                                     <div className="small text-warning mb-1">

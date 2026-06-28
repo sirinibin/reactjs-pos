@@ -860,6 +860,7 @@ const StoreCreate = forwardRef((props, ref) => {
         { id: 'serial_numbers', label: 'Serial Numbers',   icon: 'bi-hash'              },
         { id: 'bank_account',   label: 'Bank Account',     icon: 'bi-bank'              },
         { id: 'settings',       label: 'Settings',         icon: 'bi-gear'              },
+        ...(formData.zatca?.phase === "2" ? [{ id: 'zatca_credentials', label: 'ZATCA Credentials', icon: 'bi-shield-lock' }] : []),
     ];
     const ERROR_TAB_MAP = {
         business_category: 'general', name: 'general', name_in_arabic: 'general',
@@ -5662,6 +5663,59 @@ const StoreCreate = forwardRef((props, ref) => {
                         </div>
 
                         </div></div>)}
+
+                        {activeTab === 'zatca_credentials' && formData.zatca?.phase === "2" && (<div className="pw-tab-wrap"><div className="pw-card">
+                            <h6 className="fw-semibold mb-3"><i className="bi bi-shield-lock me-2"></i>ZATCA Credentials</h6>
+                            {[
+                                { label: 'Environment',                    value: formData.zatca?.env },
+                                { label: 'Connected',                      value: formData.zatca?.connected ? 'Yes' : 'No' },
+                                { label: 'OTP',                            value: formData.zatca?.otp },
+                                { label: 'CSR',                            value: formData.zatca?.csr },
+                                { label: 'Private Key',                    value: formData.zatca?.private_key },
+                                { label: 'Binary Security Token',          value: formData.zatca?.binary_security_token },
+                                { label: 'Secret',                         value: formData.zatca?.secret },
+                                { label: 'Production Binary Security Token', value: formData.zatca?.production_binary_security_token },
+                                { label: 'Production Secret',              value: formData.zatca?.production_secret },
+                                { label: 'Compliance Request ID',          value: formData.zatca?.compliance_request_id },
+                                { label: 'Production Request ID',          value: formData.zatca?.production_request_id },
+                                { label: 'Last Connected At',              value: formData.zatca?.last_connected_at },
+                                { label: 'Last Disconnected At',           value: formData.zatca?.last_disconnected_at },
+                                { label: 'Connection Failed Count',        value: formData.zatca?.connection_failed_count },
+                                { label: 'Last Failed At',                 value: formData.zatca?.connection_last_failed_at },
+                            ].map(({ label, value }) => (
+                                <div className="row mb-2" key={label}>
+                                    <div className="col-md-4">
+                                        <label className="form-label fw-semibold mb-0" style={{ fontSize: '13px' }}>{label}</label>
+                                    </div>
+                                    <div className="col-md-8">
+                                        {value == null || value === '' || value === 0 ? (
+                                            <span className="text-muted" style={{ fontSize: '13px' }}>—</span>
+                                        ) : (
+                                            <textarea
+                                                readOnly
+                                                className="form-control form-control-sm font-monospace"
+                                                value={String(value)}
+                                                rows={String(value).length > 80 ? 4 : 1}
+                                                style={{ fontSize: '12px', resize: 'vertical', backgroundColor: '#f8f9fa' }}
+                                            />
+                                        )}
+                                    </div>
+                                </div>
+                            ))}
+                            {formData.zatca?.connection_errors?.length > 0 && (
+                                <div className="row mb-2">
+                                    <div className="col-md-4">
+                                        <label className="form-label fw-semibold mb-0" style={{ fontSize: '13px' }}>Connection Errors</label>
+                                    </div>
+                                    <div className="col-md-8">
+                                        {formData.zatca.connection_errors.map((err, i) => (
+                                            <div key={i} className="text-danger" style={{ fontSize: '12px' }}>{err}</div>
+                                        ))}
+                                    </div>
+                                </div>
+                            )}
+                        </div></div>)}
+
                         </div>{/* pw-content-scroll */}
                         </div>{/* pw-content */}
                     </form>

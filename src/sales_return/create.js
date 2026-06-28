@@ -2264,7 +2264,7 @@ const SalesReturnCreate = forwardRef((props, ref) => {
                             {formData.order_code}
                         </span>}
                     </Modal.Title>
-                    {store.zatca?.phase === "2" && !formData.id && < div style={{ marginLeft: "20px" }}>
+                    {store.zatca?.phase === "2" && store.zatca?.connected && !formData.id && < div style={{ marginLeft: "20px" }}>
                         <input type="checkbox" id="sales_return_report_to_zatca" name="sales_return_report_to_zatca" checked={formData.enable_report_to_zatca} onChange={(e) => {
                             formData.enable_report_to_zatca = !formData.enable_report_to_zatca;
                             setFormData({ ...formData });

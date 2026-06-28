@@ -676,7 +676,6 @@ const ExpenseCreate = forwardRef((props, ref) => {
 
     const NAV_TABS = [
         { id: 'details', label: 'Details', icon: 'bi-receipt' },
-        { id: 'categories', label: 'Categories', icon: 'bi-folder2-open' },
         { id: 'attachments', label: 'Attachments', icon: 'bi-paperclip' },
     ];
 
@@ -686,7 +685,6 @@ const ExpenseCreate = forwardRef((props, ref) => {
     function getErrorTab(key) {
         const k = key.toLowerCase();
         if (['image','photo','attachment'].some(f => k.includes(f))) return 'attachments';
-        if (['category'].some(f => k.includes(f))) return 'categories';
         return 'details';
     }
 
@@ -1134,12 +1132,7 @@ const ExpenseCreate = forwardRef((props, ref) => {
                                                 </div>
                                             </div>
                                         </div>
-                                    </>
-                                )}
-
-                                {/* ===== TAB 2: CATEGORIES ===== */}
-                                {activeTab === 'categories' && (
-                                    <>
+                                        {/* Categories */}
                                         <div className="pw-card" style={CARD}>
                                             <SectionTitle icon="bi-folder2-open">Expense Categories</SectionTitle>
                                             <div className="row g-3">
@@ -1226,7 +1219,7 @@ const ExpenseCreate = forwardRef((props, ref) => {
                                     </>
                                 )}
 
-                                {/* ===== TAB 3: ATTACHMENTS ===== */}
+                                {/* ===== TAB 2: ATTACHMENTS ===== */}
                                 {activeTab === 'attachments' && (
                                     <>
                                         <div className="pw-card" style={CARD}>
