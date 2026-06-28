@@ -1613,7 +1613,6 @@ const ProductCreate = forwardRef((props, ref) => {
 
   const NAV_TABS = [
     { id: 'basic',     label: 'Basic Info',         icon: 'bi-info-circle'  },
-    { id: 'pricing',   label: 'Pricing',             icon: 'bi-currency-dollar' },
     { id: 'inventory', label: 'Inventory / Stock',   icon: 'bi-box-seam'    },
     { id: 'linked',    label: 'Linked Products',     icon: 'bi-link-45deg'  },
   ];
@@ -1621,10 +1620,10 @@ const ProductCreate = forwardRef((props, ref) => {
   const ERROR_TAB_MAP = {
     name: 'basic', name_in_arabic: 'basic', brand_id: 'basic', country_code: 'basic',
     part_number: 'basic', prefix_part_number: 'basic', rack: 'basic', category_id: 'basic', allow_duplicates: 'basic',
-    purchase_unit_price_0: 'pricing', wholesale_unit_price: 'pricing',
-    purchase_unit_price_with_vat_0: 'pricing', wholesale_unit_price_with_vat: 'pricing',
-    retail_unit_price: 'pricing', retail_unit_price_0: 'pricing',
-    retail_unit_price_with_vat: 'pricing', retail_unit_price_with_vat_0: 'pricing',
+    purchase_unit_price_0: 'basic', wholesale_unit_price: 'basic',
+    purchase_unit_price_with_vat_0: 'basic', wholesale_unit_price_with_vat: 'basic',
+    retail_unit_price: 'basic', retail_unit_price_0: 'basic',
+    retail_unit_price_with_vat: 'basic', retail_unit_price_with_vat_0: 'basic',
   };
   const getErrorTab = (key) => {
     if (ERROR_TAB_MAP[key]) return ERROR_TAB_MAP[key];
@@ -1788,7 +1787,18 @@ const ProductCreate = forwardRef((props, ref) => {
                   onMouseLeave={(e) => { if (activeTab !== tab.id) e.currentTarget.style.background = 'transparent'; }}
                 >
                   <i className={`bi ${tab.icon}`} style={{ fontSize: '15px', flexShrink: 0 }}></i>
-                  <span style={{ flex: 1 }}>{tab.label}</span>
+                  <span style={{ flex: 1 }}>
+                    {tab.label}
+                    {tab.id === 'inventory' && (() => {
+                      const stock = productStores[localStorage.getItem('store_id')]?.stock;
+                      if (!stock) return null;
+                      return (
+                        <span style={{ display: 'block', fontSize: '10px', fontWeight: 500, opacity: 0.75, marginTop: '1px' }}>
+                          {stock} in stock
+                        </span>
+                      );
+                    })()}
+                  </span>
                   {tabErrorCounts[tab.id] > 0 && (
                     <span style={{
                       background: '#ba1a1a', color: '#fff', borderRadius: '50%',
@@ -1962,105 +1972,6 @@ const ProductCreate = forwardRef((props, ref) => {
                     </div>
                   </div>
 
-                  {!store?.settings?.enable_warehouse_module && (
-                    <div className="pw-card" style={CARD}>
-                      <SectionTitle icon="bi-geo-alt">Rack / Location</SectionTitle>
-                      <div className="row">
-                        <div className="col-md-4">
-                          <Label>Rack / Location</Label>
-                          <input id="product_rack" name="product_rack" type="text"
-                            value={formData.rack || ''}
-                            onChange={(e) => { formData.rack = e.target.value; setFormData({ ...formData }); }}
-                            style={INPUT} placeholder="Rack / Location"
-                          />
-                          {errors.rack && <ErrMsg>{errors.rack}</ErrMsg>}
-                        </div>
-                      </div>
-                    </div>
-                  )}
-
-                  {store?.settings?.enable_warehouse_module && (
-                    <div className="pw-card" style={CARD}>
-                      <SectionTitle icon="bi-geo-alt">Rack / Location</SectionTitle>
-                      <div style={{ overflowX: 'auto', maxWidth: '560px' }}>
-                        <table style={{ borderCollapse: 'collapse', width: '100%' }}>
-                          <thead>
-                            <tr style={{ background: '#eceef0' }}>
-                              <th style={TH}>Storage Facility</th>
-                              <th style={TH}>Rack / Location</th>
-                            </tr>
-                          </thead>
-                          <tbody>
-                            <tr style={{ borderBottom: '1px solid #c3c6d7' }}>
-                              <td style={{ ...TD, fontWeight: 600 }}>Main Store</td>
-                              <td style={TD}>
-                                <input type="text" style={INPUT}
-                                  value={productStores[localStorage.getItem('store_id')]?.warehouse_racks?.main_store || ''}
-                                  onChange={(e) => { const storeId = localStorage.getItem('store_id'); if (!productStores[storeId].warehouse_racks) productStores[storeId].warehouse_racks = {}; productStores[storeId].warehouse_racks.main_store = e.target.value; setProductStores({ ...productStores }); }}
-                                  placeholder="Rack/Location"
-                                />
-                              </td>
-                            </tr>
-                            {warehouseList.map((wh) => (
-                              <tr key={wh.id} style={{ borderBottom: '1px solid #c3c6d7' }}>
-                                <td style={{ ...TD, fontWeight: 600 }}>{wh.name} ({wh.code})</td>
-                                <td style={TD}>
-                                  <input type="text" style={INPUT}
-                                    value={productStores[localStorage.getItem('store_id')]?.warehouse_racks?.[wh.code] || ''}
-                                    onChange={(e) => { const storeId = localStorage.getItem('store_id'); if (!productStores[storeId].warehouse_racks) productStores[storeId].warehouse_racks = {}; productStores[storeId].warehouse_racks[wh.code] = e.target.value; setProductStores({ ...productStores }); }}
-                                    placeholder="Rack/Location"
-                                  />
-                                </td>
-                              </tr>
-                            ))}
-                          </tbody>
-                        </table>
-                      </div>
-                    </div>
-                  )}
-
-                  <div className="pw-card" style={{ ...CARD, padding: '16px 24px' }}>
-                    <div className="d-flex align-items-start gap-2">
-                      <input type="checkbox" id="allow_duplicates"
-                        style={{ width: '16px', height: '16px', accentColor: '#004ac6', cursor: 'pointer', flexShrink: 0, marginTop: '2px' }}
-                        checked={formData.allow_duplicates || false}
-                        onChange={() => { formData.allow_duplicates = !formData.allow_duplicates; setFormData({ ...formData }); }}
-                      />
-                      <div>
-                        <label htmlFor="allow_duplicates" style={{ fontFamily: '"Inter", sans-serif', fontSize: '13px', fontWeight: 500, color: '#191c1e', cursor: 'pointer', marginBottom: '2px', display: 'block' }}>
-                          Allow duplicates in Sales, Purchases etc.
-                        </label>
-                        <p style={{ fontFamily: '"Inter", sans-serif', fontSize: '12px', color: '#737686', marginBottom: 0 }}>
-                          System will not flag redundant entries for this product.
-                        </p>
-                      </div>
-                    </div>
-                    {errors.allow_duplicates && <ErrMsg>{errors.allow_duplicates}</ErrMsg>}
-                  </div>
-
-                  <div className="pw-card" style={CARD}>
-                    <SectionTitle icon="bi-journal-text">Note</SectionTitle>
-                    <textarea
-                      id="product_note"
-                      name="product_note"
-                      value={formData.note || ''}
-                      rows={4}
-                      onChange={(e) => {
-                        formData.note = e.target.value;
-                        setFormData({ ...formData });
-                      }}
-                      onKeyDown={(e) => { if (e.key === 'Enter') e.stopPropagation(); }}
-                      style={{ ...INPUT, resize: 'vertical', minHeight: '88px' }}
-                      placeholder="Optional note about this product…"
-                    />
-                  </div>
-
-                </div>
-              )}
-
-              {/* ===== TAB 2: PRICING ===== */}
-              {activeTab === 'pricing' && (
-                <div className="pw-tab-wrap">
                   <div className="pw-card" style={CARD}>
                     <SectionTitle icon="bi-currency-dollar">Unit Prices</SectionTitle>
                     <div className="row g-4 pw-price-cards">
@@ -2206,10 +2117,104 @@ const ProductCreate = forwardRef((props, ref) => {
 
                     </div>
                   </div>
+
+                  {!store?.settings?.enable_warehouse_module && (
+                    <div className="pw-card" style={CARD}>
+                      <SectionTitle icon="bi-geo-alt">Rack / Location</SectionTitle>
+                      <div className="row">
+                        <div className="col-md-4">
+                          <Label>Rack / Location</Label>
+                          <input id="product_rack" name="product_rack" type="text"
+                            value={formData.rack || ''}
+                            onChange={(e) => { formData.rack = e.target.value; setFormData({ ...formData }); }}
+                            style={INPUT} placeholder="Rack / Location"
+                          />
+                          {errors.rack && <ErrMsg>{errors.rack}</ErrMsg>}
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {store?.settings?.enable_warehouse_module && (
+                    <div className="pw-card" style={CARD}>
+                      <SectionTitle icon="bi-geo-alt">Rack / Location</SectionTitle>
+                      <div style={{ overflowX: 'auto', maxWidth: '560px' }}>
+                        <table style={{ borderCollapse: 'collapse', width: '100%' }}>
+                          <thead>
+                            <tr style={{ background: '#eceef0' }}>
+                              <th style={TH}>Storage Facility</th>
+                              <th style={TH}>Rack / Location</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            <tr style={{ borderBottom: '1px solid #c3c6d7' }}>
+                              <td style={{ ...TD, fontWeight: 600 }}>Main Store</td>
+                              <td style={TD}>
+                                <input type="text" style={INPUT}
+                                  value={productStores[localStorage.getItem('store_id')]?.warehouse_racks?.main_store || ''}
+                                  onChange={(e) => { const storeId = localStorage.getItem('store_id'); if (!productStores[storeId].warehouse_racks) productStores[storeId].warehouse_racks = {}; productStores[storeId].warehouse_racks.main_store = e.target.value; setProductStores({ ...productStores }); }}
+                                  placeholder="Rack/Location"
+                                />
+                              </td>
+                            </tr>
+                            {warehouseList.map((wh) => (
+                              <tr key={wh.id} style={{ borderBottom: '1px solid #c3c6d7' }}>
+                                <td style={{ ...TD, fontWeight: 600 }}>{wh.name} ({wh.code})</td>
+                                <td style={TD}>
+                                  <input type="text" style={INPUT}
+                                    value={productStores[localStorage.getItem('store_id')]?.warehouse_racks?.[wh.code] || ''}
+                                    onChange={(e) => { const storeId = localStorage.getItem('store_id'); if (!productStores[storeId].warehouse_racks) productStores[storeId].warehouse_racks = {}; productStores[storeId].warehouse_racks[wh.code] = e.target.value; setProductStores({ ...productStores }); }}
+                                    placeholder="Rack/Location"
+                                  />
+                                </td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    </div>
+                  )}
+
+                  <div className="pw-card" style={{ ...CARD, padding: '16px 24px' }}>
+                    <div className="d-flex align-items-start gap-2">
+                      <input type="checkbox" id="allow_duplicates"
+                        style={{ width: '16px', height: '16px', accentColor: '#004ac6', cursor: 'pointer', flexShrink: 0, marginTop: '2px' }}
+                        checked={formData.allow_duplicates || false}
+                        onChange={() => { formData.allow_duplicates = !formData.allow_duplicates; setFormData({ ...formData }); }}
+                      />
+                      <div>
+                        <label htmlFor="allow_duplicates" style={{ fontFamily: '"Inter", sans-serif', fontSize: '13px', fontWeight: 500, color: '#191c1e', cursor: 'pointer', marginBottom: '2px', display: 'block' }}>
+                          Allow duplicates in Sales, Purchases etc.
+                        </label>
+                        <p style={{ fontFamily: '"Inter", sans-serif', fontSize: '12px', color: '#737686', marginBottom: 0 }}>
+                          System will not flag redundant entries for this product.
+                        </p>
+                      </div>
+                    </div>
+                    {errors.allow_duplicates && <ErrMsg>{errors.allow_duplicates}</ErrMsg>}
+                  </div>
+
+                  <div className="pw-card" style={CARD}>
+                    <SectionTitle icon="bi-journal-text">Note</SectionTitle>
+                    <textarea
+                      id="product_note"
+                      name="product_note"
+                      value={formData.note || ''}
+                      rows={4}
+                      onChange={(e) => {
+                        formData.note = e.target.value;
+                        setFormData({ ...formData });
+                      }}
+                      onKeyDown={(e) => { if (e.key === 'Enter') e.stopPropagation(); }}
+                      style={{ ...INPUT, resize: 'vertical', minHeight: '88px' }}
+                      placeholder="Optional note about this product…"
+                    />
+                  </div>
+
                 </div>
               )}
 
-              {/* ===== TAB 3: INVENTORY / STOCK ===== */}
+              {/* ===== TAB 2: INVENTORY / STOCK ===== */}
               {activeTab === 'inventory' && (
                 <div>
 

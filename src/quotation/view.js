@@ -433,16 +433,12 @@ const QuotationView = forwardRef((props, ref) => {
                                 <tr style={{ fontSize: '13px', fontWeight: 600, color: '#434655', textTransform: 'uppercase', lineHeight: '16px' }}>
                                     <th style={{ padding: '12px 24px', fontWeight: 600 }}>{t("SI No.")}</th>
                                     <th style={{ padding: '12px 24px', fontWeight: 600 }}>{t("Part No.")}</th>
-                                    <th style={{ padding: '12px 24px', fontWeight: 600 }}>{t("Name")}</th>
+                                    <th style={{ padding: '12px 24px', fontWeight: 600 }}>{t("Product Name")}</th>
                                     <th style={{ padding: '12px 24px', textAlign: 'center', fontWeight: 600 }}>{t("Qty")}</th>
                                     <th style={{ padding: '12px 24px', textAlign: 'right', fontWeight: 600 }}>{t("Unit Price")}</th>
-                                    <th style={{ padding: '12px 24px', textAlign: 'right', fontWeight: 600 }}>{t("Disc.")}</th>
-                                    <th style={{ padding: '12px 24px', textAlign: 'right', fontWeight: 600 }}>{t("Disc. %")}</th>
-                                    <th style={{ padding: '12px 24px', textAlign: 'right', fontWeight: 600 }}>{t("Price")}</th>
-                                    <th style={{ padding: '12px 24px', textAlign: 'right', fontWeight: 600 }}>{t("Purchase Unit Price")}</th>
-                                    <th style={{ padding: '12px 24px', textAlign: 'right', fontWeight: 600 }}>{t("Purchase Price")}</th>
-                                    <th style={{ padding: '12px 24px', textAlign: 'right', fontWeight: 600 }}>{t("Profit")}</th>
-                                    <th style={{ padding: '12px 24px', textAlign: 'right', fontWeight: 600 }}>{t("Loss")}</th>
+                                    <th style={{ padding: '12px 24px', textAlign: 'right', fontWeight: 600 }}>{t("Disc %")}</th>
+                                    <th style={{ padding: '12px 24px', textAlign: 'right', fontWeight: 600 }}>{t("VAT")}</th>
+                                    <th style={{ padding: '12px 24px', textAlign: 'right', fontWeight: 600 }}>{t("Total Price")}</th>
                                 </tr>
                             </thead>
                             <tbody style={{ fontSize: '14px', lineHeight: '20px', color: '#191c1e' }}>
@@ -460,25 +456,13 @@ const QuotationView = forwardRef((props, ref) => {
                                             <NumberFormat value={trimTo2Decimals(product.unit_price)} displayType={"text"} thousandSeparator={true} renderText={(v) => v} />
                                         </td>
                                         <td style={{ padding: '12px 24px', textAlign: 'right' }}>
-                                            <NumberFormat value={trimTo2Decimals((product.unit_discount || 0) * product.quantity)} displayType={"text"} thousandSeparator={true} renderText={(v) => v} />
-                                        </td>
-                                        <td style={{ padding: '12px 24px', textAlign: 'right' }}>
                                             <NumberFormat value={trimTo2Decimals(product.unit_discount_percent)} displayType={"text"} thousandSeparator={true} suffix="%" renderText={(v) => v} />
                                         </td>
+                                        <td style={{ padding: '12px 24px', textAlign: 'right' }}>
+                                            <NumberFormat value={trimTo2Decimals(product.vat_price || 0)} displayType={"text"} thousandSeparator={true} renderText={(v) => v} />
+                                        </td>
                                         <td style={{ padding: '12px 24px', textAlign: 'right', fontWeight: 700 }}>
-                                            <NumberFormat value={trimTo2Decimals((product.unit_price - (product.unit_discount || 0)) * product.quantity)} displayType={"text"} thousandSeparator={true} renderText={(v) => v} />
-                                        </td>
-                                        <td style={{ padding: '12px 24px', textAlign: 'right' }}>
-                                            <NumberFormat value={trimTo2Decimals(product.purchase_unit_price)} displayType={"text"} thousandSeparator={true} renderText={(v) => v} />
-                                        </td>
-                                        <td style={{ padding: '12px 24px', textAlign: 'right' }}>
-                                            <NumberFormat value={trimTo2Decimals((product.purchase_unit_price || 0) * product.quantity)} displayType={"text"} thousandSeparator={true} renderText={(v) => v} />
-                                        </td>
-                                        <td style={{ padding: '12px 24px', textAlign: 'right' }}>
-                                            <NumberFormat value={trimTo2Decimals(product.profit)} displayType={"text"} thousandSeparator={true} renderText={(v) => v} />
-                                        </td>
-                                        <td style={{ padding: '12px 24px', textAlign: 'right' }}>
-                                            <NumberFormat value={trimTo2Decimals(product.loss)} displayType={"text"} thousandSeparator={true} renderText={(v) => v} />
+                                            <NumberFormat value={trimTo2Decimals((product.unit_price - (product.unit_discount || 0)) * product.quantity + (product.vat_price || 0))} displayType={"text"} thousandSeparator={true} renderText={(v) => v} />
                                         </td>
                                     </tr>
                                 ))}

@@ -473,14 +473,14 @@ const SalesReturnView = forwardRef((props, ref) => {
                             <table style={{ width: '100%', textAlign: 'left', borderCollapse: 'collapse', minWidth: '700px' }}>
                                 <thead style={{ backgroundColor: '#f1f5f9' }}>
                                     <tr style={{ fontSize: '13px', fontWeight: 600, color: '#434655', textTransform: 'uppercase', lineHeight: '16px' }}>
-                                        <th style={{ padding: '12px 16px', fontWeight: 600 }}>{t("SI No.")}</th>
-                                        <th style={{ padding: '12px 16px', fontWeight: 600 }}>{t("Part No.")}</th>
-                                        <th style={{ padding: '12px 16px', fontWeight: 600 }}>{t("Name")}</th>
-                                        <th style={{ padding: '12px 16px', textAlign: 'center', fontWeight: 600 }}>{t("Qty")}</th>
-                                        <th style={{ padding: '12px 16px', textAlign: 'right', fontWeight: 600 }}>{t("Unit Price")}</th>
-                                        <th style={{ padding: '12px 16px', textAlign: 'right', fontWeight: 600 }}>{t("Disc %")}</th>
-                                        <th style={{ padding: '12px 16px', textAlign: 'right', fontWeight: 600 }}>{t("VAT")}</th>
-                                        <th style={{ padding: '12px 16px', textAlign: 'right', fontWeight: 600 }}>{t("Total")}</th>
+                                        <th style={{ padding: '12px 24px', fontWeight: 600 }}>{t("SI No.")}</th>
+                                        <th style={{ padding: '12px 24px', fontWeight: 600 }}>{t("Part No.")}</th>
+                                        <th style={{ padding: '12px 24px', fontWeight: 600 }}>{t("Product Name")}</th>
+                                        <th style={{ padding: '12px 24px', textAlign: 'center', fontWeight: 600 }}>{t("Qty")}</th>
+                                        <th style={{ padding: '12px 24px', textAlign: 'right', fontWeight: 600 }}>{t("Unit Price")}</th>
+                                        <th style={{ padding: '12px 24px', textAlign: 'right', fontWeight: 600 }}>{t("Disc %")}</th>
+                                        <th style={{ padding: '12px 24px', textAlign: 'right', fontWeight: 600 }}>{t("VAT")}</th>
+                                        <th style={{ padding: '12px 24px', textAlign: 'right', fontWeight: 600 }}>{t("Total Price")}</th>
                                     </tr>
                                 </thead>
                                 <tbody style={{ fontSize: '14px', lineHeight: '20px', color: '#191c1e' }}>
@@ -490,21 +490,21 @@ const SalesReturnView = forwardRef((props, ref) => {
                                             onMouseEnter={e => { e.currentTarget.style.transform = 'translateX(4px)'; e.currentTarget.style.backgroundColor = '#f2f4f6'; }}
                                             onMouseLeave={e => { e.currentTarget.style.transform = 'translateX(0)'; e.currentTarget.style.backgroundColor = ''; }}
                                         >
-                                            <td style={{ padding: '12px 16px' }}>{index + 1}</td>
-                                            <td style={{ padding: '12px 16px', fontFamily: 'monospace', color: '#004ac6' }}>{product.part_number}</td>
-                                            <td style={{ padding: '12px 16px' }}>{product.name}{product.name_in_arabic ? " / " + product.name_in_arabic : ""}</td>
-                                            <td style={{ padding: '12px 16px', textAlign: 'center' }}>{product.quantity} {product.unit || ""}</td>
-                                            <td style={{ padding: '12px 16px', textAlign: 'right' }}>
+                                            <td style={{ padding: '12px 24px' }}>{index + 1}</td>
+                                            <td style={{ padding: '12px 24px', fontFamily: 'monospace', color: '#004ac6' }}>{product.part_number}</td>
+                                            <td style={{ padding: '12px 24px' }}>{product.name}{product.name_in_arabic ? " / " + product.name_in_arabic : ""}</td>
+                                            <td style={{ padding: '12px 24px', textAlign: 'center' }}>{product.quantity} {product.unit || ""}</td>
+                                            <td style={{ padding: '12px 24px', textAlign: 'right' }}>
                                                 <NumberFormat value={trimTo2Decimals(product.unit_price)} displayType={"text"} thousandSeparator={true} renderText={(v) => v} />
                                             </td>
-                                            <td style={{ padding: '12px 16px', textAlign: 'right' }}>
+                                            <td style={{ padding: '12px 24px', textAlign: 'right' }}>
                                                 <NumberFormat value={trimTo2Decimals(product.unit_discount_percent)} displayType={"text"} thousandSeparator={true} suffix="%" renderText={(v) => v} />
                                             </td>
-                                            <td style={{ padding: '12px 16px', textAlign: 'right' }}>
+                                            <td style={{ padding: '12px 24px', textAlign: 'right' }}>
                                                 <NumberFormat value={trimTo2Decimals(product.vat_price || 0)} displayType={"text"} thousandSeparator={true} renderText={(v) => v} />
                                             </td>
-                                            <td style={{ padding: '12px 16px', textAlign: 'right', fontWeight: 700 }}>
-                                                <NumberFormat value={trimTo2Decimals((product.unit_price - (product.unit_discount || 0)) * product.quantity)} displayType={"text"} thousandSeparator={true} renderText={(v) => v} />
+                                            <td style={{ padding: '12px 24px', textAlign: 'right', fontWeight: 700 }}>
+                                                <NumberFormat value={trimTo2Decimals((product.unit_price - (product.unit_discount || 0)) * product.quantity + (product.vat_price || 0))} displayType={"text"} thousandSeparator={true} renderText={(v) => v} />
                                             </td>
                                         </tr>
                                     ))}

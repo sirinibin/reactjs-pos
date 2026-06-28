@@ -455,12 +455,9 @@ const QuotationSalesReturnView = forwardRef((props, ref) => {
                                                 <th style={{ padding: '12px 24px', fontWeight: 600 }}>Product Name</th>
                                                 <th style={{ padding: '12px 24px', textAlign: 'center', fontWeight: 600 }}>Qty</th>
                                                 <th style={{ padding: '12px 24px', textAlign: 'right', fontWeight: 600 }}>Unit Price</th>
-                                                <th style={{ padding: '12px 24px', textAlign: 'right', fontWeight: 600 }}>Disc.</th>
                                                 <th style={{ padding: '12px 24px', textAlign: 'right', fontWeight: 600 }}>Disc %</th>
-                                                <th style={{ padding: '12px 24px', textAlign: 'right', fontWeight: 600 }}>Price</th>
-                                                <th style={{ padding: '12px 24px', textAlign: 'right', fontWeight: 600 }}>Purchase Price</th>
-                                                <th style={{ padding: '12px 24px', textAlign: 'right', fontWeight: 600 }}>Profit</th>
-                                                <th style={{ padding: '12px 24px', textAlign: 'right', fontWeight: 600 }}>Loss</th>
+                                                <th style={{ padding: '12px 24px', textAlign: 'right', fontWeight: 600 }}>VAT</th>
+                                                <th style={{ padding: '12px 24px', textAlign: 'right', fontWeight: 600 }}>Total Price</th>
                                             </tr>
                                         </thead>
                                         <tbody style={{ fontSize: '14px', lineHeight: '20px', color: '#191c1e' }}>
@@ -478,22 +475,13 @@ const QuotationSalesReturnView = forwardRef((props, ref) => {
                                                         <NumberFormat value={trimTo2Decimals(product.unit_price)} displayType={"text"} thousandSeparator={true} renderText={(v) => v} />
                                                     </td>
                                                     <td style={{ padding: '12px 24px', textAlign: 'right' }}>
-                                                        <NumberFormat value={product.unit_discount ? trimTo2Decimals(product.unit_discount * product.quantity) : 0.00} displayType={"text"} thousandSeparator={true} renderText={(v) => v} />
-                                                    </td>
-                                                    <td style={{ padding: '12px 24px', textAlign: 'right' }}>
                                                         <NumberFormat value={trimTo2Decimals(product.unit_discount_percent)} displayType={"text"} thousandSeparator={true} suffix="%" renderText={(v) => v} />
                                                     </td>
+                                                    <td style={{ padding: '12px 24px', textAlign: 'right' }}>
+                                                        <NumberFormat value={trimTo2Decimals(product.vat_price || 0)} displayType={"text"} thousandSeparator={true} renderText={(v) => v} />
+                                                    </td>
                                                     <td style={{ padding: '12px 24px', textAlign: 'right', fontWeight: 700 }}>
-                                                        <NumberFormat value={trimTo2Decimals((product.unit_price - product.unit_discount) * product.quantity)} displayType={"text"} thousandSeparator={true} renderText={(v) => v} />
-                                                    </td>
-                                                    <td style={{ padding: '12px 24px', textAlign: 'right' }}>
-                                                        <NumberFormat value={trimTo2Decimals(product.purchase_unit_price * product.quantity)} displayType={"text"} thousandSeparator={true} renderText={(v) => v} />
-                                                    </td>
-                                                    <td style={{ padding: '12px 24px', textAlign: 'right' }}>
-                                                        <NumberFormat value={trimTo2Decimals(product.profit)} displayType={"text"} thousandSeparator={true} renderText={(v) => v} />
-                                                    </td>
-                                                    <td style={{ padding: '12px 24px', textAlign: 'right' }}>
-                                                        <NumberFormat value={trimTo2Decimals(product.loss)} displayType={"text"} thousandSeparator={true} renderText={(v) => v} />
+                                                        <NumberFormat value={trimTo2Decimals((product.unit_price - (product.unit_discount || 0)) * product.quantity + (product.vat_price || 0))} displayType={"text"} thousandSeparator={true} renderText={(v) => v} />
                                                     </td>
                                                 </tr>
                                             ))}

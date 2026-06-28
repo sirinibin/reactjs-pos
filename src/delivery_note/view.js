@@ -1,8 +1,10 @@
 import React, { useState, useRef, forwardRef, useImperativeHandle } from "react";
 import { Modal } from 'react-bootstrap';
 
+import NumberFormat from "react-number-format";
 import OrderPreview from './../order/preview.js';
 import DeliveryNotePrint from './print.js';
+import { trimTo2Decimals } from "../utils/numberUtils";
 
 const DeliveryNoteView = forwardRef((props, ref) => {
 
@@ -269,28 +271,24 @@ const DeliveryNoteView = forwardRef((props, ref) => {
                         </div>
                     </div>
 
-                    {/* Main Body Grid */}
-                    <div className="grid grid-cols-1 lg:grid-cols-12 items-start" style={{ gap: '32px' }}>
-
-                        {/* Left Column: Products Table */}
-                        <div className="lg:col-span-8" style={{ display: 'flex', flexDirection: 'column', gap: '32px' }}>
-
-                            <section style={{ backgroundColor: '#ffffff', borderRadius: '8px', border: '1px solid #e2e8f0', overflow: 'hidden' }}>
+                    {/* Full-width Products Section — OUTSIDE the grid, ABOVE it */}
+                    <section style={{ backgroundColor: '#ffffff', borderRadius: '8px', border: '1px solid #e2e8f0', overflow: 'hidden', marginBottom: '32px' }}>
                                 <div style={{ padding: '12px 24px', borderBottom: '1px solid #c3c6d7', display: 'flex', justifyContent: 'space-between', alignItems: 'center', backgroundColor: '#f2f4f6' }}>
                                     <h3 style={{ margin: 0, fontSize: '18px', fontWeight: 600, lineHeight: '26px', fontFamily: "'Hanken Grotesk', sans-serif", color: '#191c1e' }}>Delivered Items</h3>
                                     <span style={{ fontSize: '12px', fontWeight: 500, color: '#434655' }}>{model.products?.length || 0} Item(s)</span>
                                 </div>
-                                <div style={{ overflowX: 'auto', maxHeight: '400px', overflowY: 'auto' }}>
-                                    <table style={{ width: '100%', textAlign: 'left', borderCollapse: 'collapse' }}>
+                                <div style={{ overflowX: 'auto' }}>
+                                    <table style={{ width: '100%', textAlign: 'left', borderCollapse: 'collapse', minWidth: '700px' }}>
                                         <thead style={{ backgroundColor: '#f1f5f9' }}>
                                             <tr style={{ fontSize: '13px', fontWeight: 600, color: '#434655', textTransform: 'uppercase', lineHeight: '16px' }}>
                                                 <th style={{ padding: '12px 24px', fontWeight: 600 }}>SI No.</th>
                                                 <th style={{ padding: '12px 24px', fontWeight: 600 }}>Part No.</th>
                                                 <th style={{ padding: '12px 24px', fontWeight: 600 }}>Product Name</th>
                                                 <th style={{ padding: '12px 24px', textAlign: 'center', fontWeight: 600 }}>Qty</th>
-                                                {model.net_total > 0 && <th style={{ padding: '12px 24px', textAlign: 'right', fontWeight: 600 }}>Unit Price</th>}
-                                                {model.net_total > 0 && <th style={{ padding: '12px 24px', textAlign: 'right', fontWeight: 600 }}>Unit Disc.</th>}
-                                                {model.net_total > 0 && <th style={{ padding: '12px 24px', textAlign: 'right', fontWeight: 600 }}>Total Price</th>}
+                                                <th style={{ padding: '12px 24px', textAlign: 'right', fontWeight: 600 }}>Unit Price</th>
+                                                <th style={{ padding: '12px 24px', textAlign: 'right', fontWeight: 600 }}>Disc %</th>
+                                                <th style={{ padding: '12px 24px', textAlign: 'right', fontWeight: 600 }}>VAT</th>
+                                                <th style={{ padding: '12px 24px', textAlign: 'right', fontWeight: 600 }}>Total Price</th>
                                             </tr>
                                         </thead>
                                         <tbody style={{ fontSize: '14px', lineHeight: '20px', color: '#191c1e' }}>
@@ -304,21 +302,18 @@ const DeliveryNoteView = forwardRef((props, ref) => {
                                                     <td style={{ padding: '12px 24px', fontFamily: 'monospace', color: '#004ac6' }}>{product.part_number}</td>
                                                     <td style={{ padding: '12px 24px' }}>{product.name}{product.name_in_arabic ? " / " + product.name_in_arabic : ""}</td>
                                                     <td style={{ padding: '12px 24px', textAlign: 'center' }}>{product.quantity} {product.unit || ""}</td>
-                                                    {model.net_total > 0 && (
-                                                        <td style={{ padding: '12px 24px', textAlign: 'right' }}>
-                                                            {product.unit_price ? product.unit_price.toFixed(2) : "0.00"}
-                                                        </td>
-                                                    )}
-                                                    {model.net_total > 0 && (
-                                                        <td style={{ padding: '12px 24px', textAlign: 'right' }}>
-                                                            {product.unit_discount ? product.unit_discount.toFixed(2) : "0.00"}
-                                                        </td>
-                                                    )}
-                                                    {model.net_total > 0 && (
-                                                        <td style={{ padding: '12px 24px', textAlign: 'right', fontWeight: 700 }}>
-                                                            {product.unit_price ? ((product.unit_price - (product.unit_discount || 0)) * product.quantity).toFixed(2) : "0.00"}
-                                                        </td>
-                                                    )}
+                                                    <td style={{ padding: '12px 24px', textAlign: 'right' }}>
+                                                        <NumberFormat value={trimTo2Decimals(product.unit_price)} displayType={"text"} thousandSeparator={true} renderText={(v) => v} />
+                                                    </td>
+                                                    <td style={{ padding: '12px 24px', textAlign: 'right' }}>
+                                                        <NumberFormat value={trimTo2Decimals(product.unit_discount_percent)} displayType={"text"} thousandSeparator={true} suffix="%" renderText={(v) => v} />
+                                                    </td>
+                                                    <td style={{ padding: '12px 24px', textAlign: 'right' }}>
+                                                        <NumberFormat value={trimTo2Decimals(product.vat_price || 0)} displayType={"text"} thousandSeparator={true} renderText={(v) => v} />
+                                                    </td>
+                                                    <td style={{ padding: '12px 24px', textAlign: 'right', fontWeight: 700 }}>
+                                                        <NumberFormat value={trimTo2Decimals((product.unit_price - (product.unit_discount || 0)) * product.quantity + (product.vat_price || 0))} displayType={"text"} thousandSeparator={true} renderText={(v) => v} />
+                                                    </td>
                                                 </tr>
                                             ))}
                                         </tbody>
@@ -378,16 +373,13 @@ const DeliveryNoteView = forwardRef((props, ref) => {
                                         </div>
                                     </div>
                                 )}
-                            </section>
+                    </section>
+
+                    {/* Metadata */}
+                    <section style={{ backgroundColor: '#ffffff', borderRadius: '8px', border: '1px solid #e2e8f0', overflow: 'hidden' }}>
+                        <div style={{ padding: '12px 24px', borderBottom: '1px solid #c3c6d7', backgroundColor: '#f2f4f6' }}>
+                            <h3 style={{ margin: 0, fontSize: '18px', fontWeight: 600, lineHeight: '26px', fontFamily: "'Hanken Grotesk', sans-serif", color: '#191c1e' }}>Metadata</h3>
                         </div>
-
-                        {/* Right Column: Metadata */}
-                        <div className="lg:col-span-4" style={{ display: 'flex', flexDirection: 'column', gap: '32px' }}>
-
-                            <section style={{ backgroundColor: '#ffffff', borderRadius: '8px', border: '1px solid #e2e8f0', overflow: 'hidden' }}>
-                                <div style={{ padding: '12px 24px', borderBottom: '1px solid #c3c6d7', backgroundColor: '#f2f4f6' }}>
-                                    <h3 style={{ margin: 0, fontSize: '18px', fontWeight: 600, lineHeight: '26px', fontFamily: "'Hanken Grotesk', sans-serif", color: '#191c1e' }}>Metadata</h3>
-                                </div>
                                 <div style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
 
                                     {/* Created By with avatar */}
@@ -458,9 +450,7 @@ const DeliveryNoteView = forwardRef((props, ref) => {
                                         </div>
                                     )}
                                 </div>
-                            </section>
-                        </div>
-                    </div>
+                    </section>
                 </div>
             </Modal.Body>
 

@@ -1,4 +1,4 @@
-import React, { useState, forwardRef, useImperativeHandle, useRef } from 'react';
+import React, { useState, forwardRef, useImperativeHandle, useRef, useEffect } from 'react';
 import imageCompression from 'browser-image-compression';
 import { Modal, Badge } from 'react-bootstrap';
 import { confirm } from 'react-bootstrap-confirmation';
@@ -6,6 +6,24 @@ import { confirm } from 'react-bootstrap-confirmation';
 const ImageGallery = forwardRef((props, ref) => {
     const [images, setImages] = useState([]);
     const [modalIndex, setModalIndex] = useState(null);
+
+    const lastStoredRef = useRef(null);
+
+    useEffect(() => {
+        if (props.storedImages && props.storedImages !== lastStoredRef.current) {
+            lastStoredRef.current = props.storedImages;
+            if (props.storedImages.length) {
+                const formatted = props.storedImages.map(url => {
+                    let fullUrl = url;
+                    if (url && !url.startsWith('/') && props.storeID && props.id) {
+                        fullUrl = `/images/${props.storeID}/${props.modelName}s/${props.id}/${url}`;
+                    }
+                    return { serverUrl: fullUrl, preview: fullUrl, status: 'uploaded' };
+                });
+                setImages(formatted);
+            }
+        }
+    }, [props.storedImages]);
 
     const zoomImgRef = useRef(null);
     const [zoomLevel, setZoomLevel] = useState(1);
@@ -148,7 +166,7 @@ const ImageGallery = forwardRef((props, ref) => {
     const handleMouseUp = () => setDragging(false);
 
     return (
-        <div className="container mt-3">
+        <div className="mt-3">
             <input
                 type="file"
                 accept="image/*"
@@ -157,14 +175,14 @@ const ImageGallery = forwardRef((props, ref) => {
                 onChange={handleImageChange}
             />
 
-            <div className="row">
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
                 {images?.map((img, index) => (
-                    <div className="col-6 col-sm-4 col-md-3 mb-3" key={index}>
+                    <div key={index} style={{ width: '180px', flexShrink: 0 }}>
                         <div className="position-relative border rounded p-1" style={{ cursor: 'pointer' }} onClick={() => setModalIndex(index)}>
                             <img
                                 src={img.preview}
-                                className="img-fluid rounded"
-                                style={{ height: '150px', objectFit: 'cover' }}
+                                className="rounded"
+                                style={{ display: 'block', width: '100%', height: 'auto' }}
                                 alt=""
                             />
                             <button

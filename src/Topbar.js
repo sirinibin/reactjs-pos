@@ -239,6 +239,7 @@ function Topbar(props) {
                     <Dropdown onToggle={(isOpen) => { if (isOpen) fetchStores(); }} className="ms-2" style={{ flex: "0 1 auto", minWidth: 0 }}>
                         <Dropdown.Toggle
                             as="span"
+                            bsPrefix="store-switcher-toggle"
                             style={{ cursor: "pointer", display: "inline-flex", alignItems: "center", gap: "6px", userSelect: "none", maxWidth: "100%", overflow: "hidden" }}
                             id="store-switcher-toggle"
                         >
