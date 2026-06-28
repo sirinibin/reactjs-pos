@@ -81,6 +81,11 @@ const ProductCreate = forwardRef((props, ref) => {
       // await getAllStores();
       await getStore(localStorage.getItem("store_id"));
 
+      if (!id && store?.settings?.allow_products_duplicates_by_default) {
+        formData.allow_duplicates = true;
+        setFormData({ ...formData });
+      }
+
       if (id) {
         await getProduct(id);
         if (timerRef.current) clearTimeout(timerRef.current);
