@@ -254,7 +254,7 @@ export function SalesType1Body({
                                 <div style={{ display: 'flex', gap: '10px', alignItems: 'flex-start' }}>
 
                                     {/* LEFT: all form fields stacked */}
-                                    <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                                    <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: '8px' }}>
 
                                         {/* Customer search row */}
                                         <div>
@@ -384,30 +384,11 @@ export function SalesType1Body({
                                             {errors.blocked && <div style={{ color: "red", fontSize: '12px', marginTop: '2px' }}>{errors.blocked}</div>}
                                         </div>
 
-                                        {/* Second row: all other fields side by side */}
-                                        <div style={{ display: 'flex', gap: '6px', alignItems: 'flex-start', flexWrap: 'wrap' }}>
-
-                                            {/* Barcode Scan */}
-                                            <div style={{ flex: '0 0 140px', minWidth: '100px' }}>
-                                                <label className="form-label" style={{ fontSize: '12px', marginBottom: '2px' }}>{t('Product Barcode Scan')}</label>
-                                                <div>
-                                                    <DebounceInput
-                                                        minLength={3}
-                                                        debounceTimeout={100}
-                                                        placeholder={t('Scan Barcode')}
-                                                        className="form-control barcode"
-                                                        value={formData.barcode}
-                                                        onChange={event => getProductByBarCode(event.target.value)} />
-                                                    {errors.bar_code && (
-                                                        <div style={{ color: "red" }}>
-                                                            {t(errors.bar_code)}
-                                                        </div>
-                                                    )}
-                                                </div>
-                                            </div>
+                                        {/* Second row: Date + Phone+WA + VAT */}
+                                        <div style={{ display: 'flex', gap: '18px', alignItems: 'flex-start', flexWrap: 'wrap' }}>
 
                                             {/* Date */}
-                                            <div style={{ flex: '0 0 175px' }}>
+                                            <div style={{ flex: '0 0 231px' }}>
                                                 <label className="form-label" style={{ fontSize: '12px', marginBottom: '2px' }}>{t('Date') + " *"}</label>
                                                 <div>
                                                     <DatePicker
@@ -456,7 +437,7 @@ export function SalesType1Body({
                                                         }}
                                                         className="form-control"
                                                         placeholder={t('Phone')}
-                                                        style={{ width: '115px' }}
+                                                        style={{ width: '166px' }}
                                                     />
                                                     <Button className={`btn btn-success btn-sm`} onClick={sendWhatsAppMessage} style={{ flexShrink: 0 }}>
                                                         <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="white" viewBox="0 0 16 16">
@@ -496,6 +477,30 @@ export function SalesType1Body({
                                                         {t(errors.vat_no)}
                                                     </div>
                                                 )}
+                                            </div>
+
+                                        </div>
+
+                                        {/* Third row: Barcode + Address + Remarks */}
+                                        <div style={{ display: 'flex', gap: '18px', alignItems: 'flex-start', flexWrap: 'wrap' }}>
+
+                                            {/* Barcode Scan */}
+                                            <div style={{ flex: '0 0 140px', minWidth: '100px' }}>
+                                                <label className="form-label" style={{ fontSize: '12px', marginBottom: '2px' }}>{t('Product Barcode Scan')}</label>
+                                                <div>
+                                                    <DebounceInput
+                                                        minLength={3}
+                                                        debounceTimeout={100}
+                                                        placeholder={t('Scan Barcode')}
+                                                        className="form-control barcode"
+                                                        value={formData.barcode}
+                                                        onChange={event => getProductByBarCode(event.target.value)} />
+                                                    {errors.bar_code && (
+                                                        <div style={{ color: "red" }}>
+                                                            {t(errors.bar_code)}
+                                                        </div>
+                                                    )}
+                                                </div>
                                             </div>
 
                                             {/* Address */}
