@@ -2493,7 +2493,7 @@ export function SalesType1Body({
                                                         <tr key="total_without_vat">
                                                             <th colSpan="8" className="text-end">
                                                                 {t("Total(without VAT)")}
-                                                                <OverlayTrigger placement="left" overlay={renderTotalWithoutVATTooltip}>
+                                                                <OverlayTrigger placement="left" overlay={renderTotalWithoutVATTooltip()}>
                                                                     <span style={{ textDecoration: 'underline dotted', cursor: 'pointer', marginLeft: '4px' }}>ℹ️</span>
                                                                 </OverlayTrigger>
                                                             </th>
@@ -2506,7 +2506,7 @@ export function SalesType1Body({
                                                         <tr key="total_with_vat">
                                                             <th colSpan="8" className="text-end">
                                                                 {t("Total(with VAT)")}
-                                                                <OverlayTrigger placement="left" overlay={renderTotalWithVATTooltip}>
+                                                                <OverlayTrigger placement="left" overlay={renderTotalWithVATTooltip()}>
                                                                     <span style={{ textDecoration: 'underline dotted', cursor: 'pointer', marginLeft: '4px' }}>ℹ️</span>
                                                                 </OverlayTrigger>
                                                             </th>
@@ -2519,7 +2519,7 @@ export function SalesType1Body({
                                                         <tr key="shipping">
                                                             <th colSpan="8" className="text-end">
                                                                 {t("Shipping & Handling Fees")}
-                                                                <OverlayTrigger placement="left" overlay={renderShippingTooltip}>
+                                                                <OverlayTrigger placement="left" overlay={renderShippingTooltip()}>
                                                                     <span style={{ textDecoration: 'underline dotted', cursor: 'pointer', marginLeft: '4px' }}>ℹ️</span>
                                                                 </OverlayTrigger>
                                                             </th>
@@ -2551,7 +2551,7 @@ export function SalesType1Body({
                                                                     discountPercent = parseFloat(e.target.value); setDiscountPercent(discountPercent);
                                                                     timerRef.current = setTimeout(() => { reCalculate(); }, 100);
                                                                 }} />{"%"}
-                                                                <OverlayTrigger placement="left" overlay={renderDiscountWithoutVATTooltip}>
+                                                                <OverlayTrigger placement="left" overlay={renderDiscountWithoutVATTooltip()}>
                                                                     <span style={{ textDecoration: 'underline dotted', cursor: 'pointer', marginLeft: '4px' }}>ℹ️</span>
                                                                 </OverlayTrigger>
                                                                 {errors.discount_percent && <div style={{ color: "red" }}>{errors.discount_percent}</div>}
@@ -2585,7 +2585,7 @@ export function SalesType1Body({
                                                                     discountPercentWithVAT = parseFloat(e.target.value); setDiscountPercentWithVAT(discountPercentWithVAT);
                                                                     timerRef.current = setTimeout(() => { reCalculate(); }, 100);
                                                                 }} />{"%"}
-                                                                <OverlayTrigger placement="left" overlay={renderDiscountWithVATTooltip}>
+                                                                <OverlayTrigger placement="left" overlay={renderDiscountWithVATTooltip()}>
                                                                     <span style={{ textDecoration: 'underline dotted', cursor: 'pointer', marginLeft: '4px' }}>ℹ️</span>
                                                                 </OverlayTrigger>
                                                                 {errors.discount_percent_with_vat && <div style={{ color: "red" }}>{errors.discount_percent_with_vat}</div>}
@@ -2611,7 +2611,7 @@ export function SalesType1Body({
                                                         <tr key="taxable_amount">
                                                             <th colSpan="8" className="text-end">
                                                                 {t("Total Taxable Amount(without VAT)")}
-                                                                <OverlayTrigger placement="right" overlay={renderTooltip}>
+                                                                <OverlayTrigger placement="left" overlay={renderTooltip()}>
                                                                     <span style={{ textDecoration: 'underline dotted', cursor: 'pointer', marginLeft: '4px' }}>ℹ️</span>
                                                                 </OverlayTrigger>
                                                             </th>
@@ -2631,7 +2631,7 @@ export function SalesType1Body({
                                                                     delete errors["vat_percent"]; setErrors({ ...errors });
                                                                     formData.vat_percent = e.target.value; reCalculate(); setFormData({ ...formData });
                                                                 }} />{"%"}
-                                                                <OverlayTrigger placement="left" overlay={renderVATTooltip}>
+                                                                <OverlayTrigger placement="left" overlay={renderVATTooltip()}>
                                                                     <span style={{ textDecoration: 'underline dotted', cursor: 'pointer', marginLeft: '4px' }}>ℹ️</span>
                                                                 </OverlayTrigger>
                                                                 {errors.vat_percent && <div style={{ color: "red" }}>{errors.vat_percent}</div>}
@@ -2645,7 +2645,7 @@ export function SalesType1Body({
                                                         <tr key="net_before_rounding">
                                                             <th colSpan="8" className="text-end">
                                                                 {t("Net Total(with VAT) Before Rounding")}
-                                                                <OverlayTrigger placement="right" overlay={renderNetTotalBeforeRoundingTooltip}>
+                                                                <OverlayTrigger placement="left" overlay={renderNetTotalBeforeRoundingTooltip()}>
                                                                     <span style={{ textDecoration: 'underline dotted', cursor: 'pointer', marginLeft: '4px' }}>ℹ️</span>
                                                                 </OverlayTrigger>
                                                             </th>
@@ -2690,7 +2690,7 @@ export function SalesType1Body({
                                                         <tr key="net_total">
                                                             <th colSpan="8" className="text-end">
                                                                 {t("Net Total(with VAT)")}
-                                                                <OverlayTrigger placement="right" overlay={renderNetTotalTooltip}>
+                                                                <OverlayTrigger placement="left" overlay={renderNetTotalTooltip()}>
                                                                     <span style={{ textDecoration: 'underline dotted', cursor: 'pointer', marginLeft: '4px' }}>ℹ️</span>
                                                                 </OverlayTrigger>
                                                             </th>

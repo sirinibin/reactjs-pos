@@ -6538,7 +6538,7 @@ const SalesReturnCreate = forwardRef((props, ref) => {
                                     <tr>
                                         <th colSpan="8" className="text-end">
                                             {t("Total Taxable Amount(without VAT)")}
-                                            <OverlayTrigger placement="right" overlay={renderTooltip}>
+                                            <OverlayTrigger placement="left" overlay={renderTooltip()}>
                                                 <span style={{ textDecoration: 'underline dotted', cursor: 'pointer' }}>ℹ️</span>
                                             </OverlayTrigger>
 
@@ -6614,7 +6614,7 @@ const SalesReturnCreate = forwardRef((props, ref) => {
                                     <tr>
                                         <th colSpan="8" className="text-end">
                                             {t("Net Total(with VAT) Before Rounding")}
-                                            <OverlayTrigger placement="right" overlay={renderNetTotalBeforeRoundingTooltip}>
+                                            <OverlayTrigger placement="left" overlay={renderNetTotalBeforeRoundingTooltip()}>
                                                 <span style={{ textDecoration: 'underline dotted', cursor: 'pointer' }}>ℹ️</span>
                                             </OverlayTrigger>
                                         </th>
@@ -6719,7 +6719,7 @@ const SalesReturnCreate = forwardRef((props, ref) => {
                                     <tr>
                                         <th colSpan="8" className="text-end">
                                             {t("Net Total(with VAT)")}
-                                            <OverlayTrigger placement="right" overlay={renderNetTotalTooltip}>
+                                            <OverlayTrigger placement="left" overlay={renderNetTotalTooltip()}>
                                                 <span style={{ textDecoration: 'underline dotted', cursor: 'pointer' }}>ℹ️</span>
                                             </OverlayTrigger>
                                         </th>
