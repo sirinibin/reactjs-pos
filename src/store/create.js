@@ -860,6 +860,7 @@ const StoreCreate = forwardRef((props, ref) => {
         { id: 'serial_numbers', label: 'Serial Numbers',   icon: 'bi-hash'              },
         { id: 'bank_account',   label: 'Bank Account',     icon: 'bi-bank'              },
         { id: 'settings',       label: 'Settings',         icon: 'bi-gear'              },
+        { id: 'designs',        label: 'Designs',          icon: 'bi-palette'           },
         ...(formData.zatca?.phase === "2" ? [{ id: 'zatca_credentials', label: 'ZATCA Credentials', icon: 'bi-shield-lock' }] : []),
     ];
     const ERROR_TAB_MAP = {
@@ -5663,6 +5664,42 @@ const StoreCreate = forwardRef((props, ref) => {
                         </div>
 
                         </div></div>)}
+
+                        {activeTab === 'designs' && (<div className="pw-tab-wrap">
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '20px' }}><i className="bi bi-palette" style={{ fontSize: '18px', color: '#004ac6' }}></i><h3 style={{ fontFamily: '"Hanken Grotesk", sans-serif', fontSize: '16px', fontWeight: 600, color: '#191c1e', margin: 0 }}>Designs</h3></div>
+
+                        <div className="pw-card" style={{ marginBottom: '16px' }}>
+                            <div className="pw-group-title"><i className="bi bi-window-split" style={{ color: '#004ac6' }}></i> Form Designs</div>
+                            <div className="row g-3">
+                                <div className="col-md-4">
+                                    <label className="form-label fw-semibold" style={{ fontFamily: '"Inter", sans-serif', fontSize: '13px' }}>Sales Create/Update Form</label>
+                                    <select
+                                        className="form-select"
+                                        value={formData.settings?.sales_create_form_design || 'type1'}
+                                        onChange={(e) => { formData.settings.sales_create_form_design = e.target.value; setFormData({ ...formData }); }}
+                                    >
+                                        <option value="type1">Type 1 (Default)</option>
+                                        <option value="type2">Type 2</option>
+                                        <option value="type3">Type 3</option>
+                                    </select>
+                                    <div style={{ color: '#6c757d', fontSize: '12px', marginTop: '4px' }}>Layout style for the sales order creation and update form</div>
+                                </div>
+                                <div className="col-md-4">
+                                    <label className="form-label fw-semibold" style={{ fontFamily: '"Inter", sans-serif', fontSize: '13px' }}>Sales Return Create/Update Form</label>
+                                    <select
+                                        className="form-select"
+                                        value={formData.settings?.sales_return_create_form_design || 'type1'}
+                                        onChange={(e) => { formData.settings.sales_return_create_form_design = e.target.value; setFormData({ ...formData }); }}
+                                    >
+                                        <option value="type1">Type 1 (Default)</option>
+                                        <option value="type2">Type 2</option>
+                                    </select>
+                                    <div style={{ color: '#6c757d', fontSize: '12px', marginTop: '4px' }}>Layout style for the sales return creation and update form</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        </div>)}
 
                         {activeTab === 'zatca_credentials' && formData.zatca?.phase === "2" && (<div className="pw-tab-wrap"><div className="pw-card">
                             <h6 className="fw-semibold mb-3"><i className="bi bi-shield-lock me-2"></i>ZATCA Credentials</h6>

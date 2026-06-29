@@ -21,10 +21,9 @@ import PurchaseReturnHistory from "./../utils/product_purchase_return_history.js
 import QuotationHistory from "./../utils/product_quotation_history.js";
 import DeliveryNoteHistory from "./../utils/product_delivery_note_history.js";
 import Products from "../utils/products.js";
-import ResizableTableCell from './../utils/ResizableTableCell';
 import { DragDropContext, Droppable, Draggable } from 'react-beautiful-dnd';
 import { OverlayTrigger, Tooltip } from 'react-bootstrap';
-//import Amount from "../utils/amount.js";
+import Amount from "../utils/amount.js";
 
 import ProductCreate from "./../product/create.js";
 import ProductView from "./../product/view.js";
@@ -35,9 +34,12 @@ import ProductHistory from "../utils/product_history.js";
 import * as bootstrap from 'bootstrap';
 
 import CustomerWithdrawalCreate from "../customer_withdrawal/create.js";
+import CustomerPending from "./../utils/customer_pending.js";
 import SalesCreate from "../order/create.js";
 import { useTranslation } from 'react-i18next';
 import { getDateLocale } from "../i18n/dateLocales";
+import '../order/style.css';
+import ResizableTableCell from './../utils/ResizableTableCell';
 const SalesReturnCreate = forwardRef((props, ref) => {
     const { t, i18n } = useTranslation('common');
     const dateLocale = useMemo(() => getDateLocale(i18n.language), [i18n.language]);
@@ -138,6 +140,10 @@ const SalesReturnCreate = forwardRef((props, ref) => {
     }));
 
     let [store, setStore] = useState({});
+    const [srFormType, setSrFormType] = useState(() => localStorage.getItem('sr_form_type') || 'type2');
+    useEffect(() => {
+        localStorage.setItem('sr_form_type', srFormType);
+    }, [srFormType]);
     const [isZatcaLocked, setIsZatcaLocked] = useState(false);
 
     function getStore(id) {
@@ -171,7 +177,12 @@ const SalesReturnCreate = forwardRef((props, ref) => {
             });
     }
 
-
+    useEffect(() => {
+        if (!store.settings) return;
+        if (store.settings.sales_return_create_form_design) {
+            setSrFormType(store.settings.sales_return_create_form_design);
+        }
+    }, [store.settings]);
 
 
     function ObjectToSearchQueryParams(object) {
@@ -184,6 +195,25 @@ const SalesReturnCreate = forwardRef((props, ref) => {
 
 
     let [selectedCustomers, setSelectedCustomers] = useState([]);
+
+    function fetchAndSetCustomer(customerId, fallbackData) {
+        if (!customerId) return;
+        const storeId = localStorage.getItem("store_id");
+        const select = "id,code,credit_limit,credit_balance,vat_no,name,phone,phone2,email,name_in_arabic,phone_in_arabic,search_label,stores";
+        fetch(`/v1/customer/${customerId}?search[store_id]=${storeId}&select=${select}`, {
+            method: 'GET',
+            headers: { 'Content-Type': 'application/json', 'Authorization': localStorage.getItem('access_token') },
+        })
+            .then(async r => {
+                const data = r.ok && await r.json();
+                if (data?.result) {
+                    setSelectedCustomers([{ ...data.result, id: data.result.id || customerId }]);
+                } else {
+                    setSelectedCustomers([fallbackData]);
+                }
+            })
+            .catch(() => setSelectedCustomers([fallbackData]));
+    }
 
     function getSalesReturn(id) {
         //console.log("inside getSalesReturn id:", id);
@@ -317,15 +347,11 @@ const SalesReturnCreate = forwardRef((props, ref) => {
 
 
                 if (formData.customer_name && formData.customer_id) {
-                    let selectedCustomers = [
-                        {
-                            id: formData.customer_id,
-                            name: formData.customer.name,
-                            search_label: formData.customer.search_label,
-                        }
-                    ];
-
-                    setSelectedCustomers([...selectedCustomers]);
+                    fetchAndSetCustomer(formData.customer_id, {
+                        id: formData.customer_id,
+                        name: formData.customer?.name || formData.customer_name,
+                        search_label: formData.customer?.search_label || formData.customer_name,
+                    });
                 }
 
 
@@ -483,6 +509,14 @@ const SalesReturnCreate = forwardRef((props, ref) => {
                     formData.received_by_signature_id = order.delivered_by_signature_id;
                     */
                     formData.customer_id = order.customer_id;
+                    formData.customer_name = order.customer_name;
+                    if (order.customer_id && order.customer_name) {
+                        fetchAndSetCustomer(order.customer_id, {
+                            id: order.customer_id,
+                            name: order.customer_name,
+                            search_label: order.customer_name,
+                        });
+                    }
 
                     // formData.is_discount_percent = order.is_discount_percent;
                     formData.discount_percent = order.discount_percent;
@@ -632,6 +666,40 @@ const SalesReturnCreate = forwardRef((props, ref) => {
 
     //const history = useHistory();
     let [errors, setErrors] = useState({});
+    useEffect(() => {
+        if (Object.keys(errors).length === 0) return;
+        const timer = setTimeout(() => setErrors({}), 5000);
+        return () => clearTimeout(timer);
+    }, [errors]);
+    const _defaultBillSummaryOrder = ['total_without_vat', 'total_with_vat', 'shipping', 'discount_without_vat', 'discount_with_vat', 'taxable_amount', 'vat', 'net_before_rounding', 'rounding_amount', 'net_total'];
+    const _billSummaryFieldLabels = { total_without_vat: 'Total(without VAT)', total_with_vat: 'Total(with VAT)', shipping: 'Shipping & Handling Fees', discount_without_vat: 'Sales Discount(without VAT)', discount_with_vat: 'Sales Discount(with VAT)', taxable_amount: 'Total Taxable Amount(without VAT)', vat: 'VAT', net_before_rounding: 'Net Total(with VAT) Before Rounding', rounding_amount: 'Rounding Amount', net_total: 'Net Total(with VAT)' };
+    const [billSummaryVisible, setBillSummaryVisible] = useState(() => {
+        try { const s = localStorage.getItem('bill_summary_visible_sr'); return s ? JSON.parse(s) : Object.fromEntries(_defaultBillSummaryOrder.map(k => [k, true])); } catch { return Object.fromEntries(_defaultBillSummaryOrder.map(k => [k, true])); }
+    });
+    const [billSummaryOrder, setBillSummaryOrder] = useState(() => {
+        try { const s = localStorage.getItem('bill_summary_order_sr'); return s ? JSON.parse(s) : _defaultBillSummaryOrder; } catch { return _defaultBillSummaryOrder; }
+    });
+    const [showBillSummarySettings, setShowBillSummarySettings] = useState(false);
+    const [openSummaryTooltip, setOpenSummaryTooltip] = useState(null);
+    useEffect(() => {
+        if (!openSummaryTooltip) return;
+        const close = () => setOpenSummaryTooltip(null);
+        const timer = setTimeout(() => document.addEventListener('click', close, { once: true }), 0);
+        return () => { clearTimeout(timer); document.removeEventListener('click', close); };
+    }, [openSummaryTooltip]);
+    const updateBillSummaryVisible = (key, val) => {
+        const next = { ...billSummaryVisible, [key]: val };
+        setBillSummaryVisible(next);
+        localStorage.setItem('bill_summary_visible_sr', JSON.stringify(next));
+    };
+    const reorderBillSummary = (from, to) => {
+        if (from === to) return;
+        const arr = [...billSummaryOrder];
+        arr.splice(to, 0, arr.splice(from, 1)[0]);
+        setBillSummaryOrder(arr);
+        localStorage.setItem('bill_summary_order_sr', JSON.stringify(arr));
+    };
+    const billSummaryDragRef = useRef(null);
     const [isProcessing, setProcessing] = useState(false);
 
     //fields
@@ -1275,6 +1343,46 @@ const SalesReturnCreate = forwardRef((props, ref) => {
 
     const latestRequestRef = useRef(0);
 
+    const isAllSelected = selectedProducts?.every((product) => product.selected);
+
+    const renderTooltip = (props) => (
+        <Tooltip id="label-tooltip" {...props}>
+            {t("Total(without VAT) + Shipping & Handling Fees - Discount(without VAT)")}
+            {"(" + trimTo2Decimals(formData.total) + " + " + trimTo2Decimals(shipping) + " - " + trimTo2Decimals(discount) + ") = " + trimTo2Decimals(formData.total + shipping - discount)}
+        </Tooltip>
+    );
+
+    const renderNetTotalBeforeRoundingTooltip = (props) => (
+        <Tooltip id="label-tooltip" {...props}>
+            {t("Total Taxable Amount(without VAT) + VAT Price ( {{vatPercent}}% of Taxable Amount)", {
+                vatPercent: formData.vat_percent,
+            })}
+            {"(" + trimTo2Decimals(formData.total + shipping - discount) + " + " + trimTo2Decimals(formData.vat_price) + ") = " + trimTo2Decimals(formData.net_total - roundingAmount)}
+        </Tooltip>
+    );
+
+    const renderNetTotalTooltip = (props) => (
+        <Tooltip id="label-tooltip" {...props}>
+            {t("Total Taxable Amount(without VAT) + VAT Price ( {{vatPercent}}% of Taxable Amount)", {
+                vatPercent: formData.vat_percent,
+            })} {roundingAmount > 0 ? " + Rounding Amount" : " - Rounding Amount"}
+            {"(" + trimTo2Decimals(formData.total + shipping - discount) + " + " + trimTo2Decimals(formData.vat_price) + `${roundingAmount > 0 ? " + " : " - "}` + trimTo2Decimals(roundingAmount) + " ) = " + trimTo2Decimals(formData.net_total)}
+        </Tooltip>
+    );
+    const handleSelectAll = (e) => {
+        if (e.target.checked) {
+            for (let i = 0; i < selectedProducts?.length; i++) {
+                selectedProducts[i].selected = true;
+            }
+        } else {
+            for (let i = 0; i < selectedProducts?.length; i++) {
+                selectedProducts[i].selected = false;
+            }
+        }
+        setSelectedProducts([...selectedProducts]);
+        reCalculate();
+    };
+
     async function reCalculate(productIndex) {
         const requestId = Date.now();
         latestRequestRef.current = requestId;
@@ -1815,47 +1923,16 @@ const SalesReturnCreate = forwardRef((props, ref) => {
 
     const timerRef = useRef(null);
 
-    const isAllSelected = selectedProducts?.every((product) => product.selected);
+    let [showCustomerPending, setShowCustomerPending] = useState(false);
+    const CustomerPendingRef = useRef();
+    function openCustomerPending(customer) {
+        setShowCustomerPending(true);
+        if (timerRef.current) clearTimeout(timerRef.current);
+        timerRef.current = setTimeout(() => {
+            CustomerPendingRef.current?.open(false, customer);
+        }, 50);
+    }
 
-    const handleSelectAll = (e) => {
-        if (e.target.checked) {
-            for (let i = 0; i < selectedProducts?.length; i++) {
-                selectedProducts[i].selected = true;
-            }
-        } else {
-            for (let i = 0; i < selectedProducts?.length; i++) {
-                selectedProducts[i].selected = false;
-            }
-        }
-        setSelectedProducts([...selectedProducts]);
-        reCalculate();
-    };
-
-
-    const renderTooltip = (props) => (
-        <Tooltip id="label-tooltip" {...props}>
-            {t("Total(without VAT) + Shipping & Handling Fees - Discount(without VAT)")}
-            {"(" + trimTo2Decimals(formData.total) + " + " + trimTo2Decimals(shipping) + " - " + trimTo2Decimals(discount) + ") = " + trimTo2Decimals(formData.total + shipping - discount)}
-        </Tooltip>
-    );
-
-    const renderNetTotalBeforeRoundingTooltip = (props) => (
-        <Tooltip id="label-tooltip" {...props}>
-            {t("Total Taxable Amount(without VAT) + VAT Price ( {{vatPercent}}% of Taxable Amount)", {
-                vatPercent: formData.vat_percent,
-            })}
-            {"(" + trimTo2Decimals(formData.total + shipping - discount) + " + " + trimTo2Decimals(formData.vat_price) + ") = " + trimTo2Decimals(formData.net_total - roundingAmount)}
-        </Tooltip>
-    );
-
-    const renderNetTotalTooltip = (props) => (
-        <Tooltip id="label-tooltip" {...props}>
-            {t("Total Taxable Amount(without VAT) + VAT Price ( {{vatPercent}}% of Taxable Amount)", {
-                vatPercent: formData.vat_percent,
-            })} {roundingAmount > 0 ? " + Rounding Amount" : " - Rounding Amount"}
-            {"(" + trimTo2Decimals(formData.total + shipping - discount) + " + " + trimTo2Decimals(formData.vat_price) + `${roundingAmount > 0 ? " + " : " - "}` + trimTo2Decimals(roundingAmount) + " ) = " + trimTo2Decimals(formData.net_total)}
-        </Tooltip>
-    );
 
 
     const inputRefs = useRef({});
@@ -2111,6 +2188,44 @@ const SalesReturnCreate = forwardRef((props, ref) => {
         { key: 'price_with_vat', label: 'Price(with VAT)', visible: true },
     ], []);
     const [spColumns, setSPColumns] = useState(defaultSPColumns);
+
+    const SR_COL_DEFAULTS = useMemo(() => ({
+        select: 32, si_no: 40, part_number: 80, name: 220, info: 56,
+        purchase_unit_price: 110, stock: 70, warehouse: 84, qty: 80,
+        unit_price: 120, unit_price_with_vat: 120,
+        unit_discount: 100, unit_discount_with_vat: 100, unit_discount_percent: 100,
+        price: 120, price_with_vat: 120,
+    }), []);
+    const [srColWidths, setSrColWidths] = useState(() => {
+        try { return JSON.parse(localStorage.getItem('sr_sp_col_widths') || '{}'); } catch { return {}; }
+    });
+    const srColResizeRef = useRef(null);
+    const startSrColResize = useCallback((e, colKey, defaultWidth) => {
+        e.preventDefault();
+        const startX = e.clientX;
+        const startWidth = srColWidths[colKey] ?? defaultWidth ?? SR_COL_DEFAULTS[colKey] ?? 60;
+        function onMouseMove(ev) {
+            const w = Math.max(40, startWidth + ev.clientX - startX);
+            setSrColWidths(prev => {
+                const next = { ...prev, [colKey]: w };
+                localStorage.setItem('sr_sp_col_widths', JSON.stringify(next));
+                return next;
+            });
+        }
+        function onMouseUp() {
+            srColResizeRef.current = null;
+            document.removeEventListener('mousemove', onMouseMove);
+            document.removeEventListener('mouseup', onMouseUp);
+            document.body.style.cursor = '';
+            document.body.style.userSelect = '';
+        }
+        srColResizeRef.current = colKey;
+        document.body.style.cursor = 'col-resize';
+        document.body.style.userSelect = 'none';
+        document.addEventListener('mousemove', onMouseMove);
+        document.addEventListener('mouseup', onMouseUp);
+    }, [srColWidths, SR_COL_DEFAULTS]);
+
     const handleToggleSPColumn = (i) => {
         const updated = spColumns.map((c, idx) => idx === i ? { ...c, visible: !c.visible } : c);
         setSPColumns(updated);
@@ -2227,6 +2342,7 @@ const SalesReturnCreate = forwardRef((props, ref) => {
 
     return (
         <>
+            {showCustomerPending && <CustomerPending ref={CustomerPendingRef} />}
             {showReferenceUpdateForm && <>
                 <CustomerWithdrawalCreate ref={CustomerWithdrawalUpdateFormRef} onUpdated={handleReferenceUpdated} />
                 <SalesCreate ref={SalesUpdateFormRef} onUpdated={handleReferenceUpdated} />
@@ -2254,6 +2370,1986 @@ const SalesReturnCreate = forwardRef((props, ref) => {
             <SignatureCreate ref={SignatureCreateFormRef} showToastMessage={props.showToastMessage} />
 
 
+            {srFormType === "type2" && (
+            <Modal show={show} size="xl" fullscreen onHide={handleClose} animation={false} backdrop="static" scrollable={true} id="sales_return_create_form">
+                <Modal.Header style={{ backgroundColor: '#ffffff', borderBottom: '1px solid #c3c6d7', padding: '12px 20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px', flexWrap: 'wrap' }}>
+                    <div className="sc-header-title" style={{ display: 'flex', alignItems: 'center', gap: '10px', minWidth: 0, flexShrink: 1 }}>
+                        <h1 style={{ margin: 0, fontSize: '20px', lineHeight: '28px', fontWeight: 700, letterSpacing: '-0.01em', fontFamily: "'Hanken Grotesk', sans-serif", color: '#191c1e', whiteSpace: 'nowrap' }}>
+                            {formData.id ? t("Update Sales Return") + " #" + formData.code : t("Create Sales Return")}
+                        </h1>
+                        {formData.order_code && (
+                            <span style={{ fontSize: '13px', color: '#6b7280', fontWeight: 400, whiteSpace: 'nowrap' }}>
+                                {t("for")} <span style={{ cursor: 'pointer', color: '#004ac6', fontWeight: 600, textDecoration: 'underline dotted' }} onClick={() => openReferenceUpdateForm(formData.order_id, "sales")}>#{formData.order_code}</span>
+                            </span>
+                        )}
+                        {store.zatca?.phase === "2" && store.zatca?.connected && !formData.id && (
+                            <label style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '12px', color: '#434655', cursor: 'pointer', flexShrink: 0, whiteSpace: 'nowrap', marginLeft: '8px' }}>
+                                <input type="checkbox" className="form-check-input m-0" id="sales_return_report_to_zatca" name="sales_return_report_to_zatca" checked={formData.enable_report_to_zatca} onChange={(e) => { formData.enable_report_to_zatca = !formData.enable_report_to_zatca; setFormData({ ...formData }); }} style={{ width: '14px', height: '14px' }} />
+                                {t("Report to Zatca")}
+                            </label>
+                        )}
+                    </div>
+                    <div className="sc-header-actions">
+                        <button type="button" onClick={openPreview}
+                            style={{ display: 'flex', alignItems: 'center', gap: '4px', border: '1px solid #c3c6d7', backgroundColor: '#f7f9fb', color: '#434655', padding: '6px 10px', borderRadius: '4px', fontSize: '12px', fontWeight: 500, cursor: 'pointer' }}>
+                            <i className="bi bi-printer" style={{ fontSize: '13px' }}></i> {t('Print')}
+                        </button>
+                        {selectedProducts && selectedProducts.length > 0 && (
+                            <button type="button" onClick={handleCreate}
+                                style={{ display: 'flex', alignItems: 'center', gap: '4px', border: 'none', backgroundColor: '#004ac6', color: '#ffffff', padding: '6px 14px', borderRadius: '4px', fontSize: '12px', fontWeight: 600, cursor: 'pointer', minWidth: '80px', justifyContent: 'center' }}>
+                                {isProcessing ? <Spinner as="span" animation="border" size="sm" role="status" aria-hidden={true} /> : (formData.id ? t("Update") : t("Create"))}
+                            </button>
+                        )}
+                        <button type="button" onClick={handleClose}
+                            style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', border: '1px solid #c3c6d7', backgroundColor: '#f7f9fb', color: '#434655', padding: '6px 9px', borderRadius: '4px', fontSize: '13px', cursor: 'pointer' }}>
+                            <i className="bi bi-x-lg" />
+                        </button>
+                    </div>
+                </Modal.Header>
+                <Modal.Body style={{ overflowY: 'auto' }}>
+                    {errors && Object.keys(errors).some(k => { const m = Array.isArray(errors[k]) ? errors[k][0] : errors[k]; return !!m; }) && (
+                        <div className="sc-error-banner" style={{
+                            maxHeight: "120px", overflowY: "auto", padding: "8px 12px",
+                            backgroundColor: "#fff0f0", borderLeft: "1px solid #f5c6cb",
+                            borderBottom: "1px solid #f5c6cb",
+                            boxShadow: "-2px 2px 8px rgba(186,26,26,0.12)",
+                            position: "fixed", top: "56px", right: 0, width: "380px", zIndex: 9999,
+                        }}>
+                            <ul style={{ marginBottom: 0, paddingLeft: 16 }}>
+                                {Object.keys(errors).map((key, index) => {
+                                    const message = Array.isArray(errors[key]) ? errors[key][0] : errors[key];
+                                    return message ? (
+                                        <li key={index} style={{ color: "#dc2626", fontSize: '12px' }}>{t(message)}</li>
+                                    ) : null;
+                                })}
+                            </ul>
+                        </div>
+                    )}
+                    <section style={{ backgroundColor: '#ffffff', borderRadius: '8px', border: '1px solid #e2e8f0', marginBottom: '8px' }}>
+                        <div className="sc-header-flex" style={{ borderBottom: '1px solid #c3c6d7' }}>
+                            {/* Left: date, phone, vat, remarks, address */}
+                            <div className="sc-header-left" style={{ padding: '4px 10px', display: 'flex', gap: '6px', alignItems: 'stretch', backgroundColor: '#f2f4f6', borderRight: '1px solid #c3c6d7' }}>
+                                <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                                    {/* Row 1: Date + Phone + WhatsApp */}
+                                    <div className="sc-sub-row" style={{ alignItems: 'center' }}>
+                                        <div className="sc-date-input" style={{ flexShrink: 0 }}>
+                                            <DatePicker
+                                                id="date_str"
+                                                selected={formData.date_str ? new Date(formData.date_str) : null}
+                                                value={formData.date_str ? format(new Date(formData.date_str), "MMMM d, yyyy h:mm aa", { locale: dateLocale }) : null}
+                                                className={`form-control form-control-lg${errors.date_str ? ' is-invalid' : ''}`}
+                                                dateFormat="MMMM d, yyyy h:mm aa"
+                                                locale={dateLocale}
+                                                showTimeSelect
+                                                timeIntervals="1"
+                                                popperProps={{ strategy: 'fixed' }}
+                                                onChange={(value) => { formData.date_str = value; setFormData({ ...formData }); }}
+                                            />
+                                        </div>
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: '2px', flexShrink: 0 }}>
+                                            <input
+                                                id="sales_return_phone" name="sales_return_phone"
+                                                value={formData.phone || ''}
+                                                type="text"
+                                                onChange={(e) => { delete errors["phone"]; setErrors({ ...errors }); formData.phone = e.target.value; setFormData({ ...formData }); }}
+                                                className={`form-control form-control-lg${errors["phone"] ? ' is-invalid' : ''}`}
+                                                placeholder={t('Phone')}
+                                                style={{ width: '154px' }}
+                                            />
+                                            <button type="button" onClick={sendWhatsAppMessage}
+                                                style={{ background: '#25d366', border: 'none', borderRadius: '4px', padding: '7px 8px', cursor: 'pointer', color: '#fff', display: 'inline-flex', alignItems: 'center', flexShrink: 0 }}>
+                                                <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" fill="white" viewBox="0 0 16 16">
+                                                    <path d="M13.601 2.326A7.875 7.875 0 0 0 8.036 0C3.596 0 0 3.597 0 8.036c0 1.417.37 2.805 1.07 4.03L0 16l3.993-1.05a7.968 7.968 0 0 0 4.043 1.085h.003c4.44 0 8.036-3.596 8.036-8.036 0-2.147-.836-4.166-2.37-5.673ZM8.036 14.6a6.584 6.584 0 0 1-3.35-.92l-.24-.142-2.37.622.63-2.31-.155-.238a6.587 6.587 0 0 1-1.018-3.513c0-3.637 2.96-6.6 6.6-6.6 1.764 0 3.42.69 4.67 1.94a6.56 6.56 0 0 1 1.93 4.668c0 3.637-2.96 6.6-6.6 6.6Zm3.61-4.885c-.198-.1-1.17-.578-1.352-.644-.18-.066-.312-.1-.444.1-.13.197-.51.644-.626.775-.115.13-.23.15-.428.05-.198-.1-.837-.308-1.594-.983-.59-.525-.99-1.174-1.11-1.372-.116-.198-.012-.305.088-.403.09-.09.198-.23.298-.345.1-.115.132-.197.2-.33.065-.13.032-.247-.017-.345-.05-.1-.444-1.07-.61-1.46-.16-.384-.323-.332-.444-.338l-.378-.007c-.13 0-.344.048-.525.23s-.688.672-.688 1.64c0 .967.704 1.9.802 2.03.1.13 1.386 2.116 3.365 2.963.47.203.837.324 1.122.414.472.15.902.13 1.24.08.378-.057 1.17-.48 1.336-.942.165-.462.165-.858.116-.943-.048-.084-.18-.132-.378-.23Z" />
+                                                </svg>
+                                            </button>
+                                        </div>
+                                        <input
+                                            id="sales_vat_no" name="sales_vat_no"
+                                            value={formData.vat_no || ''}
+                                            type="text"
+                                            onChange={(e) => { delete errors["vat_no"]; setErrors({ ...errors }); formData.vat_no = e.target.value; setFormData({ ...formData }); }}
+                                            className={`form-control form-control-lg${errors["vat_no"] ? ' is-invalid' : ''}`}
+                                            placeholder={t('VAT NO.')}
+                                            style={{ width: '180px', flexShrink: 0 }}
+                                        />
+                                    </div>
+                                    {/* Row 2: Remarks + Address */}
+                                    <div className="sc-sub-row" style={{ alignItems: 'flex-end' }}>
+                                        <textarea
+                                            value={formData.remarks || ''}
+                                            onChange={(e) => { formData.remarks = e.target.value; setFormData({ ...formData }); }}
+                                            onKeyDown={(e) => { if (e.key === 'Enter') { e.stopPropagation(); e.nativeEvent.stopImmediatePropagation(); } }}
+                                            className="form-control"
+                                            id="remarks"
+                                            placeholder={t('Remarks')}
+                                            style={{ resize: 'none', fontSize: '13px', height: '38px', flex: '1 1 0', minWidth: 0 }}
+                                        />
+                                        <textarea
+                                            value={formData.address || ''}
+                                            onChange={(e) => { delete errors["address"]; setErrors({ ...errors }); formData.address = e.target.value; setFormData({ ...formData }); }}
+                                            onKeyDown={(e) => { if (e.key === 'Enter') { e.stopPropagation(); e.nativeEvent.stopImmediatePropagation(); } }}
+                                            className={`form-control${errors["address"] ? ' is-invalid' : ''}`}
+                                            id="address"
+                                            placeholder={t('Address')}
+                                            style={{ resize: 'none', fontSize: '13px', height: '38px', flex: '1 1 0', minWidth: 0 }}
+                                        />
+                                    </div>
+                                </div>
+                            </div>
+                            {/* Right: Customer info */}
+                            {selectedCustomers.length > 0 && formData.customer_id ? (() => {
+                                const c = selectedCustomers[0];
+                                const storeId = localStorage.getItem("store_id");
+                                const cs = c?.stores?.[storeId];
+                                const sep = <span style={{ width: '1px', height: '12px', background: '#c3c6d7', flexShrink: 0 }} />;
+                                const phone = c.phone || formData.phone;
+                                const phone2 = c.phone2;
+                                const vatNo = c.vat_no || formData.vat_no;
+                                return (
+                                    <div className="sc-header-right" style={{ padding: '4px 14px', background: 'rgba(0,74,198,0.03)', borderLeft: '1px solid #e2e8f0', display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: '6px', overflow: 'hidden', minHeight: '40px' }}>
+                                        {c.code && <span style={{ background: '#dbeafe', color: '#1e40af', borderRadius: '4px', padding: '1px 7px', fontSize: '11px', fontWeight: 700, letterSpacing: '0.03em', flexShrink: 0 }}>{c.code}</span>}
+                                        <span style={{ fontWeight: 700, fontSize: '13px', color: '#191c1e', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', minWidth: 0, maxWidth: '280px' }}>{c.name}</span>
+                                        {c.name_in_arabic && <><span style={{ color: '#c3c6d7', fontSize: '11px', flexShrink: 0 }}>|</span><span style={{ fontSize: '11px', color: '#64748b', fontFamily: 'Arial, sans-serif', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', minWidth: 0, maxWidth: '200px' }}>{c.name_in_arabic}</span></>}
+                                        {(phone || phone2 || vatNo) && sep}
+                                        {phone && <span style={{ display: 'inline-flex', alignItems: 'center', gap: '3px', fontSize: '11px', color: '#374151', flexShrink: 0 }}><i className="bi bi-telephone" style={{ color: '#6b7280', fontSize: '10px' }} />{phone}</span>}
+                                        {phone && phone2 && sep}
+                                        {phone2 && <span style={{ display: 'inline-flex', alignItems: 'center', gap: '3px', fontSize: '11px', color: '#374151', flexShrink: 0 }}><i className="bi bi-telephone" style={{ color: '#6b7280', fontSize: '10px' }} />{phone2}</span>}
+                                        {(phone || phone2) && vatNo && sep}
+                                        {vatNo && <span style={{ display: 'inline-flex', alignItems: 'center', gap: '3px', fontSize: '11px', color: '#374151', flexShrink: 0 }}><i className="bi bi-receipt" style={{ color: '#6b7280', fontSize: '10px' }} /><span style={{ color: '#6b7280' }}>VAT:</span>{vatNo}</span>}
+                                        {sep}
+                                        <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', fontSize: '11px', cursor: 'pointer', userSelect: 'none', flexShrink: 0 }}
+                                            onClick={() => openCustomerPending(selectedCustomers[0])}
+                                            title={t("Click to view pendings")}>
+                                            <i className="bi bi-wallet2" style={{ color: '#004ac6', fontSize: '11px' }} />
+                                            <span style={{ color: '#6b7280' }}>{t("Cr.Balance")}:</span>
+                                            <strong style={{ color: (cs?.credit_balance || 0) > 0 ? '#dc2626' : '#16a34a', textDecoration: 'underline dotted' }}><Amount amount={trimTo2Decimals(cs?.credit_balance || 0)} /></strong>
+                                            <i className="bi bi-box-arrow-up-right" style={{ color: '#004ac6', fontSize: '9px' }} />
+                                        </span>
+                                        {(c.credit_limit > 0) && <>{sep}<span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', fontSize: '11px', flexShrink: 0 }}>
+                                            <i className="bi bi-shield-check" style={{ color: '#6b7280', fontSize: '10px' }} />
+                                            <span style={{ color: '#6b7280' }}>{t("Limit")}:</span>
+                                            <strong style={{ color: '#374151' }}><Amount amount={trimTo2Decimals(c.credit_limit)} /></strong>
+                                        </span></>}
+                                    </div>
+                                );
+                            })() : <div className="sc-header-right" />}
+                        </div>
+                    </section>
+
+                    {selectedProducts && selectedProducts.length === 0 && "Already returned all products"}
+                    {selectedProducts && selectedProducts.length > 0 && <form className="needs-validation" onSubmit={handleCreate}>
+                        <div className="sr-products-table-wrap" style={{ overflowX: 'auto', maxHeight: '55vh', overflowY: 'auto', marginTop: '10px', border: '1px solid #e2e8f0', borderRadius: '8px' }}>
+                            <table style={{ width: '100%', borderCollapse: 'collapse', tableLayout: 'fixed' }}>
+                                <colgroup>
+                                    {spColumns.filter(c => c.visible).map(col => (
+                                        <col key={col.key} style={{ width: `${srColWidths[col.key] ?? SR_COL_DEFAULTS[col.key] ?? 100}px` }} />
+                                    ))}
+                                </colgroup>
+                                <thead style={{ backgroundColor: '#f1f5f9', position: 'sticky', top: 0, zIndex: 1 }}>
+                                    {(() => {
+                                        const thStyle = { padding: '10px 12px', fontWeight: 600, borderBottom: '2px solid #c3c6d7', whiteSpace: 'nowrap', fontSize: '12px', color: '#434655', position: 'relative', overflow: 'hidden' };
+                                        const resizeHandle = (colKey) => (
+                                            <div
+                                                onMouseDown={(e) => startSrColResize(e, colKey, srColWidths[colKey] ?? SR_COL_DEFAULTS[colKey] ?? 60)}
+                                                style={{ position: 'absolute', right: 0, top: '20%', bottom: '20%', width: '4px', cursor: 'col-resize', zIndex: 2, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '1px', borderRadius: '2px', backgroundColor: 'transparent' }}
+                                                onMouseEnter={e => { e.currentTarget.style.backgroundColor = '#dbeafe'; Array.from(e.currentTarget.children).forEach(d => d.style.backgroundColor = '#3b82f6'); }}
+                                                onMouseLeave={e => { e.currentTarget.style.backgroundColor = 'transparent'; Array.from(e.currentTarget.children).forEach(d => d.style.backgroundColor = '#b0b7c3'); }}
+                                            >
+                                                <div style={{ width: '1px', height: '100%', backgroundColor: '#b0b7c3', borderRadius: '1px', pointerEvents: 'none' }} />
+                                                <div style={{ width: '1px', height: '100%', backgroundColor: '#b0b7c3', borderRadius: '1px', pointerEvents: 'none' }} />
+                                            </div>
+                                        );
+                                        return (
+                                            <tr style={{ fontSize: '12px', fontWeight: 600, color: '#434655', lineHeight: '16px' }}>
+                                                {spColumns.filter(c => c.visible).map(col => {
+                                                    if (col.key === 'select') return <th key={col.key} style={{ ...thStyle, padding: 0, width: '32px' }}><button type="button" title={t("Table Settings")} onClick={() => setShowSPTableSettings(!showSPTableSettings)} style={{ background: 'none', border: 'none', padding: '2px 0', cursor: 'pointer', color: '#6b7280', display: 'flex', alignItems: 'center', justifyContent: 'center', width: '100%', height: '100%' }} onMouseEnter={e => e.currentTarget.style.color='#191c1e'} onMouseLeave={e => e.currentTarget.style.color='#6b7280'}><i className="bi bi-gear-fill" style={{ fontSize: '11px' }}></i></button></th>;
+                                                    if (col.key === 'si_no') return <th key={col.key} style={thStyle}>#&nbsp;{resizeHandle('si_no')}</th>;
+                                                    if (col.key === 'part_number') return <th key={col.key} style={thStyle}>{t('Part No.')}{resizeHandle('part_number')}</th>;
+                                                    if (col.key === 'name') return <th key={col.key} style={thStyle}>{t('Name')}{resizeHandle('name')}</th>;
+                                                    if (col.key === 'info') return <th key={col.key} style={thStyle}>{t('Info')}{resizeHandle('info')}</th>;
+                                                    if (col.key === 'purchase_unit_price') return <th key={col.key} style={{ ...thStyle, textAlign: 'right' }}>{t('P. Unit Price')}{resizeHandle('purchase_unit_price')}</th>;
+                                                    if (col.key === 'stock') return <th key={col.key} style={thStyle}>{t('Stock')}{resizeHandle('stock')}</th>;
+                                                    if (col.key === 'qty') return <th key={col.key} style={{ ...thStyle, textAlign: 'center' }}>{t('Qty')}{resizeHandle('qty')}</th>;
+                                                    if (col.key === 'warehouse') return store.settings?.enable_warehouse_module ? <th key={col.key} style={thStyle}>{t('Add Stock To')}{resizeHandle('warehouse')}</th> : null;
+                                                    if (col.key === 'unit_price') return <th key={col.key} style={{ ...thStyle, textAlign: 'right' }}>{t('U. Price (ex. VAT)')}{resizeHandle('unit_price')}</th>;
+                                                    if (col.key === 'unit_price_with_vat') return <th key={col.key} style={{ ...thStyle, textAlign: 'right' }}>{t('U. Price (inc. VAT)')}{resizeHandle('unit_price_with_vat')}</th>;
+                                                    if (col.key === 'unit_discount') return <th key={col.key} style={{ ...thStyle, textAlign: 'right' }}>{t('U. Disc. (ex. VAT)')}{resizeHandle('unit_discount')}</th>;
+                                                    if (col.key === 'unit_discount_with_vat') return <th key={col.key} style={{ ...thStyle, textAlign: 'right' }}>{t('U. Disc. (inc. VAT)')}{resizeHandle('unit_discount_with_vat')}</th>;
+                                                    if (col.key === 'unit_discount_percent') return <th key={col.key} style={{ ...thStyle, textAlign: 'right' }}>{t('U. Disc. %')}{resizeHandle('unit_discount_percent')}</th>;
+                                                    if (col.key === 'price') return <th key={col.key} style={{ ...thStyle, textAlign: 'right' }}>{t('Total (ex. VAT)')}{resizeHandle('price')}</th>;
+                                                    if (col.key === 'price_with_vat') return <th key={col.key} style={{ ...thStyle, textAlign: 'right' }}>{t('Total (inc. VAT)')}{resizeHandle('price_with_vat')}</th>;
+                                                    return null;
+                                                })}
+                                            </tr>
+                                        );
+                                    })()}
+                                </thead>
+                                <tbody style={{ fontSize: '13px', color: '#191c1e' }}>
+                                    {selectedProducts.map((product, index) => {
+                                        const duplicateIndexes = selectedProducts
+                                            .map((p, i) => p.product_id === product.product_id ? i : -1)
+                                            .filter(i => i !== -1);
+                                        const duplicateCount = duplicateIndexes.length;
+                                        return (
+                                            <tr key={index} style={{ borderBottom: '1px solid #e2e8f0', transition: 'background-color 0.15s' }}
+                                                onMouseEnter={e => { e.currentTarget.style.backgroundColor = '#f8fafc'; }}
+                                                onMouseLeave={e => { e.currentTarget.style.backgroundColor = ''; }}>
+                                                {spColumns.filter(c => c.visible).map(col => {
+                                                    if (col.key === 'select') return (
+                                                        <td key="select" style={{ verticalAlign: 'middle', padding: '4px 8px', width: "20px", whiteSpace: "nowrap" }}>
+                                                            <input
+                                                                className="form-check-input"
+                                                                id={`${"select_sales_return_product_" + index}`}
+                                                                name={`${"select_sales_return_product_" + index}`}
+                                                                type="checkbox"
+                                                                checked={selectedProducts[index].selected}
+                                                                onChange={(e) => {
+                                                                    console.log("e.target.value:", e.target.value)
+                                                                    selectedProducts[index].selected = !selectedProducts[index].selected;
+                                                                    setSelectedProducts([...selectedProducts]);
+                                                                    reCalculate();
+                                                                }} />
+                                                        </td>);
+                                                    if (col.key === 'si_no') return (<td key="si_no" style={{ verticalAlign: 'middle', padding: '4px 8px', width: "auto", whiteSpace: "nowrap" }}>{index + 1}</td>);
+                                                    // eslint-disable-next-line no-lone-blocks
+                                                    {/*<td style={{ verticalAlign: 'middle', padding: '4px 8px', width: "auto", whiteSpace: "nowrap" }}>
+                                                <OverflowTooltip maxWidth={120} value={product.prefix_part_number ? product.prefix_part_number + " - " + product.part_number : product.part_number} />
+                                            </td>*/}
+                                                    if (col.key === 'part_number') return (<td key="part_number" style={{ verticalAlign: 'middle', padding: '4px 8px' }}>
+                                                        <div style={{ display: 'flex', alignItems: 'center' }}>
+                                                        <input type="text" id={`${"sales_return_product_part_number" + index}`}
+                                                            name={`${"sales_return_product_part_number" + index}`}
+                                                            onWheel={(e) => e.target.blur()}
+                                                            value={product.part_number}
+                                                            className={`form-control text-start ${errors["part_number_" + index] ? 'is-invalid' : ''} ${warnings["part_number_" + index] ? 'border-warning text-warning' : ''}`}
+                                                            onKeyDown={(e) => {
+                                                                RunKeyActions(e, product);
+                                                            }}
+                                                            placeholder={t("Part No.")} onChange={(e) => {
+                                                                delete errors["part_number_" + index];
+                                                                setErrors({ ...errors });
+
+                                                                if (!e.target.value) {
+                                                                    selectedProducts[index].part_number = "";
+                                                                    setSelectedProducts([...selectedProducts]);
+                                                                    return;
+                                                                }
+                                                                selectedProducts[index].part_number = e.target.value;
+                                                                setSelectedProducts([...selectedProducts]);
+                                                            }} />
+                                                        {(errors[`part_number_${index}`] || warnings[`part_number_${index}`]) && (
+                                                            <OverlayTrigger placement="top" overlay={<Tooltip>{errors[`part_number_${index}`] || warnings[`part_number_${index}`]}</Tooltip>}>
+                                                                <i className={`bi bi-exclamation-circle-fill ${errors[`part_number_${index}`] ? 'text-danger' : 'text-warning'} ms-2`} style={{ fontSize: '0.85rem', cursor: 'help' }}></i>
+                                                            </OverlayTrigger>
+                                                        )}
+                                                        </div>
+                                                    </td>);
+                                                    if (col.key === 'name') return (<td key="name" style={{ verticalAlign: 'middle', padding: '4px 8px' }}>
+                                                        <div className="input-group" style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
+                                                            <input type="text" id={`${"sales_return_product_name" + index}`}
+                                                                name={`${"sales_return_product_name" + index}`}
+                                                                onWheel={(e) => e.target.blur()}
+                                                                value={product.name}
+                                                                className={`form-control text-start ${errors["name_" + index] ? 'is-invalid' : ''} ${warnings["name_" + index] ? 'border-warning text-warning' : ''}`}
+                                                                onKeyDown={(e) => {
+                                                                    RunKeyActions(e, product);
+                                                                }}
+                                                                placeholder="Name" onChange={(e) => {
+                                                                    delete errors["name_" + index];
+                                                                    setErrors({ ...errors });
+
+                                                                    if (!e.target.value) {
+                                                                        selectedProducts[index].name = "";
+                                                                        setSelectedProducts([...selectedProducts]);
+                                                                        console.log("errors:", errors);
+                                                                        return;
+                                                                    }
+
+                                                                    selectedProducts[index].name = e.target.value;
+                                                                    setSelectedProducts([...selectedProducts]);
+                                                                }} />
+
+                                                            <div style={{ display: 'flex', alignItems: 'center', marginLeft: '8px', position: 'relative' }}>
+                                                                <div
+                                                                    style={{ color: "blue", cursor: "pointer", marginLeft: "2px" }}
+                                                                    onClick={() => {
+                                                                        openUpdateProductForm(product.product_id);
+                                                                    }}
+                                                                >
+                                                                    <i className="bi bi-pencil"> </i>
+                                                                </div>
+
+                                                                <div
+                                                                    style={{ color: "blue", cursor: "pointer", marginLeft: "8px" }}
+                                                                    onClick={() => {
+                                                                        openProductDetails(product.product_id);
+                                                                    }}
+                                                                >
+                                                                    <i className="bi bi-eye"> </i>
+                                                                </div>
+
+                                                                {duplicateCount > 1 && (
+                                                                    <OverlayTrigger
+                                                                        placement="top"
+                                                                        overlay={
+                                                                            <Tooltip id={`duplicate-tooltip-input-${index}`}>
+                                                                                {`${duplicateCount - 1} Duplicate${(duplicateCount - 1) > 1 ? 's' : ''}`}
+                                                                            </Tooltip>
+                                                                        }
+                                                                    >
+                                                                        <span style={{
+                                                                            position: 'absolute',
+                                                                            top: '50%',
+                                                                            right: '48px',
+                                                                            transform: 'translateY(-50%)',
+                                                                            display: 'inline-flex',
+                                                                            alignItems: 'center',
+                                                                            justifyContent: 'center',
+                                                                            width: '22px',
+                                                                            height: '22px',
+                                                                            borderRadius: '50%',
+                                                                            background: '#ffc107',
+                                                                            color: '#212529',
+                                                                            fontWeight: 'bold',
+                                                                            fontSize: '0.7rem',
+                                                                            boxShadow: '0 1px 4px rgba(0,0,0,0.08)',
+                                                                            cursor: 'pointer',
+                                                                            border: '2px solid #fff',
+                                                                            zIndex: 2
+                                                                        }}>
+                                                                            {duplicateCount - 1}
+                                                                        </span>
+                                                                    </OverlayTrigger>
+                                                                )}
+                                                            </div>
+                                                        </div>
+                                                        {(errors[`name_${index}`] || warnings[`name_${index}`]) && (
+                                                            <i
+                                                                className={`bi bi-exclamation-circle-fill ${errors[`name_${index}`] ? 'text-danger' : 'text-warning'} ms-2`}
+                                                                data-bs-toggle="tooltip"
+                                                                data-bs-placement="top"
+                                                                data-error={t(errors[`name_${index}`]) || ''}
+                                                                data-warning={t(warnings[`name_${index}`]) || ''}
+                                                                title={errors[`name_${index}`] || warnings[`name_${index}`] || ''}
+                                                                style={{
+                                                                    fontSize: '1rem',
+                                                                    cursor: 'pointer',
+                                                                    whiteSpace: 'nowrap',
+                                                                }}
+                                                            ></i>
+                                                        )}
+                                                    </td>);
+                                                    if (col.key === 'info') return (<td key="info" style={{ verticalAlign: 'middle', padding: '4px 6px', textAlign: 'center' }}>
+                                                        <Dropdown drop="auto">
+                                                            <Dropdown.Toggle as="span" id={`info-dd-sr-${index}`} style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: '28px', height: '28px', borderRadius: '6px', cursor: 'pointer', color: '#6b7280', transition: 'background 0.15s, color 0.15s' }}
+                                                                onMouseEnter={e => { e.currentTarget.style.background = '#f1f5f9'; e.currentTarget.style.color = '#191c1e'; }}
+                                                                onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = '#6b7280'; }}>
+                                                                <i className="bi bi-three-dots-vertical" style={{ fontSize: '15px', pointerEvents: 'none' }}></i>
+                                                            </Dropdown.Toggle>
+                                                            <Dropdown.Menu style={{ zIndex: 9999, fontSize: '13px', minWidth: '210px', boxShadow: '0 4px 16px rgba(0,0,0,0.12)', border: '1px solid #e2e8f0', borderRadius: '8px', padding: '4px' }} popperConfig={{ modifiers: [{ name: 'preventOverflow', options: { boundary: 'viewport' } }] }}>
+                                                                <Dropdown.Item style={{ borderRadius: '6px', padding: '7px 12px' }} onClick={() => openLinkedProducts(product)}>
+                                                                    <i className="bi bi-link-45deg me-2" style={{ color: '#6366f1' }}></i>{t("Linked Products")} <span className="text-muted" style={{ fontSize: '11px' }}>({getShortcut('linkedProducts')})</span>
+                                                                </Dropdown.Item>
+                                                                <Dropdown.Item style={{ borderRadius: '6px', padding: '7px 12px' }} onClick={() => openProductImages(product.product_id)}>
+                                                                    <i className="bi bi-images me-2" style={{ color: '#0ea5e9' }}></i>{t("Images")} <span className="text-muted" style={{ fontSize: '11px' }}>({getShortcut('images')})</span>
+                                                                </Dropdown.Item>
+                                                                <Dropdown.Divider style={{ margin: '4px 0' }} />
+                                                                <Dropdown.Item style={{ borderRadius: '6px', padding: '7px 12px' }} onClick={() => openProductHistory(product)}>
+                                                                    <i className="bi bi-journal-text me-2" style={{ color: '#64748b' }}></i>{t("Product History")} <span className="text-muted" style={{ fontSize: '11px' }}>({getShortcut('productHistory')})</span>
+                                                                </Dropdown.Item>
+                                                                <Dropdown.Item style={{ borderRadius: '6px', padding: '7px 12px' }} onClick={() => openSalesHistory(product)}>
+                                                                    <i className="bi bi-receipt me-2" style={{ color: '#16a34a' }}></i>{t("Sales History")} <span className="text-muted" style={{ fontSize: '11px' }}>({getShortcut('salesHistory')})</span>
+                                                                </Dropdown.Item>
+                                                                <Dropdown.Item style={{ borderRadius: '6px', padding: '7px 12px' }} onClick={() => openSalesReturnHistory(product)}>
+                                                                    <i className="bi bi-arrow-return-left me-2" style={{ color: '#dc2626' }}></i>{t("Sales Return History")} <span className="text-muted" style={{ fontSize: '11px' }}>({getShortcut('salesReturnHistory')})</span>
+                                                                </Dropdown.Item>
+                                                                <Dropdown.Item style={{ borderRadius: '6px', padding: '7px 12px' }} onClick={() => openPurchaseHistory(product)}>
+                                                                    <i className="bi bi-bag me-2" style={{ color: '#d97706' }}></i>{t("Purchase History")} <span className="text-muted" style={{ fontSize: '11px' }}>({getShortcut('purchaseHistory')})</span>
+                                                                </Dropdown.Item>
+                                                                <Dropdown.Item style={{ borderRadius: '6px', padding: '7px 12px' }} onClick={() => openPurchaseReturnHistory(product)}>
+                                                                    <i className="bi bi-bag-x me-2" style={{ color: '#ea580c' }}></i>{t("Purchase Return History")} <span className="text-muted" style={{ fontSize: '11px' }}>({getShortcut('purchaseReturnHistory')})</span>
+                                                                </Dropdown.Item>
+                                                                <Dropdown.Item style={{ borderRadius: '6px', padding: '7px 12px' }} onClick={() => openDeliveryNoteHistory(product)}>
+                                                                    <i className="bi bi-truck me-2" style={{ color: '#0891b2' }}></i>{t("Delivery Note History")} <span className="text-muted" style={{ fontSize: '11px' }}>({getShortcut('deliveryNoteHistory')})</span>
+                                                                </Dropdown.Item>
+                                                                <Dropdown.Item style={{ borderRadius: '6px', padding: '7px 12px' }} onClick={() => openQuotationHistory(product, "quotation")}>
+                                                                    <i className="bi bi-file-earmark-text me-2" style={{ color: '#7c3aed' }}></i>{t("Quotation History")} <span className="text-muted" style={{ fontSize: '11px' }}>({getShortcut('quotationHistory')})</span>
+                                                                </Dropdown.Item>
+                                                                <Dropdown.Item style={{ borderRadius: '6px', padding: '7px 12px' }} onClick={() => openQuotationSalesHistory(product)}>
+                                                                    <i className="bi bi-file-earmark-check me-2" style={{ color: '#0284c7' }}></i>{t("Qtn. Sales History")} <span className="text-muted" style={{ fontSize: '11px' }}>({getShortcut('quotationSalesHistory')})</span>
+                                                                </Dropdown.Item>
+                                                                <Dropdown.Item style={{ borderRadius: '6px', padding: '7px 12px' }} onClick={() => openQuotationSalesReturnHistory(product)}>
+                                                                    <i className="bi bi-file-earmark-x me-2" style={{ color: '#be123c' }}></i>{t("Qtn. Sales Return History")} <span className="text-muted" style={{ fontSize: '11px' }}>({getShortcut('quotationSalesReturnHistory')})</span>
+                                                                </Dropdown.Item>
+                                                            </Dropdown.Menu>
+                                                        </Dropdown>
+                                                    </td>);
+                                                    if (col.key === 'purchase_unit_price') return (<td key="purchase_unit_price" style={{ verticalAlign: 'middle', padding: '0.25rem' }}>
+                                                        <div className="input-group">
+                                                            <input
+                                                                type="number"
+                                                                id={`sales_return_product_purchase_unit_price_${index}`}
+                                                                name={`sales_return_product_purchase_unit_price_${index}`}
+                                                                className={`form-control text-end ${errors["purchase_unit_price_" + index] ? 'is-invalid' : ''} ${warnings["purchase_unit_price_" + index] ? 'border-warning text-warning' : ''}`}
+                                                                onWheel={(e) => e.target.blur()}
+                                                                value={product.purchase_unit_price}
+                                                                placeholder={t("Purchase Unit Price")}
+                                                                ref={(el) => {
+                                                                    if (!inputRefs.current[index]) inputRefs.current[index] = {};
+                                                                    inputRefs.current[index][`${"sales_return_product_purchase_unit_price_" + index}`] = el;
+                                                                }}
+                                                                onFocus={() => {
+                                                                    if (timerRef.current) clearTimeout(timerRef.current);
+                                                                    timerRef.current = setTimeout(() => {
+                                                                        inputRefs.current[index][`${"sales_return_product_purchase_unit_price_" + index}`].select();
+                                                                    }, 100);
+                                                                }}
+                                                                onKeyDown={(e) => {
+                                                                    RunKeyActions(e, product);
+                                                                    if (timerRef.current) clearTimeout(timerRef.current);
+
+                                                                    if (e.key === "Backspace") {
+                                                                        selectedProducts[index].purchase_unit_price = "";
+                                                                        setSelectedProducts([...selectedProducts]);
+                                                                        timerRef.current = setTimeout(() => {
+                                                                            checkErrors(index);
+                                                                            reCalculate(index);
+                                                                        }, 100);
+                                                                    } else if (e.key === "ArrowLeft") {
+                                                                        if ((index + 1) === selectedProducts.length) {
+                                                                        } else {
+                                                                            timerRef.current = setTimeout(() => {
+                                                                                inputRefs.current[(index + 1)][`${"sales_return_unit_discount_with_vat_" + (index + 1)}`].focus();
+                                                                            }, 100);
+                                                                        }
+                                                                    }
+                                                                }}
+                                                                onChange={(e) => {
+                                                                    if (timerRef.current) clearTimeout(timerRef.current);
+
+                                                                    if (parseFloat(e.target.value) === 0) {
+                                                                        selectedProducts[index].purchase_unit_price = e.target.value;
+                                                                        setSelectedProducts([...selectedProducts]);
+                                                                        timerRef.current = setTimeout(() => {
+                                                                            checkErrors(index);
+                                                                            reCalculate(index);
+                                                                        }, 100);
+                                                                        return;
+                                                                    }
+
+                                                                    if (!e.target.value) {
+                                                                        selectedProducts[index].purchase_unit_price = e.target.value;
+                                                                        setSelectedProducts([...selectedProducts]);
+                                                                        timerRef.current = setTimeout(() => {
+                                                                            checkWarnings(index);
+                                                                            checkErrors(index);
+                                                                            reCalculate(index);
+                                                                        }, 100);
+                                                                        return;
+                                                                    }
+
+                                                                    if (e.target.value) {
+                                                                        selectedProducts[index].purchase_unit_price = parseFloat(e.target.value);
+                                                                        setSelectedProducts([...selectedProducts]);
+                                                                    }
+
+                                                                    checkErrors(index);
+                                                                }}
+                                                            />
+
+                                                            {(errors[`purchase_unit_price_${index}`] || warnings[`purchase_unit_price_${index}`]) && (
+                                                                <i
+                                                                    className={`bi bi-exclamation-circle-fill ${errors[`purchase_unit_price_${index}`] ? 'text-danger' : 'text-warning'} ms-2`}
+                                                                    data-bs-toggle="tooltip"
+                                                                    data-bs-placement="top"
+                                                                    data-error={t(errors[`purchase_unit_price_${index}`]) || ''}
+                                                                    data-warning={t(warnings[`purchase_unit_price_${index}`]) || ''}
+                                                                    title={errors[`purchase_unit_price_${index}`] || warnings[`purchase_unit_price_${index}`] || ''}
+                                                                    style={{
+                                                                        fontSize: '1rem',
+                                                                        cursor: 'pointer',
+                                                                        whiteSpace: 'nowrap',
+                                                                    }}
+                                                                ></i>
+                                                            )}
+                                                        </div>
+                                                    </td>);
+                                                    if (col.key === 'stock') return (<td key="stock"
+                                                        style={{
+                                                            verticalAlign: 'middle',
+                                                            padding: '4px 8px',
+                                                            whiteSpace: 'nowrap',
+                                                            width: 'auto',
+                                                            position: 'relative',
+                                                        }}
+                                                    >
+                                                        <OverlayTrigger
+                                                            placement="top"
+                                                            overlay={
+                                                                <Tooltip id={`stock-tooltip-${index}`}>
+                                                                    {(() => {
+                                                                        const warehouseStocks = selectedProducts[index].warehouse_stocks || {};
+                                                                        const orderedEntries = [];
+                                                                        if (warehouseStocks.hasOwnProperty("main_store")) {
+                                                                            orderedEntries.push(["main_store", warehouseStocks["main_store"]]);
+                                                                        }
+                                                                        Object.entries(warehouseStocks).forEach(([key, value]) => {
+                                                                            if (key !== "main_store") {
+                                                                                orderedEntries.push([key, value]);
+                                                                            }
+                                                                        });
+                                                                        const details = orderedEntries
+                                                                            .map(([key, value]) => {
+                                                                                let name = key === "main_store" ? t("Main Store") : key.replace(/^wh/, "WH").toUpperCase();
+                                                                                return `${name}: ${value}`;
+                                                                            })
+                                                                            .join(", ");
+                                                                        return details ? `(${details})` : "(" + t("Main Store") + ": " + selectedProducts[index].stock + ")";
+                                                                    })()}
+                                                                </Tooltip>
+                                                            }
+                                                        >
+                                                            <span style={{ cursor: "pointer", textDecoration: "underline dotted" }}>
+                                                                {selectedProducts[index].stock}
+                                                            </span>
+                                                        </OverlayTrigger>
+                                                    </td>);
+                                                    if (col.key === 'qty') return (<td key="qty" style={{
+                                                        verticalAlign: 'middle',
+                                                        padding: '4px 8px',
+                                                        whiteSpace: 'nowrap',
+                                                        width: 'auto',
+                                                        position: 'relative',
+                                                    }} >
+                                                        <div className="d-flex align-items-center" style={{ minWidth: 0 }}>
+                                                            <div className="input-group flex-nowrap" style={{ flex: '1 1 auto', minWidth: 0 }}>
+                                                                <input type="number"
+                                                                    style={{ minWidth: "40px", maxWidth: "120px" }}
+                                                                    id={`${"sales_return_product_quantity_" + index}`}
+                                                                    name={`${"sales_return_product_quantity_" + index}`}
+                                                                    className={`form-control text-end ${errors["quantity_" + index] ? 'is-invalid' : warnings["quantity_" + index] ? 'border-warning text-warning' : ''}`}
+                                                                    onWheel={(e) => e.target.blur()}
+                                                                    disabled={isZatcaReported}
+                                                                    value={product.quantity}
+                                                                    placeholder="Quantity"
+                                                                    ref={(el) => {
+                                                                        if (!inputRefs.current[index]) inputRefs.current[index] = {};
+                                                                        inputRefs.current[index][`${"sales_return_product_quantity_" + index}`] = el;
+                                                                    }}
+                                                                    onFocus={() => {
+                                                                        if (timerRef.current) clearTimeout(timerRef.current);
+                                                                        timerRef.current = setTimeout(() => {
+                                                                            inputRefs.current[index][`${"sales_return_product_quantity_" + index}`].select();
+                                                                        }, 100);
+                                                                    }}
+                                                                    onKeyDown={(e) => {
+                                                                        RunKeyActions(e, product);
+                                                                        if (timerRef.current) clearTimeout(timerRef.current);
+                                                                        if (e.key === "Backspace") {
+                                                                            selectedProducts[index].quantity = "";
+                                                                            setSelectedProducts([...selectedProducts]);
+                                                                            timerRef.current = setTimeout(() => {
+                                                                                checkWarnings(index);
+                                                                                checkErrors(index);
+                                                                                CalCulateLineTotals(index);
+                                                                                reCalculate(index);
+                                                                            }, 100);
+                                                                        } else if (e.key === "ArrowLeft") {
+                                                                            timerRef.current = setTimeout(() => {
+                                                                                inputRefs.current[index][`${"sales_return_product_purchase_unit_price_" + index}`].focus();
+                                                                            }, 100);
+                                                                        }
+                                                                    }}
+                                                                    onChange={(e) => {
+                                                                        setErrors({ ...errors });
+                                                                        if (timerRef.current) clearTimeout(timerRef.current);
+
+                                                                        if (parseFloat(e.target.value) === 0) {
+                                                                            selectedProducts[index].quantity = e.target.value;
+                                                                            setSelectedProducts([...selectedProducts]);
+                                                                            timerRef.current = setTimeout(() => {
+                                                                                checkWarnings(index);
+                                                                                checkErrors(index);
+                                                                                CalCulateLineTotals(index);
+                                                                                reCalculate(index);
+                                                                            }, 100);
+                                                                            return;
+                                                                        }
+
+
+                                                                        if (!e.target.value) {
+                                                                            selectedProducts[index].quantity = e.target.value;
+                                                                            setSelectedProducts([...selectedProducts]);
+                                                                            timerRef.current = setTimeout(() => {
+                                                                                checkErrors(index);
+                                                                                checkWarnings(index);
+                                                                                CalCulateLineTotals(index);
+                                                                                reCalculate(index);
+                                                                            }, 100);
+                                                                            return;
+                                                                        }
+
+
+                                                                        product.quantity = parseFloat(e.target.value);
+                                                                        selectedProducts[index].quantity = parseFloat(e.target.value);
+                                                                        timerRef.current = setTimeout(() => {
+                                                                            checkErrors(index);
+                                                                            checkWarnings(index);
+                                                                            CalCulateLineTotals(index);
+                                                                            reCalculate(index);
+                                                                        }, 100);
+                                                                    }} />
+                                                                <span className="input-group-text text-nowrap">
+                                                                    {selectedProducts[index].unit ? selectedProducts[index].unit[0]?.toUpperCase() : 'P'}
+                                                                </span>
+                                                            </div>
+                                                            {(errors[`quantity_${index}`] || warnings[`quantity_${index}`]) && (
+                                                                <i
+                                                                    className={`bi bi-exclamation-circle-fill ${errors[`quantity_${index}`] ? 'text-danger' : 'text-warning'} ms-2`}
+                                                                    data-bs-toggle="tooltip"
+                                                                    data-bs-placement="top"
+                                                                    data-error={t(errors[`quantity_${index}`]) || ''}
+                                                                    data-warning={t(warnings[`quantity_${index}`]) || ''}
+                                                                    title={errors[`quantity_${index}`] || warnings[`quantity_${index}`] || ''}
+                                                                    style={{
+                                                                        fontSize: '1rem',
+                                                                        cursor: 'pointer',
+                                                                        whiteSpace: 'nowrap',
+                                                                    }}
+                                                                ></i>
+                                                            )}
+                                                        </div>
+                                                    </td>);
+                                                    if (col.key === 'warehouse') return store.settings?.enable_warehouse_module ? (<td key="warehouse" style={{
+                                                        verticalAlign: 'middle',
+                                                        padding: '4px 8px',
+                                                        whiteSpace: 'nowrap',
+                                                        width: 'auto',
+                                                        position: 'relative',
+                                                    }} >
+                                                        <select
+                                                            id={`sales_return_product_warehouse_${index}`}
+                                                            name={`sales_return_product_warehouse_${index}`}
+                                                            className="form-control"
+                                                            value={selectedProducts[index].warehouse_id || "main_store"}
+                                                            onChange={(e) => {
+                                                                const selectedValue = e.target.value;
+
+                                                                if (selectedValue === "main_store") {
+                                                                    selectedProducts[index].warehouse_id = null;
+                                                                    selectedProducts[index].warehouse_code = "";
+                                                                } else {
+                                                                    const selectedWarehouse = warehouseList.find(w => w.id === selectedValue);
+                                                                    if (selectedWarehouse) {
+                                                                        selectedProducts[index].warehouse_id = selectedWarehouse.id;
+                                                                        selectedProducts[index].warehouse_code = selectedWarehouse.code;
+                                                                    }
+                                                                }
+
+                                                                setSelectedProducts([...selectedProducts]);
+                                                                checkWarning(index, selectedProducts[index]);
+                                                            }}
+                                                        >
+                                                            <option value="main_store">{t("Main Store")}</option>
+                                                            {warehouseList.map((warehouse) => (
+                                                                <option key={warehouse.id} value={warehouse.id}>
+                                                                    {warehouse.name} ({warehouse.code})
+                                                                </option>
+                                                            ))}
+                                                        </select>
+                                                        {errors[`warehouse_${index}`] && (
+                                                            <div style={{ color: "red" }}>
+                                                                {t(errors[`warehouse_${index}`])}
+                                                            </div>
+                                                        )}
+                                                    </td>) : null;
+                                                    if (col.key === 'unit_price') return (<td key="unit_price" style={{ verticalAlign: 'middle', padding: '0.25rem' }}>
+                                                        <div className="d-flex align-items-center" style={{ minWidth: 0 }}>
+                                                            <div className="input-group flex-nowrap" style={{ flex: '1 1 auto', minWidth: 0 }}>
+                                                                <input type="number"
+                                                                    id={`${"sales_return_product_unit_price_" + index}`}
+                                                                    name={`${"sales_return_product_unit_price_" + index}`}
+                                                                    onWheel={(e) => e.target.blur()}
+                                                                    disabled={isZatcaReported}
+                                                                    value={selectedProducts[index].unit_price}
+                                                                    className={`form-control text-end ${errors["unit_price_" + index] ? 'is-invalid' : ''} ${warnings["unit_price_" + index] ? 'border-warning text-warning' : ''}`}
+                                                                    placeholder="Unit Price(without VAT)"
+                                                                    ref={(el) => {
+                                                                        if (!inputRefs.current[index]) inputRefs.current[index] = {};
+                                                                        inputRefs.current[index][`${"sales_return_product_unit_price_" + index}`] = el;
+                                                                    }}
+
+                                                                    onFocus={() => {
+                                                                        if (timerRef.current) clearTimeout(timerRef.current);
+                                                                        timerRef.current = setTimeout(() => {
+                                                                            inputRefs.current[index][`${"sales_return_product_unit_price_" + index}`].select();
+                                                                        }, 100);
+                                                                    }}
+
+                                                                    onKeyDown={(e) => {
+                                                                        RunKeyActions(e, product);
+
+                                                                        if (timerRef.current) clearTimeout(timerRef.current);
+                                                                        if (e.key === "Backspace") {
+                                                                            selectedProducts[index].unit_price_with_vat = "";
+                                                                            selectedProducts[index].unit_price = "";
+                                                                            setSelectedProducts([...selectedProducts]);
+                                                                            timerRef.current = setTimeout(() => {
+                                                                                checkErrors(index);
+                                                                                CalCulateLineTotals(index);
+                                                                                reCalculate(index);
+                                                                            }, 100);
+                                                                        } else if (e.key === "ArrowLeft") {
+                                                                            timerRef.current = setTimeout(() => {
+                                                                                inputRefs.current[index][`${"sales_return_product_quantity_" + index}`].focus();
+                                                                            }, 100);
+                                                                        }
+                                                                    }}
+                                                                    onChange={(e) => {
+                                                                        if (timerRef.current) clearTimeout(timerRef.current);
+                                                                        if (parseFloat(e.target.value) === 0) {
+                                                                            selectedProducts[index].unit_price = e.target.value;
+                                                                            selectedProducts[index].unit_price_with_vat = e.target.value;
+                                                                            setSelectedProducts([...selectedProducts]);
+                                                                            timerRef.current = setTimeout(() => {
+                                                                                //  checkWarnings(index);
+                                                                                checkErrors(index);
+                                                                                CalCulateLineTotals(index);
+                                                                                reCalculate(index);
+                                                                            }, 100);
+                                                                            return;
+                                                                        }
+
+                                                                        if (!e.target.value) {
+                                                                            selectedProducts[index].unit_price = e.target.value;
+                                                                            selectedProducts[index].unit_price_with_vat = e.target.value;
+                                                                            setSelectedProducts([...selectedProducts]);
+                                                                            timerRef.current = setTimeout(() => {
+                                                                                //checkWarnings(index);
+                                                                                checkErrors(index);
+                                                                                CalCulateLineTotals(index);
+                                                                                reCalculate(index);
+                                                                            }, 100);
+                                                                            return;
+                                                                        }
+
+
+                                                                        if (/^\d*\.?\d{0,8}$/.test(parseFloat(e.target.value)) === false) {
+                                                                            errors["unit_price_" + index] = t("Max decimal points allowed is 8");
+                                                                            setErrors({ ...errors });
+                                                                        }
+
+                                                                        selectedProducts[index].unit_price = parseFloat(e.target.value);
+                                                                        setSelectedProducts([...selectedProducts]);
+
+                                                                        timerRef.current = setTimeout(() => {
+                                                                            selectedProducts[index].unit_price_with_vat = parseFloat(trimTo8Decimals(selectedProducts[index].unit_price * (1 + (formData.vat_percent / 100))))
+                                                                            selectedProducts[index].unit_discount_percent = parseFloat(trimTo8Decimals(((selectedProducts[index].unit_discount / selectedProducts[index].unit_price) * 100)))
+                                                                            selectedProducts[index].unit_discount_percent_with_vat = parseFloat(trimTo8Decimals(((selectedProducts[index].unit_discount_with_vat / selectedProducts[index].unit_price_with_vat) * 100)))
+                                                                            reCalculate(index);
+                                                                            CalCulateLineTotals(index);
+                                                                            checkErrors(index);
+                                                                        }, 100);
+                                                                    }} />
+
+                                                            </div>
+                                                            {(errors[`unit_price_${index}`] || warnings[`unit_price_${index}`]) && (
+                                                                <i
+                                                                    className={`bi bi-exclamation-circle-fill ${errors[`unit_price_${index}`] ? 'text-danger' : 'text-warning'} ms-2`}
+                                                                    data-bs-toggle="tooltip"
+                                                                    data-bs-placement="top"
+                                                                    data-error={t(errors[`unit_price_${index}`]) || ''}
+                                                                    data-warning={t(warnings[`unit_price_${index}`]) || ''}
+                                                                    title={errors[`unit_price_${index}`] || warnings[`unit_price_${index}`] || ''}
+                                                                    style={{
+                                                                        fontSize: '1rem',
+                                                                        cursor: 'pointer',
+                                                                        whiteSpace: 'nowrap',
+                                                                    }}
+                                                                ></i>
+                                                            )}
+                                                        </div>
+                                                    </td>);
+                                                    if (col.key === 'unit_price_with_vat') return (<td key="unit_price_with_vat" style={{ verticalAlign: 'middle', padding: '0.25rem' }}>
+                                                        <div className="d-flex align-items-center" style={{ minWidth: 0 }}>
+                                                            <div className="input-group flex-nowrap" style={{ flex: '1 1 auto', minWidth: 0 }}>
+                                                                <input type="number"
+                                                                    id={`${"sales_return_product_unit_price_with_vat_" + index}`}
+                                                                    name={`${"sales_return_product_unit_price_with_vat_" + index}`}
+                                                                    onWheel={(e) => e.target.blur()}
+                                                                    disabled={isZatcaReported}
+                                                                    value={selectedProducts[index].unit_price_with_vat}
+                                                                    className={`form-control text-end ${errors["unit_price_with_vat_" + index] ? 'is-invalid' : ''} ${warnings["unit_price_with_vat_" + index] ? 'border-warning text-warning' : ''}`}
+                                                                    ref={(el) => {
+                                                                        if (!inputRefs.current[index]) inputRefs.current[index] = {};
+                                                                        inputRefs.current[index][`${"sales_return_product_unit_price_with_vat_" + index}`] = el;
+                                                                    }}
+                                                                    placeholder={t("Unit Price(with VAT)")}
+
+                                                                    onFocus={() => {
+                                                                        if (timerRef.current) clearTimeout(timerRef.current);
+                                                                        timerRef.current = setTimeout(() => {
+                                                                            inputRefs.current[index][`${"sales_return_product_unit_price_with_vat_" + index}`].select();
+                                                                        }, 100);
+                                                                    }}
+
+                                                                    onKeyDown={(e) => {
+                                                                        RunKeyActions(e, product);
+
+                                                                        if (timerRef.current) clearTimeout(timerRef.current);
+                                                                        if (e.key === "Backspace") {
+                                                                            selectedProducts[index].unit_price_with_vat = "";
+                                                                            selectedProducts[index].unit_price = "";
+                                                                            setSelectedProducts([...selectedProducts]);
+                                                                            timerRef.current = setTimeout(() => {
+                                                                                CalCulateLineTotals(index);
+                                                                                reCalculate(index);
+                                                                            }, 100);
+                                                                        } else if (e.key === "ArrowLeft") {
+                                                                            timerRef.current = setTimeout(() => {
+                                                                                inputRefs.current[index][`${"sales_return_product_unit_price_" + index}`].focus();
+                                                                            }, 200);
+                                                                        }
+                                                                    }}
+                                                                    onChange={(e) => {
+                                                                        delete errors["unit_price_with_vat_" + index];
+
+                                                                        if (timerRef.current) clearTimeout(timerRef.current);
+
+                                                                        setErrors({ ...errors });
+                                                                        if (!e.target.value) {
+                                                                            // errors["unit_price_with_vat_" + index] = "";
+                                                                            selectedProducts[index].unit_price_with_vat = "";
+                                                                            selectedProducts[index].unit_price = "";
+                                                                            setSelectedProducts([...selectedProducts]);
+                                                                            setErrors({ ...errors });
+                                                                            console.log("errors:", errors);
+                                                                            // Set new debounce timer
+                                                                            timerRef.current = setTimeout(() => {
+                                                                                CalCulateLineTotals(index);
+                                                                                reCalculate(index);
+                                                                            }, 100);
+                                                                            return;
+                                                                        }
+
+                                                                        if (e.target.value === 0) {
+                                                                            errors["unit_price_with_vat_" + index] = t("Unit Price should be > 0");
+                                                                            selectedProducts[index].unit_price_with_vat = 0;
+                                                                            selectedProducts[index].unit_price = 0;
+                                                                            setSelectedProducts([...selectedProducts]);
+                                                                            setErrors({ ...errors });
+                                                                            console.log("errors:", errors);
+                                                                            // Set new debounce timer
+                                                                            timerRef.current = setTimeout(() => {
+                                                                                CalCulateLineTotals(index);
+                                                                                reCalculate(index);
+                                                                            }, 100);
+                                                                            return;
+                                                                        }
+
+                                                                        if (/^\d*\.?\d{0,8}$/.test(parseFloat(e.target.value)) === false) {
+                                                                            errors["unit_price_with_vat_" + index] = t("Max decimal points allowed is 8");
+                                                                            setErrors({ ...errors });
+                                                                        }
+
+
+                                                                        selectedProducts[index].unit_price_with_vat = parseFloat(e.target.value);
+
+
+                                                                        setSelectedProducts([...selectedProducts]);
+                                                                        // Set new debounce timer
+                                                                        timerRef.current = setTimeout(() => {
+                                                                            selectedProducts[index].unit_price = parseFloat(trimTo8Decimals(selectedProducts[index].unit_price_with_vat / (1 + (formData.vat_percent / 100))))
+                                                                            selectedProducts[index].unit_discount_with_vat = parseFloat(trimTo8Decimals(selectedProducts[index].unit_discount * (1 + (formData.vat_percent / 100))))
+
+                                                                            selectedProducts[index].unit_discount_percent = parseFloat(trimTo8Decimals(((selectedProducts[index].unit_discount / selectedProducts[index].unit_price) * 100)))
+                                                                            selectedProducts[index].unit_discount_percent_with_vat = parseFloat(trimTo8Decimals(((selectedProducts[index].unit_discount_with_vat / selectedProducts[index].unit_price_with_vat) * 100)))
+
+                                                                            CalCulateLineTotals(index);
+                                                                            reCalculate(index);
+                                                                        }, 100);
+                                                                    }} />
+                                                            </div>
+                                                            {(errors[`unit_price_with_vat_${index}`] || warnings[`unit_price_with_vat_${index}`]) && (
+                                                                <i
+                                                                    className={`bi bi-exclamation-circle-fill ${errors[`unit_price_with_vat_${index}`] ? 'text-danger' : 'text-warning'} ms-2`}
+                                                                    data-bs-toggle="tooltip"
+                                                                    data-bs-placement="top"
+                                                                    data-error={t(errors[`unit_price_with_vat_${index}`]) || ''}
+                                                                    data-warning={t(warnings[`unit_price_with_vat_${index}`]) || ''}
+                                                                    title={errors[`unit_price_with_vat_${index}`] || warnings[`unit_price_with_vat_${index}`] || ''}
+                                                                    style={{
+                                                                        fontSize: '1rem',
+                                                                        cursor: 'pointer',
+                                                                        whiteSpace: 'nowrap',
+                                                                    }}
+                                                                ></i>
+                                                            )}
+                                                        </div>
+                                                    </td>);
+                                                    if (col.key === 'unit_discount') return (<td key="unit_discount" style={{ verticalAlign: 'middle', padding: '0.25rem' }}>
+                                                        <div className="d-flex align-items-center" style={{ minWidth: 0 }}>
+                                                            <div className="input-group flex-nowrap" style={{ flex: '1 1 auto', minWidth: 0 }}>
+                                                                <input type="number"
+                                                                    id={`${"sales_return_unit_discount_" + index}`}
+                                                                    name={`${"sales_return_unit_discount_" + index}`}
+                                                                    onWheel={(e) => e.target.blur()}
+                                                                    disabled={isZatcaReported}
+                                                                    className={`form-control text-end ${errors["unit_discount_" + index] ? 'is-invalid' : ''} ${warnings["unit_discount_" + index] ? 'border-warning text-warning' : ''}`}
+                                                                    value={selectedProducts[index].unit_discount}
+                                                                    ref={(el) => {
+                                                                        if (!inputRefs.current[index]) inputRefs.current[index] = {};
+                                                                        inputRefs.current[index][`${"sales_return_unit_discount_" + index}`] = el;
+                                                                    }}
+                                                                    onFocus={() => {
+                                                                        if (timerRef.current) clearTimeout(timerRef.current);
+                                                                        timerRef.current = setTimeout(() => {
+                                                                            inputRefs.current[index][`${"sales_return_unit_discount_" + index}`]?.select();
+                                                                        }, 100);
+                                                                    }}
+                                                                    onKeyDown={(e) => {
+                                                                        RunKeyActions(e, product);
+
+                                                                        if (timerRef.current) clearTimeout(timerRef.current);
+                                                                        if (e.key === "ArrowLeft") {
+                                                                            timerRef.current = setTimeout(() => {
+                                                                                inputRefs.current[index][`${"sales_return_product_unit_price_with_vat_" + index}`].focus();
+                                                                            }, 100);
+                                                                        }
+                                                                    }}
+                                                                    onChange={(e) => {
+                                                                        delete errors["unit_discount_" + index];
+                                                                        if (timerRef.current) clearTimeout(timerRef.current);
+
+                                                                        if (parseFloat(e.target.value) === 0) {
+                                                                            selectedProducts[index].unit_discount = parseFloat(e.target.value);
+                                                                            setFormData({ ...formData });
+
+                                                                            setErrors({ ...errors });
+                                                                            timerRef.current = setTimeout(() => {
+                                                                                CalCulateLineTotals(index);
+                                                                                reCalculate(index);
+                                                                            }, 100);
+                                                                            return;
+                                                                        }
+
+                                                                        if (parseFloat(e.target.value) < 0) {
+                                                                            selectedProducts[index].unit_discount = 0.00;
+                                                                            selectedProducts[index].unit_discount_with_vat = 0.00;
+                                                                            selectedProducts[index].unit_discount_percent = 0.00;
+                                                                            selectedProducts[index].unit_discount_percent_with_vat = 0.00;
+                                                                            setFormData({ ...formData });
+                                                                            errors["unit_discount_" + index] = t("Unit discount should be >= 0");
+                                                                            setErrors({ ...errors });
+                                                                            timerRef.current = setTimeout(() => {
+                                                                                CalCulateLineTotals(index);
+                                                                                reCalculate(index);
+                                                                            }, 100);
+                                                                            return;
+                                                                        }
+
+                                                                        if (!e.target.value) {
+                                                                            selectedProducts[index].unit_discount = "";
+                                                                            selectedProducts[index].unit_discount_with_vat = "";
+                                                                            selectedProducts[index].unit_discount_percent = "";
+                                                                            selectedProducts[index].unit_discount_percent_with_vat = "";
+                                                                            // errors["discount_" + index] = "Invalid Discount";
+                                                                            setFormData({ ...formData });
+                                                                            timerRef.current = setTimeout(() => {
+                                                                                CalCulateLineTotals(index);
+                                                                                reCalculate(index);
+                                                                            }, 100);
+                                                                            //setErrors({...errors});
+                                                                            return;
+                                                                        }
+
+                                                                        delete errors["unit_discount_" + index];
+                                                                        delete errors["unit_discount_percent_" + index];
+                                                                        setErrors({ ...errors });
+
+                                                                        if (/^\d*\.?\d{0,8}$/.test(parseFloat(e.target.value)) === false) {
+                                                                            errors["unit_discount_" + index] = t("Max decimal points allowed is 8");
+                                                                            setErrors({ ...errors });
+                                                                        }
+
+                                                                        selectedProducts[index].unit_discount = parseFloat(e.target.value);
+
+
+                                                                        setFormData({ ...formData });
+                                                                        timerRef.current = setTimeout(() => {
+                                                                            selectedProducts[index].unit_discount_with_vat = parseFloat(trimTo2Decimals(selectedProducts[index].unit_discount * (1 + (formData.vat_percent / 100))))
+
+                                                                            selectedProducts[index].unit_discount_percent = parseFloat(trimTo2Decimals(((selectedProducts[index].unit_discount / selectedProducts[index].unit_price) * 100)))
+                                                                            selectedProducts[index].unit_discount_percent_with_vat = parseFloat(trimTo2Decimals(((selectedProducts[index].unit_discount_with_vat / selectedProducts[index].unit_price_with_vat) * 100)))
+                                                                            reCalculate(index);
+                                                                        }, 100);
+                                                                    }} />
+                                                            </div>
+                                                            {(errors[`unit_discount_${index}`] || warnings[`unit_discount_${index}`]) && (
+                                                                <i
+                                                                    className={`bi bi-exclamation-circle-fill ${errors[`unit_discount_${index}`] ? 'text-danger' : 'text-warning'} ms-2`}
+                                                                    data-bs-toggle="tooltip"
+                                                                    data-bs-placement="top"
+                                                                    data-error={t(errors[`unit_discount_${index}`]) || ''}
+                                                                    data-warning={t(warnings[`unit_discount__${index}`]) || ''}
+                                                                    title={errors[`unit_discount_${index}`] || warnings[`unit_discount_${index}`] || ''}
+                                                                    style={{
+                                                                        fontSize: '1rem',
+                                                                        cursor: 'pointer',
+                                                                        whiteSpace: 'nowrap',
+                                                                    }}
+                                                                ></i>
+                                                            )}
+                                                        </div>
+                                                    </td>);
+                                                    if (col.key === 'unit_discount_with_vat') return (<td key="unit_discount_with_vat" style={{ verticalAlign: 'middle', padding: '0.25rem' }}>
+                                                        <div className="d-flex align-items-center" style={{ minWidth: 0 }}>
+                                                            <div className="input-group flex-nowrap" style={{ flex: '1 1 auto', minWidth: 0 }}>
+                                                                <input type="number"
+                                                                    id={`${"sales_return_unit_discount_with_vat_" + index}`}
+                                                                    name={`${"sales_return_unit_discount_with_vat_" + index}`}
+                                                                    onWheel={(e) => e.target.blur()}
+                                                                    disabled={isZatcaReported}
+                                                                    className={`form-control text-end ${errors["unit_discount_with_vat_" + index] ? 'is-invalid' : ''} ${warnings["unit_discount_with_vat_" + index] ? 'border-warning text-warning' : ''}`}
+                                                                    value={selectedProducts[index].unit_discount_with_vat}
+                                                                    ref={(el) => {
+                                                                        if (!inputRefs.current[index]) inputRefs.current[index] = {};
+                                                                        inputRefs.current[index][`${"sales_return_unit_discount_with_vat_" + index}`] = el;
+                                                                    }}
+                                                                    onFocus={() => {
+                                                                        if (timerRef.current) clearTimeout(timerRef.current);
+                                                                        timerRef.current = setTimeout(() => {
+                                                                            inputRefs.current[index][`${"sales_return_unit_discount_with_vat_" + index}`]?.select();
+                                                                        }, 100);
+                                                                    }}
+                                                                    onKeyDown={(e) => {
+                                                                        RunKeyActions(e, product);
+                                                                        if (timerRef.current) clearTimeout(timerRef.current);
+
+                                                                        if (e.key === "Enter") {
+                                                                            if ((index + 1) === selectedProducts.length) {
+                                                                                timerRef.current = setTimeout(() => {
+                                                                                    inputRefs.current[index - 1][`${"sales_return_product_purchase_unit_price_" + (index - 1)}`]?.focus();
+                                                                                }, 100);
+                                                                            } else {
+                                                                                if (index === 0) {
+                                                                                    timerRef.current = setTimeout(() => {
+                                                                                        inputRefs.current[(selectedProducts.length - 1)][`${"sales_return_product_purchase_unit_price_" + (selectedProducts.length - 1)}`]?.focus();
+                                                                                    }, 100);
+                                                                                } else {
+                                                                                    console.log("moviing to next line")
+                                                                                    timerRef.current = setTimeout(() => {
+                                                                                        inputRefs.current[index - 1][`${"sales_return_product_purchase_unit_price_" + (index - 1)}`]?.focus();
+                                                                                    }, 100);
+                                                                                }
+                                                                            }
+                                                                        } else if (e.key === "ArrowLeft") {
+                                                                            timerRef.current = setTimeout(() => {
+                                                                                inputRefs.current[index][`${"sales_return_unit_discount_" + index}`].focus();
+                                                                            }, 100);
+                                                                        }
+                                                                    }}
+                                                                    onChange={(e) => {
+                                                                        if (timerRef.current) clearTimeout(timerRef.current);
+                                                                        if (parseFloat(e.target.value) === 0) {
+                                                                            selectedProducts[index].unit_discount_with_vat = 0.00;
+                                                                            selectedProducts[index].unit_discount = 0.00;
+                                                                            selectedProducts[index].unit_discount_percent = 0.00;
+                                                                            selectedProducts[index].unit_discount_percent_with_vat = 0.00;
+                                                                            setFormData({ ...formData });
+                                                                            delete errors["unit_discount_with_vat" + index];
+                                                                            setErrors({ ...errors });
+                                                                            timerRef.current = setTimeout(() => {
+                                                                                CalCulateLineTotals(index);
+                                                                                reCalculate(index);
+                                                                            }, 100);
+                                                                            return;
+                                                                        }
+
+                                                                        if (parseFloat(e.target.value) < 0) {
+                                                                            selectedProducts[index].unit_discount_with_vat = 0.00;
+                                                                            selectedProducts[index].unit_discount_percent = 0.00;
+                                                                            selectedProducts[index].unit_discount = 0.00;
+                                                                            selectedProducts[index].unit_discount_percent_with_vat = 0.00;
+                                                                            setFormData({ ...formData });
+                                                                            errors["unit_discount_" + index] = "Unit discount should be >= 0";
+                                                                            setErrors({ ...errors });
+                                                                            timerRef.current = setTimeout(() => {
+                                                                                CalCulateLineTotals(index);
+                                                                                reCalculate(index);
+                                                                            }, 100);
+                                                                            return;
+                                                                        }
+
+                                                                        if (!e.target.value) {
+                                                                            selectedProducts[index].unit_discount_with_vat = "";
+                                                                            selectedProducts[index].unit_discount = "";
+                                                                            selectedProducts[index].unit_discount_percent = "";
+                                                                            selectedProducts[index].unit_discount_percent_with_vat = "";
+                                                                            // errors["discount_" + index] = "Invalid Discount";
+                                                                            setFormData({ ...formData });
+                                                                            timerRef.current = setTimeout(() => {
+                                                                                CalCulateLineTotals(index);
+                                                                                reCalculate(index);
+                                                                            }, 100);
+                                                                            //setErrors({ ...errors });
+                                                                            return;
+                                                                        }
+
+                                                                        delete errors["unit_discount_with_vat_" + index];
+                                                                        delete errors["unit_discount_percent_" + index];
+                                                                        setErrors({ ...errors });
+
+                                                                        if (/^\d*\.?\d{0,8}$/.test(parseFloat(e.target.value)) === false) {
+                                                                            errors["unit_discount_with_vat_" + index] = t("Max decimal points allowed is 8");
+                                                                            setErrors({ ...errors });
+                                                                        }
+
+                                                                        selectedProducts[index].unit_discount_with_vat = parseFloat(e.target.value); //input
+
+
+                                                                        setFormData({ ...formData });
+                                                                        timerRef.current = setTimeout(() => {
+
+                                                                            selectedProducts[index].unit_discount = parseFloat(trimTo2Decimals(selectedProducts[index].unit_discount_with_vat / (1 + (formData.vat_percent / 100))))
+                                                                            selectedProducts[index].unit_discount_percent = parseFloat(trimTo8Decimals(((selectedProducts[index].unit_discount / selectedProducts[index].unit_price) * 100)))
+                                                                            selectedProducts[index].unit_discount_percent_with_vat = parseFloat(trimTo8Decimals(((selectedProducts[index].unit_discount_with_vat / selectedProducts[index].unit_price_with_vat) * 100)))
+
+                                                                            CalCulateLineTotals(index);
+                                                                            reCalculate(index);
+                                                                        }, 100);
+                                                                    }} />
+                                                            </div>
+                                                            {(errors[`unit_discount_with_vat_${index}`] || warnings[`unit_discount_with_vat_${index}`]) && (
+                                                                <i
+                                                                    className={`bi bi-exclamation-circle-fill ${errors[`unit_discount_with_vat_${index}`] ? 'text-danger' : 'text-warning'} ms-2`}
+                                                                    data-bs-toggle="tooltip"
+                                                                    data-bs-placement="top"
+                                                                    data-error={t(errors[`unit_discount_with_vat_${index}`]) || ''}
+                                                                    data-warning={t(warnings[`unit_discount_with_vat_${index}`]) || ''}
+                                                                    title={errors[`unit_discount_with_vat_${index}`] || warnings[`unit_discount_with_vat_${index}`] || ''}
+                                                                    style={{
+                                                                        fontSize: '1rem',
+                                                                        cursor: 'pointer',
+                                                                        whiteSpace: 'nowrap',
+                                                                    }}
+                                                                ></i>
+                                                            )}
+                                                        </div>
+                                                    </td>);
+                                                    // eslint-disable-next-line no-lone-blocks
+                                                    {/*<td>
+                                                                                            <div className="input-group mb-3">
+                                                                                                <input type="number" id={`${"sales_return_unit_discount_percent" + index}`} disabled={false} name={`${"sales_return_unit_discount_percent" + index}`} onWheel={(e) => e.target.blur()} className="form-control text-end" value={selectedProducts[index].unit_discount_percent} onChange={(e) => {
+                                                                                                    if (timerRef.current) clearTimeout(timerRef.current);
+                                            
+                                                                                                    if (parseFloat(e.target.value) === 0) {
+                                                                                                        selectedProducts[index].unit_discount_percent = 0.00;
+                                                                                                        selectedProducts[index].unit_discount_with_vat = 0.00;
+                                                                                                        selectedProducts[index].unit_discount = 0.00;
+                                                                                                        selectedProducts[index].unit_discount_percent_with_vat = 0.00;
+                                                                                                        setFormData({ ...formData });
+                                                                                                        errors["unit_discount_percent_" + index] = "";
+                                                                                                        setErrors({ ...errors });
+                                                                                                        timerRef.current = setTimeout(() => {
+                                                                                                            reCalculate(index);
+                                                                                                        }, 300);
+                                                                                                        return;
+                                                                                                    }
+                                            
+                                                                                                    if (parseFloat(e.target.value) < 0) {
+                                                                                                        selectedProducts[index].unit_discount_percent = 0.00;
+                                                                                                        selectedProducts[index].unit_discount_with_vat = 0.00;
+                                                                                                        selectedProducts[index].unit_discount = 0.00;
+                                                                                                        selectedProducts[index].unit_discount_percent_with_vat = 0.00;
+                                                                                                        setFormData({ ...formData });
+                                                                                                        errors["unit_discount_percent_" + index] = "Unit discount % should be >= 0";
+                                                                                                        setErrors({ ...errors });
+                                                                                                        timerRef.current = setTimeout(() => {
+                                                                                                            reCalculate(index);
+                                                                                                        }, 300);
+                                                                                                        return;
+                                                                                                    }
+                                            
+                                                                                                    if (!e.target.value) {
+                                                                                                        selectedProducts[index].unit_discount_percent = "";
+                                                                                                        selectedProducts[index].unit_discount_with_vat = "";
+                                                                                                        selectedProducts[index].unit_discount = "";
+                                                                                                        selectedProducts[index].unit_discount_percent_with_vat = "";
+                                                                                                        //errors["discount_percent_" + index] = "Invalid Discount Percent";
+                                                                                                        setFormData({ ...formData });
+                                                                                                        timerRef.current = setTimeout(() => {
+                                                                                                            reCalculate(index);
+                                                                                                        }, 300);
+                                                                                                        //setErrors({ ...errors });
+                                                                                                        return;
+                                                                                                    }
+                                            
+                                                                                                    errors["unit_discount_percent_" + index] = "";
+                                                                                                    errors["unit_discount_" + index] = "";
+                                                                                                    setErrors({ ...errors });
+                                            
+                                                                                                    selectedProducts[index].unit_discount_percent = parseFloat(e.target.value); //input
+                                            
+                                            
+                                                                                                    setFormData({ ...formData });
+                                            
+                                                                                                    timerRef.current = setTimeout(() => {
+                                                                                                        selectedProducts[index].unit_discount = parseFloat(trimTo2Decimals(selectedProducts[index].unit_price * (selectedProducts[index].unit_discount_percent / 100)));
+                                                                                                        selectedProducts[index].unit_discount_with_vat = parseFloat(trimTo2Decimals(selectedProducts[index].unit_discount * (1 + (formData.vat_percent / 100))))
+                                                                                                        selectedProducts[index].unit_discount_percent_with_vat = parseFloat(trimTo2Decimals(((selectedProducts[index].unit_discount_with_vat / selectedProducts[index].unit_price_with_vat) * 100)))
+                                            
+                                                                                                        reCalculate(index);
+                                                                                                    }, 300);
+                                                                                                }} />
+                                                                                            </div>
+                                                                                            {errors["unit_discount_percent_" + index] && (
+                                                                                                <div style={{ color: "red" }}>
+                                                                                                    {errors["unit_discount_percent_" + index]}
+                                                                                                </div>
+                                                                                            )}
+                                                                                        </td>*/}
+                                                    if (col.key === 'unit_discount_percent') return (<td key="unit_discount_percent" style={{ verticalAlign: 'middle', padding: '0.25rem' }}>
+                                                        <div className="d-flex align-items-center" style={{ minWidth: 0 }}>
+                                                            <div className="input-group flex-nowrap" style={{ flex: '1 1 auto', minWidth: 0 }}>
+                                                                <input type="number"
+                                                                    id={`${"sales_return_unit_discount_percent_with_vat_" + index}`}
+                                                                    disabled={false}
+                                                                    name={`${"sales_return_unit_discount_percent_with_vat_" + index}`}
+                                                                    onWheel={(e) => e.target.blur()}
+                                                                    className={`form-control text-end ${errors["unit_discount_percent_with_vat_" + index] ? 'is-invalid' : ''} ${warnings["unit_discount_percent_with_vat_" + index] ? 'border-warning text-warning' : ''}`}
+                                                                    value={selectedProducts[index].unit_discount_percent_with_vat}
+                                                                    onChange={(e) => {
+                                                                        if (timerRef.current) clearTimeout(timerRef.current);
+
+                                                                        if (parseFloat(e.target.value) === 0) {
+                                                                            selectedProducts[index].unit_discount_percent = 0.00;
+                                                                            selectedProducts[index].unit_discount_percent_with_vat = 0.00;
+                                                                            selectedProducts[index].unit_discount_with_vat = 0.00;
+                                                                            selectedProducts[index].unit_discount = 0.00;
+                                                                            setFormData({ ...formData });
+                                                                            delete errors["unit_discount_percent_" + index];
+                                                                            setErrors({ ...errors });
+                                                                            timerRef.current = setTimeout(() => {
+                                                                                CalCulateLineTotals(index);
+                                                                                reCalculate(index)
+                                                                            }, 100);
+                                                                            return;
+                                                                        }
+
+                                                                        if (parseFloat(e.target.value) < 0) {
+                                                                            selectedProducts[index].unit_discount_percent = 0.00;
+                                                                            selectedProducts[index].unit_discount_percent_with_vat = 0.00;
+                                                                            selectedProducts[index].unit_discount_with_vat = 0.00;
+                                                                            selectedProducts[index].unit_discount = 0.00;
+                                                                            setFormData({ ...formData });
+                                                                            errors["unit_discount_percent_" + index] = t("Unit discount % should be greater than or equal to 0");
+                                                                            setErrors({ ...errors });
+                                                                            timerRef.current = setTimeout(() => {
+                                                                                CalCulateLineTotals(index);
+                                                                                reCalculate(index);
+                                                                            }, 100);
+                                                                            return;
+                                                                        }
+
+                                                                        if (!e.target.value) {
+                                                                            selectedProducts[index].unit_discount_percent = "";
+                                                                            selectedProducts[index].unit_discount_percent_with_vat = "";
+                                                                            selectedProducts[index].unit_discount_with_vat = "";
+                                                                            selectedProducts[index].unit_discount = "";
+                                                                            //errors["discount_percent_" + index] = "Invalid Discount Percent";
+                                                                            setFormData({ ...formData });
+                                                                            timerRef.current = setTimeout(() => {
+                                                                                CalCulateLineTotals(index);
+                                                                                reCalculate(index);
+                                                                            }, 100);
+                                                                            //setErrors({ ...errors });
+                                                                            return;
+                                                                        }
+
+                                                                        delete errors["unit_discount_percent_" + index];
+                                                                        delete errors["unit_discount_" + index];
+                                                                        setErrors({ ...errors });
+
+                                                                        /*
+                                                                        if (/^\d*\.?\d{0, 2}$/.test(parseFloat(e.target.value)) === false) {
+                                                                    errors["unit_discount_percent_" + index] = "Max. decimal points allowed is 2";
+                                                                setErrors({...errors});
+                                                                        }*/
+
+                                                                        selectedProducts[index].unit_discount_percent_with_vat = parseFloat(e.target.value); //input
+
+
+                                                                        //selectedProducts[index].unit_discount_percent_with_vat = parseFloat(trimTo2Decimals(((selectedProducts[index].unit_discount_with_vat / selectedProducts[index].unit_price_with_vat) * 100)))
+
+                                                                        setFormData({ ...formData });
+
+                                                                        timerRef.current = setTimeout(() => {
+                                                                            selectedProducts[index].unit_discount_with_vat = parseFloat(trimTo8Decimals(selectedProducts[index].unit_price_with_vat * (selectedProducts[index].unit_discount_percent_with_vat / 100)))
+                                                                            selectedProducts[index].unit_discount = parseFloat(trimTo8Decimals(selectedProducts[index].unit_discount_with_vat / (1 + (formData.vat_percent / 100))))
+                                                                            selectedProducts[index].unit_discount_percent = parseFloat(trimTo8Decimals(((selectedProducts[index].unit_discount / selectedProducts[index].unit_price) * 100)))
+
+                                                                            CalCulateLineTotals(index);
+                                                                            reCalculate(index);
+                                                                        }, 100);
+                                                                    }} />{""}
+                                                            </div>
+                                                            {(errors[`unit_discount_percent_with_vat_${index}`] || warnings[`unit_discount_percent_with_vat_${index}`]) && (
+                                                                <i
+                                                                    className={`bi bi-exclamation-circle-fill ${errors[`unit_discount_percent_with_vat_${index}`] ? 'text-danger' : 'text-warning'} ms-2`}
+                                                                    data-bs-toggle="tooltip"
+                                                                    data-bs-placement="top"
+                                                                    data-error={t(errors[`unit_discount_percent_with_vat_${index}`]) || ''}
+                                                                    data-warning={t(warnings[`unit_discount_percent_with_vat_${index}`]) || ''}
+                                                                    title={errors[`unit_discount_percent_with_vat_${index}`] || warnings[`unit_discount_percent_with_vat_${index}`] || ''}
+                                                                    style={{
+                                                                        fontSize: '1rem',
+                                                                        cursor: 'pointer',
+                                                                        whiteSpace: 'nowrap',
+                                                                    }}
+                                                                ></i>
+                                                            )}
+                                                        </div>
+                                                    </td>);
+                                                    if (col.key === 'price') return (<td key="price" style={{ verticalAlign: 'middle', padding: '0.25rem' }}>
+                                                        <div className="d-flex align-items-center" style={{ minWidth: 0 }}>
+                                                            <div className="input-group flex-nowrap" style={{ flex: '1 1 auto', minWidth: 0 }}>
+                                                                <input type="number"
+                                                                    id={`${"sales_product_line_total_" + index}`}
+                                                                    name={`${"sales_product_line_total_" + index}`}
+                                                                    onWheel={(e) => e.target.blur()}
+                                                                    disabled={isZatcaReported}
+                                                                    value={parseFloat(trimTo2Decimals(((selectedProducts[index].unit_price || 0) - (selectedProducts[index].unit_discount || 0)) * (selectedProducts[index].quantity || 0))) || ""}
+                                                                    className={`form-control text-end ${errors["line_total_" + index] ? 'is-invalid' : ''} ${warnings["line_total_" + index] ? 'border-warning text-warning' : ''}`}
+                                                                    placeholder="Line total"
+                                                                    ref={(el) => {
+                                                                        if (!inputRefs.current[index]) inputRefs.current[index] = {};
+                                                                        inputRefs.current[index][`${"sales_product_line_total_" + index}`] = el;
+                                                                    }}
+
+                                                                    onFocus={() => {
+                                                                        if (timerRef.current) clearTimeout(timerRef.current);
+                                                                        timerRef.current = setTimeout(() => {
+                                                                            inputRefs.current[index][`${"sales_product_line_total_" + index}`]?.select();
+                                                                        }, 20);
+                                                                    }}
+
+                                                                    onKeyDown={(e) => {
+                                                                        RunKeyActions(e, product);
+
+                                                                        if (timerRef.current) clearTimeout(timerRef.current);
+                                                                        if (e.key === "Backspace") {
+                                                                            delete errors["line_total_" + index];
+                                                                            selectedProducts[index].unit_price_with_vat = "";
+                                                                            selectedProducts[index].unit_price = "";
+                                                                            selectedProducts[index].line_total = "";
+                                                                            selectedProducts[index].line_total_with_vat = "";
+                                                                            setSelectedProducts([...selectedProducts]);
+                                                                            timerRef.current = setTimeout(() => {
+                                                                                checkErrors(index);
+                                                                                CalCulateLineTotals(index, true);
+                                                                                reCalculate(index);
+                                                                            }, 100);
+                                                                        } else if (e.key === "ArrowLeft") {
+                                                                            timerRef.current = setTimeout(() => {
+                                                                                inputRefs.current[index][`${"sales_product_unit_discount_with_vat_" + index}`]?.select();
+                                                                            }, 100);
+                                                                        }
+                                                                    }}
+
+                                                                    onChange={(e) => {
+                                                                        delete errors["line_total_" + index];
+                                                                        if (timerRef.current) clearTimeout(timerRef.current);
+                                                                        if (parseFloat(e.target.value) === 0) {
+                                                                            selectedProducts[index].unit_price = e.target.value;
+                                                                            selectedProducts[index].unit_price_with_vat = e.target.value;
+                                                                            selectedProducts[index].line_total = e.target.value;
+                                                                            selectedProducts[index].line_total_with_vat = e.target.value;
+                                                                            setSelectedProducts([...selectedProducts]);
+                                                                            timerRef.current = setTimeout(() => {
+                                                                                //  checkWarnings(index);
+                                                                                checkErrors(index);
+                                                                                CalCulateLineTotals(index, true);
+                                                                                reCalculate(index);
+                                                                            }, 100);
+                                                                            return;
+                                                                        }
+
+                                                                        if (!e.target.value) {
+                                                                            selectedProducts[index].unit_price = e.target.value;
+                                                                            selectedProducts[index].unit_price_with_vat = e.target.value;
+                                                                            selectedProducts[index].line_total = e.target.value;
+                                                                            selectedProducts[index].line_total_with_vat = e.target.value;
+                                                                            setSelectedProducts([...selectedProducts]);
+                                                                            timerRef.current = setTimeout(() => {
+                                                                                //checkWarnings(index);
+                                                                                checkErrors(index);
+                                                                                CalCulateLineTotals(index, true);
+                                                                                reCalculate(index);
+                                                                            }, 100);
+                                                                            return;
+                                                                        }
+
+
+                                                                        if (/^\d*\.?\d{0,2}$/.test(parseFloat(e.target.value)) === false) {
+                                                                            errors["line_total_" + index] = t("Max decimal points allowed is 2");
+                                                                            setErrors({ ...errors });
+                                                                        }
+
+                                                                        selectedProducts[index].line_total = parseFloat(e.target.value);
+                                                                        setSelectedProducts([...selectedProducts]);
+
+                                                                        timerRef.current = setTimeout(() => {
+                                                                            if (selectedProducts[index].quantity > 0) {
+                                                                                selectedProducts[index].unit_price = parseFloat(trimTo8Decimals((selectedProducts[index].line_total / selectedProducts[index].quantity) + selectedProducts[index].unit_discount));
+
+                                                                                selectedProducts[index].unit_price_with_vat = parseFloat(trimTo8Decimals(selectedProducts[index].unit_price * (1 + (formData.vat_percent / 100))))
+                                                                                selectedProducts[index].unit_discount_percent = parseFloat(trimTo8Decimals(((selectedProducts[index].unit_discount / selectedProducts[index].unit_price) * 100)))
+                                                                                selectedProducts[index].unit_discount_percent_with_vat = parseFloat(trimTo8Decimals(((selectedProducts[index].unit_discount_with_vat / selectedProducts[index].unit_price_with_vat) * 100)))
+                                                                            }
+                                                                            CalCulateLineTotals(index, true);
+                                                                            reCalculate(index);
+                                                                            checkErrors(index);
+                                                                        }, 100);
+                                                                    }} />
+
+                                                            </div>
+                                                            {(errors[`line_total_${index}`] || warnings[`line_total_${index}`]) && (
+                                                                <i
+                                                                    className={`bi bi-exclamation-circle-fill ${errors[`line_total_${index}`] ? 'text-danger' : 'text-warning'} ms-2`}
+                                                                    data-bs-toggle="tooltip"
+                                                                    data-bs-placement="top"
+                                                                    data-error={errors[`line_total_${index}`] || ''}
+                                                                    data-warning={warnings[`line_total_${index}`] || ''}
+                                                                    title={errors[`line_total_${index}`] || warnings[`line_total_${index}`] || ''}
+                                                                    style={{
+                                                                        fontSize: '1rem',
+                                                                        cursor: 'pointer',
+                                                                        whiteSpace: 'nowrap',
+                                                                    }}
+                                                                ></i>
+                                                            )}
+                                                        </div>
+                                                    </td>);
+                                                    if (col.key === 'price_with_vat') return (<td key="price_with_vat" style={{ verticalAlign: 'middle', padding: '0.25rem' }}>
+                                                        <div className="d-flex align-items-center" style={{ minWidth: 0 }}>
+                                                            <div className="input-group flex-nowrap" style={{ flex: '1 1 auto', minWidth: 0 }}>
+                                                                <input type="number"
+                                                                    id={`${"sales_product_line_total_with_vat" + index}`}
+                                                                    name={`${"sales_product_line_total_with_vat" + index}`}
+                                                                    onWheel={(e) => e.target.blur()}
+                                                                    disabled={isZatcaReported}
+                                                                    value={parseFloat(trimTo2Decimals(((selectedProducts[index].unit_price_with_vat || 0) - (selectedProducts[index].unit_discount_with_vat || 0)) * (selectedProducts[index].quantity || 0))) || ""}
+                                                                    className={`form-control text-end ${errors["line_total_with_vat" + index] ? 'is-invalid' : ''} ${warnings["line_total_with_vat" + index] ? 'border-warning text-warning' : ''}`}
+                                                                    placeholder="Line total with VAT"
+                                                                    ref={(el) => {
+                                                                        if (!inputRefs.current[index]) inputRefs.current[index] = {};
+                                                                        inputRefs.current[index][`${"sales_product_line_total_with_vat" + index}`] = el;
+                                                                    }}
+
+                                                                    onFocus={() => {
+                                                                        if (timerRef.current) clearTimeout(timerRef.current);
+                                                                        timerRef.current = setTimeout(() => {
+                                                                            inputRefs.current[index][`${"sales_product_line_total_with_vat" + index}`]?.select();
+                                                                        }, 20);
+                                                                    }}
+
+                                                                    onKeyDown={(e) => {
+                                                                        RunKeyActions(e, product);
+
+                                                                        if (timerRef.current) clearTimeout(timerRef.current);
+                                                                        if (e.key === "Backspace") {
+                                                                            delete errors["line_total_with_vat_" + index];
+                                                                            selectedProducts[index].unit_price_with_vat = "";
+                                                                            selectedProducts[index].unit_price = "";
+                                                                            selectedProducts[index].line_total = "";
+                                                                            selectedProducts[index].line_total_with_vat = "";
+                                                                            setSelectedProducts([...selectedProducts]);
+                                                                            timerRef.current = setTimeout(() => {
+                                                                                checkErrors(index);
+                                                                                CalCulateLineTotals(index, false, true);
+                                                                                reCalculate(index);
+                                                                            }, 100);
+                                                                        } else if (e.key === "ArrowLeft") {
+                                                                            timerRef.current = setTimeout(() => {
+                                                                                inputRefs.current[index][`${"sales_product_line_total_" + index}`]?.select();
+                                                                            }, 100);
+                                                                        }
+                                                                    }}
+
+                                                                    onChange={(e) => {
+                                                                        delete errors["line_total_with_vat_" + index];
+                                                                        if (timerRef.current) clearTimeout(timerRef.current);
+                                                                        if (parseFloat(e.target.value) === 0) {
+                                                                            selectedProducts[index].unit_price = e.target.value;
+                                                                            selectedProducts[index].unit_price_with_vat = e.target.value;
+                                                                            selectedProducts[index].line_total = e.target.value;
+                                                                            selectedProducts[index].line_total_with_vat = e.target.value;
+                                                                            setSelectedProducts([...selectedProducts]);
+                                                                            timerRef.current = setTimeout(() => {
+                                                                                //  checkWarnings(index);
+                                                                                checkErrors(index);
+                                                                                CalCulateLineTotals(index, false, true);
+                                                                                reCalculate(index);
+                                                                            }, 100);
+                                                                            return;
+                                                                        }
+
+                                                                        if (!e.target.value) {
+                                                                            selectedProducts[index].unit_price = e.target.value;
+                                                                            selectedProducts[index].unit_price_with_vat = e.target.value;
+                                                                            selectedProducts[index].line_total = e.target.value;
+                                                                            selectedProducts[index].line_total_with_vat = e.target.value;
+                                                                            setSelectedProducts([...selectedProducts]);
+                                                                            timerRef.current = setTimeout(() => {
+                                                                                //checkWarnings(index);
+                                                                                checkErrors(index);
+                                                                                CalCulateLineTotals(index, false, true);
+                                                                                reCalculate(index);
+                                                                            }, 100);
+                                                                            return;
+                                                                        }
+
+
+                                                                        if (/^\d*\.?\d{0,2}$/.test(parseFloat(e.target.value)) === false) {
+                                                                            errors["line_total_with_vat_" + index] = t("Max decimal points allowed is 2");
+                                                                            setErrors({ ...errors });
+                                                                        }
+
+                                                                        selectedProducts[index].line_total_with_vat = parseFloat(e.target.value);
+                                                                        setSelectedProducts([...selectedProducts]);
+
+                                                                        timerRef.current = setTimeout(() => {
+                                                                            if (selectedProducts[index].quantity > 0) {
+                                                                                selectedProducts[index].unit_price_with_vat = parseFloat(trimTo8Decimals((selectedProducts[index].line_total_with_vat / selectedProducts[index].quantity) + selectedProducts[index].unit_discount_with_vat));
+                                                                                selectedProducts[index].unit_price = parseFloat(trimTo8Decimals(selectedProducts[index].unit_price_with_vat / (1 + (formData.vat_percent / 100))))
+
+                                                                                // selectedProducts[index].unit_price_with_vat = parseFloat(trimTo8Decimals(selectedProducts[index].unit_price * (1 + (formData.vat_percent / 100))))
+                                                                                selectedProducts[index].unit_discount_percent = parseFloat(trimTo8Decimals(((selectedProducts[index].unit_discount / selectedProducts[index].unit_price) * 100)))
+                                                                                selectedProducts[index].unit_discount_percent_with_vat = parseFloat(trimTo8Decimals(((selectedProducts[index].unit_discount_with_vat / selectedProducts[index].unit_price_with_vat) * 100)))
+                                                                            }
+                                                                            reCalculate(index);
+                                                                            CalCulateLineTotals(index, false, true);
+                                                                            checkErrors(index);
+                                                                        }, 100);
+                                                                    }} />
+
+                                                            </div>
+                                                            {(errors[`line_total_with_vat_${index}`] || warnings[`line_total_with_vat_${index}`]) && (
+                                                                <i
+                                                                    className={`bi bi-exclamation-circle-fill ${errors[`line_total_with_vat_${index}`] ? 'text-danger' : 'text-warning'} ms-2`}
+                                                                    data-bs-toggle="tooltip"
+                                                                    data-bs-placement="top"
+                                                                    data-error={t(errors[`line_total_with_vat_${index}`]) || ''}
+                                                                    data-warning={t(warnings[`line_total_with_vat_${index}`]) || ''}
+                                                                    title={errors[`line_total_with_vat_${index}`] || warnings[`line_total_with_vat_${index}`] || ''}
+                                                                    style={{
+                                                                        fontSize: '1rem',
+                                                                        cursor: 'pointer',
+                                                                        whiteSpace: 'nowrap',
+                                                                    }}
+                                                                ></i>
+                                                            )}
+                                                        </div>
+                                                    </td>);
+                                                    return null;
+                                                })}
+                                            </tr>);
+                                    }).reverse()}
+                                </tbody>
+                            </table>
+                        </div>
+                        <div className="sc-post-table">
+                        <div className="sc-post-table-right">
+                        {showBillSummarySettings && (
+                            <div style={{ position: "fixed", top: "50%", left: "50%", transform: "translate(-50%, -50%)", zIndex: 1060, background: "#fff", border: "1px solid #dee2e6", borderRadius: "8px", padding: "16px", width: "320px", boxShadow: "0 8px 32px rgba(0,0,0,0.22)" }}>
+                                <div className="d-flex justify-content-between align-items-center mb-2">
+                                    <strong style={{ fontSize: "13px" }}>{t("Customize Bill Summary")}</strong>
+                                    <button type="button" className="btn-close" style={{ fontSize: "10px" }} onClick={() => setShowBillSummarySettings(false)}></button>
+                                </div>
+                                <div style={{ fontSize: "11px", color: "#888", marginBottom: "8px" }}>{t("Toggle visibility or reorder fields")}</div>
+                                {billSummaryOrder.map((key, idx) => (
+                                    <div key={key} className="d-flex align-items-center gap-2 mb-1"
+                                        style={{ padding: "3px 0", borderBottom: "1px solid #f5f5f5", cursor: "grab" }}
+                                        draggable
+                                        onDragStart={() => { billSummaryDragRef.current = idx; }}
+                                        onDragOver={e => e.preventDefault()}
+                                        onDrop={() => { reorderBillSummary(billSummaryDragRef.current, idx); billSummaryDragRef.current = null; }}>
+                                        <span style={{ color: "#bbb", fontSize: "15px", cursor: "grab", userSelect: "none", flexShrink: 0 }}>⠿</span>
+                                        <input type="checkbox" className="form-check-input m-0" checked={!!billSummaryVisible[key]}
+                                            onChange={e => updateBillSummaryVisible(key, e.target.checked)}
+                                            style={{ width: "14px", height: "14px", flexShrink: 0 }} />
+                                        <span style={{ flex: 1, fontSize: "12px" }}>{t(_billSummaryFieldLabels[key])}</span>
+                                    </div>
+                                ))}
+                                <button type="button" className="btn btn-sm btn-outline-secondary mt-2 w-100" style={{ fontSize: "11px" }} onClick={() => {
+                                    setBillSummaryOrder(_defaultBillSummaryOrder);
+                                    setBillSummaryVisible(Object.fromEntries(_defaultBillSummaryOrder.map(k => [k, true])));
+                                    localStorage.removeItem('bill_summary_visible_sr');
+                                    localStorage.removeItem('bill_summary_order_sr');
+                                }}>{t("Reset to Default")}</button>
+                            </div>
+                        )}
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '0', backgroundColor: '#ffffff', borderRadius: '8px', border: '1px solid #e2e8f0', overflow: 'hidden' }}>
+                          <div style={{ padding: '6px 16px', borderBottom: '1px solid #c3c6d7', backgroundColor: '#f2f4f6', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                            <span style={{ fontSize: '13px', fontWeight: 600, color: '#191c1e', fontFamily: "'Hanken Grotesk', sans-serif" }}>{t("Bill Summary")}</span>
+                            <button type="button" title={t("Customize Bill Summary")} onClick={() => setShowBillSummarySettings(v => !v)}
+                              style={{ background: 'none', border: '1px solid #c3c6d7', borderRadius: '4px', padding: '1px 5px', cursor: 'pointer', color: '#6b7280', lineHeight: 1 }}
+                              onMouseEnter={e => e.currentTarget.style.color='#191c1e'}
+                              onMouseLeave={e => e.currentTarget.style.color='#6b7280'}>
+                              <i className="bi bi-gear-fill" style={{ fontSize: '11px' }}></i>
+                            </button>
+                          </div>
+                          <div style={{ padding: '6px 12px', display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                            {billSummaryOrder.filter(key => billSummaryVisible[key]).map(key => {
+                              const rowStyle = { display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '13px', lineHeight: '20px' };
+                              switch (key) {
+                                case 'total_without_vat': return (
+                                  <div key="total_without_vat" style={rowStyle}>
+                                    <span style={{ color: '#434655' }}>{t("Total (ex. VAT)")}</span>
+                                    <span style={{ fontWeight: 500 }}><NumberFormat value={trimTo2Decimals(formData.total)} displayType={"text"} thousandSeparator={true} suffix={" "} renderText={(value, props) => value} /></span>
+                                  </div>
+                                );
+                                case 'total_with_vat': return (
+                                  <div key="total_with_vat" style={rowStyle}>
+                                    <span style={{ color: '#434655' }}>{t("Total (inc. VAT)")}</span>
+                                    <span style={{ fontWeight: 500 }}><NumberFormat value={trimTo2Decimals(formData.total_with_vat)} displayType={"text"} thousandSeparator={true} suffix={" "} renderText={(value, props) => value} /></span>
+                                  </div>
+                                );
+                                case 'shipping': return (
+                                  <div key="shipping" style={rowStyle}>
+                                    <span style={{ color: '#434655' }}>{t("Shipping & Handling")}</span>
+                                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', position: 'relative' }}>
+                                      <input type="number" id="sales_shipping_fees" name="sales_shipping_fees" onWheel={(e) => e.target.blur()} disabled={isZatcaReported} style={{ width: "110px" }} className="form-control form-control-sm text-end" value={shipping} onChange={(e) => {
+                                          if (timerRef.current) clearTimeout(timerRef.current);
+                                          delete errors["shipping_handling_fees"]; setErrors({ ...errors });
+                                          if (parseFloat(e.target.value) === 0) { shipping = 0; setShipping(shipping); delete errors["shipping_handling_fees"]; setErrors({ ...errors }); timerRef.current = setTimeout(() => { reCalculate(); }, 300); return; }
+                                          if (parseFloat(e.target.value) < 0) { shipping = 0; setShipping(shipping); setErrors({ ...errors }); timerRef.current = setTimeout(() => { reCalculate(); }, 300); return; }
+                                          if (!e.target.value) { shipping = ""; setShipping(shipping); timerRef.current = setTimeout(() => { reCalculate(); }, 300); return; }
+                                          if (/^\d*\.?\d{0,2}$/.test(parseFloat(e.target.value)) === false) { errors["shipping_handling_fees"] = t("Max. decimal points allowed is 2"); setErrors({ ...errors }); }
+                                          shipping = parseFloat(e.target.value); setShipping(shipping);
+                                          timerRef.current = setTimeout(() => { reCalculate(); }, 300);
+                                      }} />
+                                      {errors.shipping_handling_fees && <div style={{ position: 'absolute', top: '100%', right: 0, zIndex: 10, whiteSpace: 'nowrap', background: '#fff', border: '1px solid #fca5a5', borderRadius: '3px', padding: '1px 6px', color: '#dc2626', fontSize: '11px' }}>{errors.shipping_handling_fees}</div>}
+                                    </div>
+                                  </div>
+                                );
+                                case 'discount_without_vat': return (
+                                  <div key="discount_without_vat" style={rowStyle}>
+                                    <span style={{ color: '#434655', position: 'relative' }}>
+                                      {t("Discount (ex. VAT)")} <input type="number" id="discount_percent" name="discount_percent" onWheel={(e) => e.target.blur()} disabled={true} style={{ width: "50px", display: 'inline-block' }} className="form-control form-control-sm d-inline-block text-center" value={discountPercent} onChange={(e) => {
+                                        if (timerRef.current) clearTimeout(timerRef.current);
+                                        if (parseFloat(e.target.value) === 0) { discount = 0; setDiscount(discount); discountPercentWithVAT = 0; setDiscountPercentWithVAT(discountPercentWithVAT); discountPercent = 0; setDiscountPercent(discountPercent); delete errors["discount_percent"]; setErrors({ ...errors }); timerRef.current = setTimeout(() => { reCalculate(); }, 100); return; }
+                                        if (parseFloat(e.target.value) < 0) { discountWithVAT = 0; setDiscountWithVAT(discountWithVAT); discountPercentWithVAT = 0; setDiscountPercentWithVAT(discountPercentWithVAT); discount = 0; setDiscount(discount); discountPercent = 0; setDiscountPercent(discountPercent); setErrors({ ...errors }); timerRef.current = setTimeout(() => { reCalculate(); }, 100); return; }
+                                        if (!e.target.value) { discountWithVAT = ""; setDiscountWithVAT(discountWithVAT); discountPercentWithVAT = ""; setDiscountPercentWithVAT(discountPercentWithVAT); discount = ""; setDiscount(discount); discountPercent = ""; setDiscountPercent(discountPercent); setErrors({ ...errors }); timerRef.current = setTimeout(() => { reCalculate(); }, 100); return; }
+                                        delete errors["discount_percent"]; delete errors["discount"]; setErrors({ ...errors });
+                                        discountPercent = parseFloat(e.target.value); setDiscountPercent(discountPercent);
+                                        timerRef.current = setTimeout(() => { reCalculate(); }, 100);
+                                      }} />{"%"}
+                                    </span>
+                                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', position: 'relative' }}>
+                                      <input type="number" id="sales_discount" name="sales_discount" onWheel={(e) => e.target.blur()} disabled={isZatcaReported} style={{ width: "110px" }} className="form-control form-control-sm text-end" value={discount} ref={discountRef}
+                                        onFocus={() => { if (timerRef.current) clearTimeout(timerRef.current); timerRef.current = setTimeout(() => { discountRef.current?.select(); }, 20); }}
+                                        onChange={(e) => {
+                                          if (timerRef.current) clearTimeout(timerRef.current);
+                                          if (parseFloat(e.target.value) === 0) { discount = 0; setDiscount(discount); discountWithVAT = 0; setDiscountWithVAT(discountWithVAT); discountPercent = 0; setDiscountPercent(discountPercent); discountPercentWithVAT = 0; setDiscountPercent(discountPercentWithVAT); delete errors["discount"]; setErrors({ ...errors }); timerRef.current = setTimeout(() => { reCalculate(); }, 100); return; }
+                                          if (parseFloat(e.target.value) < 0) { discount = 0; setDiscount(discount); discountWithVAT = 0; setDiscountWithVAT(discountWithVAT); discountPercent = 0; setDiscountPercent(discountPercent); discountPercentWithVAT = 0; setDiscountPercent(discountPercentWithVAT); setErrors({ ...errors }); timerRef.current = setTimeout(() => { reCalculate(); }, 100); return; }
+                                          if (!e.target.value) { discount = ""; setDiscount(discount); discountWithVAT = ""; setDiscountWithVAT(discountWithVAT); discountPercent = ""; setDiscountPercent(discountPercent); discountPercentWithVAT = ""; setDiscountPercent(discountPercentWithVAT); setErrors({ ...errors }); timerRef.current = setTimeout(() => { reCalculate(); }, 100); return; }
+                                          delete errors["discount"]; delete errors["discount_percent"]; setErrors({ ...errors });
+                                          if (/^\d*\.?\d{0,2}$/.test(parseFloat(e.target.value)) === false) { errors["discount"] = t("Max. decimal points allowed is 2"); setErrors({ ...errors }); }
+                                          discount = parseFloat(e.target.value); setDiscount(discount);
+                                          timerRef.current = setTimeout(() => { discountWithVAT = parseFloat(trimTo2Decimals(discount * (1 + (formData.vat_percent / 100)))); setDiscountWithVAT(discountWithVAT); reCalculate(); }, 100);
+                                        }} />
+                                      {errors.discount && <div style={{ position: 'absolute', top: '100%', right: 0, zIndex: 10, whiteSpace: 'nowrap', background: '#fff', border: '1px solid #fca5a5', borderRadius: '3px', padding: '1px 6px', color: '#dc2626', fontSize: '11px' }}>{errors.discount}</div>}
+                                    </div>
+                                  </div>
+                                );
+                                case 'discount_with_vat': return (
+                                  <div key="discount_with_vat" style={rowStyle}>
+                                    <span style={{ color: '#434655', position: 'relative' }}>
+                                      {t("Discount (inc. VAT)")} <input type="number" id="discount_percent_with_vat" name="discount_percent_with_vat" onWheel={(e) => e.target.blur()} disabled={true} style={{ width: "50px", display: 'inline-block' }} className="form-control form-control-sm d-inline-block text-center" value={discountPercentWithVAT} onChange={(e) => {
+                                        if (timerRef.current) clearTimeout(timerRef.current);
+                                        if (parseFloat(e.target.value) === 0) { discountWithVAT = 0; setDiscountWithVAT(discountWithVAT); discountPercentWithVAT = 0; setDiscountPercentWithVAT(discountPercentWithVAT); discount = 0; setDiscount(discount); discountPercent = 0; setDiscountPercent(discountPercent); delete errors["discount_percent_with_vat"]; setErrors({ ...errors }); timerRef.current = setTimeout(() => { reCalculate(); }, 100); return; }
+                                        if (parseFloat(e.target.value) < 0) { discountWithVAT = 0; setDiscountWithVAT(discountWithVAT); discountPercentWithVAT = 0; setDiscountPercentWithVAT(discountPercentWithVAT); discount = 0; setDiscount(discount); discountPercent = 0; setDiscountPercent(discountPercent); errors["discount_percent_with_vat"] = t("Discount percent should be greater than or equal to zero"); setErrors({ ...errors }); timerRef.current = setTimeout(() => { reCalculate(); }, 100); return; }
+                                        if (!e.target.value) { discountWithVAT = ""; setDiscountWithVAT(discountWithVAT); discountPercentWithVAT = ""; setDiscountPercentWithVAT(discountPercentWithVAT); discount = ""; setDiscount(discount); discountPercent = ""; setDiscountPercent(discountPercent); setErrors({ ...errors }); timerRef.current = setTimeout(() => { reCalculate(); }, 100); return; }
+                                        delete errors["discount_percent_with_vat"]; delete errors["discount_with_vat"]; setErrors({ ...errors });
+                                        discountPercentWithVAT = parseFloat(e.target.value); setDiscountPercentWithVAT(discountPercentWithVAT);
+                                        timerRef.current = setTimeout(() => { reCalculate(); }, 100);
+                                      }} />{"%"}
+                                    </span>
+                                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', position: 'relative' }}>
+                                      <input type="number" id="sales_discount_with_vat" name="sales_discount_with_vat" onWheel={(e) => e.target.blur()} disabled={isZatcaReported} style={{ width: "110px" }} className="form-control form-control-sm text-end" value={discountWithVAT} ref={discountWithVATRef}
+                                        onFocus={() => { if (timerRef.current) clearTimeout(timerRef.current); timerRef.current = setTimeout(() => { discountWithVATRef.current?.select(); }, 20); }}
+                                        onChange={(e) => {
+                                          if (timerRef.current) clearTimeout(timerRef.current);
+                                          if (parseFloat(e.target.value) === 0) { discount = 0; discountWithVAT = 0; discountPercent = 0; setDiscount(discount); setDiscountWithVAT(discount); setDiscountPercent(discount); delete errors["discount_with_vat"]; setErrors({ ...errors }); timerRef.current = setTimeout(() => { reCalculate(); }, 100); return; }
+                                          if (parseFloat(e.target.value) < 0) { discount = 0.00; discountWithVAT = 0.00; discountPercent = 0.00; setDiscount(discount); setDiscountWithVAT(discount); setDiscountPercent(discountPercent); setErrors({ ...errors }); timerRef.current = setTimeout(() => { reCalculate(); }, 100); return; }
+                                          if (!e.target.value) { discount = ""; discountWithVAT = ""; discountPercent = ""; setDiscount(discount); setDiscountWithVAT(discount); setDiscountPercent(discountPercent); setErrors({ ...errors }); timerRef.current = setTimeout(() => { reCalculate(); }, 100); return; }
+                                          delete errors["discount_with_vat"]; delete errors["discount_percent_with_vat"]; setErrors({ ...errors });
+                                          if (/^\d*\.?\d{0,2}$/.test(parseFloat(e.target.value)) === false) { errors["discount_with_vat"] = t("Max. decimal points allowed is 2"); setErrors({ ...errors }); }
+                                          discountWithVAT = parseFloat(e.target.value); setDiscountWithVAT(discountWithVAT);
+                                          timerRef.current = setTimeout(() => { discount = parseFloat(trimTo2Decimals(discountWithVAT / (1 + (formData.vat_percent / 100)))); setDiscount(discount); reCalculate(); }, 100);
+                                        }} />
+                                      {errors.discount_with_vat && <div style={{ position: 'absolute', top: '100%', right: 0, zIndex: 10, whiteSpace: 'nowrap', background: '#fff', border: '1px solid #fca5a5', borderRadius: '3px', padding: '1px 6px', color: '#dc2626', fontSize: '11px' }}>{errors.discount_with_vat}</div>}
+                                    </div>
+                                  </div>
+                                );
+                                case 'taxable_amount': return (
+                                  <div key="taxable_amount" style={rowStyle}>
+                                    <span style={{ color: '#434655' }}>{t("Taxable Amount (ex. VAT)")}</span>
+                                    <span style={{ fontWeight: 500 }}><NumberFormat value={trimTo2Decimals(formData.total + shipping - discount)} displayType={"text"} thousandSeparator={true} suffix={" "} renderText={(value, props) => value} /></span>
+                                  </div>
+                                );
+                                case 'vat': return (
+                                  <div key="vat" style={rowStyle}>
+                                    <span style={{ color: '#434655', display: 'flex', alignItems: 'center', gap: '4px', position: 'relative' }}>
+                                      {t("VAT")}
+                                      <input type="number" id="sales_vat_percent" name="sales_vat_percent" onWheel={(e) => e.target.blur()} disabled={true} className="form-control form-control-sm text-center" style={{ width: "54px", display: 'inline-block' }} value={formData.vat_percent} onChange={(e) => {
+                                        if (parseFloat(e.target.value) === 0) { formData.vat_percent = parseFloat(e.target.value); setFormData({ ...formData }); delete errors["vat_percent"]; setErrors({ ...errors }); reCalculate(); return; }
+                                        if (parseFloat(e.target.value) < 0) { formData.vat_percent = parseFloat(e.target.value); formData.vat_price = 0.00; setFormData({ ...formData }); errors["vat_percent"] = t("Vat percent should be greater than or equal to zero"); setErrors({ ...errors }); reCalculate(); return; }
+                                        if (!e.target.value) { formData.vat_percent = ""; formData.vat_price = 0.00; errors["vat_percent"] = t("Invalid vat percent"); setFormData({ ...formData }); setErrors({ ...errors }); return; }
+                                        delete errors["vat_percent"]; setErrors({ ...errors });
+                                        formData.vat_percent = e.target.value; reCalculate(); setFormData({ ...formData });
+                                      }} />
+                                      %
+                                    </span>
+                                    <span style={{ fontWeight: 500 }}><NumberFormat value={trimTo2Decimals(formData.vat_price)} displayType={"text"} thousandSeparator={true} suffix={" "} renderText={(value, props) => value} /></span>
+                                  </div>
+                                );
+                                case 'net_before_rounding': return (
+                                  <div key="net_before_rounding" style={rowStyle}>
+                                    <span style={{ color: '#434655' }}>{t("Before Rounding")}</span>
+                                    <span style={{ fontWeight: 500 }}><NumberFormat value={trimTo2Decimals(formData.net_total - roundingAmount)} displayType={"text"} thousandSeparator={true} suffix={" "} renderText={(value, props) => value} /></span>
+                                  </div>
+                                );
+                                case 'rounding_amount': return (
+                                  <div key="rounding_amount" style={rowStyle}>
+                                    <span style={{ color: '#434655', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                      {t("Rounding")}
+                                      <label style={{ fontSize: '11px', color: '#888', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '3px', marginBottom: 0 }}>
+                                        <input type="checkbox" className="form-check-input" id="sales_auto_rounding_amount" name="sales_auto_rounding_amount" style={{ width: "14px", height: "14px", verticalAlign: "middle" }} value={formData.auto_rounding_amount} checked={formData.auto_rounding_amount} onChange={(e) => {
+                                          if (timerRef.current) clearTimeout(timerRef.current);
+                                          setErrors({ ...errors });
+                                          formData.auto_rounding_amount = !formData.auto_rounding_amount;
+                                          setFormData({ ...formData });
+                                          timerRef.current = setTimeout(() => { reCalculate(); }, 100);
+                                        }} />
+                                        Auto
+                                      </label>
+                                    </span>
+                                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', position: 'relative' }}>
+                                      <input type="number" id="sales_rounding_amount" name="sales_rounding_amount" disabled={formData.auto_rounding_amount} onWheel={(e) => e.target.blur()} style={{ width: "110px" }} className="form-control form-control-sm text-end" value={roundingAmount}
+                                        onChange={(e) => {
+                                          if (timerRef.current) clearTimeout(timerRef.current);
+                                          delete errors["rounding_amount"]; setErrors({ ...errors });
+                                          if (!e.target.value) { roundingAmount = ""; setRoundingAmount(roundingAmount); timerRef.current = setTimeout(() => { reCalculate(); }, 100); return; }
+                                          if (/^-?\d*\.?\d{0,2}$/.test(parseFloat(e.target.value)) === false) { roundingAmount = parseFloat(e.target.value); errors["rounding_amount"] = t("Max. decimal points allowed is 2"); setErrors({ ...errors }); return; }
+                                          roundingAmount = parseFloat(e.target.value); setRoundingAmount(roundingAmount);
+                                          delete errors["rounding_amount"]; setErrors({ ...errors });
+                                          timerRef.current = setTimeout(() => { reCalculate(); }, 100);
+                                        }}
+                                        onKeyDown={(e) => {
+                                          if (timerRef.current) clearTimeout(timerRef.current);
+                                          if (e.key === "Backspace") { delete errors["rounding_amount"]; setErrors({ ...errors }); roundingAmount = ""; setRoundingAmount(""); timerRef.current = setTimeout(() => { reCalculate(); }, 100); }
+                                        }} />
+                                      {errors.rounding_amount && <div style={{ position: 'absolute', top: '100%', right: 0, zIndex: 10, whiteSpace: 'nowrap', background: '#fff', border: '1px solid #fca5a5', borderRadius: '3px', padding: '1px 6px', color: '#dc2626', fontSize: '11px' }}>{errors.rounding_amount}</div>}
+                                    </div>
+                                  </div>
+                                );
+                                case 'net_total': return (
+                                  <div key="net_total" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '15px', fontWeight: 700, paddingTop: '10px', borderTop: '1px solid #c3c6d7', color: '#191c1e', marginTop: '2px' }}>
+                                    <span>{t("Net Total (inc. VAT)")}</span>
+                                    <span style={{ color: '#004ac6' }}><NumberFormat value={trimTo2Decimals(formData.net_total)} displayType={"text"} thousandSeparator={true} suffix={" "} renderText={(value, props) => value} /></span>
+                                  </div>
+                                );
+                                default: return null;
+                              }
+                            })}
+                          </div>
+                        </div>
+                        </div>{/* /sc-post-table-right */}
+                        <div className="sc-post-table-left">
+                          {/* Payments card */}
+                          <div style={{ backgroundColor: '#ffffff', borderRadius: '8px', border: '1px solid #e2e8f0', overflow: 'hidden' }}>
+                            <div style={{ padding: '6px 16px', borderBottom: '1px solid #c3c6d7', backgroundColor: '#f2f4f6', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                              <span style={{ fontSize: '13px', fontWeight: 600, color: '#191c1e', fontFamily: "'Hanken Grotesk', sans-serif" }}>{t("Payments Given")}</span>
+                              <Button variant="secondary" size="sm" disabled={order.payment_status === "not_paid"} onClick={addNewPayment}><i className="bi bi-plus-lg me-1" />{t("Add Payment")}</Button>
+                            </div>
+                            <div style={{ overflowX: 'auto' }}>
+                              <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: '380px' }}>
+                                {formData.payments_input && formData.payments_input.length > 0 && (
+                                  <thead style={{ backgroundColor: '#f1f5f9', position: 'sticky', top: 0, zIndex: 1 }}>
+                                    <tr style={{ fontSize: '11px', fontWeight: 600, color: '#434655' }}>
+                                      {(() => { const th = { padding: '5px 8px', fontWeight: 600, borderBottom: '2px solid #c3c6d7', whiteSpace: 'nowrap' }; return (<>
+                                        <th style={{ ...th, width: '180px' }}>{t("Date")}</th>
+                                        <th style={{ ...th, width: '120px' }}>{t("Amount")}</th>
+                                        <th style={{ ...th, width: '150px' }}>{t("Method")}</th>
+                                        <th style={th}>{t("Reference")}</th>
+                                        <th style={{ ...th, width: '36px' }}></th>
+                                      </>); })()}
+                                    </tr>
+                                  </thead>
+                                )}
+                                <tbody style={{ fontSize: '12px', color: '#191c1e' }}>
+                                  {formData.payments_input && formData.payments_input.filter(payment => !payment.deleted).map((payment, key) => (
+                                    <tr key={key} style={{ borderBottom: '1px solid #e2e8f0' }}
+                                      onMouseEnter={e => { e.currentTarget.style.backgroundColor = '#f8fafc'; }}
+                                      onMouseLeave={e => { e.currentTarget.style.backgroundColor = ''; }}>
+                                      <td style={{ padding: '3px 6px', width: '180px', position: 'relative' }}>
+                                        <DatePicker
+                                          disabled={order.payment_status === "not_paid"}
+                                          id="date_str"
+                                          selected={formData.payments_input[key].date_str ? new Date(formData.payments_input[key].date_str) : null}
+                                          value={formData.payments_input[key].date_str ? format(new Date(formData.payments_input[key].date_str), "d MMM yy h:mm aa", { locale: dateLocale }) : null}
+                                          className={`form-control form-control-sm${errors["payment_date_" + key] ? ' is-invalid' : ''}`}
+                                          dateFormat="d MMM yy h:mm aa"
+                                          locale={dateLocale}
+                                          showTimeSelect
+                                          timeIntervals="1"
+                                          popperProps={{ strategy: 'fixed' }}
+                                          onChange={(value) => { formData.payments_input[key].date_str = value; setFormData({ ...formData }); }}
+                                        />
+                                        {errors["payment_date_" + key] && <div style={{ color: "red", fontSize: '11px' }}>{t(errors["payment_date_" + key])}</div>}
+                                      </td>
+                                      <td style={{ padding: '3px 6px', width: '120px' }}>
+                                        <input id={`${"sales_return_payment_amount" + key}`} name={`${"sales_return_payment_amount" + key}`}
+                                          type='number' disabled={order.payment_status === "not_paid"} value={formData.payments_input[key].amount}
+                                          className={`form-control form-control-sm text-end${errors["payment_amount_" + key] ? ' is-invalid' : ''}`}
+                                          onChange={(e) => {
+                                            delete errors["payment_amount_" + key]; setErrors({ ...errors });
+                                            if (!e.target.value) { formData.payments_input[key].amount = e.target.value; setFormData({ ...formData }); validatePaymentAmounts(); return; }
+                                            formData.payments_input[key].amount = parseFloat(e.target.value); validatePaymentAmounts(); setFormData({ ...formData });
+                                          }} />
+                                        {errors["payment_amount_" + key] && <div style={{ color: "red", fontSize: '11px' }}>{t(errors["payment_amount_" + key])}</div>}
+                                      </td>
+                                      <td style={{ padding: '3px 6px', width: '150px' }}>
+                                        <select value={formData.payments_input[key].method} disabled={order.payment_status === "not_paid"}
+                                          className={`form-select form-select-sm${errors["payment_method_" + key] ? ' is-invalid' : ''}`}
+                                          style={{ fontSize: '12px', height: '26px', padding: '0 24px 0 6px' }}
+                                          onChange={(e) => {
+                                            delete errors["payment_method_" + key]; setErrors({ ...errors });
+                                            if (!e.target.value) { errors["payment_method_" + key] = t("Payment method is required"); setErrors({ ...errors }); formData.payments_input[key].method = ""; setFormData({ ...formData }); return; }
+                                            formData.payments_input[key].method = e.target.value; setFormData({ ...formData });
+                                          }}>
+                                          <option value="">{t("Select")}</option>
+                                          <option value="cash">{t("Cash")}</option>
+                                          <option value="debit_card">{t("Debit Card")}</option>
+                                          <option value="credit_card">{t("Credit Card")}</option>
+                                          <option value="bank_card">{t("Bank Card")}</option>
+                                          <option value="bank_transfer">{t("Bank Transfer")}</option>
+                                          <option value="bank_cheque">{t("Bank Cheque")}</option>
+                                          <option value="sales">{t("Sales")}</option>
+                                          <option value="customer_account">{t("Customer Account")}</option>
+                                        </select>
+                                        {errors["payment_method_" + key] && <div style={{ color: "red", fontSize: '11px' }}>{t(errors["payment_method_" + key])}</div>}
+                                      </td>
+                                      <td style={{ padding: '3px 6px' }}>
+                                        {formData.payments_input[key] && (
+                                          <span style={{ cursor: "pointer", color: "#004ac6", fontSize: '11px' }} onClick={() => openReferenceUpdateForm(formData.payments_input[key].reference_id, formData.payments_input[key].reference_type)}>
+                                            {formData.payments_input[key].reference_code}
+                                          </span>
+                                        )}
+                                      </td>
+                                      <td style={{ padding: '3px 4px', textAlign: 'center' }}>
+                                        <button type="button" disabled={order.payment_status === "not_paid"} onClick={() => removePayment(key)}
+                                          style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#dc2626', padding: '1px 3px', borderRadius: '4px' }}
+                                          onMouseEnter={e => e.currentTarget.style.backgroundColor = '#fef2f2'}
+                                          onMouseLeave={e => e.currentTarget.style.backgroundColor = 'transparent'}>
+                                          <i className="bi bi-trash" style={{ fontSize: '12px' }}></i>
+                                        </button>
+                                      </td>
+                                    </tr>
+                                  ))}
+                                  <tr style={{ borderTop: '2px solid #c3c6d7', backgroundColor: '#f8fafc' }}>
+                                    <td colSpan={5} style={{ padding: '5px 10px' }}>
+                                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '16px', flexWrap: 'wrap' }}>
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: '16px', flexWrap: 'wrap' }}>
+                                          <span style={{ fontSize: '12px', color: '#434655' }}>{t("Total")}:&nbsp;<strong style={{ color: '#191c1e', fontVariantNumeric: 'tabular-nums' }}>{trimTo2Decimals(totalPaymentAmount)}</strong></span>
+                                          <span style={{ width: '1px', height: '14px', background: '#c3c6d7', display: 'inline-block' }} />
+                                          <span style={{ fontSize: '12px', color: '#434655' }}>{t("Balance")}:&nbsp;<strong style={{ color: balanceAmount > 0 ? '#dc2626' : balanceAmount < 0 ? '#2563eb' : '#16a34a', fontVariantNumeric: 'tabular-nums' }}>{trimTo2Decimals(balanceAmount)}</strong></span>
+                                          {errors["total_payment"] && <span style={{ color: '#dc2626', fontSize: '11px' }}>{t(errors["total_payment"])}</span>}
+                                        </div>
+                                        <div>
+                                          {paymentStatus === "paid" && <span className="badge bg-success" style={{ fontSize: '10px' }}>{t("Paid")}</span>}
+                                          {paymentStatus === "paid_partially" && <span className="badge bg-warning text-dark" style={{ fontSize: '10px' }}>{t("Paid Partially")}</span>}
+                                          {paymentStatus === "not_paid" && <span className="badge bg-danger" style={{ fontSize: '10px' }}>{t("Not Paid")}</span>}
+                                        </div>
+                                      </div>
+                                    </td>
+                                  </tr>
+                                </tbody>
+                              </table>
+                            </div>
+                          </div>
+                          {/* Cash Discount & Commission card */}
+                          <div style={{ backgroundColor: '#ffffff', borderRadius: '8px', border: '1px solid #e2e8f0', overflow: 'hidden' }}>
+                            <div style={{ padding: '6px 16px', borderBottom: '1px solid #c3c6d7', backgroundColor: '#f2f4f6' }}>
+                              <span style={{ fontSize: '13px', fontWeight: 600, color: '#191c1e', fontFamily: "'Hanken Grotesk', sans-serif" }}>{t("Cash Discount & Commission")}</span>
+                            </div>
+                            <div style={{ padding: '8px 12px', display: 'flex', gap: '20px', alignItems: 'flex-start', flexWrap: 'wrap' }}>
+                              <div style={{ display: 'flex', flexDirection: 'column', gap: '2px', position: 'relative' }}>
+                                <label style={{ fontSize: '11px', color: '#434655', marginBottom: '2px', display: 'block', fontWeight: 600 }}>{t("Cash Discount")}</label>
+                                <input type='number' ref={cashDiscountRef} id="sales_cash_discount" name="sales_cash_discount" value={cashDiscount}
+                                  className="form-control form-control-sm" style={{ width: '110px' }}
+                                  onChange={(e) => {
+                                    delete errors["cash_discount"]; setErrors({ ...errors });
+                                    if (!e.target.value) { cashDiscount = e.target.value; setCashDiscount(cashDiscount); if (timerRef.current) clearTimeout(timerRef.current); timerRef.current = setTimeout(() => { reCalculate(); }, 100); return; }
+                                    cashDiscount = parseFloat(e.target.value); setCashDiscount(cashDiscount);
+                                    if (cashDiscount > 0 && cashDiscount >= formData.net_total) { errors["cash_discount"] = t("Cash discount should not be greater than or equal to Net Total: {{netTotal}}", { netTotal: formData.net_total?.toString() }); setErrors({ ...errors }); return; }
+                                    if (timerRef.current) clearTimeout(timerRef.current); timerRef.current = setTimeout(() => { reCalculate(); }, 100);
+                                  }}
+                                  onKeyDown={(e) => { if (timerRef.current) clearTimeout(timerRef.current); if (e.key === "Backspace") { cashDiscount = ""; setCashDiscount(cashDiscount); if (timerRef.current) clearTimeout(timerRef.current); timerRef.current = setTimeout(() => { reCalculate(); }, 100); return; } }}
+                                  onFocus={() => { if (timerRef.current) clearTimeout(timerRef.current); timerRef.current = setTimeout(() => { cashDiscountRef.current?.select(); }, 20); }}
+                                />
+                                {errors.cash_discount && <div style={{ position: 'absolute', top: '100%', left: 0, zIndex: 10, whiteSpace: 'nowrap', background: '#fff', border: '1px solid #fca5a5', borderRadius: '3px', padding: '1px 6px', color: '#dc2626', fontSize: '11px' }}>{t(errors.cash_discount)}</div>}
+                              </div>
+                              <div style={{ width: '1px', background: '#e2e8f0', alignSelf: 'stretch', marginTop: '4px' }} />
+                              <div style={{ display: 'flex', gap: '10px', alignItems: 'flex-start', flexWrap: 'wrap' }}>
+                                <div style={{ position: 'relative' }}>
+                                  <label style={{ fontSize: '11px', color: '#434655', marginBottom: '2px', display: 'block', fontWeight: 600 }}>{t("Commission Amount")}</label>
+                                  <input type='number' ref={commissionRef} id="sales_commission" name="sales_commission" value={commission}
+                                    className="form-control form-control-sm" style={{ width: '110px' }}
+                                    onChange={(e) => {
+                                      delete errors["commission"]; delete errors["commission_payment_method"]; setErrors({ ...errors });
+                                      if (!e.target.value) { commission = e.target.value; setCommission(commission); setErrors({ ...errors }); return; }
+                                      commission = parseFloat(e.target.value); setCommission(commission);
+                                      if (commission > 0 && commission >= formData.net_total) { errors["commission"] = t("Commission should not be greater than or equal to Net Total: {{netTotal}}", { netTotal: formData.net_total?.toString() }); setErrors({ ...errors }); return; }
+                                      if (commission > 0 && !formData.commission_payment_method) { errors["commission_payment_method"] = t("Payment method is required"); setErrors({ ...errors }); return; }
+                                    }}
+                                    onKeyDown={(e) => { if (timerRef.current) clearTimeout(timerRef.current); if (e.key === "Backspace") { commission = ""; setCommission(commission); delete errors["commission"]; delete errors["commission_payment_method"]; setErrors({ ...errors }); return; } }}
+                                    onFocus={() => { if (timerRef.current) clearTimeout(timerRef.current); timerRef.current = setTimeout(() => { commissionRef.current?.select(); }, 20); }}
+                                  />
+                                  {errors.commission && <div style={{ position: 'absolute', top: '100%', left: 0, zIndex: 10, whiteSpace: 'nowrap', background: '#fff', border: '1px solid #fca5a5', borderRadius: '3px', padding: '1px 6px', color: '#dc2626', fontSize: '10px' }}>{t(errors.commission)}</div>}
+                                </div>
+                                <div style={{ position: 'relative' }}>
+                                  <label style={{ fontSize: '11px', color: '#434655', marginBottom: '2px', display: 'block', fontWeight: 600 }}>{t("Commission Method")}</label>
+                                  <select value={formData.commission_payment_method || ''} className="form-select form-select-sm" style={{ width: '160px', fontSize: '12px', height: '26px', padding: '0 24px 0 8px' }}
+                                    onChange={(e) => {
+                                      delete errors["commission_payment_method"]; setErrors({ ...errors });
+                                      if (!e.target.value && commission > 0) { errors["commission_payment_method"] = t("Payment method is required"); setErrors({ ...errors }); formData.commission_payment_method = ""; setFormData({ ...formData }); return; }
+                                      formData.commission_payment_method = e.target.value; setFormData({ ...formData });
+                                    }}>
+                                    <option value="">{t("Select")}</option>
+                                    <option value="cash">{t("Cash")}</option>
+                                    <option value="debit_card">{t("Debit Card")}</option>
+                                    <option value="credit_card">{t("Credit Card")}</option>
+                                    <option value="bank_card">{t("Bank Card")}</option>
+                                    <option value="bank_transfer">{t("Bank Transfer")}</option>
+                                    <option value="bank_cheque">{t("Bank Cheque")}</option>
+                                  </select>
+                                  {errors["commission_payment_method"] && <div style={{ position: 'absolute', top: '100%', left: 0, zIndex: 10, whiteSpace: 'nowrap', background: '#fff', border: '1px solid #fca5a5', borderRadius: '3px', padding: '1px 6px', color: '#dc2626', fontSize: '10px' }}>{t(errors["commission_payment_method"])}</div>}
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        </div>{/* /sc-post-table-left */}
+                        </div>{/* /sc-post-table */}
+                    </form>}
+                </Modal.Body>
+
+            </Modal >
+            )}
+            {srFormType === "type1" && (
             <Modal show={show} size="xl" fullscreen onHide={handleClose} animation={false} backdrop="static" scrollable={true}>
                 <Modal.Header>
                     <Modal.Title>
@@ -2303,6 +4399,47 @@ const SalesReturnCreate = forwardRef((props, ref) => {
                     </div>
                 </Modal.Header>
                 <Modal.Body>
+                    {/* Customer details card — right-aligned */}
+                    {selectedCustomers.length > 0 && formData.customer_id && (() => {
+                        const c = selectedCustomers[0];
+                        const storeId = localStorage.getItem("store_id");
+                        const cs = c?.stores?.[storeId];
+                        return (
+                            <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '6px' }}>
+                                <div style={{ flex: '0 0 380px', maxWidth: '55%' }}>
+                                    <div style={{ padding: '8px 14px', background: 'rgba(0,74,198,0.03)', border: '1px solid #e2e8f0', borderRadius: '6px', display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: '5px' }}>
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap' }}>
+                                            {c.code && <span style={{ background: '#dbeafe', color: '#1e40af', borderRadius: '4px', padding: '1px 7px', fontSize: '11px', fontWeight: 700, letterSpacing: '0.03em', flexShrink: 0 }}>{c.code}</span>}
+                                            <span style={{ fontWeight: 700, fontSize: '13px', color: '#191c1e', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: '240px' }} title={c.name}>{c.name}</span>
+                                            {c.name_in_arabic && <span style={{ fontSize: '11px', color: '#64748b', fontFamily: 'Arial, sans-serif', flexShrink: 0 }}>{c.name_in_arabic}</span>}
+                                        </div>
+                                        {(c.phone || c.phone2 || c.vat_no) && (
+                                            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
+                                                {c.phone && <span style={{ display: 'inline-flex', alignItems: 'center', gap: '3px', fontSize: '11px', color: '#374151' }}><i className="bi bi-telephone" style={{ color: '#6b7280', fontSize: '10px' }} />{c.phone}</span>}
+                                                {c.phone2 && <span style={{ display: 'inline-flex', alignItems: 'center', gap: '3px', fontSize: '11px', color: '#374151' }}><i className="bi bi-telephone" style={{ color: '#6b7280', fontSize: '10px' }} />{c.phone2}</span>}
+                                                {c.vat_no && <span style={{ display: 'inline-flex', alignItems: 'center', gap: '3px', fontSize: '11px', color: '#374151' }}><i className="bi bi-receipt" style={{ color: '#6b7280', fontSize: '10px' }} /><span style={{ color: '#6b7280' }}>VAT:</span>{c.vat_no}</span>}
+                                            </div>
+                                        )}
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
+                                            <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', fontSize: '11px', cursor: 'pointer', userSelect: 'none' }} onClick={() => openCustomerPending(selectedCustomers[0])} title="Click to view pendings">
+                                                <i className="bi bi-wallet2" style={{ color: '#004ac6', fontSize: '11px' }} />
+                                                <span style={{ color: '#6b7280' }}>Cr.Balance:</span>
+                                                <strong style={{ color: (cs?.credit_balance || 0) > 0 ? '#dc2626' : '#16a34a', textDecoration: 'underline dotted' }}>{trimTo2Decimals(cs?.credit_balance || 0)}</strong>
+                                                <i className="bi bi-box-arrow-up-right" style={{ color: '#004ac6', fontSize: '9px' }} />
+                                            </span>
+                                            {(c.credit_limit > 0) && (
+                                                <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', fontSize: '11px' }}>
+                                                    <i className="bi bi-shield-check" style={{ color: '#6b7280', fontSize: '10px' }} />
+                                                    <span style={{ color: '#6b7280' }}>Limit:</span>
+                                                    <strong style={{ color: '#374151' }}>{trimTo2Decimals(c.credit_limit)}</strong>
+                                                </span>
+                                            )}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        );
+                    })()}
                     <div style={{
                         maxHeight: "50px",        // Adjust based on design
                         minHeight: "50px",
@@ -2494,30 +4631,48 @@ const SalesReturnCreate = forwardRef((props, ref) => {
                             </button>
                         </div>
                         <div className="table-responsive" style={{ overflowX: "auto", overflowY: "scroll" }}>
-                            <table className="table table-striped table-sm table-bordered">
-                                <tbody>
-                                    <tr className="text-center" style={{ borderBottom: "solid 2px" }}>
+                            <table className="table table-striped table-sm table-bordered" style={{ tableLayout: 'fixed' }}>
+                                <colgroup>
+                                    {spColumns.filter(c => c.visible).map(col => (
+                                        <col key={col.key} style={{ width: `${srColWidths[col.key] ?? SR_COL_DEFAULTS[col.key] ?? 100}px` }} />
+                                    ))}
+                                </colgroup>
+                                <thead style={{ borderTopWidth: 0, borderBottomWidth: 0 }}>
+                                    <tr className="text-center">
                                         {spColumns.filter(c => c.visible).map(col => {
-                                            if (col.key === 'select') return <th key={col.key}>{t("Select All")} <br /><input type="checkbox" className="form-check-input" checked={isAllSelected} onChange={handleSelectAll} /></th>;
-                                            if (col.key === 'si_no') return <th key={col.key}>{t('SI No.')}</th>;
-                                            if (col.key === 'part_number') return <th key={col.key}>{t('Part No.')}</th>;
-                                            if (col.key === 'name') return <th key={col.key} style={{ minWidth: "250px" }}>{t('Name')}</th>;
-                                            if (col.key === 'info') return <th key={col.key}>{t('Info')}</th>;
-                                            if (col.key === 'purchase_unit_price') return <th key={col.key}>{t('Purchase Unit Price(without VAT)')}</th>;
-                                            if (col.key === 'stock') return <th key={col.key}>{t('Stock')}</th>;
-                                            if (col.key === 'qty') return <th key={col.key}>{t('Qty')}</th>;
-                                            if (col.key === 'warehouse') return store.settings?.enable_warehouse_module ? <th key={col.key}>{t('Add Stock To')}</th> : null;
-                                            if (col.key === 'unit_price') return <th key={col.key}>{t('Unit Price(without VAT)')}</th>;
-                                            if (col.key === 'unit_price_with_vat') return <th key={col.key}>{t('Unit Price(with VAT)')}</th>;
-                                            if (col.key === 'unit_discount') return <th key={col.key}>{t('Unit Disc.(without VAT)')}</th>;
-                                            if (col.key === 'unit_discount_with_vat') return <th key={col.key}>{t('Unit Disc.(with VAT)')}</th>;
-                                            if (col.key === 'unit_discount_percent') return <th key={col.key}>{t('Unit Disc. %(with VAT)')}</th>;
-                                            if (col.key === 'price') return <th key={col.key}>{t('Price(without VAT)')}</th>;
-                                            if (col.key === 'price_with_vat') return <th key={col.key}>{t('Price(with VAT)')}</th>;
+                                            const thStyle = { position: 'relative', overflow: 'hidden', whiteSpace: 'nowrap', zIndex: 'auto', borderTop: 0 };
+                                            const resizeHandle = (colKey) => (
+                                                <div
+                                                    onMouseDown={(e) => startSrColResize(e, colKey, srColWidths[colKey] ?? SR_COL_DEFAULTS[colKey] ?? 60)}
+                                                    style={{ position: 'absolute', right: 0, top: '20%', bottom: '20%', width: '4px', cursor: 'col-resize', zIndex: 2, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '1px', borderRadius: '2px', backgroundColor: 'transparent' }}
+                                                    onMouseEnter={e => { e.currentTarget.style.backgroundColor = '#dbeafe'; Array.from(e.currentTarget.children).forEach(d => d.style.backgroundColor = '#3b82f6'); }}
+                                                    onMouseLeave={e => { e.currentTarget.style.backgroundColor = 'transparent'; Array.from(e.currentTarget.children).forEach(d => d.style.backgroundColor = '#b0b7c3'); }}
+                                                >
+                                                    <div style={{ width: '1px', height: '100%', backgroundColor: '#b0b7c3', borderRadius: '1px', pointerEvents: 'none' }} />
+                                                    <div style={{ width: '1px', height: '100%', backgroundColor: '#b0b7c3', borderRadius: '1px', pointerEvents: 'none' }} />
+                                                </div>
+                                            );
+                                            if (col.key === 'select') return <th key={col.key} style={thStyle}>{t("Select All")} <br /><input type="checkbox" className="form-check-input" checked={isAllSelected} onChange={handleSelectAll} />{resizeHandle('select')}</th>;
+                                            if (col.key === 'si_no') return <th key={col.key} style={thStyle}>{t('SI No.')}{resizeHandle('si_no')}</th>;
+                                            if (col.key === 'part_number') return <th key={col.key} style={thStyle}>{t('Part No.')}{resizeHandle('part_number')}</th>;
+                                            if (col.key === 'name') return <th key={col.key} style={thStyle}>{t('Name')}{resizeHandle('name')}</th>;
+                                            if (col.key === 'info') return <th key={col.key} style={thStyle}>{t('Info')}{resizeHandle('info')}</th>;
+                                            if (col.key === 'purchase_unit_price') return <th key={col.key} style={thStyle}>{t('Purchase Unit Price(without VAT)')}{resizeHandle('purchase_unit_price')}</th>;
+                                            if (col.key === 'stock') return <th key={col.key} style={thStyle}>{t('Stock')}{resizeHandle('stock')}</th>;
+                                            if (col.key === 'qty') return <th key={col.key} style={thStyle}>{t('Qty')}{resizeHandle('qty')}</th>;
+                                            if (col.key === 'warehouse') return store.settings?.enable_warehouse_module ? <th key={col.key} style={thStyle}>{t('Add Stock To')}{resizeHandle('warehouse')}</th> : null;
+                                            if (col.key === 'unit_price') return <th key={col.key} style={thStyle}>{t('Unit Price(without VAT)')}{resizeHandle('unit_price')}</th>;
+                                            if (col.key === 'unit_price_with_vat') return <th key={col.key} style={thStyle}>{t('Unit Price(with VAT)')}{resizeHandle('unit_price_with_vat')}</th>;
+                                            if (col.key === 'unit_discount') return <th key={col.key} style={thStyle}>{t('Unit Disc.(without VAT)')}{resizeHandle('unit_discount')}</th>;
+                                            if (col.key === 'unit_discount_with_vat') return <th key={col.key} style={thStyle}>{t('Unit Disc.(with VAT)')}{resizeHandle('unit_discount_with_vat')}</th>;
+                                            if (col.key === 'unit_discount_percent') return <th key={col.key} style={thStyle}>{t('Unit Disc. %(with VAT)')}{resizeHandle('unit_discount_percent')}</th>;
+                                            if (col.key === 'price') return <th key={col.key} style={thStyle}>{t('Price(without VAT)')}{resizeHandle('price')}</th>;
+                                            if (col.key === 'price_with_vat') return <th key={col.key} style={thStyle}>{t('Price(with VAT)')}{resizeHandle('price_with_vat')}</th>;
                                             return null;
                                         })}
                                     </tr>
-
+                                </thead>
+                                <tbody>
                                     {selectedProducts.map((product, index) => {
                                         // Find all indexes with the same product_id
                                         const duplicateIndexes = selectedProducts
@@ -4971,7 +7126,7 @@ const SalesReturnCreate = forwardRef((props, ref) => {
                 </Modal.Body>
 
             </Modal >
-
+            )}
 
             {/* ── SP Table Settings Modal ── */}
             <Modal show={showSPTableSettings} onHide={() => setShowSPTableSettings(false)} size="sm">

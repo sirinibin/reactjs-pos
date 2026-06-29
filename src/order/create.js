@@ -54,6 +54,7 @@ import SalesReturnCreate from "../sales_return/create.js";
 import CustomerPending from "./../utils/customer_pending.js";
 import { useTranslation } from 'react-i18next';
 import eventEmitter from '../utils/eventEmitter';
+import { SalesType1Header, SalesType1Body } from './SalesType1Form';
 
 function _dnFormatTimeAgo(isoString) {
     if (!isoString) return '';
@@ -493,14 +494,11 @@ const OrderCreate = forwardRef((props, ref) => {
 
 
                 if (formData.customer_name && formData.customer_id) {
-                    let selectedCustomers = [
-                        {
-                            ...(formData.customer || {}),
-                            id: formData.customer_id,
-                            name: formData.customer_name,
-                        }
-                    ];
-                    setSelectedCustomers([...selectedCustomers]);
+                    fetchAndSetCustomer(formData.customer_id, {
+                        ...(formData.customer || {}),
+                        id: formData.customer_id,
+                        name: formData.customer_name,
+                    });
                 }
 
                 reCalculate();
@@ -739,14 +737,11 @@ const OrderCreate = forwardRef((props, ref) => {
 
 
                 if (formData.customer_name && formData.customer_id) {
-                    let selectedCustomers = [
-                        {
-                            ...(formData.customer || {}),
-                            id: formData.customer_id,
-                            name: formData.customer_name,
-                        }
-                    ];
-                    setSelectedCustomers([...selectedCustomers]);
+                    fetchAndSetCustomer(formData.customer_id, {
+                        ...(formData.customer || {}),
+                        id: formData.customer_id,
+                        name: formData.customer_name,
+                    });
                 }
 
                 reCalculate();
@@ -896,14 +891,11 @@ const OrderCreate = forwardRef((props, ref) => {
 
 
                 if (formData.customer_name && formData.customer_id) {
-                    let selectedCustomers = [
-                        {
-                            ...(formData.customer || {}),
-                            id: formData.customer_id,
-                            name: formData.customer_name,
-                        }
-                    ];
-                    setSelectedCustomers([...selectedCustomers]);
+                    fetchAndSetCustomer(formData.customer_id, {
+                        ...(formData.customer || {}),
+                        id: formData.customer_id,
+                        name: formData.customer_name,
+                    });
                 }
 
                 reCalculate();
@@ -1039,14 +1031,11 @@ const OrderCreate = forwardRef((props, ref) => {
 
 
                 if (formData.customer_name && formData.customer_id) {
-                    let selectedCustomers = [
-                        {
-                            ...(formData.customer || {}),
-                            id: formData.customer_id,
-                            name: formData.customer_name,
-                        }
-                    ];
-                    setSelectedCustomers([...selectedCustomers]);
+                    fetchAndSetCustomer(formData.customer_id, {
+                        ...(formData.customer || {}),
+                        id: formData.customer_id,
+                        name: formData.customer_name,
+                    });
                 }
 
                 reCalculate();
@@ -1132,6 +1121,25 @@ const OrderCreate = forwardRef((props, ref) => {
     const [customerOptions, setCustomerOptions] = useState([]);
     let [selectedCustomers, setSelectedCustomers] = useState([]);
     //const [isCustomersLoading, setIsCustomersLoading] = useState(false);
+
+    function fetchAndSetCustomer(customerId, fallbackData) {
+        if (!customerId) return;
+        const storeId = localStorage.getItem("store_id");
+        const select = "id,code,credit_limit,credit_balance,vat_no,name,phone,phone2,email,name_in_arabic,phone_in_arabic,search_label,stores";
+        fetch(`/v1/customer/${customerId}?search[store_id]=${storeId}&select=${select}`, {
+            method: 'GET',
+            headers: { 'Content-Type': 'application/json', 'Authorization': localStorage.getItem('access_token') },
+        })
+            .then(async r => {
+                const data = r.ok && await r.json();
+                if (data?.result) {
+                    setSelectedCustomers([{ ...data.result, id: data.result.id || customerId }]);
+                } else {
+                    setSelectedCustomers([fallbackData]);
+                }
+            })
+            .catch(() => setSelectedCustomers([fallbackData]));
+    }
 
     //Product Auto Suggestion
     const [productOptions, setProductOptions] = useState([]);
@@ -3912,7 +3920,7 @@ const OrderCreate = forwardRef((props, ref) => {
                                     }}
                                     renderMenu={(results, menuProps, state) => {
                                         return (
-                                            <Menu {...menuProps} style={{ ...menuProps.style, minWidth: '900px', width: 'max-content', maxWidth: '95vw', zIndex: 9999 }}>
+                                            <Menu {...menuProps} style={{ ...menuProps.style, width: '95vw', maxWidth: '95vw', minWidth: '300px', zIndex: 9999 }}>
                                                 <MenuItem disabled style={{ background: '#f8f9fa' }}>
                                                     <div style={{ display: 'flex', fontWeight: 'bold', padding: '4px 8px', borderBottom: '1px solid #ddd' }}>
                                                         <div style={{ width: '10%' }}>{t("ID")}</div>
@@ -4400,7 +4408,7 @@ const OrderCreate = forwardRef((props, ref) => {
 
     const [selectedProductsColumns, setSelectedProductsColumns] = useState(defaultSelectedProductsColumns);
 
-    const SC_COL_DEFAULTS = useMemo(() => ({ delete: 32, si_no: 36, part_number: 80, name: 160, info: 36, purchase_unit_price: 90, stock: 49, warehouse: 84, qty: 84, unit_price: 90, unit_price_with_vat: 90, unit_discount: 80, unit_discount_with_vat: 80, unit_discount_percent: 80, price: 90, price_with_vat: 90 }), []);
+    const SC_COL_DEFAULTS = useMemo(() => ({ delete: 32, si_no: 36, part_number: 80, name: 160, info: 56, purchase_unit_price: 90, stock: 49, warehouse: 84, qty: 84, unit_price: 90, unit_price_with_vat: 90, unit_discount: 80, unit_discount_with_vat: 80, unit_discount_percent: 80, price: 90, price_with_vat: 90 }), []);
     const [scColWidths, setScColWidths] = useState(() => {
         try { return JSON.parse(localStorage.getItem('sc_sp_col_widths') || '{}'); } catch { return {}; }
     });
@@ -4510,20 +4518,21 @@ const OrderCreate = forwardRef((props, ref) => {
     const [showSuccess, setShowSuccess] = useState(false);
     const [successMessage, setSuccessMessage] = useState(false);
 
-    const [formType, setFormType] = useState(() => localStorage.getItem('order_form_type') || 'type1');
+    const [formType, setFormType] = useState(() => localStorage.getItem('order_form_type') || 'type3');
     useEffect(() => {
         localStorage.setItem('order_form_type', formType);
     }, [formType]);
 
-    // When Enable Sales Page Selection is off, force formType to type1
+    // Always apply store's design setting; selection flag only controls the in-header switcher
     useEffect(() => {
-        if (store.settings && store.settings.enable_sales_page_selection !== true) {
-            setFormType('type1');
+        if (!store.settings) return;
+        if (store.settings.sales_create_form_design) {
+            setFormType(store.settings.sales_create_form_design);
         }
     }, [store.settings]);
 
     useEffect(() => {
-        if (formType !== 'type1') {
+        if (formType === 'type2') {
             const hasVisible = customerDetailsFields.some((field) => field.visible);
             if (!hasVisible) {
                 setIsLeftSidebarCollapsed(true);
@@ -5127,7 +5136,26 @@ const OrderCreate = forwardRef((props, ref) => {
 
             <Modal show={show} size="xl" fullscreen id="sales_create_form"
                 onHide={handleClose} animation={false} backdrop="static" scrollable={true}>
-                {formType === "type1" && (
+                {formType === "type1" && <SalesType1Header
+                    formData={formData} setFormData={setFormData}
+                    isUpdateForm={isUpdateForm}
+                    store={store}
+                    formType={formType} setFormType={setFormType}
+                    disablePreviousButton={disablePreviousButton}
+                    isSubmitting={isSubmitting}
+                    dnNotifications={dnNotifications}
+                    openPreviousForm={openPreviousForm}
+                    openLastForm={openLastForm}
+                    openNextForm={openNextForm}
+                    openCreateForm={openCreateForm}
+                    openPrint={openPrint}
+                    openPreview={openPreview}
+                    handleCreate={handleCreate}
+                    handleClose={handleClose}
+                    openSalesFromDnInForm={openSalesFromDnInForm}
+                    dismissDnNotification={dismissDnNotification}
+                />}
+                {formType === "type3" && (
                     <Modal.Header style={{ backgroundColor: '#ffffff', borderBottom: '1px solid #c3c6d7', padding: '12px 20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px', flexWrap: 'wrap' }}>
                         {/* Left: title + ZATCA */}
                         <div className="sc-header-title" style={{ display: 'flex', alignItems: 'center', gap: '10px', minWidth: 0, flexShrink: 1 }}>
@@ -5163,6 +5191,7 @@ const OrderCreate = forwardRef((props, ref) => {
                             </button>
                             {store.settings?.enable_sales_page_selection === true && (
                                 <select value={formType} onChange={(e) => setFormType(e.target.value)} className="form-select form-select-sm" style={{ width: 'auto', fontSize: '11px', padding: '2px 24px 2px 6px', height: '30px' }}>
+                                    <option value="type3">{t("Type 3")} (Compact)</option>
                                     <option value="type2">{t("Type 2")} (New)</option>
                                     <option value="type1">{t("Type 1")} (Classic)</option>
                                 </select>
@@ -5208,7 +5237,7 @@ const OrderCreate = forwardRef((props, ref) => {
                     </Modal.Header>
                 )}
                 {/* ==================== 💻 STITCH COMPACT HEADER (56px) ==================== */}
-                {formType !== "type1" && <header className="bg-surface-container-lowest border-b border-outline-variant flex justify-between items-center px-md py-xs h-[56px] sticky top-0 z-50">
+                {formType === "type2" && <header className="bg-surface-container-lowest border-b border-outline-variant flex justify-between items-center px-md py-xs h-[56px] sticky top-0 z-50">
                     <div className="flex items-center gap-sm">
                         <span className="font-headline-lg text-headline-lg font-black text-primary">Start POS</span>
                         <div className="h-5 w-px bg-outline-variant mx-xs"></div>
@@ -5300,7 +5329,8 @@ const OrderCreate = forwardRef((props, ref) => {
                                     style={{ fontSize: "12px", padding: "2px 6px", borderRadius: "4px", border: "1px solid var(--md-sys-color-outline-variant, #ccc)", background: "var(--md-sys-color-surface-container, #f5f5f5)", color: "var(--md-sys-color-on-surface, #1c1b1f)", cursor: "pointer" }}
                                     title={t("Form Type")}
                                 >
-                                    <option value="type2">{t("Type 2")} ✦</option>
+                                    <option value="type3">{t("Type 3")} (Compact)</option>
+                                    <option value="type2">{t("Type 2")} (New)</option>
                                     <option value="type1">{t("Type 1")} (Classic)</option>
                                 </select></>
                         )}
@@ -5345,7 +5375,7 @@ const OrderCreate = forwardRef((props, ref) => {
                         </button>
                     </div>
                 </header>}
-                <Modal.Body className={formType !== "type1" ? "type2-active" : ""} style={formType !== "type1" ? { padding: 0, position: "relative" } : { overflowY: "auto" }}>
+                <Modal.Body className={formType === "type2" ? "type2-active" : ""} style={formType === "type2" ? { padding: 0, position: "relative" } : { overflowY: "auto" }}>
                     {isProcessing && (
                         <div style={{
                             position: "absolute",
@@ -5393,7 +5423,7 @@ const OrderCreate = forwardRef((props, ref) => {
                             </ul>
                         </div>
                     )}
-                    {formType === "type1" && (
+                    {formType === "type3" && (
                         <form className="needs-validation" onSubmit={e => { e.preventDefault(); handleCreate(e); }}>
                           {/* Compact two-column header */}
                           <section style={{ backgroundColor: '#ffffff', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
@@ -5491,7 +5521,7 @@ const OrderCreate = forwardRef((props, ref) => {
                                         const searchWords = state.text.toLowerCase().split(" ").filter(Boolean);
 
                                         return (
-                                            <Menu {...menuProps} style={{ ...(menuProps.style || {}), minWidth: '900px', width: 'max-content', maxWidth: '95vw', zIndex: 9999 }}>
+                                            <Menu {...menuProps} style={{ ...(menuProps.style || {}), width: '95vw', maxWidth: '95vw', minWidth: '300px', zIndex: 9999 }}>
                                                 {/* Header */}
                                                 <MenuItem disabled>
                                                     <div style={{ display: 'flex', fontWeight: 'bold', padding: '4px 8px', borderBottom: '1px solid #ddd' }}>
@@ -5574,7 +5604,7 @@ const OrderCreate = forwardRef((props, ref) => {
                                     </button>
                                   )}
                                   <button type="button" onClick={openCustomers}
-                                    style={{ background: '#004ac6', color: '#fff', border: '1px solid transparent', borderRadius: '4px', padding: '4px 12px', fontSize: '13px', cursor: 'pointer', flexShrink: 0 }}>
+                                    style={{ background: '#004ac6', color: '#fff', border: '1px solid transparent', borderRadius: '4px', padding: '7px 12px', fontSize: '13px', cursor: 'pointer', flexShrink: 0 }}>
                                     <i className="bi bi-list" />
                                   </button>
                                   </div>
@@ -5684,7 +5714,7 @@ const OrderCreate = forwardRef((props, ref) => {
                                         const searchWords = state.text.toLowerCase().split(" ").filter(Boolean);
 
                                         return (
-                                            <Menu {...menuProps} style={{ ...(menuProps.style || {}), minWidth: '900px', width: 'max-content', maxWidth: '95vw', zIndex: 9999 }}>
+                                            <Menu {...menuProps} style={{ ...(menuProps.style || {}), width: '95vw', maxWidth: '95vw', minWidth: '300px', zIndex: 9999 }}>
                                                 {/* Header */}
                                                 <MenuItem disabled style={{ position: 'sticky', top: 0, padding: 0, margin: 0 }}>
                                                     <div style={{
@@ -5924,7 +5954,7 @@ const OrderCreate = forwardRef((props, ref) => {
                                     <i className="bi bi-plus-lg" />
                                   </button>
                                   <button type="button" onClick={openProducts}
-                                    style={{ background: '#004ac6', color: '#fff', border: '1px solid transparent', borderRadius: '4px', padding: '4px 12px', fontSize: '13px', cursor: 'pointer', flexShrink: 0 }}>
+                                    style={{ background: '#004ac6', color: '#fff', border: '1px solid transparent', borderRadius: '4px', padding: '7px 12px', fontSize: '13px', cursor: 'pointer', flexShrink: 0 }}>
                                     <i className="bi bi-list" />
                                   </button>
                                   <Dropdown style={{ flexShrink: 0 }}>
@@ -5995,7 +6025,7 @@ const OrderCreate = forwardRef((props, ref) => {
                               return (
                                 <div className="sc-header-right" style={{ padding: '4px 14px', background: 'rgba(0,74,198,0.03)', borderLeft: '1px solid #e2e8f0', display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: '6px', overflow: 'hidden', minHeight: '40px' }}>
                                   {c.code && <span style={{ background: '#dbeafe', color: '#1e40af', borderRadius: '4px', padding: '1px 7px', fontSize: '11px', fontWeight: 700, letterSpacing: '0.03em', flexShrink: 0 }}>{c.code}</span>}
-                                  <span style={{ fontWeight: 700, fontSize: '13px', color: '#191c1e', flexShrink: 0 }}>{c.name}</span>
+                                  <span style={{ fontWeight: 700, fontSize: '13px', color: '#191c1e', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: '260px', flexShrink: 1 }} title={c.name}>{c.name}</span>
                                   {c.name_in_arabic && <><span style={{ color: '#c3c6d7', fontSize: '11px' }}>|</span><span style={{ fontSize: '11px', color: '#64748b', fontFamily: 'Arial, sans-serif', flexShrink: 0 }}>{c.name_in_arabic}</span></>}
                                   {(c.phone || c.phone2 || c.vat_no) && sep}
                                   {c.phone && <span style={{ display: 'inline-flex', alignItems: 'center', gap: '3px', fontSize: '11px', color: '#374151', flexShrink: 0 }}><i className="bi bi-telephone" style={{ color: '#6b7280', fontSize: '10px' }} />{c.phone}</span>}
@@ -7385,6 +7415,7 @@ const OrderCreate = forwardRef((props, ref) => {
                                                 locale={dateLocale}
                                                 showTimeSelect
                                                 timeIntervals="1"
+                                                popperProps={{ strategy: 'fixed' }}
                                                 onChange={(value) => { formData.payments_input[key].date_str = value; setFormData({ ...formData }); }}
                                               />
                                             </td>
@@ -7772,8 +7803,114 @@ const OrderCreate = forwardRef((props, ref) => {
                             </Modal.Footer>
                         </form >
                     )}
+                    {formType === "type1" && <SalesType1Body
+                        formData={formData} setFormData={setFormData}
+                        errors={errors} setErrors={setErrors}
+                        warnings={warnings}
+                        selectedProducts={selectedProducts} setSelectedProducts={setSelectedProducts}
+                        selectedCustomers={selectedCustomers} setSelectedCustomers={setSelectedCustomers}
+                        isZatcaReported={isZatcaReported}
+                        store={store}
+                        warehouseList={warehouseList}
+                        openCustomerSearchResult={openCustomerSearchResult} setOpenCustomerSearchResult={setOpenCustomerSearchResult}
+                        openProductSearchResult={openProductSearchResult} setOpenProductSearchResult={setOpenProductSearchResult}
+                        customerOptions={customerOptions} setCustomerOptions={setCustomerOptions}
+                        productOptions={productOptions} setProductOptions={setProductOptions}
+                        showSelectedProductsSettings={showSelectedProductsSettings} setShowSelectedProductsSettings={setShowSelectedProductsSettings}
+                        showProductSearchSettings={showProductSearchSettings} setShowProductSearchSettings={setShowProductSearchSettings}
+                        showBillSummarySettings={showBillSummarySettings} setShowBillSummarySettings={setShowBillSummarySettings}
+                        billSummaryOrder={billSummaryOrder} setBillSummaryOrder={setBillSummaryOrder}
+                        billSummaryVisible={billSummaryVisible} setBillSummaryVisible={setBillSummaryVisible}
+                        billSummaryDragRef={billSummaryDragRef}
+                        _billSummaryFieldLabels={_billSummaryFieldLabels}
+                        _defaultBillSummaryOrder={_defaultBillSummaryOrder}
+                        reorderBillSummaryT1={reorderBillSummaryT1}
+                        updateBillSummaryVisible={updateBillSummaryVisible}
+                        timerRef={timerRef}
+                        customerSearchRef={customerSearchRef}
+                        productSearchRef={productSearchRef}
+                        inputRefs={inputRefs}
+                        latestRequestRef={latestRequestRef}
+                        onChangeTriggeredRef={onChangeTriggeredRef}
+                        discountRef={discountRef}
+                        discountWithVATRef={discountWithVATRef}
+                        cashDiscountRef={cashDiscountRef}
+                        commissionRef={commissionRef}
+                        handleCreate={handleCreate}
+                        suggestCustomers={suggestCustomers}
+                        suggestProducts={suggestProducts}
+                        getProductByBarCode={getProductByBarCode}
+                        addProduct={addProduct}
+                        removeProduct={removeProduct}
+                        openCustomerCreateForm={openCustomerCreateForm}
+                        openCustomerUpdateForm={openCustomerUpdateForm}
+                        openCustomerPending={openCustomerPending}
+                        openCustomers={openCustomers}
+                        openProducts={openProducts}
+                        openProductCreateForm={openProductCreateForm}
+                        openUpdateProductForm={openUpdateProductForm}
+                        openProductDetails={openProductDetails}
+                        openProductImages={openProductImages}
+                        openLinkedProducts={openLinkedProducts}
+                        openSalesHistory={openSalesHistory}
+                        openPurchaseHistory={openPurchaseHistory}
+                        openSalesReturnHistory={openSalesReturnHistory}
+                        openPurchaseReturnHistory={openPurchaseReturnHistory}
+                        openQuotationHistory={openQuotationHistory}
+                        openDeliveryNoteHistory={openDeliveryNoteHistory}
+                        openProductHistory={openProductHistory}
+                        openQuotationSalesHistory={openQuotationSalesHistory}
+                        openQuotationSalesReturnHistory={openQuotationSalesReturnHistory}
+                        openQuotations={openQuotations}
+                        openDeliveryNotes={openDeliveryNotes}
+                        openReferenceUpdateForm={openReferenceUpdateForm}
+                        addNewPayment={addNewPayment}
+                        removePayment={removePayment}
+                        validatePaymentAmounts={validatePaymentAmounts}
+                        getColumnWidth={getColumnWidth}
+                        getShortcut={getShortcut}
+                        RunKeyActions={RunKeyActions}
+                        CalCulateLineTotals={CalCulateLineTotals}
+                        reCalculate={reCalculate}
+                        checkErrors={checkErrors}
+                        checkWarnings={checkWarnings}
+                        checkWarning={checkWarning}
+                        isProductAdded={isProductAdded}
+                        sendWhatsAppMessage={sendWhatsAppMessage}
+                        dateLocale={dateLocale}
+                        columnStyle={columnStyle}
+                        searchProductsColumns={searchProductsColumns}
+                        selectedProductsColumns={selectedProductsColumns}
+                        shipping={shipping} setShipping={setShipping}
+                        discount={discount} setDiscount={setDiscount}
+                        discountWithVAT={discountWithVAT} setDiscountWithVAT={setDiscountWithVAT}
+                        discountPercent={discountPercent} setDiscountPercent={setDiscountPercent}
+                        discountPercentWithVAT={discountPercentWithVAT} setDiscountPercentWithVAT={setDiscountPercentWithVAT}
+                        roundingAmount={roundingAmount} setRoundingAmount={setRoundingAmount}
+                        cashDiscount={cashDiscount} setCashDiscount={setCashDiscount}
+                        commission={commission} setCommission={setCommission}
+                        totalPaymentAmount={totalPaymentAmount}
+                        balanceAmount={balanceAmount}
+                        paymentStatus={paymentStatus}
+                        isSubmitting={isSubmitting}
+                        isUpdateForm={isUpdateForm}
+                        handleClose={handleClose}
+                        renderTotalWithoutVATTooltip={renderTotalWithoutVATTooltip}
+                        renderTotalWithVATTooltip={renderTotalWithVATTooltip}
+                        renderShippingTooltip={renderShippingTooltip}
+                        renderDiscountWithoutVATTooltip={renderDiscountWithoutVATTooltip}
+                        renderDiscountWithVATTooltip={renderDiscountWithVATTooltip}
+                        renderTooltip={renderTooltip}
+                        renderVATTooltip={renderVATTooltip}
+                        renderNetTotalBeforeRoundingTooltip={renderNetTotalBeforeRoundingTooltip}
+                        renderNetTotalTooltip={renderNetTotalTooltip}
+                        scColWidths={scColWidths}
+                        SC_COL_DEFAULTS={SC_COL_DEFAULTS}
+                        startScColResize={startScColResize}
+                    />}
+
                     {
-                        formType !== "type1" && (
+                        formType === "type2" && (
                             <form className="main-height flex flex-col lg:flex-row overflow-hidden w-full" onSubmit={e => { e.preventDefault(); handleCreate(e); }} >
                                 <aside className={isLeftSidebarCollapsed
                                     ? "hidden"
@@ -7865,7 +8002,7 @@ const OrderCreate = forwardRef((props, ref) => {
                                                     }}
                                                     renderMenu={(results, menuProps, state) => {
                                                         return (
-                                                            <Menu {...menuProps} style={{ ...menuProps.style, minWidth: '1100px', width: 'max-content', maxWidth: '95vw', zIndex: 9999 }}>
+                                                            <Menu {...menuProps} style={{ ...menuProps.style, width: '95vw', maxWidth: '95vw', minWidth: '300px', zIndex: 9999 }}>
                                                                 {/* Header */}
                                                                 <MenuItem disabled style={{ position: 'sticky', top: 0, padding: 0, margin: 0 }}>
                                                                     <div style={{

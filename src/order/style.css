@@ -240,6 +240,12 @@ thead th {
   height: calc(100vh - 56px) !important;
 }
 
+/* ── Product search bar slightly taller ── */
+.productSearch {
+  padding-top: 10px !important;
+  padding-bottom: 10px !important;
+}
+
 /* ── Type 1 compact two-column header ── */
 .sc-header-flex { display: flex; }
 .sc-header-left { flex: 0 0 70%; }
@@ -269,8 +275,8 @@ thead th {
 
 /* ── Post-table layout (Payment + Summary) ── */
 .sc-post-table { display: flex; gap: 12px; align-items: flex-start; padding: 8px 0 0 0; flex-wrap: wrap; }
-.sc-post-table-left { flex: 1 1 300px; min-width: 0; display: flex; flex-direction: column; gap: 8px; }
-.sc-post-table-right { flex: 0 0 380px; position: relative; }
+.sc-post-table-left { flex: 1 1 300px; min-width: 0; display: flex; flex-direction: column; gap: 8px; order: 1; }
+.sc-post-table-right { flex: 0 0 380px; position: relative; order: 2; }
 
 /* ── Modal header action buttons ── */
 .sc-header-actions { display: flex; align-items: center; gap: 6px; flex-shrink: 0; }
@@ -358,4 +364,65 @@ thead th {
 @media (min-width: 992px) and (max-width: 1199px) {
   .sc-header-left { flex: 0 0 58% !important; }
   .sc-post-table-right { flex: 0 0 340px; }
+}
+
+/* ==========================================================================
+   ✨ SALES RETURN FORM — RESPONSIVE
+   ========================================================================== */
+
+/* Fullscreen modal sizing */
+#sales_return_create_form .modal-dialog {
+  margin: 0 !important;
+  max-width: 100vw !important;
+  height: 100vh !important;
+}
+#sales_return_create_form .modal-content {
+  height: 100vh !important;
+  border-radius: 0 !important;
+  overflow: hidden !important;
+}
+#sales_return_create_form .modal-body {
+  overflow-y: auto !important;
+}
+#sales_return_create_form input,
+#sales_return_create_form select,
+#sales_return_create_form textarea {
+  font-size: 13px !important;
+}
+
+/* Mobile + tablet portrait (≤767px) */
+@media (max-width: 767px) {
+  #sales_return_create_form .modal-header {
+    padding: 6px 10px !important;
+    flex-wrap: wrap !important;
+    gap: 6px !important;
+  }
+  #sales_return_create_form .sc-header-title h1 {
+    font-size: 14px !important;
+    white-space: normal !important;
+  }
+  #sales_return_create_form .sc-error-banner {
+    width: 100vw !important;
+    right: 0 !important;
+  }
+  .sr-products-table-wrap {
+    max-height: 38vh !important;
+  }
+}
+
+/* Mobile only (≤575px) */
+@media (max-width: 575px) {
+  #sales_return_create_form .sc-header-actions button {
+    font-size: 10px !important;
+    padding: 3px 6px !important;
+  }
+}
+
+/* Tablet landscape (768–991px) */
+@media (min-width: 768px) and (max-width: 991px) {
+  #sales_return_create_form .modal-header {
+    padding: 8px 14px !important;
+    flex-wrap: wrap !important;
+  }
+  #sales_return_create_form .sc-header-title h1 { font-size: 16px !important; }
 }

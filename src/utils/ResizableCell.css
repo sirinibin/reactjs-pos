@@ -11,7 +11,7 @@
     right: 0;
     bottom: 0;
     cursor: nwse-resize;
-    background: #888;
+    background: transparent;
     z-index: 2;
   }
   
