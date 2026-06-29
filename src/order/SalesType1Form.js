@@ -1057,19 +1057,12 @@ export function SalesType1Body({
                                                                         setSelectedProducts([...selectedProducts]);
                                                                     }} />
                                                                 {(errors[`part_number_${index}`] || warnings[`part_number_${index}`]) && (
-                                                                    <i
-                                                                        className={`bi bi-exclamation-circle-fill ${errors[`part_number_${index}`] ? 'text-danger' : 'text-warning'} ms-2`}
-                                                                        data-bs-toggle="tooltip"
-                                                                        data-bs-placement="top"
-                                                                        data-error={errors[`part_number_${index}`] || ''}
-                                                                        data-warning={warnings[`part_number_${index}`] || ''}
-                                                                        title={errors[`part_number_${index}`] || warnings[`part_number_${index}`] || ''}
-                                                                        style={{
-                                                                            fontSize: '1rem',
-                                                                            cursor: 'pointer',
-                                                                            whiteSpace: 'nowrap',
-                                                                        }}
-                                                                    ></i>
+                                                                    <OverlayTrigger placement="top" overlay={<Tooltip>{errors[`part_number_${index}`] || warnings[`part_number_${index}`] || ''}</Tooltip>}>
+                                                                        <i
+                                                                            className={`bi bi-exclamation-circle-fill ${errors[`part_number_${index}`] ? 'text-danger' : 'text-warning'} ms-2`}
+                                                                            style={{ fontSize: '1rem', cursor: 'pointer', whiteSpace: 'nowrap' }}
+                                                                        ></i>
+                                                                    </OverlayTrigger>
                                                                 )}
                                                             </div>
                                                         </ResizableTableCell>);
@@ -1154,19 +1147,12 @@ export function SalesType1Body({
                                                                 </div>
                                                             </div>
                                                             {(errors[`name_${index}`] || warnings[`name_${index}`]) && (
-                                                                <i
-                                                                    className={`bi bi-exclamation-circle-fill ${errors[`name_${index}`] ? 'text-danger' : 'text-warning'} ms-2`}
-                                                                    data-bs-toggle="tooltip"
-                                                                    data-bs-placement="top"
-                                                                    data-error={errors[`name_${index}`] || ''}
-                                                                    data-warning={warnings[`name_${index}`] || ''}
-                                                                    title={errors[`name_${index}`] || warnings[`name_${index}`] || ''}
-                                                                    style={{
-                                                                        fontSize: '1rem',
-                                                                        cursor: 'pointer',
-                                                                        whiteSpace: 'nowrap',
-                                                                    }}
-                                                                ></i>
+                                                                <OverlayTrigger placement="top" overlay={<Tooltip>{errors[`name_${index}`] || warnings[`name_${index}`] || ''}</Tooltip>}>
+                                                                    <i
+                                                                        className={`bi bi-exclamation-circle-fill ${errors[`name_${index}`] ? 'text-danger' : 'text-warning'} ms-2`}
+                                                                        style={{ fontSize: '1rem', cursor: 'pointer', whiteSpace: 'nowrap' }}
+                                                                    ></i>
+                                                                </OverlayTrigger>
                                                             )}
                                                         </ResizableTableCell>);
                                                         if (col.key === 'info') return (<td style={{ verticalAlign: 'middle', padding: '0.25rem' }}>
@@ -1314,19 +1300,12 @@ export function SalesType1Body({
                                                                 />
 
                                                                 {(errors[`purchase_unit_price_${index}`] || warnings[`purchase_unit_price_${index}`]) && (
-                                                                    <i
-                                                                        className={`bi bi-exclamation-circle-fill ${errors[`purchase_unit_price_${index}`] ? 'text-danger' : 'text-warning'} ms-2`}
-                                                                        data-bs-toggle="tooltip"
-                                                                        data-bs-placement="top"
-                                                                        data-error={errors[`purchase_unit_price_${index}`] || ''}
-                                                                        data-warning={warnings[`purchase_unit_price_${index}`] || ''}
-                                                                        title={errors[`purchase_unit_price_${index}`] || warnings[`purchase_unit_price_${index}`] || ''}
-                                                                        style={{
-                                                                            fontSize: '1rem',
-                                                                            cursor: 'pointer',
-                                                                            whiteSpace: 'nowrap',
-                                                                        }}
-                                                                    ></i>
+                                                                    <OverlayTrigger placement="top" overlay={<Tooltip>{errors[`purchase_unit_price_${index}`] || warnings[`purchase_unit_price_${index}`] || ''}</Tooltip>}>
+                                                                        <i
+                                                                            className={`bi bi-exclamation-circle-fill ${errors[`purchase_unit_price_${index}`] ? 'text-danger' : 'text-warning'} ms-2`}
+                                                                            style={{ fontSize: '1rem', cursor: 'pointer', whiteSpace: 'nowrap' }}
+                                                                        ></i>
+                                                                    </OverlayTrigger>
                                                                 )}
                                                             </div>
                                                         </td>);
@@ -1506,19 +1485,12 @@ export function SalesType1Body({
                                                                     </span>
                                                                 </div>
                                                                 {(errors[`quantity_${index}`] || warnings[`quantity_${index}`]) && (
-                                                                    <i
-                                                                        className={`bi bi-exclamation-circle-fill ${errors[`quantity_${index}`] ? 'text-danger' : 'text-warning'} ms-2`}
-                                                                        data-bs-toggle="tooltip"
-                                                                        data-bs-placement="top"
-                                                                        data-error={errors[`quantity_${index}`] || ''}
-                                                                        data-warning={warnings[`quantity_${index}`] || ''}
-                                                                        title={errors[`quantity_${index}`] || warnings[`quantity_${index}`] || ''}
-                                                                        style={{
-                                                                            fontSize: '1rem',
-                                                                            cursor: 'pointer',
-                                                                            whiteSpace: 'nowrap',
-                                                                        }}
-                                                                    ></i>
+                                                                    <OverlayTrigger placement="top" overlay={<Tooltip>{errors[`quantity_${index}`] || warnings[`quantity_${index}`] || ''}</Tooltip>}>
+                                                                        <i
+                                                                            className={`bi bi-exclamation-circle-fill ${errors[`quantity_${index}`] ? 'text-danger' : 'text-warning'} ms-2`}
+                                                                            style={{ fontSize: '1rem', cursor: 'pointer', whiteSpace: 'nowrap' }}
+                                                                        ></i>
+                                                                    </OverlayTrigger>
                                                                 )}
                                                             </div>
                                                         </td>);
@@ -1615,19 +1587,12 @@ export function SalesType1Body({
 
                                                                 </div>
                                                                 {(errors[`unit_price_${index}`] || warnings[`unit_price_${index}`]) && (
-                                                                    <i
-                                                                        className={`bi bi-exclamation-circle-fill ${errors[`unit_price_${index}`] ? 'text-danger' : 'text-warning'} ms-2`}
-                                                                        data-bs-toggle="tooltip"
-                                                                        data-bs-placement="top"
-                                                                        data-error={errors[`unit_price_${index}`] || ''}
-                                                                        data-warning={warnings[`unit_price_${index}`] || ''}
-                                                                        title={errors[`unit_price_${index}`] || warnings[`unit_price_${index}`] || ''}
-                                                                        style={{
-                                                                            fontSize: '1rem',
-                                                                            cursor: 'pointer',
-                                                                            whiteSpace: 'nowrap',
-                                                                        }}
-                                                                    ></i>
+                                                                    <OverlayTrigger placement="top" overlay={<Tooltip>{errors[`unit_price_${index}`] || warnings[`unit_price_${index}`] || ''}</Tooltip>}>
+                                                                        <i
+                                                                            className={`bi bi-exclamation-circle-fill ${errors[`unit_price_${index}`] ? 'text-danger' : 'text-warning'} ms-2`}
+                                                                            style={{ fontSize: '1rem', cursor: 'pointer', whiteSpace: 'nowrap' }}
+                                                                        ></i>
+                                                                    </OverlayTrigger>
                                                                 )}
                                                             </div>
                                                         </td>);
@@ -1732,19 +1697,12 @@ export function SalesType1Body({
                                                                         }} />
                                                                 </div>
                                                                 {(errors[`unit_price_with_vat_${index}`] || warnings[`unit_price_with_vat_${index}`]) && (
-                                                                    <i
-                                                                        className={`bi bi-exclamation-circle-fill ${errors[`unit_price_with_vat_${index}`] ? 'text-danger' : 'text-warning'} ms-2`}
-                                                                        data-bs-toggle="tooltip"
-                                                                        data-bs-placement="top"
-                                                                        data-error={errors[`unit_price_with_vat_${index}`] || ''}
-                                                                        data-warning={warnings[`unit_price_with_vat_${index}`] || ''}
-                                                                        title={errors[`unit_price_with_vat_${index}`] || warnings[`unit_price_with_vat_${index}`] || ''}
-                                                                        style={{
-                                                                            fontSize: '1rem',
-                                                                            cursor: 'pointer',
-                                                                            whiteSpace: 'nowrap',
-                                                                        }}
-                                                                    ></i>
+                                                                    <OverlayTrigger placement="top" overlay={<Tooltip>{errors[`unit_price_with_vat_${index}`] || warnings[`unit_price_with_vat_${index}`] || ''}</Tooltip>}>
+                                                                        <i
+                                                                            className={`bi bi-exclamation-circle-fill ${errors[`unit_price_with_vat_${index}`] ? 'text-danger' : 'text-warning'} ms-2`}
+                                                                            style={{ fontSize: '1rem', cursor: 'pointer', whiteSpace: 'nowrap' }}
+                                                                        ></i>
+                                                                    </OverlayTrigger>
                                                                 )}
                                                             </div>
                                                         </td>);
@@ -1848,19 +1806,12 @@ export function SalesType1Body({
                                                                         }} />
                                                                 </div>
                                                                 {(errors[`unit_discount_${index}`] || warnings[`unit_discount_${index}`]) && (
-                                                                    <i
-                                                                        className={`bi bi-exclamation-circle-fill ${errors[`unit_discount_${index}`] ? 'text-danger' : 'text-warning'} ms-2`}
-                                                                        data-bs-toggle="tooltip"
-                                                                        data-bs-placement="top"
-                                                                        data-error={errors[`unit_discount_${index}`] || ''}
-                                                                        data-warning={warnings[`unit_discount__${index}`] || ''}
-                                                                        title={errors[`unit_discount_${index}`] || warnings[`unit_discount_${index}`] || ''}
-                                                                        style={{
-                                                                            fontSize: '1rem',
-                                                                            cursor: 'pointer',
-                                                                            whiteSpace: 'nowrap',
-                                                                        }}
-                                                                    ></i>
+                                                                    <OverlayTrigger placement="top" overlay={<Tooltip>{errors[`unit_discount_${index}`] || warnings[`unit_discount_${index}`] || ''}</Tooltip>}>
+                                                                        <i
+                                                                            className={`bi bi-exclamation-circle-fill ${errors[`unit_discount_${index}`] ? 'text-danger' : 'text-warning'} ms-2`}
+                                                                            style={{ fontSize: '1rem', cursor: 'pointer', whiteSpace: 'nowrap' }}
+                                                                        ></i>
+                                                                    </OverlayTrigger>
                                                                 )}
                                                             </div>
                                                         </td>);
@@ -1988,19 +1939,12 @@ export function SalesType1Body({
                                                                         }} />
                                                                 </div>
                                                                 {(errors[`unit_discount_with_vat_${index}`] || warnings[`unit_discount_with_vat_${index}`]) && (
-                                                                    <i
-                                                                        className={`bi bi-exclamation-circle-fill ${errors[`unit_discount_with_vat_${index}`] ? 'text-danger' : 'text-warning'} ms-2`}
-                                                                        data-bs-toggle="tooltip"
-                                                                        data-bs-placement="top"
-                                                                        data-error={errors[`unit_discount_with_vat_${index}`] || ''}
-                                                                        data-warning={warnings[`unit_discount_with_vat_${index}`] || ''}
-                                                                        title={errors[`unit_discount_with_vat_${index}`] || warnings[`unit_discount_with_vat_${index}`] || ''}
-                                                                        style={{
-                                                                            fontSize: '1rem',
-                                                                            cursor: 'pointer',
-                                                                            whiteSpace: 'nowrap',
-                                                                        }}
-                                                                    ></i>
+                                                                    <OverlayTrigger placement="top" overlay={<Tooltip>{errors[`unit_discount_with_vat_${index}`] || warnings[`unit_discount_with_vat_${index}`] || ''}</Tooltip>}>
+                                                                        <i
+                                                                            className={`bi bi-exclamation-circle-fill ${errors[`unit_discount_with_vat_${index}`] ? 'text-danger' : 'text-warning'} ms-2`}
+                                                                            style={{ fontSize: '1rem', cursor: 'pointer', whiteSpace: 'nowrap' }}
+                                                                        ></i>
+                                                                    </OverlayTrigger>
                                                                 )}
                                                             </div>
                                                         </td>);
@@ -2164,19 +2108,12 @@ export function SalesType1Body({
                                                                         }} />{""}
                                                                 </div>
                                                                 {(errors[`unit_discount_percent_with_vat_${index}`] || warnings[`unit_discount_percent_with_vat_${index}`]) && (
-                                                                    <i
-                                                                        className={`bi bi-exclamation-circle-fill ${errors[`unit_discount_percent_with_vat_${index}`] ? 'text-danger' : 'text-warning'} ms-2`}
-                                                                        data-bs-toggle="tooltip"
-                                                                        data-bs-placement="top"
-                                                                        data-error={errors[`unit_discount_percent_with_vat_${index}`] || ''}
-                                                                        data-warning={warnings[`unit_discount_percent_with_vat_${index}`] || ''}
-                                                                        title={errors[`unit_discount_percent_with_vat_${index}`] || warnings[`unit_discount_percent_with_vat_${index}`] || ''}
-                                                                        style={{
-                                                                            fontSize: '1rem',
-                                                                            cursor: 'pointer',
-                                                                            whiteSpace: 'nowrap',
-                                                                        }}
-                                                                    ></i>
+                                                                    <OverlayTrigger placement="top" overlay={<Tooltip>{errors[`unit_discount_percent_with_vat_${index}`] || warnings[`unit_discount_percent_with_vat_${index}`] || ''}</Tooltip>}>
+                                                                        <i
+                                                                            className={`bi bi-exclamation-circle-fill ${errors[`unit_discount_percent_with_vat_${index}`] ? 'text-danger' : 'text-warning'} ms-2`}
+                                                                            style={{ fontSize: '1rem', cursor: 'pointer', whiteSpace: 'nowrap' }}
+                                                                        ></i>
+                                                                    </OverlayTrigger>
                                                                 )}
                                                             </div>
                                                         </td>);
@@ -2284,19 +2221,12 @@ export function SalesType1Body({
 
                                                                 </div>
                                                                 {(errors[`line_total_${index}`] || warnings[`line_total_${index}`]) && (
-                                                                    <i
-                                                                        className={`bi bi-exclamation-circle-fill ${errors[`line_total_${index}`] ? 'text-danger' : 'text-warning'} ms-2`}
-                                                                        data-bs-toggle="tooltip"
-                                                                        data-bs-placement="top"
-                                                                        data-error={errors[`line_total_${index}`] || ''}
-                                                                        data-warning={warnings[`line_total_${index}`] || ''}
-                                                                        title={errors[`line_total_${index}`] || warnings[`line_total_${index}`] || ''}
-                                                                        style={{
-                                                                            fontSize: '1rem',
-                                                                            cursor: 'pointer',
-                                                                            whiteSpace: 'nowrap',
-                                                                        }}
-                                                                    ></i>
+                                                                    <OverlayTrigger placement="top" overlay={<Tooltip>{errors[`line_total_${index}`] || warnings[`line_total_${index}`] || ''}</Tooltip>}>
+                                                                        <i
+                                                                            className={`bi bi-exclamation-circle-fill ${errors[`line_total_${index}`] ? 'text-danger' : 'text-warning'} ms-2`}
+                                                                            style={{ fontSize: '1rem', cursor: 'pointer', whiteSpace: 'nowrap' }}
+                                                                        ></i>
+                                                                    </OverlayTrigger>
                                                                 )}
                                                             </div>
                                                         </td>);
@@ -2405,19 +2335,12 @@ export function SalesType1Body({
 
                                                                 </div>
                                                                 {(errors[`line_total_with_vat_${index}`] || warnings[`line_total_with_vat_${index}`]) && (
-                                                                    <i
-                                                                        className={`bi bi-exclamation-circle-fill ${errors[`line_total_with_vat_${index}`] ? 'text-danger' : 'text-warning'} ms-2`}
-                                                                        data-bs-toggle="tooltip"
-                                                                        data-bs-placement="top"
-                                                                        data-error={errors[`line_total_with_vat_${index}`] || ''}
-                                                                        data-warning={warnings[`line_total_with_vat_${index}`] || ''}
-                                                                        title={errors[`line_total_with_vat_${index}`] || warnings[`line_total_with_vat_${index}`] || ''}
-                                                                        style={{
-                                                                            fontSize: '1rem',
-                                                                            cursor: 'pointer',
-                                                                            whiteSpace: 'nowrap',
-                                                                        }}
-                                                                    ></i>
+                                                                    <OverlayTrigger placement="top" overlay={<Tooltip>{errors[`line_total_with_vat_${index}`] || warnings[`line_total_with_vat_${index}`] || ''}</Tooltip>}>
+                                                                        <i
+                                                                            className={`bi bi-exclamation-circle-fill ${errors[`line_total_with_vat_${index}`] ? 'text-danger' : 'text-warning'} ms-2`}
+                                                                            style={{ fontSize: '1rem', cursor: 'pointer', whiteSpace: 'nowrap' }}
+                                                                        ></i>
+                                                                    </OverlayTrigger>
                                                                 )}
                                                             </div>
                                                         </td>);
