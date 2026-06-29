@@ -8,12 +8,12 @@ import { DebounceInput } from 'react-debounce-input';
 import { Spinner } from "react-bootstrap";
 import { Dropdown } from 'react-bootstrap';
 import Amount from "../utils/amount.js";
-import ResizableTableCell from '../utils/ResizableTableCell';
 import { trimTo2Decimals } from "../utils/numberUtils";
 import { trimTo8Decimals } from "../utils/numberUtils";
 import { OverlayTrigger, Tooltip } from 'react-bootstrap';
 import { highlightWords } from "../utils/search.js";
 import { useTranslation } from 'react-i18next';
+import ResizableTableCell from '../utils/ResizableTableCell';
 
 function _dnFormatTimeAgo(isoString) {
     if (!isoString) return '';
@@ -251,143 +251,315 @@ export function SalesType1Body({
     return (
                         <form className="row g-3 needs-validation" onSubmit={e => { e.preventDefault(); handleCreate(e); }} >
                             <div className="col-12">
-                                <div style={{ display: 'flex', gap: '12px', alignItems: 'stretch', justifyContent: 'space-between' }}>
+                                <div style={{ display: 'flex', gap: '10px', alignItems: 'flex-start' }}>
 
-                                    {/* Left: label + [input + action buttons on same row] */}
-                                    <div style={{ flex: 1, minWidth: 0 }}>
-                                        <label className="form-label mb-1">{t('Customer')}</label>
-                                        <div style={{ display: 'flex', gap: '4px', alignItems: 'center' }}>
-                                            <div style={{ flex: 1, minWidth: 0 }}>
-                                                <Typeahead
-                                                    id="customer_id"
-                                                    filterBy={() => true}
-                                                    labelKey="search_label"
-                                                    isLoading={false}
-                                                    emptyLabel=""
-                                                    clearButton={false}
-                                                    open={openCustomerSearchResult}
-                                                    onChange={(selectedItems) => {
-                                                        delete errors.customer_id;
-                                                        setErrors(errors);
-                                                        if (selectedItems.length === 0) {
+                                    {/* LEFT: all form fields stacked */}
+                                    <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: '6px' }}>
+
+                                        {/* Customer search row */}
+                                        <div>
+                                            <label className="form-label mb-1">{t('Customer')}</label>
+                                            <div style={{ display: 'flex', gap: '4px', alignItems: 'center' }}>
+                                                <div style={{ flex: 1, minWidth: 0 }}>
+                                                    <Typeahead
+                                                        id="customer_id"
+                                                        filterBy={() => true}
+                                                        labelKey="search_label"
+                                                        isLoading={false}
+                                                        emptyLabel=""
+                                                        clearButton={false}
+                                                        open={openCustomerSearchResult}
+                                                        onChange={(selectedItems) => {
                                                             delete errors.customer_id;
-                                                            delete errors.blocked;
-                                                            formData.customer_id = "";
-                                                            formData.customer_name = "";
-                                                            formData.customerName = "";
-                                                            setFormData({ ...formData });
-                                                            setSelectedCustomers([]);
-                                                            setOpenCustomerSearchResult(false);
-                                                            return;
-                                                        }
-                                                        formData.customer_id = selectedItems[0].id;
-                                                        if (selectedItems[0].use_remarks_in_sales && selectedItems[0].remarks) {
-                                                            formData.remarks = selectedItems[0].remarks;
-                                                        }
-                                                        if (selectedItems[0].phone && !formData.phone) {
-                                                            formData.phone = selectedItems[0].phone;
-                                                        }
-                                                        setFormData({ ...formData });
-                                                        setSelectedCustomers(selectedItems);
-                                                        fetchAndSetCustomer(selectedItems[0].id, selectedItems[0]);
-                                                        setOpenCustomerSearchResult(false);
-                                                        if (store?.settings?.block_sales_after_pending_count > 0) {
-                                                            const storeId = localStorage.getItem("store_id");
-                                                            const cs = selectedItems[0]?.stores?.[storeId];
-                                                            const pendingCount = (cs?.sales_not_paid_count || 0) + (cs?.sales_paid_partially_count || 0);
-                                                            if (pendingCount >= store.settings.block_sales_after_pending_count) {
-                                                                errors.blocked = `Customer has ${pendingCount} unpaid sale(s). New sales are blocked until existing sales are paid.`;
-                                                            } else {
+                                                            setErrors(errors);
+                                                            if (selectedItems.length === 0) {
+                                                                delete errors.customer_id;
                                                                 delete errors.blocked;
+                                                                formData.customer_id = "";
+                                                                formData.customer_name = "";
+                                                                formData.customerName = "";
+                                                                setFormData({ ...formData });
+                                                                setSelectedCustomers([]);
+                                                                setOpenCustomerSearchResult(false);
+                                                                return;
                                                             }
-                                                            setErrors({ ...errors });
-                                                        }
-                                                    }}
-                                                    options={customerOptions}
-                                                    placeholder={t('Customer Name / Mob / VAT # / ID')}
-                                                    selected={selectedCustomers}
-                                                    highlightOnlyResult={true}
-                                                    ref={customerSearchRef}
-                                                    onKeyDown={(e) => {
-                                                        if (e.key === "Escape") {
-                                                            delete errors.customer_id;
-                                                            formData.customer_id = "";
-                                                            formData.customer_name = "";
-                                                            formData.customerName = "";
+                                                            formData.customer_id = selectedItems[0].id;
+                                                            if (selectedItems[0].use_remarks_in_sales && selectedItems[0].remarks) {
+                                                                formData.remarks = selectedItems[0].remarks;
+                                                            }
+                                                            if (selectedItems[0].phone && !formData.phone) {
+                                                                formData.phone = selectedItems[0].phone;
+                                                            }
                                                             setFormData({ ...formData });
-                                                            setSelectedCustomers([]);
-                                                            setCustomerOptions([]);
+                                                            setSelectedCustomers(selectedItems);
+                                                            fetchAndSetCustomer(selectedItems[0].id, selectedItems[0]);
                                                             setOpenCustomerSearchResult(false);
-                                                            customerSearchRef.current?.clear();
-                                                        }
-                                                    }}
-                                                    onInputChange={(searchTerm, e) => {
-                                                        if (searchTerm) {
-                                                            formData.customerName = searchTerm;
-                                                            formData.customer_name = searchTerm;
-                                                            setFormData({ ...formData });
-                                                        }
-                                                        if (timerRef.current) clearTimeout(timerRef.current);
-                                                        timerRef.current = setTimeout(() => { suggestCustomers(searchTerm); }, 350);
-                                                    }}
-                                                    renderMenu={(results, menuProps, state) => {
-                                                        const searchWords = state.text.toLowerCase().split(" ").filter(Boolean);
-                                                        return (
-                                                            <Menu {...menuProps} style={{ ...(menuProps.style || {}), width: '95vw', maxWidth: '95vw', minWidth: '300px', zIndex: 9999 }}>
-                                                                <MenuItem disabled>
-                                                                    <div style={{ display: 'flex', fontWeight: 'bold', padding: '4px 8px', borderBottom: '1px solid #ddd' }}>
-                                                                        <div style={{ width: '10%' }}>{t("ID")}</div>
-                                                                        <div style={{ width: '47%' }}>{t("Name")}</div>
-                                                                        <div style={{ width: '10%' }}>{t("Phone")}</div>
-                                                                        <div style={{ width: '13%' }}>{t("VAT NO.")}</div>
-                                                                        <div style={{ width: '10%' }}>{t("Credit Balance")}</div>
-                                                                        <div style={{ width: '10%' }}>{t("Credit Limit")}</div>
-                                                                    </div>
-                                                                </MenuItem>
-                                                                {results.map((option, index) => {
-                                                                    const onlyOneResult = results.length === 1;
-                                                                    const isActive = state.activeIndex === index || onlyOneResult;
-                                                                    return (
-                                                                        <MenuItem option={option} position={index} key={index}>
-                                                                            <div style={{ display: 'flex', padding: '4px 8px' }}>
-                                                                                <div style={{ ...columnStyle, width: '10%' }}>{highlightWords(option.code, searchWords, isActive)}</div>
-                                                                                <div style={{ ...columnStyle, width: '47%' }}>{highlightWords(option.name_in_arabic ? `${option.name} - ${option.name_in_arabic}` : option.name, searchWords, isActive)}</div>
-                                                                                <div style={{ ...columnStyle, width: '10%' }}>{highlightWords(option.phone, searchWords, isActive)}</div>
-                                                                                <div style={{ ...columnStyle, width: '13%' }}>{highlightWords(option.vat_no, searchWords, isActive)}</div>
-                                                                                <div style={{ ...columnStyle, width: '10%' }}>
-                                                                                    <div tabIndex={-1} className={isActive ? "btn btn-outline-light btn-sm" : "btn btn-outline-primary btn-sm"} onMouseDown={e => e.preventDefault()} onClick={(e) => { e.preventDefault(); e.stopPropagation(); openCustomerPending(option); }}>
-                                                                                        <Amount amount={trimTo2Decimals(option.credit_balance)} />
+                                                            if (store?.settings?.block_sales_after_pending_count > 0) {
+                                                                const storeId = localStorage.getItem("store_id");
+                                                                const cs = selectedItems[0]?.stores?.[storeId];
+                                                                const pendingCount = (cs?.sales_not_paid_count || 0) + (cs?.sales_paid_partially_count || 0);
+                                                                if (pendingCount >= store.settings.block_sales_after_pending_count) {
+                                                                    errors.blocked = `Customer has ${pendingCount} unpaid sale(s). New sales are blocked until existing sales are paid.`;
+                                                                } else {
+                                                                    delete errors.blocked;
+                                                                }
+                                                                setErrors({ ...errors });
+                                                            }
+                                                        }}
+                                                        options={customerOptions}
+                                                        placeholder={t('Customer Name / Mob / VAT # / ID')}
+                                                        selected={selectedCustomers}
+                                                        highlightOnlyResult={true}
+                                                        ref={customerSearchRef}
+                                                        onKeyDown={(e) => {
+                                                            if (e.key === "Escape") {
+                                                                delete errors.customer_id;
+                                                                formData.customer_id = "";
+                                                                formData.customer_name = "";
+                                                                formData.customerName = "";
+                                                                setFormData({ ...formData });
+                                                                setSelectedCustomers([]);
+                                                                setCustomerOptions([]);
+                                                                setOpenCustomerSearchResult(false);
+                                                                customerSearchRef.current?.clear();
+                                                            }
+                                                        }}
+                                                        onInputChange={(searchTerm, e) => {
+                                                            if (searchTerm) {
+                                                                formData.customerName = searchTerm;
+                                                                formData.customer_name = searchTerm;
+                                                                setFormData({ ...formData });
+                                                            }
+                                                            if (timerRef.current) clearTimeout(timerRef.current);
+                                                            timerRef.current = setTimeout(() => { suggestCustomers(searchTerm); }, 350);
+                                                        }}
+                                                        renderMenu={(results, menuProps, state) => {
+                                                            const searchWords = state.text.toLowerCase().split(" ").filter(Boolean);
+                                                            return (
+                                                                <Menu {...menuProps} style={{ ...(menuProps.style || {}), width: '95vw', maxWidth: '95vw', minWidth: '300px', zIndex: 9999 }}>
+                                                                    <MenuItem disabled>
+                                                                        <div style={{ display: 'flex', fontWeight: 'bold', padding: '4px 8px', borderBottom: '1px solid #ddd' }}>
+                                                                            <div style={{ width: '10%' }}>{t("ID")}</div>
+                                                                            <div style={{ width: '47%' }}>{t("Name")}</div>
+                                                                            <div style={{ width: '10%' }}>{t("Phone")}</div>
+                                                                            <div style={{ width: '13%' }}>{t("VAT NO.")}</div>
+                                                                            <div style={{ width: '10%' }}>{t("Credit Balance")}</div>
+                                                                            <div style={{ width: '10%' }}>{t("Credit Limit")}</div>
+                                                                        </div>
+                                                                    </MenuItem>
+                                                                    {results.map((option, index) => {
+                                                                        const onlyOneResult = results.length === 1;
+                                                                        const isActive = state.activeIndex === index || onlyOneResult;
+                                                                        return (
+                                                                            <MenuItem option={option} position={index} key={index}>
+                                                                                <div style={{ display: 'flex', padding: '4px 8px' }}>
+                                                                                    <div style={{ ...columnStyle, width: '10%' }}>{highlightWords(option.code, searchWords, isActive)}</div>
+                                                                                    <div style={{ ...columnStyle, width: '47%' }}>{highlightWords(option.name_in_arabic ? `${option.name} - ${option.name_in_arabic}` : option.name, searchWords, isActive)}</div>
+                                                                                    <div style={{ ...columnStyle, width: '10%' }}>{highlightWords(option.phone, searchWords, isActive)}</div>
+                                                                                    <div style={{ ...columnStyle, width: '13%' }}>{highlightWords(option.vat_no, searchWords, isActive)}</div>
+                                                                                    <div style={{ ...columnStyle, width: '10%' }}>
+                                                                                        <div tabIndex={-1} className={isActive ? "btn btn-outline-light btn-sm" : "btn btn-outline-primary btn-sm"} onMouseDown={e => e.preventDefault()} onClick={(e) => { e.preventDefault(); e.stopPropagation(); openCustomerPending(option); }}>
+                                                                                            <Amount amount={trimTo2Decimals(option.credit_balance)} />
+                                                                                        </div>
                                                                                     </div>
+                                                                                    <div style={{ ...columnStyle, width: '10%' }}>{option.credit_limit && (<Amount amount={trimTo2Decimals(option.credit_limit)} />)}</div>
                                                                                 </div>
-                                                                                <div style={{ ...columnStyle, width: '10%' }}>{option.credit_limit && (<Amount amount={trimTo2Decimals(option.credit_limit)} />)}</div>
-                                                                            </div>
-                                                                        </MenuItem>
-                                                                    );
-                                                                })}
-                                                            </Menu>
-                                                        );
-                                                    }}
-                                                />
+                                                                            </MenuItem>
+                                                                        );
+                                                                    })}
+                                                                </Menu>
+                                                            );
+                                                        }}
+                                                    />
+                                                </div>
+                                                {formData.customer_id && (
+                                                    <Button className="btn btn-default btn-sm" onClick={() => openCustomerUpdateForm(formData.customer_id)}>
+                                                        <i className="bi bi-pencil"></i>
+                                                    </Button>
+                                                )}
+                                                <Button className="btn btn-primary btn-sm" onClick={openCustomers}><i className="bi bi-list"></i></Button>
+                                                <Button hide={true.toString()} onClick={openCustomerCreateForm} className="btn btn-outline-secondary btn-sm" type="button"><i className="bi bi-plus-lg"></i> {t('New')}</Button>
                                             </div>
-                                            {formData.customer_id && (
-                                                <Button className="btn btn-default btn-sm" onClick={() => openCustomerUpdateForm(formData.customer_id)}>
-                                                    <i className="bi bi-pencil"></i>
-                                                </Button>
-                                            )}
-                                            <Button className="btn btn-primary btn-sm" onClick={openCustomers}><i className="bi bi-list"></i></Button>
-                                            <Button hide={true.toString()} onClick={openCustomerCreateForm} className="btn btn-outline-secondary btn-sm" type="button"><i className="bi bi-plus-lg"></i> {t('New')}</Button>
+                                            {errors.customer_id && <div style={{ color: "red", fontSize: '12px', marginTop: '2px' }}>{t(errors.customer_id)}</div>}
+                                            {errors.blocked && <div style={{ color: "red", fontSize: '12px', marginTop: '2px' }}>{errors.blocked}</div>}
                                         </div>
-                                        {errors.customer_id && <div style={{ color: "red", fontSize: '12px', marginTop: '2px' }}>{t(errors.customer_id)}</div>}
-                                        {errors.blocked && <div style={{ color: "red", fontSize: '12px', marginTop: '2px' }}>{errors.blocked}</div>}
-                                    </div>
 
-                                    {/* Right: selected customer details card — docked to right */}
+                                        {/* Second row: all other fields side by side */}
+                                        <div style={{ display: 'flex', gap: '6px', alignItems: 'flex-start', flexWrap: 'wrap' }}>
+
+                                            {/* Barcode Scan */}
+                                            <div style={{ flex: '0 0 140px', minWidth: '100px' }}>
+                                                <label className="form-label" style={{ fontSize: '12px', marginBottom: '2px' }}>{t('Product Barcode Scan')}</label>
+                                                <div>
+                                                    <DebounceInput
+                                                        minLength={3}
+                                                        debounceTimeout={100}
+                                                        placeholder={t('Scan Barcode')}
+                                                        className="form-control barcode"
+                                                        value={formData.barcode}
+                                                        onChange={event => getProductByBarCode(event.target.value)} />
+                                                    {errors.bar_code && (
+                                                        <div style={{ color: "red" }}>
+                                                            {t(errors.bar_code)}
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            </div>
+
+                                            {/* Date */}
+                                            <div style={{ flex: '0 0 175px' }}>
+                                                <label className="form-label" style={{ fontSize: '12px', marginBottom: '2px' }}>{t('Date') + " *"}</label>
+                                                <div>
+                                                    <DatePicker
+                                                        id="date_str"
+                                                        selected={formData.date_str ? new Date(formData.date_str) : null}
+                                                        value={formData.date_str ? format(
+                                                            new Date(formData.date_str),
+                                                            "MMMM d, yyyy h:mm aa",
+                                                            { locale: dateLocale }
+                                                        ) : null}
+                                                        className="form-control"
+                                                        dateFormat="MMMM d, yyyy h:mm aa"
+                                                        locale={dateLocale}
+                                                        showTimeSelect
+                                                        timeIntervals="1"
+                                                        onChange={(value) => {
+                                                            console.log("Value", value);
+                                                            formData.date_str = value;
+                                                            // formData.date_str = format(new Date(value), "MMMM d yyyy h:mm aa");
+                                                            setFormData({ ...formData });
+                                                        }}
+                                                    />
+                                                    {errors.date_str && (
+                                                        <div style={{ color: "red" }}>
+                                                            {t(errors.date_str)}
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            </div>
+
+                                            {/* Phone + WhatsApp */}
+                                            <div style={{ flex: '0 0 auto' }}>
+                                                <label className="form-label" style={{ fontSize: '12px', marginBottom: '2px' }}>{t('Phone') + "( 05.. / +966..)"}</label>
+                                                <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                                                    <input
+                                                        id="sales_phone"
+                                                        name="sales_phone"
+                                                        value={formData.phone ? formData.phone : ""}
+                                                        type='string'
+                                                        onChange={(e) => {
+                                                            delete errors["phone"];
+                                                            setErrors({ ...errors });
+                                                            formData.phone = e.target.value;
+                                                            setFormData({ ...formData });
+                                                            console.log(formData);
+                                                        }}
+                                                        className="form-control"
+                                                        placeholder={t('Phone')}
+                                                        style={{ width: '115px' }}
+                                                    />
+                                                    <Button className={`btn btn-success btn-sm`} onClick={sendWhatsAppMessage} style={{ flexShrink: 0 }}>
+                                                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="white" viewBox="0 0 16 16">
+                                                            <path d="M13.601 2.326A7.875 7.875 0 0 0 8.036 0C3.596 0 0 3.597 0 8.036c0 1.417.37 2.805 1.07 4.03L0 16l3.993-1.05a7.968 7.968 0 0 0 4.043 1.085h.003c4.44 0 8.036-3.596 8.036-8.036 0-2.147-.836-4.166-2.37-5.673ZM8.036 14.6a6.584 6.584 0 0 1-3.35-.92l-.24-.142-2.37.622.63-2.31-.155-.238a6.587 6.587 0 0 1-1.018-3.513c0-3.637 2.96-6.6 6.6-6.6 1.764 0 3.42.69 4.67 1.94a6.56 6.56 0 0 1 1.93 4.668c0 3.637-2.96 6.6-6.6 6.6Zm3.61-4.885c-.198-.1-1.17-.578-1.352-.644-.18-.066-.312-.1-.444.1-.13.197-.51.644-.626.775-.115.13-.23.15-.428.05-.198-.1-.837-.308-1.594-.983-.59-.525-.99-1.174-1.11-1.372-.116-.198-.012-.305.088-.403.09-.09.198-.23.298-.345.1-.115.132-.197.2-.33.065-.13.032-.247-.017-.345-.05-.1-.444-1.07-.61-1.46-.16-.384-.323-.332-.444-.338l-.378-.007c-.13 0-.344.048-.525.23s-.688.672-.688 1.64c0 .967.704 1.9.802 2.03.1.13 1.386 2.116 3.365 2.963.47.203.837.324 1.122.414.472.15.902.13 1.24.08.378-.057 1.17-.48 1.336-.942.165-.462.165-.858.116-.943-.048-.084-.18-.132-.378-.23Z" />
+                                                        </svg>
+                                                    </Button>
+                                                </div>
+                                                {errors.phone && (
+                                                    <div style={{ color: "red" }}>
+                                                        {t(errors.phone)}
+                                                    </div>
+                                                )}
+                                            </div>
+
+                                            {/* VAT NO. */}
+                                            <div style={{ flex: '1 0 130px', maxWidth: '180px' }}>
+                                                <label className="form-label" style={{ fontSize: '12px', marginBottom: '2px' }}>{t('VAT NO.(15 digits)')}</label>
+                                                <div>
+                                                    <input
+                                                        id="sales_vat_no"
+                                                        name="sales_vat_no"
+                                                        value={formData.vat_no ? formData.vat_no : ""}
+                                                        type='string'
+                                                        onChange={(e) => {
+                                                            delete errors["vat_no"];
+                                                            setErrors({ ...errors });
+                                                            formData.vat_no = e.target.value;
+                                                            setFormData({ ...formData });
+                                                            console.log(formData);
+                                                        }}
+                                                        className="form-control"
+                                                        placeholder={t('VAT NO.')}
+                                                    />
+                                                </div>
+                                                {errors.vat_no && (
+                                                    <div style={{ color: "red" }}>
+                                                        {t(errors.vat_no)}
+                                                    </div>
+                                                )}
+                                            </div>
+
+                                            {/* Address */}
+                                            <div style={{ flex: '1 0 140px', maxWidth: '220px' }}>
+                                                <label className="form-label" style={{ fontSize: '12px', marginBottom: '2px' }}>{t('Address')}</label>
+                                                <div>
+                                                    <textarea
+                                                        value={formData.address}
+                                                        type='string'
+                                                        onChange={(e) => {
+                                                            delete errors["address"];
+                                                            setErrors({ ...errors });
+                                                            formData.address = e.target.value;
+                                                            setFormData({ ...formData });
+                                                            console.log(formData);
+                                                        }}
+                                                        className="form-control"
+                                                        id="address"
+                                                        placeholder={t('Address')}
+                                                    />
+                                                </div>
+                                                {errors.address && (
+                                                    <div style={{ color: "red" }}>
+                                                        {t(errors.address)}
+                                                    </div>
+                                                )}
+                                            </div>
+
+                                            {/* Remarks */}
+                                            <div style={{ flex: '1 0 140px' }}>
+                                                <label className="form-label" style={{ fontSize: '12px', marginBottom: '2px' }}>{t('Remarks')}</label>
+                                                <div>
+                                                    <textarea
+                                                        value={formData.remarks}
+                                                        type='string'
+                                                        onChange={(e) => {
+                                                            delete errors["address"];
+                                                            setErrors({ ...errors });
+                                                            formData.remarks = e.target.value;
+                                                            setFormData({ ...formData });
+                                                            console.log(formData);
+                                                        }}
+                                                        className="form-control"
+                                                        id="remarks"
+                                                        placeholder={t('Remarks')}
+                                                    />
+                                                </div>
+                                                {errors.remarks && (
+                                                    <div style={{ color: "red" }}>
+                                                        {t(errors.remarks)}
+                                                    </div>
+                                                )}
+                                            </div>
+
+                                        </div>
+                                    </div>{/* end LEFT */}
+
+                                    {/* RIGHT: customer details card — fixed width, does NOT push left fields */}
                                     {selectedCustomers.length > 0 && formData.customer_id && (() => {
                                         const c = selectedCustomers[0];
                                         const storeId = localStorage.getItem("store_id");
                                         const cs = c?.stores?.[storeId];
                                         return (
-                                            <div style={{ flex: '0 0 380px', maxWidth: '55%' }}>
+                                            <div style={{ flex: '0 0 350px', maxWidth: '40%', alignSelf: 'stretch' }}>
                                                 <div style={{ padding: '10px 16px', background: 'rgba(0,74,198,0.04)', border: '1px solid #c7d7f5', borderRadius: '8px', height: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: '6px' }}>
                                                     {/* Row 1: code + name + arabic name */}
                                                     <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
@@ -425,177 +597,6 @@ export function SalesType1Body({
                                     })()}
 
                                 </div>
-                            </div>
-
-                            <div className="col-md-2">
-                                <label className="form-label">{t('Product Barcode Scan')}</label>
-
-                                <div className="input-group mb-3">
-                                    <DebounceInput
-                                        minLength={3}
-                                        debounceTimeout={100}
-                                        placeholder={t('Scan Barcode')}
-                                        className="form-control barcode"
-                                        value={formData.barcode}
-                                        onChange={event => getProductByBarCode(event.target.value)} />
-                                    {errors.bar_code && (
-                                        <div style={{ color: "red" }}>
-
-                                            {t(errors.bar_code)}
-                                        </div>
-                                    )}
-                                </div>
-                            </div>
-
-                            <div className="col-md-3">
-                                <label className="form-label">{t('Date') + " *"}</label>
-                                <div className="input-group mb-3">
-                                    <DatePicker
-                                        id="date_str"
-                                        selected={formData.date_str ? new Date(formData.date_str) : null}
-                                        value={formData.date_str ? format(
-                                            new Date(formData.date_str),
-                                            "MMMM d, yyyy h:mm aa",
-                                            { locale: dateLocale }
-                                        ) : null}
-                                        className="form-control"
-                                        dateFormat="MMMM d, yyyy h:mm aa"
-                                        locale={dateLocale}
-                                        showTimeSelect
-                                        timeIntervals="1"
-                                        onChange={(value) => {
-                                            console.log("Value", value);
-                                            formData.date_str = value;
-                                            // formData.date_str = format(new Date(value), "MMMM d yyyy h:mm aa");
-                                            setFormData({ ...formData });
-                                        }}
-                                    />
-
-                                    {errors.date_str && (
-                                        <div style={{ color: "red" }}>
-                                            {t(errors.date_str)}
-                                        </div>
-                                    )}
-                                </div>
-                            </div>
-
-                            <div className="col-md-2">
-                                <label className="form-label">{t('Phone') + "( 05.. / +966..)"}</label>
-
-                                <div className="input-group mb-3">
-                                    <input
-                                        id="sales_phone"
-                                        name="sales_phone"
-                                        value={formData.phone ? formData.phone : ""}
-                                        type='string'
-                                        onChange={(e) => {
-                                            delete errors["phone"];
-                                            setErrors({ ...errors });
-                                            formData.phone = e.target.value;
-                                            setFormData({ ...formData });
-                                            console.log(formData);
-                                        }}
-                                        className="form-control"
-
-                                        placeholder={t('Phone')}
-                                    />
-                                </div>
-                                {errors.phone && (
-                                    <div style={{ color: "red" }}>
-
-                                        {t(errors.phone)}
-                                    </div>
-                                )}
-                            </div>
-
-                            <div className="col-md-1">
-                                <Button className={`btn btn-success btn-sm`} style={{ marginTop: "30px" }} onClick={sendWhatsAppMessage}>
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="white" viewBox="0 0 16 16">
-                                        <path d="M13.601 2.326A7.875 7.875 0 0 0 8.036 0C3.596 0 0 3.597 0 8.036c0 1.417.37 2.805 1.07 4.03L0 16l3.993-1.05a7.968 7.968 0 0 0 4.043 1.085h.003c4.44 0 8.036-3.596 8.036-8.036 0-2.147-.836-4.166-2.37-5.673ZM8.036 14.6a6.584 6.584 0 0 1-3.35-.92l-.24-.142-2.37.622.63-2.31-.155-.238a6.587 6.587 0 0 1-1.018-3.513c0-3.637 2.96-6.6 6.6-6.6 1.764 0 3.42.69 4.67 1.94a6.56 6.56 0 0 1 1.93 4.668c0 3.637-2.96 6.6-6.6 6.6Zm3.61-4.885c-.198-.1-1.17-.578-1.352-.644-.18-.066-.312-.1-.444.1-.13.197-.51.644-.626.775-.115.13-.23.15-.428.05-.198-.1-.837-.308-1.594-.983-.59-.525-.99-1.174-1.11-1.372-.116-.198-.012-.305.088-.403.09-.09.198-.23.298-.345.1-.115.132-.197.2-.33.065-.13.032-.247-.017-.345-.05-.1-.444-1.07-.61-1.46-.16-.384-.323-.332-.444-.338l-.378-.007c-.13 0-.344.048-.525.23s-.688.672-.688 1.64c0 .967.704 1.9.802 2.03.1.13 1.386 2.116 3.365 2.963.47.203.837.324 1.122.414.472.15.902.13 1.24.08.378-.057 1.17-.48 1.336-.942.165-.462.165-.858.116-.943-.048-.084-.18-.132-.378-.23Z" />
-                                    </svg>
-                                </Button>
-                            </div>
-
-
-
-                            <div className="col-md-2">
-                                <label className="form-label">{t('VAT NO.(15 digits)')}</label>
-
-                                <div className="input-group mb-3">
-                                    <input
-                                        id="sales_vat_no"
-                                        name="sales_vat_no"
-                                        value={formData.vat_no ? formData.vat_no : ""}
-                                        type='string'
-                                        onChange={(e) => {
-                                            delete errors["vat_no"];
-                                            setErrors({ ...errors });
-                                            formData.vat_no = e.target.value;
-                                            setFormData({ ...formData });
-                                            console.log(formData);
-                                        }}
-                                        className="form-control"
-
-                                        placeholder={t('VAT NO.')}
-                                    />
-                                </div>
-                                {errors.vat_no && (
-                                    <div style={{ color: "red" }}>
-
-                                        {t(errors.vat_no)}
-                                    </div>
-                                )}
-                            </div>
-
-                            <div className="col-md-3">
-                                <label className="form-label">{t('Address')}</label>
-                                <div className="input-group mb-3">
-                                    <textarea
-                                        value={formData.address}
-                                        type='string'
-                                        onChange={(e) => {
-                                            delete errors["address"];
-                                            setErrors({ ...errors });
-                                            formData.address = e.target.value;
-                                            setFormData({ ...formData });
-                                            console.log(formData);
-                                        }}
-                                        className="form-control"
-                                        id="address"
-                                        placeholder={t('Address')}
-                                    />
-                                </div>
-                                {errors.address && (
-                                    <div style={{ color: "red" }}>
-
-                                        {t(errors.address)}
-                                    </div>
-                                )}
-                            </div>
-                            <div className="col-md-3">
-                                <label className="form-label">{t('Remarks')}</label>
-                                <div className="input-group mb-3">
-                                    <textarea
-                                        value={formData.remarks}
-                                        type='string'
-                                        onChange={(e) => {
-                                            delete errors["address"];
-                                            setErrors({ ...errors });
-                                            formData.remarks = e.target.value;
-                                            setFormData({ ...formData });
-                                            console.log(formData);
-                                        }}
-                                        className="form-control"
-                                        id="remarks"
-                                        placeholder={t('Remarks')}
-                                    />
-                                </div>
-                                {errors.remarks && (
-                                    <div style={{ color: "red" }}>
-
-                                        {t(errors.remarks)}
-                                    </div>
-                                )}
                             </div>
                             <div className="col-md-10" >
                                 <label className="form-label">{t('Product Search') + "*"}</label>
@@ -985,7 +986,7 @@ export function SalesType1Body({
 
 
                                 <table className="table table-striped table-sm table-bordered">
-                                    <thead style={{ borderTopWidth: 0, borderBottomWidth: 0 }}>
+                                    <thead>
                                         <tr className="text-center">
                                             {selectedProductsColumns.filter(c => c.visible).map(col => {
                                                 if (col.key === 'delete') return <th key={col.key}></th>;
@@ -996,7 +997,7 @@ export function SalesType1Body({
                                                 if (col.key === 'purchase_unit_price') return <th key={col.key}>{t('Purchase Unit Price(without VAT)')}</th>;
                                                 if (col.key === 'stock') return <th key={col.key}>{t('Stock')}</th>;
                                                 if (col.key === 'warehouse') return store.settings?.enable_warehouse_module ? <th key={col.key}>{t('Remove Stock From')}</th> : null;
-                                                if (col.key === 'qty') return <th key={col.key}>{t('Qty')}</th>;
+                                                if (col.key === 'qty') return <th key={col.key} style={{ minWidth: "80px", maxWidth: "80px" }}>{t('Qty')}</th>;
                                                 if (col.key === 'unit_price') return <th key={col.key}>{t('Unit Price(without VAT)')}</th>;
                                                 if (col.key === 'unit_price_with_vat') return <th key={col.key}>{t('Unit Price(with VAT)')}</th>;
                                                 if (col.key === 'unit_discount') return <th key={col.key}>{t('Unit Disc.(without VAT)')}</th>;
@@ -1017,7 +1018,7 @@ export function SalesType1Body({
                                             const duplicateCount = duplicateIndexes.length;
                                             return (
                                                 <tr
-                                                    className="text-center fixed-row"
+                                                    className="text-center fixed-row "
                                                     key={index}>
                                                     {selectedProductsColumns.filter(c => c.visible).map(col => {
                                                         if (col.key === 'delete') return (<td style={{ verticalAlign: 'middle', padding: '0.25rem' }} >
@@ -1034,7 +1035,7 @@ export function SalesType1Body({
                                                             {index + 1}
 
                                                         </td>);
-                                                        if (col.key === 'part_number') return (<ResizableTableCell key="part_number" style={{ verticalAlign: 'middle', padding: '0.25rem' }}>
+                                                        if (col.key === 'part_number') return (<ResizableTableCell style={{ verticalAlign: 'middle', padding: '0.25rem' }}>
                                                             <div style={{ display: 'flex', alignItems: 'center' }}>
                                                                 <input type="text" id={`sales_product_part_number${index}`}
                                                                     name={`sales_product_part_number${index}`}
@@ -1072,7 +1073,7 @@ export function SalesType1Body({
                                                                 )}
                                                             </div>
                                                         </ResizableTableCell>);
-                                                        if (col.key === 'name') return (<ResizableTableCell key="name" style={{ verticalAlign: 'middle', padding: '0.25rem' }}
+                                                        if (col.key === 'name') return (<ResizableTableCell style={{ verticalAlign: 'middle', padding: '0.25rem' }}
                                                         >
                                                             <div className="input-group" style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
                                                                 <input type="text" id={`${"sales_product_name" + index}`}
@@ -1168,70 +1169,70 @@ export function SalesType1Body({
                                                                 ></i>
                                                             )}
                                                         </ResizableTableCell>);
-                                                        if (col.key === 'info') return (<td key={col.key} style={{ verticalAlign: 'middle', padding: '0.25rem' }}>
+                                                        if (col.key === 'info') return (<td style={{ verticalAlign: 'middle', padding: '0.25rem' }}>
                                                             <div style={{ zIndex: "9999 !important", position: "absolute !important" }}>
-                                                                <Dropdown drop="top">
-                                                                    <Dropdown.Toggle variant="secondary" id="dropdown-secondary" style={{}}>
-                                                                        <i className="bi bi-info"></i>
-                                                                    </Dropdown.Toggle>
-                                                                    <Dropdown.Menu style={{ zIndex: 9999, position: "absolute" }} popperConfig={{ modifiers: [{ name: 'preventOverflow', options: { boundary: 'viewport' } }] }}>
-                                                                        <Dropdown.Item onClick={() => openLinkedProducts(product)}>
-                                                                            <i className="bi bi-link"></i>&nbsp;
-                                                                            {t("Linked Products")} ({getShortcut('linkedProducts')})
-                                                                        </Dropdown.Item>
+                                                            <Dropdown drop="top">
+                                                                <Dropdown.Toggle variant="secondary" id="dropdown-secondary" style={{}}>
+                                                                    <i className="bi bi-info"></i>
+                                                                </Dropdown.Toggle>
+                                                                <Dropdown.Menu style={{ zIndex: 9999, position: "absolute" }} popperConfig={{ modifiers: [{ name: 'preventOverflow', options: { boundary: 'viewport' } }] }}>
+                                                                    <Dropdown.Item onClick={() => openLinkedProducts(product)}>
+                                                                        <i className="bi bi-link"></i>&nbsp;
+                                                                        {t("Linked Products")} ({getShortcut('linkedProducts')})
+                                                                    </Dropdown.Item>
 
-                                                                        <Dropdown.Item onClick={() => openProductHistory(product)}>
-                                                                            <i className="bi bi-clock-history"></i>&nbsp;
-                                                                            {t("History")} ({getShortcut('productHistory')})
-                                                                        </Dropdown.Item>
+                                                                    <Dropdown.Item onClick={() => openProductHistory(product)}>
+                                                                        <i className="bi bi-clock-history"></i>&nbsp;
+                                                                        {t("History")} ({getShortcut('productHistory')})
+                                                                    </Dropdown.Item>
 
-                                                                        <Dropdown.Item onClick={() => openSalesHistory(product)}>
-                                                                            <i className="bi bi-clock-history"></i>&nbsp;
-                                                                            {t("Sales History")} ({getShortcut('salesHistory')})
-                                                                        </Dropdown.Item>
+                                                                    <Dropdown.Item onClick={() => openSalesHistory(product)}>
+                                                                        <i className="bi bi-clock-history"></i>&nbsp;
+                                                                        {t("Sales History")} ({getShortcut('salesHistory')})
+                                                                    </Dropdown.Item>
 
-                                                                        <Dropdown.Item onClick={() => openSalesReturnHistory(product)}>
-                                                                            <i className="bi bi-clock-history"></i>&nbsp;
-                                                                            {t("Sales Return History")} ({getShortcut('salesReturnHistory')})
-                                                                        </Dropdown.Item>
+                                                                    <Dropdown.Item onClick={() => openSalesReturnHistory(product)}>
+                                                                        <i className="bi bi-clock-history"></i>&nbsp;
+                                                                        {t("Sales Return History")} ({getShortcut('salesReturnHistory')})
+                                                                    </Dropdown.Item>
 
-                                                                        <Dropdown.Item onClick={() => openPurchaseHistory(product)}>
-                                                                            <i className="bi bi-clock-history"></i>&nbsp;
-                                                                            {t("Purchase History")} ({getShortcut('purchaseHistory')})
-                                                                        </Dropdown.Item>
+                                                                    <Dropdown.Item onClick={() => openPurchaseHistory(product)}>
+                                                                        <i className="bi bi-clock-history"></i>&nbsp;
+                                                                        {t("Purchase History")} ({getShortcut('purchaseHistory')})
+                                                                    </Dropdown.Item>
 
-                                                                        <Dropdown.Item onClick={() => openPurchaseReturnHistory(product)}>
-                                                                            <i className="bi bi-clock-history"></i>&nbsp;
-                                                                            {t("Purchase Return History")} ({getShortcut('purchaseReturnHistory')})
-                                                                        </Dropdown.Item>
+                                                                    <Dropdown.Item onClick={() => openPurchaseReturnHistory(product)}>
+                                                                        <i className="bi bi-clock-history"></i>&nbsp;
+                                                                        {t("Purchase Return History")} ({getShortcut('purchaseReturnHistory')})
+                                                                    </Dropdown.Item>
 
-                                                                        <Dropdown.Item onClick={() => openDeliveryNoteHistory(product)}>
-                                                                            <i className="bi bi-clock-history"></i>&nbsp;
-                                                                            {t("Delivery Note History")} ({getShortcut('deliveryNoteHistory')})
-                                                                        </Dropdown.Item>
+                                                                    <Dropdown.Item onClick={() => openDeliveryNoteHistory(product)}>
+                                                                        <i className="bi bi-clock-history"></i>&nbsp;
+                                                                        {t("Delivery Note History")} ({getShortcut('deliveryNoteHistory')})
+                                                                    </Dropdown.Item>
 
-                                                                        <Dropdown.Item onClick={() => openQuotationHistory(product, "quotation")}>
-                                                                            <i className="bi bi-clock-history"></i>&nbsp;
-                                                                            {t("Quotation History")} ({getShortcut('quotationHistory')})
-                                                                        </Dropdown.Item>
+                                                                    <Dropdown.Item onClick={() => openQuotationHistory(product, "quotation")}>
+                                                                        <i className="bi bi-clock-history"></i>&nbsp;
+                                                                        {t("Quotation History")} ({getShortcut('quotationHistory')})
+                                                                    </Dropdown.Item>
 
-                                                                        <Dropdown.Item onClick={() => openQuotationSalesHistory(product)}>
-                                                                            <i className="bi bi-clock-history"></i>&nbsp;
-                                                                            {t("Qtn. Sales History")} ({getShortcut('quotationSalesHistory')})
-                                                                        </Dropdown.Item>
+                                                                    <Dropdown.Item onClick={() => openQuotationSalesHistory(product)}>
+                                                                        <i className="bi bi-clock-history"></i>&nbsp;
+                                                                        {t("Qtn. Sales History")} ({getShortcut('quotationSalesHistory')})
+                                                                    </Dropdown.Item>
 
-                                                                        <Dropdown.Item onClick={() => openQuotationSalesReturnHistory(product)}>
-                                                                            <i className="bi bi-clock-history"></i>&nbsp;
-                                                                            {t("Qtn. Sales Return History")} ({getShortcut('quotationSalesReturnHistory')})
-                                                                        </Dropdown.Item>
+                                                                    <Dropdown.Item onClick={() => openQuotationSalesReturnHistory(product)}>
+                                                                        <i className="bi bi-clock-history"></i>&nbsp;
+                                                                        {t("Qtn. Sales Return History")} ({getShortcut('quotationSalesReturnHistory')})
+                                                                    </Dropdown.Item>
 
-                                                                        <Dropdown.Item onClick={() => openProductImages(product.product_id)}>
-                                                                            <i className="bi bi-clock-history"></i>&nbsp;
-                                                                            {t("Images")} ({getShortcut('images')})
-                                                                        </Dropdown.Item>
-                                                                    </Dropdown.Menu>
+                                                                    <Dropdown.Item onClick={() => openProductImages(product.product_id)}>
+                                                                        <i className="bi bi-clock-history"></i>&nbsp;
+                                                                        {t("Images")} ({getShortcut('images')})
+                                                                    </Dropdown.Item>
+                                                                </Dropdown.Menu>
 
-                                                                </Dropdown>
+                                                            </Dropdown>
                                                             </div>
 
                                                         </td>);

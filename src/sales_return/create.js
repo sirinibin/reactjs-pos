@@ -14,6 +14,7 @@ import { trimTo2Decimals } from "../utils/numberUtils";
 import { trimTo8Decimals } from "../utils/numberUtils";
 import Preview from "./../order/preview.js";
 import { Dropdown } from 'react-bootstrap';
+import ResizableTableCell from '../utils/ResizableTableCell';
 import SalesHistory from "../utils/product_sales_history.js";
 import SalesReturnHistory from "./../utils/product_sales_return_history.js";
 import PurchaseHistory from "./../utils/product_purchase_history.js";
@@ -39,7 +40,6 @@ import SalesCreate from "../order/create.js";
 import { useTranslation } from 'react-i18next';
 import { getDateLocale } from "../i18n/dateLocales";
 import '../order/style.css';
-import ResizableTableCell from './../utils/ResizableTableCell';
 const SalesReturnCreate = forwardRef((props, ref) => {
     const { t, i18n } = useTranslation('common');
     const dateLocale = useMemo(() => getDateLocale(i18n.language), [i18n.language]);
@@ -2180,42 +2180,6 @@ const SalesReturnCreate = forwardRef((props, ref) => {
     ], []);
     const [spColumns, setSPColumns] = useState(defaultSPColumns);
 
-    const SR_COL_DEFAULTS = useMemo(() => ({
-        select: 32, si_no: 40, part_number: 80, name: 220, info: 56,
-        purchase_unit_price: 110, stock: 70, warehouse: 84, qty: 150,
-        unit_price: 120, unit_price_with_vat: 120,
-        unit_discount: 100, unit_discount_with_vat: 100, unit_discount_percent: 100,
-        price: 120, price_with_vat: 120,
-    }), []);
-    const [srColWidths, setSrColWidths] = useState(() => {
-        try { return JSON.parse(localStorage.getItem('sr_sp_col_widths') || '{}'); } catch { return {}; }
-    });
-    const srColResizeRef = useRef(null);
-    const startSrColResize = useCallback((e, colKey, defaultWidth) => {
-        e.preventDefault();
-        const startX = e.clientX;
-        const startWidth = srColWidths[colKey] ?? defaultWidth ?? SR_COL_DEFAULTS[colKey] ?? 60;
-        function onMouseMove(ev) {
-            const w = Math.max(40, startWidth + ev.clientX - startX);
-            setSrColWidths(prev => {
-                const next = { ...prev, [colKey]: w };
-                localStorage.setItem('sr_sp_col_widths', JSON.stringify(next));
-                return next;
-            });
-        }
-        function onMouseUp() {
-            srColResizeRef.current = null;
-            document.removeEventListener('mousemove', onMouseMove);
-            document.removeEventListener('mouseup', onMouseUp);
-            document.body.style.cursor = '';
-            document.body.style.userSelect = '';
-        }
-        srColResizeRef.current = colKey;
-        document.body.style.cursor = 'col-resize';
-        document.body.style.userSelect = 'none';
-        document.addEventListener('mousemove', onMouseMove);
-        document.addEventListener('mouseup', onMouseUp);
-    }, [srColWidths, SR_COL_DEFAULTS]);
 
     const handleToggleSPColumn = (i) => {
         const updated = spColumns.map((c, idx) => idx === i ? { ...c, visible: !c.visible } : c);
@@ -2529,65 +2493,40 @@ const SalesReturnCreate = forwardRef((props, ref) => {
 
                     {selectedProducts && selectedProducts.length === 0 && "Already returned all products"}
                     {selectedProducts && selectedProducts.length > 0 && <form className="needs-validation" onSubmit={handleCreate}>
-                        <div className="sr-products-table-wrap" style={{ overflowX: 'auto', maxHeight: '55vh', overflowY: 'auto', marginTop: '10px', border: '1px solid #e2e8f0', borderRadius: '8px' }}>
-                            <table style={{ width: '100%', borderCollapse: 'collapse', tableLayout: 'fixed' }}>
-                                <colgroup>
-                                    {spColumns.filter(c => c.visible).map(col => (
-                                        <col key={col.key} style={{ width: `${srColWidths[col.key] ?? SR_COL_DEFAULTS[col.key] ?? 100}px` }} />
-                                    ))}
-                                </colgroup>
-                                <thead style={{ backgroundColor: '#f1f5f9', position: 'sticky', top: 0, zIndex: 1 }}>
-                                    {(() => {
-                                        const thStyle = { padding: '10px 12px', fontWeight: 600, borderBottom: '2px solid #c3c6d7', whiteSpace: 'nowrap', fontSize: '12px', color: '#434655', position: 'relative', overflow: 'hidden' };
-                                        const resizeHandle = (colKey) => (
-                                            <div
-                                                onMouseDown={(e) => startSrColResize(e, colKey, srColWidths[colKey] ?? SR_COL_DEFAULTS[colKey] ?? 60)}
-                                                style={{ position: 'absolute', right: 0, top: '20%', bottom: '20%', width: '4px', cursor: 'col-resize', zIndex: 2, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '1px', borderRadius: '2px', backgroundColor: 'transparent' }}
-                                                onMouseEnter={e => { e.currentTarget.style.backgroundColor = '#dbeafe'; Array.from(e.currentTarget.children).forEach(d => d.style.backgroundColor = '#3b82f6'); }}
-                                                onMouseLeave={e => { e.currentTarget.style.backgroundColor = 'transparent'; Array.from(e.currentTarget.children).forEach(d => d.style.backgroundColor = '#b0b7c3'); }}
-                                            >
-                                                <div style={{ width: '1px', height: '100%', backgroundColor: '#b0b7c3', borderRadius: '1px', pointerEvents: 'none' }} />
-                                                <div style={{ width: '1px', height: '100%', backgroundColor: '#b0b7c3', borderRadius: '1px', pointerEvents: 'none' }} />
-                                            </div>
-                                        );
-                                        return (
-                                            <tr style={{ fontSize: '12px', fontWeight: 600, color: '#434655', lineHeight: '16px' }}>
-                                                {spColumns.filter(c => c.visible).map(col => {
-                                                    if (col.key === 'select') return <th key={col.key} style={{ ...thStyle, padding: 0, width: '32px' }}><button type="button" title={t("Table Settings")} onClick={() => setShowSPTableSettings(!showSPTableSettings)} style={{ background: 'none', border: 'none', padding: '2px 0', cursor: 'pointer', color: '#6b7280', display: 'flex', alignItems: 'center', justifyContent: 'center', width: '100%', height: '100%' }} onMouseEnter={e => e.currentTarget.style.color='#191c1e'} onMouseLeave={e => e.currentTarget.style.color='#6b7280'}><i className="bi bi-gear-fill" style={{ fontSize: '11px' }}></i></button></th>;
-                                                    if (col.key === 'si_no') return <th key={col.key} style={thStyle}>#&nbsp;{resizeHandle('si_no')}</th>;
-                                                    if (col.key === 'part_number') return <th key={col.key} style={thStyle}>{t('Part No.')}{resizeHandle('part_number')}</th>;
-                                                    if (col.key === 'name') return <th key={col.key} style={thStyle}>{t('Name')}{resizeHandle('name')}</th>;
-                                                    if (col.key === 'info') return <th key={col.key} style={thStyle}>{t('Info')}{resizeHandle('info')}</th>;
-                                                    if (col.key === 'purchase_unit_price') return <th key={col.key} style={{ ...thStyle, textAlign: 'right' }}>{t('P. Unit Price')}{resizeHandle('purchase_unit_price')}</th>;
-                                                    if (col.key === 'stock') return <th key={col.key} style={thStyle}>{t('Stock')}{resizeHandle('stock')}</th>;
-                                                    if (col.key === 'qty') return <th key={col.key} style={{ ...thStyle, textAlign: 'center' }}>{t('Qty')}{resizeHandle('qty')}</th>;
-                                                    if (col.key === 'warehouse') return store.settings?.enable_warehouse_module ? <th key={col.key} style={thStyle}>{t('Add Stock To')}{resizeHandle('warehouse')}</th> : null;
-                                                    if (col.key === 'unit_price') return <th key={col.key} style={{ ...thStyle, textAlign: 'right' }}>{t('U. Price (ex. VAT)')}{resizeHandle('unit_price')}</th>;
-                                                    if (col.key === 'unit_price_with_vat') return <th key={col.key} style={{ ...thStyle, textAlign: 'right' }}>{t('U. Price (inc. VAT)')}{resizeHandle('unit_price_with_vat')}</th>;
-                                                    if (col.key === 'unit_discount') return <th key={col.key} style={{ ...thStyle, textAlign: 'right' }}>{t('U. Disc. (ex. VAT)')}{resizeHandle('unit_discount')}</th>;
-                                                    if (col.key === 'unit_discount_with_vat') return <th key={col.key} style={{ ...thStyle, textAlign: 'right' }}>{t('U. Disc. (inc. VAT)')}{resizeHandle('unit_discount_with_vat')}</th>;
-                                                    if (col.key === 'unit_discount_percent') return <th key={col.key} style={{ ...thStyle, textAlign: 'right' }}>{t('U. Disc. %')}{resizeHandle('unit_discount_percent')}</th>;
-                                                    if (col.key === 'price') return <th key={col.key} style={{ ...thStyle, textAlign: 'right' }}>{t('Total (ex. VAT)')}{resizeHandle('price')}</th>;
-                                                    if (col.key === 'price_with_vat') return <th key={col.key} style={{ ...thStyle, textAlign: 'right' }}>{t('Total (inc. VAT)')}{resizeHandle('price_with_vat')}</th>;
-                                                    return null;
-                                                })}
-                                            </tr>
-                                        );
-                                    })()}
-                                </thead>
-                                <tbody style={{ fontSize: '13px', color: '#191c1e' }}>
+                        <div className="table-responsive" style={{ overflowX: "auto", overflowY: "scroll" }}>
+                            <table className="table table-striped table-sm table-bordered">
+                                <tbody>
+                                    <tr className="text-center" style={{ borderBottom: "solid 2px" }}>
+                                        {spColumns.filter(c => c.visible).map(col => {
+                                            if (col.key === 'select') return <th key={col.key}>{t("Select All")} <br /><input type="checkbox" className="form-check-input" checked={isAllSelected} onChange={handleSelectAll} /></th>;
+                                            if (col.key === 'si_no') return <th key={col.key}>{t('SI No.')}</th>;
+                                            if (col.key === 'part_number') return <th key={col.key}>{t('Part No.')}</th>;
+                                            if (col.key === 'name') return <th key={col.key} style={{ minWidth: "250px" }}>{t('Name')}</th>;
+                                            if (col.key === 'info') return <th key={col.key}>{t('Info')}</th>;
+                                            if (col.key === 'purchase_unit_price') return <th key={col.key}>{t('Purchase Unit Price(without VAT)')}</th>;
+                                            if (col.key === 'stock') return <th key={col.key}>{t('Stock')}</th>;
+                                            if (col.key === 'qty') return <th key={col.key}>{t('Qty')}</th>;
+                                            if (col.key === 'warehouse') return store.settings?.enable_warehouse_module ? <th key={col.key}>{t('Add Stock To')}</th> : null;
+                                            if (col.key === 'unit_price') return <th key={col.key}>{t('Unit Price(without VAT)')}</th>;
+                                            if (col.key === 'unit_price_with_vat') return <th key={col.key}>{t('Unit Price(with VAT)')}</th>;
+                                            if (col.key === 'unit_discount') return <th key={col.key}>{t('Unit Disc.(without VAT)')}</th>;
+                                            if (col.key === 'unit_discount_with_vat') return <th key={col.key}>{t('Unit Disc.(with VAT)')}</th>;
+                                            if (col.key === 'unit_discount_percent') return <th key={col.key}>{t('Unit Disc. %(with VAT)')}</th>;
+                                            if (col.key === 'price') return <th key={col.key}>{t('Price(without VAT)')}</th>;
+                                            if (col.key === 'price_with_vat') return <th key={col.key}>{t('Price(with VAT)')}</th>;
+                                            return null;
+                                        })}
+                                    </tr>
                                     {selectedProducts.map((product, index) => {
                                         const duplicateIndexes = selectedProducts
                                             .map((p, i) => p.product_id === product.product_id ? i : -1)
                                             .filter(i => i !== -1);
                                         const duplicateCount = duplicateIndexes.length;
                                         return (
-                                            <tr key={index} style={{ borderBottom: '1px solid #e2e8f0', transition: 'background-color 0.15s' }}
-                                                onMouseEnter={e => { e.currentTarget.style.backgroundColor = '#f8fafc'; }}
-                                                onMouseLeave={e => { e.currentTarget.style.backgroundColor = ''; }}>
+                                            <tr key={index} className="text-center">
                                                 {spColumns.filter(c => c.visible).map(col => {
                                                     if (col.key === 'select') return (
-                                                        <td key="select" style={{ verticalAlign: 'middle', padding: '4px 8px', width: "20px", whiteSpace: "nowrap" }}>
+                                                        <td key="select" style={{ verticalAlign: 'middle', padding: '0.25rem', width: "20px", whiteSpace: "nowrap" }}>
                                                             <input
                                                                 className="form-check-input"
                                                                 id={`${"select_sales_return_product_" + index}`}
@@ -2601,12 +2540,12 @@ const SalesReturnCreate = forwardRef((props, ref) => {
                                                                     reCalculate();
                                                                 }} />
                                                         </td>);
-                                                    if (col.key === 'si_no') return (<td key="si_no" style={{ verticalAlign: 'middle', padding: '4px 8px', width: "auto", whiteSpace: "nowrap" }}>{index + 1}</td>);
+                                                    if (col.key === 'si_no') return (<td key="si_no" style={{ verticalAlign: 'middle', padding: '0.25rem', width: "auto", whiteSpace: "nowrap" }}>{index + 1}</td>);
                                                     // eslint-disable-next-line no-lone-blocks
                                                     {/*<td style={{ verticalAlign: 'middle', padding: '4px 8px', width: "auto", whiteSpace: "nowrap" }}>
                                                 <OverflowTooltip maxWidth={120} value={product.prefix_part_number ? product.prefix_part_number + " - " + product.part_number : product.part_number} />
                                             </td>*/}
-                                                    if (col.key === 'part_number') return (<td key="part_number" style={{ verticalAlign: 'middle', padding: '4px 8px', position: 'relative' }}>
+                                                    if (col.key === 'part_number') return (<td key="part_number" style={{ verticalAlign: 'middle', padding: '0.25rem' }}>
                                                         <div style={{ display: 'flex', alignItems: 'center' }}>
                                                         <input type="text" id={`${"sales_return_product_part_number" + index}`}
                                                             name={`${"sales_return_product_part_number" + index}`}
@@ -2634,21 +2573,8 @@ const SalesReturnCreate = forwardRef((props, ref) => {
                                                             </OverlayTrigger>
                                                         )}
                                                         </div>
-                                                        <div
-                                                            style={{ position: 'absolute', right: 0, bottom: 0, width: '12px', height: '12px', cursor: 'nwse-resize', zIndex: 2, background: 'linear-gradient(135deg, transparent 50%, #b0b7c3 50%)', borderRadius: '0 0 2px 0' }}
-                                                            onMouseDown={(e) => {
-                                                                e.preventDefault();
-                                                                const tr = e.currentTarget.closest('tr');
-                                                                const startY = e.clientY;
-                                                                const startHeight = tr.offsetHeight;
-                                                                function onMove(ev) { tr.style.height = `${Math.max(30, startHeight + ev.clientY - startY)}px`; }
-                                                                function onUp() { document.removeEventListener('mousemove', onMove); document.removeEventListener('mouseup', onUp); }
-                                                                document.addEventListener('mousemove', onMove);
-                                                                document.addEventListener('mouseup', onUp);
-                                                            }}
-                                                        />
                                                     </td>);
-                                                    if (col.key === 'name') return (<td key="name" style={{ verticalAlign: 'middle', padding: '4px 8px', position: 'relative' }}>
+                                                    if (col.key === 'name') return (<td key="name" style={{ verticalAlign: 'middle', padding: '0.25rem' }}>
                                                         <div className="input-group" style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
                                                             <input type="text" id={`${"sales_return_product_name" + index}`}
                                                                 name={`${"sales_return_product_name" + index}`}
@@ -2742,62 +2668,13 @@ const SalesReturnCreate = forwardRef((props, ref) => {
                                                                 }}
                                                             ></i>
                                                         )}
-                                                        <div
-                                                            style={{ position: 'absolute', right: 0, bottom: 0, width: '12px', height: '12px', cursor: 'nwse-resize', zIndex: 2, background: 'linear-gradient(135deg, transparent 50%, #b0b7c3 50%)', borderRadius: '0 0 2px 0' }}
-                                                            onMouseDown={(e) => {
-                                                                e.preventDefault();
-                                                                const tr = e.currentTarget.closest('tr');
-                                                                const startY = e.clientY;
-                                                                const startHeight = tr.offsetHeight;
-                                                                function onMove(ev) { tr.style.height = `${Math.max(30, startHeight + ev.clientY - startY)}px`; }
-                                                                function onUp() { document.removeEventListener('mousemove', onMove); document.removeEventListener('mouseup', onUp); }
-                                                                document.addEventListener('mousemove', onMove);
-                                                                document.addEventListener('mouseup', onUp);
-                                                            }}
-                                                        />
                                                     </td>);
-                                                    if (col.key === 'info') return (<td key="info" style={{ verticalAlign: 'middle', padding: '4px 6px', textAlign: 'center' }}>
-                                                        <Dropdown drop="auto">
-                                                            <Dropdown.Toggle as="span" id={`info-dd-sr-${index}`} style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: '28px', height: '28px', borderRadius: '6px', cursor: 'pointer', color: '#6b7280', transition: 'background 0.15s, color 0.15s' }}
-                                                                onMouseEnter={e => { e.currentTarget.style.background = '#f1f5f9'; e.currentTarget.style.color = '#191c1e'; }}
-                                                                onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = '#6b7280'; }}>
-                                                                <i className="bi bi-three-dots-vertical" style={{ fontSize: '15px', pointerEvents: 'none' }}></i>
+                                                    if (col.key === 'info') return (<td key="info" style={{ verticalAlign: 'middle', padding: '0.25rem' }}>
+                                                        <Dropdown drop="top">
+                                                            <Dropdown.Toggle variant="secondary" id="dropdown-secondary" style={{}}>
+                                                                <i className="bi bi-info"></i>
                                                             </Dropdown.Toggle>
-                                                            <Dropdown.Menu style={{ zIndex: 9999, fontSize: '13px', minWidth: '210px', boxShadow: '0 4px 16px rgba(0,0,0,0.12)', border: '1px solid #e2e8f0', borderRadius: '8px', padding: '4px' }} popperConfig={{ modifiers: [{ name: 'preventOverflow', options: { boundary: 'viewport' } }] }}>
-                                                                <Dropdown.Item style={{ borderRadius: '6px', padding: '7px 12px' }} onClick={() => openLinkedProducts(product)}>
-                                                                    <i className="bi bi-link-45deg me-2" style={{ color: '#6366f1' }}></i>{t("Linked Products")} <span className="text-muted" style={{ fontSize: '11px' }}>({getShortcut('linkedProducts')})</span>
-                                                                </Dropdown.Item>
-                                                                <Dropdown.Item style={{ borderRadius: '6px', padding: '7px 12px' }} onClick={() => openProductImages(product.product_id)}>
-                                                                    <i className="bi bi-images me-2" style={{ color: '#0ea5e9' }}></i>{t("Images")} <span className="text-muted" style={{ fontSize: '11px' }}>({getShortcut('images')})</span>
-                                                                </Dropdown.Item>
-                                                                <Dropdown.Divider style={{ margin: '4px 0' }} />
-                                                                <Dropdown.Item style={{ borderRadius: '6px', padding: '7px 12px' }} onClick={() => openProductHistory(product)}>
-                                                                    <i className="bi bi-journal-text me-2" style={{ color: '#64748b' }}></i>{t("Product History")} <span className="text-muted" style={{ fontSize: '11px' }}>({getShortcut('productHistory')})</span>
-                                                                </Dropdown.Item>
-                                                                <Dropdown.Item style={{ borderRadius: '6px', padding: '7px 12px' }} onClick={() => openSalesHistory(product)}>
-                                                                    <i className="bi bi-receipt me-2" style={{ color: '#16a34a' }}></i>{t("Sales History")} <span className="text-muted" style={{ fontSize: '11px' }}>({getShortcut('salesHistory')})</span>
-                                                                </Dropdown.Item>
-                                                                <Dropdown.Item style={{ borderRadius: '6px', padding: '7px 12px' }} onClick={() => openSalesReturnHistory(product)}>
-                                                                    <i className="bi bi-arrow-return-left me-2" style={{ color: '#dc2626' }}></i>{t("Sales Return History")} <span className="text-muted" style={{ fontSize: '11px' }}>({getShortcut('salesReturnHistory')})</span>
-                                                                </Dropdown.Item>
-                                                                <Dropdown.Item style={{ borderRadius: '6px', padding: '7px 12px' }} onClick={() => openPurchaseHistory(product)}>
-                                                                    <i className="bi bi-bag me-2" style={{ color: '#d97706' }}></i>{t("Purchase History")} <span className="text-muted" style={{ fontSize: '11px' }}>({getShortcut('purchaseHistory')})</span>
-                                                                </Dropdown.Item>
-                                                                <Dropdown.Item style={{ borderRadius: '6px', padding: '7px 12px' }} onClick={() => openPurchaseReturnHistory(product)}>
-                                                                    <i className="bi bi-bag-x me-2" style={{ color: '#ea580c' }}></i>{t("Purchase Return History")} <span className="text-muted" style={{ fontSize: '11px' }}>({getShortcut('purchaseReturnHistory')})</span>
-                                                                </Dropdown.Item>
-                                                                <Dropdown.Item style={{ borderRadius: '6px', padding: '7px 12px' }} onClick={() => openDeliveryNoteHistory(product)}>
-                                                                    <i className="bi bi-truck me-2" style={{ color: '#0891b2' }}></i>{t("Delivery Note History")} <span className="text-muted" style={{ fontSize: '11px' }}>({getShortcut('deliveryNoteHistory')})</span>
-                                                                </Dropdown.Item>
-                                                                <Dropdown.Item style={{ borderRadius: '6px', padding: '7px 12px' }} onClick={() => openQuotationHistory(product, "quotation")}>
-                                                                    <i className="bi bi-file-earmark-text me-2" style={{ color: '#7c3aed' }}></i>{t("Quotation History")} <span className="text-muted" style={{ fontSize: '11px' }}>({getShortcut('quotationHistory')})</span>
-                                                                </Dropdown.Item>
-                                                                <Dropdown.Item style={{ borderRadius: '6px', padding: '7px 12px' }} onClick={() => openQuotationSalesHistory(product)}>
-                                                                    <i className="bi bi-file-earmark-check me-2" style={{ color: '#0284c7' }}></i>{t("Qtn. Sales History")} <span className="text-muted" style={{ fontSize: '11px' }}>({getShortcut('quotationSalesHistory')})</span>
-                                                                </Dropdown.Item>
-                                                                <Dropdown.Item style={{ borderRadius: '6px', padding: '7px 12px' }} onClick={() => openQuotationSalesReturnHistory(product)}>
-                                                                    <i className="bi bi-file-earmark-x me-2" style={{ color: '#be123c' }}></i>{t("Qtn. Sales Return History")} <span className="text-muted" style={{ fontSize: '11px' }}>({getShortcut('quotationSalesReturnHistory')})</span>
-                                                                </Dropdown.Item>
+                                                            <Dropdown.Menu style={{ zIndex: 9999, position: "absolute" }} popperConfig={{ modifiers: [{ name: 'preventOverflow', options: { boundary: 'viewport' } }] }}>
                                                             </Dropdown.Menu>
                                                         </Dropdown>
                                                     </td>);
@@ -4416,230 +4293,152 @@ const SalesReturnCreate = forwardRef((props, ref) => {
                     </div>
                 </Modal.Header>
                 <Modal.Body>
-                    {/* Customer details card — right-aligned */}
-                    {selectedCustomers.length > 0 && formData.customer_id && (() => {
-                        const c = selectedCustomers[0];
-                        const storeId = localStorage.getItem("store_id");
-                        const cs = c?.stores?.[storeId];
-                        return (
-                            <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '6px' }}>
-                                <div style={{ flex: '0 0 380px', maxWidth: '55%' }}>
-                                    <div style={{ padding: '10px 16px', background: 'rgba(0,74,198,0.04)', border: '1px solid #c7d7f5', borderRadius: '8px', display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: '6px' }}>
-                                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
-                                            {c.code && <span style={{ background: '#dbeafe', color: '#1e40af', borderRadius: '4px', padding: '2px 8px', fontSize: '12px', fontWeight: 700, letterSpacing: '0.03em', flexShrink: 0 }}>{c.code}</span>}
-                                            <span style={{ fontWeight: 700, fontSize: '15px', color: '#191c1e', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: '260px' }} title={c.name}>{c.name}</span>
-                                            {c.name_in_arabic && <span style={{ fontSize: '13px', color: '#64748b', fontFamily: 'Arial, sans-serif', flexShrink: 0 }}>{c.name_in_arabic}</span>}
+                    {errors && Object.keys(errors).some(k => { const m = Array.isArray(errors[k]) ? errors[k][0] : errors[k]; return !!m; }) && (
+                        <div className="sc-error-banner" style={{ maxHeight: '120px', overflowY: 'auto', padding: '8px 12px', backgroundColor: '#fff0f0', borderLeft: '1px solid #f5c6cb', borderBottom: '1px solid #f5c6cb', boxShadow: '-2px 2px 8px rgba(186,26,26,0.12)', position: 'fixed', top: '56px', right: 0, width: '380px', zIndex: 9999 }}>
+                            <ul style={{ marginBottom: 0, paddingLeft: 16 }}>
+                                {Object.keys(errors).map((key, index) => { const message = Array.isArray(errors[key]) ? errors[key][0] : errors[key]; return message ? <li key={index} style={{ color: '#dc2626', fontSize: '12px' }}>{t(message)}</li> : null; })}
+                            </ul>
+                        </div>
+                    )}
+                    <section style={{ backgroundColor: '#ffffff', borderRadius: '8px', border: '1px solid #e2e8f0', marginBottom: '8px' }}>
+                        <div className="sc-header-flex" style={{ borderBottom: '1px solid #c3c6d7' }}>
+                            <div className="sc-header-left" style={{ padding: '4px 10px', display: 'flex', gap: '6px', alignItems: 'stretch', backgroundColor: '#f2f4f6', borderRight: '1px solid #c3c6d7' }}>
+                                <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                                    {/* Row 1: Customer (disabled) */}
+                                    <div>
+                                        <label className="form-label" style={{ fontSize: '12px', marginBottom: '2px' }}>{t('Customer')}</label>
+                                        <input
+                                            type="text"
+                                            className="form-control"
+                                            disabled
+                                            value={selectedCustomers?.[0]?.name || formData.customer_name || ''}
+                                            placeholder={t('Customer')}
+                                            style={{ backgroundColor: '#f8f9fa' }}
+                                        />
+                                    </div>
+                                    {/* Row 2: Date + Phone+WA + VAT + Address + Remarks */}
+                                    <div className="sc-sub-row" style={{ alignItems: 'flex-start' }}>
+                                        {/* Date */}
+                                        <div style={{ flex: '0 0 175px' }}>
+                                            <label className="form-label" style={{ fontSize: '12px', marginBottom: '2px' }}>{t('Date')}*</label>
+                                            <DatePicker
+                                                id="date_str"
+                                                selected={formData.date_str ? new Date(formData.date_str) : null}
+                                                value={formData.date_str ? format(new Date(formData.date_str), "MMMM d, yyyy h:mm aa", { locale: dateLocale }) : null}
+                                                className={`form-control${errors.date_str ? ' is-invalid' : ''}`}
+                                                dateFormat="MMMM d, yyyy h:mm aa"
+                                                locale={dateLocale}
+                                                showTimeSelect
+                                                timeIntervals="1"
+                                                popperProps={{ strategy: 'fixed' }}
+                                                onChange={(value) => { formData.date_str = value; setFormData({ ...formData }); }}
+                                            />
+                                            {errors.date_str && <div style={{ color: 'red', fontSize: '11px' }}>{t(errors.date_str)}</div>}
                                         </div>
-                                        {(c.phone || c.phone2 || c.vat_no) && (
-                                            <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
-                                                {c.phone && <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', fontSize: '13px', color: '#374151' }}><i className="bi bi-telephone" style={{ color: '#6b7280', fontSize: '12px' }} />{c.phone}</span>}
-                                                {c.phone2 && <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', fontSize: '13px', color: '#374151' }}><i className="bi bi-telephone" style={{ color: '#6b7280', fontSize: '12px' }} />{c.phone2}</span>}
-                                                {c.vat_no && <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', fontSize: '13px', color: '#374151' }}><i className="bi bi-receipt" style={{ color: '#6b7280', fontSize: '12px' }} /><span style={{ color: '#6b7280' }}>VAT:</span><strong>{c.vat_no}</strong></span>}
+                                        {/* Phone + WhatsApp */}
+                                        <div style={{ flex: '0 0 auto' }}>
+                                            <label className="form-label" style={{ fontSize: '12px', marginBottom: '2px' }}>{t('Phone')} ( 05.. / +966..)</label>
+                                            <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                                                <input
+                                                    id="sales_return_phone" name="sales_return_phone"
+                                                    value={formData.phone || ''}
+                                                    type="text"
+                                                    onChange={(e) => { delete errors["phone"]; setErrors({ ...errors }); formData.phone = e.target.value; setFormData({ ...formData }); }}
+                                                    className={`form-control${errors["phone"] ? ' is-invalid' : ''}`}
+                                                    placeholder={t('Phone')}
+                                                    style={{ width: '115px' }}
+                                                />
+                                                <button type="button" onClick={sendWhatsAppMessage}
+                                                    style={{ background: '#25d366', border: 'none', borderRadius: '4px', padding: '7px 8px', cursor: 'pointer', color: '#fff', display: 'inline-flex', alignItems: 'center', flexShrink: 0 }}>
+                                                    <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" fill="white" viewBox="0 0 16 16">
+                                                        <path d="M13.601 2.326A7.875 7.875 0 0 0 8.036 0C3.596 0 0 3.597 0 8.036c0 1.417.37 2.805 1.07 4.03L0 16l3.993-1.05a7.968 7.968 0 0 0 4.043 1.085h.003c4.44 0 8.036-3.596 8.036-8.036 0-2.147-.836-4.166-2.37-5.673ZM8.036 14.6a6.584 6.584 0 0 1-3.35-.92l-.24-.142-2.37.622.63-2.31-.155-.238a6.587 6.587 0 0 1-1.018-3.513c0-3.637 2.96-6.6 6.6-6.6 1.764 0 3.42.69 4.67 1.94a6.56 6.56 0 0 1 1.93 4.668c0 3.637-2.96 6.6-6.6 6.6Zm3.61-4.885c-.198-.1-1.17-.578-1.352-.644-.18-.066-.312-.1-.444.1-.13.197-.51.644-.626.775-.115.13-.23.15-.428.05-.198-.1-.837-.308-1.594-.983-.59-.525-.99-1.174-1.11-1.372-.116-.198-.012-.305.088-.403.09-.09.198-.23.298-.345.1-.115.132-.197.2-.33.065-.13.032-.247-.017-.345-.05-.1-.444-1.07-.61-1.46-.16-.384-.323-.332-.444-.338l-.378-.007c-.13 0-.344.048-.525.23s-.688.672-.688 1.64c0 .967.704 1.9.802 2.03.1.13 1.386 2.116 3.365 2.963.47.203.837.324 1.122.414.472.15.902.13 1.24.08.378-.057 1.17-.48 1.336-.942.165-.462.165-.858.116-.943-.048-.084-.18-.132-.378-.23Z" />
+                                                    </svg>
+                                                </button>
                                             </div>
-                                        )}
-                                        <div style={{ display: 'flex', alignItems: 'center', gap: '16px', flexWrap: 'wrap', borderTop: '1px solid #e2e8f0', paddingTop: '4px', marginTop: '2px' }}>
-                                            <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', cursor: 'pointer', userSelect: 'none' }} onClick={() => openCustomerPending(selectedCustomers[0])} title="Click to view pendings">
-                                                <i className="bi bi-wallet2" style={{ color: '#004ac6', fontSize: '13px' }} />
-                                                <span style={{ fontSize: '13px', color: '#6b7280', fontWeight: 500 }}>Cr.Balance:</span>
-                                                <strong style={{ fontSize: '17px', fontWeight: 700, color: (c.credit_balance ?? cs?.credit_balance ?? 0) > 0 ? '#dc2626' : '#16a34a', letterSpacing: '-0.5px' }}>{trimTo2Decimals(c.credit_balance ?? cs?.credit_balance ?? 0)}</strong>
-                                                <i className="bi bi-box-arrow-up-right" style={{ color: '#004ac6', fontSize: '10px' }} />
-                                            </span>
-                                            {(c.credit_limit > 0) && (
-                                                <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
-                                                    <i className="bi bi-shield-check" style={{ color: '#6b7280', fontSize: '13px' }} />
-                                                    <span style={{ fontSize: '13px', color: '#6b7280', fontWeight: 500 }}>Limit:</span>
-                                                    <strong style={{ fontSize: '15px', fontWeight: 700, color: '#374151' }}>{trimTo2Decimals(c.credit_limit)}</strong>
-                                                </span>
-                                            )}
+                                            {errors.phone && <div style={{ color: 'red', fontSize: '11px' }}>{t(errors.phone)}</div>}
+                                        </div>
+                                        {/* VAT */}
+                                        <div style={{ flex: '0 0 150px' }}>
+                                            <label className="form-label" style={{ fontSize: '12px', marginBottom: '2px' }}>{t('VAT NO.(15 digits)')}</label>
+                                            <input
+                                                id="sales_vat_no" name="sales_vat_no"
+                                                value={formData.vat_no || ''}
+                                                type="text"
+                                                onChange={(e) => { delete errors["vat_no"]; setErrors({ ...errors }); formData.vat_no = e.target.value; setFormData({ ...formData }); }}
+                                                className={`form-control${errors["vat_no"] ? ' is-invalid' : ''}`}
+                                                placeholder={t('VAT NO.')}
+                                            />
+                                            {errors.vat_no && <div style={{ color: 'red', fontSize: '11px' }}>{t(errors.vat_no)}</div>}
+                                        </div>
+                                        {/* Address */}
+                                        <div style={{ flex: '1 1 140px', minWidth: '100px' }}>
+                                            <label className="form-label" style={{ fontSize: '12px', marginBottom: '2px' }}>{t('Address')}</label>
+                                            <textarea
+                                                value={formData.address || ''}
+                                                onChange={(e) => { delete errors["address"]; setErrors({ ...errors }); formData.address = e.target.value; setFormData({ ...formData }); }}
+                                                onKeyDown={(e) => { if (e.key === 'Enter') { e.stopPropagation(); e.nativeEvent.stopImmediatePropagation(); } }}
+                                                className={`form-control${errors["address"] ? ' is-invalid' : ''}`}
+                                                id="address" placeholder={t('Address')}
+                                                style={{ resize: 'none', fontSize: '13px', height: '32px' }}
+                                            />
+                                        </div>
+                                        {/* Remarks */}
+                                        <div style={{ flex: '1 1 140px', minWidth: '100px' }}>
+                                            <label className="form-label" style={{ fontSize: '12px', marginBottom: '2px' }}>{t('Remarks')}</label>
+                                            <textarea
+                                                value={formData.remarks || ''}
+                                                onChange={(e) => { formData.remarks = e.target.value; setFormData({ ...formData }); }}
+                                                onKeyDown={(e) => { if (e.key === 'Enter') { e.stopPropagation(); e.nativeEvent.stopImmediatePropagation(); } }}
+                                                className="form-control"
+                                                id="remarks" placeholder={t('Remarks')}
+                                                style={{ resize: 'none', fontSize: '13px', height: '32px' }}
+                                            />
                                         </div>
                                     </div>
                                 </div>
                             </div>
-                        );
-                    })()}
-                    <div style={{
-                        maxHeight: "50px",        // Adjust based on design
-                        minHeight: "50px",
-                        overflowY: "scroll",
-                    }}>
-                        {errors && Object.keys(errors).length > 0 && (
-                            <div
-                                style={{
-                                    backgroundColor: "#fff0f0",
-                                    border: "1px solid #f5c6cb",
-                                    padding: "10px",
-                                    marginBottom: "10px",
-                                    borderRadius: "4px"
-                                }}
-                            >
-                                <ul style={{ marginBottom: 0 }}>
-                                    {Object.keys(errors).map((key, index) => {
-                                        const message = Array.isArray(errors[key]) ? errors[key][0] : errors[key];
-                                        return message ? (
-                                            <li key={index} style={{ color: "red" }}>
-                                                {message}
-                                            </li>
-                                        ) : null;
-                                    })}
-                                </ul>
-                            </div>
-                        )}
-                    </div>
-                    <div className="row">
-                        {selectedProducts?.length > 0 && <div className="col-md-3" >
-                            <label className="form-label">{t("Date")}*</label>
-                            <div className="input-group mb-3">
-                                <DatePicker
-                                    id="date_str"
-                                    selected={formData.date_str ? new Date(formData.date_str) : null}
-                                    value={formData.date_str ? format(
-                                        new Date(formData.date_str),
-                                        "MMMM d, yyyy h:mm aa",
-                                        { locale: dateLocale }
-                                    ) : null}
-                                    className="form-control"
-                                    dateFormat="MMMM d, yyyy h:mm aa"
-                                    locale={dateLocale}
-                                    showTimeSelect
-                                    timeIntervals="1"
-                                    onChange={(value) => {
-                                        console.log("Value", value);
-                                        formData.date_str = value;
-                                        // formData.date_str = format(new Date(value), "MMMM d yyyy h:mm aa");
-                                        setFormData({ ...formData });
-                                    }}
-                                />
-                            </div>
-                            {errors.date_str && (
-                                <div style={{ color: "red" }}>
-                                    <i className="bi bi-x-lg"> </i>
-                                    {t(errors.date_str)}
-                                </div>
-                            )}
-
-                        </div>}
-
-                        {selectedProducts?.length > 0 && <div className="col-md-2">
-                            <label className="form-label">{t("Phone")} ( 05.. / +966..)</label>
-
-                            <div className="input-group mb-3">
-                                <input
-                                    id="sales_return_phone"
-                                    name="sales_return_phone"
-                                    value={formData.phone ? formData.phone : ""}
-                                    type='string'
-                                    onChange={(e) => {
-                                        delete errors["phone"];
-                                        setErrors({ ...errors });
-                                        formData.phone = e.target.value;
-                                        setFormData({ ...formData });
-                                        console.log(formData);
-                                    }}
-                                    className="form-control"
-
-                                    placeholder={t("Phone")}
-                                />
-                            </div>
-                            {errors.phone && (
-                                <div style={{ color: "red" }}>
-
-                                    {t(errors.phone)}
-                                </div>
-                            )}
-                        </div>}
-
-                        {selectedProducts?.length > 0 && <div className="col-md-1">
-                            <Button className={`btn btn-success btn-sm`} style={{ marginTop: "30px" }} onClick={sendWhatsAppMessage}>
-                                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="white" viewBox="0 0 16 16">
-                                    <path d="M13.601 2.326A7.875 7.875 0 0 0 8.036 0C3.596 0 0 3.597 0 8.036c0 1.417.37 2.805 1.07 4.03L0 16l3.993-1.05a7.968 7.968 0 0 0 4.043 1.085h.003c4.44 0 8.036-3.596 8.036-8.036 0-2.147-.836-4.166-2.37-5.673ZM8.036 14.6a6.584 6.584 0 0 1-3.35-.92l-.24-.142-2.37.622.63-2.31-.155-.238a6.587 6.587 0 0 1-1.018-3.513c0-3.637 2.96-6.6 6.6-6.6 1.764 0 3.42.69 4.67 1.94a6.56 6.56 0 0 1 1.93 4.668c0 3.637-2.96 6.6-6.6 6.6Zm3.61-4.885c-.198-.1-1.17-.578-1.352-.644-.18-.066-.312-.1-.444.1-.13.197-.51.644-.626.775-.115.13-.23.15-.428.05-.198-.1-.837-.308-1.594-.983-.59-.525-.99-1.174-1.11-1.372-.116-.198-.012-.305.088-.403.09-.09.198-.23.298-.345.1-.115.132-.197.2-.33.065-.13.032-.247-.017-.345-.05-.1-.444-1.07-.61-1.46-.16-.384-.323-.332-.444-.338l-.378-.007c-.13 0-.344.048-.525.23s-.688.672-.688 1.64c0 .967.704 1.9.802 2.03.1.13 1.386 2.116 3.365 2.963.47.203.837.324 1.122.414.472.15.902.13 1.24.08.378-.057 1.17-.48 1.336-.942.165-.462.165-.858.116-.943-.048-.084-.18-.132-.378-.23Z" />
-                                </svg>
-                            </Button>
-                        </div>}
-
-                        {selectedProducts?.length > 0 && <div className="col-md-2">
-                            <label className="form-label">{t("VAT NO.(15 digits)")}</label>
-
-                            <div className="input-group mb-3">
-                                <input
-                                    id="sales_vat_no"
-                                    name="sales_vat_no"
-                                    value={formData.vat_no ? formData.vat_no : ""}
-                                    type='string'
-                                    onChange={(e) => {
-                                        delete errors["vat_no"];
-                                        setErrors({ ...errors });
-                                        formData.vat_no = e.target.value;
-                                        setFormData({ ...formData });
-                                        console.log(formData);
-                                    }}
-                                    className="form-control"
-
-                                    placeholder={t("VAT NO.")}
-                                />
-                            </div>
-                            {errors.vat_no && (
-                                <div style={{ color: "red" }}>
-
-                                    {t(errors.vat_no)}
-                                </div>
-                            )}
-                        </div>}
-
-                        {selectedProducts?.length > 0 && <div className="col-md-3">
-                            <label className="form-label">{t("Address")}</label>
-                            <div className="input-group mb-3">
-                                <textarea
-                                    value={formData.address}
-                                    type='string'
-                                    onChange={(e) => {
-                                        delete errors["address"];
-                                        setErrors({ ...errors });
-                                        formData.address = e.target.value;
-                                        setFormData({ ...formData });
-                                        console.log(formData);
-                                    }}
-                                    className="form-control"
-                                    id="address"
-                                    placeholder={t("Address")}
-                                />
-                            </div>
-                            {errors.address && (
-                                <div style={{ color: "red" }}>
-
-                                    {t(errors.address)}
-                                </div>
-                            )}
-                        </div>}
-
-                        {selectedProducts?.length > 0 && <div className="col-md-3" >
-                            <label className="form-label">{t("Remarks")}</label>
-                            <div className="input-group mb-3">
-                                <textarea
-                                    value={formData.remarks}
-                                    type='string'
-                                    onChange={(e) => {
-                                        delete errors["address"];
-                                        setErrors({ ...errors });
-                                        formData.remarks = e.target.value;
-                                        setFormData({ ...formData });
-                                        console.log(formData);
-                                    }}
-                                    className="form-control"
-                                    id="remarks"
-                                    placeholder={t("Remarks")}
-                                />
-                            </div>
-                            {errors.remarks && (
-                                <div style={{ color: "red" }}>
-                                    {t(errors.remarks)}
-                                </div>
-                            )}
-                        </div>}
-                    </div>
+                            {/* Right: customer details inline */}
+                            {selectedCustomers.length > 0 && formData.customer_id ? (() => {
+                                const c = selectedCustomers[0];
+                                const storeId = localStorage.getItem("store_id");
+                                const cs = c?.stores?.[storeId];
+                                const sep = <span style={{ width: '1px', height: '12px', background: '#c3c6d7', flexShrink: 0 }} />;
+                                const phone = c.phone || formData.phone;
+                                const phone2 = c.phone2;
+                                const vatNo = c.vat_no || formData.vat_no;
+                                return (
+                                    <div className="sc-header-right" style={{ padding: '4px 14px', background: 'rgba(0,74,198,0.03)', borderLeft: '1px solid #e2e8f0', display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: '6px', overflow: 'hidden', minHeight: '40px' }}>
+                                        {c.code && <span style={{ background: '#dbeafe', color: '#1e40af', borderRadius: '4px', padding: '1px 7px', fontSize: '12px', fontWeight: 700, letterSpacing: '0.03em', flexShrink: 0 }}>{c.code}</span>}
+                                        <span style={{ fontWeight: 700, fontSize: '15px', color: '#191c1e', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', minWidth: 0, maxWidth: '280px' }}>{c.name}</span>
+                                        {c.name_in_arabic && <><span style={{ color: '#c3c6d7', fontSize: '13px', flexShrink: 0 }}>|</span><span style={{ fontSize: '13px', color: '#64748b', fontFamily: 'Arial, sans-serif', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', minWidth: 0, maxWidth: '200px' }}>{c.name_in_arabic}</span></>}
+                                        {(phone || phone2 || vatNo) && sep}
+                                        {phone && <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', fontSize: '13px', color: '#374151', flexShrink: 0 }}><i className="bi bi-telephone" style={{ color: '#6b7280', fontSize: '12px' }} />{phone}</span>}
+                                        {phone && phone2 && sep}
+                                        {phone2 && <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', fontSize: '13px', color: '#374151', flexShrink: 0 }}><i className="bi bi-telephone" style={{ color: '#6b7280', fontSize: '12px' }} />{phone2}</span>}
+                                        {(phone || phone2) && vatNo && sep}
+                                        {vatNo && <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', fontSize: '13px', color: '#374151', flexShrink: 0 }}><i className="bi bi-receipt" style={{ color: '#6b7280', fontSize: '12px' }} /><span style={{ color: '#6b7280' }}>VAT:</span>{vatNo}</span>}
+                                        {sep}
+                                        <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', fontSize: '13px', cursor: 'pointer', userSelect: 'none', flexShrink: 0 }}
+                                            onClick={() => openCustomerPending(selectedCustomers[0])}
+                                            title={t("Click to view pendings")}>
+                                            <i className="bi bi-wallet2" style={{ color: '#004ac6', fontSize: '13px' }} />
+                                            <span style={{ color: '#6b7280' }}>{t("Cr.Balance")}:</span>
+                                            <strong style={{ fontSize: '17px', fontWeight: 700, color: (c.credit_balance ?? cs?.credit_balance ?? 0) > 0 ? '#dc2626' : '#16a34a', textDecoration: 'underline dotted' }}>{trimTo2Decimals(c.credit_balance ?? cs?.credit_balance ?? 0)}</strong>
+                                            <i className="bi bi-box-arrow-up-right" style={{ color: '#004ac6', fontSize: '10px' }} />
+                                        </span>
+                                        {(c.credit_limit > 0) && <>{sep}<span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', fontSize: '13px', flexShrink: 0 }}>
+                                            <i className="bi bi-shield-check" style={{ color: '#6b7280', fontSize: '13px' }} />
+                                            <span style={{ color: '#6b7280' }}>{t("Limit")}:</span>
+                                            <strong style={{ fontSize: '15px', fontWeight: 700, color: '#374151' }}>{trimTo2Decimals(c.credit_limit)}</strong>
+                                        </span></>}
+                                    </div>
+                                );
+                            })() : <div className="sc-header-right" />}
+                        </div>
+                    </section>
 
                     {selectedProducts && selectedProducts.length === 0 && "Already returned all products"}
                     {selectedProducts && selectedProducts.length > 0 && <form className="row g-3 needs-validation" onSubmit={handleCreate}>
-                        <h2>Select Products</h2>
                         <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: "0" }}>
                             <button type="button" className="btn btn-sm btn-outline-secondary"
                                 onClick={() => setShowSPTableSettings(!showSPTableSettings)}
@@ -4649,10 +4448,10 @@ const SalesReturnCreate = forwardRef((props, ref) => {
                         </div>
                         <div className="table-responsive" style={{ overflowX: "auto", overflowY: "scroll" }}>
                             <table className="table table-striped table-sm table-bordered">
-                                <thead style={{ borderTopWidth: 0, borderBottomWidth: 0 }}>
-                                    <tr className="text-center">
+                                <tbody>
+                                    <tr className="text-center" style={{ borderBottom: "solid 2px" }}>
                                         {spColumns.filter(c => c.visible).map(col => {
-                                            if (col.key === 'select') return <th key={col.key}>{t("Select All")} <br /><input type="checkbox" checked={isAllSelected} onChange={handleSelectAll} /></th>;
+                                            if (col.key === 'select') return <th key={col.key}>{t("Select All")} <br /><input type="checkbox" className="form-check-input" checked={isAllSelected} onChange={handleSelectAll} /></th>;
                                             if (col.key === 'si_no') return <th key={col.key}>{t('SI No.')}</th>;
                                             if (col.key === 'part_number') return <th key={col.key}>{t('Part No.')}</th>;
                                             if (col.key === 'name') return <th key={col.key} style={{ minWidth: "250px" }}>{t('Name')}</th>;
@@ -4671,8 +4470,6 @@ const SalesReturnCreate = forwardRef((props, ref) => {
                                             return null;
                                         })}
                                     </tr>
-                                </thead>
-                                <tbody>
                                     {selectedProducts.map((product, index) => {
                                         // Find all indexes with the same product_id
                                         const duplicateIndexes = selectedProducts
@@ -4697,12 +4494,12 @@ const SalesReturnCreate = forwardRef((props, ref) => {
                                                                     reCalculate();
                                                                 }} />
                                                         </td>);
-                                                    if (col.key === 'si_no') return (<td key="si_no" style={{ verticalAlign: 'middle', padding: '0.25rem' }}>{index + 1}</td>);
+                                                    if (col.key === 'si_no') return (<td key="si_no" style={{ verticalAlign: 'middle', padding: '0.25rem', width: "auto", whiteSpace: "nowrap" }}>{index + 1}</td>);
                                                     // eslint-disable-next-line no-lone-blocks
                                                     {/*<td style={{ verticalAlign: 'middle', padding: '0.25rem', width: "auto", whiteSpace: "nowrap" }}>
                                                 <OverflowTooltip maxWidth={120} value={product.prefix_part_number ? product.prefix_part_number + " - " + product.part_number : product.part_number} />
                                             </td>*/}
-                                                    if (col.key === 'part_number') return (<ResizableTableCell key="part_number" style={{ verticalAlign: 'middle', padding: '0.25rem' }}
+                                                    if (col.key === 'part_number') return (<ResizableTableCell key="part_number" style={{ verticalAlign: 'middle', padding: '0.25rem', width: "auto", whiteSpace: "nowrap" }}
                                                     >
                                                         {/*<OverflowTooltip maxWidth={140} value={product.prefix_part_number ? product.prefix_part_number + " - " + product.part_number : product.part_number} />*/}
                                                         <input type="text" id={`${"sales_return_product_part_number" + index}`}
@@ -4844,7 +4641,6 @@ const SalesReturnCreate = forwardRef((props, ref) => {
                                                                 <Dropdown.Toggle variant="secondary" id="dropdown-secondary" style={{}}>
                                                                     <i className="bi bi-info"></i>
                                                                 </Dropdown.Toggle>
-
                                                                 <Dropdown.Menu style={{ zIndex: 9999, position: "absolute" }} popperConfig={{ modifiers: [{ name: 'preventOverflow', options: { boundary: 'viewport' } }] }}>
                                                                     <Dropdown.Item onClick={() => openLinkedProducts(product)}>
                                                                         <i className="bi bi-link"></i>&nbsp;
@@ -4863,45 +4659,40 @@ const SalesReturnCreate = forwardRef((props, ref) => {
 
                                                                     <Dropdown.Item onClick={() => openSalesReturnHistory(product)}>
                                                                         <i className="bi bi-clock-history"></i>&nbsp;
-                                                                        {t("Sales Return History")} ({getShortcut('salesReturnHistory')})
-                                                                    </Dropdown.Item>
-
-                                                                    <Dropdown.Item onClick={() => openPurchaseHistory(product)}>
-                                                                        <i className="bi bi-clock-history"></i>&nbsp;
-                                                                        {t("Purchase History")} ({getShortcut('purchaseHistory')})
-                                                                    </Dropdown.Item>
-
-                                                                    <Dropdown.Item onClick={() => openPurchaseReturnHistory(product)}>
-                                                                        <i className="bi bi-clock-history"></i>&nbsp;
-                                                                        {t("Purchase Return History")} ({getShortcut('purchaseReturnHistory')})
-                                                                    </Dropdown.Item>
-
-                                                                    <Dropdown.Item onClick={() => openDeliveryNoteHistory(product)}>
-                                                                        <i className="bi bi-clock-history"></i>&nbsp;
-                                                                        {t("Delivery Note History")} ({getShortcut('deliveryNoteHistory')})
-                                                                    </Dropdown.Item>
-
-                                                                    <Dropdown.Item onClick={() => openQuotationHistory(product, "quotation")}>
-                                                                        <i className="bi bi-clock-history"></i>&nbsp;
-                                                                        {t("Quotation History")} ({getShortcut('quotationHistory')})
-                                                                    </Dropdown.Item>
-
-                                                                    <Dropdown.Item onClick={() => openQuotationSalesHistory(product)}>
-                                                                        <i className="bi bi-clock-history"></i>&nbsp;
-                                                                        {t("Qtn. Sales History")} ({getShortcut('quotationSalesHistory')})
-                                                                    </Dropdown.Item>
-
-                                                                    <Dropdown.Item onClick={() => openQuotationSalesReturnHistory(product)}>
-                                                                        <i className="bi bi-clock-history"></i>&nbsp;
-                                                                        {t("Qtn. Sales Return History")} ({getShortcut('quotationSalesReturnHistory')})
-                                                                    </Dropdown.Item>
-
-                                                                    <Dropdown.Item onClick={() => openProductImages(product.product_id)}>
-                                                                        <i className="bi bi-clock-history"></i>&nbsp;
-                                                                        {t("Images")} ({getShortcut('images')})
-                                                                    </Dropdown.Item>
-                                                                </Dropdown.Menu>
-                                                            </Dropdown>
+                                                                    {t("Sales Return History")} ({getShortcut('salesReturnHistory')})
+                                                                </Dropdown.Item>
+                                                                <Dropdown.Divider style={{ margin: '4px 0' }} />
+                                                                <Dropdown.Item style={{ borderRadius: '6px', padding: '7px 12px' }} onClick={() => openPurchaseHistory(product)}>
+                                                                    <i className="bi bi-bag me-2" style={{ color: '#d97706' }}></i>
+                                                                    {t("Purchase History")} ({getShortcut('purchaseHistory')})
+                                                                </Dropdown.Item>
+                                                                <Dropdown.Item style={{ borderRadius: '6px', padding: '7px 12px' }} onClick={() => openPurchaseReturnHistory(product)}>
+                                                                    <i className="bi bi-bag-x me-2" style={{ color: '#ea580c' }}></i>
+                                                                    {t("Purchase Return History")} ({getShortcut('purchaseReturnHistory')})
+                                                                </Dropdown.Item>
+                                                                <Dropdown.Divider style={{ margin: '4px 0' }} />
+                                                                <Dropdown.Item style={{ borderRadius: '6px', padding: '7px 12px' }} onClick={() => openDeliveryNoteHistory(product)}>
+                                                                    <i className="bi bi-truck me-2" style={{ color: '#0891b2' }}></i>
+                                                                    {t("Delivery Note History")} ({getShortcut('deliveryNoteHistory')})
+                                                                </Dropdown.Item>
+                                                                <Dropdown.Item style={{ borderRadius: '6px', padding: '7px 12px' }} onClick={() => openQuotationHistory(product, "quotation")}>
+                                                                    <i className="bi bi-file-earmark-text me-2" style={{ color: '#7c3aed' }}></i>
+                                                                    {t("Quotation History")} ({getShortcut('quotationHistory')})
+                                                                </Dropdown.Item>
+                                                                <Dropdown.Item style={{ borderRadius: '6px', padding: '7px 12px' }} onClick={() => openQuotationSalesHistory(product)}>
+                                                                    <i className="bi bi-receipt me-2" style={{ color: '#16a34a' }}></i>
+                                                                    {t("Qtn. Sales History")} ({getShortcut('quotationSalesHistory')})
+                                                                </Dropdown.Item>
+                                                                <Dropdown.Item style={{ borderRadius: '6px', padding: '7px 12px' }} onClick={() => openQuotationSalesReturnHistory(product)}>
+                                                                    <i className="bi bi-arrow-return-left me-2" style={{ color: '#dc2626' }}></i>
+                                                                    {t("Qtn. Sales Return History")} ({getShortcut('quotationSalesReturnHistory')})
+                                                                </Dropdown.Item>
+                                                                <Dropdown.Item style={{ borderRadius: '6px', padding: '7px 12px' }} onClick={() => openProductImages(product.product_id)}>
+                                                                    <i className="bi bi-images me-2" style={{ color: '#64748b' }}></i>
+                                                                    {t("Images")} ({getShortcut('images')})
+                                                                </Dropdown.Item>
+                                                            </Dropdown.Menu>
+                                                        </Dropdown>
                                                         </div>
                                                     </td>);
                                                     if (col.key === 'purchase_unit_price') return (<td key="purchase_unit_price" style={{ verticalAlign: 'middle', padding: '0.25rem' }}>
