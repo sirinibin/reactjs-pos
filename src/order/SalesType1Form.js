@@ -525,7 +525,7 @@ export function SalesType1Body({
                                             </div>
 
                                             {/* Remarks */}
-                                            <div style={{ flex: '1 0 140px' }}>
+                                            <div style={{ flex: '1 0 140px', maxWidth: '220px' }}>
                                                 <label className="form-label" style={{ fontSize: '12px', marginBottom: '2px' }}>{t('Remarks')}</label>
                                                 <div>
                                                     <textarea

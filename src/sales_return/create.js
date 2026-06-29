@@ -32,7 +32,6 @@ import ImageViewerModal from './../utils/ImageViewerModal';
 //import ProductHistory from "./../product/product_history.js";
 import ProductHistory from "../utils/product_history.js";
 //import OverflowTooltip from "../utils/OverflowTooltip.js";
-import * as bootstrap from 'bootstrap';
 
 import CustomerWithdrawalCreate from "../customer_withdrawal/create.js";
 import CustomerPending from "./../utils/customer_pending.js";
