@@ -385,7 +385,7 @@ export function SalesType1Body({
                                         </div>
 
                                         {/* 2×3 grid: Date | Phone+WA | VAT  /  Barcode | Address | Remarks */}
-                                        <div style={{ display: 'grid', gridTemplateColumns: '231px 220px 220px', gap: '8px 18px', alignItems: 'start', flexShrink: 0, width: 'fit-content' }}>
+                                        <div style={{ display: 'grid', gridTemplateColumns: '231px 1fr 1fr', gap: '8px 18px', alignItems: 'start', maxWidth: '80%' }}>
 
                                             {/* R1C1: Date */}
                                             <div>

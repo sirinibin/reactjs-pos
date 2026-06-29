@@ -4226,85 +4226,95 @@ const SalesReturnCreate = forwardRef((props, ref) => {
                                             style={{ backgroundColor: '#f8f9fa' }}
                                         />
                                     </div>
-                                    {/* Row 2: Date + Phone+WA + VAT + Address + Remarks */}
-                                    <div className="sc-sub-row" style={{ alignItems: 'flex-start' }}>
-                                        {/* Date */}
-                                        <div style={{ flex: '0 0 175px' }}>
-                                            <label className="form-label" style={{ fontSize: '12px', marginBottom: '2px' }}>{t('Date')}*</label>
-                                            <DatePicker
-                                                id="date_str"
-                                                selected={formData.date_str ? new Date(formData.date_str) : null}
-                                                value={formData.date_str ? format(new Date(formData.date_str), "MMMM d, yyyy h:mm aa", { locale: dateLocale }) : null}
-                                                className={`form-control${errors.date_str ? ' is-invalid' : ''}`}
-                                                dateFormat="MMMM d, yyyy h:mm aa"
-                                                locale={dateLocale}
-                                                showTimeSelect
-                                                timeIntervals="1"
-                                                popperProps={{ strategy: 'fixed' }}
-                                                onChange={(value) => { formData.date_str = value; setFormData({ ...formData }); }}
-                                            />
-                                            {errors.date_str && <div style={{ color: 'red', fontSize: '11px' }}>{t(errors.date_str)}</div>}
-                                        </div>
-                                        {/* Phone + WhatsApp */}
-                                        <div style={{ flex: '0 0 auto' }}>
-                                            <label className="form-label" style={{ fontSize: '12px', marginBottom: '2px' }}>{t('Phone')} ( 05.. / +966..)</label>
-                                            <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                                                <input
-                                                    id="sales_return_phone" name="sales_return_phone"
-                                                    value={formData.phone || ''}
-                                                    type="text"
-                                                    onChange={(e) => { delete errors["phone"]; setErrors({ ...errors }); formData.phone = e.target.value; setFormData({ ...formData }); }}
-                                                    className={`form-control${errors["phone"] ? ' is-invalid' : ''}`}
-                                                    placeholder={t('Phone')}
-                                                    style={{ width: '115px' }}
-                                                />
-                                                <button type="button" onClick={sendWhatsAppMessage}
-                                                    style={{ background: '#25d366', border: 'none', borderRadius: '4px', padding: '7px 8px', cursor: 'pointer', color: '#fff', display: 'inline-flex', alignItems: 'center', flexShrink: 0 }}>
-                                                    <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" fill="white" viewBox="0 0 16 16">
-                                                        <path d="M13.601 2.326A7.875 7.875 0 0 0 8.036 0C3.596 0 0 3.597 0 8.036c0 1.417.37 2.805 1.07 4.03L0 16l3.993-1.05a7.968 7.968 0 0 0 4.043 1.085h.003c4.44 0 8.036-3.596 8.036-8.036 0-2.147-.836-4.166-2.37-5.673ZM8.036 14.6a6.584 6.584 0 0 1-3.35-.92l-.24-.142-2.37.622.63-2.31-.155-.238a6.587 6.587 0 0 1-1.018-3.513c0-3.637 2.96-6.6 6.6-6.6 1.764 0 3.42.69 4.67 1.94a6.56 6.56 0 0 1 1.93 4.668c0 3.637-2.96 6.6-6.6 6.6Zm3.61-4.885c-.198-.1-1.17-.578-1.352-.644-.18-.066-.312-.1-.444.1-.13.197-.51.644-.626.775-.115.13-.23.15-.428.05-.198-.1-.837-.308-1.594-.983-.59-.525-.99-1.174-1.11-1.372-.116-.198-.012-.305.088-.403.09-.09.198-.23.298-.345.1-.115.132-.197.2-.33.065-.13.032-.247-.017-.345-.05-.1-.444-1.07-.61-1.46-.16-.384-.323-.332-.444-.338l-.378-.007c-.13 0-.344.048-.525.23s-.688.672-.688 1.64c0 .967.704 1.9.802 2.03.1.13 1.386 2.116 3.365 2.963.47.203.837.324 1.122.414.472.15.902.13 1.24.08.378-.057 1.17-.48 1.336-.942.165-.462.165-.858.116-.943-.048-.084-.18-.132-.378-.23Z" />
-                                                    </svg>
-                                                </button>
-                                            </div>
-                                            {errors.phone && <div style={{ color: 'red', fontSize: '11px' }}>{t(errors.phone)}</div>}
-                                        </div>
-                                        {/* VAT */}
-                                        <div style={{ flex: '0 0 150px' }}>
-                                            <label className="form-label" style={{ fontSize: '12px', marginBottom: '2px' }}>{t('VAT NO.(15 digits)')}</label>
-                                            <input
-                                                id="sales_vat_no" name="sales_vat_no"
-                                                value={formData.vat_no || ''}
-                                                type="text"
-                                                onChange={(e) => { delete errors["vat_no"]; setErrors({ ...errors }); formData.vat_no = e.target.value; setFormData({ ...formData }); }}
-                                                className={`form-control${errors["vat_no"] ? ' is-invalid' : ''}`}
-                                                placeholder={t('VAT NO.')}
-                                            />
-                                            {errors.vat_no && <div style={{ color: 'red', fontSize: '11px' }}>{t(errors.vat_no)}</div>}
-                                        </div>
-                                        {/* Address */}
-                                        <div style={{ flex: '1 1 140px', minWidth: '100px' }}>
-                                            <label className="form-label" style={{ fontSize: '12px', marginBottom: '2px' }}>{t('Address')}</label>
-                                            <textarea
-                                                value={formData.address || ''}
-                                                onChange={(e) => { delete errors["address"]; setErrors({ ...errors }); formData.address = e.target.value; setFormData({ ...formData }); }}
-                                                onKeyDown={(e) => { if (e.key === 'Enter') { e.stopPropagation(); e.nativeEvent.stopImmediatePropagation(); } }}
-                                                className={`form-control${errors["address"] ? ' is-invalid' : ''}`}
-                                                id="address" placeholder={t('Address')}
-                                                style={{ resize: 'none', fontSize: '13px', height: '32px' }}
-                                            />
-                                        </div>
-                                        {/* Remarks */}
-                                        <div style={{ flex: '1 1 140px', minWidth: '100px' }}>
-                                            <label className="form-label" style={{ fontSize: '12px', marginBottom: '2px' }}>{t('Remarks')}</label>
-                                            <textarea
-                                                value={formData.remarks || ''}
-                                                onChange={(e) => { formData.remarks = e.target.value; setFormData({ ...formData }); }}
-                                                onKeyDown={(e) => { if (e.key === 'Enter') { e.stopPropagation(); e.nativeEvent.stopImmediatePropagation(); } }}
-                                                className="form-control"
-                                                id="remarks" placeholder={t('Remarks')}
-                                                style={{ resize: 'none', fontSize: '13px', height: '32px' }}
-                                            />
-                                        </div>
-                                    </div>
+                                    {/* Row 2: 5-column table — Date | Phone+WA | VAT | Address | Remarks */}
+                                    <table style={{ width: '100%', borderCollapse: 'separate', borderSpacing: '10px 0', tableLayout: 'fixed' }}>
+                                        <colgroup>
+                                            <col style={{ width: '188px' }} />
+                                            <col />
+                                            <col />
+                                            <col />
+                                            <col />
+                                        </colgroup>
+                                        <thead>
+                                            <tr>
+                                                <th style={{ fontWeight: 500, fontSize: '12px', padding: '0 0 2px 0', background: 'inherit' }}>{t('Date')}*</th>
+                                                <th style={{ fontWeight: 500, fontSize: '12px', padding: '0 0 2px 0', background: 'inherit' }}>{t('Phone')} ( 05.. / +966..)</th>
+                                                <th style={{ fontWeight: 500, fontSize: '12px', padding: '0 0 2px 0', background: 'inherit' }}>{t('VAT NO.(15 digits)')}</th>
+                                                <th style={{ fontWeight: 500, fontSize: '12px', padding: '0 0 2px 0', background: 'inherit' }}>{t('Address')}</th>
+                                                <th style={{ fontWeight: 500, fontSize: '12px', padding: '0 0 2px 0', background: 'inherit' }}>{t('Remarks')}</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <tr style={{ verticalAlign: 'top' }}>
+                                                <td style={{ padding: 0 }}>
+                                                    <DatePicker
+                                                        id="date_str"
+                                                        selected={formData.date_str ? new Date(formData.date_str) : null}
+                                                        value={formData.date_str ? format(new Date(formData.date_str), "MMMM d, yyyy h:mm aa", { locale: dateLocale }) : null}
+                                                        className={`form-control${errors.date_str ? ' is-invalid' : ''}`}
+                                                        dateFormat="MMMM d, yyyy h:mm aa"
+                                                        locale={dateLocale}
+                                                        showTimeSelect
+                                                        timeIntervals="1"
+                                                        popperProps={{ strategy: 'fixed' }}
+                                                        onChange={(value) => { formData.date_str = value; setFormData({ ...formData }); }}
+                                                    />
+                                                    {errors.date_str && <div style={{ color: 'red', fontSize: '11px' }}>{t(errors.date_str)}</div>}
+                                                </td>
+                                                <td style={{ padding: 0 }}>
+                                                    <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                                                        <input
+                                                            id="sales_return_phone" name="sales_return_phone"
+                                                            value={formData.phone || ''}
+                                                            type="text"
+                                                            onChange={(e) => { delete errors["phone"]; setErrors({ ...errors }); formData.phone = e.target.value; setFormData({ ...formData }); }}
+                                                            className={`form-control${errors["phone"] ? ' is-invalid' : ''}`}
+                                                            placeholder={t('Phone')}
+                                                            style={{ flex: 1, minWidth: 0 }}
+                                                        />
+                                                        <button type="button" onClick={sendWhatsAppMessage}
+                                                            style={{ background: '#25d366', border: 'none', borderRadius: '4px', padding: '7px 8px', cursor: 'pointer', color: '#fff', display: 'inline-flex', alignItems: 'center', flexShrink: 0 }}>
+                                                            <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" fill="white" viewBox="0 0 16 16">
+                                                                <path d="M13.601 2.326A7.875 7.875 0 0 0 8.036 0C3.596 0 0 3.597 0 8.036c0 1.417.37 2.805 1.07 4.03L0 16l3.993-1.05a7.968 7.968 0 0 0 4.043 1.085h.003c4.44 0 8.036-3.596 8.036-8.036 0-2.147-.836-4.166-2.37-5.673ZM8.036 14.6a6.584 6.584 0 0 1-3.35-.92l-.24-.142-2.37.622.63-2.31-.155-.238a6.587 6.587 0 0 1-1.018-3.513c0-3.637 2.96-6.6 6.6-6.6 1.764 0 3.42.69 4.67 1.94a6.56 6.56 0 0 1 1.93 4.668c0 3.637-2.96 6.6-6.6 6.6Zm3.61-4.885c-.198-.1-1.17-.578-1.352-.644-.18-.066-.312-.1-.444.1-.13.197-.51.644-.626.775-.115.13-.23.15-.428.05-.198-.1-.837-.308-1.594-.983-.59-.525-.99-1.174-1.11-1.372-.116-.198-.012-.305.088-.403.09-.09.198-.23.298-.345.1-.115.132-.197.2-.33.065-.13.032-.247-.017-.345-.05-.1-.444-1.07-.61-1.46-.16-.384-.323-.332-.444-.338l-.378-.007c-.13 0-.344.048-.525.23s-.688.672-.688 1.64c0 .967.704 1.9.802 2.03.1.13 1.386 2.116 3.365 2.963.47.203.837.324 1.122.414.472.15.902.13 1.24.08.378-.057 1.17-.48 1.336-.942.165-.462.165-.858.116-.943-.048-.084-.18-.132-.378-.23Z" />
+                                                            </svg>
+                                                        </button>
+                                                    </div>
+                                                    {errors.phone && <div style={{ color: 'red', fontSize: '11px' }}>{t(errors.phone)}</div>}
+                                                </td>
+                                                <td style={{ padding: 0 }}>
+                                                    <input
+                                                        id="sales_vat_no" name="sales_vat_no"
+                                                        value={formData.vat_no || ''}
+                                                        type="text"
+                                                        onChange={(e) => { delete errors["vat_no"]; setErrors({ ...errors }); formData.vat_no = e.target.value; setFormData({ ...formData }); }}
+                                                        className={`form-control${errors["vat_no"] ? ' is-invalid' : ''}`}
+                                                        placeholder={t('VAT NO.')}
+                                                    />
+                                                    {errors.vat_no && <div style={{ color: 'red', fontSize: '11px' }}>{t(errors.vat_no)}</div>}
+                                                </td>
+                                                <td style={{ padding: 0 }}>
+                                                    <textarea
+                                                        value={formData.address || ''}
+                                                        onChange={(e) => { delete errors["address"]; setErrors({ ...errors }); formData.address = e.target.value; setFormData({ ...formData }); }}
+                                                        onKeyDown={(e) => { if (e.key === 'Enter') { e.stopPropagation(); e.nativeEvent.stopImmediatePropagation(); } }}
+                                                        className={`form-control${errors["address"] ? ' is-invalid' : ''}`}
+                                                        id="address" placeholder={t('Address')}
+                                                        style={{ resize: 'none', fontSize: '13px', height: '32px', width: '100%' }}
+                                                    />
+                                                </td>
+                                                <td style={{ padding: 0 }}>
+                                                    <textarea
+                                                        value={formData.remarks || ''}
+                                                        onChange={(e) => { formData.remarks = e.target.value; setFormData({ ...formData }); }}
+                                                        onKeyDown={(e) => { if (e.key === 'Enter') { e.stopPropagation(); e.nativeEvent.stopImmediatePropagation(); } }}
+                                                        className="form-control"
+                                                        id="remarks" placeholder={t('Remarks')}
+                                                        style={{ resize: 'none', fontSize: '13px', height: '32px', width: '100%' }}
+                                                    />
+                                                </td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
                                 </div>
                             </div>
                             {/* Right: customer details inline */}
