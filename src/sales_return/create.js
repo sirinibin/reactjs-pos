@@ -3988,6 +3988,7 @@ const SalesReturnCreate = forwardRef((props, ref) => {
                                         <th style={{ ...th, width: '180px' }}>{t("Date")}</th>
                                         <th style={{ ...th, width: '120px' }}>{t("Amount")}</th>
                                         <th style={{ ...th, width: '150px' }}>{t("Method")}</th>
+                                        <th style={th}>{t("Description")}</th>
                                         <th style={th}>{t("Reference")}</th>
                                         <th style={{ ...th, width: '36px' }}></th>
                                       </>); })()}
@@ -4047,6 +4048,13 @@ const SalesReturnCreate = forwardRef((props, ref) => {
                                         </select>
                                         {errors["payment_method_" + key] && <div style={{ color: "red", fontSize: '11px' }}>{t(errors["payment_method_" + key])}</div>}
                                       </td>
+                                      <td style={{ padding: '3px 6px', minWidth: '120px' }}>
+                                        <input type='text' value={formData.payments_input[key].description || ""} className="form-control form-control-sm"
+                                          disabled={order.payment_status === "not_paid"}
+                                          onChange={(e) => { formData.payments_input[key].description = e.target.value; setFormData({ ...formData }); }}
+                                          placeholder={t("Description")}
+                                        />
+                                      </td>
                                       <td style={{ padding: '3px 6px' }}>
                                         {formData.payments_input[key] && (
                                           <span style={{ cursor: "pointer", color: "#004ac6", fontSize: '11px' }} onClick={() => openReferenceUpdateForm(formData.payments_input[key].reference_id, formData.payments_input[key].reference_type)}>
@@ -4065,7 +4073,7 @@ const SalesReturnCreate = forwardRef((props, ref) => {
                                     </tr>
                                   ))}
                                   <tr style={{ borderTop: '2px solid #c3c6d7', backgroundColor: '#f8fafc' }}>
-                                    <td colSpan={5} style={{ padding: '5px 10px' }}>
+                                    <td colSpan={6} style={{ padding: '5px 10px' }}>
                                       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '16px', flexWrap: 'wrap' }}>
                                         <div style={{ display: 'flex', alignItems: 'center', gap: '16px', flexWrap: 'wrap' }}>
                                           <span style={{ fontSize: '12px', color: '#434655' }}>{t("Total")}:&nbsp;<strong style={{ color: '#191c1e', fontVariantNumeric: 'tabular-nums' }}>{trimTo2Decimals(totalPaymentAmount)}</strong></span>
@@ -6462,6 +6470,9 @@ const SalesReturnCreate = forwardRef((props, ref) => {
                                             {t("Payment method")}
                                         </th>
                                         <th>
+                                            {t("Description")}
+                                        </th>
+                                        <th>
                                             {t("Reference")}
                                         </th>
                                         <th>
@@ -6567,6 +6578,13 @@ const SalesReturnCreate = forwardRef((props, ref) => {
                                                                 {t(errors["payment_method_" + key])}
                                                             </div>
                                                         )}
+                                                    </td>
+                                                    <td style={{ width: "200px" }}>
+                                                        <input type='text' value={formData.payments_input[key].description || ""} className="form-control"
+                                                            disabled={order.payment_status === "not_paid"}
+                                                            onChange={(e) => { formData.payments_input[key].description = e.target.value; setFormData({ ...formData }); }}
+                                                            placeholder={t("Description")}
+                                                        />
                                                     </td>
                                                     <td style={{ width: "200px" }}>
                                                         {formData.payments_input[key] && (

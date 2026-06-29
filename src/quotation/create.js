@@ -5979,6 +5979,9 @@ async function checkWarning(i) {
                           Payment method
                         </th>
                         <th>
+                          Description
+                        </th>
+                        <th>
                           Reference
                         </th>
                         <th>
@@ -6082,6 +6085,12 @@ async function checkWarning(i) {
                                   {errors["payment_method_" + key]}
                                 </div>
                               )}
+                            </td>
+                            <td style={{ width: "200px" }}>
+                              <input type='text' value={formData.payments_input[key].description || ""} className="form-control"
+                                onChange={(e) => { formData.payments_input[key].description = e.target.value; setFormData({ ...formData }); }}
+                                placeholder="Description"
+                              />
                             </td>
                             <td style={{ width: "200px" }}>
                               {formData.payments_input[key] && (

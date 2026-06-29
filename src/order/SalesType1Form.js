@@ -2752,6 +2752,9 @@ export function SalesType1Body({
                                                     {t("Payment Method")}
                                                 </th>
                                                 <th>
+                                                    {t("Description")}
+                                                </th>
+                                                <th>
                                                     {t("Reference")}
                                                 </th>
                                                 <th>
@@ -2857,6 +2860,12 @@ export function SalesType1Body({
                                                                     {t(errors["payment_method_" + key])}
                                                                 </div>
                                                             )}
+                                                        </td>
+                                                        <td style={{ width: "200px" }}>
+                                                            <input type='text' value={formData.payments_input[key].description || ""} className="form-control"
+                                                                onChange={(e) => { formData.payments_input[key].description = e.target.value; setFormData({ ...formData }); }}
+                                                                placeholder={t("Description")}
+                                                            />
                                                         </td>
                                                         <td style={{ width: "200px" }}>
                                                             {formData.payments_input[key] && (

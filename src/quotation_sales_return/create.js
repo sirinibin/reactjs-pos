@@ -4514,6 +4514,9 @@ const QuotationSalesReturnCreate = forwardRef((props, ref) => {
                                             Payment method
                                         </th>
                                         <th>
+                                            Description
+                                        </th>
+                                        <th>
                                             Reference
                                         </th>
                                         <th>
@@ -4618,6 +4621,13 @@ const QuotationSalesReturnCreate = forwardRef((props, ref) => {
                                                                 {errors["payment_method_" + key]}
                                                             </div>
                                                         )}
+                                                    </td>
+                                                    <td style={{ width: "200px" }}>
+                                                        <input type='text' value={formData.payments_input[key].description || ""} className="form-control"
+                                                            disabled={quotation.payment_status === "not_paid"}
+                                                            onChange={(e) => { formData.payments_input[key].description = e.target.value; setFormData({ ...formData }); }}
+                                                            placeholder="Description"
+                                                        />
                                                     </td>
                                                     <td style={{ width: "200px" }}>
                                                         {formData.payments_input[key] && (
