@@ -140,10 +140,7 @@ const SalesReturnCreate = forwardRef((props, ref) => {
     }));
 
     let [store, setStore] = useState({});
-    const [srFormType, setSrFormType] = useState(() => localStorage.getItem('sr_form_type') || 'type2');
-    useEffect(() => {
-        localStorage.setItem('sr_form_type', srFormType);
-    }, [srFormType]);
+    const srFormType = store?.settings?.sales_return_create_form_design || 'type2';
     const [isZatcaLocked, setIsZatcaLocked] = useState(false);
 
     function getStore(id) {
@@ -177,12 +174,6 @@ const SalesReturnCreate = forwardRef((props, ref) => {
             });
     }
 
-    useEffect(() => {
-        if (!store.settings) return;
-        if (store.settings.sales_return_create_form_design) {
-            setSrFormType(store.settings.sales_return_create_form_design);
-        }
-    }, [store.settings]);
 
 
     function ObjectToSearchQueryParams(object) {
