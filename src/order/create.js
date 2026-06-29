@@ -4408,7 +4408,7 @@ const OrderCreate = forwardRef((props, ref) => {
 
     const [selectedProductsColumns, setSelectedProductsColumns] = useState(defaultSelectedProductsColumns);
 
-    const SC_COL_DEFAULTS = useMemo(() => ({ delete: 32, si_no: 36, part_number: 80, name: 160, info: 56, purchase_unit_price: 90, stock: 49, warehouse: 84, qty: 84, unit_price: 90, unit_price_with_vat: 90, unit_discount: 80, unit_discount_with_vat: 80, unit_discount_percent: 80, price: 90, price_with_vat: 90 }), []);
+    const SC_COL_DEFAULTS = useMemo(() => ({ delete: 32, si_no: 36, part_number: 80, name: 160, info: 56, purchase_unit_price: 90, stock: 49, warehouse: 84, qty: 150, unit_price: 90, unit_price_with_vat: 90, unit_discount: 80, unit_discount_with_vat: 80, unit_discount_percent: 80, price: 90, price_with_vat: 90 }), []);
     const [scColWidths, setScColWidths] = useState(() => {
         try { return JSON.parse(localStorage.getItem('sc_sp_col_widths') || '{}'); } catch { return {}; }
     });
@@ -7904,9 +7904,7 @@ const OrderCreate = forwardRef((props, ref) => {
                         renderVATTooltip={renderVATTooltip}
                         renderNetTotalBeforeRoundingTooltip={renderNetTotalBeforeRoundingTooltip}
                         renderNetTotalTooltip={renderNetTotalTooltip}
-                        scColWidths={scColWidths}
-                        SC_COL_DEFAULTS={SC_COL_DEFAULTS}
-                        startScColResize={startScColResize}
+                        fetchAndSetCustomer={fetchAndSetCustomer}
                     />}
 
                     {

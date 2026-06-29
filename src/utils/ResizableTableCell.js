@@ -1,7 +1,7 @@
 import React, { useRef, useEffect } from 'react';
 import './ResizableCell.css';
 
-const ResizableTableCell = ({ children }) => {
+const ResizableTableCell = ({ children, style }) => {
     const cellRef = useRef(null);
 
     useEffect(() => {
@@ -53,7 +53,7 @@ const ResizableTableCell = ({ children }) => {
     }, []);
 
     return (
-        <td ref={cellRef} className="resizable-td">
+        <td ref={cellRef} className="resizable-td" style={style}>
             {children}
         </td>
     );

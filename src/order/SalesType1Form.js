@@ -8,6 +8,7 @@ import { DebounceInput } from 'react-debounce-input';
 import { Spinner } from "react-bootstrap";
 import { Dropdown } from 'react-bootstrap';
 import Amount from "../utils/amount.js";
+import ResizableTableCell from '../utils/ResizableTableCell';
 import { trimTo2Decimals } from "../utils/numberUtils";
 import { trimTo8Decimals } from "../utils/numberUtils";
 import { OverlayTrigger, Tooltip } from 'react-bootstrap';
@@ -244,21 +245,8 @@ export function SalesType1Body({
     renderVATTooltip,
     renderNetTotalBeforeRoundingTooltip,
     renderNetTotalTooltip,
-    scColWidths,
-    SC_COL_DEFAULTS,
-    startScColResize,
+    fetchAndSetCustomer,
 }) {
-    const resizeHandle = (colKey) => (
-        <div
-            onMouseDown={(e) => startScColResize(e, colKey, scColWidths[colKey] ?? SC_COL_DEFAULTS[colKey] ?? 60)}
-            style={{ position: 'absolute', right: 0, top: '20%', bottom: '20%', width: '4px', cursor: 'col-resize', zIndex: 2, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '1px', borderRadius: '2px', backgroundColor: 'transparent' }}
-            onMouseEnter={e => { e.currentTarget.style.backgroundColor = '#dbeafe'; Array.from(e.currentTarget.children).forEach(d => d.style.backgroundColor = '#3b82f6'); }}
-            onMouseLeave={e => { e.currentTarget.style.backgroundColor = 'transparent'; Array.from(e.currentTarget.children).forEach(d => d.style.backgroundColor = '#b0b7c3'); }}
-        >
-            <div style={{ width: '1px', height: '100%', backgroundColor: '#b0b7c3', borderRadius: '1px', pointerEvents: 'none' }} />
-            <div style={{ width: '1px', height: '100%', backgroundColor: '#b0b7c3', borderRadius: '1px', pointerEvents: 'none' }} />
-        </div>
-    );
     const { t } = useTranslation('common');
     return (
                         <form className="row g-3 needs-validation" onSubmit={e => { e.preventDefault(); handleCreate(e); }} >
@@ -301,6 +289,7 @@ export function SalesType1Body({
                                                         }
                                                         setFormData({ ...formData });
                                                         setSelectedCustomers(selectedItems);
+                                                        fetchAndSetCustomer(selectedItems[0].id, selectedItems[0]);
                                                         setOpenCustomerSearchResult(false);
                                                         if (store?.settings?.block_sales_after_pending_count > 0) {
                                                             const storeId = localStorage.getItem("store_id");
@@ -399,34 +388,34 @@ export function SalesType1Body({
                                         const cs = c?.stores?.[storeId];
                                         return (
                                             <div style={{ flex: '0 0 380px', maxWidth: '55%' }}>
-                                                <div style={{ padding: '8px 14px', background: 'rgba(0,74,198,0.03)', border: '1px solid #e2e8f0', borderRadius: '6px', height: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: '5px' }}>
+                                                <div style={{ padding: '10px 16px', background: 'rgba(0,74,198,0.04)', border: '1px solid #c7d7f5', borderRadius: '8px', height: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: '6px' }}>
                                                     {/* Row 1: code + name + arabic name */}
-                                                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap' }}>
-                                                        {c.code && <span style={{ background: '#dbeafe', color: '#1e40af', borderRadius: '4px', padding: '1px 7px', fontSize: '11px', fontWeight: 700, letterSpacing: '0.03em', flexShrink: 0 }}>{c.code}</span>}
-                                                        <span style={{ fontWeight: 700, fontSize: '13px', color: '#191c1e', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: '240px' }} title={c.name}>{c.name}</span>
-                                                        {c.name_in_arabic && <span style={{ fontSize: '11px', color: '#64748b', fontFamily: 'Arial, sans-serif', flexShrink: 0 }}>{c.name_in_arabic}</span>}
+                                                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+                                                        {c.code && <span style={{ background: '#dbeafe', color: '#1e40af', borderRadius: '4px', padding: '2px 8px', fontSize: '12px', fontWeight: 700, letterSpacing: '0.03em', flexShrink: 0 }}>{c.code}</span>}
+                                                        <span style={{ fontWeight: 700, fontSize: '15px', color: '#191c1e', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: '260px' }} title={c.name}>{c.name}</span>
+                                                        {c.name_in_arabic && <span style={{ fontSize: '13px', color: '#64748b', fontFamily: 'Arial, sans-serif', flexShrink: 0 }}>{c.name_in_arabic}</span>}
                                                     </div>
                                                     {/* Row 2: phone(s) + VAT */}
                                                     {(c.phone || c.phone2 || c.vat_no) && (
-                                                        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
-                                                            {c.phone && <span style={{ display: 'inline-flex', alignItems: 'center', gap: '3px', fontSize: '11px', color: '#374151' }}><i className="bi bi-telephone" style={{ color: '#6b7280', fontSize: '10px' }} />{c.phone}</span>}
-                                                            {c.phone2 && <span style={{ display: 'inline-flex', alignItems: 'center', gap: '3px', fontSize: '11px', color: '#374151' }}><i className="bi bi-telephone" style={{ color: '#6b7280', fontSize: '10px' }} />{c.phone2}</span>}
-                                                            {c.vat_no && <span style={{ display: 'inline-flex', alignItems: 'center', gap: '3px', fontSize: '11px', color: '#374151' }}><i className="bi bi-receipt" style={{ color: '#6b7280', fontSize: '10px' }} /><span style={{ color: '#6b7280' }}>VAT:</span>{c.vat_no}</span>}
+                                                        <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
+                                                            {c.phone && <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', fontSize: '13px', color: '#374151' }}><i className="bi bi-telephone" style={{ color: '#6b7280', fontSize: '12px' }} />{c.phone}</span>}
+                                                            {c.phone2 && <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', fontSize: '13px', color: '#374151' }}><i className="bi bi-telephone" style={{ color: '#6b7280', fontSize: '12px' }} />{c.phone2}</span>}
+                                                            {c.vat_no && <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', fontSize: '13px', color: '#374151' }}><i className="bi bi-receipt" style={{ color: '#6b7280', fontSize: '12px' }} /><span style={{ color: '#6b7280' }}>VAT:</span><strong>{c.vat_no}</strong></span>}
                                                         </div>
                                                     )}
                                                     {/* Row 3: credit balance + limit */}
-                                                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
-                                                        <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', fontSize: '11px', cursor: 'pointer', userSelect: 'none' }} onClick={() => openCustomerPending(selectedCustomers[0])} title={t("Click to view pendings")}>
-                                                            <i className="bi bi-wallet2" style={{ color: '#004ac6', fontSize: '11px' }} />
-                                                            <span style={{ color: '#6b7280' }}>{t("Cr.Balance")}:</span>
-                                                            <strong style={{ color: (cs?.credit_balance || 0) > 0 ? '#dc2626' : '#16a34a', textDecoration: 'underline dotted' }}><Amount amount={trimTo2Decimals(cs?.credit_balance || 0)} /></strong>
-                                                            <i className="bi bi-box-arrow-up-right" style={{ color: '#004ac6', fontSize: '9px' }} />
+                                                    <div style={{ display: 'flex', alignItems: 'center', gap: '16px', flexWrap: 'wrap', borderTop: '1px solid #e2e8f0', paddingTop: '4px', marginTop: '2px' }}>
+                                                        <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', cursor: 'pointer', userSelect: 'none' }} onClick={() => openCustomerPending(selectedCustomers[0])} title={t("Click to view pendings")}>
+                                                            <i className="bi bi-wallet2" style={{ color: '#004ac6', fontSize: '13px' }} />
+                                                            <span style={{ fontSize: '13px', color: '#6b7280', fontWeight: 500 }}>{t("Cr.Balance")}:</span>
+                                                            <strong style={{ fontSize: '17px', fontWeight: 700, color: (c.credit_balance ?? cs?.credit_balance ?? 0) > 0 ? '#dc2626' : '#16a34a', letterSpacing: '-0.5px' }}><Amount amount={trimTo2Decimals(c.credit_balance ?? cs?.credit_balance ?? 0)} /></strong>
+                                                            <i className="bi bi-box-arrow-up-right" style={{ color: '#004ac6', fontSize: '10px' }} />
                                                         </span>
                                                         {(c.credit_limit > 0) && (
-                                                            <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', fontSize: '11px' }}>
-                                                                <i className="bi bi-shield-check" style={{ color: '#6b7280', fontSize: '10px' }} />
-                                                                <span style={{ color: '#6b7280' }}>{t("Limit")}:</span>
-                                                                <strong style={{ color: '#374151' }}><Amount amount={trimTo2Decimals(c.credit_limit)} /></strong>
+                                                            <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+                                                                <i className="bi bi-shield-check" style={{ color: '#6b7280', fontSize: '13px' }} />
+                                                                <span style={{ fontSize: '13px', color: '#6b7280', fontWeight: 500 }}>{t("Limit")}:</span>
+                                                                <strong style={{ fontSize: '15px', fontWeight: 700, color: '#374151' }}><Amount amount={trimTo2Decimals(c.credit_limit)} /></strong>
                                                             </span>
                                                         )}
                                                     </div>
@@ -995,32 +984,26 @@ export function SalesType1Body({
                             <div className="table-responsive" style={{ overflowX: "auto", maxHeight: "400px", overflowY: "scroll" }}>
 
 
-                                <table className="table table-striped table-sm table-bordered" style={{ tableLayout: 'fixed' }}>
-                                    <colgroup>
-                                        {selectedProductsColumns.filter(c => c.visible).map(col => (
-                                            <col key={col.key} style={{ width: `${scColWidths[col.key] ?? SC_COL_DEFAULTS[col.key] ?? 100}px` }} />
-                                        ))}
-                                    </colgroup>
+                                <table className="table table-striped table-sm table-bordered">
                                     <thead style={{ borderTopWidth: 0, borderBottomWidth: 0 }}>
                                         <tr className="text-center">
                                             {selectedProductsColumns.filter(c => c.visible).map(col => {
-                                                const thStyle = { position: 'relative', overflow: 'hidden', whiteSpace: 'nowrap', zIndex: 'auto', borderTop: 0 };
-                                                if (col.key === 'delete') return <th key={col.key} style={thStyle}></th>;
-                                                if (col.key === 'si_no') return <th key={col.key} style={thStyle}>{t('SI No.')}{resizeHandle('si_no')}</th>;
-                                                if (col.key === 'part_number') return <th key={col.key} style={thStyle}>{t('Part No.')}{resizeHandle('part_number')}</th>;
-                                                if (col.key === 'name') return <th key={col.key} style={thStyle}>{t('Name')}{resizeHandle('name')}</th>;
-                                                if (col.key === 'info') return <th key={col.key} style={thStyle}>{t('Info')}{resizeHandle('info')}</th>;
-                                                if (col.key === 'purchase_unit_price') return <th key={col.key} style={thStyle}>{t('Purchase Unit Price(without VAT)')}{resizeHandle('purchase_unit_price')}</th>;
-                                                if (col.key === 'stock') return <th key={col.key} style={thStyle}>{t('Stock')}{resizeHandle('stock')}</th>;
-                                                if (col.key === 'warehouse') return store.settings?.enable_warehouse_module ? <th key={col.key} style={thStyle}>{t('Remove Stock From')}{resizeHandle('warehouse')}</th> : null;
-                                                if (col.key === 'qty') return <th key={col.key} style={thStyle}>{t('Qty')}{resizeHandle('qty')}</th>;
-                                                if (col.key === 'unit_price') return <th key={col.key} style={thStyle}>{t('Unit Price(without VAT)')}{resizeHandle('unit_price')}</th>;
-                                                if (col.key === 'unit_price_with_vat') return <th key={col.key} style={thStyle}>{t('Unit Price(with VAT)')}{resizeHandle('unit_price_with_vat')}</th>;
-                                                if (col.key === 'unit_discount') return <th key={col.key} style={thStyle}>{t('Unit Disc.(without VAT)')}{resizeHandle('unit_discount')}</th>;
-                                                if (col.key === 'unit_discount_with_vat') return <th key={col.key} style={thStyle}>{t('Unit Disc.(with VAT)')}{resizeHandle('unit_discount_with_vat')}</th>;
-                                                if (col.key === 'unit_discount_percent') return <th key={col.key} style={thStyle}>{t('Unit Disc. %(with VAT)')}{resizeHandle('unit_discount_percent')}</th>;
-                                                if (col.key === 'price') return <th key={col.key} style={thStyle}>{t('Price(without VAT)')}{resizeHandle('price')}</th>;
-                                                if (col.key === 'price_with_vat') return <th key={col.key} style={thStyle}>{t('Price(with VAT)')}{resizeHandle('price_with_vat')}</th>;
+                                                if (col.key === 'delete') return <th key={col.key}></th>;
+                                                if (col.key === 'si_no') return <th key={col.key}>{t('SI No.')}</th>;
+                                                if (col.key === 'part_number') return <th key={col.key}>{t('Part No.')}</th>;
+                                                if (col.key === 'name') return <th key={col.key} style={{ minWidth: "250px" }}>{t('Name')}</th>;
+                                                if (col.key === 'info') return <th key={col.key}>{t('Info')}</th>;
+                                                if (col.key === 'purchase_unit_price') return <th key={col.key}>{t('Purchase Unit Price(without VAT)')}</th>;
+                                                if (col.key === 'stock') return <th key={col.key}>{t('Stock')}</th>;
+                                                if (col.key === 'warehouse') return store.settings?.enable_warehouse_module ? <th key={col.key}>{t('Remove Stock From')}</th> : null;
+                                                if (col.key === 'qty') return <th key={col.key}>{t('Qty')}</th>;
+                                                if (col.key === 'unit_price') return <th key={col.key}>{t('Unit Price(without VAT)')}</th>;
+                                                if (col.key === 'unit_price_with_vat') return <th key={col.key}>{t('Unit Price(with VAT)')}</th>;
+                                                if (col.key === 'unit_discount') return <th key={col.key}>{t('Unit Disc.(without VAT)')}</th>;
+                                                if (col.key === 'unit_discount_with_vat') return <th key={col.key}>{t('Unit Disc.(with VAT)')}</th>;
+                                                if (col.key === 'unit_discount_percent') return <th key={col.key}>{t('Unit Disc. %(with VAT)')}</th>;
+                                                if (col.key === 'price') return <th key={col.key}>{t('Price(without VAT)')}</th>;
+                                                if (col.key === 'price_with_vat') return <th key={col.key}>{t('Price(with VAT)')}</th>;
                                                 return null;
                                             })}
                                         </tr>
@@ -1051,7 +1034,7 @@ export function SalesType1Body({
                                                             {index + 1}
 
                                                         </td>);
-                                                        if (col.key === 'part_number') return (<td key={col.key} style={{ verticalAlign: 'middle', padding: '0.25rem' }}>
+                                                        if (col.key === 'part_number') return (<ResizableTableCell key="part_number" style={{ verticalAlign: 'middle', padding: '0.25rem' }}>
                                                             <div style={{ display: 'flex', alignItems: 'center' }}>
                                                                 <input type="text" id={`sales_product_part_number${index}`}
                                                                     name={`sales_product_part_number${index}`}
@@ -1081,16 +1064,15 @@ export function SalesType1Body({
                                                                         data-warning={warnings[`part_number_${index}`] || ''}
                                                                         title={errors[`part_number_${index}`] || warnings[`part_number_${index}`] || ''}
                                                                         style={{
-                                                                            fontSize: '0.85rem',
+                                                                            fontSize: '1rem',
                                                                             cursor: 'pointer',
                                                                             whiteSpace: 'nowrap',
                                                                         }}
                                                                     ></i>
                                                                 )}
-
                                                             </div>
-                                                        </td>);
-                                                        if (col.key === 'name') return (<td key={col.key} style={{ verticalAlign: 'middle', padding: '0.25rem' }}
+                                                        </ResizableTableCell>);
+                                                        if (col.key === 'name') return (<ResizableTableCell key="name" style={{ verticalAlign: 'middle', padding: '0.25rem' }}
                                                         >
                                                             <div className="input-group" style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
                                                                 <input type="text" id={`${"sales_product_name" + index}`}
@@ -1185,7 +1167,7 @@ export function SalesType1Body({
                                                                     }}
                                                                 ></i>
                                                             )}
-                                                        </td>);
+                                                        </ResizableTableCell>);
                                                         if (col.key === 'info') return (<td key={col.key} style={{ verticalAlign: 'middle', padding: '0.25rem' }}>
                                                             <div style={{ zIndex: "9999 !important", position: "absolute !important" }}>
                                                                 <Dropdown drop="top">
@@ -1443,7 +1425,7 @@ export function SalesType1Body({
                                                             <div className="d-flex align-items-center" style={{}}>
                                                                 <div className="input-group flex-nowrap" style={{ flex: '1 1 auto' }}>
                                                                     <input type="number"
-                                                                        style={{ minWidth: "80px", maxWidth: "80px" }}
+                                                                        style={{ minWidth: "70px", maxWidth: "100px" }}
                                                                         id={`${"sales_product_quantity_" + index}`}
                                                                         name={`${"sales_product_quantity" + index}`}
                                                                         className={`form-control text-end ${errors["quantity_" + index] ? 'is-invalid' : warnings["quantity_" + index] ? 'border-warning text-warning' : ''}`}
