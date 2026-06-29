@@ -266,10 +266,10 @@ export function SalesType1Body({
                                 <div style={{ display: 'flex', gap: '12px', alignItems: 'stretch', justifyContent: 'space-between' }}>
 
                                     {/* Left: label + [input + action buttons on same row] */}
-                                    <div style={{ flex: 'none' }}>
+                                    <div style={{ flex: 1, minWidth: 0 }}>
                                         <label className="form-label mb-1">{t('Customer')}</label>
                                         <div style={{ display: 'flex', gap: '4px', alignItems: 'center' }}>
-                                            <div style={{ width: '252px' }}>
+                                            <div style={{ flex: 1, minWidth: 0 }}>
                                                 <Typeahead
                                                     id="customer_id"
                                                     filterBy={() => true}
