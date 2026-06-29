@@ -251,10 +251,10 @@ export function SalesType1Body({
     return (
                         <form className="row g-3 needs-validation" onSubmit={e => { e.preventDefault(); handleCreate(e); }} >
                             <div className="col-12">
-                                <div style={{ display: 'flex', gap: '10px', alignItems: 'flex-start' }}>
+                                <div style={{ display: 'grid', gridTemplateColumns: '1fr 350px', gap: '10px', alignItems: 'start' }}>
 
                                     {/* LEFT: all form fields stacked */}
-                                    <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                                    <div style={{ minWidth: 0, display: 'flex', flexDirection: 'column', gap: '8px' }}>
 
                                         {/* Customer search row */}
                                         <div>
@@ -385,7 +385,7 @@ export function SalesType1Body({
                                         </div>
 
                                         {/* 2×3 grid: Date | Phone+WA | VAT  /  Barcode | Address | Remarks */}
-                                        <div style={{ display: 'grid', gridTemplateColumns: '231px 1fr 1fr', gap: '8px 18px', alignItems: 'start' }}>
+                                        <div style={{ display: 'grid', gridTemplateColumns: '231px 220px 220px', gap: '8px 18px', alignItems: 'start', flexShrink: 0, width: 'fit-content' }}>
 
                                             {/* R1C1: Date */}
                                             <div>
@@ -510,13 +510,14 @@ export function SalesType1Body({
                                         </div>
                                     </div>{/* end LEFT */}
 
-                                    {/* RIGHT: customer details card — fixed width, does NOT push left fields */}
+                                    {/* RIGHT: always-reserved 350px column — content shown when customer selected */}
+                                    <div style={{ alignSelf: 'stretch' }}>
                                     {selectedCustomers.length > 0 && formData.customer_id && (() => {
                                         const c = selectedCustomers[0];
                                         const storeId = localStorage.getItem("store_id");
                                         const cs = c?.stores?.[storeId];
                                         return (
-                                            <div style={{ flex: '0 0 350px', maxWidth: '40%', alignSelf: 'stretch' }}>
+                                            <div style={{ height: '100%' }}>
                                                 <div style={{ padding: '10px 16px', background: 'rgba(0,74,198,0.04)', border: '1px solid #c7d7f5', borderRadius: '8px', height: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: '6px' }}>
                                                     {/* Row 1: code + name + arabic name */}
                                                     <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
@@ -552,6 +553,7 @@ export function SalesType1Body({
                                             </div>
                                         );
                                     })()}
+                                    </div>
 
                                 </div>
                             </div>
