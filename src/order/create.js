@@ -40,7 +40,7 @@ import Customers from "./../utils/customers.js";
 import Amount from "../utils/amount.js";
 import { trimTo2Decimals } from "../utils/numberUtils";
 import { trimTo8Decimals } from "../utils/numberUtils";
-import { OverlayTrigger, Tooltip } from 'react-bootstrap';
+import { OverlayTrigger, Tooltip, Popover } from 'react-bootstrap';
 import ImageViewerModal from './../utils/ImageViewerModal';
 import * as bootstrap from 'bootstrap';
 //import OverflowTooltip from "../utils/OverflowTooltip.js";
@@ -52,7 +52,6 @@ import PurchaseCreate from "../purchase/create.js";
 import CustomerDepositCreate from "../customer_deposit/create.js";
 import SalesReturnCreate from "../sales_return/create.js";
 import CustomerPending from "./../utils/customer_pending.js";
-import Badge from 'react-bootstrap/Badge';
 import { useTranslation } from 'react-i18next';
 import eventEmitter from '../utils/eventEmitter';
 
@@ -496,11 +495,9 @@ const OrderCreate = forwardRef((props, ref) => {
                 if (formData.customer_name && formData.customer_id) {
                     let selectedCustomers = [
                         {
+                            ...(formData.customer || {}),
                             id: formData.customer_id,
                             name: formData.customer_name,
-                            vat_no: formData.customer?.vat_no || "",
-                            search_label: formData.customer?.search_label || "",
-                            credit_balance: formData.customer?.credit_balance || 0,
                         }
                     ];
                     setSelectedCustomers([...selectedCustomers]);
@@ -744,9 +741,9 @@ const OrderCreate = forwardRef((props, ref) => {
                 if (formData.customer_name && formData.customer_id) {
                     let selectedCustomers = [
                         {
+                            ...(formData.customer || {}),
                             id: formData.customer_id,
                             name: formData.customer_name,
-                            search_label: formData.customer.search_label,
                         }
                     ];
                     setSelectedCustomers([...selectedCustomers]);
@@ -901,9 +898,9 @@ const OrderCreate = forwardRef((props, ref) => {
                 if (formData.customer_name && formData.customer_id) {
                     let selectedCustomers = [
                         {
+                            ...(formData.customer || {}),
                             id: formData.customer_id,
                             name: formData.customer_name,
-                            search_label: formData.customer.search_label,
                         }
                     ];
                     setSelectedCustomers([...selectedCustomers]);
@@ -1044,9 +1041,9 @@ const OrderCreate = forwardRef((props, ref) => {
                 if (formData.customer_name && formData.customer_id) {
                     let selectedCustomers = [
                         {
+                            ...(formData.customer || {}),
                             id: formData.customer_id,
                             name: formData.customer_name,
-                            search_label: formData.customer.search_label,
                         }
                     ];
                     setSelectedCustomers([...selectedCustomers]);
@@ -1067,6 +1064,7 @@ const OrderCreate = forwardRef((props, ref) => {
 
     useEffect(() => {
         const listener = event => {
+            if (event.target.tagName === "TEXTAREA") return;
             if (event.code === "Enter" || event.code === "NumpadEnter") {
                 //console.log("Enter key was pressed. Run your function-order.123");
                 // event.preventDefault();
@@ -1102,6 +1100,11 @@ const OrderCreate = forwardRef((props, ref) => {
     let [errors, setErrors] = useState({
         "payment_amount": [],
     });
+    useEffect(() => {
+        if (Object.keys(errors).length === 0) return;
+        const timer = setTimeout(() => setErrors({ "payment_amount": [] }), 5000);
+        return () => clearTimeout(timer);
+    }, [errors]);
     const [isProcessing, setProcessing] = useState(false);
     const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -2790,10 +2793,7 @@ const OrderCreate = forwardRef((props, ref) => {
             }
         }
 
-        //totalPaymentAmount = totalPayment;
-        // alert(totalPaymentAmount)
-        // console.log("totalPaymentAmount:", totalPaymentAmount);
-        setTotalPaymentAmount(totalPaymentAmount);
+        setTotalPaymentAmount(totalPayment);
         //console.log("totalPayment:", totalPayment)
         balanceAmount = (parseFloat(trimTo2Decimals(formData.net_total)) - parseFloat(parseFloat(trimTo2Decimals(cashDiscount)))) - parseFloat(trimTo2Decimals(totalPayment));
         balanceAmount = parseFloat(trimTo2Decimals(balanceAmount));
@@ -3393,60 +3393,146 @@ const OrderCreate = forwardRef((props, ref) => {
     const timerRef = useRef(null);
 
 
-    const renderTooltip = (props) => (
-        <Tooltip id="label-tooltip" {...props}>
-            {t("Total(without VAT)")} + {t("Shipping & Handling Fees")} - {t("Discount(without VAT)")}
-            {"(" + trimTo2Decimals(formData.total) + " + " + trimTo2Decimals(shipping) + " - " + trimTo2Decimals(discount) + ") = " + trimTo2Decimals(formData.total + shipping - discount)}
-        </Tooltip>
+    const _scPopoverStyle = { maxWidth: '340px', minWidth: '240px', background: '#212529', border: '1px solid #495057', boxShadow: '0 4px 14px rgba(0,0,0,.45)', borderRadius: '6px', color: '#f8f9fa' };
+    const _scPopoverHeaderStyle = { background: '#212529', borderBottom: '1px solid #495057', color: '#f8f9fa', fontSize: '0.78rem', fontWeight: 700, padding: '6px 10px 6px 12px', borderRadius: '6px 6px 0 0', display: 'flex', justifyContent: 'space-between', alignItems: 'center' };
+    const _scPopoverBodyStyle = { padding: 0, background: '#212529', borderRadius: '0 0 6px 6px' };
+    const _scCloseBtn = () => (
+        <button type="button" onClick={(e) => { e.stopPropagation(); setOpenSummaryTooltip(null); }}
+            style={{ background: 'none', border: 'none', color: '#adb5bd', cursor: 'pointer', fontSize: '1.1rem', lineHeight: 1, padding: '0 0 0 8px' }}>×</button>
+    );
+    const _scRow = (label, value, divider = false, bold = false, color = null) => (
+        <tr style={{ lineHeight: 1.7, borderTop: divider ? '1px solid #495057' : 'none' }}>
+            <td style={{ padding: divider ? '5px 6px 2px 12px' : '1px 6px 1px 12px', color: '#adb5bd', whiteSpace: 'nowrap', verticalAlign: 'top', width: '1%', fontSize: '0.74rem' }}>{label}</td>
+            <td style={{ padding: divider ? '5px 12px 2px 4px' : '1px 12px 1px 4px', textAlign: 'right', fontWeight: bold ? 700 : 400, color: color || '#f8f9fa', whiteSpace: 'nowrap', fontSize: '0.74rem', fontVariantNumeric: 'tabular-nums' }}>{value}</td>
+        </tr>
     );
 
-    const renderNetTotalBeforeRoundingTooltip = (props) => (
-        <Tooltip id="label-tooltip" {...props}>
-            {t("Total Taxable Amount(without VAT)")} + {t("VAT Price ( {{vatPercent}}% of Taxable Amount)", { vatPercent: formData.vat_percent })}
-            {"(" + trimTo2Decimals(formData.total + shipping - discount) + " + " + trimTo2Decimals(formData.vat_price) + ") = " + trimTo2Decimals(formData.net_total - roundingAmount)}
-        </Tooltip>
+    const renderTotalWithoutVATTooltip = () => (
+        <Popover id="sc-total-ex-vat-tooltip" style={_scPopoverStyle}>
+            <Popover.Header style={_scPopoverHeaderStyle}><span>{t("Total (ex. VAT)")}</span>{_scCloseBtn()}</Popover.Header>
+            <Popover.Body style={_scPopoverBodyStyle}>
+                <table style={{ width: '100%', borderCollapse: 'collapse' }}><tbody>
+                    {_scRow(t("Sum of all line totals (ex. VAT)"), '')}
+                    {_scRow('= Total (ex. VAT)', `SAR ${trimTo2Decimals(formData.total || 0)}`, true, true, '#74c0fc')}
+                </tbody></table>
+            </Popover.Body>
+        </Popover>
     );
-
-    const renderNetTotalTooltip = (props) => (
-        <Tooltip id="label-tooltip" {...props}>
-            {t("Total Taxable Amount(without VAT)")} + {t("VAT Price ( {{vatPercent}}% of Taxable Amount)", { vatPercent: formData.vat_percent })} {roundingAmount > 0 ? " + " + t("Rounding Amount") : " - " + t("Rounding Amount")}
-            {"(" + trimTo2Decimals(formData.total + shipping - discount) + " + " + trimTo2Decimals(formData.vat_price) + `${roundingAmount > 0 ? " + " : " - "}` + trimTo2Decimals(roundingAmount) + " ) = " + trimTo2Decimals(formData.net_total)}
-        </Tooltip>
+    const renderTotalWithVATTooltip = () => (
+        <Popover id="sc-total-inc-vat-tooltip" style={_scPopoverStyle}>
+            <Popover.Header style={_scPopoverHeaderStyle}><span>{t("Total (inc. VAT)")}</span>{_scCloseBtn()}</Popover.Header>
+            <Popover.Body style={_scPopoverBodyStyle}>
+                <table style={{ width: '100%', borderCollapse: 'collapse' }}><tbody>
+                    {_scRow(t("Sum of all line totals (inc. VAT)"), '')}
+                    {_scRow('= Total (inc. VAT)', `SAR ${trimTo2Decimals(formData.total_with_vat || 0)}`, true, true, '#74c0fc')}
+                </tbody></table>
+            </Popover.Body>
+        </Popover>
     );
-
-    const renderTotalWithoutVATTooltip = (props) => (
-        <Tooltip id="total-without-vat-tooltip" {...props}>
-            {t("Sum of all product prices (excluding VAT)")}
-            {" = "}{trimTo2Decimals(formData.total)}
-        </Tooltip>
+    const renderShippingTooltip = () => (
+        <Popover id="sc-shipping-tooltip" style={_scPopoverStyle}>
+            <Popover.Header style={_scPopoverHeaderStyle}><span>{t("Shipping & Handling")}</span>{_scCloseBtn()}</Popover.Header>
+            <Popover.Body style={_scPopoverBodyStyle}>
+                <table style={{ width: '100%', borderCollapse: 'collapse' }}><tbody>
+                    {_scRow(t("Additional shipping and handling charges"), '')}
+                    {_scRow('= Shipping', `SAR ${trimTo2Decimals(shipping || 0)}`, true, true, '#74c0fc')}
+                </tbody></table>
+            </Popover.Body>
+        </Popover>
     );
-    const renderTotalWithVATTooltip = (props) => (
-        <Tooltip id="total-with-vat-tooltip" {...props}>
-            {t("Sum of all product prices (including VAT)")}
-            {" = "}{trimTo2Decimals(formData.total_with_vat)}
-        </Tooltip>
+    const renderDiscountWithoutVATTooltip = () => (
+        <Popover id="sc-discount-ex-vat-tooltip" style={_scPopoverStyle}>
+            <Popover.Header style={_scPopoverHeaderStyle}><span>{t("Discount (ex. VAT)")}</span>{_scCloseBtn()}</Popover.Header>
+            <Popover.Body style={_scPopoverBodyStyle}>
+                <table style={{ width: '100%', borderCollapse: 'collapse' }}><tbody>
+                    {_scRow(t("Discount applied before VAT"), '')}
+                    {_scRow('= Discount', `SAR ${trimTo2Decimals(discount || 0)}`, true, true, '#74c0fc')}
+                </tbody></table>
+            </Popover.Body>
+        </Popover>
     );
-    const renderShippingTooltip = (props) => (
-        <Tooltip id="shipping-tooltip" {...props}>
-            {t("Additional shipping and handling charges added to the order")}
-        </Tooltip>
+    const renderDiscountWithVATTooltip = () => (
+        <Popover id="sc-discount-inc-vat-tooltip" style={_scPopoverStyle}>
+            <Popover.Header style={_scPopoverHeaderStyle}><span>{t("Discount (inc. VAT)")}</span>{_scCloseBtn()}</Popover.Header>
+            <Popover.Body style={_scPopoverBodyStyle}>
+                <table style={{ width: '100%', borderCollapse: 'collapse' }}><tbody>
+                    {_scRow(t("Discount applied including VAT"), '')}
+                    {_scRow('= Discount', `SAR ${trimTo2Decimals(discountWithVAT || 0)}`, true, true, '#74c0fc')}
+                </tbody></table>
+            </Popover.Body>
+        </Popover>
     );
-    const renderDiscountWithoutVATTooltip = (props) => (
-        <Tooltip id="discount-without-vat-tooltip" {...props}>
-            {t("Discount amount applied before VAT calculation")}
-        </Tooltip>
-    );
-    const renderDiscountWithVATTooltip = (props) => (
-        <Tooltip id="discount-with-vat-tooltip" {...props}>
-            {t("Discount amount applied including VAT")}
-        </Tooltip>
-    );
-    const renderVATTooltip = (props) => (
-        <Tooltip id="vat-tooltip" {...props}>
-            {t("Value Added Tax")} ({formData.vat_percent}% {t("of Total Taxable Amount")})
-            {" = "}{trimTo2Decimals(formData.vat_price)}
-        </Tooltip>
-    );
+    const renderTooltip = () => {
+        const total = trimTo2Decimals(formData.total || 0);
+        const ship = trimTo2Decimals(shipping || 0);
+        const disc = trimTo2Decimals(discount || 0);
+        const result = trimTo2Decimals((formData.total || 0) + (shipping || 0) - (discount || 0));
+        return (
+            <Popover id="sc-taxable-tooltip" style={_scPopoverStyle}>
+                <Popover.Header style={_scPopoverHeaderStyle}><span>{t("Taxable Amount (ex. VAT)")}</span>{_scCloseBtn()}</Popover.Header>
+                <Popover.Body style={_scPopoverBodyStyle}>
+                    <table style={{ width: '100%', borderCollapse: 'collapse' }}><tbody>
+                        {_scRow('Total (ex. VAT)', total)}
+                        {_scRow('+ Shipping', ship)}
+                        {_scRow('− Discount (ex. VAT)', disc)}
+                        {_scRow('= Taxable Amount', `SAR ${result}`, true, true, '#74c0fc')}
+                    </tbody></table>
+                </Popover.Body>
+            </Popover>
+        );
+    };
+    const renderVATTooltip = () => {
+        const taxable = trimTo2Decimals((formData.total || 0) + (shipping || 0) - (discount || 0));
+        const vatAmt = trimTo2Decimals(formData.vat_price || 0);
+        return (
+            <Popover id="sc-vat-tooltip" style={_scPopoverStyle}>
+                <Popover.Header style={_scPopoverHeaderStyle}><span>{t("VAT")}</span>{_scCloseBtn()}</Popover.Header>
+                <Popover.Body style={_scPopoverBodyStyle}>
+                    <table style={{ width: '100%', borderCollapse: 'collapse' }}><tbody>
+                        {_scRow('Taxable Amount', taxable)}
+                        {_scRow(`× VAT (${formData.vat_percent || 0}%)`, '')}
+                        {_scRow('= VAT', `SAR ${vatAmt}`, true, true, '#74c0fc')}
+                    </tbody></table>
+                </Popover.Body>
+            </Popover>
+        );
+    };
+    const renderNetTotalBeforeRoundingTooltip = () => {
+        const taxable = trimTo2Decimals((formData.total || 0) + (shipping || 0) - (discount || 0));
+        const vat = trimTo2Decimals(formData.vat_price || 0);
+        const result = trimTo2Decimals((formData.net_total || 0) - (roundingAmount || 0));
+        return (
+            <Popover id="sc-net-before-rounding-tooltip" style={_scPopoverStyle}>
+                <Popover.Header style={_scPopoverHeaderStyle}><span>{t("Before Rounding")}</span>{_scCloseBtn()}</Popover.Header>
+                <Popover.Body style={_scPopoverBodyStyle}>
+                    <table style={{ width: '100%', borderCollapse: 'collapse' }}><tbody>
+                        {_scRow('Taxable Amount', taxable)}
+                        {_scRow(`+ VAT (${formData.vat_percent || 0}%)`, vat)}
+                        {_scRow('= Before Rounding', `SAR ${result}`, true, true, '#74c0fc')}
+                    </tbody></table>
+                </Popover.Body>
+            </Popover>
+        );
+    };
+    const renderNetTotalTooltip = () => {
+        const taxable = trimTo2Decimals((formData.total || 0) + (shipping || 0) - (discount || 0));
+        const vat = trimTo2Decimals(formData.vat_price || 0);
+        const rounding = roundingAmount || 0;
+        const net = trimTo2Decimals(formData.net_total || 0);
+        return (
+            <Popover id="sc-net-total-tooltip" style={_scPopoverStyle}>
+                <Popover.Header style={_scPopoverHeaderStyle}><span>{t("Net Total (inc. VAT)")}</span>{_scCloseBtn()}</Popover.Header>
+                <Popover.Body style={_scPopoverBodyStyle}>
+                    <table style={{ width: '100%', borderCollapse: 'collapse' }}><tbody>
+                        {_scRow('Taxable Amount', taxable)}
+                        {_scRow(`+ VAT (${formData.vat_percent || 0}%)`, vat)}
+                        {_scRow(`${rounding >= 0 ? '+ ' : '− '}Rounding`, trimTo2Decimals(Math.abs(rounding)))}
+                        {_scRow('= Net Total (inc. VAT)', `SAR ${net}`, true, true, '#69db7c')}
+                    </tbody></table>
+                </Popover.Body>
+            </Popover>
+        );
+    };
 
     const inputRefs = useRef({});
     const cashDiscountRef = useRef(null);
@@ -3462,8 +3548,32 @@ const OrderCreate = forwardRef((props, ref) => {
     const customerSearchRef = useRef();
 
 
+    const lastEditedProductIdRef = useRef(null);
     function openUpdateProductForm(id) {
+        lastEditedProductIdRef.current = id;
         ProductCreateFormRef.current.open(id);
+    }
+    async function refreshEditedProduct() {
+        const id = lastEditedProductIdRef.current;
+        if (!id) return;
+        const product = await getProduct(id, `id,item_code,part_number,name,name_in_arabic,unit,product_stores.${localStorage.getItem("store_id")}`);
+        if (!product) return;
+        const productStore = product.product_stores?.[localStorage.getItem("store_id")] || {};
+        setSelectedProducts(prev => prev.map(item => {
+            if (item.product_id !== id) return item;
+            return {
+                ...item,
+                code: product.item_code,
+                part_number: product.part_number,
+                name: product.name,
+                name_in_arabic: product.name_in_arabic || "",
+                unit: product.unit,
+                unit_price: productStore.retail_unit_price ?? item.unit_price,
+                unit_price_with_vat: productStore.retail_unit_price_with_vat ?? item.unit_price_with_vat,
+                purchase_unit_price: productStore.purchase_unit_price ?? item.purchase_unit_price,
+                purchase_unit_price_with_vat: productStore.purchase_unit_price_with_vat ?? item.purchase_unit_price_with_vat,
+            };
+        }));
     }
 
     const ProductDetailsViewRef = useRef();
@@ -3531,13 +3641,7 @@ const OrderCreate = forwardRef((props, ref) => {
         // alert(updatedCustomer);
         if (updatedCustomer.name && updatedCustomer.id) {
             // alert("updatedCustomer.customer_name:" + updatedCustomer.name);
-            let selectedCustomers = [
-                {
-                    id: updatedCustomer.id,
-                    name: updatedCustomer.name,
-                    search_label: updatedCustomer.search_label,
-                }
-            ];
+            let selectedCustomers = [{ ...updatedCustomer }];
             setSelectedCustomers([...selectedCustomers]);
 
             formData.customer_id = updatedCustomer.id;
@@ -4296,6 +4400,36 @@ const OrderCreate = forwardRef((props, ref) => {
 
     const [selectedProductsColumns, setSelectedProductsColumns] = useState(defaultSelectedProductsColumns);
 
+    const SC_COL_DEFAULTS = useMemo(() => ({ delete: 32, si_no: 36, part_number: 80, name: 160, info: 36, purchase_unit_price: 90, stock: 49, warehouse: 84, qty: 84, unit_price: 90, unit_price_with_vat: 90, unit_discount: 80, unit_discount_with_vat: 80, unit_discount_percent: 80, price: 90, price_with_vat: 90 }), []);
+    const [scColWidths, setScColWidths] = useState(() => {
+        try { return JSON.parse(localStorage.getItem('sc_sp_col_widths') || '{}'); } catch { return {}; }
+    });
+    const scColResizeRef = useRef(null);
+    const startScColResize = useCallback((e, colKey, defaultWidth) => {
+        e.preventDefault();
+        const startX = e.clientX;
+        const startWidth = scColWidths[colKey] ?? defaultWidth ?? SC_COL_DEFAULTS[colKey] ?? 60;
+        function onMouseMove(ev) {
+            const w = Math.max(40, startWidth + ev.clientX - startX);
+            setScColWidths(prev => {
+                const next = { ...prev, [colKey]: w };
+                localStorage.setItem('sc_sp_col_widths', JSON.stringify(next));
+                return next;
+            });
+        }
+        function onMouseUp() {
+            scColResizeRef.current = null;
+            document.removeEventListener('mousemove', onMouseMove);
+            document.removeEventListener('mouseup', onMouseUp);
+            document.body.style.cursor = '';
+            document.body.style.userSelect = '';
+        }
+        scColResizeRef.current = colKey;
+        document.body.style.cursor = 'col-resize';
+        document.body.style.userSelect = 'none';
+        document.addEventListener('mousemove', onMouseMove);
+        document.addEventListener('mouseup', onMouseUp);
+    }, [scColWidths, SC_COL_DEFAULTS]);
 
     const handleToggleSelectedProductsColumn = (index) => {
         const updated = [...selectedProductsColumns];
@@ -4493,6 +4627,13 @@ const OrderCreate = forwardRef((props, ref) => {
         return _defaultBillSummaryOrder;
     });
     const [showBillSummarySettings, setShowBillSummarySettings] = useState(false);
+    const [openSummaryTooltip, setOpenSummaryTooltip] = useState(null);
+    useEffect(() => {
+        if (!openSummaryTooltip) return;
+        const close = () => setOpenSummaryTooltip(null);
+        const t = setTimeout(() => document.addEventListener('click', close, { once: true }), 0);
+        return () => { clearTimeout(t); document.removeEventListener('click', close); };
+    }, [openSummaryTooltip]);
     const updateBillSummaryVisible = (key, val) => {
         const next = { ...billSummaryVisible, [key]: val };
         setBillSummaryVisible(next);
@@ -4979,7 +5120,7 @@ const OrderCreate = forwardRef((props, ref) => {
             <OrderView ref={DetailsViewRef} openCreateForm={props.openCreateForm} />
             <ProductView ref={ProductDetailsViewRef} />
             <CustomerCreate ref={CustomerCreateFormRef} showToastMessage={props.showToastMessage} />
-            <ProductCreate ref={ProductCreateFormRef} showToastMessage={props.showToastMessage} />
+            <ProductCreate ref={ProductCreateFormRef} showToastMessage={props.showToastMessage} refreshList={refreshEditedProduct} />
             <UserCreate ref={UserCreateFormRef} showToastMessage={props.showToastMessage} />
             <SignatureCreate ref={SignatureCreateFormRef} showToastMessage={props.showToastMessage} />
 
@@ -4987,86 +5128,82 @@ const OrderCreate = forwardRef((props, ref) => {
             <Modal show={show} size="xl" fullscreen id="sales_create_form"
                 onHide={handleClose} animation={false} backdrop="static" scrollable={true}>
                 {formType === "type1" && (
-                    <Modal.Header>
-                        <Modal.Title>
-                            {isUpdateForm ? t("Update Sales") + " #" + formData.code : t("Create New Sales Order")}
-                        </Modal.Title>
-                        {!isUpdateForm && store?.zatca?.phase === "2" && store?.zatca?.connected && <div style={{ marginLeft: "20px" }}>
-                            <input type="checkbox" className="form-check-input" id="sales_report_to_zatca" name="report_to_zatca" checked={formData.enable_report_to_zatca} onChange={(e) => {
-                                formData.enable_report_to_zatca = !formData.enable_report_to_zatca;
-                                setFormData({ ...formData });
-                            }} style={{ width: "16px", height: "16px", verticalAlign: "middle", marginRight: "6px" }} /> {t("Report to Zatca")} <br />
-                        </div>}
-                        <div className="col align-self-end text-end">
-                            <Button variant="primary" className="btn btn-primary" disabled={disablePreviousButton} onClick={(e) => { e.preventDefault(); if (isUpdateForm) { openPreviousForm(); } else { openLastForm(); } }}>
-                                <i className="bi-chevron-double-left"></i> {t('Previous')}
-                            </Button>
-                            &nbsp;&nbsp;
-                            <Button disabled={!isUpdateForm} variant="primary" className="btn btn-primary" onClick={(e) => { e.preventDefault(); openNextForm(); }}>
-                                {t('Next')} <i className="bi-chevron-double-right"></i>
-                            </Button>
-                            &nbsp;&nbsp;
-                            <Button disabled={!isUpdateForm} variant="primary" className="btn btn-primary" onClick={(e) => { e.preventDefault(); openCreateForm(); }}>
-                                <i className="bi bi-plus"></i> {t('Create New')}
-                            </Button>
-                            &nbsp;&nbsp;
-                            <Button variant="secondary" disabled={!isUpdateForm} onClick={openPrint}>
-                                <i className="bi bi-printer"></i> {t('Print')}
-                            </Button>
-                            &nbsp;&nbsp;
-                            <Button variant="primary" disabled={!isUpdateForm} onClick={openPreview}>
-                                <i className="bi bi-printer"></i> {t('Print A4 Invoice')}
-                            </Button>
-                            &nbsp;&nbsp;
-                            <Button variant="primary" style={{ minWidth: "80px" }} onClick={(e) => { e.preventDefault(); handleCreate(e); }}>
-                                {isSubmitting ? <Spinner as="span" animation="border" size="sm" role="status" aria-hidden={true} /> : ""}
-                                {isUpdateForm && !isSubmitting ? t('Update') : !isSubmitting ? t('Create') : ""}
-                            </Button>
-                            &nbsp;&nbsp;
+                    <Modal.Header style={{ backgroundColor: '#ffffff', borderBottom: '1px solid #c3c6d7', padding: '12px 20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px', flexWrap: 'wrap' }}>
+                        {/* Left: title + ZATCA */}
+                        <div className="sc-header-title" style={{ display: 'flex', alignItems: 'center', gap: '10px', minWidth: 0, flexShrink: 1 }}>
+                            <h1 style={{ margin: 0, fontSize: '20px', lineHeight: '28px', fontWeight: 700, letterSpacing: '-0.01em', fontFamily: "'Hanken Grotesk', sans-serif", color: '#191c1e', whiteSpace: 'nowrap' }}>
+                                {isUpdateForm ? t("Update Sales") + " #" + formData.code : t("Create New Sales Order")}
+                            </h1>
+                            {!isUpdateForm && store?.zatca?.phase === "2" && store?.zatca?.connected && (
+                                <label style={{ display: 'flex', alignItems: 'center', gap: '5px', fontSize: '12px', color: '#434655', cursor: 'pointer', whiteSpace: 'nowrap', flexShrink: 0 }}>
+                                    <input type="checkbox" className="form-check-input" id="sales_report_to_zatca" name="report_to_zatca" checked={formData.enable_report_to_zatca} onChange={(e) => { formData.enable_report_to_zatca = !formData.enable_report_to_zatca; setFormData({ ...formData }); }} style={{ width: '14px', height: '14px', margin: 0 }} />
+                                    {t("Report to Zatca")}
+                                </label>
+                            )}
+                        </div>
+                        {/* Right: action buttons */}
+                        <div className="sc-header-actions">
+                            <button type="button" disabled={disablePreviousButton} onClick={(e) => { e.preventDefault(); if (isUpdateForm) { openPreviousForm(); } else { openLastForm(); } }} style={{ display: 'flex', alignItems: 'center', gap: '4px', border: '1px solid #c3c6d7', backgroundColor: '#f7f9fb', color: '#434655', padding: '6px 10px', borderRadius: '4px', fontSize: '12px', fontWeight: 500, cursor: 'pointer', opacity: disablePreviousButton ? 0.5 : 1 }}>
+                                <i className="bi-chevron-double-left" style={{ fontSize: '13px' }}></i> {t('Previous')}
+                            </button>
+                            <button type="button" disabled={!isUpdateForm} onClick={(e) => { e.preventDefault(); openNextForm(); }} style={{ display: 'flex', alignItems: 'center', gap: '4px', border: '1px solid #c3c6d7', backgroundColor: '#f7f9fb', color: '#434655', padding: '6px 10px', borderRadius: '4px', fontSize: '12px', fontWeight: 500, cursor: 'pointer', opacity: !isUpdateForm ? 0.5 : 1 }}>
+                                {t('Next')} <i className="bi-chevron-double-right" style={{ fontSize: '13px' }}></i>
+                            </button>
+                            <button type="button" disabled={!isUpdateForm} onClick={(e) => { e.preventDefault(); openCreateForm(); }} style={{ display: 'flex', alignItems: 'center', gap: '4px', border: '1px solid #c3c6d7', backgroundColor: '#f7f9fb', color: '#434655', padding: '6px 10px', borderRadius: '4px', fontSize: '12px', fontWeight: 500, cursor: 'pointer', opacity: !isUpdateForm ? 0.5 : 1 }}>
+                                <i className="bi bi-plus" style={{ fontSize: '14px' }}></i> {t('Create New')}
+                            </button>
+                            <button type="button" disabled={!isUpdateForm} onClick={openPrint} style={{ display: 'flex', alignItems: 'center', gap: '4px', border: '1px solid #c3c6d7', backgroundColor: '#f7f9fb', color: '#434655', padding: '6px 10px', borderRadius: '4px', fontSize: '12px', fontWeight: 500, cursor: 'pointer', opacity: !isUpdateForm ? 0.5 : 1 }}>
+                                <i className="bi bi-printer" style={{ fontSize: '14px' }}></i> {t('Print')}
+                            </button>
+                            <button type="button" disabled={!isUpdateForm} onClick={openPreview} style={{ display: 'flex', alignItems: 'center', gap: '4px', border: '1px solid #c3c6d7', backgroundColor: '#f7f9fb', color: '#434655', padding: '6px 10px', borderRadius: '4px', fontSize: '12px', fontWeight: 500, cursor: 'pointer', opacity: !isUpdateForm ? 0.5 : 1 }}>
+                                <i className="bi bi-file-earmark-pdf" style={{ fontSize: '14px' }}></i> {t('Print A4')}
+                            </button>
+                            <button type="button" onClick={(e) => { e.preventDefault(); handleCreate(e); }} style={{ display: 'flex', alignItems: 'center', gap: '4px', backgroundColor: '#004ac6', color: '#ffffff', border: 'none', padding: '6px 16px', borderRadius: '4px', fontSize: '12px', fontWeight: 600, cursor: 'pointer', minWidth: '70px', justifyContent: 'center', boxShadow: '0 1px 2px rgba(0,0,0,0.1)' }}>
+                                {isSubmitting ? <Spinner as="span" animation="border" size="sm" role="status" aria-hidden={true} /> : <><i className="bi bi-check2" style={{ fontSize: '14px' }}></i> {isUpdateForm ? t('Update') : t('Create')}</>}
+                            </button>
                             {store.settings?.enable_sales_page_selection === true && (
-                                <><select value={formType} onChange={(e) => setFormType(e.target.value)} className="form-select form-select-sm d-inline-block" style={{ width: "auto", fontSize: "11px", padding: "2px 24px 2px 6px", height: "26px", lineHeight: "1.2" }}>
+                                <select value={formType} onChange={(e) => setFormType(e.target.value)} className="form-select form-select-sm" style={{ width: 'auto', fontSize: '11px', padding: '2px 24px 2px 6px', height: '30px' }}>
                                     <option value="type2">{t("Type 2")} (New)</option>
                                     <option value="type1">{t("Type 1")} (Classic)</option>
-                                </select>&nbsp;&nbsp;</>
+                                </select>
                             )}
-                            {/* ── DN Reminder Bell ── */}
+                            {/* DN Reminder Bell */}
                             {store.settings?.enable_notification === true && (
-                                <Dropdown style={{ display: "inline-block", verticalAlign: "middle" }}>
-                                    <Dropdown.Toggle as="span" style={{ cursor: "pointer", position: "relative", display: "inline-block", padding: "0 6px" }} id="dn-bell-t1">
-                                        <i className="bi bi-bell fs-6"></i>
+                                <Dropdown style={{ display: 'inline-flex', alignItems: 'center' }}>
+                                    <Dropdown.Toggle as="span" style={{ cursor: 'pointer', position: 'relative', display: 'inline-flex', padding: '0 4px' }} id="dn-bell-t1">
+                                        <i className="bi bi-bell" style={{ fontSize: '16px', color: '#434655' }}></i>
                                         {dnNotifications.length > 0 && (
-                                            <span style={{ position: "absolute", top: "-4px", right: "1px", background: "red", color: "white", borderRadius: "50%", fontSize: "10px", fontWeight: "bold", minWidth: "16px", height: "16px", display: "flex", alignItems: "center", justifyContent: "center", padding: "0 2px" }}>
+                                            <span style={{ position: 'absolute', top: '-4px', right: '0', background: 'red', color: 'white', borderRadius: '50%', fontSize: '9px', fontWeight: 'bold', minWidth: '14px', height: '14px', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0 2px' }}>
                                                 {dnNotifications.length}
                                             </span>
                                         )}
                                     </Dropdown.Toggle>
-                                    <Dropdown.Menu align="end" style={{ minWidth: "320px", maxHeight: "400px", overflowY: "auto" }}>
+                                    <Dropdown.Menu align="end" style={{ minWidth: '320px', maxHeight: '400px', overflowY: 'auto' }}>
                                         {dnNotifications.length === 0 ? (
                                             <Dropdown.ItemText className="text-muted small">No pending reminders</Dropdown.ItemText>
                                         ) : (
                                             dnNotifications.map(notif => (
-                                                <div key={notif.id} style={{ display: "flex", alignItems: "flex-start", padding: "8px 14px", borderBottom: "1px solid #f0f0f0", gap: "6px" }}>
-                                                    <div style={{ flex: 1, cursor: "pointer", minWidth: 0 }} onClick={() => openSalesFromDnInForm(notif)}>
-                                                        <div style={{ fontSize: "13px", lineHeight: "1.4" }}>
+                                                <div key={notif.id} style={{ display: 'flex', alignItems: 'flex-start', padding: '8px 14px', borderBottom: '1px solid #f0f0f0', gap: '6px' }}>
+                                                    <div style={{ flex: 1, cursor: 'pointer', minWidth: 0 }} onClick={() => openSalesFromDnInForm(notif)}>
+                                                        <div style={{ fontSize: '13px', lineHeight: '1.4' }}>
                                                             <i className="bi bi-file-earmark-text text-primary me-2"></i>
                                                             Create Sales for DN <strong>{notif.code}</strong>
                                                         </div>
                                                         {notif.arrived_at && (
-                                                            <div style={{ fontSize: "11px", color: "#888", marginTop: "3px" }}>
+                                                            <div style={{ fontSize: '11px', color: '#888', marginTop: '3px' }}>
                                                                 {_dnFormatDateTime(notif.arrived_at)}
-                                                                <span style={{ marginLeft: "6px", fontWeight: 600, color: "#555" }}>· {_dnFormatTimeAgo(notif.arrived_at)}</span>
+                                                                <span style={{ marginLeft: '6px', fontWeight: 600, color: '#555' }}>· {_dnFormatTimeAgo(notif.arrived_at)}</span>
                                                             </div>
                                                         )}
                                                     </div>
-                                                    <button onClick={(e) => { e.stopPropagation(); dismissDnNotification(notif.id, true); }} title="Dismiss" style={{ background: "none", border: "none", cursor: "pointer", color: "#aaa", fontSize: "16px", lineHeight: 1, padding: "0 2px", flexShrink: 0 }}>&times;</button>
+                                                    <button onClick={(e) => { e.stopPropagation(); dismissDnNotification(notif.id, true); }} title="Dismiss" style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#aaa', fontSize: '16px', lineHeight: 1, padding: '0 2px', flexShrink: 0 }}>&times;</button>
                                                 </div>
                                             ))
                                         )}
                                     </Dropdown.Menu>
                                 </Dropdown>
                             )}
-                            &nbsp;&nbsp;
-                            <button type="button" className="btn-close" onClick={handleClose} aria-label="Close"></button>
+                            <button type="button" className="btn-close" onClick={handleClose} aria-label="Close" style={{ marginLeft: '4px' }}></button>
                         </div>
                     </Modal.Header>
                 )}
@@ -5226,25 +5363,23 @@ const OrderCreate = forwardRef((props, ref) => {
                             gap: "10px",
                         }}>
                             <Spinner animation="border" variant="primary" style={{ width: "3rem", height: "3rem" }} />
-                            <span className="font-label-lg font-bold text-primary">{t("Loading Order details...")}</span>
+                            <span className="font-label-lg font-bold text-primary">{t("Loading Sales Details...")}</span>
                         </div>
                     )}
-                    {errors && Object.keys(errors).length > 0 && (
-                        <div style={{
+                    {errors && Object.keys(errors).some(k => { const m = Array.isArray(errors[k]) ? errors[k][0] : errors[k]; return !!m; }) && (
+                        <div className="sc-error-banner" style={{
                             maxHeight: "120px",
                             overflowY: "auto",
                             padding: "8px 12px",
                             backgroundColor: "#fff0f0",
+                            borderLeft: "1px solid #f5c6cb",
                             borderBottom: "1px solid #f5c6cb",
-                            ...(formType !== "type1" ? {
-                                position: "absolute",
-                                top: 0,
-                                right: 0,
-                                width: "380px",
-                                zIndex: 200,
-                                borderLeft: "1px solid #f5c6cb",
-                                boxShadow: "-2px 2px 8px rgba(186,26,26,0.12)",
-                            } : {})
+                            boxShadow: "-2px 2px 8px rgba(186,26,26,0.12)",
+                            position: "fixed",
+                            top: "56px",
+                            right: 0,
+                            width: "380px",
+                            zIndex: 9999,
                         }}>
                             <ul style={{ marginBottom: 0 }}>
                                 {Object.keys(errors).map((key, index) => {
@@ -5259,9 +5394,18 @@ const OrderCreate = forwardRef((props, ref) => {
                         </div>
                     )}
                     {formType === "type1" && (
-                        <form className="row g-3 needs-validation" onSubmit={e => { e.preventDefault(); handleCreate(e); }} >
-                            <div className="col-md-10" style={{ border: "solid 0px" }}>
-                                <label className="form-label">{t('Customer')}</label>
+                        <form className="needs-validation" onSubmit={e => { e.preventDefault(); handleCreate(e); }}>
+                          {/* Compact two-column header */}
+                          <section style={{ backgroundColor: '#ffffff', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
+                          <div className="sc-header-flex" style={{ borderBottom: '1px solid #c3c6d7' }}>
+                            {/* Left 60% */}
+                            <div className="sc-header-left" style={{ padding: '4px 10px', display: 'flex', gap: '6px', alignItems: 'stretch', backgroundColor: '#f2f4f6', borderRight: '1px solid #c3c6d7' }}>
+                              <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                                {/* Customer row */}
+                                <div className="sc-sub-row sc-customer-row" style={{ alignItems: 'center', flexWrap: 'nowrap' }}>
+                                  <div className="sc-customer-search-group">
+                                  <div className="sc-search-input" style={{ flex: '1 1 0', minWidth: 0 }}>
+                                    <div style={{ flex: 1, minWidth: 0 }}>
                                 <Typeahead
                                     id="customer_id"
                                     filterBy={() => true}
@@ -5347,7 +5491,7 @@ const OrderCreate = forwardRef((props, ref) => {
                                         const searchWords = state.text.toLowerCase().split(" ").filter(Boolean);
 
                                         return (
-                                            <Menu {...menuProps}>
+                                            <Menu {...menuProps} style={{ ...(menuProps.style || {}), minWidth: '900px', width: 'max-content', maxWidth: '95vw', zIndex: 9999 }}>
                                                 {/* Header */}
                                                 <MenuItem disabled>
                                                     <div style={{ display: 'flex', fontWeight: 'bold', padding: '4px 8px', borderBottom: '1px solid #ddd' }}>
@@ -5417,215 +5561,61 @@ const OrderCreate = forwardRef((props, ref) => {
                                         );
                                     }}
                                 />
-                                <Button hide={true.toString()} onClick={openCustomerCreateForm} className="btn btn-outline-secondary btn-primary btn-sm" type="button" id="button-addon1"> <i className="bi bi-plus-lg"></i> {t('New')}</Button>
-
-                                {selectedCustomers.length > 0 && formData.customer_id && <Button style={{ marginLeft: "8px" }} variant="btn btn-sm btn-primary" onClick={() => {
-                                    openCustomerPending(selectedCustomers[0]);
-                                }} >
-                                    {t('Pendings')}
-                                    <Badge bg="danger" style={{ marginLeft: "2px" }}>
-                                        <Amount amount={trimTo2Decimals(selectedCustomers[0]?.credit_balance)} />
-                                    </Badge>
-                                </Button>}
-
-                                {errors.customer_id && (
-                                    <div style={{ color: "red" }}>
-                                        {t(errors.customer_id)}
                                     </div>
-                                )}
-                                {errors.blocked && (
-                                    <div style={{ color: "red", marginTop: "4px" }}>
-                                        {errors.blocked}
-                                    </div>
-                                )}
-
-                            </div>
-                            <div className="col-md-1">
-                                {formData.customer_id && <><Button className="btn btn-default" style={{ marginTop: "30px" }} onClick={() => {
-                                    openCustomerUpdateForm(formData.customer_id);
-                                }}>
-                                    <i class="bi bi-pencil"></i>
-                                </Button>&nbsp;</>}
-
-                                <Button className="btn btn-primary" style={{ marginTop: "30px" }} onClick={openCustomers}>
-                                    <i class="bi bi-list"></i>
-                                </Button>
-
-
-                            </div>
-
-                            <div className="col-md-2">
-                                <label className="form-label">{t('Product Barcode Scan')}</label>
-
-                                <div className="input-group mb-3">
-                                    <DebounceInput
-                                        minLength={3}
-                                        debounceTimeout={100}
-                                        placeholder={t('Scan Barcode')}
-                                        className="form-control barcode"
-                                        value={formData.barcode}
-                                        onChange={event => getProductByBarCode(event.target.value)} />
-                                    {errors.bar_code && (
-                                        <div style={{ color: "red" }}>
-
-                                            {t(errors.bar_code)}
-                                        </div>
-                                    )}
-                                </div>
-                            </div>
-
-                            <div className="col-md-3">
-                                <label className="form-label">{t('Date') + " *"}</label>
-                                <div className="input-group mb-3">
+                                  </div>
+                                  <button type="button" onClick={openCustomerCreateForm}
+                                    style={{ background: '#fff', border: '1px solid #c3c6d7', borderRadius: '4px', padding: '7px 12px', fontSize: '13px', cursor: 'pointer', flexShrink: 0 }}>
+                                    <i className="bi bi-plus-lg" />
+                                  </button>
+                                  {formData.customer_id && (
+                                    <button type="button" onClick={() => openCustomerUpdateForm(formData.customer_id)}
+                                      style={{ background: '#fff', border: '1px solid #c3c6d7', borderRadius: '4px', padding: '7px 12px', fontSize: '13px', cursor: 'pointer', flexShrink: 0 }}>
+                                      <i className="bi bi-pencil" />
+                                    </button>
+                                  )}
+                                  <button type="button" onClick={openCustomers}
+                                    style={{ background: '#004ac6', color: '#fff', border: '1px solid transparent', borderRadius: '4px', padding: '7px 12px', fontSize: '13px', cursor: 'pointer', flexShrink: 0 }}>
+                                    <i className="bi bi-list" />
+                                  </button>
+                                  </div>
+                                  <div className="sc-date-phone-group">
+                                  <div className="sc-date-input" style={{ flexShrink: 0 }}>
                                     <DatePicker
-                                        id="date_str"
-                                        selected={formData.date_str ? new Date(formData.date_str) : null}
-                                        value={formData.date_str ? format(
-                                            new Date(formData.date_str),
-                                            "MMMM d, yyyy h:mm aa",
-                                            { locale: dateLocale }
-                                        ) : null}
-                                        className="form-control"
-                                        dateFormat="MMMM d, yyyy h:mm aa"
-                                        locale={dateLocale}
-                                        showTimeSelect
-                                        timeIntervals="1"
-                                        onChange={(value) => {
-                                            console.log("Value", value);
-                                            formData.date_str = value;
-                                            // formData.date_str = format(new Date(value), "MMMM d yyyy h:mm aa");
-                                            setFormData({ ...formData });
-                                        }}
+                                      id="date_str"
+                                      selected={formData.date_str ? new Date(formData.date_str) : null}
+                                      value={formData.date_str ? format(new Date(formData.date_str), "MMMM d, yyyy h:mm aa", { locale: dateLocale }) : null}
+                                      className="form-control form-control-lg"
+                                      dateFormat="MMMM d, yyyy h:mm aa"
+                                      locale={dateLocale}
+                                      showTimeSelect
+                                      timeIntervals="1"
+                                      onChange={(value) => { formData.date_str = value; setFormData({ ...formData }); }}
                                     />
-
-                                    {errors.date_str && (
-                                        <div style={{ color: "red" }}>
-                                            {t(errors.date_str)}
-                                        </div>
-                                    )}
-                                </div>
-                            </div>
-
-                            <div className="col-md-2">
-                                <label className="form-label">{t('Phone') + "( 05.. / +966..)"}</label>
-
-                                <div className="input-group mb-3">
+                                  </div>
+                                  <div style={{ display: 'flex', alignItems: 'center', gap: '2px', flexShrink: 0 }}>
                                     <input
-                                        id="sales_phone"
-                                        name="sales_phone"
-                                        value={formData.phone ? formData.phone : ""}
-                                        type='string'
-                                        onChange={(e) => {
-                                            delete errors["phone"];
-                                            setErrors({ ...errors });
-                                            formData.phone = e.target.value;
-                                            setFormData({ ...formData });
-                                            console.log(formData);
-                                        }}
-                                        className="form-control"
-
-                                        placeholder={t('Phone')}
+                                      id="sales_phone" name="sales_phone"
+                                      value={formData.phone || ''}
+                                      type="text"
+                                      onChange={(e) => { delete errors["phone"]; setErrors({ ...errors }); formData.phone = e.target.value; setFormData({ ...formData }); }}
+                                      className={`form-control form-control-lg${errors["phone"] ? ' is-invalid' : ''}`}
+                                      placeholder={t('Phone')}
+                                      style={{ width: '154px' }}
                                     />
-                                </div>
-                                {errors.phone && (
-                                    <div style={{ color: "red" }}>
-
-                                        {t(errors.phone)}
-                                    </div>
-                                )}
-                            </div>
-
-                            <div className="col-md-1">
-                                <Button className={`btn btn-success btn-sm`} style={{ marginTop: "30px" }} onClick={sendWhatsAppMessage}>
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="white" viewBox="0 0 16 16">
+                                    <button type="button" onClick={sendWhatsAppMessage}
+                                      style={{ background: '#25d366', border: 'none', borderRadius: '4px', padding: '7px 8px', cursor: 'pointer', color: '#fff', display: 'inline-flex', alignItems: 'center', flexShrink: 0 }}>
+                                      <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" fill="white" viewBox="0 0 16 16">
                                         <path d="M13.601 2.326A7.875 7.875 0 0 0 8.036 0C3.596 0 0 3.597 0 8.036c0 1.417.37 2.805 1.07 4.03L0 16l3.993-1.05a7.968 7.968 0 0 0 4.043 1.085h.003c4.44 0 8.036-3.596 8.036-8.036 0-2.147-.836-4.166-2.37-5.673ZM8.036 14.6a6.584 6.584 0 0 1-3.35-.92l-.24-.142-2.37.622.63-2.31-.155-.238a6.587 6.587 0 0 1-1.018-3.513c0-3.637 2.96-6.6 6.6-6.6 1.764 0 3.42.69 4.67 1.94a6.56 6.56 0 0 1 1.93 4.668c0 3.637-2.96 6.6-6.6 6.6Zm3.61-4.885c-.198-.1-1.17-.578-1.352-.644-.18-.066-.312-.1-.444.1-.13.197-.51.644-.626.775-.115.13-.23.15-.428.05-.198-.1-.837-.308-1.594-.983-.59-.525-.99-1.174-1.11-1.372-.116-.198-.012-.305.088-.403.09-.09.198-.23.298-.345.1-.115.132-.197.2-.33.065-.13.032-.247-.017-.345-.05-.1-.444-1.07-.61-1.46-.16-.384-.323-.332-.444-.338l-.378-.007c-.13 0-.344.048-.525.23s-.688.672-.688 1.64c0 .967.704 1.9.802 2.03.1.13 1.386 2.116 3.365 2.963.47.203.837.324 1.122.414.472.15.902.13 1.24.08.378-.057 1.17-.48 1.336-.942.165-.462.165-.858.116-.943-.048-.084-.18-.132-.378-.23Z" />
-                                    </svg>
-                                </Button>
-                            </div>
-
-
-
-                            <div className="col-md-2">
-                                <label className="form-label">{t('VAT NO.(15 digits)')}</label>
-
-                                <div className="input-group mb-3">
-                                    <input
-                                        id="sales_vat_no"
-                                        name="sales_vat_no"
-                                        value={formData.vat_no ? formData.vat_no : ""}
-                                        type='string'
-                                        onChange={(e) => {
-                                            delete errors["vat_no"];
-                                            setErrors({ ...errors });
-                                            formData.vat_no = e.target.value;
-                                            setFormData({ ...formData });
-                                            console.log(formData);
-                                        }}
-                                        className="form-control"
-
-                                        placeholder={t('VAT NO.')}
-                                    />
+                                      </svg>
+                                    </button>
+                                  </div>
+                                  </div>
                                 </div>
-                                {errors.vat_no && (
-                                    <div style={{ color: "red" }}>
-
-                                        {t(errors.vat_no)}
-                                    </div>
-                                )}
-                            </div>
-
-                            <div className="col-md-3">
-                                <label className="form-label">{t('Address')}</label>
-                                <div className="input-group mb-3">
-                                    <textarea
-                                        value={formData.address}
-                                        type='string'
-                                        onChange={(e) => {
-                                            delete errors["address"];
-                                            setErrors({ ...errors });
-                                            formData.address = e.target.value;
-                                            setFormData({ ...formData });
-                                            console.log(formData);
-                                        }}
-                                        className="form-control"
-                                        id="address"
-                                        placeholder={t('Address')}
-                                    />
-                                </div>
-                                {errors.address && (
-                                    <div style={{ color: "red" }}>
-
-                                        {t(errors.address)}
-                                    </div>
-                                )}
-                            </div>
-                            <div className="col-md-3">
-                                <label className="form-label">{t('Remarks')}</label>
-                                <div className="input-group mb-3">
-                                    <textarea
-                                        value={formData.remarks}
-                                        type='string'
-                                        onChange={(e) => {
-                                            delete errors["address"];
-                                            setErrors({ ...errors });
-                                            formData.remarks = e.target.value;
-                                            setFormData({ ...formData });
-                                            console.log(formData);
-                                        }}
-                                        className="form-control"
-                                        id="remarks"
-                                        placeholder={t('Remarks')}
-                                    />
-                                </div>
-                                {errors.remarks && (
-                                    <div style={{ color: "red" }}>
-
-                                        {t(errors.remarks)}
-                                    </div>
-                                )}
-                            </div>
-                            <div className="col-md-10" >
-                                <label className="form-label">{t('Product Search') + "*"}</label>
+                                {/* Product row */}
+                                <div className="sc-sub-row sc-product-row" style={{ alignItems: 'flex-end' }}>
+                                  <div className="sc-product-search-group">
+                                  <div className="sc-search-input" style={{ flex: '1 1 0', minWidth: 0 }}>
+                                    <div style={{ flex: 1, minWidth: 0 }}>
                                 <Typeahead
                                     id="product_id"
                                     filterBy={() => true}
@@ -5694,7 +5684,7 @@ const OrderCreate = forwardRef((props, ref) => {
                                         const searchWords = state.text.toLowerCase().split(" ").filter(Boolean);
 
                                         return (
-                                            <Menu {...menuProps}>
+                                            <Menu {...menuProps} style={{ ...(menuProps.style || {}), minWidth: '900px', width: 'max-content', maxWidth: '95vw', zIndex: 9999 }}>
                                                 {/* Header */}
                                                 <MenuItem disabled style={{ position: 'sticky', top: 0, padding: 0, margin: 0 }}>
                                                     <div style={{
@@ -5927,115 +5917,160 @@ const OrderCreate = forwardRef((props, ref) => {
                                         );
                                     }}
                                 />
-
-                                <Button hide={true.toString()} onClick={openProductCreateForm} className="btn btn-outline-secondary btn-primary btn-sm" type="button" id="button-addon1"> <i className="bi bi-plus-lg"></i> {t('New')}</Button>
-                                {errors.product_id ? (
-                                    <div style={{ color: "red" }}>
-
-                                        {t(errors.product_id)}
                                     </div>
-                                ) : ""}
-                            </div>
-
-                            <div className="col-md-1">
-                                <Button className="btn btn-primary" style={{ marginTop: "30px" }} onClick={openProducts}>
-                                    <i class="bi bi-list"></i>
-                                </Button>
-                            </div>
-
-                            <div className="col-md-1">
-                                <div style={{ zIndex: "9999 !important", marginTop: "30px" }}>
-                                    <Dropdown style={{}}>
-                                        <Dropdown.Toggle variant="success" id="dropdown-basic">
-                                            <i className="bi bi-download"></i>    {t('Import')}
-                                        </Dropdown.Toggle>
-                                        <Dropdown.Menu >
-                                            <Dropdown.Item onClick={() => {
-                                                openQuotations();
-                                            }}>
-                                                <i className="bi bi-file-earmark-text"></i>
-                                                &nbsp;
-                                                {t('From Quotations')}
-                                            </Dropdown.Item>
-
-                                            <Dropdown.Item onClick={() => {
-                                                openDeliveryNotes();
-                                            }}>
-                                                <i className="bi bi-file-earmark-text"></i>
-                                                &nbsp;
-                                                {t('From Delivery Notes')}
-                                            </Dropdown.Item>
-                                        </Dropdown.Menu>
-                                    </Dropdown>
-
-                                    {/*<div className="input-group mb-4">*/}
-                                    {/*<Dropdown drop="top" variant="success">
-                                    <Dropdown.Toggle variant="success" id="dropdown-secondary" style={{}}>
-                                        <i className="bi bi-download"></i>    Import Product from
+                                  </div>
+                                  <button type="button" onClick={openProductCreateForm}
+                                    style={{ background: '#fff', border: '1px solid #c3c6d7', borderRadius: '4px', padding: '7px 12px', fontSize: '13px', cursor: 'pointer', flexShrink: 0 }}>
+                                    <i className="bi bi-plus-lg" />
+                                  </button>
+                                  <button type="button" onClick={openProducts}
+                                    style={{ background: '#004ac6', color: '#fff', border: '1px solid transparent', borderRadius: '4px', padding: '7px 12px', fontSize: '13px', cursor: 'pointer', flexShrink: 0 }}>
+                                    <i className="bi bi-list" />
+                                  </button>
+                                  <Dropdown style={{ flexShrink: 0 }}>
+                                    <Dropdown.Toggle bsPrefix="btn" id="dropdown-import" style={{ background: '#198754', color: '#fff', border: 'none', borderRadius: '4px', padding: '7px 12px', fontSize: '13px', cursor: 'pointer', display: 'inline-flex', alignItems: 'center' }}>
+                                      <i className="bi bi-download" />
                                     </Dropdown.Toggle>
-
-
-                                    <Dropdown.Menu >
-                                        <Dropdown.Item onClick={() => {
-                                            openLinkedProducts();
-                                        }}>
-                                            <i className="bi bi-file-earmark-text"></i>
-                                            &nbsp;
-                                            Quotations
-                                        </Dropdown.Item>
-
-                                        <Dropdown.Item onClick={() => {
-                                            openSalesHistory();
-                                        }}>
-                                            <i className="bi bi-file-earmark-text"></i>
-                                            &nbsp;
-                                            Delivery Notes
-                                        </Dropdown.Item>
+                                    <Dropdown.Menu>
+                                      <Dropdown.Item onClick={() => openQuotations()}>
+                                        <i className="bi bi-file-earmark-text" /> {t('From Quotations')}
+                                      </Dropdown.Item>
+                                      <Dropdown.Item onClick={() => openDeliveryNotes()}>
+                                        <i className="bi bi-file-earmark-text" /> {t('From Delivery Notes')}
+                                      </Dropdown.Item>
                                     </Dropdown.Menu>
-                                </Dropdown>*/}
+                                  </Dropdown>
+                                  </div>
+                                  <div className="sc-barcode-vat-group">
+                                  <div className="sc-barcode-input" style={{ flex: '0 1 160px', minWidth: '100px' }}>
+                                    <DebounceInput
+                                      minLength={3}
+                                      debounceTimeout={100}
+                                      placeholder={t('Scan Barcode')}
+                                      className="form-control form-control-lg barcode"
+                                      value={formData.barcode}
+                                      onChange={event => getProductByBarCode(event.target.value)}
+                                    />
+                                  </div>
+                                  <input
+                                    id="sales_vat_no" name="sales_vat_no"
+                                    value={formData.vat_no || ''}
+                                    type="text"
+                                    onChange={(e) => { delete errors["vat_no"]; setErrors({ ...errors }); formData.vat_no = e.target.value; setFormData({ ...formData }); }}
+                                    className={`form-control form-control-lg${errors["vat_no"] ? ' is-invalid' : ''}`}
+                                    placeholder={t('VAT NO.')}
+                                    style={{ width: '199px', flexShrink: 0 }}
+                                  />
+                                  </div>
                                 </div>
+                              </div>
+                              {/* Remarks */}
+                              <div className="sc-remarks" style={{ display: 'flex', flexDirection: 'column', alignSelf: 'stretch', maxHeight: '130px', gap: '3px' }}>
+                                <textarea
+                                  value={formData.remarks}
+                                  onChange={(e) => { delete errors["address"]; setErrors({ ...errors }); formData.remarks = e.target.value; setFormData({ ...formData }); }}
+                                  onKeyDown={(e) => { if (e.key === 'Enter') { e.stopPropagation(); e.nativeEvent.stopImmediatePropagation(); } }}
+                                  className="form-control"
+                                  id="remarks"
+                                  placeholder={t('Remarks')}
+                                  style={{ resize: 'none', flex: 1, fontSize: '13px', minHeight: '0' }}
+                                />
+                                <textarea
+                                  value={formData.address || ''}
+                                  onChange={(e) => { delete errors["address"]; setErrors({ ...errors }); formData.address = e.target.value; setFormData({ ...formData }); }}
+                                  onKeyDown={(e) => { if (e.key === 'Enter') { e.stopPropagation(); e.nativeEvent.stopImmediatePropagation(); } }}
+                                  className={`form-control${errors["address"] ? ' is-invalid' : ''}`}
+                                  id="address"
+                                  placeholder={t('Address')}
+                                  style={{ resize: 'none', flex: 1, fontSize: '13px', minHeight: '0' }}
+                                />
+                              </div>
                             </div>
+                            {/* Right 40% — selected customer details */}
+                            {selectedCustomers.length > 0 && formData.customer_id ? (() => {
+                              const c = selectedCustomers[0];
+                              const storeId = localStorage.getItem("store_id");
+                              const cs = c?.stores?.[storeId];
+                              const sep = <span style={{ width: '1px', height: '12px', background: '#c3c6d7', flexShrink: 0 }} />;
+                              return (
+                                <div className="sc-header-right" style={{ padding: '4px 14px', background: 'rgba(0,74,198,0.03)', borderLeft: '1px solid #e2e8f0', display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: '6px', overflow: 'hidden', minHeight: '40px' }}>
+                                  {c.code && <span style={{ background: '#dbeafe', color: '#1e40af', borderRadius: '4px', padding: '1px 7px', fontSize: '11px', fontWeight: 700, letterSpacing: '0.03em', flexShrink: 0 }}>{c.code}</span>}
+                                  <span style={{ fontWeight: 700, fontSize: '13px', color: '#191c1e', flexShrink: 0 }}>{c.name}</span>
+                                  {c.name_in_arabic && <><span style={{ color: '#c3c6d7', fontSize: '11px' }}>|</span><span style={{ fontSize: '11px', color: '#64748b', fontFamily: 'Arial, sans-serif', flexShrink: 0 }}>{c.name_in_arabic}</span></>}
+                                  {(c.phone || c.phone2 || c.vat_no) && sep}
+                                  {c.phone && <span style={{ display: 'inline-flex', alignItems: 'center', gap: '3px', fontSize: '11px', color: '#374151', flexShrink: 0 }}><i className="bi bi-telephone" style={{ color: '#6b7280', fontSize: '10px' }} />{c.phone}</span>}
+                                  {c.phone && c.phone2 && sep}
+                                  {c.phone2 && <span style={{ display: 'inline-flex', alignItems: 'center', gap: '3px', fontSize: '11px', color: '#374151', flexShrink: 0 }}><i className="bi bi-telephone" style={{ color: '#6b7280', fontSize: '10px' }} />{c.phone2}</span>}
+                                  {(c.phone || c.phone2) && c.vat_no && sep}
+                                  {c.vat_no && <span style={{ display: 'inline-flex', alignItems: 'center', gap: '3px', fontSize: '11px', color: '#374151', flexShrink: 0 }}><i className="bi bi-receipt" style={{ color: '#6b7280', fontSize: '10px' }} /><span style={{ color: '#6b7280' }}>VAT:</span>{c.vat_no}</span>}
+                                  {sep}
+                                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', fontSize: '11px', cursor: 'pointer', userSelect: 'none', flexShrink: 0 }}
+                                    onClick={() => openCustomerPending(selectedCustomers[0])}
+                                    title={t("Click to view pendings")}>
+                                    <i className="bi bi-wallet2" style={{ color: '#004ac6', fontSize: '11px' }} />
+                                    <span style={{ color: '#6b7280' }}>{t("Cr.Balance")}:</span>
+                                    <strong style={{ color: (cs?.credit_balance || 0) > 0 ? '#dc2626' : '#16a34a', textDecoration: 'underline dotted' }}><Amount amount={trimTo2Decimals(cs?.credit_balance || 0)} /></strong>
+                                    <i className="bi bi-box-arrow-up-right" style={{ color: '#004ac6', fontSize: '9px' }} />
+                                  </span>
+                                  {(c.credit_limit > 0) && <>{sep}<span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', fontSize: '11px', flexShrink: 0 }}>
+                                    <i className="bi bi-shield-check" style={{ color: '#6b7280', fontSize: '10px' }} />
+                                    <span style={{ color: '#6b7280' }}>{t("Limit")}:</span>
+                                    <strong style={{ color: '#374151' }}><Amount amount={trimTo2Decimals(c.credit_limit)} /></strong>
+                                  </span></>}
+                                </div>
+                              );
+                            })() : <div className="sc-header-right" />}
+                          </div>
 
 
 
-                            <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: "0" }}>
-                                <button
-                                    type="button"
-                                    className="btn btn-sm btn-outline-secondary"
-                                    onClick={() => setShowSelectedProductsSettings(!showSelectedProductsSettings)}
-                                    title={t("Table Settings")}
-                                >
-                                    <i className="bi bi-gear-fill" style={{ fontSize: "1rem" }} />
-                                </button>
-                            </div>
-                            <div className="table-responsive" style={{ overflowX: "auto", maxHeight: "400px", overflowY: "scroll" }}>
-
-
-                                <table className="table table-striped table-sm table-bordered">
-                                    <thead>
-                                        <tr className="text-center">
-                                            {selectedProductsColumns.filter(c => c.visible).map(col => {
-                                                if (col.key === 'delete') return <th key={col.key}></th>;
-                                                if (col.key === 'si_no') return <th key={col.key}>{t('SI No.')}</th>;
-                                                if (col.key === 'part_number') return <th key={col.key}>{t('Part No.')}</th>;
-                                                if (col.key === 'name') return <th key={col.key} style={{ minWidth: "250px" }}>{t('Name')}</th>;
-                                                if (col.key === 'info') return <th key={col.key}>{t('Info')}</th>;
-                                                if (col.key === 'purchase_unit_price') return <th key={col.key}>{t('Purchase Unit Price(without VAT)')}</th>;
-                                                if (col.key === 'stock') return <th key={col.key}>{t('Stock')}</th>;
-                                                if (col.key === 'warehouse') return store.settings?.enable_warehouse_module ? <th key={col.key}>{t('Remove Stock From')}</th> : null;
-                                                if (col.key === 'qty') return <th key={col.key} style={{ minWidth: "80px", maxWidth: "80px" }}>{t('Qty')}</th>;
-                                                if (col.key === 'unit_price') return <th key={col.key}>{t('Unit Price(without VAT)')}</th>;
-                                                if (col.key === 'unit_price_with_vat') return <th key={col.key}>{t('Unit Price(with VAT)')}</th>;
-                                                if (col.key === 'unit_discount') return <th key={col.key}>{t('Unit Disc.(without VAT)')}</th>;
-                                                if (col.key === 'unit_discount_with_vat') return <th key={col.key}>{t('Unit Disc.(with VAT)')}</th>;
-                                                if (col.key === 'unit_discount_percent') return <th key={col.key}>{t('Unit Disc. %(with VAT)')}</th>;
-                                                if (col.key === 'price') return <th key={col.key}>{t('Price(without VAT)')}</th>;
-                                                if (col.key === 'price_with_vat') return <th key={col.key}>{t('Price(with VAT)')}</th>;
-                                                return null;
-                                            })}
-                                        </tr>
+                            <div style={{ overflowX: 'auto', maxHeight: '55vh', overflowY: 'auto', marginTop: '6px' }}>
+                                <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: '600px', tableLayout: 'fixed' }}>
+                                    <colgroup>
+                                        {selectedProductsColumns.filter(c => c.visible).map(col => (
+                                            <col key={col.key} style={{ width: `${scColWidths[col.key] ?? SC_COL_DEFAULTS[col.key] ?? 100}px` }} />
+                                        ))}
+                                    </colgroup>
+                                    <thead style={{ backgroundColor: '#f1f5f9', position: 'sticky', top: 0, zIndex: 1 }}>
+                                        {(() => {
+                                            const thStyle = { padding: '10px 12px', fontWeight: 600, borderBottom: '2px solid #c3c6d7', whiteSpace: 'nowrap', position: 'relative', overflow: 'hidden' };
+                                            const resizeHandle = (colKey) => (
+                                                <div
+                                                    onMouseDown={(e) => startScColResize(e, colKey, scColWidths[colKey] ?? SC_COL_DEFAULTS[colKey] ?? 60)}
+                                                    style={{ position: 'absolute', right: 0, top: '20%', bottom: '20%', width: '4px', cursor: 'col-resize', zIndex: 2, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '1px', borderRadius: '2px', backgroundColor: 'transparent' }}
+                                                    onMouseEnter={e => { e.currentTarget.style.backgroundColor = '#dbeafe'; Array.from(e.currentTarget.children).forEach(d => d.style.backgroundColor = '#3b82f6'); }}
+                                                    onMouseLeave={e => { e.currentTarget.style.backgroundColor = 'transparent'; Array.from(e.currentTarget.children).forEach(d => d.style.backgroundColor = '#b0b7c3'); }}
+                                                >
+                                                    <div style={{ width: '1px', height: '100%', backgroundColor: '#b0b7c3', borderRadius: '1px', pointerEvents: 'none' }} />
+                                                    <div style={{ width: '1px', height: '100%', backgroundColor: '#b0b7c3', borderRadius: '1px', pointerEvents: 'none' }} />
+                                                </div>
+                                            );
+                                            return (
+                                                <tr style={{ fontSize: '12px', fontWeight: 600, color: '#434655', lineHeight: '16px' }}>
+                                                    {selectedProductsColumns.filter(c => c.visible).map(col => {
+                                                        if (col.key === 'delete') return <th key={col.key} style={{ ...thStyle, padding: 0 }}><button type="button" title={t("Table Settings")} onClick={() => setShowSelectedProductsSettings(!showSelectedProductsSettings)} style={{ background: 'none', border: 'none', padding: '2px 0', cursor: 'pointer', color: '#6b7280', display: 'flex', alignItems: 'center', justifyContent: 'center', width: '100%', height: '100%' }} onMouseEnter={e => e.currentTarget.style.color='#191c1e'} onMouseLeave={e => e.currentTarget.style.color='#6b7280'}><i className="bi bi-gear-fill" style={{ fontSize: '11px' }}></i></button></th>;
+                                                        if (col.key === 'si_no') return <th key={col.key} style={thStyle}>#&nbsp;{resizeHandle('si_no')}</th>;
+                                                        if (col.key === 'part_number') return <th key={col.key} style={thStyle}>{t('Part No.')}{resizeHandle('part_number')}</th>;
+                                                        if (col.key === 'name') return <th key={col.key} style={thStyle}>{t('Name')}{resizeHandle('name')}</th>;
+                                                        if (col.key === 'info') return <th key={col.key} style={thStyle}>{t('Info')}{resizeHandle('info')}</th>;
+                                                        if (col.key === 'purchase_unit_price') return <th key={col.key} style={{ ...thStyle, textAlign: 'right' }}>{t('P. Unit Price')}{resizeHandle('purchase_unit_price')}</th>;
+                                                        if (col.key === 'stock') return <th key={col.key} style={thStyle}>{t('Stock')}{resizeHandle('stock')}</th>;
+                                                        if (col.key === 'warehouse') return store.settings?.enable_warehouse_module ? <th key={col.key} style={thStyle}>{t('Remove Stock From')}{resizeHandle('warehouse')}</th> : null;
+                                                        if (col.key === 'qty') return <th key={col.key} style={{ ...thStyle, textAlign: 'center' }}>{t('Qty')}{resizeHandle('qty')}</th>;
+                                                        if (col.key === 'unit_price') return <th key={col.key} style={{ ...thStyle, textAlign: 'right' }}>{t('U. Price (ex. VAT)')}{resizeHandle('unit_price')}</th>;
+                                                        if (col.key === 'unit_price_with_vat') return <th key={col.key} style={{ ...thStyle, textAlign: 'right' }}>{t('U. Price (inc. VAT)')}{resizeHandle('unit_price_with_vat')}</th>;
+                                                        if (col.key === 'unit_discount') return <th key={col.key} style={{ ...thStyle, textAlign: 'right' }}>{t('U. Disc. (ex. VAT)')}{resizeHandle('unit_discount')}</th>;
+                                                        if (col.key === 'unit_discount_with_vat') return <th key={col.key} style={{ ...thStyle, textAlign: 'right' }}>{t('U. Disc. (inc. VAT)')}{resizeHandle('unit_discount_with_vat')}</th>;
+                                                        if (col.key === 'unit_discount_percent') return <th key={col.key} style={{ ...thStyle, textAlign: 'right' }}>{t('U. Disc. %')}{resizeHandle('unit_discount_percent')}</th>;
+                                                        if (col.key === 'price') return <th key={col.key} style={{ ...thStyle, textAlign: 'right' }}>{t('Total (ex. VAT)')}{resizeHandle('price')}</th>;
+                                                        if (col.key === 'price_with_vat') return <th key={col.key} style={{ ...thStyle, textAlign: 'right' }}>{t('Total (inc. VAT)')}{resizeHandle('price_with_vat')}</th>;
+                                                        return null;
+                                                    })}
+                                                </tr>
+                                            );
+                                        })()}
                                     </thead>
-                                    <tbody>
+                                    <tbody style={{ fontSize: '13px', color: '#191c1e' }}>
                                         {selectedProducts.map((product, index) => {
                                             // Find all indexes with the same product_id
                                             const duplicateIndexes = selectedProducts
@@ -6044,10 +6079,12 @@ const OrderCreate = forwardRef((props, ref) => {
                                             const duplicateCount = duplicateIndexes.length;
                                             return (
                                                 <tr
-                                                    className="text-center fixed-row"
-                                                    key={index}>
+                                                    key={index}
+                                                    style={{ borderBottom: '1px solid #e2e8f0', transition: 'background-color 0.15s' }}
+                                                    onMouseEnter={e => { e.currentTarget.style.backgroundColor = '#f8fafc'; }}
+                                                    onMouseLeave={e => { e.currentTarget.style.backgroundColor = ''; }}>
                                                     {selectedProductsColumns.filter(c => c.visible).map(col => {
-                                                        if (col.key === 'delete') return (<td style={{ verticalAlign: 'middle', padding: '0.25rem' }} >
+                                                        if (col.key === 'delete') return (<td style={{ verticalAlign: 'middle', padding: '4px 8px' }} >
                                                             <div
                                                                 style={{ color: "red", cursor: isZatcaReported ? "not-allowed" : "pointer", opacity: isZatcaReported ? 0.4 : 1, pointerEvents: isZatcaReported ? "none" : undefined }}
                                                                 onClick={() => {
@@ -6057,17 +6094,17 @@ const OrderCreate = forwardRef((props, ref) => {
                                                                 <i className="bi bi-trash"> </i>
                                                             </div>
                                                         </td>);
-                                                        if (col.key === 'si_no') return (<td style={{ verticalAlign: 'middle', padding: '0.25rem' }}>
+                                                        if (col.key === 'si_no') return (<td style={{ verticalAlign: 'middle', padding: '4px 8px' }}>
                                                             {index + 1}
 
                                                         </td>);
-                                                        if (col.key === 'part_number') return (<ResizableTableCell style={{ verticalAlign: 'middle', padding: '0.25rem' }}>
+                                                        if (col.key === 'part_number') return (<td key="part_number" style={{ verticalAlign: 'middle', padding: '4px 8px' }}>
                                                             <div style={{ display: 'flex', alignItems: 'center' }}>
                                                                 <input type="text" id={`sales_product_part_number${index}`}
                                                                     name={`sales_product_part_number${index}`}
                                                                     onWheel={(e) => e.target.blur()}
                                                                     value={selectedProducts[index].part_number}
-                                                                    className={`form-control text-start ${errors["part_number_" + index] ? 'is-invalid' : ''} ${warnings["part_number_" + index] ? 'border-warning text-warning' : ''}`}
+                                                                    className={`form-control text-start ${errors["part_number_" + index] ? 'is-invalid' : ''} ${warnings["part_number_" + index] ? 'border-warning' : ''}`}
                                                                     onKeyDown={(e) => {
                                                                         RunKeyActions(e, product);
                                                                     }}
@@ -6083,31 +6120,19 @@ const OrderCreate = forwardRef((props, ref) => {
                                                                         setSelectedProducts([...selectedProducts]);
                                                                     }} />
                                                                 {(errors[`part_number_${index}`] || warnings[`part_number_${index}`]) && (
-                                                                    <i
-                                                                        className={`bi bi-exclamation-circle-fill ${errors[`part_number_${index}`] ? 'text-danger' : 'text-warning'} ms-2`}
-                                                                        data-bs-toggle="tooltip"
-                                                                        data-bs-placement="top"
-                                                                        data-error={errors[`part_number_${index}`] || ''}
-                                                                        data-warning={warnings[`part_number_${index}`] || ''}
-                                                                        title={errors[`part_number_${index}`] || warnings[`part_number_${index}`] || ''}
-                                                                        style={{
-                                                                            fontSize: '0.85rem',
-                                                                            cursor: 'pointer',
-                                                                            whiteSpace: 'nowrap',
-                                                                        }}
-                                                                    ></i>
+                                                                    <OverlayTrigger placement="top" overlay={<Tooltip>{errors[`part_number_${index}`] || warnings[`part_number_${index}`]}</Tooltip>}><i className={`bi bi-exclamation-circle-fill ${errors[`part_number_${index}`] ? 'text-danger' : 'text-warning'} ms-2`} style={{ fontSize: '0.85rem', cursor: 'help' }}></i></OverlayTrigger>
                                                                 )}
 
                                                             </div>
-                                                        </ResizableTableCell>);
-                                                        if (col.key === 'name') return (<ResizableTableCell style={{ verticalAlign: 'middle', padding: '0.25rem' }}
+                                                        </td>);
+                                                        if (col.key === 'name') return (<td key="name" style={{ verticalAlign: 'middle', padding: '4px 8px' }}
                                                         >
                                                             <div className="input-group" style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
                                                                 <input type="text" id={`${"sales_product_name" + index}`}
                                                                     name={`${"sales_product_name" + index}`}
                                                                     onWheel={(e) => e.target.blur()}
                                                                     value={product.name}
-                                                                    className={`form-control text-start ${errors["name_" + index] ? 'is-invalid' : ''} ${warnings["name_" + index] ? 'border-warning text-warning' : ''}`}
+                                                                    className={`form-control text-start ${errors["name_" + index] ? 'is-invalid' : ''} ${warnings["name_" + index] ? 'border-warning' : ''}`}
                                                                     onKeyDown={(e) => {
                                                                         RunKeyActions(e, product);
                                                                     }}
@@ -6181,96 +6206,62 @@ const OrderCreate = forwardRef((props, ref) => {
                                                                 </div>
                                                             </div>
                                                             {(errors[`name_${index}`] || warnings[`name_${index}`]) && (
-                                                                <i
-                                                                    className={`bi bi-exclamation-circle-fill ${errors[`name_${index}`] ? 'text-danger' : 'text-warning'} ms-2`}
-                                                                    data-bs-toggle="tooltip"
-                                                                    data-bs-placement="top"
-                                                                    data-error={errors[`name_${index}`] || ''}
-                                                                    data-warning={warnings[`name_${index}`] || ''}
-                                                                    title={errors[`name_${index}`] || warnings[`name_${index}`] || ''}
-                                                                    style={{
-                                                                        fontSize: '1rem',
-                                                                        cursor: 'pointer',
-                                                                        whiteSpace: 'nowrap',
-                                                                    }}
-                                                                ></i>
+                                                                <OverlayTrigger placement="top" overlay={<Tooltip>{errors[`name_${index}`] || warnings[`name_${index}`]}</Tooltip>}><i className={`bi bi-exclamation-circle-fill ${errors[`name_${index}`] ? 'text-danger' : 'text-warning'} ms-2`} style={{ fontSize: '1rem', cursor: 'help' }}></i></OverlayTrigger>
                                                             )}
-                                                        </ResizableTableCell>);
-                                                        if (col.key === 'info') return (<td style={{ verticalAlign: 'middle', padding: '0.25rem' }}>
-                                                            <div style={{ zIndex: "9999 !important", position: "absolute !important" }}>
-                                                                <Dropdown drop="top">
-                                                                    <Dropdown.Toggle variant="secondary" id="dropdown-secondary" style={{}}>
-                                                                        <i className="bi bi-info"></i>
-                                                                    </Dropdown.Toggle>
-                                                                    <Dropdown.Menu style={{ zIndex: 9999, position: "absolute" }} popperConfig={{ modifiers: [{ name: 'preventOverflow', options: { boundary: 'viewport' } }] }}>
-                                                                        <Dropdown.Item onClick={() => openLinkedProducts(product)}>
-                                                                            <i className="bi bi-link"></i>&nbsp;
-                                                                            {t("Linked Products")} ({getShortcut('linkedProducts')})
-                                                                        </Dropdown.Item>
-
-                                                                        <Dropdown.Item onClick={() => openProductHistory(product)}>
-                                                                            <i className="bi bi-clock-history"></i>&nbsp;
-                                                                            {t("History")} ({getShortcut('productHistory')})
-                                                                        </Dropdown.Item>
-
-                                                                        <Dropdown.Item onClick={() => openSalesHistory(product)}>
-                                                                            <i className="bi bi-clock-history"></i>&nbsp;
-                                                                            {t("Sales History")} ({getShortcut('salesHistory')})
-                                                                        </Dropdown.Item>
-
-                                                                        <Dropdown.Item onClick={() => openSalesReturnHistory(product)}>
-                                                                            <i className="bi bi-clock-history"></i>&nbsp;
-                                                                            {t("Sales Return History")} ({getShortcut('salesReturnHistory')})
-                                                                        </Dropdown.Item>
-
-                                                                        <Dropdown.Item onClick={() => openPurchaseHistory(product)}>
-                                                                            <i className="bi bi-clock-history"></i>&nbsp;
-                                                                            {t("Purchase History")} ({getShortcut('purchaseHistory')})
-                                                                        </Dropdown.Item>
-
-                                                                        <Dropdown.Item onClick={() => openPurchaseReturnHistory(product)}>
-                                                                            <i className="bi bi-clock-history"></i>&nbsp;
-                                                                            {t("Purchase Return History")} ({getShortcut('purchaseReturnHistory')})
-                                                                        </Dropdown.Item>
-
-                                                                        <Dropdown.Item onClick={() => openDeliveryNoteHistory(product)}>
-                                                                            <i className="bi bi-clock-history"></i>&nbsp;
-                                                                            {t("Delivery Note History")} ({getShortcut('deliveryNoteHistory')})
-                                                                        </Dropdown.Item>
-
-                                                                        <Dropdown.Item onClick={() => openQuotationHistory(product, "quotation")}>
-                                                                            <i className="bi bi-clock-history"></i>&nbsp;
-                                                                            {t("Quotation History")} ({getShortcut('quotationHistory')})
-                                                                        </Dropdown.Item>
-
-                                                                        <Dropdown.Item onClick={() => openQuotationSalesHistory(product)}>
-                                                                            <i className="bi bi-clock-history"></i>&nbsp;
-                                                                            {t("Qtn. Sales History")} ({getShortcut('quotationSalesHistory')})
-                                                                        </Dropdown.Item>
-
-                                                                        <Dropdown.Item onClick={() => openQuotationSalesReturnHistory(product)}>
-                                                                            <i className="bi bi-clock-history"></i>&nbsp;
-                                                                            {t("Qtn. Sales Return History")} ({getShortcut('quotationSalesReturnHistory')})
-                                                                        </Dropdown.Item>
-
-                                                                        <Dropdown.Item onClick={() => openProductImages(product.product_id)}>
-                                                                            <i className="bi bi-clock-history"></i>&nbsp;
-                                                                            {t("Images")} ({getShortcut('images')})
-                                                                        </Dropdown.Item>
-                                                                    </Dropdown.Menu>
-
-                                                                </Dropdown>
-                                                            </div>
-
+                                                        </td>);
+                                                        if (col.key === 'info') return (<td key="info" style={{ verticalAlign: 'middle', padding: '4px 6px', textAlign: 'center' }}>
+                                                          <Dropdown drop="auto">
+                                                            <Dropdown.Toggle as="span" id={`info-dd-${index}`} style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: '28px', height: '28px', borderRadius: '6px', cursor: 'pointer', color: '#6b7280', transition: 'background 0.15s, color 0.15s' }}
+                                                              onMouseEnter={e => { e.currentTarget.style.background = '#f1f5f9'; e.currentTarget.style.color = '#191c1e'; }}
+                                                              onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = '#6b7280'; }}>
+                                                              <i className="bi bi-three-dots-vertical" style={{ fontSize: '15px', pointerEvents: 'none' }}></i>
+                                                            </Dropdown.Toggle>
+                                                            <Dropdown.Menu style={{ zIndex: 9999, fontSize: '13px', minWidth: '210px', boxShadow: '0 4px 16px rgba(0,0,0,0.12)', border: '1px solid #e2e8f0', borderRadius: '8px', padding: '4px' }} popperConfig={{ modifiers: [{ name: 'preventOverflow', options: { boundary: 'viewport' } }] }}>
+                                                              <Dropdown.Item style={{ borderRadius: '6px', padding: '7px 12px' }} onClick={() => openLinkedProducts(product)}>
+                                                                <i className="bi bi-link-45deg me-2" style={{ color: '#6366f1' }}></i>{t("Linked Products")} <span className="text-muted" style={{ fontSize: '11px' }}>({getShortcut('linkedProducts')})</span>
+                                                              </Dropdown.Item>
+                                                              <Dropdown.Item style={{ borderRadius: '6px', padding: '7px 12px' }} onClick={() => openProductImages(product.product_id)}>
+                                                                <i className="bi bi-images me-2" style={{ color: '#0ea5e9' }}></i>{t("Images")} <span className="text-muted" style={{ fontSize: '11px' }}>({getShortcut('images')})</span>
+                                                              </Dropdown.Item>
+                                                              <Dropdown.Divider style={{ margin: '4px 0' }} />
+                                                              <Dropdown.Item style={{ borderRadius: '6px', padding: '7px 12px' }} onClick={() => openProductHistory(product)}>
+                                                                <i className="bi bi-journal-text me-2" style={{ color: '#64748b' }}></i>{t("Product History")} <span className="text-muted" style={{ fontSize: '11px' }}>({getShortcut('productHistory')})</span>
+                                                              </Dropdown.Item>
+                                                              <Dropdown.Item style={{ borderRadius: '6px', padding: '7px 12px' }} onClick={() => openSalesHistory(product)}>
+                                                                <i className="bi bi-receipt me-2" style={{ color: '#16a34a' }}></i>{t("Sales History")} <span className="text-muted" style={{ fontSize: '11px' }}>({getShortcut('salesHistory')})</span>
+                                                              </Dropdown.Item>
+                                                              <Dropdown.Item style={{ borderRadius: '6px', padding: '7px 12px' }} onClick={() => openSalesReturnHistory(product)}>
+                                                                <i className="bi bi-arrow-return-left me-2" style={{ color: '#dc2626' }}></i>{t("Sales Return History")} <span className="text-muted" style={{ fontSize: '11px' }}>({getShortcut('salesReturnHistory')})</span>
+                                                              </Dropdown.Item>
+                                                              <Dropdown.Item style={{ borderRadius: '6px', padding: '7px 12px' }} onClick={() => openPurchaseHistory(product)}>
+                                                                <i className="bi bi-bag me-2" style={{ color: '#d97706' }}></i>{t("Purchase History")} <span className="text-muted" style={{ fontSize: '11px' }}>({getShortcut('purchaseHistory')})</span>
+                                                              </Dropdown.Item>
+                                                              <Dropdown.Item style={{ borderRadius: '6px', padding: '7px 12px' }} onClick={() => openPurchaseReturnHistory(product)}>
+                                                                <i className="bi bi-bag-x me-2" style={{ color: '#ea580c' }}></i>{t("Purchase Return History")} <span className="text-muted" style={{ fontSize: '11px' }}>({getShortcut('purchaseReturnHistory')})</span>
+                                                              </Dropdown.Item>
+                                                              <Dropdown.Item style={{ borderRadius: '6px', padding: '7px 12px' }} onClick={() => openDeliveryNoteHistory(product)}>
+                                                                <i className="bi bi-truck me-2" style={{ color: '#0891b2' }}></i>{t("Delivery Note History")} <span className="text-muted" style={{ fontSize: '11px' }}>({getShortcut('deliveryNoteHistory')})</span>
+                                                              </Dropdown.Item>
+                                                              <Dropdown.Item style={{ borderRadius: '6px', padding: '7px 12px' }} onClick={() => openQuotationHistory(product, "quotation")}>
+                                                                <i className="bi bi-file-earmark-text me-2" style={{ color: '#7c3aed' }}></i>{t("Quotation History")} <span className="text-muted" style={{ fontSize: '11px' }}>({getShortcut('quotationHistory')})</span>
+                                                              </Dropdown.Item>
+                                                              <Dropdown.Item style={{ borderRadius: '6px', padding: '7px 12px' }} onClick={() => openQuotationSalesHistory(product)}>
+                                                                <i className="bi bi-file-earmark-check me-2" style={{ color: '#0284c7' }}></i>{t("Qtn. Sales History")} <span className="text-muted" style={{ fontSize: '11px' }}>({getShortcut('quotationSalesHistory')})</span>
+                                                              </Dropdown.Item>
+                                                              <Dropdown.Item style={{ borderRadius: '6px', padding: '7px 12px' }} onClick={() => openQuotationSalesReturnHistory(product)}>
+                                                                <i className="bi bi-file-earmark-x me-2" style={{ color: '#be123c' }}></i>{t("Qtn. Sales Return History")} <span className="text-muted" style={{ fontSize: '11px' }}>({getShortcut('quotationSalesReturnHistory')})</span>
+                                                              </Dropdown.Item>
+                                                            </Dropdown.Menu>
+                                                          </Dropdown>
                                                         </td>);
 
-                                                        if (col.key === 'purchase_unit_price') return (<td style={{ verticalAlign: 'middle', padding: '0.25rem' }}>
+                                                        if (col.key === 'purchase_unit_price') return (<td style={{ verticalAlign: 'middle', padding: '4px 8px' }}>
                                                             <div className="input-group">
                                                                 <input
                                                                     type="number"
                                                                     id={`sales_product_purchase_unit_price_${index}`}
                                                                     name={`sales_product_purchase_unit_price_${index}`}
-                                                                    className={`form-control text-end ${errors["purchase_unit_price_" + index] ? 'is-invalid' : ''} ${warnings["purchase_unit_price_" + index] ? 'border-warning text-warning' : ''}`}
+                                                                    className={`form-control text-end ${errors["purchase_unit_price_" + index] ? 'is-invalid' : ''} ${warnings["purchase_unit_price_" + index] ? 'border-warning' : ''}`}
                                                                     onWheel={(e) => e.target.blur()}
                                                                     value={product.purchase_unit_price}
                                                                     placeholder={t("Purchase Unit Price")}
@@ -6341,19 +6332,7 @@ const OrderCreate = forwardRef((props, ref) => {
                                                                 />
 
                                                                 {(errors[`purchase_unit_price_${index}`] || warnings[`purchase_unit_price_${index}`]) && (
-                                                                    <i
-                                                                        className={`bi bi-exclamation-circle-fill ${errors[`purchase_unit_price_${index}`] ? 'text-danger' : 'text-warning'} ms-2`}
-                                                                        data-bs-toggle="tooltip"
-                                                                        data-bs-placement="top"
-                                                                        data-error={errors[`purchase_unit_price_${index}`] || ''}
-                                                                        data-warning={warnings[`purchase_unit_price_${index}`] || ''}
-                                                                        title={errors[`purchase_unit_price_${index}`] || warnings[`purchase_unit_price_${index}`] || ''}
-                                                                        style={{
-                                                                            fontSize: '1rem',
-                                                                            cursor: 'pointer',
-                                                                            whiteSpace: 'nowrap',
-                                                                        }}
-                                                                    ></i>
+                                                                    <OverlayTrigger placement="top" overlay={<Tooltip>{errors[`purchase_unit_price_${index}`] || warnings[`purchase_unit_price_${index}`]}</Tooltip>}><i className={`bi bi-exclamation-circle-fill ${errors[`purchase_unit_price_${index}`] ? 'text-danger' : 'text-warning'} ms-2`} style={{ fontSize: '1rem', cursor: 'help' }}></i></OverlayTrigger>
                                                                 )}
                                                             </div>
                                                         </td>);
@@ -6361,7 +6340,7 @@ const OrderCreate = forwardRef((props, ref) => {
                                                         if (col.key === 'stock') return (<td
                                                             style={{
                                                                 verticalAlign: 'middle',
-                                                                padding: '0.25rem',
+                                                                padding: '4px 8px',
                                                                 whiteSpace: 'nowrap',
                                                                 width: 'auto',
                                                                 position: 'relative',
@@ -6400,7 +6379,7 @@ const OrderCreate = forwardRef((props, ref) => {
                                                         </td>);
                                                         if (col.key === 'warehouse') return store.settings?.enable_warehouse_module ? (<td style={{
                                                             verticalAlign: 'middle',
-                                                            padding: '0.25rem',
+                                                            padding: '4px 8px',
                                                             whiteSpace: 'nowrap',
                                                             width: 'auto',
                                                             position: 'relative',
@@ -6438,25 +6417,26 @@ const OrderCreate = forwardRef((props, ref) => {
                                                                 ))}
                                                             </select>
                                                             {errors[`warehouse_${index}`] && (
-                                                                <div style={{ color: "red" }}>
+                                                                <div style={{ position: 'absolute', top: '100%', left: 0, zIndex: 10, whiteSpace: 'nowrap', background: '#fff', border: '1px solid #fca5a5', borderRadius: '3px', padding: '1px 6px', boxShadow: '0 2px 6px rgba(0,0,0,0.1)', color: '#dc2626' }}>
                                                                     {t(errors[`warehouse_${index}`])}
                                                                 </div>
                                                             )}
                                                         </td>) : null;
                                                         if (col.key === 'qty') return (<td style={{
                                                             verticalAlign: 'middle',
-                                                            padding: '0.25rem',
+                                                            padding: '4px 8px',
                                                             whiteSpace: 'nowrap',
                                                             width: 'auto',
                                                             position: 'relative',
+                                                            textAlign: 'left',
                                                         }} >
-                                                            <div className="d-flex align-items-center" style={{}}>
-                                                                <div className="input-group flex-nowrap" style={{ flex: '1 1 auto' }}>
+                                                            <div style={{ display: 'flex', alignItems: 'center', gap: '2px', overflow: 'hidden' }}>
+                                                                <div className="input-group flex-nowrap" style={{ flex: '1 1 0', minWidth: 0 }}>
                                                                     <input type="number"
-                                                                        style={{ minWidth: "80px", maxWidth: "80px" }}
+                                                                        style={{ minWidth: 0, width: '100%' }}
                                                                         id={`${"sales_product_quantity_" + index}`}
                                                                         name={`${"sales_product_quantity" + index}`}
-                                                                        className={`form-control text-end ${errors["quantity_" + index] ? 'is-invalid' : warnings["quantity_" + index] ? 'border-warning text-warning' : ''}`}
+                                                                        className={`form-control text-end ${errors["quantity_" + index] ? 'is-invalid' : warnings["quantity_" + index] ? 'border-warning' : ''}`}
                                                                         onWheel={(e) => e.target.blur()}
                                                                         disabled={isZatcaReported}
                                                                         value={product.quantity}
@@ -6528,29 +6508,22 @@ const OrderCreate = forwardRef((props, ref) => {
                                                                                 reCalculate(index);
                                                                             }, 100);
                                                                         }} />
-                                                                    <span className="input-group-text text-nowrap">
+                                                                    <span className="input-group-text text-nowrap" style={{ borderRadius: '0 4px 4px 0', padding: '0 5px', fontSize: '11px' }}>
                                                                         {selectedProducts[index].unit ? selectedProducts[index].unit[0]?.toUpperCase() : 'P'}
                                                                     </span>
                                                                 </div>
                                                                 {(errors[`quantity_${index}`] || warnings[`quantity_${index}`]) && (
-                                                                    <i
-                                                                        className={`bi bi-exclamation-circle-fill ${errors[`quantity_${index}`] ? 'text-danger' : 'text-warning'} ms-2`}
-                                                                        data-bs-toggle="tooltip"
-                                                                        data-bs-placement="top"
-                                                                        data-error={errors[`quantity_${index}`] || ''}
-                                                                        data-warning={warnings[`quantity_${index}`] || ''}
-                                                                        title={errors[`quantity_${index}`] || warnings[`quantity_${index}`] || ''}
-                                                                        style={{
-                                                                            fontSize: '1rem',
-                                                                            cursor: 'pointer',
-                                                                            whiteSpace: 'nowrap',
-                                                                        }}
-                                                                    ></i>
+                                                                    <OverlayTrigger placement="top" overlay={<Tooltip>{errors[`quantity_${index}`] || warnings[`quantity_${index}`]}</Tooltip>}>
+                                                                        <i
+                                                                            className={`bi bi-exclamation-circle-fill ${errors[`quantity_${index}`] ? 'text-danger' : 'text-warning'}`}
+                                                                            style={{ fontSize: '12px', flexShrink: 0, cursor: 'help' }}
+                                                                        ></i>
+                                                                    </OverlayTrigger>
                                                                 )}
                                                             </div>
                                                         </td>);
 
-                                                        if (col.key === 'unit_price') return (<td style={{ verticalAlign: 'middle', padding: '0.25rem' }}>
+                                                        if (col.key === 'unit_price') return (<td style={{ verticalAlign: 'middle', padding: '4px 8px', borderLeft: '1px solid #e2e8f0' }}>
                                                             <div className="d-flex align-items-center" style={{ minWidth: 0 }}>
                                                                 <div className="input-group flex-nowrap" style={{ flex: '1 1 auto', minWidth: 0 }}>
                                                                     <input type="number"
@@ -6559,7 +6532,7 @@ const OrderCreate = forwardRef((props, ref) => {
                                                                         onWheel={(e) => e.target.blur()}
                                                                         disabled={isZatcaReported}
                                                                         value={selectedProducts[index].unit_price}
-                                                                        className={`form-control text-end ${errors["unit_price_" + index] ? 'is-invalid' : ''} ${warnings["unit_price_" + index] ? 'border-warning text-warning' : ''}`}
+                                                                        className={`form-control text-end ${errors["unit_price_" + index] ? 'is-invalid' : ''} ${warnings["unit_price_" + index] ? 'border-warning' : ''}`}
                                                                         placeholder="Unit Price(without VAT)"
                                                                         ref={(el) => {
                                                                             if (!inputRefs.current[index]) inputRefs.current[index] = {};
@@ -6642,23 +6615,11 @@ const OrderCreate = forwardRef((props, ref) => {
 
                                                                 </div>
                                                                 {(errors[`unit_price_${index}`] || warnings[`unit_price_${index}`]) && (
-                                                                    <i
-                                                                        className={`bi bi-exclamation-circle-fill ${errors[`unit_price_${index}`] ? 'text-danger' : 'text-warning'} ms-2`}
-                                                                        data-bs-toggle="tooltip"
-                                                                        data-bs-placement="top"
-                                                                        data-error={errors[`unit_price_${index}`] || ''}
-                                                                        data-warning={warnings[`unit_price_${index}`] || ''}
-                                                                        title={errors[`unit_price_${index}`] || warnings[`unit_price_${index}`] || ''}
-                                                                        style={{
-                                                                            fontSize: '1rem',
-                                                                            cursor: 'pointer',
-                                                                            whiteSpace: 'nowrap',
-                                                                        }}
-                                                                    ></i>
+                                                                    <OverlayTrigger placement="top" overlay={<Tooltip>{errors[`unit_price_${index}`] || warnings[`unit_price_${index}`]}</Tooltip>}><i className={`bi bi-exclamation-circle-fill ${errors[`unit_price_${index}`] ? 'text-danger' : 'text-warning'} ms-2`} style={{ fontSize: '1rem', cursor: 'help' }}></i></OverlayTrigger>
                                                                 )}
                                                             </div>
                                                         </td>);
-                                                        if (col.key === 'unit_price_with_vat') return (<td style={{ verticalAlign: 'middle', padding: '0.25rem' }}>
+                                                        if (col.key === 'unit_price_with_vat') return (<td style={{ verticalAlign: 'middle', padding: '4px 8px' }}>
                                                             <div className="d-flex align-items-center" style={{ minWidth: 0 }}>
                                                                 <div className="input-group flex-nowrap" style={{ flex: '1 1 auto', minWidth: 0 }}>
                                                                     <input type="number"
@@ -6667,7 +6628,7 @@ const OrderCreate = forwardRef((props, ref) => {
                                                                         onWheel={(e) => e.target.blur()}
                                                                         disabled={isZatcaReported}
                                                                         value={selectedProducts[index].unit_price_with_vat}
-                                                                        className={`form-control text-end ${errors["unit_price_with_vat_" + index] ? 'is-invalid' : ''} ${warnings["unit_price_with_vat_" + index] ? 'border-warning text-warning' : ''}`}
+                                                                        className={`form-control text-end ${errors["unit_price_with_vat_" + index] ? 'is-invalid' : ''} ${warnings["unit_price_with_vat_" + index] ? 'border-warning' : ''}`}
                                                                         ref={(el) => {
                                                                             if (!inputRefs.current[index]) inputRefs.current[index] = {};
                                                                             inputRefs.current[index][`${"sales_product_unit_price_with_vat_" + index}`] = el;
@@ -6759,23 +6720,11 @@ const OrderCreate = forwardRef((props, ref) => {
                                                                         }} />
                                                                 </div>
                                                                 {(errors[`unit_price_with_vat_${index}`] || warnings[`unit_price_with_vat_${index}`]) && (
-                                                                    <i
-                                                                        className={`bi bi-exclamation-circle-fill ${errors[`unit_price_with_vat_${index}`] ? 'text-danger' : 'text-warning'} ms-2`}
-                                                                        data-bs-toggle="tooltip"
-                                                                        data-bs-placement="top"
-                                                                        data-error={errors[`unit_price_with_vat_${index}`] || ''}
-                                                                        data-warning={warnings[`unit_price_with_vat_${index}`] || ''}
-                                                                        title={errors[`unit_price_with_vat_${index}`] || warnings[`unit_price_with_vat_${index}`] || ''}
-                                                                        style={{
-                                                                            fontSize: '1rem',
-                                                                            cursor: 'pointer',
-                                                                            whiteSpace: 'nowrap',
-                                                                        }}
-                                                                    ></i>
+                                                                    <OverlayTrigger placement="top" overlay={<Tooltip>{errors[`unit_price_with_vat_${index}`] || warnings[`unit_price_with_vat_${index}`]}</Tooltip>}><i className={`bi bi-exclamation-circle-fill ${errors[`unit_price_with_vat_${index}`] ? 'text-danger' : 'text-warning'} ms-2`} style={{ fontSize: '1rem', cursor: 'help' }}></i></OverlayTrigger>
                                                                 )}
                                                             </div>
                                                         </td>);
-                                                        if (col.key === 'unit_discount') return (<td style={{ verticalAlign: 'middle', padding: '0.25rem' }}>
+                                                        if (col.key === 'unit_discount') return (<td style={{ verticalAlign: 'middle', padding: '4px 8px' }}>
                                                             <div className="d-flex align-items-center" style={{ minWidth: 0 }}>
                                                                 <div className="input-group flex-nowrap" style={{ flex: '1 1 auto', minWidth: 0 }}>
                                                                     <input type="number"
@@ -6783,7 +6732,7 @@ const OrderCreate = forwardRef((props, ref) => {
                                                                         name={`${"sales_unit_discount_" + index}`}
                                                                         onWheel={(e) => e.target.blur()}
                                                                         disabled={isZatcaReported}
-                                                                        className={`form-control text-end ${errors["unit_discount_" + index] ? 'is-invalid' : ''} ${warnings["unit_discount_" + index] ? 'border-warning text-warning' : ''}`}
+                                                                        className={`form-control text-end ${errors["unit_discount_" + index] ? 'is-invalid' : ''} ${warnings["unit_discount_" + index] ? 'border-warning' : ''}`}
                                                                         value={selectedProducts[index].unit_discount}
                                                                         ref={(el) => {
                                                                             if (!inputRefs.current[index]) inputRefs.current[index] = {};
@@ -6875,25 +6824,13 @@ const OrderCreate = forwardRef((props, ref) => {
                                                                         }} />
                                                                 </div>
                                                                 {(errors[`unit_discount_${index}`] || warnings[`unit_discount_${index}`]) && (
-                                                                    <i
-                                                                        className={`bi bi-exclamation-circle-fill ${errors[`unit_discount_${index}`] ? 'text-danger' : 'text-warning'} ms-2`}
-                                                                        data-bs-toggle="tooltip"
-                                                                        data-bs-placement="top"
-                                                                        data-error={errors[`unit_discount_${index}`] || ''}
-                                                                        data-warning={warnings[`unit_discount__${index}`] || ''}
-                                                                        title={errors[`unit_discount_${index}`] || warnings[`unit_discount_${index}`] || ''}
-                                                                        style={{
-                                                                            fontSize: '1rem',
-                                                                            cursor: 'pointer',
-                                                                            whiteSpace: 'nowrap',
-                                                                        }}
-                                                                    ></i>
+                                                                    <OverlayTrigger placement="top" overlay={<Tooltip>{errors[`unit_discount_${index}`] || warnings[`unit_discount__${index}`]}</Tooltip>}><i className={`bi bi-exclamation-circle-fill ${errors[`unit_discount_${index}`] ? 'text-danger' : 'text-warning'} ms-2`} style={{ fontSize: '1rem', cursor: 'help' }}></i></OverlayTrigger>
                                                                 )}
                                                             </div>
                                                         </td>);
                                                         /*} ref={(el) => inputRefs.current[index] = el}
                                                             onFocus={() => inputRefs.current[index]?.select()}*/
-                                                        if (col.key === 'unit_discount_with_vat') return (<td style={{ verticalAlign: 'middle', padding: '0.25rem' }}>
+                                                        if (col.key === 'unit_discount_with_vat') return (<td style={{ verticalAlign: 'middle', padding: '4px 8px' }}>
                                                             <div className="d-flex align-items-center" style={{ minWidth: 0 }}>
                                                                 <div className="input-group flex-nowrap" style={{ flex: '1 1 auto', minWidth: 0 }}>
                                                                     <input type="number"
@@ -6901,7 +6838,7 @@ const OrderCreate = forwardRef((props, ref) => {
                                                                         name={`${"sales_unit_discount_with_vat_" + index}`}
                                                                         onWheel={(e) => e.target.blur()}
                                                                         disabled={isZatcaReported}
-                                                                        className={`form-control text-end ${errors["unit_discount_with_vat_" + index] ? 'is-invalid' : ''} ${warnings["unit_discount_with_vat_" + index] ? 'border-warning text-warning' : ''}`}
+                                                                        className={`form-control text-end ${errors["unit_discount_with_vat_" + index] ? 'is-invalid' : ''} ${warnings["unit_discount_with_vat_" + index] ? 'border-warning' : ''}`}
                                                                         value={selectedProducts[index].unit_discount_with_vat}
                                                                         ref={(el) => {
                                                                             if (!inputRefs.current[index]) inputRefs.current[index] = {};
@@ -7015,19 +6952,7 @@ const OrderCreate = forwardRef((props, ref) => {
                                                                         }} />
                                                                 </div>
                                                                 {(errors[`unit_discount_with_vat_${index}`] || warnings[`unit_discount_with_vat_${index}`]) && (
-                                                                    <i
-                                                                        className={`bi bi-exclamation-circle-fill ${errors[`unit_discount_with_vat_${index}`] ? 'text-danger' : 'text-warning'} ms-2`}
-                                                                        data-bs-toggle="tooltip"
-                                                                        data-bs-placement="top"
-                                                                        data-error={errors[`unit_discount_with_vat_${index}`] || ''}
-                                                                        data-warning={warnings[`unit_discount_with_vat_${index}`] || ''}
-                                                                        title={errors[`unit_discount_with_vat_${index}`] || warnings[`unit_discount_with_vat_${index}`] || ''}
-                                                                        style={{
-                                                                            fontSize: '1rem',
-                                                                            cursor: 'pointer',
-                                                                            whiteSpace: 'nowrap',
-                                                                        }}
-                                                                    ></i>
+                                                                    <OverlayTrigger placement="top" overlay={<Tooltip>{errors[`unit_discount_with_vat_${index}`] || warnings[`unit_discount_with_vat_${index}`]}</Tooltip>}><i className={`bi bi-exclamation-circle-fill ${errors[`unit_discount_with_vat_${index}`] ? 'text-danger' : 'text-warning'} ms-2`} style={{ fontSize: '1rem', cursor: 'help' }}></i></OverlayTrigger>
                                                                 )}
                                                             </div>
                                                         </td>);
@@ -7106,7 +7031,7 @@ const OrderCreate = forwardRef((props, ref) => {
                                                         </div>
                                                     )}
                                                 </td>*/
-                                                        if (col.key === 'unit_discount_percent') return (<td style={{ verticalAlign: 'middle', padding: '0.25rem' }}>
+                                                        if (col.key === 'unit_discount_percent') return (<td style={{ verticalAlign: 'middle', padding: '4px 8px' }}>
                                                             <div className="d-flex align-items-center" style={{ minWidth: 0 }}>
                                                                 <div className="input-group flex-nowrap" style={{ flex: '1 1 auto', minWidth: 0 }}>
                                                                     <input type="number"
@@ -7114,7 +7039,7 @@ const OrderCreate = forwardRef((props, ref) => {
                                                                         disabled={true}
                                                                         name={`${"sales_unit_discount_percent_with_vat_" + index}`}
                                                                         onWheel={(e) => e.target.blur()}
-                                                                        className={`form-control text-end ${errors["unit_discount_percent_with_vat_" + index] ? 'is-invalid' : ''} ${warnings["unit_discount_percent_with_vat_" + index] ? 'border-warning text-warning' : ''}`}
+                                                                        className={`form-control text-end ${errors["unit_discount_percent_with_vat_" + index] ? 'is-invalid' : ''} ${warnings["unit_discount_percent_with_vat_" + index] ? 'border-warning' : ''}`}
                                                                         value={selectedProducts[index].unit_discount_percent_with_vat}
                                                                         onChange={(e) => {
                                                                             if (timerRef.current) clearTimeout(timerRef.current);
@@ -7191,23 +7116,11 @@ const OrderCreate = forwardRef((props, ref) => {
                                                                         }} />{""}
                                                                 </div>
                                                                 {(errors[`unit_discount_percent_with_vat_${index}`] || warnings[`unit_discount_percent_with_vat_${index}`]) && (
-                                                                    <i
-                                                                        className={`bi bi-exclamation-circle-fill ${errors[`unit_discount_percent_with_vat_${index}`] ? 'text-danger' : 'text-warning'} ms-2`}
-                                                                        data-bs-toggle="tooltip"
-                                                                        data-bs-placement="top"
-                                                                        data-error={errors[`unit_discount_percent_with_vat_${index}`] || ''}
-                                                                        data-warning={warnings[`unit_discount_percent_with_vat_${index}`] || ''}
-                                                                        title={errors[`unit_discount_percent_with_vat_${index}`] || warnings[`unit_discount_percent_with_vat_${index}`] || ''}
-                                                                        style={{
-                                                                            fontSize: '1rem',
-                                                                            cursor: 'pointer',
-                                                                            whiteSpace: 'nowrap',
-                                                                        }}
-                                                                    ></i>
+                                                                    <OverlayTrigger placement="top" overlay={<Tooltip>{errors[`unit_discount_percent_with_vat_${index}`] || warnings[`unit_discount_percent_with_vat_${index}`]}</Tooltip>}><i className={`bi bi-exclamation-circle-fill ${errors[`unit_discount_percent_with_vat_${index}`] ? 'text-danger' : 'text-warning'} ms-2`} style={{ fontSize: '1rem', cursor: 'help' }}></i></OverlayTrigger>
                                                                 )}
                                                             </div>
                                                         </td>);
-                                                        if (col.key === 'price') return (<td style={{ verticalAlign: 'middle', padding: '0.25rem' }}>
+                                                        if (col.key === 'price') return (<td style={{ verticalAlign: 'middle', padding: '4px 8px' }}>
                                                             <div className="d-flex align-items-center" style={{ minWidth: 0 }}>
                                                                 <div className="input-group flex-nowrap" style={{ flex: '1 1 auto', minWidth: 0 }}>
                                                                     <input type="number"
@@ -7216,7 +7129,7 @@ const OrderCreate = forwardRef((props, ref) => {
                                                                         onWheel={(e) => e.target.blur()}
                                                                         disabled={isZatcaReported}
                                                                         value={parseFloat(trimTo2Decimals(((selectedProducts[index].unit_price || 0) - (selectedProducts[index].unit_discount || 0)) * (selectedProducts[index].quantity || 0))) || ""}
-                                                                        className={`form-control text-end ${errors["line_total_" + index] ? 'is-invalid' : ''} ${warnings["line_total_" + index] ? 'border-warning text-warning' : ''}`}
+                                                                        className={`form-control text-end ${errors["line_total_" + index] ? 'is-invalid' : ''} ${warnings["line_total_" + index] ? 'border-warning' : ''}`}
                                                                         placeholder="Line total"
                                                                         ref={(el) => {
                                                                             if (!inputRefs.current[index]) inputRefs.current[index] = {};
@@ -7311,23 +7224,11 @@ const OrderCreate = forwardRef((props, ref) => {
 
                                                                 </div>
                                                                 {(errors[`line_total_${index}`] || warnings[`line_total_${index}`]) && (
-                                                                    <i
-                                                                        className={`bi bi-exclamation-circle-fill ${errors[`line_total_${index}`] ? 'text-danger' : 'text-warning'} ms-2`}
-                                                                        data-bs-toggle="tooltip"
-                                                                        data-bs-placement="top"
-                                                                        data-error={errors[`line_total_${index}`] || ''}
-                                                                        data-warning={warnings[`line_total_${index}`] || ''}
-                                                                        title={errors[`line_total_${index}`] || warnings[`line_total_${index}`] || ''}
-                                                                        style={{
-                                                                            fontSize: '1rem',
-                                                                            cursor: 'pointer',
-                                                                            whiteSpace: 'nowrap',
-                                                                        }}
-                                                                    ></i>
+                                                                    <OverlayTrigger placement="top" overlay={<Tooltip>{errors[`line_total_${index}`] || warnings[`line_total_${index}`]}</Tooltip>}><i className={`bi bi-exclamation-circle-fill ${errors[`line_total_${index}`] ? 'text-danger' : 'text-warning'} ms-2`} style={{ fontSize: '1rem', cursor: 'help' }}></i></OverlayTrigger>
                                                                 )}
                                                             </div>
                                                         </td>);
-                                                        if (col.key === 'price_with_vat') return (<td style={{ verticalAlign: 'middle', padding: '0.25rem' }}>
+                                                        if (col.key === 'price_with_vat') return (<td style={{ verticalAlign: 'middle', padding: '4px 8px' }}>
                                                             <div className="d-flex align-items-center" style={{ minWidth: 0 }}>
                                                                 <div className="input-group flex-nowrap" style={{ flex: '1 1 auto', minWidth: 0 }}>
                                                                     <input type="number"
@@ -7336,7 +7237,7 @@ const OrderCreate = forwardRef((props, ref) => {
                                                                         onWheel={(e) => e.target.blur()}
                                                                         disabled={isZatcaReported}
                                                                         value={parseFloat(trimTo2Decimals(((selectedProducts[index].unit_price_with_vat || 0) - (selectedProducts[index].unit_discount_with_vat || 0)) * (selectedProducts[index].quantity || 0))) || ""}
-                                                                        className={`form-control text-end ${errors["line_total_with_vat" + index] ? 'is-invalid' : ''} ${warnings["line_total_with_vat" + index] ? 'border-warning text-warning' : ''}`}
+                                                                        className={`form-control text-end ${errors["line_total_with_vat" + index] ? 'is-invalid' : ''} ${warnings["line_total_with_vat" + index] ? 'border-warning' : ''}`}
                                                                         placeholder="Line total with VAT"
                                                                         ref={(el) => {
                                                                             if (!inputRefs.current[index]) inputRefs.current[index] = {};
@@ -7432,19 +7333,7 @@ const OrderCreate = forwardRef((props, ref) => {
 
                                                                 </div>
                                                                 {(errors[`line_total_with_vat_${index}`] || warnings[`line_total_with_vat_${index}`]) && (
-                                                                    <i
-                                                                        className={`bi bi-exclamation-circle-fill ${errors[`line_total_with_vat_${index}`] ? 'text-danger' : 'text-warning'} ms-2`}
-                                                                        data-bs-toggle="tooltip"
-                                                                        data-bs-placement="top"
-                                                                        data-error={errors[`line_total_with_vat_${index}`] || ''}
-                                                                        data-warning={warnings[`line_total_with_vat_${index}`] || ''}
-                                                                        title={errors[`line_total_with_vat_${index}`] || warnings[`line_total_with_vat_${index}`] || ''}
-                                                                        style={{
-                                                                            fontSize: '1rem',
-                                                                            cursor: 'pointer',
-                                                                            whiteSpace: 'nowrap',
-                                                                        }}
-                                                                    ></i>
+                                                                    <OverlayTrigger placement="top" overlay={<Tooltip>{errors[`line_total_with_vat_${index}`] || warnings[`line_total_with_vat_${index}`]}</Tooltip>}><i className={`bi bi-exclamation-circle-fill ${errors[`line_total_with_vat_${index}`] ? 'text-danger' : 'text-warning'} ms-2`} style={{ fontSize: '1rem', cursor: 'help' }}></i></OverlayTrigger>
                                                                 )}
                                                             </div>
                                                         </td>);
@@ -7456,7 +7345,181 @@ const OrderCreate = forwardRef((props, ref) => {
                                     </tbody>
                                 </table>
                             </div>
-                            <div style={{ position: "relative" }}>
+                            </section>
+                            <div className="sc-post-table">
+                              {/* LEFT: Payment + Commission */}
+                              <div className="sc-post-table-left">
+                                {/* Payment card */}
+                                <div style={{ backgroundColor: '#ffffff', borderRadius: '8px', border: '1px solid #e2e8f0', overflow: 'hidden' }}>
+                                  <div style={{ padding: '6px 16px', borderBottom: '1px solid #c3c6d7', backgroundColor: '#f2f4f6', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                    <span style={{ fontSize: '13px', fontWeight: 600, color: '#191c1e', fontFamily: "'Hanken Grotesk', sans-serif" }}>{t("Payments Received")}</span>
+                                    <Button variant="secondary" size="sm" onClick={addNewPayment}><i className="bi bi-plus-lg me-1" />{t("Add Payment")}</Button>
+                                  </div>
+                                  <div style={{ overflowX: 'auto' }}>
+                                    <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: '380px' }}>
+                                      {formData.payments_input && formData.payments_input.length > 0 && (
+                                        <thead style={{ backgroundColor: '#f1f5f9', position: 'sticky', top: 0, zIndex: 1 }}>
+                                          <tr style={{ fontSize: '11px', fontWeight: 600, color: '#434655' }}>
+                                            {(() => { const th = { padding: '5px 8px', fontWeight: 600, borderBottom: '2px solid #c3c6d7', whiteSpace: 'nowrap' }; return (<>
+                                              <th style={{ ...th, width: '150px' }}>{t("Date")}</th>
+                                              <th style={{ ...th, width: '100px' }}>{t("Amount")}</th>
+                                              <th style={{ ...th, width: '130px' }}>{t("Method")}</th>
+                                              <th style={th}>{t("Reference")}</th>
+                                              <th style={{ ...th, width: '36px' }}></th>
+                                            </>); })()}
+                                          </tr>
+                                        </thead>
+                                      )}
+                                      <tbody style={{ fontSize: '12px', color: '#191c1e' }}>
+                                        {formData.payments_input && formData.payments_input.filter(payment => !payment.deleted).map((payment, key) => (
+                                          <tr key={key} style={{ borderBottom: '1px solid #e2e8f0' }}
+                                            onMouseEnter={e => { e.currentTarget.style.backgroundColor = '#f8fafc'; }}
+                                            onMouseLeave={e => { e.currentTarget.style.backgroundColor = ''; }}>
+                                            <td style={{ padding: '3px 6px', width: '150px', position: 'relative' }}>
+                                              <DatePicker
+                                                id="payment_date_str"
+                                                selected={formData.payments_input[key].date_str ? new Date(formData.payments_input[key].date_str) : null}
+                                                value={formData.payments_input[key].date_str ? format(new Date(formData.payments_input[key].date_str), "d MMM yy h:mm aa", { locale: dateLocale }) : null}
+                                                className={`form-control form-control-sm${errors["payment_date_" + key] ? ' is-invalid' : ''}`}
+                                                dateFormat="d MMM yy h:mm aa"
+                                                locale={dateLocale}
+                                                showTimeSelect
+                                                timeIntervals="1"
+                                                onChange={(value) => { formData.payments_input[key].date_str = value; setFormData({ ...formData }); }}
+                                              />
+                                            </td>
+                                            <td style={{ padding: '3px 6px', width: '100px' }}>
+                                              <input type='number' id={`${"sales_payment_amount" + key}`} name={`${"sales_payment_amount" + key}`} value={formData.payments_input[key].amount} className={`form-control form-control-sm text-end${errors["payment_amount_" + key] ? ' is-invalid' : ''}`}
+                                                onChange={(e) => {
+                                                  delete errors["payment_amount_" + key]; setErrors({ ...errors });
+                                                  if (!e.target.value) { formData.payments_input[key].amount = e.target.value; setFormData({ ...formData }); validatePaymentAmounts(); return; }
+                                                  formData.payments_input[key].amount = parseFloat(e.target.value); validatePaymentAmounts(); setFormData({ ...formData });
+                                                }} />
+                                            </td>
+                                            <td style={{ padding: '3px 6px', width: '130px' }}>
+                                              <select value={formData.payments_input[key].method} className={`form-select form-select-sm ${errors['payment_method_' + key] ? 'is-invalid' : ''}`} style={{ fontSize: '12px', height: '26px', padding: '0 24px 0 6px' }}
+                                                onChange={(e) => {
+                                                  delete errors["payment_method_" + key]; setErrors({ ...errors });
+                                                  if (!e.target.value) { errors["payment_method_" + key] = t("Payment method is required"); setErrors({ ...errors }); formData.payments_input[key].method = ""; setFormData({ ...formData }); return; }
+                                                  formData.payments_input[key].method = e.target.value; setFormData({ ...formData });
+                                                }}>
+                                                <option value="">{t("Select")}</option>
+                                                <option value="cash">{t("Cash")}</option>
+                                                <option value="debit_card">{t("Debit Card")}</option>
+                                                <option value="credit_card">{t("Credit Card")}</option>
+                                                <option value="bank_card">{t("Bank Card")}</option>
+                                                <option value="bank_transfer">{t("Bank Transfer")}</option>
+                                                <option value="bank_cheque">{t("Bank Cheque")}</option>
+                                                <option value="sales_return">{t("Sales Return")}</option>
+                                                <option value="purchase">{t("Purchase")}</option>
+                                              </select>
+                                            </td>
+                                            <td style={{ padding: '3px 6px' }}>
+                                              {formData.payments_input[key] && (
+                                                <span style={{ cursor: "pointer", color: "#004ac6", fontSize: '11px' }} onClick={() => openReferenceUpdateForm(formData.payments_input[key].reference_id, formData.payments_input[key].reference_type)}>
+                                                  {formData.payments_input[key].reference_code}
+                                                </span>
+                                              )}
+                                            </td>
+                                            <td style={{ padding: '3px 4px', textAlign: 'center' }}>
+                                              <button type="button" onClick={() => removePayment(key)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#dc2626', padding: '1px 3px', borderRadius: '4px' }}
+                                                onMouseEnter={e => e.currentTarget.style.backgroundColor = '#fef2f2'}
+                                                onMouseLeave={e => e.currentTarget.style.backgroundColor = 'transparent'}>
+                                                <i className="bi bi-trash" style={{ fontSize: '12px' }}></i>
+                                              </button>
+                                            </td>
+                                          </tr>
+                                        ))}
+                                        <tr style={{ borderTop: '2px solid #c3c6d7', backgroundColor: '#f8fafc' }}>
+                                          <td colSpan={5} style={{ padding: '5px 10px', position: 'relative' }}>
+                                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '16px', flexWrap: 'wrap' }}>
+                                              <div style={{ display: 'flex', alignItems: 'center', gap: '16px', flexWrap: 'wrap' }}>
+                                                <span style={{ fontSize: '12px', color: '#434655' }}>
+                                                  {t("Total")}:&nbsp;<strong style={{ color: '#191c1e', fontVariantNumeric: 'tabular-nums' }}>{trimTo2Decimals(totalPaymentAmount)}</strong>
+                                                </span>
+                                                <span style={{ width: '1px', height: '14px', background: '#c3c6d7', display: 'inline-block' }} />
+                                                <span style={{ fontSize: '12px', color: '#434655' }}>
+                                                  {t("Balance")}:&nbsp;<strong style={{ color: balanceAmount > 0 ? '#dc2626' : balanceAmount < 0 ? '#2563eb' : '#16a34a', fontVariantNumeric: 'tabular-nums' }}>{trimTo2Decimals(balanceAmount)}</strong>
+                                                </span>
+                                              </div>
+                                              <div>
+                                                {paymentStatus === "paid" && <span className="badge bg-success" style={{ fontSize: '10px' }}>{t("Paid")}</span>}
+                                                {paymentStatus === "paid_partially" && <span className="badge bg-warning text-dark" style={{ fontSize: '10px' }}>{t("Paid Partially")}</span>}
+                                                {paymentStatus === "not_paid" && <span className="badge bg-danger" style={{ fontSize: '10px' }}>{t("Not Paid")}</span>}
+                                              </div>
+                                            </div>
+                                          </td>
+                                        </tr>
+                                      </tbody>
+                                    </table>
+                                  </div>
+                                </div>
+                                {/* Cash Discount & Commission card */}
+                                <div style={{ backgroundColor: '#ffffff', borderRadius: '8px', border: '1px solid #e2e8f0', overflow: 'hidden' }}>
+                                  <div style={{ padding: '6px 16px', borderBottom: '1px solid #c3c6d7', backgroundColor: '#f2f4f6' }}>
+                                    <span style={{ fontSize: '13px', fontWeight: 600, color: '#191c1e', fontFamily: "'Hanken Grotesk', sans-serif" }}>{t("Cash Discount & Commission")}</span>
+                                  </div>
+                                  <div style={{ padding: '8px 12px', display: 'flex', gap: '20px', alignItems: 'flex-start', flexWrap: 'wrap' }}>
+                                    {/* Cash Discount column */}
+                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '2px', position: 'relative' }}>
+                                      <label style={{ fontSize: '11px', color: '#434655', marginBottom: '2px', display: 'block', fontWeight: 600 }}>{t("Cash Discount")}</label>
+                                      <input type='number' ref={cashDiscountRef} id="sales_cash_discount" name="sales_cash_discount" value={cashDiscount}
+                                        className="form-control form-control-sm" style={{ width: '110px' }}
+                                        onChange={(e) => {
+                                          delete errors["cash_discount"]; setErrors({ ...errors });
+                                          if (!e.target.value) { cashDiscount = e.target.value; setCashDiscount(cashDiscount); if (timerRef.current) clearTimeout(timerRef.current); timerRef.current = setTimeout(() => { reCalculate(); }, 100); return; }
+                                          cashDiscount = parseFloat(e.target.value); setCashDiscount(cashDiscount);
+                                          if (cashDiscount > 0 && cashDiscount >= formData.net_total) { errors["cash_discount"] = t("Cash discount should not be greater than or equal to Net Total: ") + formData.net_total?.toString(); setErrors({ ...errors }); return; }
+                                          if (timerRef.current) clearTimeout(timerRef.current); timerRef.current = setTimeout(() => { reCalculate(); }, 100);
+                                        }}
+                                        onKeyDown={(e) => { if (timerRef.current) clearTimeout(timerRef.current); if (e.key === "Backspace") { cashDiscount = ""; setCashDiscount(cashDiscount); if (timerRef.current) clearTimeout(timerRef.current); timerRef.current = setTimeout(() => { reCalculate(); }, 100); return; } }}
+                                        onFocus={() => { if (timerRef.current) clearTimeout(timerRef.current); timerRef.current = setTimeout(() => { cashDiscountRef.current?.select(); }, 20); }}
+                                      />
+                                      {errors.cash_discount && <div style={{ position: 'absolute', top: '100%', left: 0, zIndex: 10, whiteSpace: 'nowrap', background: '#fff', border: '1px solid #fca5a5', borderRadius: '3px', padding: '1px 6px', boxShadow: '0 2px 6px rgba(0,0,0,0.1)', color: '#dc2626', fontSize: '11px' }}>{t(errors.cash_discount)}</div>}
+                                    </div>
+                                    {/* Vertical divider */}
+                                    <div style={{ width: '1px', background: '#e2e8f0', alignSelf: 'stretch', marginTop: '4px' }} />
+                                    {/* Commission column */}
+                                    <div style={{ display: 'flex', gap: '10px', alignItems: 'flex-start', flexWrap: 'wrap' }}>
+                                      <div style={{ position: 'relative' }}>
+                                        <label style={{ fontSize: '11px', color: '#434655', marginBottom: '2px', display: 'block', fontWeight: 600 }}>{t("Commission Amount")}</label>
+                                        <input type='number' ref={commissionRef} id="sales_commission" name="sales_commission" value={commission} className="form-control form-control-sm" style={{ width: '110px' }}
+                                          onChange={(e) => {
+                                            delete errors["commission"]; delete errors["commission_payment_method"]; setErrors({ ...errors });
+                                            if (!e.target.value) { commission = e.target.value; setCommission(commission); setErrors({ ...errors }); return; }
+                                            commission = parseFloat(e.target.value); setCommission(commission);
+                                            if (commission > 0 && commission >= formData.net_total) { errors["commission"] = t("Commission should not be greater than or equal to Net Total: ") + formData.net_total?.toString(); setErrors({ ...errors }); return; }
+                                            if (commission > 0 && !formData.commission_payment_method) { errors["commission_payment_method"] = t("Payment method is required"); setErrors({ ...errors }); return; }
+                                          }}
+                                          onKeyDown={(e) => { if (timerRef.current) clearTimeout(timerRef.current); if (e.key === "Backspace") { commission = ""; setCommission(commission); delete errors["commission"]; delete errors["commission_payment_method"]; setErrors({ ...errors }); return; } }}
+                                          onFocus={() => { if (timerRef.current) clearTimeout(timerRef.current); timerRef.current = setTimeout(() => { commissionRef.current?.select(); }, 20); }}
+                                        />
+                                        {errors.commission && <div style={{ position: 'absolute', top: '100%', left: 0, zIndex: 10, whiteSpace: 'nowrap', background: '#fff', border: '1px solid #fca5a5', borderRadius: '3px', padding: '1px 6px', boxShadow: '0 2px 6px rgba(0,0,0,0.1)', color: '#dc2626', fontSize: '10px' }}>{t(errors.commission)}</div>}
+                                      </div>
+                                      <div style={{ position: 'relative' }}>
+                                        <label style={{ fontSize: '11px', color: '#434655', marginBottom: '2px', display: 'block', fontWeight: 600 }}>{t("Commission Method")}</label>
+                                        <select value={formData.commission_payment_method} className="form-select form-select-sm" style={{ width: '160px', fontSize: '12px', height: '26px', padding: '0 24px 0 8px' }}
+                                          onChange={(e) => {
+                                            delete errors["commission_payment_method"]; setErrors({ ...errors });
+                                            if (!e.target.value && commission > 0) { errors["commission_payment_method"] = t("Payment method is required"); setErrors({ ...errors }); formData.commission_payment_method = ""; setFormData({ ...formData }); return; }
+                                            formData.commission_payment_method = e.target.value; setFormData({ ...formData });
+                                          }}>
+                                          <option value="">{t("Select")}</option>
+                                          <option value="cash">{t("Cash")}</option>
+                                          <option value="debit_card">{t("Debit Card")}</option>
+                                          <option value="credit_card">{t("Credit Card")}</option>
+                                          <option value="bank_card">{t("Bank Card")}</option>
+                                          <option value="bank_transfer">{t("Bank Transfer")}</option>
+                                          <option value="bank_cheque">{t("Bank Cheque")}</option>
+                                        </select>
+                                        {errors["commission_payment_method"] && <div style={{ position: 'absolute', top: '100%', left: 0, zIndex: 10, whiteSpace: 'nowrap', background: '#fff', border: '1px solid #fca5a5', borderRadius: '3px', padding: '1px 6px', boxShadow: '0 2px 6px rgba(0,0,0,0.1)', color: '#dc2626', fontSize: '10px' }}>{t(errors["commission_payment_method"])}</div>}
+                                      </div>
+                                    </div>
+                                  </div>
+                                </div>
+                              </div>
+                              {/* RIGHT: Summary (max-width 380px) */}
+                              <div className="sc-post-table-right">
                                 {/* Settings centered overlay panel */}
                                 {showBillSummarySettings && (
                                     <div style={{ position: "fixed", top: "50%", left: "50%", transform: "translate(-50%, -50%)", zIndex: 1060, background: "#fff", border: "1px solid #dee2e6", borderRadius: "8px", padding: "16px", width: "320px", boxShadow: "0 8px 32px rgba(0,0,0,0.22)" }}>
@@ -7494,681 +7557,190 @@ const OrderCreate = forwardRef((props, ref) => {
                                         }}>{t("Reset to Default")}</button>
                                     </div>
                                 )}
-                                <div className="table-responsive">
-                                    <table className="table table-striped table-sm table-bordered">
-                                        <thead>
-                                            <tr>
-                                                <th colSpan="9" style={{ padding: "3px 8px", background: "#f8f9fa", fontWeight: "normal" }}>
-                                                    <div className="d-flex justify-content-between align-items-center">
-                                                        <small className="text-muted">{t("Bill Summary")}</small>
-                                                        <button
-                                                            type="button"
-                                                            className="btn btn-sm btn-outline-secondary p-0"
-                                                            style={{ width: "20px", height: "20px", lineHeight: 1 }}
-                                                            title={t("Customize Bill Summary")}
-                                                            onClick={() => setShowBillSummarySettings(v => !v)}
-                                                        >
-                                                            <i className="bi bi-gear" style={{ fontSize: "11px" }}></i>
-                                                        </button>
-                                                    </div>
-                                                </th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            {billSummaryOrder.filter(key => billSummaryVisible[key]).map(key => {
-                                                switch (key) {
-                                                    case 'total_without_vat': return (
-                                                        <tr key="total_without_vat">
-                                                            <th colSpan="8" className="text-end">
-                                                                {t("Total(without VAT)")}
-                                                                <OverlayTrigger placement="left" overlay={renderTotalWithoutVATTooltip}>
-                                                                    <span style={{ textDecoration: 'underline dotted', cursor: 'pointer', marginLeft: '4px' }}>ℹ️</span>
-                                                                </OverlayTrigger>
-                                                            </th>
-                                                            <td className="text-end" style={{ width: "200px" }}>
-                                                                <NumberFormat value={trimTo2Decimals(formData.total)} displayType={"text"} thousandSeparator={true} suffix={" "} renderText={(value, props) => value} />
-                                                            </td>
-                                                        </tr>
-                                                    );
-                                                    case 'total_with_vat': return (
-                                                        <tr key="total_with_vat">
-                                                            <th colSpan="8" className="text-end">
-                                                                {t("Total(with VAT)")}
-                                                                <OverlayTrigger placement="left" overlay={renderTotalWithVATTooltip}>
-                                                                    <span style={{ textDecoration: 'underline dotted', cursor: 'pointer', marginLeft: '4px' }}>ℹ️</span>
-                                                                </OverlayTrigger>
-                                                            </th>
-                                                            <td className="text-end" style={{ width: "200px" }}>
-                                                                <NumberFormat value={trimTo2Decimals(formData.total_with_vat)} displayType={"text"} thousandSeparator={true} suffix={" "} renderText={(value, props) => value} />
-                                                            </td>
-                                                        </tr>
-                                                    );
-                                                    case 'shipping': return (
-                                                        <tr key="shipping">
-                                                            <th colSpan="8" className="text-end">
-                                                                {t("Shipping & Handling Fees")}
-                                                                <OverlayTrigger placement="left" overlay={renderShippingTooltip}>
-                                                                    <span style={{ textDecoration: 'underline dotted', cursor: 'pointer', marginLeft: '4px' }}>ℹ️</span>
-                                                                </OverlayTrigger>
-                                                            </th>
-                                                            <td className="text-end">
-                                                                <input type="number" id="sales_shipping_fees" name="sales_shipping_fees" onWheel={(e) => e.target.blur()} disabled={isZatcaReported} style={{ width: "150px" }} className="form-control form-control-sm" value={shipping} onChange={(e) => {
-                                                                    if (timerRef.current) clearTimeout(timerRef.current);
-                                                                    delete errors["shipping_handling_fees"];
-                                                                    setErrors({ ...errors });
-                                                                    if (parseFloat(e.target.value) === 0) { shipping = 0; setShipping(shipping); delete errors["shipping_handling_fees"]; setErrors({ ...errors }); timerRef.current = setTimeout(() => { reCalculate(); }, 100); return; }
-                                                                    if (parseFloat(e.target.value) < 0) { shipping = 0.00; setShipping(shipping); setErrors({ ...errors }); timerRef.current = setTimeout(() => { reCalculate(); }, 100); return; }
-                                                                    if (!e.target.value) { shipping = ""; setShipping(shipping); setErrors({ ...errors }); timerRef.current = setTimeout(() => { reCalculate(); }, 100); return; }
-                                                                    if (/^\d*\.?\d{0,2}$/.test(parseFloat(e.target.value)) === false) { errors["shipping_handling_fees"] = t("Max. decimal points allowed is 2"); setErrors({ ...errors }); }
-                                                                    shipping = parseFloat(e.target.value); setShipping(shipping);
-                                                                    timerRef.current = setTimeout(() => { reCalculate(); }, 100);
-                                                                }} />
-                                                                {errors.shipping_handling_fees && <div style={{ color: "red" }}>{errors.shipping_handling_fees}</div>}
-                                                            </td>
-                                                        </tr>
-                                                    );
-                                                    case 'discount_without_vat': return (
-                                                        <tr key="discount_without_vat">
-                                                            <th colSpan="8" className="text-end">
-                                                                {t("Discount(without VAT)")} <input type="number" id="discount_percent" name="discount_percent" onWheel={(e) => e.target.blur()} disabled={true} style={{ width: "50px" }} className="form-control form-control-sm d-inline-block" value={discountPercent} onChange={(e) => {
-                                                                    if (timerRef.current) clearTimeout(timerRef.current);
-                                                                    if (parseFloat(e.target.value) === 0) { discount = 0; setDiscount(discount); discountPercentWithVAT = 0; setDiscountPercentWithVAT(discountPercentWithVAT); discountPercent = 0; setDiscountPercent(discountPercent); errors["discount_percent"] = ""; setErrors({ ...errors }); timerRef.current = setTimeout(() => { reCalculate(); }, 100); return; }
-                                                                    if (parseFloat(e.target.value) < 0) { discountWithVAT = 0; setDiscountWithVAT(discountWithVAT); discountPercentWithVAT = 0; setDiscountPercentWithVAT(discountPercentWithVAT); discount = 0; setDiscount(discount); discountPercent = 0; setDiscountPercent(discountPercent); setErrors({ ...errors }); timerRef.current = setTimeout(() => { reCalculate(); }, 100); return; }
-                                                                    if (!e.target.value) { discountWithVAT = ""; setDiscountWithVAT(discountWithVAT); discountPercentWithVAT = ""; setDiscountPercentWithVAT(discountPercentWithVAT); discount = ""; setDiscount(discount); discountPercent = ""; setDiscountPercent(discountPercent); setErrors({ ...errors }); timerRef.current = setTimeout(() => { reCalculate(); }, 100); return; }
-                                                                    delete errors["discount_percent"]; delete errors["discount"]; setErrors({ ...errors });
-                                                                    discountPercent = parseFloat(e.target.value); setDiscountPercent(discountPercent);
-                                                                    timerRef.current = setTimeout(() => { reCalculate(); }, 100);
-                                                                }} />{"%"}
-                                                                <OverlayTrigger placement="left" overlay={renderDiscountWithoutVATTooltip}>
-                                                                    <span style={{ textDecoration: 'underline dotted', cursor: 'pointer', marginLeft: '4px' }}>ℹ️</span>
-                                                                </OverlayTrigger>
-                                                                {errors.discount_percent && <div style={{ color: "red" }}>{errors.discount_percent}</div>}
-                                                            </th>
-                                                            <td className="text-end">
-                                                                <input type="number" id="sales_discount" name="sales_discount" onWheel={(e) => e.target.blur()} disabled={isZatcaReported} style={{ width: "150px" }} className="form-control form-control-sm" value={discount} ref={discountRef}
-                                                                    onFocus={() => { if (timerRef.current) clearTimeout(timerRef.current); timerRef.current = setTimeout(() => { discountRef.current?.select(); }, 20); }}
-                                                                    onChange={(e) => {
-                                                                        if (timerRef.current) clearTimeout(timerRef.current);
-                                                                        if (parseFloat(e.target.value) === 0) { discount = 0; setDiscount(discount); discountWithVAT = 0; setDiscountWithVAT(discountWithVAT); discountPercent = 0; setDiscountPercent(discountPercent); discountPercentWithVAT = 0; setDiscountPercent(discountPercentWithVAT); delete errors["discount"]; setErrors({ ...errors }); timerRef.current = setTimeout(() => { reCalculate(); }, 100); return; }
-                                                                        if (parseFloat(e.target.value) < 0) { discount = 0; setDiscount(discount); discountWithVAT = 0; setDiscountWithVAT(discountWithVAT); discountPercent = 0; setDiscountPercent(discountPercent); discountPercentWithVAT = 0; setDiscountPercent(discountPercentWithVAT); setErrors({ ...errors }); timerRef.current = setTimeout(() => { reCalculate(); }, 100); return; }
-                                                                        if (!e.target.value) { discount = ""; setDiscount(discount); discountWithVAT = ""; setDiscountWithVAT(discountWithVAT); discountPercent = ""; setDiscountPercent(discountPercent); discountPercentWithVAT = ""; setDiscountPercent(discountPercentWithVAT); setErrors({ ...errors }); timerRef.current = setTimeout(() => { reCalculate(); }, 100); return; }
-                                                                        delete errors["discount"]; delete errors["discount_percent"]; setErrors({ ...errors });
-                                                                        if (/^\d*\.?\d{0,2}$/.test(parseFloat(e.target.value)) === false) { errors["discount"] = t("Max. decimal points allowed is 2"); setErrors({ ...errors }); }
-                                                                        discount = parseFloat(e.target.value); setDiscount(discount);
-                                                                        timerRef.current = setTimeout(() => { discountWithVAT = parseFloat(trimTo2Decimals(discount * (1 + (formData.vat_percent / 100)))); setDiscountWithVAT(discountWithVAT); reCalculate(); }, 100);
-                                                                    }} />
-                                                                {errors.discount && <div style={{ color: "red" }}>{errors.discount}</div>}
-                                                            </td>
-                                                        </tr>
-                                                    );
-                                                    case 'discount_with_vat': return (
-                                                        <tr key="discount_with_vat">
-                                                            <th colSpan="8" className="text-end">
-                                                                {t("Discount(with VAT)")} <input type="number" id="discount_percent_with_vat" name="discount_percent_with_vat" onWheel={(e) => e.target.blur()} disabled={true} style={{ width: "50px" }} className="form-control form-control-sm d-inline-block" value={discountPercentWithVAT} onChange={(e) => {
-                                                                    if (timerRef.current) clearTimeout(timerRef.current);
-                                                                    if (parseFloat(e.target.value) === 0) { discountWithVAT = 0; setDiscountWithVAT(discountWithVAT); discountPercentWithVAT = 0; setDiscountPercentWithVAT(discountPercentWithVAT); discount = 0; setDiscount(discount); discountPercent = 0; setDiscountPercent(discountPercent); delete errors["discount_percent_with_vat"]; setErrors({ ...errors }); timerRef.current = setTimeout(() => { reCalculate(); }, 100); return; }
-                                                                    if (parseFloat(e.target.value) < 0) { discountWithVAT = 0; setDiscountWithVAT(discountWithVAT); discountPercentWithVAT = 0; setDiscountPercentWithVAT(discountPercentWithVAT); discount = 0; setDiscount(discount); discountPercent = 0; setDiscountPercent(discountPercent); errors["discount_percent_with_vat"] = t("Discount percent should be greater than or equal to zero"); setErrors({ ...errors }); timerRef.current = setTimeout(() => { reCalculate(); }, 100); return; }
-                                                                    if (!e.target.value) { discountWithVAT = ""; setDiscountWithVAT(discountWithVAT); discountPercentWithVAT = ""; setDiscountPercentWithVAT(discountPercentWithVAT); discount = ""; setDiscount(discount); discountPercent = ""; setDiscountPercent(discountPercent); setErrors({ ...errors }); timerRef.current = setTimeout(() => { reCalculate(); }, 100); return; }
-                                                                    delete errors["discount_percent_with_vat"]; delete errors["discount_with_vat"]; setErrors({ ...errors });
-                                                                    discountPercentWithVAT = parseFloat(e.target.value); setDiscountPercentWithVAT(discountPercentWithVAT);
-                                                                    timerRef.current = setTimeout(() => { reCalculate(); }, 100);
-                                                                }} />{"%"}
-                                                                <OverlayTrigger placement="left" overlay={renderDiscountWithVATTooltip}>
-                                                                    <span style={{ textDecoration: 'underline dotted', cursor: 'pointer', marginLeft: '4px' }}>ℹ️</span>
-                                                                </OverlayTrigger>
-                                                                {errors.discount_percent_with_vat && <div style={{ color: "red" }}>{errors.discount_percent_with_vat}</div>}
-                                                            </th>
-                                                            <td className="text-end">
-                                                                <input type="number" id="sales_discount_with_vat" name="sales_discount_with_vat" onWheel={(e) => e.target.blur()} disabled={isZatcaReported} style={{ width: "150px" }} className="form-control form-control-sm" value={discountWithVAT} ref={discountWithVATRef}
-                                                                    onFocus={() => { if (timerRef.current) clearTimeout(timerRef.current); timerRef.current = setTimeout(() => { discountWithVATRef.current?.select(); }, 20); }}
-                                                                    onChange={(e) => {
-                                                                        if (timerRef.current) clearTimeout(timerRef.current);
-                                                                        if (parseFloat(e.target.value) === 0) { discount = 0; discountWithVAT = 0; discountPercent = 0; setDiscount(discount); setDiscountWithVAT(discount); setDiscountPercent(discount); delete errors["discount_with_vat"]; setErrors({ ...errors }); timerRef.current = setTimeout(() => { reCalculate(); }, 100); return; }
-                                                                        if (parseFloat(e.target.value) < 0) { discount = 0.00; discountWithVAT = 0.00; discountPercent = 0.00; setDiscount(discount); setDiscountWithVAT(discount); setDiscountPercent(discountPercent); setErrors({ ...errors }); timerRef.current = setTimeout(() => { reCalculate(); }, 100); return; }
-                                                                        if (!e.target.value) { discount = ""; discountWithVAT = ""; discountPercent = ""; setDiscount(discount); setDiscountWithVAT(discount); setDiscountPercent(discountPercent); setErrors({ ...errors }); timerRef.current = setTimeout(() => { reCalculate(); }, 100); return; }
-                                                                        delete errors["discount_with_vat"]; delete errors["discount_percent_with_vat"]; setErrors({ ...errors });
-                                                                        if (/^\d*\.?\d{0,2}$/.test(parseFloat(e.target.value)) === false) { errors["discount_with_vat"] = t("Max. decimal points allowed is 2"); setErrors({ ...errors }); }
-                                                                        discountWithVAT = parseFloat(e.target.value); setDiscountWithVAT(discountWithVAT);
-                                                                        timerRef.current = setTimeout(() => { discount = parseFloat(trimTo2Decimals(discountWithVAT / (1 + (formData.vat_percent / 100)))); setDiscount(discount); reCalculate(); }, 100);
-                                                                    }} />
-                                                                {errors.discount_with_vat && <div style={{ color: "red" }}>{errors.discount_with_vat}</div>}
-                                                            </td>
-                                                        </tr>
-                                                    );
-                                                    case 'taxable_amount': return (
-                                                        <tr key="taxable_amount">
-                                                            <th colSpan="8" className="text-end">
-                                                                {t("Total Taxable Amount(without VAT)")}
-                                                                <OverlayTrigger placement="right" overlay={renderTooltip}>
-                                                                    <span style={{ textDecoration: 'underline dotted', cursor: 'pointer', marginLeft: '4px' }}>ℹ️</span>
-                                                                </OverlayTrigger>
-                                                            </th>
-                                                            <td className="text-end" style={{ width: "200px" }}>
-                                                                <NumberFormat value={trimTo2Decimals(formData.total + shipping - discount)} displayType={"text"} thousandSeparator={true} suffix={" "} renderText={(value, props) => value} />
-                                                            </td>
-                                                        </tr>
-                                                    );
-                                                    case 'vat': return (
-                                                        <tr key="vat">
-                                                            <th colSpan="8" className="text-end">
-                                                                {t("VAT")} <input type="number" id="sales_vat_percent" name="sales_vat_percent" onWheel={(e) => e.target.blur()} disabled={true} className="form-control form-control-sm d-inline-block text-center" style={{ width: "50px" }} value={formData.vat_percent} onChange={(e) => {
-                                                                    console.log("Inside onchange vat percent");
-                                                                    if (parseFloat(e.target.value) === 0) { formData.vat_percent = parseFloat(e.target.value); setFormData({ ...formData }); delete errors["vat_percent"]; setErrors({ ...errors }); reCalculate(); return; }
-                                                                    if (parseFloat(e.target.value) < 0) { formData.vat_percent = parseFloat(e.target.value); formData.vat_price = 0.00; setFormData({ ...formData }); errors["vat_percent"] = t("VAT percent should be greater than or equal to zero"); setErrors({ ...errors }); reCalculate(); return; }
-                                                                    if (!e.target.value) { formData.vat_percent = ""; formData.vat_price = 0.00; errors["vat_percent"] = t("Invalid vat percent"); setFormData({ ...formData }); setErrors({ ...errors }); return; }
-                                                                    delete errors["vat_percent"]; setErrors({ ...errors });
-                                                                    formData.vat_percent = e.target.value; reCalculate(); setFormData({ ...formData });
-                                                                }} />{"%"}
-                                                                <OverlayTrigger placement="left" overlay={renderVATTooltip}>
-                                                                    <span style={{ textDecoration: 'underline dotted', cursor: 'pointer', marginLeft: '4px' }}>ℹ️</span>
-                                                                </OverlayTrigger>
-                                                                {errors.vat_percent && <div style={{ color: "red" }}>{errors.vat_percent}</div>}
-                                                            </th>
-                                                            <td className="text-end">
-                                                                <NumberFormat value={trimTo2Decimals(formData.vat_price)} displayType={"text"} thousandSeparator={true} suffix={" "} renderText={(value, props) => value} />
-                                                            </td>
-                                                        </tr>
-                                                    );
-                                                    case 'net_before_rounding': return (
-                                                        <tr key="net_before_rounding">
-                                                            <th colSpan="8" className="text-end">
-                                                                {t("Net Total(with VAT) Before Rounding")}
-                                                                <OverlayTrigger placement="right" overlay={renderNetTotalBeforeRoundingTooltip}>
-                                                                    <span style={{ textDecoration: 'underline dotted', cursor: 'pointer', marginLeft: '4px' }}>ℹ️</span>
-                                                                </OverlayTrigger>
-                                                            </th>
-                                                            <th className="text-end">
-                                                                <NumberFormat value={trimTo2Decimals(formData.net_total - roundingAmount)} displayType={"text"} thousandSeparator={true} suffix={" "} renderText={(value, props) => value} />
-                                                            </th>
-                                                        </tr>
-                                                    );
-                                                    case 'rounding_amount': return (
-                                                        <tr key="rounding_amount">
-                                                            <th colSpan="8" className="text-end">
-                                                                {t("Rounding Amount")}
-                                                                [<input type="checkbox" id="sales_auto_rounding_amount" name="sales_auto_rounding_amount" className="form-check-input" style={{ width: "14px", height: "14px", verticalAlign: "middle" }} value={formData.auto_rounding_amount} checked={formData.auto_rounding_amount} onChange={(e) => {
-                                                                    if (timerRef.current) clearTimeout(timerRef.current);
-                                                                    setErrors({ ...errors });
-                                                                    formData.auto_rounding_amount = !formData.auto_rounding_amount;
-                                                                    setFormData({ ...formData });
-                                                                    timerRef.current = setTimeout(() => { reCalculate(); }, 100);
-                                                                }} />{" " + t("Auto Calculate") + "]"}
-                                                            </th>
-                                                            <td className="text-end">
-                                                                <input type="number" id="sales_rounding_amount" name="sales_rounding_amount" disabled={formData.auto_rounding_amount} onWheel={(e) => e.target.blur()} style={{ width: "150px" }} className="form-control form-control-sm" value={roundingAmount}
-                                                                    onChange={(e) => {
-                                                                        if (timerRef.current) clearTimeout(timerRef.current);
-                                                                        delete errors["rounding_amount"]; setErrors({ ...errors });
-                                                                        if (!e.target.value) { roundingAmount = ""; setRoundingAmount(roundingAmount); timerRef.current = setTimeout(() => { reCalculate(); }, 100); return; }
-                                                                        if (e.target.value) { if (/^-?\d*\.?\d{0,2}$/.test(parseFloat(e.target.value)) === false) { roundingAmount = parseFloat(e.target.value); errors["rounding_amount"] = t("Max. decimal points allowed is 2"); setErrors({ ...errors }); return; } }
-                                                                        roundingAmount = parseFloat(e.target.value); setRoundingAmount(roundingAmount);
-                                                                        delete errors["rounding_amount"]; setErrors({ ...errors });
-                                                                        timerRef.current = setTimeout(() => { reCalculate(); }, 100);
-                                                                    }}
-                                                                    onKeyDown={(e) => {
-                                                                        if (timerRef.current) clearTimeout(timerRef.current);
-                                                                        if (e.key === "Backspace") { delete errors["rounding_amount"]; setErrors({ ...errors }); roundingAmount = ""; setRoundingAmount(""); timerRef.current = setTimeout(() => { reCalculate(); }, 100); }
-                                                                    }}
-                                                                />
-                                                                {errors.rounding_amount && <div style={{ color: "red" }}>{errors.rounding_amount}</div>}
-                                                            </td>
-                                                        </tr>
-                                                    );
-                                                    case 'net_total': return (
-                                                        <tr key="net_total">
-                                                            <th colSpan="8" className="text-end">
-                                                                {t("Net Total(with VAT)")}
-                                                                <OverlayTrigger placement="right" overlay={renderNetTotalTooltip}>
-                                                                    <span style={{ textDecoration: 'underline dotted', cursor: 'pointer', marginLeft: '4px' }}>ℹ️</span>
-                                                                </OverlayTrigger>
-                                                            </th>
-                                                            <th className="text-end">
-                                                                <NumberFormat value={trimTo2Decimals(formData.net_total)} displayType={"text"} thousandSeparator={true} suffix={" "} renderText={(value, props) => value} />
-                                                            </th>
-                                                        </tr>
-                                                    );
-                                                    default: return null;
-                                                }
-                                            })}
-                                        </tbody>
-                                    </table>
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: '0', backgroundColor: '#ffffff', borderRadius: '8px', border: '1px solid #e2e8f0', overflow: 'hidden' }}>
+                                  <div style={{ padding: '6px 16px', borderBottom: '1px solid #c3c6d7', backgroundColor: '#f2f4f6', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                    <span style={{ fontSize: '13px', fontWeight: 600, color: '#191c1e', fontFamily: "'Hanken Grotesk', sans-serif" }}>{t("Bill Summary")}</span>
+                                    <button type="button" title={t("Customize Bill Summary")} onClick={() => setShowBillSummarySettings(v => !v)}
+                                      style={{ background: 'none', border: '1px solid #c3c6d7', borderRadius: '4px', padding: '1px 5px', cursor: 'pointer', color: '#6b7280', lineHeight: 1 }}
+                                      onMouseEnter={e => e.currentTarget.style.color='#191c1e'}
+                                      onMouseLeave={e => e.currentTarget.style.color='#6b7280'}>
+                                      <i className="bi bi-gear-fill" style={{ fontSize: '11px' }}></i>
+                                    </button>
+                                  </div>
+                                  <div style={{ padding: '6px 12px', display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                                    {billSummaryOrder.filter(key => billSummaryVisible[key]).map(key => {
+                                      const rowStyle = { display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '13px', lineHeight: '20px' };
+                                      switch (key) {
+                                        case 'total_without_vat': return (
+                                          <div key="total_without_vat" style={rowStyle}>
+                                            <span style={{ color: '#434655' }}>{t("Total (ex. VAT)")} <OverlayTrigger placement="left" trigger="click" show={openSummaryTooltip === 'total_ex_vat'} overlay={renderTotalWithoutVATTooltip()}><span style={{ textDecoration: 'underline dotted', cursor: 'pointer', color: '#888' }} onClick={(e) => { e.stopPropagation(); setOpenSummaryTooltip(p => p === 'total_ex_vat' ? null : 'total_ex_vat'); }}>ℹ️</span></OverlayTrigger></span>
+                                            <span style={{ fontWeight: 500 }}><NumberFormat value={trimTo2Decimals(formData.total)} displayType={"text"} thousandSeparator={true} suffix={" "} renderText={(value, props) => value} /></span>
+                                          </div>
+                                        );
+                                        case 'total_with_vat': return (
+                                          <div key="total_with_vat" style={rowStyle}>
+                                            <span style={{ color: '#434655' }}>{t("Total (inc. VAT)")} <OverlayTrigger placement="left" trigger="click" show={openSummaryTooltip === 'total_inc_vat'} overlay={renderTotalWithVATTooltip()}><span style={{ textDecoration: 'underline dotted', cursor: 'pointer', color: '#888' }} onClick={(e) => { e.stopPropagation(); setOpenSummaryTooltip(p => p === 'total_inc_vat' ? null : 'total_inc_vat'); }}>ℹ️</span></OverlayTrigger></span>
+                                            <span style={{ fontWeight: 500 }}><NumberFormat value={trimTo2Decimals(formData.total_with_vat)} displayType={"text"} thousandSeparator={true} suffix={" "} renderText={(value, props) => value} /></span>
+                                          </div>
+                                        );
+                                        case 'shipping': return (
+                                          <div key="shipping" style={rowStyle}>
+                                            <span style={{ color: '#434655' }}>{t("Shipping & Handling")} <OverlayTrigger placement="left" trigger="click" show={openSummaryTooltip === 'shipping'} overlay={renderShippingTooltip()}><span style={{ textDecoration: 'underline dotted', cursor: 'pointer', color: '#888' }} onClick={(e) => { e.stopPropagation(); setOpenSummaryTooltip(p => p === 'shipping' ? null : 'shipping'); }}>ℹ️</span></OverlayTrigger></span>
+                                            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', position: 'relative' }}>
+                                              <input type="number" id="sales_shipping_fees" name="sales_shipping_fees" onWheel={(e) => e.target.blur()} disabled={isZatcaReported} style={{ width: "110px" }} className="form-control form-control-sm text-end" value={shipping} onChange={(e) => {
+                                                  if (timerRef.current) clearTimeout(timerRef.current);
+                                                  delete errors["shipping_handling_fees"]; setErrors({ ...errors });
+                                                  if (parseFloat(e.target.value) === 0) { shipping = 0; setShipping(shipping); delete errors["shipping_handling_fees"]; setErrors({ ...errors }); timerRef.current = setTimeout(() => { reCalculate(); }, 100); return; }
+                                                  if (parseFloat(e.target.value) < 0) { shipping = 0.00; setShipping(shipping); setErrors({ ...errors }); timerRef.current = setTimeout(() => { reCalculate(); }, 100); return; }
+                                                  if (!e.target.value) { shipping = ""; setShipping(shipping); setErrors({ ...errors }); timerRef.current = setTimeout(() => { reCalculate(); }, 100); return; }
+                                                  if (/^\d*\.?\d{0,2}$/.test(parseFloat(e.target.value)) === false) { errors["shipping_handling_fees"] = t("Max. decimal points allowed is 2"); setErrors({ ...errors }); }
+                                                  shipping = parseFloat(e.target.value); setShipping(shipping);
+                                                  timerRef.current = setTimeout(() => { reCalculate(); }, 100);
+                                              }} />
+                                              {errors.shipping_handling_fees && <div style={{ position: 'absolute', top: '100%', right: 0, zIndex: 10, whiteSpace: 'nowrap', background: '#fff', border: '1px solid #fca5a5', borderRadius: '3px', padding: '1px 6px', boxShadow: '0 2px 6px rgba(0,0,0,0.1)', color: '#dc2626', fontSize: '11px' }}>{errors.shipping_handling_fees}</div>}
+                                            </div>
+                                          </div>
+                                        );
+                                        case 'discount_without_vat': return (
+                                          <div key="discount_without_vat" style={rowStyle}>
+                                            <span style={{ color: '#434655', position: 'relative' }}>
+                                              {t("Discount (ex. VAT)")} <input type="number" id="discount_percent" name="discount_percent" onWheel={(e) => e.target.blur()} disabled={true} style={{ width: "50px", display: 'inline-block' }} className="form-control form-control-sm d-inline-block text-center" value={discountPercent} onChange={(e) => {
+                                                if (timerRef.current) clearTimeout(timerRef.current);
+                                                if (parseFloat(e.target.value) === 0) { discount = 0; setDiscount(discount); discountPercentWithVAT = 0; setDiscountPercentWithVAT(discountPercentWithVAT); discountPercent = 0; setDiscountPercent(discountPercent); errors["discount_percent"] = ""; setErrors({ ...errors }); timerRef.current = setTimeout(() => { reCalculate(); }, 100); return; }
+                                                if (parseFloat(e.target.value) < 0) { discountWithVAT = 0; setDiscountWithVAT(discountWithVAT); discountPercentWithVAT = 0; setDiscountPercentWithVAT(discountPercentWithVAT); discount = 0; setDiscount(discount); discountPercent = 0; setDiscountPercent(discountPercent); setErrors({ ...errors }); timerRef.current = setTimeout(() => { reCalculate(); }, 100); return; }
+                                                if (!e.target.value) { discountWithVAT = ""; setDiscountWithVAT(discountWithVAT); discountPercentWithVAT = ""; setDiscountPercentWithVAT(discountPercentWithVAT); discount = ""; setDiscount(discount); discountPercent = ""; setDiscountPercent(discountPercent); setErrors({ ...errors }); timerRef.current = setTimeout(() => { reCalculate(); }, 100); return; }
+                                                delete errors["discount_percent"]; delete errors["discount"]; setErrors({ ...errors });
+                                                discountPercent = parseFloat(e.target.value); setDiscountPercent(discountPercent);
+                                                timerRef.current = setTimeout(() => { reCalculate(); }, 100);
+                                              }} />{"% "}
+                                              <OverlayTrigger placement="left" trigger="click" show={openSummaryTooltip === 'disc_ex_vat'} overlay={renderDiscountWithoutVATTooltip()}><span style={{ textDecoration: 'underline dotted', cursor: 'pointer', color: '#888' }} onClick={(e) => { e.stopPropagation(); setOpenSummaryTooltip(p => p === 'disc_ex_vat' ? null : 'disc_ex_vat'); }}>ℹ️</span></OverlayTrigger>
+                                              {errors.discount_percent && <div style={{ position: 'absolute', top: '100%', left: 0, zIndex: 10, whiteSpace: 'nowrap', background: '#fff', border: '1px solid #fca5a5', borderRadius: '3px', padding: '1px 6px', boxShadow: '0 2px 6px rgba(0,0,0,0.1)', color: '#dc2626', fontSize: '11px' }}>{errors.discount_percent}</div>}
+                                            </span>
+                                            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', position: 'relative' }}>
+                                              <input type="number" id="sales_discount" name="sales_discount" onWheel={(e) => e.target.blur()} disabled={isZatcaReported} style={{ width: "110px" }} className="form-control form-control-sm text-end" value={discount} ref={discountRef}
+                                                onFocus={() => { if (timerRef.current) clearTimeout(timerRef.current); timerRef.current = setTimeout(() => { discountRef.current?.select(); }, 20); }}
+                                                onChange={(e) => {
+                                                  if (timerRef.current) clearTimeout(timerRef.current);
+                                                  if (parseFloat(e.target.value) === 0) { discount = 0; setDiscount(discount); discountWithVAT = 0; setDiscountWithVAT(discountWithVAT); discountPercent = 0; setDiscountPercent(discountPercent); discountPercentWithVAT = 0; setDiscountPercent(discountPercentWithVAT); delete errors["discount"]; setErrors({ ...errors }); timerRef.current = setTimeout(() => { reCalculate(); }, 100); return; }
+                                                  if (parseFloat(e.target.value) < 0) { discount = 0; setDiscount(discount); discountWithVAT = 0; setDiscountWithVAT(discountWithVAT); discountPercent = 0; setDiscountPercent(discountPercent); discountPercentWithVAT = 0; setDiscountPercent(discountPercentWithVAT); setErrors({ ...errors }); timerRef.current = setTimeout(() => { reCalculate(); }, 100); return; }
+                                                  if (!e.target.value) { discount = ""; setDiscount(discount); discountWithVAT = ""; setDiscountWithVAT(discountWithVAT); discountPercent = ""; setDiscountPercent(discountPercent); discountPercentWithVAT = ""; setDiscountPercent(discountPercentWithVAT); setErrors({ ...errors }); timerRef.current = setTimeout(() => { reCalculate(); }, 100); return; }
+                                                  delete errors["discount"]; delete errors["discount_percent"]; setErrors({ ...errors });
+                                                  if (/^\d*\.?\d{0,2}$/.test(parseFloat(e.target.value)) === false) { errors["discount"] = t("Max. decimal points allowed is 2"); setErrors({ ...errors }); }
+                                                  discount = parseFloat(e.target.value); setDiscount(discount);
+                                                  timerRef.current = setTimeout(() => { discountWithVAT = parseFloat(trimTo2Decimals(discount * (1 + (formData.vat_percent / 100)))); setDiscountWithVAT(discountWithVAT); reCalculate(); }, 100);
+                                                }} />
+                                              {errors.discount && <div style={{ position: 'absolute', top: '100%', right: 0, zIndex: 10, whiteSpace: 'nowrap', background: '#fff', border: '1px solid #fca5a5', borderRadius: '3px', padding: '1px 6px', boxShadow: '0 2px 6px rgba(0,0,0,0.1)', color: '#dc2626', fontSize: '11px' }}>{errors.discount}</div>}
+                                            </div>
+                                          </div>
+                                        );
+                                        case 'discount_with_vat': return (
+                                          <div key="discount_with_vat" style={rowStyle}>
+                                            <span style={{ color: '#434655', position: 'relative' }}>
+                                              {t("Discount (inc. VAT)")} <input type="number" id="discount_percent_with_vat" name="discount_percent_with_vat" onWheel={(e) => e.target.blur()} disabled={true} style={{ width: "50px", display: 'inline-block' }} className="form-control form-control-sm d-inline-block text-center" value={discountPercentWithVAT} onChange={(e) => {
+                                                if (timerRef.current) clearTimeout(timerRef.current);
+                                                if (parseFloat(e.target.value) === 0) { discountWithVAT = 0; setDiscountWithVAT(discountWithVAT); discountPercentWithVAT = 0; setDiscountPercentWithVAT(discountPercentWithVAT); discount = 0; setDiscount(discount); discountPercent = 0; setDiscountPercent(discountPercent); delete errors["discount_percent_with_vat"]; setErrors({ ...errors }); timerRef.current = setTimeout(() => { reCalculate(); }, 100); return; }
+                                                if (parseFloat(e.target.value) < 0) { discountWithVAT = 0; setDiscountWithVAT(discountWithVAT); discountPercentWithVAT = 0; setDiscountPercentWithVAT(discountPercentWithVAT); discount = 0; setDiscount(discount); discountPercent = 0; setDiscountPercent(discountPercent); errors["discount_percent_with_vat"] = t("Discount percent should be greater than or equal to zero"); setErrors({ ...errors }); timerRef.current = setTimeout(() => { reCalculate(); }, 100); return; }
+                                                if (!e.target.value) { discountWithVAT = ""; setDiscountWithVAT(discountWithVAT); discountPercentWithVAT = ""; setDiscountPercentWithVAT(discountPercentWithVAT); discount = ""; setDiscount(discount); discountPercent = ""; setDiscountPercent(discountPercent); setErrors({ ...errors }); timerRef.current = setTimeout(() => { reCalculate(); }, 100); return; }
+                                                delete errors["discount_percent_with_vat"]; delete errors["discount_with_vat"]; setErrors({ ...errors });
+                                                discountPercentWithVAT = parseFloat(e.target.value); setDiscountPercentWithVAT(discountPercentWithVAT);
+                                                timerRef.current = setTimeout(() => { reCalculate(); }, 100);
+                                              }} />{"% "}
+                                              <OverlayTrigger placement="left" trigger="click" show={openSummaryTooltip === 'disc_inc_vat'} overlay={renderDiscountWithVATTooltip()}><span style={{ textDecoration: 'underline dotted', cursor: 'pointer', color: '#888' }} onClick={(e) => { e.stopPropagation(); setOpenSummaryTooltip(p => p === 'disc_inc_vat' ? null : 'disc_inc_vat'); }}>ℹ️</span></OverlayTrigger>
+                                              {errors.discount_percent_with_vat && <div style={{ position: 'absolute', top: '100%', left: 0, zIndex: 10, whiteSpace: 'nowrap', background: '#fff', border: '1px solid #fca5a5', borderRadius: '3px', padding: '1px 6px', boxShadow: '0 2px 6px rgba(0,0,0,0.1)', color: '#dc2626', fontSize: '11px' }}>{errors.discount_percent_with_vat}</div>}
+                                            </span>
+                                            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', position: 'relative' }}>
+                                              <input type="number" id="sales_discount_with_vat" name="sales_discount_with_vat" onWheel={(e) => e.target.blur()} disabled={isZatcaReported} style={{ width: "110px" }} className="form-control form-control-sm text-end" value={discountWithVAT} ref={discountWithVATRef}
+                                                onFocus={() => { if (timerRef.current) clearTimeout(timerRef.current); timerRef.current = setTimeout(() => { discountWithVATRef.current?.select(); }, 20); }}
+                                                onChange={(e) => {
+                                                  if (timerRef.current) clearTimeout(timerRef.current);
+                                                  if (parseFloat(e.target.value) === 0) { discount = 0; discountWithVAT = 0; discountPercent = 0; setDiscount(discount); setDiscountWithVAT(discount); setDiscountPercent(discount); delete errors["discount_with_vat"]; setErrors({ ...errors }); timerRef.current = setTimeout(() => { reCalculate(); }, 100); return; }
+                                                  if (parseFloat(e.target.value) < 0) { discount = 0.00; discountWithVAT = 0.00; discountPercent = 0.00; setDiscount(discount); setDiscountWithVAT(discount); setDiscountPercent(discountPercent); setErrors({ ...errors }); timerRef.current = setTimeout(() => { reCalculate(); }, 100); return; }
+                                                  if (!e.target.value) { discount = ""; discountWithVAT = ""; discountPercent = ""; setDiscount(discount); setDiscountWithVAT(discount); setDiscountPercent(discountPercent); setErrors({ ...errors }); timerRef.current = setTimeout(() => { reCalculate(); }, 100); return; }
+                                                  delete errors["discount_with_vat"]; delete errors["discount_percent_with_vat"]; setErrors({ ...errors });
+                                                  if (/^\d*\.?\d{0,2}$/.test(parseFloat(e.target.value)) === false) { errors["discount_with_vat"] = t("Max. decimal points allowed is 2"); setErrors({ ...errors }); }
+                                                  discountWithVAT = parseFloat(e.target.value); setDiscountWithVAT(discountWithVAT);
+                                                  timerRef.current = setTimeout(() => { discount = parseFloat(trimTo2Decimals(discountWithVAT / (1 + (formData.vat_percent / 100)))); setDiscount(discount); reCalculate(); }, 100);
+                                                }} />
+                                              {errors.discount_with_vat && <div style={{ position: 'absolute', top: '100%', right: 0, zIndex: 10, whiteSpace: 'nowrap', background: '#fff', border: '1px solid #fca5a5', borderRadius: '3px', padding: '1px 6px', boxShadow: '0 2px 6px rgba(0,0,0,0.1)', color: '#dc2626', fontSize: '11px' }}>{errors.discount_with_vat}</div>}
+                                            </div>
+                                          </div>
+                                        );
+                                        case 'taxable_amount': return (
+                                          <div key="taxable_amount" style={rowStyle}>
+                                            <span style={{ color: '#434655' }}>{t("Taxable Amount (ex. VAT)")} <OverlayTrigger placement="left" trigger="click" show={openSummaryTooltip === 'taxable'} overlay={renderTooltip()}><span style={{ textDecoration: 'underline dotted', cursor: 'pointer', color: '#888' }} onClick={(e) => { e.stopPropagation(); setOpenSummaryTooltip(p => p === 'taxable' ? null : 'taxable'); }}>ℹ️</span></OverlayTrigger></span>
+                                            <span style={{ fontWeight: 500 }}><NumberFormat value={trimTo2Decimals(formData.total + shipping - discount)} displayType={"text"} thousandSeparator={true} suffix={" "} renderText={(value, props) => value} /></span>
+                                          </div>
+                                        );
+                                        case 'vat': return (
+                                          <div key="vat" style={rowStyle}>
+                                            <span style={{ color: '#434655', display: 'flex', alignItems: 'center', gap: '4px', position: 'relative' }}>
+                                              {t("VAT")}
+                                              <input type="number" id="sales_vat_percent" name="sales_vat_percent" onWheel={(e) => e.target.blur()} disabled={true} className="form-control form-control-sm text-center" style={{ width: "54px", display: 'inline-block' }} value={formData.vat_percent} onChange={(e) => {
+                                                if (parseFloat(e.target.value) === 0) { formData.vat_percent = parseFloat(e.target.value); setFormData({ ...formData }); delete errors["vat_percent"]; setErrors({ ...errors }); reCalculate(); return; }
+                                                if (parseFloat(e.target.value) < 0) { formData.vat_percent = parseFloat(e.target.value); formData.vat_price = 0.00; setFormData({ ...formData }); errors["vat_percent"] = t("VAT percent should be greater than or equal to zero"); setErrors({ ...errors }); reCalculate(); return; }
+                                                if (!e.target.value) { formData.vat_percent = ""; formData.vat_price = 0.00; errors["vat_percent"] = t("Invalid vat percent"); setFormData({ ...formData }); setErrors({ ...errors }); return; }
+                                                delete errors["vat_percent"]; setErrors({ ...errors });
+                                                formData.vat_percent = e.target.value; reCalculate(); setFormData({ ...formData });
+                                              }} />
+                                              %
+                                              <OverlayTrigger placement="left" trigger="click" show={openSummaryTooltip === 'vat'} overlay={renderVATTooltip()}><span style={{ textDecoration: 'underline dotted', cursor: 'pointer', color: '#888' }} onClick={(e) => { e.stopPropagation(); setOpenSummaryTooltip(p => p === 'vat' ? null : 'vat'); }}>ℹ️</span></OverlayTrigger>
+                                              {errors.vat_percent && <div style={{ position: 'absolute', top: '100%', left: 0, zIndex: 10, whiteSpace: 'nowrap', background: '#fff', border: '1px solid #fca5a5', borderRadius: '3px', padding: '1px 6px', boxShadow: '0 2px 6px rgba(0,0,0,0.1)', color: '#dc2626', fontSize: '11px' }}>{errors.vat_percent}</div>}
+                                            </span>
+                                            <span style={{ fontWeight: 500 }}><NumberFormat value={trimTo2Decimals(formData.vat_price)} displayType={"text"} thousandSeparator={true} suffix={" "} renderText={(value, props) => value} /></span>
+                                          </div>
+                                        );
+                                        case 'net_before_rounding': return (
+                                          <div key="net_before_rounding" style={rowStyle}>
+                                            <span style={{ color: '#434655' }}>{t("Before Rounding")} <OverlayTrigger placement="left" trigger="click" show={openSummaryTooltip === 'before_rounding'} overlay={renderNetTotalBeforeRoundingTooltip()}><span style={{ textDecoration: 'underline dotted', cursor: 'pointer', color: '#888' }} onClick={(e) => { e.stopPropagation(); setOpenSummaryTooltip(p => p === 'before_rounding' ? null : 'before_rounding'); }}>ℹ️</span></OverlayTrigger></span>
+                                            <span style={{ fontWeight: 500 }}><NumberFormat value={trimTo2Decimals(formData.net_total - roundingAmount)} displayType={"text"} thousandSeparator={true} suffix={" "} renderText={(value, props) => value} /></span>
+                                          </div>
+                                        );
+                                        case 'rounding_amount': return (
+                                          <div key="rounding_amount" style={rowStyle}>
+                                            <span style={{ color: '#434655', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                              {t("Rounding")}
+                                              <label style={{ fontSize: '11px', color: '#888', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '3px', marginBottom: 0 }}>
+                                                <input type="checkbox" className="form-check-input" id="sales_auto_rounding_amount" name="sales_auto_rounding_amount" style={{ width: "14px", height: "14px", verticalAlign: "middle" }} value={formData.auto_rounding_amount} checked={formData.auto_rounding_amount} onChange={(e) => {
+                                                  if (timerRef.current) clearTimeout(timerRef.current);
+                                                  setErrors({ ...errors });
+                                                  formData.auto_rounding_amount = !formData.auto_rounding_amount;
+                                                  setFormData({ ...formData });
+                                                  timerRef.current = setTimeout(() => { reCalculate(); }, 100);
+                                                }} />
+                                                Auto
+                                              </label>
+                                            </span>
+                                            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', position: 'relative' }}>
+                                              <input type="number" id="sales_rounding_amount" name="sales_rounding_amount" disabled={formData.auto_rounding_amount} onWheel={(e) => e.target.blur()} style={{ width: "110px" }} className="form-control form-control-sm text-end" value={roundingAmount}
+                                                onChange={(e) => {
+                                                  if (timerRef.current) clearTimeout(timerRef.current);
+                                                  delete errors["rounding_amount"]; setErrors({ ...errors });
+                                                  if (!e.target.value) { roundingAmount = ""; setRoundingAmount(roundingAmount); timerRef.current = setTimeout(() => { reCalculate(); }, 100); return; }
+                                                  if (e.target.value) { if (/^-?\d*\.?\d{0,2}$/.test(parseFloat(e.target.value)) === false) { roundingAmount = parseFloat(e.target.value); errors["rounding_amount"] = t("Max. decimal points allowed is 2"); setErrors({ ...errors }); return; } }
+                                                  roundingAmount = parseFloat(e.target.value); setRoundingAmount(roundingAmount);
+                                                  delete errors["rounding_amount"]; setErrors({ ...errors });
+                                                  timerRef.current = setTimeout(() => { reCalculate(); }, 100);
+                                                }}
+                                                onKeyDown={(e) => {
+                                                  if (timerRef.current) clearTimeout(timerRef.current);
+                                                  if (e.key === "Backspace") { delete errors["rounding_amount"]; setErrors({ ...errors }); roundingAmount = ""; setRoundingAmount(""); timerRef.current = setTimeout(() => { reCalculate(); }, 100); }
+                                                }} />
+                                              {errors.rounding_amount && <div style={{ position: 'absolute', top: '100%', right: 0, zIndex: 10, whiteSpace: 'nowrap', background: '#fff', border: '1px solid #fca5a5', borderRadius: '3px', padding: '1px 6px', boxShadow: '0 2px 6px rgba(0,0,0,0.1)', color: '#dc2626', fontSize: '11px' }}>{errors.rounding_amount}</div>}
+                                            </div>
+                                          </div>
+                                        );
+                                        case 'net_total': return (
+                                          <div key="net_total" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '15px', fontWeight: 700, paddingTop: '10px', borderTop: '1px solid #c3c6d7', color: '#191c1e', marginTop: '2px' }}>
+                                            <span>{t("Net Total (inc. VAT)")} <OverlayTrigger placement="left" trigger="click" show={openSummaryTooltip === 'net_total'} overlay={renderNetTotalTooltip()}><span style={{ textDecoration: 'underline dotted', cursor: 'pointer', fontSize: '13px', color: '#888' }} onClick={(e) => { e.stopPropagation(); setOpenSummaryTooltip(p => p === 'net_total' ? null : 'net_total'); }}>ℹ️</span></OverlayTrigger></span>
+                                            <span style={{ color: '#004ac6' }}><NumberFormat value={trimTo2Decimals(formData.net_total)} displayType={"text"} thousandSeparator={true} suffix={" "} renderText={(value, props) => value} /></span>
+                                          </div>
+                                        );
+                                        default: return null;
+                                      }
+                                    })}
+                                  </div>
                                 </div>
-                            </div>
-                            {/*
-                        <div className="col-md-6">
-                            <label className="form-label">
-                                Delivered By Signature(Optional)
-                            </label>
-
-                            <div className="input-group mb-3">
-                                <Typeahead
-                                    id="delivered_by_signature_id"
-                                 
-                                    labelKey="name"
-                                    isLoading={isDeliveredBySignaturesLoading}
-                                    isInvalid={errors.delivered_by_signature_id ? true : false}
-                                    onChange={(selectedItems) => {
-                                        errors.delivered_by_signature_id = "";
-                                        setErrors(errors);
-                                        if (selectedItems.length === 0) {
-                                            errors.delivered_by_signature_id =
-                                                "Invalid Signature Selected";
-                                            setErrors(errors);
-                                            setFormData({ ...formData });
-                                            setSelectedDeliveredBySignatures([]);
-                                            return;
-                                        }
-                                        formData.delivered_by_signature_id = selectedItems[0].id;
-                                        setFormData({ ...formData });
-                                        setSelectedDeliveredBySignatures(selectedItems);
-                                    }}
-                                    options={}
-                                    placeholder="Select Signature"
-                                    selected={selectedDeliveredBySignatures}
-                                    highlightOnlyResult={true}
-                                    onInputChange={(searchTerm, e) => {
-                                        suggestSignatures(searchTerm);
-                                    }}
-                                />
-
-                                <Button hide={true.toString()} onClick={openSignatureCreateForm} className="btn btn-outline-secondary btn-primary btn-sm" type="button" id="button-addon1"> <i className="bi bi-plus-lg"></i> New</Button>
-                                {errors.delivered_by_signature_id ? (
-                                    <div style={{ color: "red" }}>
-                                      
-                                        {errors.delivered_by_signature_id}
-                                    </div>
-                                ) : ""}
-                            </div>
-                        </div>
-
-                        <div className="col-md-6">
-                            <label className="form-label">Signature Date(Optional)</label>
-
-                            <div className="input-group mb-3">
-                                <DatePicker
-                                    id="signature_date_str"
-                                    value={formData.signature_date_str}
-                                    selected={selectedDate}
-                                    className="form-control"
-                                    dateFormat="MMM dd yyyy"
-                                    locale={dateLocale}
-                                    onChange={(value) => {
-                                        formData.signature_date_str = format(new Date(value), "MMM dd yyyy");
-                                        setFormData({ ...formData });
-                                    }}
-                                />
-
-                                {errors.signature_date_str && (
-                                    <div style={{ color: "red" }}>
-                                       
-                                        {errors.signature_date_str}
-                                    </div>
-                                )}
-                            </div>
-                        </div>
-                                */}
-                            <div className="col-md-2">
-                                <label className="form-label">{t("Cash discount")}</label>
-                                <input
-                                    type='number'
-                                    ref={cashDiscountRef}
-                                    id="sales_cash_discount"
-                                    name="sales_cash_discount"
-                                    value={cashDiscount}
-                                    className="form-control"
-                                    onChange={(e) => {
-                                        delete errors["cash_discount"];
-                                        setErrors({ ...errors });
-                                        if (!e.target.value) {
-                                            cashDiscount = e.target.value;
-                                            setCashDiscount(cashDiscount);
-
-                                            if (timerRef.current) clearTimeout(timerRef.current);
-                                            timerRef.current = setTimeout(() => {
-                                                // validatePaymentAmounts();
-                                                reCalculate();
-                                            }, 100);
-
-                                            return;
-                                        }
-
-                                        cashDiscount = parseFloat(e.target.value);
-                                        setCashDiscount(cashDiscount);
-
-                                        if (cashDiscount > 0 && cashDiscount >= formData.net_total) {
-                                            errors["cash_discount"] = t("Cash discount should not be greater than or equal to Net Total: ") + formData.net_total?.toString();
-                                            setErrors({ ...errors });
-                                            return;
-                                        }
-
-                                        if (timerRef.current) clearTimeout(timerRef.current);
-                                        timerRef.current = setTimeout(() => {
-                                            //  validatePaymentAmounts();
-                                            reCalculate();
-                                        }, 100);
-                                        console.log(formData);
-                                    }}
-
-                                    onKeyDown={(e) => {
-                                        if (timerRef.current) clearTimeout(timerRef.current);
-
-                                        if (e.key === "Backspace") {
-                                            cashDiscount = "";
-                                            setCashDiscount(cashDiscount);
-
-                                            if (timerRef.current) clearTimeout(timerRef.current);
-                                            timerRef.current = setTimeout(() => {
-                                                reCalculate();
-                                            }, 100);
-                                            return;
-                                        }
-                                    }}
-                                    onFocus={() => {
-                                        if (timerRef.current) clearTimeout(timerRef.current);
-                                        timerRef.current = setTimeout(() => {
-                                            cashDiscountRef.current?.select();
-                                        }, 20);
-                                    }}
-                                />
-                                {errors.cash_discount && (
-                                    <div style={{ color: "red" }}>
-                                        {errors.cash_discount}
-                                    </div>
-                                )}
-                            </div>
-
-                            <div className="col-md-8">
-                                <label className="form-label">{t("Payments Received")}</label>
-
-                                <div class="table-responsive" style={{ maxWidth: "900px" }}>
-                                    <Button variant="secondary" style={{ alignContent: "right", marginBottom: "10px" }} onClick={addNewPayment}>
-                                        {t("Create New Payment")}
-                                    </Button>
-                                    <table class="table table-striped table-sm table-bordered">
-                                        {formData.payments_input && formData.payments_input?.length > 0 &&
-                                            <thead>
-                                                <th>
-                                                    {t("Date")}
-                                                </th>
-                                                <th>
-                                                    {t("Amount")}
-                                                </th>
-                                                <th>
-                                                    {t("Payment Method")}
-                                                </th>
-                                                <th>
-                                                    {t("Reference")}
-                                                </th>
-                                                <th>
-                                                    {t("Action")}
-                                                </th>
-                                            </thead>}
-                                        <tbody>
-                                            {formData.payments_input &&
-                                                formData.payments_input.filter(payment => !payment.deleted).map((payment, key) => (
-                                                    <tr key={key}>
-                                                        <td style={{ minWidth: "220px" }}>
-
-                                                            <DatePicker
-                                                                id="payment_date_str"
-                                                                selected={formData.payments_input[key].date_str ? new Date(formData.payments_input[key].date_str) : null}
-                                                                value={formData.payments_input[key].date_str ? format(
-                                                                    new Date(formData.payments_input[key].date_str),
-                                                                    "MMMM d, yyyy h:mm aa",
-                                                                    { locale: dateLocale }
-                                                                ) : null}
-                                                                className="form-control"
-                                                                dateFormat="MMMM d, yyyy h:mm aa"
-                                                                locale={dateLocale}
-                                                                showTimeSelect
-                                                                timeIntervals="1"
-                                                                onChange={(value) => {
-                                                                    console.log("Value", value);
-                                                                    formData.payments_input[key].date_str = value;
-                                                                    setFormData({ ...formData });
-                                                                }}
-                                                            />
-                                                            {errors["payment_date_" + key] && (
-                                                                <div style={{ color: "red" }}>
-
-                                                                    {t(errors["payment_date_" + key])}
-                                                                </div>
-                                                            )}
-                                                        </td>
-                                                        <td style={{ width: "300px" }}>
-                                                            <input type='number' id={`${"sales_payment_amount" + key}`} name={`${"sales_payment_amount" + key}`} value={formData.payments_input[key].amount} className="form-control "
-                                                                onChange={(e) => {
-                                                                    delete errors["payment_amount_" + key];
-                                                                    setErrors({ ...errors });
-
-                                                                    if (!e.target.value) {
-                                                                        formData.payments_input[key].amount = e.target.value;
-                                                                        setFormData({ ...formData });
-                                                                        validatePaymentAmounts();
-                                                                        return;
-                                                                    }
-
-                                                                    formData.payments_input[key].amount = parseFloat(e.target.value);
-
-                                                                    validatePaymentAmounts();
-                                                                    setFormData({ ...formData });
-                                                                    console.log(formData);
-                                                                }}
-                                                            />
-                                                            {errors["payment_amount_" + key] && (
-                                                                <div style={{ color: "red" }}>
-
-                                                                    {t(errors["payment_amount_" + key])}
-                                                                </div>
-                                                            )}
-                                                        </td>
-                                                        <td style={{ width: "200px" }}>
-                                                            <select value={formData.payments_input[key].method} className="form-control "
-                                                                onChange={(e) => {
-                                                                    // errors["payment_method"] = [];
-                                                                    delete errors["payment_method_" + key];
-                                                                    setErrors({ ...errors });
-
-                                                                    if (!e.target.value) {
-                                                                        errors["payment_method_" + key] = t("Payment method is required");
-                                                                        setErrors({ ...errors });
-
-                                                                        formData.payments_input[key].method = "";
-                                                                        setFormData({ ...formData });
-                                                                        return;
-                                                                    }
-
-                                                                    // errors["payment_method"] = "";
-                                                                    //setErrors({ ...errors });
-
-                                                                    formData.payments_input[key].method = e.target.value;
-                                                                    setFormData({ ...formData });
-                                                                    console.log(formData);
-                                                                }}
-                                                            >
-                                                                <option value="">{t("Select")}</option>
-                                                                <option value="cash">{t("Cash")}</option>
-                                                                <option value="debit_card">{t("Debit Card")}</option>
-                                                                <option value="credit_card">{t("Credit Card")}</option>
-                                                                <option value="bank_card">{t("Bank Card")}</option>
-                                                                <option value="bank_transfer">{t("Bank Transfer")}</option>
-                                                                <option value="bank_cheque">{t("Bank Cheque")}</option>
-                                                                <option value="sales_return">{t("Sales Return")}</option>
-                                                                <option value="purchase">{t("Purchase")}</option>
-                                                            </select>
-                                                            {errors["payment_method_" + key] && (
-                                                                <div style={{ color: "red" }}>
-
-                                                                    {t(errors["payment_method_" + key])}
-                                                                </div>
-                                                            )}
-                                                        </td>
-                                                        <td style={{ width: "200px" }}>
-                                                            {formData.payments_input[key] && (
-                                                                <span
-                                                                    style={{ cursor: "pointer", color: "blue" }}
-                                                                    onClick={() => openReferenceUpdateForm(formData.payments_input[key].reference_id, formData.payments_input[key].reference_type)}
-                                                                >
-                                                                    {formData.payments_input[key].reference_code}
-                                                                </span>
-                                                            )}
-                                                        </td>
-                                                        <td style={{ width: "200px" }}>
-                                                            <Button variant="danger" onClick={(event) => {
-                                                                removePayment(key);
-                                                            }}>
-                                                                {t("Remove")}
-                                                            </Button>
-
-                                                        </td>
-                                                    </tr>
-                                                ))}
-                                            <tr>
-                                                <td class="text-end">
-                                                    <b>{t("Total")}</b>
-                                                </td>
-                                                <td><b style={{ marginLeft: "14px" }}>{trimTo2Decimals(totalPaymentAmount)}</b>
-                                                    {errors["total_payment"] && (
-                                                        <div style={{ color: "red" }}>
-                                                            {t(errors["total_payment"])}
-                                                        </div>
-                                                    )}
-                                                </td>
-                                                <td>
-                                                    <b style={{ marginLeft: "12px", alignSelf: "end" }}>{t("Balance")}: {trimTo2Decimals(balanceAmount)}</b>
-                                                    {errors["customer_credit_limit"] && (
-                                                        <div style={{ color: "red" }}>
-                                                            {t(errors["customer_credit_limit"])}
-                                                        </div>
-                                                    )}
-                                                </td>
-                                                <td colSpan={2}>
-                                                    <b>{t("Payment status")}: </b>
-                                                    {paymentStatus === "paid" ?
-                                                        <span className="badge bg-success">
-                                                            {t("Paid")}
-                                                        </span> : ""}
-                                                    {paymentStatus === "paid_partially" ?
-                                                        <span className="badge bg-warning">
-                                                            {t("Paid Partially")}
-                                                        </span> : ""}
-                                                    {paymentStatus === "not_paid" ?
-                                                        <span className="badge bg-danger">
-                                                            {t("Not Paid")}
-                                                        </span> : ""}
-                                                </td>
-                                            </tr>
-                                        </tbody>
-                                    </table>
-
-                                </div>
-                            </div>
-
-
-                            <div className="row">
-                                <div className="col-md-2">
-                                    <label className="form-label">{t("Commission")}</label>
-                                    <input
-                                        type='number'
-                                        ref={commissionRef}
-                                        id="sales_commission"
-                                        name="sales_commission"
-                                        value={commission}
-                                        className="form-control"
-                                        onChange={(e) => {
-                                            delete errors["commission"];
-                                            delete errors["commission_payment_method"];
-                                            setErrors({ ...errors });
-                                            if (!e.target.value) {
-                                                commission = e.target.value;
-                                                setCommission(commission);
-                                                setErrors({ ...errors });
-                                                return;
-                                            }
-
-                                            commission = parseFloat(e.target.value);
-                                            setCommission(commission);
-
-                                            if (commission > 0 && commission >= formData.net_total) {
-                                                errors["commission"] = t("Commission should not be greater than or equal to Net Total: ") + formData.net_total?.toString();
-                                                setErrors({ ...errors });
-                                                return;
-                                            }
-
-                                            if (commission > 0 && !formData.commission_payment_method) {
-                                                errors["commission_payment_method"] = t("Payment method is required");
-                                                setErrors({ ...errors });
-                                                return;
-                                            }
-
-
-                                            console.log(formData);
-                                        }}
-
-                                        onKeyDown={(e) => {
-                                            if (timerRef.current) clearTimeout(timerRef.current);
-
-                                            if (e.key === "Backspace") {
-                                                commission = "";
-                                                setCommission(commission);
-                                                delete errors["commission"];
-                                                delete errors["commission_payment_method"];
-                                                setErrors({ ...errors });
-                                                return;
-                                            }
-                                        }}
-                                        onFocus={() => {
-                                            if (timerRef.current) clearTimeout(timerRef.current);
-                                            timerRef.current = setTimeout(() => {
-                                                commissionRef.current?.select();
-                                            }, 20);
-                                        }}
-                                    />
-                                    {errors.commission && (
-                                        <div style={{ color: "red" }}>
-                                            {t(errors.commission)}
-                                        </div>
-                                    )}
-                                </div>
-                                <div className="col-md-2">
-                                    <label className="form-label">{t("Commission Payment Method")}</label>
-                                    <select value={formData.commission_payment_method} className="form-control "
-                                        onChange={(e) => {
-                                            // errors["payment_method"] = [];
-                                            delete errors["commission_payment_method"];
-                                            setErrors({ ...errors });
-
-                                            if (!e.target.value && commission > 0) {
-                                                errors["commission_payment_method"] = t("Payment method is required");
-                                                setErrors({ ...errors });
-
-                                                formData.commission_payment_method = "";
-                                                setFormData({ ...formData });
-                                                return;
-                                            }
-
-                                            // errors["payment_method"] = "";
-                                            //setErrors({ ...errors });
-
-                                            formData.commission_payment_method = e.target.value;
-                                            setFormData({ ...formData });
-                                            console.log(formData);
-                                        }}
-                                    >
-                                        <option value="">{t("Select")}</option>
-                                        <option value="cash">{t("Cash")}</option>
-                                        <option value="debit_card">{t("Debit Card")}</option>
-                                        <option value="credit_card">{t("Credit Card")}</option>
-                                        <option value="bank_card">{t("Bank Card")}</option>
-                                        <option value="bank_transfer">{t("Bank Transfer")}</option>
-                                        <option value="bank_cheque">{t("Bank Cheque")}</option>
-                                    </select>
-                                    {errors["commission_payment_method"] && (
-                                        <div style={{ color: "red" }}>
-                                            {t(errors["commission_payment_method"])}
-                                        </div>
-                                    )}
-                                </div>
+                                          </div>
                             </div>
 
                             <Modal.Footer>
@@ -8618,7 +8190,7 @@ const OrderCreate = forwardRef((props, ref) => {
                                                                             name={`sales_product_part_number${index}`}
                                                                             onWheel={(e) => e.target.blur()}
                                                                             value={selectedProducts[index].part_number}
-                                                                            className={`form-control text-start ${errors["part_number_" + index] ? 'is-invalid' : ''} ${warnings["part_number_" + index] ? 'border-warning text-warning' : ''}`}
+                                                                            className={`form-control text-start ${errors["part_number_" + index] ? 'is-invalid' : ''} ${warnings["part_number_" + index] ? 'border-warning' : ''}`}
                                                                             onKeyDown={(e) => {
                                                                                 RunKeyActions(e, product);
                                                                             }}
@@ -8634,19 +8206,7 @@ const OrderCreate = forwardRef((props, ref) => {
                                                                                 setSelectedProducts([...selectedProducts]);
                                                                             }} />
                                                                         {(errors[`part_number_${index}`] || warnings[`part_number_${index}`]) && (
-                                                                            <i
-                                                                                className={`bi bi-exclamation-circle-fill ${errors[`part_number_${index}`] ? 'text-danger' : 'text-warning'} ms-2`}
-                                                                                data-bs-toggle="tooltip"
-                                                                                data-bs-placement="top"
-                                                                                data-error={errors[`part_number_${index}`] || ''}
-                                                                                data-warning={warnings[`part_number_${index}`] || ''}
-                                                                                title={errors[`part_number_${index}`] || warnings[`part_number_${index}`] || ''}
-                                                                                style={{
-                                                                                    fontSize: '0.85rem',
-                                                                                    cursor: 'pointer',
-                                                                                    whiteSpace: 'nowrap',
-                                                                                }}
-                                                                            ></i>
+                                                                            <OverlayTrigger placement="top" overlay={<Tooltip>{errors[`part_number_${index}`] || warnings[`part_number_${index}`]}</Tooltip>}><i className={`bi bi-exclamation-circle-fill ${errors[`part_number_${index}`] ? 'text-danger' : 'text-warning'} ms-2`} style={{ fontSize: '0.85rem', cursor: 'help' }}></i></OverlayTrigger>
                                                                         )}
 
                                                                     </div>
@@ -8658,7 +8218,7 @@ const OrderCreate = forwardRef((props, ref) => {
                                                                             name={`${"sales_product_name" + index}`}
                                                                             onWheel={(e) => e.target.blur()}
                                                                             value={product.name}
-                                                                            className={`form-control text-start ${errors["name_" + index] ? 'is-invalid' : ''} ${warnings["name_" + index] ? 'border-warning text-warning' : ''}`}
+                                                                            className={`form-control text-start ${errors["name_" + index] ? 'is-invalid' : ''} ${warnings["name_" + index] ? 'border-warning' : ''}`}
                                                                             onKeyDown={(e) => {
                                                                                 RunKeyActions(e, product);
                                                                             }}
@@ -8732,19 +8292,7 @@ const OrderCreate = forwardRef((props, ref) => {
                                                                         </div>
                                                                     </div>
                                                                     {(errors[`name_${index}`] || warnings[`name_${index}`]) && (
-                                                                        <i
-                                                                            className={`bi bi-exclamation-circle-fill ${errors[`name_${index}`] ? 'text-danger' : 'text-warning'} ms-2`}
-                                                                            data-bs-toggle="tooltip"
-                                                                            data-bs-placement="top"
-                                                                            data-error={errors[`name_${index}`] || ''}
-                                                                            data-warning={warnings[`name_${index}`] || ''}
-                                                                            title={errors[`name_${index}`] || warnings[`name_${index}`] || ''}
-                                                                            style={{
-                                                                                fontSize: '1rem',
-                                                                                cursor: 'pointer',
-                                                                                whiteSpace: 'nowrap',
-                                                                            }}
-                                                                        ></i>
+                                                                        <OverlayTrigger placement="top" overlay={<Tooltip>{errors[`name_${index}`] || warnings[`name_${index}`]}</Tooltip>}><i className={`bi bi-exclamation-circle-fill ${errors[`name_${index}`] ? 'text-danger' : 'text-warning'} ms-2`} style={{ fontSize: '1rem', cursor: 'help' }}></i></OverlayTrigger>
                                                                     )}
                                                                 </ResizableTableCell>);
                                                                 if (col.key === 'info') return (<td style={{ verticalAlign: 'middle', padding: '0.25rem' }}>
@@ -8821,7 +8369,7 @@ const OrderCreate = forwardRef((props, ref) => {
                                                                             type="number"
                                                                             id={`sales_product_purchase_unit_price_${index}`}
                                                                             name={`sales_product_purchase_unit_price_${index}`}
-                                                                            className={`form-control text-end ${errors["purchase_unit_price_" + index] ? 'is-invalid' : ''} ${warnings["purchase_unit_price_" + index] ? 'border-warning text-warning' : ''}`}
+                                                                            className={`form-control text-end ${errors["purchase_unit_price_" + index] ? 'is-invalid' : ''} ${warnings["purchase_unit_price_" + index] ? 'border-warning' : ''}`}
                                                                             onWheel={(e) => e.target.blur()}
                                                                             value={product.purchase_unit_price}
                                                                             placeholder={t("Purchase Unit Price")}
@@ -8892,19 +8440,7 @@ const OrderCreate = forwardRef((props, ref) => {
                                                                         />
 
                                                                         {(errors[`purchase_unit_price_${index}`] || warnings[`purchase_unit_price_${index}`]) && (
-                                                                            <i
-                                                                                className={`bi bi-exclamation-circle-fill ${errors[`purchase_unit_price_${index}`] ? 'text-danger' : 'text-warning'} ms-2`}
-                                                                                data-bs-toggle="tooltip"
-                                                                                data-bs-placement="top"
-                                                                                data-error={errors[`purchase_unit_price_${index}`] || ''}
-                                                                                data-warning={warnings[`purchase_unit_price_${index}`] || ''}
-                                                                                title={errors[`purchase_unit_price_${index}`] || warnings[`purchase_unit_price_${index}`] || ''}
-                                                                                style={{
-                                                                                    fontSize: '1rem',
-                                                                                    cursor: 'pointer',
-                                                                                    whiteSpace: 'nowrap',
-                                                                                }}
-                                                                            ></i>
+                                                                            <OverlayTrigger placement="top" overlay={<Tooltip>{errors[`purchase_unit_price_${index}`] || warnings[`purchase_unit_price_${index}`]}</Tooltip>}><i className={`bi bi-exclamation-circle-fill ${errors[`purchase_unit_price_${index}`] ? 'text-danger' : 'text-warning'} ms-2`} style={{ fontSize: '1rem', cursor: 'help' }}></i></OverlayTrigger>
                                                                         )}
                                                                     </div>
                                                                 </td>);
@@ -9007,7 +8543,7 @@ const OrderCreate = forwardRef((props, ref) => {
                                                                                 style={{ minWidth: "80px", maxWidth: "80px" }}
                                                                                 id={`${"sales_product_quantity_" + index}`}
                                                                                 name={`${"sales_product_quantity" + index}`}
-                                                                                className={`form-control text-end ${errors["quantity_" + index] ? 'is-invalid' : warnings["quantity_" + index] ? 'border-warning text-warning' : ''}`}
+                                                                                className={`form-control text-end ${errors["quantity_" + index] ? 'is-invalid' : warnings["quantity_" + index] ? 'border-warning' : ''}`}
                                                                                 onWheel={(e) => e.target.blur()}
                                                                                 disabled={isZatcaReported}
                                                                                 value={product.quantity}
@@ -9084,19 +8620,7 @@ const OrderCreate = forwardRef((props, ref) => {
                                                                             </span>
                                                                         </div>
                                                                         {(errors[`quantity_${index}`] || warnings[`quantity_${index}`]) && (
-                                                                            <i
-                                                                                className={`bi bi-exclamation-circle-fill ${errors[`quantity_${index}`] ? 'text-danger' : 'text-warning'} ms-2`}
-                                                                                data-bs-toggle="tooltip"
-                                                                                data-bs-placement="top"
-                                                                                data-error={errors[`quantity_${index}`] || ''}
-                                                                                data-warning={warnings[`quantity_${index}`] || ''}
-                                                                                title={errors[`quantity_${index}`] || warnings[`quantity_${index}`] || ''}
-                                                                                style={{
-                                                                                    fontSize: '1rem',
-                                                                                    cursor: 'pointer',
-                                                                                    whiteSpace: 'nowrap',
-                                                                                }}
-                                                                            ></i>
+                                                                            <OverlayTrigger placement="top" overlay={<Tooltip>{errors[`quantity_${index}`] || warnings[`quantity_${index}`]}</Tooltip>}><i className={`bi bi-exclamation-circle-fill ${errors[`quantity_${index}`] ? 'text-danger' : 'text-warning'} ms-2`} style={{ fontSize: '1rem', cursor: 'help' }}></i></OverlayTrigger>
                                                                         )}
                                                                     </div>
                                                                 </td>);
@@ -9110,7 +8634,7 @@ const OrderCreate = forwardRef((props, ref) => {
                                                                                 onWheel={(e) => e.target.blur()}
                                                                                 disabled={isZatcaReported}
                                                                                 value={selectedProducts[index].unit_price}
-                                                                                className={`form-control text-end ${errors["unit_price_" + index] ? 'is-invalid' : ''} ${warnings["unit_price_" + index] ? 'border-warning text-warning' : ''}`}
+                                                                                className={`form-control text-end ${errors["unit_price_" + index] ? 'is-invalid' : ''} ${warnings["unit_price_" + index] ? 'border-warning' : ''}`}
                                                                                 placeholder="Unit Price(without VAT)"
                                                                                 ref={(el) => {
                                                                                     if (!inputRefs.current[index]) inputRefs.current[index] = {};
@@ -9193,19 +8717,7 @@ const OrderCreate = forwardRef((props, ref) => {
 
                                                                         </div>
                                                                         {(errors[`unit_price_${index}`] || warnings[`unit_price_${index}`]) && (
-                                                                            <i
-                                                                                className={`bi bi-exclamation-circle-fill ${errors[`unit_price_${index}`] ? 'text-danger' : 'text-warning'} ms-2`}
-                                                                                data-bs-toggle="tooltip"
-                                                                                data-bs-placement="top"
-                                                                                data-error={errors[`unit_price_${index}`] || ''}
-                                                                                data-warning={warnings[`unit_price_${index}`] || ''}
-                                                                                title={errors[`unit_price_${index}`] || warnings[`unit_price_${index}`] || ''}
-                                                                                style={{
-                                                                                    fontSize: '1rem',
-                                                                                    cursor: 'pointer',
-                                                                                    whiteSpace: 'nowrap',
-                                                                                }}
-                                                                            ></i>
+                                                                            <OverlayTrigger placement="top" overlay={<Tooltip>{errors[`unit_price_${index}`] || warnings[`unit_price_${index}`]}</Tooltip>}><i className={`bi bi-exclamation-circle-fill ${errors[`unit_price_${index}`] ? 'text-danger' : 'text-warning'} ms-2`} style={{ fontSize: '1rem', cursor: 'help' }}></i></OverlayTrigger>
                                                                         )}
                                                                     </div>
                                                                 </td>);
@@ -9218,7 +8730,7 @@ const OrderCreate = forwardRef((props, ref) => {
                                                                                 onWheel={(e) => e.target.blur()}
                                                                                 disabled={isZatcaReported}
                                                                                 value={selectedProducts[index].unit_price_with_vat}
-                                                                                className={`form-control text-end ${errors["unit_price_with_vat_" + index] ? 'is-invalid' : ''} ${warnings["unit_price_with_vat_" + index] ? 'border-warning text-warning' : ''}`}
+                                                                                className={`form-control text-end ${errors["unit_price_with_vat_" + index] ? 'is-invalid' : ''} ${warnings["unit_price_with_vat_" + index] ? 'border-warning' : ''}`}
                                                                                 ref={(el) => {
                                                                                     if (!inputRefs.current[index]) inputRefs.current[index] = {};
                                                                                     inputRefs.current[index][`${"sales_product_unit_price_with_vat_" + index}`] = el;
@@ -9310,19 +8822,7 @@ const OrderCreate = forwardRef((props, ref) => {
                                                                                 }} />
                                                                         </div>
                                                                         {(errors[`unit_price_with_vat_${index}`] || warnings[`unit_price_with_vat_${index}`]) && (
-                                                                            <i
-                                                                                className={`bi bi-exclamation-circle-fill ${errors[`unit_price_with_vat_${index}`] ? 'text-danger' : 'text-warning'} ms-2`}
-                                                                                data-bs-toggle="tooltip"
-                                                                                data-bs-placement="top"
-                                                                                data-error={errors[`unit_price_with_vat_${index}`] || ''}
-                                                                                data-warning={warnings[`unit_price_with_vat_${index}`] || ''}
-                                                                                title={errors[`unit_price_with_vat_${index}`] || warnings[`unit_price_with_vat_${index}`] || ''}
-                                                                                style={{
-                                                                                    fontSize: '1rem',
-                                                                                    cursor: 'pointer',
-                                                                                    whiteSpace: 'nowrap',
-                                                                                }}
-                                                                            ></i>
+                                                                            <OverlayTrigger placement="top" overlay={<Tooltip>{errors[`unit_price_with_vat_${index}`] || warnings[`unit_price_with_vat_${index}`]}</Tooltip>}><i className={`bi bi-exclamation-circle-fill ${errors[`unit_price_with_vat_${index}`] ? 'text-danger' : 'text-warning'} ms-2`} style={{ fontSize: '1rem', cursor: 'help' }}></i></OverlayTrigger>
                                                                         )}
                                                                     </div>
                                                                 </td>);
@@ -9334,7 +8834,7 @@ const OrderCreate = forwardRef((props, ref) => {
                                                                                 name={`${"sales_unit_discount_" + index}`}
                                                                                 onWheel={(e) => e.target.blur()}
                                                                                 disabled={isZatcaReported}
-                                                                                className={`form-control text-end ${errors["unit_discount_" + index] ? 'is-invalid' : ''} ${warnings["unit_discount_" + index] ? 'border-warning text-warning' : ''}`}
+                                                                                className={`form-control text-end ${errors["unit_discount_" + index] ? 'is-invalid' : ''} ${warnings["unit_discount_" + index] ? 'border-warning' : ''}`}
                                                                                 value={selectedProducts[index].unit_discount}
                                                                                 ref={(el) => {
                                                                                     if (!inputRefs.current[index]) inputRefs.current[index] = {};
@@ -9426,19 +8926,7 @@ const OrderCreate = forwardRef((props, ref) => {
                                                                                 }} />
                                                                         </div>
                                                                         {(errors[`unit_discount_${index}`] || warnings[`unit_discount_${index}`]) && (
-                                                                            <i
-                                                                                className={`bi bi-exclamation-circle-fill ${errors[`unit_discount_${index}`] ? 'text-danger' : 'text-warning'} ms-2`}
-                                                                                data-bs-toggle="tooltip"
-                                                                                data-bs-placement="top"
-                                                                                data-error={errors[`unit_discount_${index}`] || ''}
-                                                                                data-warning={warnings[`unit_discount__${index}`] || ''}
-                                                                                title={errors[`unit_discount_${index}`] || warnings[`unit_discount_${index}`] || ''}
-                                                                                style={{
-                                                                                    fontSize: '1rem',
-                                                                                    cursor: 'pointer',
-                                                                                    whiteSpace: 'nowrap',
-                                                                                }}
-                                                                            ></i>
+                                                                            <OverlayTrigger placement="top" overlay={<Tooltip>{errors[`unit_discount_${index}`] || warnings[`unit_discount__${index}`]}</Tooltip>}><i className={`bi bi-exclamation-circle-fill ${errors[`unit_discount_${index}`] ? 'text-danger' : 'text-warning'} ms-2`} style={{ fontSize: '1rem', cursor: 'help' }}></i></OverlayTrigger>
                                                                         )}
                                                                     </div>
                                                                 </td>);
@@ -9450,7 +8938,7 @@ const OrderCreate = forwardRef((props, ref) => {
                                                                                 name={`${"sales_unit_discount_with_vat_" + index}`}
                                                                                 onWheel={(e) => e.target.blur()}
                                                                                 disabled={isZatcaReported}
-                                                                                className={`form-control text-end ${errors["unit_discount_with_vat_" + index] ? 'is-invalid' : ''} ${warnings["unit_discount_with_vat_" + index] ? 'border-warning text-warning' : ''}`}
+                                                                                className={`form-control text-end ${errors["unit_discount_with_vat_" + index] ? 'is-invalid' : ''} ${warnings["unit_discount_with_vat_" + index] ? 'border-warning' : ''}`}
                                                                                 value={selectedProducts[index].unit_discount_with_vat}
                                                                                 ref={(el) => {
                                                                                     if (!inputRefs.current[index]) inputRefs.current[index] = {};
@@ -9564,19 +9052,7 @@ const OrderCreate = forwardRef((props, ref) => {
                                                                                 }} />
                                                                         </div>
                                                                         {(errors[`unit_discount_with_vat_${index}`] || warnings[`unit_discount_with_vat_${index}`]) && (
-                                                                            <i
-                                                                                className={`bi bi-exclamation-circle-fill ${errors[`unit_discount_with_vat_${index}`] ? 'text-danger' : 'text-warning'} ms-2`}
-                                                                                data-bs-toggle="tooltip"
-                                                                                data-bs-placement="top"
-                                                                                data-error={errors[`unit_discount_with_vat_${index}`] || ''}
-                                                                                data-warning={warnings[`unit_discount_with_vat_${index}`] || ''}
-                                                                                title={errors[`unit_discount_with_vat_${index}`] || warnings[`unit_discount_with_vat_${index}`] || ''}
-                                                                                style={{
-                                                                                    fontSize: '1rem',
-                                                                                    cursor: 'pointer',
-                                                                                    whiteSpace: 'nowrap',
-                                                                                }}
-                                                                            ></i>
+                                                                            <OverlayTrigger placement="top" overlay={<Tooltip>{errors[`unit_discount_with_vat_${index}`] || warnings[`unit_discount_with_vat_${index}`]}</Tooltip>}><i className={`bi bi-exclamation-circle-fill ${errors[`unit_discount_with_vat_${index}`] ? 'text-danger' : 'text-warning'} ms-2`} style={{ fontSize: '1rem', cursor: 'help' }}></i></OverlayTrigger>
                                                                         )}
                                                                     </div>
                                                                 </td>);
@@ -9588,7 +9064,7 @@ const OrderCreate = forwardRef((props, ref) => {
                                                                                 disabled={true}
                                                                                 name={`${"sales_unit_discount_percent_with_vat_" + index}`}
                                                                                 onWheel={(e) => e.target.blur()}
-                                                                                className={`form-control text-end ${errors["unit_discount_percent_with_vat_" + index] ? 'is-invalid' : ''} ${warnings["unit_discount_percent_with_vat_" + index] ? 'border-warning text-warning' : ''}`}
+                                                                                className={`form-control text-end ${errors["unit_discount_percent_with_vat_" + index] ? 'is-invalid' : ''} ${warnings["unit_discount_percent_with_vat_" + index] ? 'border-warning' : ''}`}
                                                                                 value={selectedProducts[index].unit_discount_percent_with_vat}
                                                                                 onChange={(e) => {
                                                                                     if (timerRef.current) clearTimeout(timerRef.current);
@@ -9657,19 +9133,7 @@ const OrderCreate = forwardRef((props, ref) => {
                                                                                 }} />{""}
                                                                         </div>
                                                                         {(errors[`unit_discount_percent_with_vat_${index}`] || warnings[`unit_discount_percent_with_vat_${index}`]) && (
-                                                                            <i
-                                                                                className={`bi bi-exclamation-circle-fill ${errors[`unit_discount_percent_with_vat_${index}`] ? 'text-danger' : 'text-warning'} ms-2`}
-                                                                                data-bs-toggle="tooltip"
-                                                                                data-bs-placement="top"
-                                                                                data-error={errors[`unit_discount_percent_with_vat_${index}`] || ''}
-                                                                                data-warning={warnings[`unit_discount_percent_with_vat_${index}`] || ''}
-                                                                                title={errors[`unit_discount_percent_with_vat_${index}`] || warnings[`unit_discount_percent_with_vat_${index}`] || ''}
-                                                                                style={{
-                                                                                    fontSize: '1rem',
-                                                                                    cursor: 'pointer',
-                                                                                    whiteSpace: 'nowrap',
-                                                                                }}
-                                                                            ></i>
+                                                                            <OverlayTrigger placement="top" overlay={<Tooltip>{errors[`unit_discount_percent_with_vat_${index}`] || warnings[`unit_discount_percent_with_vat_${index}`]}</Tooltip>}><i className={`bi bi-exclamation-circle-fill ${errors[`unit_discount_percent_with_vat_${index}`] ? 'text-danger' : 'text-warning'} ms-2`} style={{ fontSize: '1rem', cursor: 'help' }}></i></OverlayTrigger>
                                                                         )}
                                                                     </div>
                                                                 </td>);
@@ -9682,7 +9146,7 @@ const OrderCreate = forwardRef((props, ref) => {
                                                                                 onWheel={(e) => e.target.blur()}
                                                                                 disabled={isZatcaReported}
                                                                                 value={parseFloat(trimTo2Decimals(((selectedProducts[index].unit_price || 0) - (selectedProducts[index].unit_discount || 0)) * (selectedProducts[index].quantity || 0))) || ""}
-                                                                                className={`form-control text-end ${errors["line_total_" + index] ? 'is-invalid' : ''} ${warnings["line_total_" + index] ? 'border-warning text-warning' : ''}`}
+                                                                                className={`form-control text-end ${errors["line_total_" + index] ? 'is-invalid' : ''} ${warnings["line_total_" + index] ? 'border-warning' : ''}`}
                                                                                 placeholder="Line total"
                                                                                 ref={(el) => {
                                                                                     if (!inputRefs.current[index]) inputRefs.current[index] = {};
@@ -9777,19 +9241,7 @@ const OrderCreate = forwardRef((props, ref) => {
 
                                                                         </div>
                                                                         {(errors[`line_total_${index}`] || warnings[`line_total_${index}`]) && (
-                                                                            <i
-                                                                                className={`bi bi-exclamation-circle-fill ${errors[`line_total_${index}`] ? 'text-danger' : 'text-warning'} ms-2`}
-                                                                                data-bs-toggle="tooltip"
-                                                                                data-bs-placement="top"
-                                                                                data-error={errors[`line_total_${index}`] || ''}
-                                                                                data-warning={warnings[`line_total_${index}`] || ''}
-                                                                                title={errors[`line_total_${index}`] || warnings[`line_total_${index}`] || ''}
-                                                                                style={{
-                                                                                    fontSize: '1rem',
-                                                                                    cursor: 'pointer',
-                                                                                    whiteSpace: 'nowrap',
-                                                                                }}
-                                                                            ></i>
+                                                                            <OverlayTrigger placement="top" overlay={<Tooltip>{errors[`line_total_${index}`] || warnings[`line_total_${index}`]}</Tooltip>}><i className={`bi bi-exclamation-circle-fill ${errors[`line_total_${index}`] ? 'text-danger' : 'text-warning'} ms-2`} style={{ fontSize: '1rem', cursor: 'help' }}></i></OverlayTrigger>
                                                                         )}
                                                                     </div>
                                                                 </td>);
@@ -9802,7 +9254,7 @@ const OrderCreate = forwardRef((props, ref) => {
                                                                                 onWheel={(e) => e.target.blur()}
                                                                                 disabled={isZatcaReported}
                                                                                 value={parseFloat(trimTo2Decimals(((selectedProducts[index].unit_price_with_vat || 0) - (selectedProducts[index].unit_discount_with_vat || 0)) * (selectedProducts[index].quantity || 0))) || ""}
-                                                                                className={`form-control text-end ${errors["line_total_with_vat" + index] ? 'is-invalid' : ''} ${warnings["line_total_with_vat" + index] ? 'border-warning text-warning' : ''}`}
+                                                                                className={`form-control text-end ${errors["line_total_with_vat" + index] ? 'is-invalid' : ''} ${warnings["line_total_with_vat" + index] ? 'border-warning' : ''}`}
                                                                                 placeholder="Line total with VAT"
                                                                                 ref={(el) => {
                                                                                     if (!inputRefs.current[index]) inputRefs.current[index] = {};
@@ -9898,19 +9350,7 @@ const OrderCreate = forwardRef((props, ref) => {
 
                                                                         </div>
                                                                         {(errors[`line_total_with_vat_${index}`] || warnings[`line_total_with_vat_${index}`]) && (
-                                                                            <i
-                                                                                className={`bi bi-exclamation-circle-fill ${errors[`line_total_with_vat_${index}`] ? 'text-danger' : 'text-warning'} ms-2`}
-                                                                                data-bs-toggle="tooltip"
-                                                                                data-bs-placement="top"
-                                                                                data-error={errors[`line_total_with_vat_${index}`] || ''}
-                                                                                data-warning={warnings[`line_total_with_vat_${index}`] || ''}
-                                                                                title={errors[`line_total_with_vat_${index}`] || warnings[`line_total_with_vat_${index}`] || ''}
-                                                                                style={{
-                                                                                    fontSize: '1rem',
-                                                                                    cursor: 'pointer',
-                                                                                    whiteSpace: 'nowrap',
-                                                                                }}
-                                                                            ></i>
+                                                                            <OverlayTrigger placement="top" overlay={<Tooltip>{errors[`line_total_with_vat_${index}`] || warnings[`line_total_with_vat_${index}`]}</Tooltip>}><i className={`bi bi-exclamation-circle-fill ${errors[`line_total_with_vat_${index}`] ? 'text-danger' : 'text-warning'} ms-2`} style={{ fontSize: '1rem', cursor: 'help' }}></i></OverlayTrigger>
                                                                         )}
                                                                     </div>
                                                                 </td>);

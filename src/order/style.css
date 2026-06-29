@@ -239,3 +239,109 @@ thead th {
   overflow: hidden !important;
   height: calc(100vh - 56px) !important;
 }
+
+/* ── Type 1 compact two-column header ── */
+.sc-header-flex { display: flex; }
+.sc-header-left { flex: 0 0 70%; }
+.sc-header-right { flex: 1; min-width: 0; }
+.sc-sub-row { display: flex; gap: 6px; flex-wrap: wrap; }
+.sc-search-input { flex: 0 0 252px; min-width: 160px; }
+.sc-date-input { flex: 0 0 200px; min-width: 140px; }
+.sc-barcode-input { flex: 0 1 160px; min-width: 100px; }
+.sc-remarks { flex: 0 1 156px; min-width: 80px; }
+
+/* ── Row sub-groups for mobile wrapping ── */
+.sc-customer-search-group { display: flex; align-items: center; gap: 6px; flex: 1 1 0; min-width: 0; }
+.sc-date-phone-group { display: flex; align-items: center; gap: 6px; flex-shrink: 0; }
+.sc-product-search-group { display: flex; align-items: flex-end; gap: 6px; flex: 1 1 0; min-width: 0; }
+.sc-barcode-vat-group { display: flex; align-items: center; gap: 6px; flex-shrink: 0; }
+
+/* ── Post-table layout (Payment + Summary) ── */
+.sc-post-table { display: flex; gap: 12px; align-items: flex-start; padding: 8px 0 0 0; flex-wrap: wrap; }
+.sc-post-table-left { flex: 1 1 300px; min-width: 0; display: flex; flex-direction: column; gap: 8px; }
+.sc-post-table-right { flex: 0 0 380px; position: relative; }
+
+/* ── Modal header action buttons ── */
+.sc-header-actions { display: flex; align-items: center; gap: 6px; flex-shrink: 0; }
+
+/* ── Type 1 form responsiveness ── */
+#sales_create_form .modal-body .row.g-3 { max-width: 100%; }
+
+/* ── Mobile + tablet portrait (≤767px): full responsive ── */
+@media (max-width: 767px) {
+  /* Modal header */
+  #sales_create_form .modal-header { padding: 6px 10px !important; flex-wrap: wrap !important; gap: 6px !important; }
+  #sales_create_form .sc-header-title h1 { font-size: 14px !important; white-space: normal !important; }
+  .sc-header-actions { flex-wrap: wrap !important; gap: 4px !important; flex-shrink: 1 !important; }
+  .sc-header-actions button { font-size: 11px !important; padding: 4px 8px !important; }
+  .sc-header-actions select { font-size: 10px !important; }
+  #sales_create_form .modal-body { padding: 0 !important; }
+
+  /* Two-column header → single column */
+  .sc-header-flex { flex-direction: column !important; }
+  .sc-header-left {
+    flex: 1 1 100% !important;
+    border-right: none !important;
+    border-bottom: 1px solid #c3c6d7;
+    flex-direction: column !important;   /* sc-header-left itself is display:flex row → stack */
+    align-items: stretch !important;
+  }
+  .sc-header-right { flex: 1 1 100% !important; }
+
+  /* sc-remarks: was side-by-side with search column, now goes below */
+  .sc-remarks {
+    flex: 0 0 auto !important;
+    width: 100% !important;
+    min-width: 0 !important;
+    max-height: 72px !important;
+    align-self: auto !important;
+  }
+
+  /* Customer row: wrap into 2 lines */
+  .sc-customer-row { flex-wrap: wrap !important; gap: 4px !important; }
+  .sc-customer-search-group { flex: 1 1 100% !important; }
+  .sc-date-phone-group { flex: 1 1 100% !important; gap: 4px !important; }
+  .sc-date-input { flex: 1 1 0 !important; min-width: 0 !important; }
+  .sc-date-input .react-datepicker-wrapper,
+  .sc-date-input .react-datepicker__input-container,
+  .sc-date-input input { width: 100% !important; min-width: 0 !important; }
+  #sales_phone { flex: 1 1 0 !important; width: auto !important; min-width: 80px !important; }
+
+  /* Product row: wrap into 2 lines */
+  .sc-product-row { flex-wrap: wrap !important; gap: 4px !important; }
+  .sc-product-search-group { flex: 1 1 100% !important; }
+  .sc-barcode-vat-group { flex: 1 1 100% !important; gap: 4px !important; }
+  .sc-barcode-input { flex: 1 1 0 !important; min-width: 0 !important; }
+  #sales_vat_no { flex: 1 1 0 !important; width: auto !important; min-width: 80px !important; flex-shrink: 1 !important; }
+
+  /* Post-table: stack vertically */
+  .sc-post-table-left { flex: 1 1 100%; }
+  .sc-post-table-right { flex: 1 1 100%; }
+
+  /* Error banner full width */
+  .sc-error-banner { width: 100vw !important; right: 0 !important; }
+}
+
+/* ── Mobile only (≤575px): tighter adjustments ── */
+@media (max-width: 575px) {
+  .sc-header-actions button { font-size: 10px !important; padding: 3px 6px !important; }
+}
+
+/* Tablet landscape (768–991px) */
+@media (min-width: 768px) and (max-width: 991px) {
+  #sales_create_form .modal-header { padding: 8px 14px !important; flex-wrap: wrap !important; }
+  #sales_create_form .sc-header-title h1 { font-size: 16px !important; }
+  .sc-header-actions { gap: 4px !important; }
+  .sc-header-actions button { font-size: 11px !important; padding: 4px 8px !important; }
+  .sc-header-left { flex: 0 0 55% !important; }
+  .sc-search-input { flex: 1 1 180px !important; }
+  .sc-date-input { flex: 1 1 150px !important; }
+  /* Post-table: narrower summary card */
+  .sc-post-table-right { flex: 0 0 300px; }
+}
+
+/* Small desktop (992–1199px) */
+@media (min-width: 992px) and (max-width: 1199px) {
+  .sc-header-left { flex: 0 0 58% !important; }
+  .sc-post-table-right { flex: 0 0 340px; }
+}
