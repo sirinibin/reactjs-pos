@@ -5400,7 +5400,7 @@ const OrderCreate = forwardRef((props, ref) => {
                           <div className="sc-header-flex" style={{ borderBottom: '1px solid #c3c6d7' }}>
                             {/* Left 60% */}
                             <div className="sc-header-left" style={{ padding: '4px 10px', display: 'flex', gap: '6px', alignItems: 'stretch', backgroundColor: '#f2f4f6', borderRight: '1px solid #c3c6d7' }}>
-                              <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                              <div className="sc-search-rows-grid" style={{ flex: 1 }}>
                                 {/* Customer row */}
                                 <div className="sc-sub-row sc-customer-row" style={{ alignItems: 'center', flexWrap: 'nowrap' }}>
                                   <div className="sc-customer-search-group">
@@ -5574,7 +5574,7 @@ const OrderCreate = forwardRef((props, ref) => {
                                     </button>
                                   )}
                                   <button type="button" onClick={openCustomers}
-                                    style={{ background: '#004ac6', color: '#fff', border: '1px solid transparent', borderRadius: '4px', padding: '7px 12px', fontSize: '13px', cursor: 'pointer', flexShrink: 0 }}>
+                                    style={{ background: '#004ac6', color: '#fff', border: '1px solid transparent', borderRadius: '4px', padding: '4px 12px', fontSize: '13px', cursor: 'pointer', flexShrink: 0 }}>
                                     <i className="bi bi-list" />
                                   </button>
                                   </div>
@@ -5924,7 +5924,7 @@ const OrderCreate = forwardRef((props, ref) => {
                                     <i className="bi bi-plus-lg" />
                                   </button>
                                   <button type="button" onClick={openProducts}
-                                    style={{ background: '#004ac6', color: '#fff', border: '1px solid transparent', borderRadius: '4px', padding: '7px 12px', fontSize: '13px', cursor: 'pointer', flexShrink: 0 }}>
+                                    style={{ background: '#004ac6', color: '#fff', border: '1px solid transparent', borderRadius: '4px', padding: '4px 12px', fontSize: '13px', cursor: 'pointer', flexShrink: 0 }}>
                                     <i className="bi bi-list" />
                                   </button>
                                   <Dropdown style={{ flexShrink: 0 }}>

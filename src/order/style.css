@@ -250,11 +250,22 @@ thead th {
 .sc-barcode-input { flex: 0 1 160px; min-width: 100px; }
 .sc-remarks { flex: 0 1 156px; min-width: 80px; }
 
+/* ── Shared grid so customer & product search bars are the same width ── */
+.sc-search-rows-grid {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  column-gap: 6px;
+  row-gap: 4px;
+}
+/* Row wrappers become transparent to the grid — their children become grid items */
+.sc-search-rows-grid .sc-customer-row,
+.sc-search-rows-grid .sc-product-row { display: contents; }
+
 /* ── Row sub-groups for mobile wrapping ── */
-.sc-customer-search-group { display: flex; align-items: center; gap: 6px; flex: 1 1 0; min-width: 0; }
-.sc-date-phone-group { display: flex; align-items: center; gap: 6px; flex-shrink: 0; }
-.sc-product-search-group { display: flex; align-items: flex-end; gap: 6px; flex: 1 1 0; min-width: 0; }
-.sc-barcode-vat-group { display: flex; align-items: center; gap: 6px; flex-shrink: 0; }
+.sc-customer-search-group { display: flex; align-items: center; gap: 6px; min-width: 0; align-self: center; }
+.sc-date-phone-group { display: flex; align-items: center; gap: 6px; flex-shrink: 0; align-self: center; }
+.sc-product-search-group { display: flex; align-items: flex-end; gap: 6px; min-width: 0; align-self: end; }
+.sc-barcode-vat-group { display: flex; align-items: center; gap: 6px; flex-shrink: 0; align-self: end; }
 
 /* ── Post-table layout (Payment + Summary) ── */
 .sc-post-table { display: flex; gap: 12px; align-items: flex-start; padding: 8px 0 0 0; flex-wrap: wrap; }
@@ -297,8 +308,12 @@ thead th {
     align-self: auto !important;
   }
 
+  /* Restore grid rows to flex so they can wrap on mobile */
+  .sc-search-rows-grid { display: flex !important; flex-direction: column; gap: 4px; }
+  .sc-search-rows-grid .sc-customer-row { display: flex !important; flex-wrap: wrap !important; gap: 4px !important; }
+  .sc-search-rows-grid .sc-product-row { display: flex !important; flex-wrap: wrap !important; gap: 4px !important; }
+
   /* Customer row: wrap into 2 lines */
-  .sc-customer-row { flex-wrap: wrap !important; gap: 4px !important; }
   .sc-customer-search-group { flex: 1 1 100% !important; }
   .sc-date-phone-group { flex: 1 1 100% !important; gap: 4px !important; }
   .sc-date-input { flex: 1 1 0 !important; min-width: 0 !important; }
@@ -308,7 +323,6 @@ thead th {
   #sales_phone { flex: 1 1 0 !important; width: auto !important; min-width: 80px !important; }
 
   /* Product row: wrap into 2 lines */
-  .sc-product-row { flex-wrap: wrap !important; gap: 4px !important; }
   .sc-product-search-group { flex: 1 1 100% !important; }
   .sc-barcode-vat-group { flex: 1 1 100% !important; gap: 4px !important; }
   .sc-barcode-input { flex: 1 1 0 !important; min-width: 0 !important; }
