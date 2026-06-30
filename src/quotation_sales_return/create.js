@@ -467,6 +467,11 @@ const QuotationSalesReturnCreate = forwardRef((props, ref) => {
                     formData.received_by_signature_id = quotation.delivered_by_signature_id;
                     */
                     formData.customer_id = quotation.customer_id;
+                    formData.customer_name = quotation.customer_name;
+                    if (quotation.customer_id) {
+                        const fallback = { ...(quotation.customer || {}), id: quotation.customer_id, name: quotation.customer_name };
+                        fetchAndSetCustomer(quotation.customer_id, fallback);
+                    }
 
                     // formData.is_discount_percent = quotation.is_discount_percent;
                     formData.discount_percent = quotation.discount_percent;
