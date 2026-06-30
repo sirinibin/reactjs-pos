@@ -498,31 +498,8 @@ const CustomerCreate = forwardRef((props, ref) => {
         </div>
     );
 
-    const NAV_TABS = [
-        { id: 'basic',     label: 'Basic Info',  icon: 'bi-person-circle' },
-        { id: 'address',   label: 'Address',      icon: 'bi-geo-alt'       },
-        { id: 'financial', label: 'Financial',    icon: 'bi-cash-stack'    },
-        { id: 'photos',    label: 'Photos',       icon: 'bi-images'        },
-    ];
-
-    const [activeTab, setActiveTab] = useState("basic");
-    // ───────────────────────────────────────────────────────────────────────
-
-    function getErrorTab(key) {
-        const k = key.toLowerCase();
-        if (['logo','image','photo'].some(f => k.includes(f))) return 'photos';
-        if (['country','city','state','postal','address','national','building','street','district','zipcode','unit_no','region'].some(f => k.includes(f))) return 'address';
-        if (['credit','payment','balance','deposit','withdrawal','bank'].some(f => k.includes(f))) return 'financial';
-        return 'basic';
-    }
-
     const allErrors = Object.entries(errors).filter(([, v]) => v);
     const totalErrors = allErrors.length;
-
-    const tabIds = NAV_TABS.map(t => t.id);
-    const currentTabIndex = tabIds.indexOf(activeTab);
-    const prevTab = tabIds[currentTabIndex - 1];
-    const nextTab = tabIds[currentTabIndex + 1];
 
     return (
         <>
@@ -594,33 +571,6 @@ const CustomerCreate = forwardRef((props, ref) => {
                 <Modal.Body className="pw-body">
                     <form onSubmit={handleCreate} className="pw-form">
 
-                        {/* Left Nav Sidebar */}
-                        <aside className="pw-sidebar">
-                            <div className="pw-sidebar-header">
-                                <div style={{ fontFamily: '"Hanken Grotesk", sans-serif', fontSize: '15px', fontWeight: 700, color: '#191c1e', marginBottom: '2px' }}>
-                                    {formData.id ? 'Edit Customer' : 'New Customer'}
-                                </div>
-                                <div style={{ fontFamily: '"Inter", sans-serif', fontSize: '11px', color: '#434655' }}>Customer Wizard</div>
-                            </div>
-                            {NAV_TABS.map((tab) => (
-                                <button key={tab.id} type="button"
-                                    onClick={() => setActiveTab(tab.id)}
-                                    style={{
-                                        display: 'flex', alignItems: 'center', gap: '8px',
-                                        padding: '9px 10px', borderRadius: '6px', border: 'none', cursor: 'pointer', textAlign: 'left', width: '100%',
-                                        background: activeTab === tab.id ? '#2563eb' : 'transparent',
-                                        color: activeTab === tab.id ? '#eeefff' : '#434655',
-                                        fontFamily: '"Inter", sans-serif', fontSize: '13px', fontWeight: activeTab === tab.id ? 700 : 500,
-                                    }}
-                                    onMouseEnter={(e) => { if (activeTab !== tab.id) e.currentTarget.style.background = '#e0e3e5'; }}
-                                    onMouseLeave={(e) => { if (activeTab !== tab.id) e.currentTarget.style.background = 'transparent'; }}
-                                >
-                                    <i className={`bi ${tab.icon}`} style={{ fontSize: '15px', flexShrink: 0 }}></i>
-                                    <span style={{ flex: 1 }}>{tab.label}</span>
-                                </button>
-                            ))}
-                        </aside>
-
                         {/* Main Content Area */}
                         <div className="pw-content" style={{ display: "flex", flexDirection: "column" }}>
                             <div style={{ flex: 1, overflowY: "auto", padding: "20px 28px", paddingBottom: "8px" }} className="pw-content-scroll">
@@ -630,28 +580,15 @@ const CustomerCreate = forwardRef((props, ref) => {
                                   <i className="bi bi-exclamation-circle-fill" style={{ fontSize: "14px" }}></i>
                                   {totalErrors} error{totalErrors > 1 ? "s" : ""} — please fix before saving:
                                 </div>
-                                {NAV_TABS.map((tab) => {
-                                  const tabErrs = allErrors.filter(([k]) => getErrorTab(k) === tab.id);
-                                  if (!tabErrs.length) return null;
-                                  return (
-                                    <div key={tab.id} style={{ marginBottom: "6px" }}>
-                                      <button type="button" onClick={() => setActiveTab(tab.id)}
-                                        style={{ background: "none", border: "none", padding: 0, fontFamily: "Inter, sans-serif", fontWeight: 700, color: "#004ac6", cursor: "pointer", fontSize: "12px", textDecoration: "underline", display: "inline-flex", alignItems: "center", gap: "4px", marginBottom: "2px" }}>
-                                        <i className={`bi ${tab.icon}`} style={{ fontSize: "11px" }}></i> {tab.label}:
-                                      </button>
-                                      {tabErrs.map(([k, v]) => (
-                                        <div key={k} style={{ fontFamily: "Inter, sans-serif", fontSize: "12px", color: "#93000a", paddingLeft: "14px" }}>• {v}</div>
-                                      ))}
-                                    </div>
-                                  );
-                                })}
+                                {allErrors.map(([k, v]) => (
+                                  <div key={k} style={{ fontFamily: "Inter, sans-serif", fontSize: "12px", color: "#93000a", paddingLeft: "14px" }}>• {v}</div>
+                                ))}
                               </div>
                             </div>
                             <div className="pw-tab-wrap">
 
-                                {/* ── Basic Info Tab ── */}
-                                {activeTab === 'basic' && (
-                                    <>
+                                {/* ── Basic Info ── */}
+                                <>
                                         <div style={CARD} className="pw-card">
                                             <SectionTitle icon="bi-person-circle">Identity</SectionTitle>
                                             <div className="row g-3">
@@ -778,6 +715,45 @@ const CustomerCreate = forwardRef((props, ref) => {
                                                     />
                                                     {errors.contact_person && <ErrMsg>{errors.contact_person}</ErrMsg>}
                                                 </div>
+
+                                                <div className="col-md-4">
+                                                    <Label>Country</Label>
+                                                    <Typeahead
+                                                        id="country_code"
+                                                        labelKey="label"
+                                                        onChange={(selectedItems) => {
+                                                            errors.country_code = "";
+                                                            setErrors(errors);
+                                                            if (selectedItems.length === 0) {
+                                                                errors.country_code = "Invalid country selected";
+                                                                setErrors(errors);
+                                                                formData.country_code = "";
+                                                                formData.country_name = "";
+                                                                setFormData({ ...formData });
+                                                                setSelectedCountries([]);
+                                                                return;
+                                                            }
+                                                            formData.country_code = selectedItems[0].value;
+                                                            formData.country_name = selectedItems[0].label;
+                                                            setFormData({ ...formData });
+                                                            setSelectedCountries(selectedItems);
+                                                        }}
+                                                        ref={countrySearchRef}
+                                                        onKeyDown={(e) => {
+                                                            if (e.key === "Escape") {
+                                                                countrySearchRef.current?.clear();
+                                                            }
+                                                        }}
+                                                        options={countryOptions}
+                                                        placeholder="Country name"
+                                                        selected={selectedCountries}
+                                                        highlightOnlyResult={true}
+                                                        onInputChange={(searchTerm, e) => {
+                                                            //suggestBrands(searchTerm);
+                                                        }}
+                                                    />
+                                                    {errors.country_code && <ErrMsg>{errors.country_code}</ErrMsg>}
+                                                </div>
                                             </div>
                                         </div>
 
@@ -862,56 +838,10 @@ const CustomerCreate = forwardRef((props, ref) => {
                                                 </div>
                                             </div>
                                         </div>
-                                    </>
-                                )}
+                                </>
 
-                                {/* ── Address Tab ── */}
-                                {activeTab === 'address' && (
-                                    <>
-                                        <div style={CARD} className="pw-card">
-                                            <SectionTitle icon="bi-geo-alt">Location</SectionTitle>
-                                            <div className="row g-3">
-                                                <div className="col-md-6">
-                                                    <Label>Country</Label>
-                                                    <Typeahead
-                                                        id="country_code"
-                                                        labelKey="label"
-                                                        onChange={(selectedItems) => {
-                                                            errors.country_code = "";
-                                                            setErrors(errors);
-                                                            if (selectedItems.length === 0) {
-                                                                errors.country_code = "Invalid country selected";
-                                                                setErrors(errors);
-                                                                formData.country_code = "";
-                                                                formData.country_name = "";
-                                                                setFormData({ ...formData });
-                                                                setSelectedCountries([]);
-                                                                return;
-                                                            }
-                                                            formData.country_code = selectedItems[0].value;
-                                                            formData.country_name = selectedItems[0].label;
-                                                            setFormData({ ...formData });
-                                                            setSelectedCountries(selectedItems);
-                                                        }}
-                                                        ref={countrySearchRef}
-                                                        onKeyDown={(e) => {
-                                                            if (e.key === "Escape") {
-                                                                countrySearchRef.current?.clear();
-                                                            }
-                                                        }}
-                                                        options={countryOptions}
-                                                        placeholder="Country name"
-                                                        selected={selectedCountries}
-                                                        highlightOnlyResult={true}
-                                                        onInputChange={(searchTerm, e) => {
-                                                            //suggestBrands(searchTerm);
-                                                        }}
-                                                    />
-                                                    {errors.country_code && <ErrMsg>{errors.country_code}</ErrMsg>}
-                                                </div>
-                                            </div>
-                                        </div>
-
+                                {/* ── Address ── */}
+                                <>
                                         <div style={CARD} className="pw-card">
                                             <SectionTitle icon="bi-signpost">National Address</SectionTitle>
                                             <div className="row g-3">
@@ -1123,12 +1053,10 @@ const CustomerCreate = forwardRef((props, ref) => {
                                                 </div>
                                             </div>
                                         </div>
-                                    </>
-                                )}
+                                </>
 
-                                {/* ── Financial Tab ── */}
-                                {activeTab === 'financial' && (
-                                    <>
+                                {/* ── Financial ── */}
+                                <>
                                         <div style={CARD} className="pw-card">
                                             <SectionTitle icon="bi-cash-stack">Credit &amp; Balances</SectionTitle>
                                             <div className="row g-3">
@@ -1207,34 +1135,17 @@ const CustomerCreate = forwardRef((props, ref) => {
                                                 )}
                                             </div>
                                         </div>
-                                    </>
-                                )}
+                                </>
 
-                                {/* ── Photos Tab ── */}
-                                {activeTab === 'photos' && (
-                                    <>
+                                {/* ── Photos ── */}
+                                <>
                                         <div style={CARD} className="pw-card">
                                             <SectionTitle icon="bi-images">Customer Photos</SectionTitle>
                                             <ImageGallery ref={ImageGalleryRef} id={formData.id} storeID={formData.store_id} storedImages={formData.images} modelName={"customer"} />
                                         </div>
-                                    </>
-                                )}
+                                </>
 
                             </div>
-                            </div>
-
-                            <div style={{ flexShrink: 0, padding: "12px 28px", borderTop: "1px solid #c3c6d7", background: "#ffffff" }}>
-                                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                                    <button type="button" disabled={!prevTab} onClick={() => prevTab && setActiveTab(prevTab)} style={{ background: prevTab ? "#d0e1fb" : "#f0f2f4", color: prevTab ? "#54647a" : "#9aa0b0", border: "none", borderRadius: "4px", padding: "7px 16px", fontSize: "13px", fontWeight: 600, fontFamily: "Inter, sans-serif", cursor: prevTab ? "pointer" : "default", display: "inline-flex", alignItems: "center", gap: "6px" }}>
-                                        <i className="bi bi-arrow-left"></i>
-                                        {prevTab ? NAV_TABS.find(t => t.id === prevTab)?.label : "Previous"}
-                                    </button>
-                                    <span style={{ fontFamily: "Inter, sans-serif", fontSize: "12px", color: "#737686" }}>{currentTabIndex + 1} / {tabIds.length}</span>
-                                    <button type="button" disabled={!nextTab} onClick={() => nextTab && setActiveTab(nextTab)} style={{ background: nextTab ? "#004ac6" : "#f0f2f4", color: nextTab ? "#ffffff" : "#9aa0b0", border: "none", borderRadius: "4px", padding: "7px 16px", fontSize: "13px", fontWeight: 600, fontFamily: "Inter, sans-serif", cursor: nextTab ? "pointer" : "default", display: "inline-flex", alignItems: "center", gap: "6px" }}>
-                                        {nextTab ? NAV_TABS.find(t => t.id === nextTab)?.label : "Next"}
-                                        <i className="bi bi-arrow-right"></i>
-                                    </button>
-                                </div>
                             </div>
                         </div>
 

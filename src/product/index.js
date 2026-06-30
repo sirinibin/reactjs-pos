@@ -1168,7 +1168,7 @@ function ProductIndex(props) {
     }
     const SHORTCUTS = {
         DEFAULT: {
-            linkedProducts: "Ctrl + Shift + 1",
+            linkedProducts: "Ctrl + Shift + 9",
             productHistory: "Ctrl + Shift + 2",
             salesHistory: "Ctrl + Shift + 3",
             salesReturnHistory: "Ctrl + Shift + 4",
@@ -1176,12 +1176,12 @@ function ProductIndex(props) {
             purchaseReturnHistory: "Ctrl + Shift + 6",
             deliveryNoteHistory: "Ctrl + Shift + 7",
             quotationHistory: "Ctrl + Shift + 8",
-            quotationSalesHistory: "Ctrl + Shift + 9",
+            quotationSalesHistory: "Ctrl + Shift + 1",
             quotationSalesReturnHistory: "Ctrl + Shift + Z",
             images: "Ctrl + Shift + F",
         },
         LGK: {
-            linkedProducts: "F10",
+            linkedProducts: "F3",
             productHistory: "Ctrl + Shift + B",
             salesHistory: "F4",
             salesReturnHistory: "F9",
@@ -1189,12 +1189,12 @@ function ProductIndex(props) {
             purchaseReturnHistory: "F8",
             deliveryNoteHistory: "Ctrl + Shift + P",
             quotationHistory: "F2",
-            quotationSalesHistory: "F3",
+            quotationSalesHistory: "F10",
             quotationSalesReturnHistory: "Ctrl + Shift + Z",
             images: "Ctrl + Shift + F",
         },
         MBDI: {
-            linkedProducts: "F10",
+            linkedProducts: "Ctrl + Shift + 7",
             productHistory: "Ctrl + Shift + 6",
             salesHistory: "F4",
             salesReturnHistory: "F9",
@@ -1202,7 +1202,7 @@ function ProductIndex(props) {
             purchaseReturnHistory: "F8",
             deliveryNoteHistory: "F3",
             quotationHistory: "F2",
-            quotationSalesHistory: "Ctrl + Shift + 7",
+            quotationSalesHistory: "F10",
             quotationSalesReturnHistory: "Ctrl + Shift + 8",
             images: "Ctrl + Shift + 9",
         },
@@ -1225,7 +1225,7 @@ function ProductIndex(props) {
         // LGK store uses original simple mapping
         if (store?.code === "LGK") {
             if (event.key === "F10") {
-                openLinkedProducts(product);
+                openQuotationSalesHistory(product);
             } else if (isCmdOrCtrl && event.shiftKey && event.key.toLowerCase() === 'b') {
                 openProductHistory(product);
             } else if (event.key === "F4") {
@@ -1237,7 +1237,7 @@ function ProductIndex(props) {
             } else if (event.key === "F8") {
                 openPurchaseReturnHistory(product);
             } else if (event.key === "F3") {
-                openQuotationSalesHistory(product);
+                openLinkedProducts(product);
             } else if (event.key === "F2") {
                 openQuotationHistory(product);
             } else if (isCmdOrCtrl && event.shiftKey && event.key.toLowerCase() === 'p') {
@@ -1250,7 +1250,7 @@ function ProductIndex(props) {
             return;
         } else if (store?.code === "MBDI") {
             if (event.key === "F10") {
-                openLinkedProducts(product);
+                openQuotationSalesHistory(product);
             } else if (isCmdOrCtrl && event.shiftKey && event.key.toLowerCase() === '6') {
                 openProductHistory(product);
             } else if (event.key === "F4") {
@@ -1266,7 +1266,7 @@ function ProductIndex(props) {
             } else if (event.key === "F2") {
                 openQuotationHistory(product, "quotation");
             } else if (isCmdOrCtrl && event.shiftKey && event.key.toLowerCase() === '7') {
-                openQuotationSalesHistory(product);
+                openLinkedProducts(product);
             } else if (isCmdOrCtrl && event.shiftKey && event.key.toLowerCase() === '8') {
                 openQuotationSalesReturnHistory(product);
             } else if (isCmdOrCtrl && event.shiftKey && event.key.toLowerCase() === '9') {
@@ -1339,7 +1339,7 @@ function ProductIndex(props) {
             try { event.preventDefault(); } catch (e) { /* ignore */ }
 
             switch (digit) {
-                case "1": openLinkedProducts(product); return;
+                case "1": openQuotationSalesHistory(product); return;
                 case "2": openProductHistory(product); return;
                 case "3": openSalesHistory(product); return;
                 case "4": openSalesReturnHistory(product); return;
@@ -1347,7 +1347,7 @@ function ProductIndex(props) {
                 case "6": openPurchaseReturnHistory(product); return;
                 case "7": openDeliveryNoteHistory(product); return;
                 case "8": openQuotationHistory(product); return;
-                case "9": openQuotationSalesHistory(product); return;
+                case "9": openLinkedProducts(product); return;
                 case "0": openQuotationSalesReturnHistory(product); return;
                 default: break;
             }

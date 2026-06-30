@@ -9,7 +9,7 @@ import { Typeahead, Menu, MenuItem } from "react-bootstrap-typeahead";
 import NumberFormat from "react-number-format";
 import DatePicker from "react-datepicker";
 import { format } from "date-fns";
-import { Spinner, Badge } from "react-bootstrap";
+import { Spinner } from "react-bootstrap";
 import ProductView from "./../product/view.js";
 import { trimTo2Decimals, trimTo8Decimals } from "../utils/numberUtils";
 import ResizableTableCell from './../utils/ResizableTableCell';
@@ -413,17 +413,9 @@ const PurchaseCreate = forwardRef((props, ref) => {
                 setSelectedProducts(updatedProducts);
 
                 setSelectedVendors([]);
-                if (purchase.vendor_id && purchase.vendor_name && purchase.vendor.search_label) {
-                    let selectedVendors = [
-                        {
-                            id: purchase.vendor_id,
-                            name: purchase.vendor_name,
-                            vat_no: purchase.vendor?.vat_no || "",
-                            search_label: purchase.vendor?.search_label || "",
-                            credit_balance: purchase.vendor?.credit_balance || 0,
-                        }
-                    ];
-                    setSelectedVendors([...selectedVendors]);
+                if (purchase.vendor_id) {
+                    const fallback = { ...(purchase.vendor || {}), id: purchase.vendor_id };
+                    fetchAndSetVendor(purchase.vendor_id, fallback);
                 }
 
                 reCalculate();
@@ -1736,6 +1728,25 @@ const PurchaseCreate = forwardRef((props, ref) => {
         VendorCreateFormRef.current.open();
     }
 
+    function fetchAndSetVendor(vendorId, fallbackData) {
+        if (!vendorId) return;
+        const storeId = localStorage.getItem("store_id");
+        const select = "id,code,credit_limit,credit_balance,vat_no,name,phone,phone2,name_in_arabic,phone_in_arabic,search_label";
+        fetch(`/v1/vendor/${vendorId}?search[store_id]=${storeId}&select=${select}`, {
+            method: 'GET',
+            headers: { 'Content-Type': 'application/json', 'Authorization': localStorage.getItem('access_token') },
+        })
+            .then(async r => {
+                const data = r.ok && await r.json();
+                if (data?.result) {
+                    setSelectedVendors([{ ...data.result }]);
+                } else {
+                    setSelectedVendors([fallbackData]);
+                }
+            })
+            .catch(() => setSelectedVendors([fallbackData]));
+    }
+
     const UserCreateFormRef = useRef();
 
 
@@ -1897,7 +1908,7 @@ const PurchaseCreate = forwardRef((props, ref) => {
 
     const SHORTCUTS = {
         DEFAULT: {
-            linkedProducts: "Ctrl + Shift + 1",
+            linkedProducts: "Ctrl + Shift + 9",
             productHistory: "Ctrl + Shift + 2",
             salesHistory: "Ctrl + Shift + 3",
             salesReturnHistory: "Ctrl + Shift + 4",
@@ -1905,12 +1916,12 @@ const PurchaseCreate = forwardRef((props, ref) => {
             purchaseReturnHistory: "Ctrl + Shift + 6",
             deliveryNoteHistory: "Ctrl + Shift + 7",
             quotationHistory: "Ctrl + Shift + 8",
-            quotationSalesHistory: "Ctrl + Shift + 9",
+            quotationSalesHistory: "Ctrl + Shift + 1",
             quotationSalesReturnHistory: "Ctrl + Shift + Z",
             images: "Ctrl + Shift + F",
         },
         LGK: {
-            linkedProducts: "F10",
+            linkedProducts: "F3",
             productHistory: "Ctrl + Shift + B",
             salesHistory: "F4",
             salesReturnHistory: "F9",
@@ -1918,12 +1929,12 @@ const PurchaseCreate = forwardRef((props, ref) => {
             purchaseReturnHistory: "F8",
             deliveryNoteHistory: "Ctrl + Shift + P",
             quotationHistory: "F2",
-            quotationSalesHistory: "F3",
+            quotationSalesHistory: "F10",
             quotationSalesReturnHistory: "Ctrl + Shift + Z",
             images: "Ctrl + Shift + F",
         },
         MBDI: {
-            linkedProducts: "F10",
+            linkedProducts: "Ctrl + Shift + 7",
             productHistory: "Ctrl + Shift + 6",
             salesHistory: "F4",
             salesReturnHistory: "F9",
@@ -1931,7 +1942,7 @@ const PurchaseCreate = forwardRef((props, ref) => {
             purchaseReturnHistory: "F8",
             deliveryNoteHistory: "F3",
             quotationHistory: "F2",
-            quotationSalesHistory: "Ctrl + Shift + 7",
+            quotationSalesHistory: "F10",
             quotationSalesReturnHistory: "Ctrl + Shift + 8",
             images: "Ctrl + Shift + 9",
         },
@@ -1954,7 +1965,7 @@ const PurchaseCreate = forwardRef((props, ref) => {
         // LGK store uses original simple mapping
         if (store?.code === "LGK") {
             if (event.key === "F10") {
-                openLinkedProducts(product);
+                openQuotationSalesHistory(product);
             } else if (isCmdOrCtrl && event.shiftKey && event.key.toLowerCase() === 'b') {
                 openProductHistory(product);
             } else if (event.key === "F4") {
@@ -1966,7 +1977,7 @@ const PurchaseCreate = forwardRef((props, ref) => {
             } else if (event.key === "F8") {
                 openPurchaseReturnHistory(product);
             } else if (event.key === "F3") {
-                openQuotationSalesHistory(product);
+                openLinkedProducts(product);
             } else if (event.key === "F2") {
                 openQuotationHistory(product);
             } else if (isCmdOrCtrl && event.shiftKey && event.key.toLowerCase() === 'p') {
@@ -1979,7 +1990,7 @@ const PurchaseCreate = forwardRef((props, ref) => {
             return;
         } else if (store?.code === "MBDI") {
             if (event.key === "F10") {
-                openLinkedProducts(product);
+                openQuotationSalesHistory(product);
             } else if (isCmdOrCtrl && event.shiftKey && event.key.toLowerCase() === '6') {
                 openProductHistory(product);
             } else if (event.key === "F4") {
@@ -1995,7 +2006,7 @@ const PurchaseCreate = forwardRef((props, ref) => {
             } else if (event.key === "F2") {
                 openQuotationHistory(product, "quotation");
             } else if (isCmdOrCtrl && event.shiftKey && event.key.toLowerCase() === '7') {
-                openQuotationSalesHistory(product);
+                openLinkedProducts(product);
             } else if (isCmdOrCtrl && event.shiftKey && event.key.toLowerCase() === '8') {
                 openQuotationSalesReturnHistory(product);
             } else if (isCmdOrCtrl && event.shiftKey && event.key.toLowerCase() === '9') {
@@ -2068,7 +2079,7 @@ const PurchaseCreate = forwardRef((props, ref) => {
             try { event.preventDefault(); } catch (e) { /* ignore */ }
 
             switch (digit) {
-                case "1": openLinkedProducts(product); return;
+                case "1": openQuotationSalesHistory(product); return;
                 case "2": openProductHistory(product); return;
                 case "3": openSalesHistory(product); return;
                 case "4": openSalesReturnHistory(product); return;
@@ -2076,7 +2087,7 @@ const PurchaseCreate = forwardRef((props, ref) => {
                 case "6": openPurchaseReturnHistory(product); return;
                 case "7": openDeliveryNoteHistory(product); return;
                 case "8": openQuotationHistory(product); return;
-                case "9": openQuotationSalesHistory(product); return;
+                case "9": openLinkedProducts(product); return;
                 case "0": openQuotationSalesReturnHistory(product); return;
                 default: break;
             }
@@ -2916,382 +2927,313 @@ const PurchaseCreate = forwardRef((props, ref) => {
                     </div>
                 </Modal.Header>
                 <Modal.Body>
-                    <div style={{
-                        maxHeight: "50px",        // Adjust based on design
-                        minHeight: "50px",
-                        overflowY: "scroll",
-                    }}>
-                        {errors && Object.keys(errors).length > 0 && (
-                            <div
-                                style={{
-
-
-                                    backgroundColor: "#fff0f0",
-                                    border: "1px solid #f5c6cb",
-                                    padding: "10px",
-                                    marginBottom: "10px",
-                                    borderRadius: "4px"
-                                }}
-                            >
-                                <ul style={{ marginBottom: 0 }}>
-                                    {Object.keys(errors).map((key, index) => {
-                                        const message = Array.isArray(errors[key]) ? errors[key][0] : errors[key];
-                                        return message ? (
-                                            <li key={index} style={{ color: "red" }}>
-                                                {message}
-                                            </li>
-                                        ) : null;
-                                    })}
-                                </ul>
-                            </div>
-                        )}
-                    </div>
+                    {errors && Object.keys(errors).some(k => { const m = Array.isArray(errors[k]) ? errors[k][0] : errors[k]; return !!m; }) && (
+                        <div style={{ maxHeight: '120px', overflowY: 'auto', padding: '8px 12px', backgroundColor: '#fff0f0', borderLeft: '1px solid #f5c6cb', borderBottom: '1px solid #f5c6cb', boxShadow: '-2px 2px 8px rgba(186,26,26,0.12)', position: 'fixed', top: '56px', right: 0, width: '380px', zIndex: 9999 }}>
+                            <ul style={{ marginBottom: 0, paddingLeft: 16 }}>
+                                {Object.keys(errors).map((key, index) => { const message = Array.isArray(errors[key]) ? errors[key][0] : errors[key]; return message ? <li key={index} style={{ color: '#dc2626', fontSize: '12px' }}>{t(message)}</li> : null; })}
+                            </ul>
+                        </div>
+                    )}
                     <form className="row g-3 needs-validation" onSubmit={handleCreate}>
-                        <div className="col-md-10">
-                            <label className="form-label">{t('Vendor')}</label>
-                            <Typeahead
-                                id="vendor_search"
-                                filterBy={() => true}
-                                labelKey="search_label"
-                                open={openVendorSearchResult}
-                                isLoading={false}
-                                onChange={(selectedItems) => {
-                                    delete errors.vendor_id;
-                                    setErrors(errors);
-                                    if (selectedItems.length === 0) {
-                                        delete errors.vendor_id;
-                                        //setErrors(errors);
-                                        formData.vendor_id = "";
-                                        setFormData({ ...formData });
-                                        setSelectedVendors([]);
-                                        return;
-                                    }
-                                    formData.vendor_id = selectedItems[0].id;
-                                    if (selectedItems[0].use_remarks_in_purchases && selectedItems[0].remarks) {
-                                        formData.remarks = selectedItems[0].remarks;
-                                    }
+                        <div className="col-12">
+                            <div className="entity-header-grid">
+                                {/* LEFT: vendor Typeahead + form fields */}
+                                <div>
+                                    {/* Vendor search row */}
+                                    <div style={{ marginBottom: '12px' }}>
+                                        <label className="form-label">{t('Vendor')}</label>
+                                        <div style={{ display: 'flex', gap: '4px', alignItems: 'flex-start' }}>
+                                            <div style={{ flex: 1, minWidth: 0 }}>
+                                                <Typeahead
+                                                    id="vendor_search"
+                                                    positionFixed={true}
+                                                    filterBy={() => true}
+                                                    labelKey="search_label"
+                                                    open={openVendorSearchResult}
+                                                    isLoading={false}
+                                                    onChange={(selectedItems) => {
+                                                        delete errors.vendor_id;
+                                                        setErrors(errors);
+                                                        if (selectedItems.length === 0) {
+                                                            delete errors.vendor_id;
+                                                            //setErrors(errors);
+                                                            formData.vendor_id = "";
+                                                            setFormData({ ...formData });
+                                                            setSelectedVendors([]);
+                                                            return;
+                                                        }
+                                                        formData.vendor_id = selectedItems[0].id;
+                                                        if (selectedItems[0].use_remarks_in_purchases && selectedItems[0].remarks) {
+                                                            formData.remarks = selectedItems[0].remarks;
+                                                        }
 
-                                    setOpenVendorSearchResult(false);
-                                    setFormData({ ...formData });
-                                    setSelectedVendors(selectedItems);
-                                }}
-                                options={vendorOptions}
-                                placeholder={t('Vendor Name / Mob / VAT # / ID')}
-                                selected={selectedVendors}
-                                highlightOnlyResult={true}
-                                ref={vendorSearchRef}
-                                onKeyDown={(e) => {
-                                    if (e.key === "Escape") {
-                                        delete errors.vendor_id;
-                                        setOpenVendorSearchResult(false);
-                                        //setErrors(errors);
-                                        formData.vendor_id = "";
-                                        formData.vendor_name = "";
+                                                        setOpenVendorSearchResult(false);
+                                                        setFormData({ ...formData });
+                                                        setSelectedVendors(selectedItems);
+                                                    }}
+                                                    options={vendorOptions}
+                                                    placeholder={t('Vendor Name / Mob / VAT # / ID')}
+                                                    selected={selectedVendors}
+                                                    highlightOnlyResult={true}
+                                                    ref={vendorSearchRef}
+                                                    onKeyDown={(e) => {
+                                                        if (e.key === "Escape") {
+                                                            delete errors.vendor_id;
+                                                            setOpenVendorSearchResult(false);
+                                                            //setErrors(errors);
+                                                            formData.vendor_id = "";
+                                                            formData.vendor_name = "";
 
-                                        setFormData({ ...formData });
-                                        setSelectedVendors([]);
-                                        setVendorOptions([]);
-                                        vendorSearchRef.current?.clear();
-                                    }
-                                }}
-                                onInputChange={(searchTerm, e) => {
-                                    if (searchTerm) {
-                                        formData.vendor_name = searchTerm;
-                                    }
-                                    setFormData({ ...formData });
-                                    if (timerRef.current) clearTimeout(timerRef.current);
-                                    timerRef.current = setTimeout(() => {
-                                        suggestVendors(searchTerm);
-                                    }, 350);
-                                }}
+                                                            setFormData({ ...formData });
+                                                            setSelectedVendors([]);
+                                                            setVendorOptions([]);
+                                                            vendorSearchRef.current?.clear();
+                                                        }
+                                                    }}
+                                                    onInputChange={(searchTerm, e) => {
+                                                        if (searchTerm) {
+                                                            formData.vendor_name = searchTerm;
+                                                        }
+                                                        setFormData({ ...formData });
+                                                        if (timerRef.current) clearTimeout(timerRef.current);
+                                                        timerRef.current = setTimeout(() => {
+                                                            suggestVendors(searchTerm);
+                                                        }, 350);
+                                                    }}
 
-                                renderMenu={(results, menuProps, state) => {
-                                    const searchWords = state.text.toLowerCase().split(" ").filter(Boolean);
+                                                    renderMenu={(results, menuProps, state) => {
+                                                        const searchWords = state.text.toLowerCase().split(" ").filter(Boolean);
 
-                                    return (
-                                        <Menu {...menuProps}>
-                                            {/* Header */}
-                                            <MenuItem disabled>
-                                                <div style={{ display: 'flex', fontWeight: 'bold', padding: '4px 8px', borderBottom: '1px solid #ddd' }}>
-                                                    <div style={{ width: '10%' }}>ID</div>
-                                                    <div style={{ width: '47%' }}>Name</div>
-                                                    <div style={{ width: '10%' }}>Phone</div>
-                                                    <div style={{ width: '13%' }}>VAT</div>
-                                                    <div style={{ width: '10%' }}>Credit Balance</div>
-                                                    <div style={{ width: '10%' }}>Credit Limit</div>
+                                                        return (
+                                                            <Menu {...menuProps} style={{ minWidth: 'calc(100vw - 60px)' }}>
+                                                                {/* Header */}
+                                                                <MenuItem disabled>
+                                                                    <div style={{ display: 'flex', fontWeight: 'bold', padding: '4px 8px', borderBottom: '1px solid #ddd' }}>
+                                                                        <div style={{ width: '10%' }}>ID</div>
+                                                                        <div style={{ width: '47%' }}>Name</div>
+                                                                        <div style={{ width: '10%' }}>Phone</div>
+                                                                        <div style={{ width: '13%' }}>VAT</div>
+                                                                        <div style={{ width: '10%' }}>Credit Balance</div>
+                                                                        <div style={{ width: '10%' }}>Credit Limit</div>
+                                                                    </div>
+                                                                </MenuItem>
+
+                                                                {/* Rows */}
+                                                                {results.map((option, index) => {
+                                                                    const onlyOneResult = results.length === 1;
+                                                                    const isActive = state.activeIndex === index || onlyOneResult;
+                                                                    return (
+                                                                        <MenuItem option={option} position={index} key={index}>
+                                                                            <div style={{ display: 'flex', padding: '4px 8px' }}>
+                                                                                <div style={{ ...columnStyle, width: '10%' }}>
+                                                                                    {highlightWords(
+                                                                                        option.code,
+                                                                                        searchWords,
+                                                                                        isActive
+                                                                                    )}
+                                                                                </div>
+                                                                                <div style={{ ...columnStyle, width: '47%' }}>
+                                                                                    {highlightWords(
+                                                                                        option.name_in_arabic
+                                                                                            ? `${option.name} - ${option.name_in_arabic}`
+                                                                                            : option.name,
+                                                                                        searchWords,
+                                                                                        isActive
+                                                                                    )}
+                                                                                </div>
+                                                                                <div style={{ ...columnStyle, width: '10%' }}>
+                                                                                    {highlightWords(option.phone, searchWords, isActive)}
+                                                                                </div>
+                                                                                <div style={{ ...columnStyle, width: '13%' }}>
+                                                                                    {highlightWords(option.vat_no, searchWords, isActive)}
+                                                                                </div>
+                                                                                <div style={{ ...columnStyle, width: '10%' }}>
+                                                                                    {option.credit_balance && (
+                                                                                        <Amount amount={trimTo2Decimals(option.credit_balance)} />
+                                                                                    )}
+                                                                                </div>
+                                                                                <div style={{ ...columnStyle, width: '10%' }}>
+                                                                                    {option.credit_limit && (
+                                                                                        <Amount amount={trimTo2Decimals(option.credit_limit)} />
+                                                                                    )}
+                                                                                </div>
+                                                                            </div>
+                                                                        </MenuItem>
+                                                                    );
+                                                                })}
+                                                            </Menu>
+                                                        );
+                                                    }}
+                                                />
+                                            </div>
+                                            <Button hide={true.toString()} onClick={openVendorCreateForm} className="btn btn-outline-secondary btn-primary btn-sm" type="button" id="button-addon1"><i className="bi bi-plus-lg"></i> {t('New')}</Button>
+                                            <Button onClick={openVendors} className="btn btn-outline-secondary btn-primary btn-sm" type="button"><i className="bi bi-list"></i></Button>
+                                            {selectedVendors.length > 0 && formData.vendor_id && <Button className="btn btn-outline-secondary btn-primary btn-sm" type="button" onClick={() => openVendorUpdateForm(formData.vendor_id)}><i className="bi bi-pencil"></i></Button>}
+                                        </div>
+                                        {errors.vendor_id && <div style={{ color: 'red' }}>{errors.vendor_id}</div>}
+                                    </div>
+                                    {/* Other form fields — 2×3 CSS Grid matching Sales form */}
+                                    <div style={{ display: 'grid', gridTemplateColumns: '231px 1fr 1fr', gap: '8px 18px', alignItems: 'start', maxWidth: '80%', marginTop: '8px' }}>
+
+                                        {/* R1C1: Date */}
+                                        <div>
+                                            <label className="form-label" style={{ fontSize: '12px', marginBottom: '2px' }}>{t('Date Time')} *</label>
+                                            <DatePicker
+                                                id="date_str"
+                                                selected={formData.date_str ? new Date(formData.date_str) : null}
+                                                value={formData.date_str ? format(new Date(formData.date_str), "MMMM d, yyyy h:mm aa", { locale: dateLocale }) : null}
+                                                className="form-control"
+                                                dateFormat="MMMM d, yyyy h:mm aa"
+                                                locale={dateLocale}
+                                                showTimeSelect
+                                                timeIntervals="1"
+                                                onChange={(value) => {
+                                                    formData.date_str = value;
+                                                    setFormData({ ...formData });
+                                                }}
+                                            />
+                                            {errors.date_str && <div style={{ color: "red" }}>{errors.date_str}</div>}
+                                        </div>
+
+                                        {/* R1C2: Phone + WhatsApp inline */}
+                                        <div>
+                                            <label className="form-label" style={{ fontSize: '12px', marginBottom: '2px' }}>{t('Phone ( 05.. / +966..)')}</label>
+                                            <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                                                <input id="purchase_phone_no" name="purchase_phone_no"
+                                                    value={formData.phone ? formData.phone : ""}
+                                                    type='string'
+                                                    onChange={(e) => {
+                                                        delete errors["phone"];
+                                                        setErrors({ ...errors });
+                                                        formData.phone = e.target.value;
+                                                        setFormData({ ...formData });
+                                                    }}
+                                                    className="form-control"
+                                                    placeholder={t('Phone ( 05.. / +966..)')}
+                                                />
+                                                <Button className="btn btn-success btn-sm" onClick={sendWhatsAppMessage} style={{ flexShrink: 0 }}>
+                                                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="white" viewBox="0 0 16 16">
+                                                        <path d="M13.601 2.326A7.875 7.875 0 0 0 8.036 0C3.596 0 0 3.597 0 8.036c0 1.417.37 2.805 1.07 4.03L0 16l3.993-1.05a7.968 7.968 0 0 0 4.043 1.085h.003c4.44 0 8.036-3.596 8.036-8.036 0-2.147-.836-4.166-2.37-5.673ZM8.036 14.6a6.584 6.584 0 0 1-3.35-.92l-.24-.142-2.37.622.63-2.31-.155-.238a6.587 6.587 0 0 1-1.018-3.513c0-3.637 2.96-6.6 6.6-6.6 1.764 0 3.42.69 4.67 1.94a6.56 6.56 0 0 1 1.93 4.668c0 3.637-2.96 6.6-6.6 6.6Zm3.61-4.885c-.198-.1-1.17-.578-1.352-.644-.18-.066-.312-.1-.444.1-.13.197-.51.644-.626.775-.115.13-.23.15-.428.05-.198-.1-.837-.308-1.594-.983-.59-.525-.99-1.174-1.11-1.372-.116-.198-.012-.305.088-.403.09-.09.198-.23.298-.345.1-.115.132-.197.2-.33.065-.13.032-.247-.017-.345-.05-.1-.444-1.07-.61-1.46-.16-.384-.323-.332-.444-.338l-.378-.007c-.13 0-.344.048-.525.23s-.688.672-.688 1.64c0 .967.704 1.9.802 2.03.1.13 1.386 2.116 3.365 2.963.47.203.837.324 1.122.414.472.15.902.13 1.24.08.378-.057 1.17-.48 1.336-.942.165-.462.165-.858.116-.943-.048-.084-.18-.132-.378-.23Z" />
+                                                    </svg>
+                                                </Button>
+                                            </div>
+                                            {errors.phone && <div style={{ color: "red" }}>{errors.phone}</div>}
+                                        </div>
+
+                                        {/* R1C3: VAT NO. */}
+                                        <div>
+                                            <label className="form-label" style={{ fontSize: '12px', marginBottom: '2px' }}>{t('VAT NO.(15 digits)')}</label>
+                                            <input id="purchase_vat_no" name="purchase_vat_no"
+                                                value={formData.vat_no ? formData.vat_no : ""}
+                                                type='string'
+                                                onChange={(e) => {
+                                                    delete errors["vat_no"];
+                                                    setErrors({ ...errors });
+                                                    formData.vat_no = e.target.value;
+                                                    setFormData({ ...formData });
+                                                }}
+                                                className="form-control"
+                                                placeholder={t('VAT NO.(15 digits)')}
+                                            />
+                                            {errors.vat_no && <div style={{ color: "red" }}>{errors.vat_no}</div>}
+                                        </div>
+
+                                        {/* R2C1: Vendor Invoice No. */}
+                                        <div>
+                                            <label className="form-label" style={{ fontSize: '12px', marginBottom: '2px' }}>{t('Vendor Invoice No. (Optional)')}</label>
+                                            <input id="purchase_vendor_invoice_no" name="purchase_vendor_invoice_no"
+                                                value={formData.vendor_invoice_no ? formData.vendor_invoice_no : ""}
+                                                type='string'
+                                                onChange={(e) => {
+                                                    delete errors["vendor_invoice_no"];
+                                                    setErrors({ ...errors });
+                                                    formData.vendor_invoice_no = e.target.value;
+                                                    setFormData({ ...formData });
+                                                }}
+                                                className="form-control"
+                                                placeholder={t('Vendor Invoice No. (Optional)')}
+                                            />
+                                            {errors.vendor_invoice_no && <div style={{ color: "red" }}>{errors.vendor_invoice_no}</div>}
+                                        </div>
+
+                                        {/* R2C2: Address */}
+                                        <div>
+                                            <label className="form-label" style={{ fontSize: '12px', marginBottom: '2px' }}>{t('Address')}</label>
+                                            <textarea
+                                                value={formData.address}
+                                                onChange={(e) => {
+                                                    delete errors["address"];
+                                                    setErrors({ ...errors });
+                                                    formData.address = e.target.value;
+                                                    setFormData({ ...formData });
+                                                }}
+                                                className="form-control"
+                                                id="address"
+                                                placeholder={t('Address')}
+                                                style={{ width: '100%' }}
+                                            />
+                                            {errors.address && <div style={{ color: "red" }}>{errors.address}</div>}
+                                        </div>
+
+                                        {/* R2C3: Remarks */}
+                                        <div>
+                                            <label className="form-label" style={{ fontSize: '12px', marginBottom: '2px' }}>{t('Remarks')}</label>
+                                            <textarea
+                                                value={formData.remarks}
+                                                onChange={(e) => {
+                                                    delete errors["remarks"];
+                                                    setErrors({ ...errors });
+                                                    formData.remarks = e.target.value;
+                                                    setFormData({ ...formData });
+                                                }}
+                                                className="form-control"
+                                                id="remarks"
+                                                placeholder={t('Remarks')}
+                                                style={{ width: '100%' }}
+                                            />
+                                            {errors.remarks && <div style={{ color: "red" }}>{errors.remarks}</div>}
+                                        </div>
+
+                                    </div>
+                                </div>
+                                {/* RIGHT: Vendor detail panel */}
+                                <div style={{ alignSelf: 'start' }}>
+                                    {selectedVendors.length > 0 && formData.vendor_id && (() => {
+                                        const v = selectedVendors[0];
+                                        return (
+                                            <div style={{ padding: '10px 16px', background: 'rgba(0,74,198,0.04)', border: '1px solid #c7d7f5', borderRadius: '8px', display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                                                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+                                                    {v.code && <span style={{ background: '#dbeafe', color: '#1e40af', borderRadius: '4px', padding: '2px 8px', fontSize: '12px', fontWeight: 700, letterSpacing: '0.03em', flexShrink: 0 }}>{v.code}</span>}
+                                                    <span className="entity-detail-name" style={{ fontWeight: 700, fontSize: '15px', color: '#191c1e', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: '260px' }} title={v.name}>{v.name}</span>
+                                                    {v.name_in_arabic && <span style={{ fontSize: '13px', color: '#64748b', fontFamily: 'Arial, sans-serif', flexShrink: 0 }}>{v.name_in_arabic}</span>}
                                                 </div>
-                                            </MenuItem>
-
-                                            {/* Rows */}
-                                            {results.map((option, index) => {
-                                                const onlyOneResult = results.length === 1;
-                                                const isActive = state.activeIndex === index || onlyOneResult;
-                                                return (
-                                                    <MenuItem option={option} position={index} key={index}>
-                                                        <div style={{ display: 'flex', padding: '4px 8px' }}>
-                                                            <div style={{ ...columnStyle, width: '10%' }}>
-                                                                {highlightWords(
-                                                                    option.code,
-                                                                    searchWords,
-                                                                    isActive
-                                                                )}
-                                                            </div>
-                                                            <div style={{ ...columnStyle, width: '47%' }}>
-                                                                {highlightWords(
-                                                                    option.name_in_arabic
-                                                                        ? `${option.name} - ${option.name_in_arabic}`
-                                                                        : option.name,
-                                                                    searchWords,
-                                                                    isActive
-                                                                )}
-                                                            </div>
-                                                            <div style={{ ...columnStyle, width: '10%' }}>
-                                                                {highlightWords(option.phone, searchWords, isActive)}
-                                                            </div>
-                                                            <div style={{ ...columnStyle, width: '13%' }}>
-                                                                {highlightWords(option.vat_no, searchWords, isActive)}
-                                                            </div>
-                                                            <div style={{ ...columnStyle, width: '10%' }}>
-                                                                {option.credit_balance && (
-                                                                    <Amount amount={trimTo2Decimals(option.credit_balance)} />
-                                                                )}
-                                                            </div>
-                                                            <div style={{ ...columnStyle, width: '10%' }}>
-                                                                {option.credit_limit && (
-                                                                    <Amount amount={trimTo2Decimals(option.credit_limit)} />
-                                                                )}
-                                                            </div>
-                                                        </div>
-                                                    </MenuItem>
-                                                );
-                                            })}
-                                        </Menu>
-                                    );
-                                }}
-                            />
-                            <Button hide={true.toString()} onClick={openVendorCreateForm} className="btn btn-outline-secondary btn-primary btn-sm" type="button" id="button-addon1"> <i className="bi bi-plus-lg"></i> {t('New')}</Button>
-
-                            {selectedVendors.length > 0 && formData.vendor_id && <Button style={{ marginLeft: "8px" }} variant="btn btn-sm btn-primary" onClick={() => {
-                                openVendorPending(selectedVendors[0]);
-                            }} >
-                                {t('Pendings')}
-                                <Badge bg="danger" style={{ marginLeft: "2px" }}>
-                                    <Amount amount={trimTo2Decimals(selectedVendors[0]?.credit_balance)} />
-                                </Badge>
-                            </Button>}
-
-                            {errors.vendor_id && (
-                                <div style={{ color: "red" }}>
-                                    {errors.vendor_id}
+                                                {(v.phone || v.phone2 || v.vat_no) && (
+                                                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
+                                                        {v.phone && <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', fontSize: '13px', color: '#374151' }}><i className="bi bi-telephone" style={{ color: '#6b7280', fontSize: '12px' }} />{v.phone}</span>}
+                                                        {v.phone2 && <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', fontSize: '13px', color: '#374151' }}><i className="bi bi-telephone" style={{ color: '#6b7280', fontSize: '12px' }} />{v.phone2}</span>}
+                                                        {v.vat_no && <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', fontSize: '13px', color: '#374151' }}><i className="bi bi-receipt" style={{ color: '#6b7280', fontSize: '12px' }} /><span style={{ color: '#6b7280' }}>VAT:</span><strong>{v.vat_no}</strong></span>}
+                                                    </div>
+                                                )}
+                                                <div style={{ display: 'flex', alignItems: 'center', gap: '16px', flexWrap: 'wrap', borderTop: '1px solid #e2e8f0', paddingTop: '4px', marginTop: '2px' }}>
+                                                    <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', cursor: 'pointer', userSelect: 'none' }} onClick={() => openVendorPending(selectedVendors[0])} title="Click to view pendings">
+                                                        <i className="bi bi-wallet2" style={{ color: '#004ac6', fontSize: '13px' }} />
+                                                        <span style={{ fontSize: '13px', color: '#6b7280', fontWeight: 500 }}>{t('Cr.Balance')}:</span>
+                                                        <strong style={{ fontSize: '17px', fontWeight: 700, color: (v.credit_balance ?? 0) > 0 ? '#dc2626' : '#16a34a', letterSpacing: '-0.5px', textDecoration: 'underline dotted' }}><Amount amount={trimTo2Decimals(v.credit_balance ?? 0)} /></strong>
+                                                        <i className="bi bi-box-arrow-up-right" style={{ color: '#004ac6', fontSize: '10px' }} />
+                                                    </span>
+                                                    {(v.credit_limit > 0) && (
+                                                        <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+                                                            <i className="bi bi-shield-check" style={{ color: '#6b7280', fontSize: '13px' }} />
+                                                            <span style={{ fontSize: '13px', color: '#6b7280', fontWeight: 500 }}>{t('Limit')}:</span>
+                                                            <strong style={{ fontSize: '15px', fontWeight: 700, color: '#374151' }}><Amount amount={trimTo2Decimals(v.credit_limit)} /></strong>
+                                                        </span>
+                                                    )}
+                                                </div>
+                                            </div>
+                                        );
+                                    })()}
                                 </div>
-                            )}
-                        </div>
-                        <div className="col-md-1">
-
-                            {formData.vendor_id && <><Button className="btn btn-default" style={{ marginTop: "30px" }} onClick={() => {
-                                openVendorUpdateForm(formData.vendor_id);
-                            }}>
-                                <i class="bi bi-pencil"></i>
-                            </Button>&nbsp;</>}
-
-                            <Button className="btn btn-primary" style={{ marginTop: "30px" }} onClick={openVendors}>
-                                <i class="bi bi-list"></i>
-                            </Button>
-                        </div>
-                        {/*
-                        <div className="col-md-3">
-                            <label className="form-label">Product Barcode Scan</label>
-
-                            <div className="input-group mb-3">
-                                <DebounceInput
-                                    minLength={12}
-                                    debounceTimeout={500}
-                                    placeholder="Scan Barcode"
-                                    className="form-control barcode"
-                                    value={formData.barcode}
-                                    onChange={event => getProductByBarCode(event.target.value)} />
-                                {errors.bar_code && (
-                                    <div style={{ color: "red" }}>
-                                        <i className="bi bi-x-lg"> </i>
-                                        {errors.bar_code}
-                                    </div>
-                                )}
-                            
                             </div>
-                        </div>
-                                */}
-
-                        <div className="col-md-2">
-                            <label className="form-label">{t('Vendor Invoice No. (Optional)')}</label>
-
-                            <div className="input-group mb-3">
-                                <input id="purchase_vendor_invoice_no" name="purchase_vendor_invoice_no"
-                                    value={formData.vendor_invoice_no ? formData.vendor_invoice_no : ""}
-                                    type='string'
-                                    onChange={(e) => {
-                                        delete errors["vendor_invoice_no"];
-                                        setErrors({ ...errors });
-                                        formData.vendor_invoice_no = e.target.value;
-                                        setFormData({ ...formData });
-                                        console.log(formData);
-                                    }}
-                                    className="form-control"
-                                    placeholder={t('Vendor Invoice No. (Optional)')}
-                                />
-                                {errors.vendor_invoice_no && (
-                                    <div style={{ color: "red" }}>
-                                        {errors.vendor_invoice_no}
-                                    </div>
-                                )}
-
-                            </div>
-                        </div>
-
-                        <div className="col-md-3">
-                            <label className="form-label">{t('Date Time')}*</label>
-
-                            <div className="input-group mb-3">
-                                <DatePicker
-                                    id="date_str"
-                                    selected={formData.date_str ? new Date(formData.date_str) : null}
-                                    value={formData.date_str ? format(
-                                        new Date(formData.date_str),
-                                        "MMMM d, yyyy h:mm aa",
-                                        { locale: dateLocale }
-                                    ) : null}
-                                    className="form-control"
-                                    dateFormat="MMMM d, yyyy h:mm aa"
-                                    locale={dateLocale}
-                                    showTimeSelect
-                                    timeIntervals="1"
-                                    onChange={(value) => {
-                                        console.log("Value", value);
-                                        formData.date_str = value;
-                                        // formData.date_str = format(new Date(value), "MMMM d yyyy h:mm aa");
-                                        setFormData({ ...formData });
-                                    }}
-                                />
-
-                                {errors.date_str && (
-                                    <div style={{ color: "red" }}>
-                                        <i className="bi bi-x-lg"> </i>
-                                        {errors.date_str}
-                                    </div>
-                                )}
-                            </div>
-                        </div>
-
-                        <div className="col-md-2">
-                            <label className="form-label">{t('Phone ( 05.. / +966..)')}</label>
-
-                            <div className="input-group mb-3">
-                                <input
-                                    id="purchase_phone_no" name="purchase_phone_no"
-                                    value={formData.phone ? formData.phone : ""}
-                                    type='string'
-                                    onChange={(e) => {
-                                        delete errors["phone"];
-                                        setErrors({ ...errors });
-                                        formData.phone = e.target.value;
-                                        setFormData({ ...formData });
-                                        console.log(formData);
-                                    }}
-                                    className="form-control"
-                                    placeholder={t('Phone ( 05.. / +966..)')}
-                                />
-                            </div>
-                            {errors.phone && (
-                                <div style={{ color: "red" }}>
-
-                                    {errors.phone}
-                                </div>
-                            )}
-                        </div>
-
-                        <div className="col-md-1">
-                            <Button className={`btn btn-success btn-sm`} style={{ marginTop: "30px" }} onClick={sendWhatsAppMessage}>
-                                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="white" viewBox="0 0 16 16">
-                                    <path d="M13.601 2.326A7.875 7.875 0 0 0 8.036 0C3.596 0 0 3.597 0 8.036c0 1.417.37 2.805 1.07 4.03L0 16l3.993-1.05a7.968 7.968 0 0 0 4.043 1.085h.003c4.44 0 8.036-3.596 8.036-8.036 0-2.147-.836-4.166-2.37-5.673ZM8.036 14.6a6.584 6.584 0 0 1-3.35-.92l-.24-.142-2.37.622.63-2.31-.155-.238a6.587 6.587 0 0 1-1.018-3.513c0-3.637 2.96-6.6 6.6-6.6 1.764 0 3.42.69 4.67 1.94a6.56 6.56 0 0 1 1.93 4.668c0 3.637-2.96 6.6-6.6 6.6Zm3.61-4.885c-.198-.1-1.17-.578-1.352-.644-.18-.066-.312-.1-.444.1-.13.197-.51.644-.626.775-.115.13-.23.15-.428.05-.198-.1-.837-.308-1.594-.983-.59-.525-.99-1.174-1.11-1.372-.116-.198-.012-.305.088-.403.09-.09.198-.23.298-.345.1-.115.132-.197.2-.33.065-.13.032-.247-.017-.345-.05-.1-.444-1.07-.61-1.46-.16-.384-.323-.332-.444-.338l-.378-.007c-.13 0-.344.048-.525.23s-.688.672-.688 1.64c0 .967.704 1.9.802 2.03.1.13 1.386 2.116 3.365 2.963.47.203.837.324 1.122.414.472.15.902.13 1.24.08.378-.057 1.17-.48 1.336-.942.165-.462.165-.858.116-.943-.048-.084-.18-.132-.378-.23Z" />
-                                </svg>
-                            </Button>
-                        </div>
-
-                        <div className="col-md-2">
-                            <label className="form-label">{t('VAT NO.(15 digits)')}</label>
-
-                            <div className="input-group mb-3">
-                                <input
-                                    id="purchase_vat_no" name="purchase_vat_no"
-                                    value={formData.vat_no ? formData.vat_no : ""}
-                                    type='string'
-                                    onChange={(e) => {
-                                        delete errors["vat_no"];
-                                        setErrors({ ...errors });
-                                        formData.vat_no = e.target.value;
-                                        setFormData({ ...formData });
-                                        console.log(formData);
-                                    }}
-                                    className="form-control"
-                                    placeholder={t('VAT NO.(15 digits)')}
-                                />
-                            </div>
-                            {errors.vat_no && (
-                                <div style={{ color: "red" }}>
-
-                                    {errors.vat_no}
-                                </div>
-                            )}
-                        </div>
-
-                        <div className="col-md-3">
-                            <label className="form-label">{t('Address')}</label>
-                            <div className="input-group mb-3">
-                                <textarea
-                                    value={formData.address}
-                                    type='string'
-                                    onChange={(e) => {
-                                        delete errors["address"];
-                                        setErrors({ ...errors });
-                                        formData.address = e.target.value;
-                                        setFormData({ ...formData });
-                                        console.log(formData);
-                                    }}
-                                    className="form-control"
-                                    id="address"
-                                    placeholder={t('Address')}
-                                />
-                            </div>
-                            {errors.address && (
-                                <div style={{ color: "red" }}>
-
-                                    {errors.address}
-                                </div>
-                            )}
-                        </div>
-
-                        <div className="col-md-3" >
-                            <label className="form-label">{t('Remarks')}</label>
-                            <div className="input-group mb-3">
-                                <textarea
-                                    value={formData.remarks}
-                                    type='string'
-                                    onChange={(e) => {
-                                        delete errors["remarks"];
-                                        setErrors({ ...errors });
-                                        formData.remarks = e.target.value;
-                                        setFormData({ ...formData });
-                                        console.log(formData);
-                                    }}
-                                    className="form-control"
-                                    id="remarks"
-                                    placeholder={t('Remarks')}
-                                />
-                            </div>
-                            {errors.remarks && (
-                                <div style={{ color: "red" }}>
-                                    {errors.remarks}
-                                </div>
-                            )}
                         </div>
 
                         <div className="col-md-10">
@@ -3371,7 +3313,7 @@ const PurchaseCreate = forwardRef((props, ref) => {
                                     const searchWords = state.text.toLowerCase().split(" ").filter(Boolean);
 
                                     return (
-                                        <Menu {...menuProps}>
+                                        <Menu {...menuProps} style={{ minWidth: 'calc(100vw - 60px)' }}>
                                             {/* Header */}
                                             <MenuItem disabled style={{ position: 'sticky', top: 0, padding: 0, margin: 0 }}>
                                                 <div style={{
@@ -5850,7 +5792,7 @@ const PurchaseCreate = forwardRef((props, ref) => {
                                                             </div>
                                                         )}
                                                     </td>
-                                                    <td style={{ width: "200px" }}>
+                                                    <td style={{ width: "420px", position: 'relative' }}>
                                                         <select value={formData.payments_input[key].method} className="form-control "
                                                             onChange={(e) => {
                                                                 // errors["payment_method"] = [];
@@ -5886,13 +5828,13 @@ const PurchaseCreate = forwardRef((props, ref) => {
                                                             <option value="vendor_account">{t('Vendor Account')}</option>
                                                         </select>
                                                         {errors["payment_method_" + key] && (
-                                                            <div style={{ color: "red" }}>
+                                                            <div style={{ color: "red", position: 'absolute', left: 0, top: '100%', whiteSpace: 'nowrap', zIndex: 100, backgroundColor: '#fff', fontSize: '12px', padding: '2px 4px' }}>
                                                                 <i className="bi bi-x-lg"> </i>
                                                                 {errors["payment_method_" + key]}
                                                             </div>
                                                         )}
                                                     </td>
-                                                    <td style={{ width: "200px" }}>
+                                                    <td style={{ width: "672px" }}>
                                                         <input type='text' value={formData.payments_input[key].description || ""} className="form-control"
                                                             onChange={(e) => { formData.payments_input[key].description = e.target.value; setFormData({ ...formData }); }}
                                                             placeholder={t("Description")}

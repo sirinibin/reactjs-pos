@@ -251,7 +251,7 @@ export function SalesType1Body({
     return (
                         <form className="row g-3 needs-validation" onSubmit={e => { e.preventDefault(); handleCreate(e); }} >
                             <div className="col-12">
-                                <div style={{ display: 'grid', gridTemplateColumns: '1fr 350px', gap: '10px', alignItems: 'start' }}>
+                                <div className="entity-header-grid" style={{ gap: '10px', alignItems: 'start' }}>
 
                                     {/* LEFT: all form fields stacked */}
                                     <div style={{ minWidth: 0, display: 'flex', flexDirection: 'column', gap: '8px' }}>
@@ -522,7 +522,7 @@ export function SalesType1Body({
                                                     {/* Row 1: code + name + arabic name */}
                                                     <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
                                                         {c.code && <span style={{ background: '#dbeafe', color: '#1e40af', borderRadius: '4px', padding: '2px 8px', fontSize: '12px', fontWeight: 700, letterSpacing: '0.03em', flexShrink: 0 }}>{c.code}</span>}
-                                                        <span style={{ fontWeight: 700, fontSize: '15px', color: '#191c1e', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: '260px' }} title={c.name}>{c.name}</span>
+                                                        <span className="entity-detail-name" style={{ fontWeight: 700, fontSize: '15px', color: '#191c1e', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: '260px' }} title={c.name}>{c.name}</span>
                                                         {c.name_in_arabic && <span style={{ fontSize: '13px', color: '#64748b', fontFamily: 'Arial, sans-serif', flexShrink: 0 }}>{c.name_in_arabic}</span>}
                                                     </div>
                                                     {/* Row 2: phone(s) + VAT */}
@@ -1589,6 +1589,7 @@ export function SalesType1Body({
                                                                                 timerRef.current = setTimeout(() => {
                                                                                     CalCulateLineTotals(index);
                                                                                     reCalculate(index);
+                                                                                    checkErrors(index);
                                                                                 }, 100);
                                                                             } else if (e.key === "ArrowLeft") {
                                                                                 timerRef.current = setTimeout(() => {
@@ -1613,6 +1614,7 @@ export function SalesType1Body({
                                                                                 timerRef.current = setTimeout(() => {
                                                                                     CalCulateLineTotals(index);
                                                                                     reCalculate(index);
+                                                                                    checkErrors(index);
                                                                                 }, 100);
                                                                                 return;
                                                                             }
@@ -1628,6 +1630,7 @@ export function SalesType1Body({
                                                                                 timerRef.current = setTimeout(() => {
                                                                                     CalCulateLineTotals(index);
                                                                                     reCalculate(index);
+                                                                                    checkErrors(index);
                                                                                 }, 100);
                                                                                 return;
                                                                             }
@@ -1652,6 +1655,7 @@ export function SalesType1Body({
 
                                                                                 CalCulateLineTotals(index);
                                                                                 reCalculate(index);
+                                                                                checkErrors(index);
                                                                             }, 100);
                                                                         }} />
                                                                 </div>
@@ -2820,7 +2824,7 @@ export function SalesType1Body({
                                                                 </div>
                                                             )}
                                                         </td>
-                                                        <td style={{ width: "200px" }}>
+                                                        <td style={{ width: "420px", position: 'relative' }}>
                                                             <select value={formData.payments_input[key].method} className="form-control "
                                                                 onChange={(e) => {
                                                                     // errors["payment_method"] = [];
@@ -2855,13 +2859,12 @@ export function SalesType1Body({
                                                                 <option value="purchase">{t("Purchase")}</option>
                                                             </select>
                                                             {errors["payment_method_" + key] && (
-                                                                <div style={{ color: "red" }}>
-
+                                                                <div style={{ color: "red", position: 'absolute', left: 0, top: '100%', whiteSpace: 'nowrap', zIndex: 100, backgroundColor: '#fff', fontSize: '12px', padding: '2px 4px' }}>
                                                                     {t(errors["payment_method_" + key])}
                                                                 </div>
                                                             )}
                                                         </td>
-                                                        <td style={{ width: "200px" }}>
+                                                        <td style={{ width: "672px" }}>
                                                             <input type='text' value={formData.payments_input[key].description || ""} className="form-control"
                                                                 onChange={(e) => { formData.payments_input[key].description = e.target.value; setFormData({ ...formData }); }}
                                                                 placeholder={t("Description")}

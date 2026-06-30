@@ -20,7 +20,6 @@ const WarehouseCreate = forwardRef((props, ref) => {
             if (id) {
                 getWarehouse(id);
             }
-            setActiveTab('general');
             SetShow(true);
         },
     }));
@@ -48,7 +47,6 @@ const WarehouseCreate = forwardRef((props, ref) => {
 
     let [errors, setErrors] = useState({});
     const [isProcessing, setProcessing] = useState(false);
-    const [activeTab, setActiveTab] = useState('general');
     const [flash, setFlash] = useState(null);
     const flashTimerRef = useRef(null);
     const timerRef = useRef(null);
@@ -157,8 +155,6 @@ const WarehouseCreate = forwardRef((props, ref) => {
 
         if (haveErrors) {
             setErrors({ ...errors });
-            const errorKeys = Object.keys(errors).filter(k => errors[k]);
-            if (errorKeys.length > 0) setActiveTab(getErrorTab(errorKeys[0]));
             showFlash("Please fix the errors before saving.", "danger");
             return;
         }
@@ -236,25 +232,7 @@ const WarehouseCreate = forwardRef((props, ref) => {
         </div>
     );
 
-    const NAV_TABS = [
-        { id: 'general', label: 'General Info', icon: 'bi-info-circle' },
-        { id: 'address', label: 'National Address', icon: 'bi-geo-alt' },
-    ];
-
-    const ERROR_TAB_MAP = {
-        name: 'general', name_in_arabic: 'general', phone: 'general', email: 'general', country_code: 'general',
-        national_address_building_no: 'address', national_address_zipcode: 'address',
-    };
-    const getErrorTab = (key) => {
-        if (ERROR_TAB_MAP[key]) return ERROR_TAB_MAP[key];
-        if (key.startsWith('national_address_')) return 'address';
-        return 'general';
-    };
     const allErrors = Object.entries(errors).filter(([, v]) => v);
-    const tabErrorCounts = NAV_TABS.reduce((acc, tab) => {
-        acc[tab.id] = allErrors.filter(([k]) => getErrorTab(k) === tab.id).length;
-        return acc;
-    }, {});
     const totalErrors = allErrors.length;
 
     return (
@@ -314,318 +292,253 @@ const WarehouseCreate = forwardRef((props, ref) => {
                     @keyframes fadeInDown { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
                     .pw-modal .modal-content { display: flex; flex-direction: column; height: 100%; }
                     .pw-body { padding: 0 !important; overflow: hidden !important; display: flex !important; flex-direction: column !important; flex: 1 !important; min-height: 0 !important; }
-                    .pw-form { display: flex; width: 100%; flex: 1; min-height: 0; }
-                    .pw-sidebar { width: 200px; background: #f2f4f6; border-right: 1px solid #c3c6d7; padding: 16px 10px; flex-shrink: 0; overflow-y: auto; display: flex; flex-direction: column; gap: 4px; }
-                    .pw-sidebar-header { margin-bottom: 16px; }
-                    .pw-content { flex: 1; display: flex; flex-direction: column; background: #f7f9fb; min-width: 0; overflow: hidden; }
-                    .pw-content-scroll { flex: 1; overflow-y: auto; padding: 20px 28px; }
+                    .pw-content-scroll { flex: 1; overflow-y: auto; padding: 20px 28px; background: #f7f9fb; }
                     .pw-tab-wrap { max-width: 900px; }
                     @media (max-width: 767px) {
-                        .pw-form { flex-direction: column; }
-                        .pw-sidebar { width: 100%; height: auto; flex-direction: row; overflow-x: auto; overflow-y: hidden; border-right: none; border-bottom: 1px solid #c3c6d7; padding: 6px 8px; gap: 4px; }
-                        .pw-sidebar-header { display: none; }
-                        .pw-sidebar button { flex-shrink: 0; white-space: nowrap; padding: 8px 12px !important; }
                         .pw-content-scroll { padding: 14px 16px !important; }
                         .pw-tab-wrap { max-width: 100%; }
                     }
                     @media (min-width: 768px) and (max-width: 1100px) {
-                        .pw-sidebar { width: 170px; }
                         .pw-content-scroll { padding: 16px 20px; }
                         .pw-tab-wrap { max-width: 100%; }
                     }
                 `}</style>
                 <Modal.Body className="pw-body">
-                    <form onSubmit={handleCreate} className="pw-form">
+                    <form onSubmit={handleCreate} style={{ display: 'flex', flexDirection: 'column', flex: 1, minHeight: 0 }}>
+                        <div className="pw-content-scroll">
 
-                        {/* Left Nav Sidebar */}
-                        <aside className="pw-sidebar">
-                            <div className="pw-sidebar-header">
-                                <div style={{ fontFamily: '"Hanken Grotesk", sans-serif', fontSize: '15px', fontWeight: 700, color: '#191c1e', marginBottom: '2px' }}>
-                                    {formData.id ? 'Edit Warehouse' : 'New Warehouse'}
+                            {/* Error Summary */}
+                            <div style={{ overflow: 'hidden', maxHeight: totalErrors > 0 ? '500px' : '0', marginBottom: totalErrors > 0 ? '16px' : '0', transition: 'max-height 0.25s ease, margin-bottom 0.2s ease' }}>
+                                <div style={{ background: '#ffdad6', border: '1px solid #f4adaa', borderRadius: '8px', padding: '12px 16px' }}>
+                                    <div style={{ fontFamily: '"Inter", sans-serif', fontWeight: 700, color: '#93000a', marginBottom: '8px', fontSize: '13px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                        <i className="bi bi-exclamation-circle-fill" style={{ fontSize: '14px' }}></i>
+                                        {totalErrors} error{totalErrors > 1 ? 's' : ''} — please fix before saving:
+                                    </div>
+                                    {allErrors.map(([k, v]) => (
+                                        <div key={k} style={{ fontFamily: '"Inter", sans-serif', fontSize: '12px', color: '#93000a', paddingLeft: '10px' }}>• {v}</div>
+                                    ))}
                                 </div>
-                                <div style={{ fontFamily: '"Inter", sans-serif', fontSize: '11px', color: '#434655' }}>Warehouse Wizard</div>
                             </div>
-                            {NAV_TABS.map((tab) => (
-                                <button key={tab.id} type="button"
-                                    onClick={() => setActiveTab(tab.id)}
-                                    style={{
-                                        display: 'flex', alignItems: 'center', gap: '8px',
-                                        padding: '9px 10px', borderRadius: '6px', border: 'none', cursor: 'pointer', textAlign: 'left', width: '100%',
-                                        background: activeTab === tab.id ? '#2563eb' : 'transparent',
-                                        color: activeTab === tab.id ? '#eeefff' : '#434655',
-                                        fontFamily: '"Inter", sans-serif', fontSize: '13px', fontWeight: activeTab === tab.id ? 700 : 500,
-                                    }}
-                                    onMouseEnter={(e) => { if (activeTab !== tab.id) e.currentTarget.style.background = '#e0e3e5'; }}
-                                    onMouseLeave={(e) => { if (activeTab !== tab.id) e.currentTarget.style.background = 'transparent'; }}
-                                >
-                                    <i className={`bi ${tab.icon}`} style={{ fontSize: '15px', flexShrink: 0 }}></i>
-                                    <span style={{ flex: 1 }}>{tab.label}</span>
-                                    {tabErrorCounts[tab.id] > 0 && (
-                                        <span style={{
-                                            background: '#ba1a1a', color: '#fff', borderRadius: '50%',
-                                            width: '18px', height: '18px', fontSize: '10px', fontWeight: 700,
-                                            display: 'inline-flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
-                                        }}>
-                                            {tabErrorCounts[tab.id]}
-                                        </span>
-                                    )}
-                                </button>
-                            ))}
-                        </aside>
 
-                        {/* Main Content Area */}
-                        <div className="pw-content">
-                            <div className="pw-content-scroll">
-
-                                {/* Error Summary */}
-                                <div style={{ overflow: 'hidden', maxHeight: totalErrors > 0 ? '500px' : '0', marginBottom: totalErrors > 0 ? '16px' : '0', transition: 'max-height 0.25s ease, margin-bottom 0.2s ease' }}>
-                                    <div style={{ background: '#ffdad6', border: '1px solid #f4adaa', borderRadius: '8px', padding: '12px 16px' }}>
-                                        <div style={{ fontFamily: '"Inter", sans-serif', fontWeight: 700, color: '#93000a', marginBottom: '8px', fontSize: '13px', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                                            <i className="bi bi-exclamation-circle-fill" style={{ fontSize: '14px' }}></i>
-                                            {totalErrors} error{totalErrors > 1 ? 's' : ''} — please fix before saving:
+                            {/* General Info */}
+                            <div className="pw-tab-wrap">
+                                <div className="pw-card" style={CARD}>
+                                    <SectionTitle icon="bi-building">Warehouse Identity</SectionTitle>
+                                    <div className="row g-3">
+                                        <div className="col-md-6">
+                                            <Label required>Name</Label>
+                                            <input
+                                                value={formData.name || ""}
+                                                type="text"
+                                                onChange={(e) => {
+                                                    errors["name"] = ""; setErrors({ ...errors });
+                                                    formData.name = e.target.value; setFormData({ ...formData });
+                                                }}
+                                                style={INPUT} placeholder="Warehouse name"
+                                            />
+                                            {errors.name && <ErrMsg>{errors.name}</ErrMsg>}
                                         </div>
-                                        {NAV_TABS.map((tab) => {
-                                            const tabErrs = allErrors.filter(([k]) => getErrorTab(k) === tab.id);
-                                            if (!tabErrs.length) return null;
-                                            return (
-                                                <div key={tab.id} style={{ marginBottom: '6px' }}>
-                                                    <button type="button" onClick={() => setActiveTab(tab.id)}
-                                                        style={{ background: 'none', border: 'none', padding: 0, fontFamily: '"Inter", sans-serif', fontWeight: 700, color: '#004ac6', cursor: 'pointer', fontSize: '12px', textDecoration: 'underline', display: 'block', marginBottom: '2px' }}>
-                                                        {tab.label}:
-                                                    </button>
-                                                    {tabErrs.map(([k, v]) => (
-                                                        <div key={k} style={{ fontFamily: '"Inter", sans-serif', fontSize: '12px', color: '#93000a', paddingLeft: '10px' }}>• {v}</div>
-                                                    ))}
-                                                </div>
-                                            );
-                                        })}
+                                        <div className="col-md-6">
+                                            <Label>Name in Arabic</Label>
+                                            <input
+                                                value={formData.name_in_arabic || ""}
+                                                type="text"
+                                                onChange={(e) => {
+                                                    errors["name_in_arabic"] = ""; setErrors({ ...errors });
+                                                    formData.name_in_arabic = e.target.value; setFormData({ ...formData });
+                                                }}
+                                                style={{ ...INPUT, direction: 'rtl' }} placeholder="اسم المستودع"
+                                            />
+                                            {errors.name_in_arabic && <ErrMsg>{errors.name_in_arabic}</ErrMsg>}
+                                        </div>
+                                        <div className="col-md-4">
+                                            <Label>Phone (05.. / +966..)</Label>
+                                            <input
+                                                value={formData.phone || ""}
+                                                type="text"
+                                                onChange={(e) => {
+                                                    errors["phone"] = ""; setErrors({ ...errors });
+                                                    formData.phone = e.target.value; setFormData({ ...formData });
+                                                }}
+                                                style={INPUT} placeholder="Phone"
+                                            />
+                                            {errors.phone && <ErrMsg>{errors.phone}</ErrMsg>}
+                                        </div>
+                                        <div className="col-md-4">
+                                            <Label>Email</Label>
+                                            <input
+                                                value={formData.email || ""}
+                                                type="text"
+                                                onChange={(e) => {
+                                                    errors["email"] = ""; setErrors({ ...errors });
+                                                    formData.email = e.target.value; setFormData({ ...formData });
+                                                }}
+                                                style={INPUT} placeholder="Email"
+                                            />
+                                            {errors.email && <ErrMsg>{errors.email}</ErrMsg>}
+                                        </div>
+                                        <div className="col-md-4">
+                                            <Label>Country</Label>
+                                            <Typeahead
+                                                id="country_code"
+                                                labelKey="label"
+                                                onChange={(selectedItems) => {
+                                                    errors.country_code = ""; setErrors(errors);
+                                                    if (selectedItems.length === 0) {
+                                                        errors.country_code = "Invalid country selected"; setErrors(errors);
+                                                        formData.country_code = ""; formData.country_name = "";
+                                                        setFormData({ ...formData }); setSelectedCountries([]); return;
+                                                    }
+                                                    formData.country_code = selectedItems[0].value;
+                                                    formData.country_name = selectedItems[0].label;
+                                                    setFormData({ ...formData }); setSelectedCountries(selectedItems);
+                                                }}
+                                                options={countryOptions} placeholder="Country name"
+                                                selected={selectedCountries} highlightOnlyResult={true}
+                                                ref={countrySearchRef}
+                                                onKeyDown={(e) => { if (e.key === "Escape") { countrySearchRef.current?.clear(); } }}
+                                                onInputChange={() => {}}
+                                            />
+                                            {errors.country_code && <ErrMsg>{errors.country_code}</ErrMsg>}
+                                        </div>
                                     </div>
                                 </div>
-
-                                {/* ===== TAB: GENERAL INFO ===== */}
-                                {activeTab === 'general' && (
-                                    <div className="pw-tab-wrap">
-                                        <div className="pw-card" style={CARD}>
-                                            <SectionTitle icon="bi-building">Warehouse Identity</SectionTitle>
-                                            <div className="row g-3">
-                                                <div className="col-md-6">
-                                                    <Label required>Name</Label>
-                                                    <input
-                                                        value={formData.name || ""}
-                                                        type="text"
-                                                        onChange={(e) => {
-                                                            errors["name"] = ""; setErrors({ ...errors });
-                                                            formData.name = e.target.value; setFormData({ ...formData });
-                                                        }}
-                                                        style={INPUT} placeholder="Warehouse name"
-                                                    />
-                                                    {errors.name && <ErrMsg>{errors.name}</ErrMsg>}
-                                                </div>
-                                                <div className="col-md-6">
-                                                    <Label>Name in Arabic</Label>
-                                                    <input
-                                                        value={formData.name_in_arabic || ""}
-                                                        type="text"
-                                                        onChange={(e) => {
-                                                            errors["name_in_arabic"] = ""; setErrors({ ...errors });
-                                                            formData.name_in_arabic = e.target.value; setFormData({ ...formData });
-                                                        }}
-                                                        style={{ ...INPUT, direction: 'rtl' }} placeholder="اسم المستودع"
-                                                    />
-                                                    {errors.name_in_arabic && <ErrMsg>{errors.name_in_arabic}</ErrMsg>}
-                                                </div>
-                                                <div className="col-md-4">
-                                                    <Label>Phone (05.. / +966..)</Label>
-                                                    <input
-                                                        value={formData.phone || ""}
-                                                        type="text"
-                                                        onChange={(e) => {
-                                                            errors["phone"] = ""; setErrors({ ...errors });
-                                                            formData.phone = e.target.value; setFormData({ ...formData });
-                                                        }}
-                                                        style={INPUT} placeholder="Phone"
-                                                    />
-                                                    {errors.phone && <ErrMsg>{errors.phone}</ErrMsg>}
-                                                </div>
-                                                <div className="col-md-4">
-                                                    <Label>Email</Label>
-                                                    <input
-                                                        value={formData.email || ""}
-                                                        type="text"
-                                                        onChange={(e) => {
-                                                            errors["email"] = ""; setErrors({ ...errors });
-                                                            formData.email = e.target.value; setFormData({ ...formData });
-                                                        }}
-                                                        style={INPUT} placeholder="Email"
-                                                    />
-                                                    {errors.email && <ErrMsg>{errors.email}</ErrMsg>}
-                                                </div>
-                                                <div className="col-md-4">
-                                                    <Label>Country</Label>
-                                                    <Typeahead
-                                                        id="country_code"
-                                                        labelKey="label"
-                                                        onChange={(selectedItems) => {
-                                                            errors.country_code = ""; setErrors(errors);
-                                                            if (selectedItems.length === 0) {
-                                                                errors.country_code = "Invalid country selected"; setErrors(errors);
-                                                                formData.country_code = ""; formData.country_name = "";
-                                                                setFormData({ ...formData }); setSelectedCountries([]); return;
-                                                            }
-                                                            formData.country_code = selectedItems[0].value;
-                                                            formData.country_name = selectedItems[0].label;
-                                                            setFormData({ ...formData }); setSelectedCountries(selectedItems);
-                                                        }}
-                                                        options={countryOptions} placeholder="Country name"
-                                                        selected={selectedCountries} highlightOnlyResult={true}
-                                                        ref={countrySearchRef}
-                                                        onKeyDown={(e) => { if (e.key === "Escape") { countrySearchRef.current?.clear(); } }}
-                                                        onInputChange={() => {}}
-                                                    />
-                                                    {errors.country_code && <ErrMsg>{errors.country_code}</ErrMsg>}
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                )}
-
-                                {/* ===== TAB: NATIONAL ADDRESS ===== */}
-                                {activeTab === 'address' && (
-                                    <div className="pw-tab-wrap">
-                                        <div className="pw-card" style={CARD}>
-                                            <SectionTitle icon="bi-geo-alt">National Address</SectionTitle>
-                                            <div className="row g-3">
-                                                <div className="col-md-3">
-                                                    <Label>Short Code</Label>
-                                                    <input
-                                                        value={formData.national_address?.short_code || ""}
-                                                        type="text"
-                                                        onChange={(e) => {
-                                                            formData.national_address.short_code = e.target.value; setFormData({ ...formData });
-                                                        }}
-                                                        style={INPUT} placeholder="Short code"
-                                                    />
-                                                </div>
-                                                <div className="col-md-3">
-                                                    <Label>Building Number (4 digits)</Label>
-                                                    <input
-                                                        value={formData.national_address?.building_no || ""}
-                                                        type="text"
-                                                        onChange={(e) => {
-                                                            errors["national_address_building_no"] = "";
-                                                            formData.national_address.building_no = e.target.value; setFormData({ ...formData });
-                                                        }}
-                                                        style={INPUT} placeholder="Building Number"
-                                                    />
-                                                    {errors.national_address_building_no && <ErrMsg>{errors.national_address_building_no}</ErrMsg>}
-                                                </div>
-                                                <div className="col-md-3">
-                                                    <Label>Street Name</Label>
-                                                    <input
-                                                        value={formData.national_address?.street_name || ""}
-                                                        type="text"
-                                                        onChange={(e) => {
-                                                            formData.national_address.street_name = e.target.value; setFormData({ ...formData });
-                                                        }}
-                                                        style={INPUT} placeholder="Street Name"
-                                                    />
-                                                </div>
-                                                <div className="col-md-3">
-                                                    <Label>Street Name (Arabic)</Label>
-                                                    <input
-                                                        value={formData.national_address?.street_name_arabic || ""}
-                                                        type="text"
-                                                        onChange={(e) => {
-                                                            formData.national_address.street_name_arabic = e.target.value; setFormData({ ...formData });
-                                                        }}
-                                                        style={{ ...INPUT, direction: 'rtl' }} placeholder="اسم الشارع"
-                                                    />
-                                                </div>
-                                                <div className="col-md-3">
-                                                    <Label>District Name</Label>
-                                                    <input
-                                                        value={formData.national_address?.district_name || ""}
-                                                        type="text"
-                                                        onChange={(e) => {
-                                                            formData.national_address.district_name = e.target.value; setFormData({ ...formData });
-                                                        }}
-                                                        style={INPUT} placeholder="District Name"
-                                                    />
-                                                </div>
-                                                <div className="col-md-3">
-                                                    <Label>District Name (Arabic)</Label>
-                                                    <input
-                                                        value={formData.national_address?.district_name_arabic || ""}
-                                                        type="text"
-                                                        onChange={(e) => {
-                                                            formData.national_address.district_name_arabic = e.target.value; setFormData({ ...formData });
-                                                        }}
-                                                        style={{ ...INPUT, direction: 'rtl' }} placeholder="اسم الحي"
-                                                    />
-                                                </div>
-                                                <div className="col-md-3">
-                                                    <Label>City Name</Label>
-                                                    <input
-                                                        value={formData.national_address?.city_name || ""}
-                                                        type="text"
-                                                        onChange={(e) => {
-                                                            formData.national_address.city_name = e.target.value; setFormData({ ...formData });
-                                                        }}
-                                                        style={INPUT} placeholder="City Name"
-                                                    />
-                                                </div>
-                                                <div className="col-md-3">
-                                                    <Label>City Name (Arabic)</Label>
-                                                    <input
-                                                        value={formData.national_address?.city_name_arabic || ""}
-                                                        type="text"
-                                                        onChange={(e) => {
-                                                            formData.national_address.city_name_arabic = e.target.value; setFormData({ ...formData });
-                                                        }}
-                                                        style={{ ...INPUT, direction: 'rtl' }} placeholder="اسم المدينة"
-                                                    />
-                                                </div>
-                                                <div className="col-md-3">
-                                                    <Label>Zipcode (5 digits)</Label>
-                                                    <input
-                                                        value={formData.national_address?.zipcode || ""}
-                                                        type="text"
-                                                        onChange={(e) => {
-                                                            errors["national_address_zipcode"] = "";
-                                                            formData.national_address.zipcode = e.target.value; setFormData({ ...formData });
-                                                        }}
-                                                        style={INPUT} placeholder="Zipcode"
-                                                    />
-                                                    {errors.national_address_zipcode && <ErrMsg>{errors.national_address_zipcode}</ErrMsg>}
-                                                </div>
-                                                <div className="col-md-3">
-                                                    <Label>Additional Number</Label>
-                                                    <input
-                                                        value={formData.national_address?.additional_no || ""}
-                                                        type="text"
-                                                        onChange={(e) => {
-                                                            formData.national_address.additional_no = e.target.value; setFormData({ ...formData });
-                                                        }}
-                                                        style={INPUT} placeholder="Additional Number"
-                                                    />
-                                                </div>
-                                                <div className="col-md-3">
-                                                    <Label>Unit Number</Label>
-                                                    <input
-                                                        value={formData.national_address?.unit_no || ""}
-                                                        type="text"
-                                                        onChange={(e) => {
-                                                            formData.national_address.unit_no = e.target.value; setFormData({ ...formData });
-                                                        }}
-                                                        style={INPUT} placeholder="Unit Number"
-                                                    />
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                )}
-
                             </div>
+
+                            {/* National Address */}
+                            <div className="pw-tab-wrap">
+                                <div className="pw-card" style={CARD}>
+                                    <SectionTitle icon="bi-geo-alt">National Address</SectionTitle>
+                                    <div className="row g-3">
+                                        <div className="col-md-3">
+                                            <Label>Short Code</Label>
+                                            <input
+                                                value={formData.national_address?.short_code || ""}
+                                                type="text"
+                                                onChange={(e) => {
+                                                    formData.national_address.short_code = e.target.value; setFormData({ ...formData });
+                                                }}
+                                                style={INPUT} placeholder="Short code"
+                                            />
+                                        </div>
+                                        <div className="col-md-3">
+                                            <Label>Building Number (4 digits)</Label>
+                                            <input
+                                                value={formData.national_address?.building_no || ""}
+                                                type="text"
+                                                onChange={(e) => {
+                                                    errors["national_address_building_no"] = "";
+                                                    formData.national_address.building_no = e.target.value; setFormData({ ...formData });
+                                                }}
+                                                style={INPUT} placeholder="Building Number"
+                                            />
+                                            {errors.national_address_building_no && <ErrMsg>{errors.national_address_building_no}</ErrMsg>}
+                                        </div>
+                                        <div className="col-md-3">
+                                            <Label>Street Name</Label>
+                                            <input
+                                                value={formData.national_address?.street_name || ""}
+                                                type="text"
+                                                onChange={(e) => {
+                                                    formData.national_address.street_name = e.target.value; setFormData({ ...formData });
+                                                }}
+                                                style={INPUT} placeholder="Street Name"
+                                            />
+                                        </div>
+                                        <div className="col-md-3">
+                                            <Label>Street Name (Arabic)</Label>
+                                            <input
+                                                value={formData.national_address?.street_name_arabic || ""}
+                                                type="text"
+                                                onChange={(e) => {
+                                                    formData.national_address.street_name_arabic = e.target.value; setFormData({ ...formData });
+                                                }}
+                                                style={{ ...INPUT, direction: 'rtl' }} placeholder="اسم الشارع"
+                                            />
+                                        </div>
+                                        <div className="col-md-3">
+                                            <Label>District Name</Label>
+                                            <input
+                                                value={formData.national_address?.district_name || ""}
+                                                type="text"
+                                                onChange={(e) => {
+                                                    formData.national_address.district_name = e.target.value; setFormData({ ...formData });
+                                                }}
+                                                style={INPUT} placeholder="District Name"
+                                            />
+                                        </div>
+                                        <div className="col-md-3">
+                                            <Label>District Name (Arabic)</Label>
+                                            <input
+                                                value={formData.national_address?.district_name_arabic || ""}
+                                                type="text"
+                                                onChange={(e) => {
+                                                    formData.national_address.district_name_arabic = e.target.value; setFormData({ ...formData });
+                                                }}
+                                                style={{ ...INPUT, direction: 'rtl' }} placeholder="اسم الحي"
+                                            />
+                                        </div>
+                                        <div className="col-md-3">
+                                            <Label>City Name</Label>
+                                            <input
+                                                value={formData.national_address?.city_name || ""}
+                                                type="text"
+                                                onChange={(e) => {
+                                                    formData.national_address.city_name = e.target.value; setFormData({ ...formData });
+                                                }}
+                                                style={INPUT} placeholder="City Name"
+                                            />
+                                        </div>
+                                        <div className="col-md-3">
+                                            <Label>City Name (Arabic)</Label>
+                                            <input
+                                                value={formData.national_address?.city_name_arabic || ""}
+                                                type="text"
+                                                onChange={(e) => {
+                                                    formData.national_address.city_name_arabic = e.target.value; setFormData({ ...formData });
+                                                }}
+                                                style={{ ...INPUT, direction: 'rtl' }} placeholder="اسم المدينة"
+                                            />
+                                        </div>
+                                        <div className="col-md-3">
+                                            <Label>Zipcode (5 digits)</Label>
+                                            <input
+                                                value={formData.national_address?.zipcode || ""}
+                                                type="text"
+                                                onChange={(e) => {
+                                                    errors["national_address_zipcode"] = "";
+                                                    formData.national_address.zipcode = e.target.value; setFormData({ ...formData });
+                                                }}
+                                                style={INPUT} placeholder="Zipcode"
+                                            />
+                                            {errors.national_address_zipcode && <ErrMsg>{errors.national_address_zipcode}</ErrMsg>}
+                                        </div>
+                                        <div className="col-md-3">
+                                            <Label>Additional Number</Label>
+                                            <input
+                                                value={formData.national_address?.additional_no || ""}
+                                                type="text"
+                                                onChange={(e) => {
+                                                    formData.national_address.additional_no = e.target.value; setFormData({ ...formData });
+                                                }}
+                                                style={INPUT} placeholder="Additional Number"
+                                            />
+                                        </div>
+                                        <div className="col-md-3">
+                                            <Label>Unit Number</Label>
+                                            <input
+                                                value={formData.national_address?.unit_no || ""}
+                                                type="text"
+                                                onChange={(e) => {
+                                                    formData.national_address.unit_no = e.target.value; setFormData({ ...formData });
+                                                }}
+                                                style={INPUT} placeholder="Unit Number"
+                                            />
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
                         </div>
                     </form>
                 </Modal.Body>

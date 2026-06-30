@@ -11930,3 +11930,55 @@ span.flatpickr-weekday {
   top: 0;
   width: 260px;
 }
+
+/* Responsive two-column entity header grid (vendor/customer search + detail panel) */
+.entity-header-grid {
+    display: grid;
+    grid-template-columns: 1fr 350px;
+    gap: 16px;
+    align-items: stretch;
+}
+@media (max-width: 767.98px) {
+    .entity-header-grid {
+        grid-template-columns: 1fr !important;
+    }
+    .entity-header-grid > div:last-child {
+        height: auto !important;
+    }
+}
+
+/* ── Entity search flex row: allow buttons to wrap on narrow screens ── */
+.entity-search-row {
+    display: flex;
+    gap: 4px;
+    align-items: flex-start;
+    flex-wrap: nowrap;
+}
+@media (max-width: 480px) {
+    .entity-search-row {
+        flex-wrap: wrap;
+    }
+    .entity-search-row > div:first-child {
+        flex: 1 1 100%;
+    }
+}
+
+/* ── Modal header actions: wrap on mobile ── */
+@media (max-width: 767.98px) {
+    .modal-header .col.align-self-end.text-end {
+        text-align: left !important;
+        flex: 1 1 100% !important;
+        display: flex !important;
+        flex-wrap: wrap !important;
+        gap: 4px !important;
+    }
+    .modal-header .col.align-self-end.text-end .btn {
+        font-size: 12px !important;
+        padding: 4px 8px !important;
+    }
+    /* Entity detail name: allow wrapping on mobile */
+    .entity-header-grid .entity-detail-name {
+        max-width: 100% !important;
+        white-space: normal !important;
+    }
+}

@@ -62,19 +62,16 @@ const ImageGallery = forwardRef((props, ref) => {
          return new Promise(resolve => setTimeout(resolve, ms));
      }*/
 
-    const handleImageChange = async (e) => {
-        const files = Array.from(e.target.files || []);
+    const processFiles = async (fileList) => {
+        const files = Array.from(fileList || []);
         if (!files.length) return;
 
         const compressedFiles = await Promise.all(files.map(async (file) => {
             const compressedFile = await imageCompression(file, {
-                /* maxSizeMB: 0.3,
-                 maxWidthOrHeight: 1024,
-                 useWebWorker: true*/
-                maxSizeMB: 1.0,               // allow larger target to keep quality
-                maxWidthOrHeight: 2048,      // preserve higher resolution
+                maxSizeMB: 1.0,
+                maxWidthOrHeight: 2048,
                 useWebWorker: true,
-                initialQuality: 0.9,         // start with high quality
+                initialQuality: 0.9,
                 fileType: file.type,
             });
 
@@ -89,6 +86,8 @@ const ImageGallery = forwardRef((props, ref) => {
             uploadToServer(img, newImages.length - compressedFiles.length + indexOffset);
         });
     };
+
+    const handleImageChange = (e) => processFiles(e.target.files);
 
     const uploadToServer = async (img, index) => {
         const formData = new FormData();
@@ -167,13 +166,21 @@ const ImageGallery = forwardRef((props, ref) => {
 
     return (
         <div className="mt-3">
-            <input
-                type="file"
-                accept="image/*"
-                multiple
-                className="form-control mb-3"
-                onChange={handleImageChange}
-            />
+            <label
+                style={{
+                    display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+                    border: '2px dashed #c3c6d7', borderRadius: '8px', padding: '24px 20px',
+                    cursor: 'pointer', background: '#f7f9fb', gap: '8px', marginBottom: '16px',
+                }}
+                onDragOver={e => { e.preventDefault(); e.currentTarget.style.borderColor = '#004ac6'; }}
+                onDragLeave={e => { e.currentTarget.style.borderColor = '#c3c6d7'; }}
+                onDrop={e => { e.preventDefault(); e.currentTarget.style.borderColor = '#c3c6d7'; processFiles(e.dataTransfer.files); }}
+            >
+                <i className="bi bi-cloud-upload" style={{ fontSize: '32px', color: '#004ac6' }}></i>
+                <span style={{ fontSize: '14px', fontWeight: 600, color: '#191c1e' }}>Click or drag images here</span>
+                <span style={{ fontSize: '12px', color: '#737686' }}>JPG, PNG, GIF, WebP — multiple supported</span>
+                <input type="file" accept="image/*" multiple style={{ display: 'none' }} onChange={handleImageChange} />
+            </label>
 
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
                 {images?.map((img, index) => (

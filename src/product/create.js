@@ -95,7 +95,6 @@ const ProductCreate = forwardRef((props, ref) => {
 
       }
 
-      setActiveTab('basic');
       SetShow(true);
     },
   }));
@@ -919,7 +918,7 @@ const ProductCreate = forwardRef((props, ref) => {
 
   let [damagedStock, setDamagedStock] = useState('');
   const [operationType, setOperationType] = useState(null); // 'add' or 'remove'
-  const [activeTab, setActiveTab] = useState('basic');
+
 
   const inputRefs = useRef({});
   const countrySearchRef = useRef();
@@ -1204,7 +1203,7 @@ const ProductCreate = forwardRef((props, ref) => {
 
   const SHORTCUTS = {
     DEFAULT: {
-      linkedProducts: "Ctrl + Shift + 1",
+      linkedProducts: "Ctrl + Shift + 9",
       productHistory: "Ctrl + Shift + 2",
       salesHistory: "Ctrl + Shift + 3",
       salesReturnHistory: "Ctrl + Shift + 4",
@@ -1212,25 +1211,25 @@ const ProductCreate = forwardRef((props, ref) => {
       purchaseReturnHistory: "Ctrl + Shift + 6",
       deliveryNoteHistory: "Ctrl + Shift + 7",
       quotationHistory: "Ctrl + Shift + 8",
-      quotationSalesHistory: "Ctrl + Shift + 9",
+      quotationSalesHistory: "Ctrl + Shift + 1",
       quotationSalesReturnHistory: "Ctrl + Shift + Z",
       images: "Ctrl + Shift + F",
     },
     LGK: {
-      linkedProducts: "F10",
+      linkedProducts: "F3",
       productHistory: "Ctrl + Shift + B",
       salesHistory: "F4",
       salesReturnHistory: "F9",
       purchaseHistory: "F6",
       purchaseReturnHistory: "F8",
-      deliveryNoteHistory: "F3",
+      deliveryNoteHistory: "Ctrl + Shift + P",
       quotationHistory: "F2",
-      quotationSalesHistory: "Ctrl + Shift + P",
+      quotationSalesHistory: "F10",
       quotationSalesReturnHistory: "Ctrl + Shift + Z",
       images: "Ctrl + Shift + F",
     },
     MBDI: {
-      linkedProducts: "F10",
+      linkedProducts: "Ctrl + Shift + 7",
       productHistory: "Ctrl + Shift + 6",
       salesHistory: "F4",
       salesReturnHistory: "F9",
@@ -1238,7 +1237,7 @@ const ProductCreate = forwardRef((props, ref) => {
       purchaseReturnHistory: "F8",
       deliveryNoteHistory: "F3",
       quotationHistory: "F2",
-      quotationSalesHistory: "Ctrl + Shift + 7",
+      quotationSalesHistory: "F10",
       quotationSalesReturnHistory: "Ctrl + Shift + 8",
       images: "Ctrl + Shift + 9",
     },
@@ -1261,7 +1260,7 @@ const ProductCreate = forwardRef((props, ref) => {
     // LGK store uses original simple mapping
     if (store?.code === "LGK") {
       if (event.key === "F10") {
-        openLinkedProducts(product);
+        openQuotationSalesHistory(product);
       } else if (isCmdOrCtrl && event.shiftKey && event.key.toLowerCase() === 'b') {
         openProductHistory(product);
       } else if (event.key === "F4") {
@@ -1273,11 +1272,11 @@ const ProductCreate = forwardRef((props, ref) => {
       } else if (event.key === "F8") {
         openPurchaseReturnHistory(product);
       } else if (event.key === "F3") {
-        openDeliveryNoteHistory(product);
+        openLinkedProducts(product);
       } else if (event.key === "F2") {
         openQuotationHistory(product);
       } else if (isCmdOrCtrl && event.shiftKey && event.key.toLowerCase() === 'p') {
-        openQuotationSalesHistory(product);
+        openDeliveryNoteHistory(product);
       } else if (isCmdOrCtrl && event.shiftKey && event.key.toLowerCase() === 'z') {
         openQuotationSalesReturnHistory(product);
       } else if (isCmdOrCtrl && event.shiftKey && event.key.toLowerCase() === 'f') {
@@ -1286,7 +1285,7 @@ const ProductCreate = forwardRef((props, ref) => {
       return;
     } else if (store?.code === "MBDI") {
       if (event.key === "F10") {
-        openLinkedProducts(product);
+        openQuotationSalesHistory(product);
       } else if (isCmdOrCtrl && event.shiftKey && event.key.toLowerCase() === '6') {
         openProductHistory(product);
       } else if (event.key === "F4") {
@@ -1302,7 +1301,7 @@ const ProductCreate = forwardRef((props, ref) => {
       } else if (event.key === "F2") {
         openQuotationHistory(product);
       } else if (isCmdOrCtrl && event.shiftKey && event.key.toLowerCase() === '7') {
-        openQuotationSalesHistory(product);
+        openLinkedProducts(product);
       } else if (isCmdOrCtrl && event.shiftKey && event.key.toLowerCase() === '8') {
         openQuotationSalesReturnHistory(product);
       } else if (isCmdOrCtrl && event.shiftKey && event.key.toLowerCase() === '9') {
@@ -1375,7 +1374,7 @@ const ProductCreate = forwardRef((props, ref) => {
       try { event.preventDefault(); } catch (e) { /* ignore */ }
 
       switch (digit) {
-        case "1": openLinkedProducts(product); return;
+        case "1": openQuotationSalesHistory(product); return;
         case "2": openProductHistory(product); return;
         case "3": openSalesHistory(product); return;
         case "4": openSalesReturnHistory(product); return;
@@ -1383,7 +1382,7 @@ const ProductCreate = forwardRef((props, ref) => {
         case "6": openPurchaseReturnHistory(product); return;
         case "7": openDeliveryNoteHistory(product); return;
         case "8": openQuotationHistory(product); return;
-        case "9": openQuotationSalesHistory(product); return;
+        case "9": openLinkedProducts(product); return;
         case "0": openQuotationSalesReturnHistory(product); return;
         default: break;
       }
@@ -1616,36 +1615,8 @@ const ProductCreate = forwardRef((props, ref) => {
     </div>
   );
 
-  const NAV_TABS = [
-    { id: 'basic',     label: 'Basic Info',         icon: 'bi-info-circle'  },
-    { id: 'inventory', label: 'Inventory / Stock',   icon: 'bi-box-seam'    },
-    { id: 'linked',    label: 'Linked Products & Photos', icon: 'bi-link-45deg'  },
-  ];
-
-  const ERROR_TAB_MAP = {
-    name: 'basic', name_in_arabic: 'basic', brand_id: 'basic', country_code: 'basic',
-    part_number: 'basic', prefix_part_number: 'basic', rack: 'basic', category_id: 'basic', allow_duplicates: 'basic',
-    purchase_unit_price_0: 'basic', wholesale_unit_price: 'basic',
-    purchase_unit_price_with_vat_0: 'basic', wholesale_unit_price_with_vat: 'basic',
-    retail_unit_price: 'basic', retail_unit_price_0: 'basic',
-    retail_unit_price_with_vat: 'basic', retail_unit_price_with_vat_0: 'basic',
-  };
-  const getErrorTab = (key) => {
-    if (ERROR_TAB_MAP[key]) return ERROR_TAB_MAP[key];
-    if (key.startsWith('set_') || key.startsWith('adjustment_') || key.startsWith('damaged_')) return 'inventory';
-    return 'basic';
-  };
   const allErrors = Object.entries(errors).filter(([, v]) => v);
-  const tabErrorCounts = NAV_TABS.reduce((acc, tab) => {
-    acc[tab.id] = allErrors.filter(([k]) => getErrorTab(k) === tab.id).length;
-    return acc;
-  }, {});
   const totalErrors = allErrors.length;
-
-  const tabIds = NAV_TABS.map(t => t.id);
-  const currentTabIndex = tabIds.indexOf(activeTab);
-  const prevTab = tabIds[currentTabIndex - 1];
-  const nextTab = tabIds[currentTabIndex + 1];
   // ─────────────────────────────────────────────────────────────────────
 
   return (
@@ -1770,67 +1741,6 @@ const ProductCreate = forwardRef((props, ref) => {
         <Modal.Body className="pw-body">
           <form onSubmit={handleCreate} className="pw-form">
 
-            {/* Left Nav Sidebar */}
-            <aside className="pw-sidebar">
-              <div className="pw-sidebar-header">
-                <div style={{ fontFamily: '"Hanken Grotesk", sans-serif', fontSize: '15px', fontWeight: 700, color: '#191c1e', marginBottom: '2px' }}>
-                  {formData.id ? 'Edit Product' : 'New Product'}
-                </div>
-                <div style={{ fontFamily: '"Inter", sans-serif', fontSize: '11px', color: '#434655' }}>Product Wizard</div>
-              </div>
-              {NAV_TABS.map((tab) => (
-                <button key={tab.id} type="button"
-                  onClick={() => setActiveTab(tab.id)}
-                  style={{
-                    display: 'flex', alignItems: 'center', gap: '8px',
-                    padding: '9px 10px', borderRadius: '6px', border: 'none', cursor: 'pointer', textAlign: 'left', width: '100%',
-                    background: activeTab === tab.id ? '#2563eb' : 'transparent',
-                    color: activeTab === tab.id ? '#eeefff' : '#434655',
-                    fontFamily: '"Inter", sans-serif', fontSize: '13px', fontWeight: activeTab === tab.id ? 700 : 500,
-                  }}
-                  onMouseEnter={(e) => { if (activeTab !== tab.id) e.currentTarget.style.background = '#e0e3e5'; }}
-                  onMouseLeave={(e) => { if (activeTab !== tab.id) e.currentTarget.style.background = 'transparent'; }}
-                >
-                  <i className={`bi ${tab.icon}`} style={{ fontSize: '15px', flexShrink: 0 }}></i>
-                  <span style={{ flex: 1 }}>
-                    {tab.label}
-                    {tab.id === 'inventory' && (() => {
-                      const stock = productStores[localStorage.getItem('store_id')]?.stock;
-                      if (!stock) return null;
-                      return (
-                        <span style={{ display: 'block', fontSize: '10px', fontWeight: 500, opacity: 0.75, marginTop: '1px' }}>
-                          {stock} in stock
-                        </span>
-                      );
-                    })()}
-                    {tab.id === 'linked' && (() => {
-                      const photos = formData.images?.length || 0;
-                      const linked = selectedLinkedProducts?.length || 0;
-                      if (!photos && !linked) return null;
-                      const parts = [];
-                      if (linked) parts.push(`${linked} linked`);
-                      if (photos) parts.push(`${photos} photo${photos !== 1 ? 's' : ''}`);
-                      return (
-                        <span style={{ display: 'block', fontSize: '10px', fontWeight: 500, opacity: 0.75, marginTop: '1px' }}>
-                          {parts.join(' · ')}
-                        </span>
-                      );
-                    })()}
-                  </span>
-                  {tabErrorCounts[tab.id] > 0 && (
-                    <span style={{
-                      background: '#ba1a1a', color: '#fff', borderRadius: '50%',
-                      width: '18px', height: '18px', fontSize: '10px', fontWeight: 700,
-                      display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
-                      flexShrink: 0,
-                    }}>
-                      {tabErrorCounts[tab.id]}
-                    </span>
-                  )}
-                </button>
-              ))}
-            </aside>
-
             {/* Main Content Area */}
             <div className="pw-content">
               <div className="pw-content-scroll">
@@ -1842,27 +1752,14 @@ const ProductCreate = forwardRef((props, ref) => {
                     <i className="bi bi-exclamation-circle-fill" style={{ fontSize: '14px' }}></i>
                     {totalErrors} error{totalErrors > 1 ? 's' : ''} — please fix before saving:
                   </div>
-                  {NAV_TABS.map((tab) => {
-                    const tabErrs = allErrors.filter(([k]) => getErrorTab(k) === tab.id);
-                    if (!tabErrs.length) return null;
-                    return (
-                      <div key={tab.id} style={{ marginBottom: '6px' }}>
-                        <button type="button" onClick={() => setActiveTab(tab.id)}
-                          style={{ background: 'none', border: 'none', padding: 0, fontFamily: '"Inter", sans-serif', fontWeight: 700, color: '#004ac6', cursor: 'pointer', fontSize: '12px', textDecoration: 'underline', display: 'block', marginBottom: '2px' }}>
-                          {tab.label}:
-                        </button>
-                        {tabErrs.map(([k, v]) => (
-                          <div key={k} style={{ fontFamily: '"Inter", sans-serif', fontSize: '12px', color: '#93000a', paddingLeft: '10px' }}>• {v}</div>
-                        ))}
-                      </div>
-                    );
-                  })}
+                  {allErrors.map(([k, v]) => (
+                    <div key={k} style={{ fontFamily: '"Inter", sans-serif', fontSize: '12px', color: '#93000a', paddingLeft: '10px' }}>• {v}</div>
+                  ))}
                 </div>
               </div>
 
-              {/* ===== TAB 1: BASIC INFO ===== */}
-              {activeTab === 'basic' && (
-                <div className="pw-tab-wrap">
+              {/* ===== BASIC INFO ===== */}
+              <div className="pw-tab-wrap">
 
                   <div className="pw-card" style={CARD}>
                     <SectionTitle icon="bi-person-badge">Product Identity</SectionTitle>
@@ -1973,7 +1870,7 @@ const ProductCreate = forwardRef((props, ref) => {
                       </div>
                       <div className="col-md-2">
                         <Label required>Unit</Label>
-                        <select className="form-select form-select-sm" value={formData.unit}
+                        <select className="form-select form-select-sm" style={{ height: '30px', padding: '2px 8px' }} value={formData.unit}
                           onChange={(e) => { formData.unit = e.target.value; setFormData({ ...formData }); }}>
                           <option value="">PC</option>
                           <option value="drum">Drum</option>
@@ -2230,11 +2127,9 @@ const ProductCreate = forwardRef((props, ref) => {
                   </div>
 
                 </div>
-              )}
 
-              {/* ===== TAB 2: INVENTORY / STOCK ===== */}
-              {activeTab === 'inventory' && (
-                <div>
+              {/* ===== INVENTORY / STOCK ===== */}
+              <div>
 
                   <div className="pw-card" style={CARD}>
                     <SectionTitle icon="bi-boxes">Current Stock Levels</SectionTitle>
@@ -2575,11 +2470,9 @@ const ProductCreate = forwardRef((props, ref) => {
                   </div>
 
                 </div>
-              )}
 
-              {/* ===== TAB 4: LINKED PRODUCTS & PHOTOS ===== */}
-              {activeTab === 'linked' && (
-                <div>
+              {/* ===== LINKED PRODUCTS & PHOTOS ===== */}
+              <div>
 
                   <div className="pw-card" style={CARD}>
                     <SectionTitle icon="bi-link-45deg">Linked Products</SectionTitle>
@@ -2638,27 +2531,8 @@ const ProductCreate = forwardRef((props, ref) => {
                   </div>
 
                 </div>
-              )}
 
               </div>{/* end pw-content-scroll */}
-
-              <div style={{ flexShrink: 0, padding: '12px 28px', borderTop: '1px solid #c3c6d7', background: '#ffffff' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <button type="button" disabled={!prevTab} onClick={() => prevTab && setActiveTab(prevTab)}
-                    style={{ background: prevTab ? '#d0e1fb' : '#f0f2f4', color: prevTab ? '#54647a' : '#9aa0b0', border: 'none', borderRadius: '4px', padding: '7px 16px', fontSize: '13px', fontWeight: 600, fontFamily: '"Inter", sans-serif', cursor: prevTab ? 'pointer' : 'default', display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
-                    <i className="bi bi-arrow-left"></i>
-                    {prevTab ? NAV_TABS.find(t => t.id === prevTab)?.label : 'Previous'}
-                  </button>
-                  <span style={{ fontFamily: '"Inter", sans-serif', fontSize: '12px', color: '#737686' }}>
-                    {currentTabIndex + 1} / {tabIds.length}
-                  </span>
-                  <button type="button" disabled={!nextTab} onClick={() => nextTab && setActiveTab(nextTab)}
-                    style={{ background: nextTab ? '#004ac6' : '#f0f2f4', color: nextTab ? '#ffffff' : '#9aa0b0', border: 'none', borderRadius: '4px', padding: '7px 16px', fontSize: '13px', fontWeight: 600, fontFamily: '"Inter", sans-serif', cursor: nextTab ? 'pointer' : 'default', display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
-                    {nextTab ? NAV_TABS.find(t => t.id === nextTab)?.label : 'Next'}
-                    <i className="bi bi-arrow-right"></i>
-                  </button>
-                </div>
-              </div>
 
             </div>{/* end pw-content */}
           </form>

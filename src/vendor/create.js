@@ -385,27 +385,8 @@ const VendorCreate = forwardRef((props, ref) => {
         </div>
     );
 
-    const NAV_TABS = [
-        { id: 'basic', label: 'Basic Info', icon: 'bi-building' },
-        { id: 'address', label: 'Address', icon: 'bi-geo-alt' },
-    ];
-
-    const [activeTab, setActiveTab] = useState("basic");
-    // ───────────────────────────────────────────────────────────────────────
-
-    function getErrorTab(key) {
-        const k = key.toLowerCase();
-        if (['country','city','state','postal','address','national','building','street','district','zipcode'].some(f => k.includes(f))) return 'address';
-        return 'basic';
-    }
-
     const allErrors = Object.entries(errors).filter(([, v]) => v);
     const totalErrors = allErrors.length;
-
-    const tabIds = NAV_TABS.map(t => t.id);
-    const currentTabIndex = tabIds.indexOf(activeTab);
-    const prevTab = tabIds[currentTabIndex - 1];
-    const nextTab = tabIds[currentTabIndex + 1];
 
     return (
         <>
@@ -475,33 +456,6 @@ const VendorCreate = forwardRef((props, ref) => {
                 <Modal.Body className="pw-body">
                     <form onSubmit={handleCreate} className="pw-form">
 
-                        {/* Left Nav Sidebar */}
-                        <aside className="pw-sidebar">
-                            <div className="pw-sidebar-header">
-                                <div style={{ fontFamily: '"Hanken Grotesk", sans-serif', fontSize: '15px', fontWeight: 700, color: '#191c1e', marginBottom: '2px' }}>
-                                    {formData.id ? 'Edit Vendor' : 'New Vendor'}
-                                </div>
-                                <div style={{ fontFamily: '"Inter", sans-serif', fontSize: '11px', color: '#434655' }}>Vendor Wizard</div>
-                            </div>
-                            {NAV_TABS.map((tab) => (
-                                <button key={tab.id} type="button"
-                                    onClick={() => setActiveTab(tab.id)}
-                                    style={{
-                                        display: 'flex', alignItems: 'center', gap: '8px',
-                                        padding: '9px 10px', borderRadius: '6px', border: 'none', cursor: 'pointer', textAlign: 'left', width: '100%',
-                                        background: activeTab === tab.id ? '#2563eb' : 'transparent',
-                                        color: activeTab === tab.id ? '#eeefff' : '#434655',
-                                        fontFamily: '"Inter", sans-serif', fontSize: '13px', fontWeight: activeTab === tab.id ? 700 : 500,
-                                    }}
-                                    onMouseEnter={(e) => { if (activeTab !== tab.id) e.currentTarget.style.background = '#e0e3e5'; }}
-                                    onMouseLeave={(e) => { if (activeTab !== tab.id) e.currentTarget.style.background = 'transparent'; }}
-                                >
-                                    <i className={`bi ${tab.icon}`} style={{ fontSize: '15px', flexShrink: 0 }}></i>
-                                    <span style={{ flex: 1 }}>{tab.label}</span>
-                                </button>
-                            ))}
-                        </aside>
-
                         {/* Main Content Area */}
                         <div className="pw-content" style={{ display: "flex", flexDirection: "column" }}>
                             <div className="pw-content-scroll" style={{ flex: 1, overflowY: "auto", padding: "20px 28px", paddingBottom: "8px" }}>
@@ -511,31 +465,18 @@ const VendorCreate = forwardRef((props, ref) => {
                                   <i className="bi bi-exclamation-circle-fill" style={{ fontSize: "14px" }}></i>
                                   {totalErrors} error{totalErrors > 1 ? "s" : ""} — please fix before saving:
                                 </div>
-                                {NAV_TABS.map((tab) => {
-                                  const tabErrs = allErrors.filter(([k]) => getErrorTab(k) === tab.id);
-                                  if (!tabErrs.length) return null;
-                                  return (
-                                    <div key={tab.id} style={{ marginBottom: "6px" }}>
-                                      <button type="button" onClick={() => setActiveTab(tab.id)}
-                                        style={{ background: "none", border: "none", padding: 0, fontFamily: "Inter, sans-serif", fontWeight: 700, color: "#004ac6", cursor: "pointer", fontSize: "12px", textDecoration: "underline", display: "inline-flex", alignItems: "center", gap: "4px", marginBottom: "2px" }}>
-                                        <i className={`bi ${tab.icon}`} style={{ fontSize: "11px" }}></i> {tab.label}:
-                                      </button>
-                                      {tabErrs.map(([k, v]) => (
-                                        <div key={k} style={{ fontFamily: "Inter, sans-serif", fontSize: "12px", color: "#93000a", paddingLeft: "14px" }}>• {v}</div>
-                                      ))}
-                                    </div>
-                                  );
-                                })}
+                                {allErrors.map(([k, v]) => (
+                                  <div key={k} style={{ fontFamily: "Inter, sans-serif", fontSize: "12px", color: "#93000a", paddingLeft: "14px" }}>• {v}</div>
+                                ))}
                               </div>
                             </div>
                             <div className="pw-tab-wrap">
 
-                                {/* ===== TAB 1: BASIC INFO ===== */}
-                                {activeTab === 'basic' && (
-                                    <>
+                                {/* ===== BASIC INFO ===== */}
+                                <>
                                         {/* Identity Card */}
                                         <div className="pw-card" style={CARD}>
-                                            <SectionTitle icon="bi-building">Vendor Identity</SectionTitle>
+                                            <SectionTitle icon="bi-person-circle">Vendor Identity</SectionTitle>
                                             <div className="row g-3">
                                                 <div className="col-md-6">
                                                     <Label required>Name</Label>
@@ -582,13 +523,7 @@ const VendorCreate = forwardRef((props, ref) => {
                                                     />
                                                     {errors.name_in_arabic && <ErrMsg>{errors.name_in_arabic}</ErrMsg>}
                                                 </div>
-                                            </div>
-                                        </div>
 
-                                        {/* Contact Card */}
-                                        <div className="pw-card" style={CARD}>
-                                            <SectionTitle icon="bi-person-lines-fill">Contact Details</SectionTitle>
-                                            <div className="row g-3">
                                                 <div className="col-md-4">
                                                     <Label>Email</Label>
                                                     <input
@@ -645,6 +580,45 @@ const VendorCreate = forwardRef((props, ref) => {
                                                         placeholder="Contact Person"
                                                     />
                                                     {errors.contact_person && <ErrMsg>{errors.contact_person}</ErrMsg>}
+                                                </div>
+
+                                                <div className="col-md-4">
+                                                    <Label>Country</Label>
+                                                    <Typeahead
+                                                        id="country_code"
+                                                        labelKey="label"
+                                                        onChange={(selectedItems) => {
+                                                            errors.country_code = "";
+                                                            setErrors(errors);
+                                                            if (selectedItems.length === 0) {
+                                                                errors.country_code = "Invalid country selected";
+                                                                setErrors(errors);
+                                                                formData.country_code = "";
+                                                                formData.country_name = "";
+                                                                setFormData({ ...formData });
+                                                                setSelectedCountries([]);
+                                                                return;
+                                                            }
+                                                            formData.country_code = selectedItems[0].value;
+                                                            formData.country_name = selectedItems[0].label;
+                                                            setFormData({ ...formData });
+                                                            setSelectedCountries(selectedItems);
+                                                        }}
+                                                        options={countryOptions}
+                                                        placeholder="Country name"
+                                                        selected={selectedCountries}
+                                                        highlightOnlyResult={true}
+                                                        onInputChange={(searchTerm, e) => {
+                                                            //suggestBrands(searchTerm);
+                                                        }}
+                                                        ref={countrySearchRef}
+                                                        onKeyDown={(e) => {
+                                                            if (e.key === "Escape") {
+                                                                countrySearchRef.current?.clear();
+                                                            }
+                                                        }}
+                                                    />
+                                                    {errors.country_code && <ErrMsg>{errors.country_code}</ErrMsg>}
                                                 </div>
                                             </div>
                                         </div>
@@ -714,47 +688,11 @@ const VendorCreate = forwardRef((props, ref) => {
                                             </div>
                                         </div>
 
-                                        {/* Credit & Remarks Card */}
+                                        {/* Remarks Card */}
                                         <div className="pw-card" style={CARD}>
-                                            <SectionTitle icon="bi-credit-card">Credit & Remarks</SectionTitle>
+                                            <SectionTitle icon="bi-chat-left-text">Remarks</SectionTitle>
                                             <div className="row g-3">
-                                                <div className="col-md-3">
-                                                    <Label>Credit Limit</Label>
-                                                    <input
-                                                        id="vendor_credit_limit"
-                                                        name="vendor_credit_limit"
-                                                        type="number"
-                                                        value={formData.credit_limit !== undefined ? formData.credit_limit : ""}
-                                                        style={INPUT}
-                                                        onChange={(e) => {
-                                                            errors["credit_limit"] = "";
-                                                            setErrors({ ...errors });
-                                                            if (!e.target.value) {
-                                                                formData.credit_limit = e.target.value;
-                                                                setFormData({ ...formData });
-                                                                return;
-                                                            }
-                                                            formData.credit_limit = parseFloat(e.target.value);
-                                                            setFormData({ ...formData });
-                                                            console.log(formData);
-                                                        }}
-                                                    />
-                                                    {errors.credit_limit && <ErrMsg>{errors.credit_limit}</ErrMsg>}
-                                                </div>
-
-                                                <div className="col-md-3">
-                                                    <Label>Credit Balance</Label>
-                                                    <input
-                                                        type="text"
-                                                        disabled={true}
-                                                        value={formData.credit_balance !== undefined ? formData.credit_balance : ""}
-                                                        style={{ ...INPUT, background: '#f2f4f6', color: '#737686' }}
-                                                        onChange={(e) => { }}
-                                                    />
-                                                    {errors.credit_balance && <ErrMsg>{errors.credit_balance}</ErrMsg>}
-                                                </div>
-
-                                                <div className="col-md-6">
+                                                <div className="col-md-12">
                                                     <Label>
                                                         Remarks&nbsp;|&nbsp;
                                                         <input
@@ -780,7 +718,7 @@ const VendorCreate = forwardRef((props, ref) => {
                                                             setFormData({ ...formData });
                                                             console.log(formData);
                                                         }}
-                                                        style={{ ...INPUT, resize: 'vertical', minHeight: '72px' }}
+                                                        style={{ ...INPUT, resize: 'vertical', minHeight: '80px' }}
                                                         id="remarks"
                                                         placeholder="Remarks"
                                                     />
@@ -788,112 +726,34 @@ const VendorCreate = forwardRef((props, ref) => {
                                                 </div>
                                             </div>
                                         </div>
+                                </>
 
-                                        {/* Vendor Photos */}
+                                {/* ===== ADDRESS ===== */}
+                                <>
+                                        {/* National Address Card */}
                                         <div className="pw-card" style={CARD}>
-                                            <SectionTitle icon="bi-images">Vendor Photos</SectionTitle>
-                                            <ImageGallery ref={ImageGalleryRef} id={formData.id} storeID={formData.store_id} storedImages={formData.images} modelName={"vendor"} />
-                                        </div>
-                                    </>
-                                )}
-
-                                {/* ===== TAB 2: ADDRESS ===== */}
-                                {activeTab === 'address' && (
-                                    <>
-                                        {/* Country & City Card */}
-                                        <div className="pw-card" style={CARD}>
-                                            <SectionTitle icon="bi-geo-alt">Country & City</SectionTitle>
+                                            <SectionTitle icon="bi-signpost">National Address</SectionTitle>
                                             <div className="row g-3">
-                                                <div className="col-md-6">
-                                                    <Label>Country</Label>
-                                                    <Typeahead
-                                                        id="country_code"
-                                                        labelKey="label"
-                                                        onChange={(selectedItems) => {
-                                                            errors.country_code = "";
-                                                            setErrors(errors);
-                                                            if (selectedItems.length === 0) {
-                                                                errors.country_code = "Invalid country selected";
-                                                                setErrors(errors);
-                                                                formData.country_code = "";
-                                                                formData.country_name = "";
-                                                                setFormData({ ...formData });
-                                                                setSelectedCountries([]);
-                                                                return;
-                                                            }
-                                                            formData.country_code = selectedItems[0].value;
-                                                            formData.country_name = selectedItems[0].label;
-                                                            setFormData({ ...formData });
-                                                            setSelectedCountries(selectedItems);
-                                                        }}
-                                                        options={countryOptions}
-                                                        placeholder="Country name"
-                                                        selected={selectedCountries}
-                                                        highlightOnlyResult={true}
-                                                        onInputChange={(searchTerm, e) => {
-                                                            //suggestBrands(searchTerm);
-                                                        }}
-                                                        ref={countrySearchRef}
-                                                        onKeyDown={(e) => {
-                                                            if (e.key === "Escape") {
-                                                                countrySearchRef.current?.clear();
-                                                            }
-                                                        }}
-                                                    />
-                                                    {errors.country_code && <ErrMsg>{errors.country_code}</ErrMsg>}
-                                                </div>
-
-                                                <div className="col-md-6">
-                                                    <Label>City Name</Label>
+                                                <div className="col-md-4">
+                                                    <Label>Building Number</Label>
                                                     <input
-                                                        id="vendor_national_address_city_name"
-                                                        name="vendor_national_address_city_name"
-                                                        value={formData.national_address.city_name ? formData.national_address.city_name : ""}
+                                                        id="vendor_national_address_building_no"
+                                                        name="vendor_national_address_building_no"
+                                                        value={formData.national_address.building_no ? formData.national_address.building_no : ""}
                                                         type="text"
                                                         onChange={(e) => {
-                                                            errors["national_address_city_name"] = "";
-                                                            formData.national_address.city_name = e.target.value;
+                                                            errors["national_address_building_no"] = "";
+                                                            formData.national_address.building_no = e.target.value;
                                                             setFormData({ ...formData });
                                                             console.log(formData);
-                                                            if (timerRef.current) clearTimeout(timerRef.current);
-                                                            timerRef.current = setTimeout(() => {
-                                                                translateText(e.target.value, (translated) =>
-                                                                    setFormData(prev => ({ ...prev, national_address: { ...prev.national_address, city_name_arabic: translated } }))
-                                                                );
-                                                            }, 500);
                                                         }}
                                                         style={INPUT}
-                                                        placeholder="City Name"
+                                                        placeholder="Building Number"
                                                     />
-                                                    {errors.national_address_city_name && <ErrMsg>{errors.national_address_city_name}</ErrMsg>}
+                                                    {errors.national_address_building_no && <ErrMsg>{errors.national_address_building_no}</ErrMsg>}
                                                 </div>
 
-                                                <div className="col-md-6">
-                                                    <Label>City Name (Arabic)</Label>
-                                                    <input
-                                                        id="vendor_national_address_city_name_arabic"
-                                                        name="vendor_national_address_city_name_arabic"
-                                                        value={formData.national_address.city_name_arabic ? formData.national_address.city_name_arabic : ""}
-                                                        type="text"
-                                                        onChange={(e) => {
-                                                            errors["national_address_city_name_arabic"] = "";
-                                                            formData.national_address.city_name_arabic = e.target.value;
-                                                            setFormData({ ...formData });
-                                                            console.log(formData);
-                                                        }}
-                                                        style={{ ...INPUT, direction: 'rtl' }}
-                                                        placeholder="City Name (Arabic)"
-                                                    />
-                                                    {errors.national_address_city_name_arabic && <ErrMsg>{errors.national_address_city_name_arabic}</ErrMsg>}
-                                                </div>
-                                            </div>
-                                        </div>
-
-                                        {/* Address Card */}
-                                        <div className="pw-card" style={CARD}>
-                                            <SectionTitle icon="bi-signpost-split">Address Details</SectionTitle>
-                                            <div className="row g-3">
-                                                <div className="col-md-6">
+                                                <div className="col-md-4">
                                                     <Label>Street Name</Label>
                                                     <input
                                                         id="vendor_national_address_street_name"
@@ -918,7 +778,7 @@ const VendorCreate = forwardRef((props, ref) => {
                                                     {errors.national_address_street_name && <ErrMsg>{errors.national_address_street_name}</ErrMsg>}
                                                 </div>
 
-                                                <div className="col-md-6">
+                                                <div className="col-md-4">
                                                     <Label>Street Name (Arabic)</Label>
                                                     <input
                                                         id="vendor_national_address_street_name_arabic"
@@ -937,7 +797,7 @@ const VendorCreate = forwardRef((props, ref) => {
                                                     {errors.national_address_street_name_arabic && <ErrMsg>{errors.national_address_street_name_arabic}</ErrMsg>}
                                                 </div>
 
-                                                <div className="col-md-6">
+                                                <div className="col-md-4">
                                                     <Label>District Name</Label>
                                                     <input
                                                         id="vendor_national_address_district_name"
@@ -962,7 +822,7 @@ const VendorCreate = forwardRef((props, ref) => {
                                                     {errors.national_address_district_name && <ErrMsg>{errors.national_address_district_name}</ErrMsg>}
                                                 </div>
 
-                                                <div className="col-md-6">
+                                                <div className="col-md-4">
                                                     <Label>District Name (Arabic)</Label>
                                                     <input
                                                         id="vendor_national_address_district_name_arabic"
@@ -980,33 +840,8 @@ const VendorCreate = forwardRef((props, ref) => {
                                                     />
                                                     {errors.national_address_district_name_arabic && <ErrMsg>{errors.national_address_district_name_arabic}</ErrMsg>}
                                                 </div>
-                                            </div>
-                                        </div>
 
-                                        {/* National Address Card */}
-                                        <div className="pw-card" style={CARD}>
-                                            <SectionTitle icon="bi-house-door">National Address</SectionTitle>
-                                            <div className="row g-3">
-                                                <div className="col-md-3">
-                                                    <Label>Building Number</Label>
-                                                    <input
-                                                        id="vendor_national_address_building_no"
-                                                        name="vendor_national_address_building_no"
-                                                        value={formData.national_address.building_no ? formData.national_address.building_no : ""}
-                                                        type="text"
-                                                        onChange={(e) => {
-                                                            errors["national_address_building_no"] = "";
-                                                            formData.national_address.building_no = e.target.value;
-                                                            setFormData({ ...formData });
-                                                            console.log(formData);
-                                                        }}
-                                                        style={INPUT}
-                                                        placeholder="Building Number"
-                                                    />
-                                                    {errors.national_address_building_no && <ErrMsg>{errors.national_address_building_no}</ErrMsg>}
-                                                </div>
-
-                                                <div className="col-md-3">
+                                                <div className="col-md-4">
                                                     <Label>Unit Number</Label>
                                                     <input
                                                         id="vendor_national_address_unit_no"
@@ -1025,7 +860,51 @@ const VendorCreate = forwardRef((props, ref) => {
                                                     {errors.national_address_unit_no && <ErrMsg>{errors.national_address_unit_no}</ErrMsg>}
                                                 </div>
 
-                                                <div className="col-md-3">
+                                                <div className="col-md-4">
+                                                    <Label>City Name</Label>
+                                                    <input
+                                                        id="vendor_national_address_city_name"
+                                                        name="vendor_national_address_city_name"
+                                                        value={formData.national_address.city_name ? formData.national_address.city_name : ""}
+                                                        type="text"
+                                                        onChange={(e) => {
+                                                            errors["national_address_city_name"] = "";
+                                                            formData.national_address.city_name = e.target.value;
+                                                            setFormData({ ...formData });
+                                                            console.log(formData);
+                                                            if (timerRef.current) clearTimeout(timerRef.current);
+                                                            timerRef.current = setTimeout(() => {
+                                                                translateText(e.target.value, (translated) =>
+                                                                    setFormData(prev => ({ ...prev, national_address: { ...prev.national_address, city_name_arabic: translated } }))
+                                                                );
+                                                            }, 500);
+                                                        }}
+                                                        style={INPUT}
+                                                        placeholder="City Name"
+                                                    />
+                                                    {errors.national_address_city_name && <ErrMsg>{errors.national_address_city_name}</ErrMsg>}
+                                                </div>
+
+                                                <div className="col-md-4">
+                                                    <Label>City Name (Arabic)</Label>
+                                                    <input
+                                                        id="vendor_national_address_city_name_arabic"
+                                                        name="vendor_national_address_city_name_arabic"
+                                                        value={formData.national_address.city_name_arabic ? formData.national_address.city_name_arabic : ""}
+                                                        type="text"
+                                                        onChange={(e) => {
+                                                            errors["national_address_city_name_arabic"] = "";
+                                                            formData.national_address.city_name_arabic = e.target.value;
+                                                            setFormData({ ...formData });
+                                                            console.log(formData);
+                                                        }}
+                                                        style={{ ...INPUT, direction: 'rtl' }}
+                                                        placeholder="City Name (Arabic)"
+                                                    />
+                                                    {errors.national_address_city_name_arabic && <ErrMsg>{errors.national_address_city_name_arabic}</ErrMsg>}
+                                                </div>
+
+                                                <div className="col-md-4">
                                                     <Label>Zipcode</Label>
                                                     <input
                                                         id="vendor_national_address_zipcode"
@@ -1044,7 +923,7 @@ const VendorCreate = forwardRef((props, ref) => {
                                                     {errors.national_address_zipcode && <ErrMsg>{errors.national_address_zipcode}</ErrMsg>}
                                                 </div>
 
-                                                <div className="col-md-3">
+                                                <div className="col-md-4">
                                                     <Label>Additional Number</Label>
                                                     <input
                                                         id="vendor_national_address_additional_no"
@@ -1064,25 +943,64 @@ const VendorCreate = forwardRef((props, ref) => {
                                                 </div>
                                             </div>
                                         </div>
-                                    </>
-                                )}
+                                </>
+
+                                {/* ===== FINANCIAL ===== */}
+                                <>
+                                        {/* Credit & Balances Card */}
+                                        <div className="pw-card" style={CARD}>
+                                            <SectionTitle icon="bi-cash-stack">Credit & Balances</SectionTitle>
+                                            <div className="row g-3">
+                                                <div className="col-md-4">
+                                                    <Label>Credit Limit</Label>
+                                                    <input
+                                                        id="vendor_credit_limit"
+                                                        name="vendor_credit_limit"
+                                                        type="number"
+                                                        value={formData.credit_limit !== undefined ? formData.credit_limit : ""}
+                                                        style={INPUT}
+                                                        onChange={(e) => {
+                                                            errors["credit_limit"] = "";
+                                                            setErrors({ ...errors });
+                                                            if (!e.target.value) {
+                                                                formData.credit_limit = e.target.value;
+                                                                setFormData({ ...formData });
+                                                                return;
+                                                            }
+                                                            formData.credit_limit = parseFloat(e.target.value);
+                                                            setFormData({ ...formData });
+                                                            console.log(formData);
+                                                        }}
+                                                    />
+                                                    {errors.credit_limit && <ErrMsg>{errors.credit_limit}</ErrMsg>}
+                                                </div>
+
+                                                <div className="col-md-4">
+                                                    <Label>Credit Balance</Label>
+                                                    <input
+                                                        type="text"
+                                                        disabled={true}
+                                                        value={formData.credit_balance !== undefined ? formData.credit_balance : ""}
+                                                        style={{ ...INPUT, background: '#f2f4f6', color: '#737686' }}
+                                                        onChange={(e) => { }}
+                                                    />
+                                                    {errors.credit_balance && <ErrMsg>{errors.credit_balance}</ErrMsg>}
+                                                </div>
+                                            </div>
+                                        </div>
+                                </>
+
+                                {/* ===== PHOTOS ===== */}
+                                <>
+                                        {/* Vendor Photos */}
+                                        <div className="pw-card" style={CARD}>
+                                            <SectionTitle icon="bi-images">Vendor Photos</SectionTitle>
+                                            <ImageGallery ref={ImageGalleryRef} id={formData.id} storeID={formData.store_id} storedImages={formData.images} modelName={"vendor"} />
+                                        </div>
+                                </>
 
                             </div>
                             </div>{/* end pw-content-scroll */}
-
-                            <div style={{ flexShrink: 0, padding: "12px 28px", borderTop: "1px solid #c3c6d7", background: "#ffffff" }}>
-                                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                                    <button type="button" disabled={!prevTab} onClick={() => prevTab && setActiveTab(prevTab)} style={{ background: prevTab ? "#d0e1fb" : "#f0f2f4", color: prevTab ? "#54647a" : "#9aa0b0", border: "none", borderRadius: "4px", padding: "7px 16px", fontSize: "13px", fontWeight: 600, fontFamily: "Inter, sans-serif", cursor: prevTab ? "pointer" : "default", display: "inline-flex", alignItems: "center", gap: "6px" }}>
-                                        <i className="bi bi-arrow-left"></i>
-                                        {prevTab ? NAV_TABS.find(t => t.id === prevTab)?.label : "Previous"}
-                                    </button>
-                                    <span style={{ fontFamily: "Inter, sans-serif", fontSize: "12px", color: "#737686" }}>{currentTabIndex + 1} / {tabIds.length}</span>
-                                    <button type="button" disabled={!nextTab} onClick={() => nextTab && setActiveTab(nextTab)} style={{ background: nextTab ? "#004ac6" : "#f0f2f4", color: nextTab ? "#ffffff" : "#9aa0b0", border: "none", borderRadius: "4px", padding: "7px 16px", fontSize: "13px", fontWeight: 600, fontFamily: "Inter, sans-serif", cursor: nextTab ? "pointer" : "default", display: "inline-flex", alignItems: "center", gap: "6px" }}>
-                                        {nextTab ? NAV_TABS.find(t => t.id === nextTab)?.label : "Next"}
-                                        <i className="bi bi-arrow-right"></i>
-                                    </button>
-                                </div>
-                            </div>
                         </div>
 
                     </form>

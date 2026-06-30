@@ -25,7 +25,8 @@ import DeliveryNoteHistory from "./../utils/product_delivery_note_history.js";
 import Products from "../utils/products.js";
 import ResizableTableCell from '../utils/ResizableTableCell.js';
 import { OverlayTrigger, Tooltip } from 'react-bootstrap';
-//import Amount from "../utils/amount.js";
+import Amount from "../utils/amount.js";
+import CustomerPending from "../utils/customer_pending.js";
 
 import ProductCreate from "../product/create.js";
 import ProductView from "../product/view.js";
@@ -302,16 +303,9 @@ const QuotationSalesReturnCreate = forwardRef((props, ref) => {
                 setFormData({ ...formData });
 
 
-                if (formData.customer_name && formData.customer_id) {
-                    let selectedCustomers = [
-                        {
-                            id: formData.customer_id,
-                            name: formData.customer.name,
-                            search_label: formData.customer.search_label,
-                        }
-                    ];
-
-                    setSelectedCustomers([...selectedCustomers]);
+                if (formData.customer_id) {
+                    const fallback = { ...(formData.customer || {}), id: formData.customer_id, name: formData.customer_name };
+                    fetchAndSetCustomer(formData.customer_id, fallback);
                 }
 
                 /* let selectedProductsTemp = quotationsalesReturn.products;
@@ -668,7 +662,7 @@ const QuotationSalesReturnCreate = forwardRef((props, ref) => {
 
     const SHORTCUTS = {
         DEFAULT: {
-            linkedProducts: "Ctrl + Shift + 1",
+            linkedProducts: "Ctrl + Shift + 9",
             productHistory: "Ctrl + Shift + 2",
             salesHistory: "Ctrl + Shift + 3",
             salesReturnHistory: "Ctrl + Shift + 4",
@@ -676,12 +670,12 @@ const QuotationSalesReturnCreate = forwardRef((props, ref) => {
             purchaseReturnHistory: "Ctrl + Shift + 6",
             deliveryNoteHistory: "Ctrl + Shift + 7",
             quotationHistory: "Ctrl + Shift + 8",
-            quotationSalesHistory: "Ctrl + Shift + 9",
+            quotationSalesHistory: "Ctrl + Shift + 1",
             quotationSalesReturnHistory: "Ctrl + Shift + Z",
             images: "Ctrl + Shift + F",
         },
         LGK: {
-            linkedProducts: "F10",
+            linkedProducts: "F3",
             productHistory: "Ctrl + Shift + B",
             salesHistory: "F4",
             salesReturnHistory: "F9",
@@ -689,12 +683,12 @@ const QuotationSalesReturnCreate = forwardRef((props, ref) => {
             purchaseReturnHistory: "F8",
             deliveryNoteHistory: "Ctrl + Shift + P",
             quotationHistory: "F2",
-            quotationSalesHistory: "F3",
+            quotationSalesHistory: "F10",
             quotationSalesReturnHistory: "Ctrl + Shift + Z",
             images: "Ctrl + Shift + F",
         },
         MBDI: {
-            linkedProducts: "F10",
+            linkedProducts: "Ctrl + Shift + 7",
             productHistory: "Ctrl + Shift + 6",
             salesHistory: "F4",
             salesReturnHistory: "F9",
@@ -702,7 +696,7 @@ const QuotationSalesReturnCreate = forwardRef((props, ref) => {
             purchaseReturnHistory: "F8",
             deliveryNoteHistory: "F3",
             quotationHistory: "F2",
-            quotationSalesHistory: "Ctrl + Shift + 7",
+            quotationSalesHistory: "F10",
             quotationSalesReturnHistory: "Ctrl + Shift + 8",
             images: "Ctrl + Shift + 9",
         },
@@ -725,7 +719,7 @@ const QuotationSalesReturnCreate = forwardRef((props, ref) => {
         // LGK store uses original simple mapping
         if (store?.code === "LGK") {
             if (event.key === "F10") {
-                openLinkedProducts(product);
+                openQuotationSalesHistory(product);
             } else if (isCmdOrCtrl && event.shiftKey && event.key.toLowerCase() === 'b') {
                 openProductHistory(product);
             } else if (event.key === "F4") {
@@ -737,7 +731,7 @@ const QuotationSalesReturnCreate = forwardRef((props, ref) => {
             } else if (event.key === "F8") {
                 openPurchaseReturnHistory(product);
             } else if (event.key === "F3") {
-                openQuotationSalesHistory(product);
+                openLinkedProducts(product);
             } else if (event.key === "F2") {
                 openQuotationHistory(product);
             } else if (isCmdOrCtrl && event.shiftKey && event.key.toLowerCase() === 'p') {
@@ -750,7 +744,7 @@ const QuotationSalesReturnCreate = forwardRef((props, ref) => {
             return;
         } else if (store?.code === "MBDI") {
             if (event.key === "F10") {
-                openLinkedProducts(product);
+                openQuotationSalesHistory(product);
             } else if (isCmdOrCtrl && event.shiftKey && event.key.toLowerCase() === '6') {
                 openProductHistory(product);
             } else if (event.key === "F4") {
@@ -766,7 +760,7 @@ const QuotationSalesReturnCreate = forwardRef((props, ref) => {
             } else if (event.key === "F2") {
                 openQuotationHistory(product, "quotation");
             } else if (isCmdOrCtrl && event.shiftKey && event.key.toLowerCase() === '7') {
-                openQuotationSalesHistory(product);
+                openLinkedProducts(product);
             } else if (isCmdOrCtrl && event.shiftKey && event.key.toLowerCase() === '8') {
                 openQuotationSalesReturnHistory(product);
             } else if (isCmdOrCtrl && event.shiftKey && event.key.toLowerCase() === '9') {
@@ -839,7 +833,7 @@ const QuotationSalesReturnCreate = forwardRef((props, ref) => {
             try { event.preventDefault(); } catch (e) { /* ignore */ }
 
             switch (digit) {
-                case "1": openLinkedProducts(product); return;
+                case "1": openQuotationSalesHistory(product); return;
                 case "2": openProductHistory(product); return;
                 case "3": openSalesHistory(product); return;
                 case "4": openSalesReturnHistory(product); return;
@@ -847,7 +841,7 @@ const QuotationSalesReturnCreate = forwardRef((props, ref) => {
                 case "6": openPurchaseReturnHistory(product); return;
                 case "7": openDeliveryNoteHistory(product); return;
                 case "8": openQuotationHistory(product); return;
-                case "9": openQuotationSalesHistory(product); return;
+                case "9": openLinkedProducts(product); return;
                 case "0": openQuotationSalesReturnHistory(product); return;
                 default: break;
             }
@@ -1522,6 +1516,30 @@ const QuotationSalesReturnCreate = forwardRef((props, ref) => {
     const CustomerCreateFormRef = useRef();
     const ProductCreateFormRef = useRef();
 
+    let [showCustomerPending, setShowCustomerPending] = useState(false);
+    const CustomerPendingRef = useRef();
+    function openCustomerPending(customer) {
+        setShowCustomerPending(true);
+        if (timerRef.current) clearTimeout(timerRef.current);
+        timerRef.current = setTimeout(() => { CustomerPendingRef.current?.open(false, customer); }, 50);
+    }
+
+    function fetchAndSetCustomer(customerId, fallbackData) {
+        if (!customerId) return;
+        const storeId = localStorage.getItem("store_id");
+        const select = "id,code,credit_limit,credit_balance,vat_no,name,phone,phone2,name_in_arabic,phone_in_arabic,search_label";
+        fetch(`/v1/customer/${customerId}?search[store_id]=${storeId}&select=${select}`, {
+            method: 'GET',
+            headers: { 'Content-Type': 'application/json', 'Authorization': localStorage.getItem('access_token') },
+        })
+            .then(async r => {
+                const data = r.ok && await r.json();
+                if (data?.result) { setSelectedCustomers([{ ...data.result }]); }
+                else { setSelectedCustomers([fallbackData]); }
+            })
+            .catch(() => setSelectedCustomers([fallbackData]));
+    }
+
 
 
     const UserCreateFormRef = useRef();
@@ -1936,9 +1954,11 @@ const QuotationSalesReturnCreate = forwardRef((props, ref) => {
             if (selectedProducts[i].purchase_unit_price > selectedProducts[i].unit_price) {
                 errors["purchase_unit_price_" + i] = "Purchase Unit Price should not be greater than Unit Price(without VAT)"
                 errors["unit_price_" + i] = "Unit price should not be less than Purchase Unit Price(without VAT)"
+                errors["unit_price_with_vat_" + i] = "Unit price(with VAT) is less than Purchase Unit Price"
             } else {
                 delete errors["purchase_unit_price_" + i];
                 delete errors["unit_price_" + i];
+                delete errors["unit_price_with_vat_" + i];
             }
         }
 
@@ -2149,6 +2169,7 @@ const QuotationSalesReturnCreate = forwardRef((props, ref) => {
             <QuotationSalesReturnView ref={DetailsViewRef} />
             <StoreCreate ref={StoreCreateFormRef} showToastMessage={props.showToastMessage} />
             <CustomerCreate ref={CustomerCreateFormRef} showToastMessage={props.showToastMessage} />
+            {showCustomerPending && <CustomerPending ref={CustomerPendingRef} />}
             <ProductCreate ref={ProductCreateFormRef} showToastMessage={props.showToastMessage} />
             <UserCreate ref={UserCreateFormRef} showToastMessage={props.showToastMessage} />
             <SignatureCreate ref={SignatureCreateFormRef} showToastMessage={props.showToastMessage} />
@@ -2191,187 +2212,144 @@ const QuotationSalesReturnCreate = forwardRef((props, ref) => {
                     </div>
                 </Modal.Header>
                 <Modal.Body>
-                    <div style={{
-                        maxHeight: "50px",        // Adjust based on design
-                        minHeight: "50px",
-                        overflowY: "scroll",
-                    }}>
-                        {errors && Object.keys(errors).length > 0 && (
-                            <div
-                                style={{
-                                    backgroundColor: "#fff0f0",
-                                    border: "1px solid #f5c6cb",
-                                    padding: "10px",
-                                    marginBottom: "10px",
-                                    borderRadius: "4px"
-                                }}
-                            >
-                                <ul style={{ marginBottom: 0 }}>
-                                    {Object.keys(errors).map((key, index) => {
-                                        const message = Array.isArray(errors[key]) ? errors[key][0] : errors[key];
-                                        return message ? (
-                                            <li key={index} style={{ color: "red" }}>
-                                                {message}
-                                            </li>
-                                        ) : null;
-                                    })}
-                                </ul>
-                            </div>
-                        )}
-                    </div>
-                    <div className="row">
-                        {selectedProducts?.length > 0 && <div className="col-md-3" >
-                            <label className="form-label">Date*</label>
-                            <div className="input-group mb-3">
-                                <DatePicker
-                                    id="date_str"
-                                    selected={formData.date_str ? new Date(formData.date_str) : null}
-                                    value={formData.date_str ? format(
-                                        new Date(formData.date_str),
-                                        "MMMM d, yyyy h:mm aa"
-                                    ) : null}
-                                    className="form-control"
-                                    dateFormat="MMMM d, yyyy h:mm aa"
-                                    showTimeSelect
-                                    timeIntervals="1"
-                                    onChange={(value) => {
-                                        console.log("Value", value);
-                                        formData.date_str = value;
-                                        // formData.date_str = format(new Date(value), "MMMM d yyyy h:mm aa");
-                                        setFormData({ ...formData });
-                                    }}
-                                />
-                            </div>
-                            {errors.date_str && (
-                                <div style={{ color: "red" }}>
-                                    <i className="bi bi-x-lg"> </i>
-                                    {errors.date_str}
-                                </div>
-                            )}
-
-                        </div>}
-
-                        {selectedProducts?.length > 0 && <div className="col-md-2">
-                            <label className="form-label">Phone ( 05.. / +966..)</label>
-
-                            <div className="input-group mb-3">
+                    {errors && Object.keys(errors).some(k => { const m = Array.isArray(errors[k]) ? errors[k][0] : errors[k]; return !!m; }) && (
+                        <div className="sc-error-banner" style={{ maxHeight: '120px', overflowY: 'auto', padding: '8px 12px', backgroundColor: '#fff0f0', borderLeft: '1px solid #f5c6cb', borderBottom: '1px solid #f5c6cb', boxShadow: '-2px 2px 8px rgba(186,26,26,0.12)', position: 'fixed', top: '56px', right: 0, width: '380px', zIndex: 9999 }}>
+                            <ul style={{ marginBottom: 0, paddingLeft: 16 }}>
+                                {Object.keys(errors).map((key, index) => { const message = Array.isArray(errors[key]) ? errors[key][0] : errors[key]; return message ? <li key={index} style={{ color: '#dc2626', fontSize: '12px' }}>{message}</li> : null; })}
+                            </ul>
+                        </div>
+                    )}
+                    <div className="entity-header-grid" style={{ gap: '10px', alignItems: 'start', marginBottom: '12px' }}>
+                        {/* LEFT: disabled customer input + CSS Grid fields */}
+                        <div style={{ minWidth: 0, display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                            <div>
+                                <label className="form-label mb-1">Customer</label>
                                 <input
-                                    id="quotationsales_return_phone"
-                                    name="quotationsales_return_phone"
-                                    value={formData.phone ? formData.phone : ""}
-                                    type='string'
-                                    onChange={(e) => {
-                                        delete errors["phone"];
-                                        setErrors({ ...errors });
-                                        formData.phone = e.target.value;
-                                        setFormData({ ...formData });
-                                        console.log(formData);
-                                    }}
+                                    type="text"
                                     className="form-control"
-
-                                    placeholder="Phone"
+                                    disabled
+                                    value={selectedCustomers?.[0]?.name || formData.customer_name || ''}
+                                    placeholder="Customer"
+                                    style={{ backgroundColor: '#f8f9fa' }}
                                 />
                             </div>
-                            {errors.phone && (
-                                <div style={{ color: "red" }}>
-
-                                    {errors.phone}
+                            <div style={{ display: 'grid', gridTemplateColumns: '231px 1fr 1fr', gap: '8px 18px', alignItems: 'start' }}>
+                                {/* R1C1: Date */}
+                                <div>
+                                    <label className="form-label" style={{ fontSize: '12px', marginBottom: '2px' }}>Date *</label>
+                                    <DatePicker
+                                        id="date_str"
+                                        selected={formData.date_str ? new Date(formData.date_str) : null}
+                                        value={formData.date_str ? format(new Date(formData.date_str), "MMMM d, yyyy h:mm aa") : null}
+                                        className={`form-control${errors.date_str ? ' is-invalid' : ''}`}
+                                        dateFormat="MMMM d, yyyy h:mm aa"
+                                        showTimeSelect
+                                        timeIntervals="1"
+                                        onChange={(value) => { formData.date_str = value; setFormData({ ...formData }); }}
+                                    />
+                                    {errors.date_str && <div style={{ color: 'red', fontSize: '11px' }}>{errors.date_str}</div>}
                                 </div>
-                            )}
-                        </div>}
-
-                        {selectedProducts?.length > 0 && <div className="col-md-1">
-                            <Button className={`btn btn-success btn-sm`} style={{ marginTop: "30px" }} onClick={sendWhatsAppMessage}>
-                                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="white" viewBox="0 0 16 16">
-                                    <path d="M13.601 2.326A7.875 7.875 0 0 0 8.036 0C3.596 0 0 3.597 0 8.036c0 1.417.37 2.805 1.07 4.03L0 16l3.993-1.05a7.968 7.968 0 0 0 4.043 1.085h.003c4.44 0 8.036-3.596 8.036-8.036 0-2.147-.836-4.166-2.37-5.673ZM8.036 14.6a6.584 6.584 0 0 1-3.35-.92l-.24-.142-2.37.622.63-2.31-.155-.238a6.587 6.587 0 0 1-1.018-3.513c0-3.637 2.96-6.6 6.6-6.6 1.764 0 3.42.69 4.67 1.94a6.56 6.56 0 0 1 1.93 4.668c0 3.637-2.96 6.6-6.6 6.6Zm3.61-4.885c-.198-.1-1.17-.578-1.352-.644-.18-.066-.312-.1-.444.1-.13.197-.51.644-.626.775-.115.13-.23.15-.428.05-.198-.1-.837-.308-1.594-.983-.59-.525-.99-1.174-1.11-1.372-.116-.198-.012-.305.088-.403.09-.09.198-.23.298-.345.1-.115.132-.197.2-.33.065-.13.032-.247-.017-.345-.05-.1-.444-1.07-.61-1.46-.16-.384-.323-.332-.444-.338l-.378-.007c-.13 0-.344.048-.525.23s-.688.672-.688 1.64c0 .967.704 1.9.802 2.03.1.13 1.386 2.116 3.365 2.963.47.203.837.324 1.122.414.472.15.902.13 1.24.08.378-.057 1.17-.48 1.336-.942.165-.462.165-.858.116-.943-.048-.084-.18-.132-.378-.23Z" />
-                                </svg>
-                            </Button>
-                        </div>}
-
-                        {selectedProducts?.length > 0 && <div className="col-md-2">
-                            <label className="form-label">VAT NO.(15 digits)</label>
-
-                            <div className="input-group mb-3">
-                                <input
-                                    id="quotationsales_vat_no"
-                                    name="quotationsales_vat_no"
-                                    value={formData.vat_no ? formData.vat_no : ""}
-                                    type='string'
-                                    onChange={(e) => {
-                                        delete errors["vat_no"];
-                                        setErrors({ ...errors });
-                                        formData.vat_no = e.target.value;
-                                        setFormData({ ...formData });
-                                        console.log(formData);
-                                    }}
-                                    className="form-control"
-
-                                    placeholder="VAT NO."
-                                />
+                                {/* R1C2: Phone + WhatsApp */}
+                                <div>
+                                    <label className="form-label" style={{ fontSize: '12px', marginBottom: '2px' }}>Phone ( 05.. / +966..)</label>
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                                        <input
+                                            id="quotationsales_return_phone" name="quotationsales_return_phone"
+                                            value={formData.phone || ''}
+                                            type="text"
+                                            onChange={(e) => { delete errors["phone"]; setErrors({ ...errors }); formData.phone = e.target.value; setFormData({ ...formData }); }}
+                                            className={`form-control${errors.phone ? ' is-invalid' : ''}`}
+                                            placeholder="Phone"
+                                        />
+                                        <Button className="btn btn-success btn-sm" onClick={sendWhatsAppMessage} style={{ flexShrink: 0 }}>
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" fill="white" viewBox="0 0 16 16">
+                                                <path d="M13.601 2.326A7.875 7.875 0 0 0 8.036 0C3.596 0 0 3.597 0 8.036c0 1.417.37 2.805 1.07 4.03L0 16l3.993-1.05a7.968 7.968 0 0 0 4.043 1.085h.003c4.44 0 8.036-3.596 8.036-8.036 0-2.147-.836-4.166-2.37-5.673ZM8.036 14.6a6.584 6.584 0 0 1-3.35-.92l-.24-.142-2.37.622.63-2.31-.155-.238a6.587 6.587 0 0 1-1.018-3.513c0-3.637 2.96-6.6 6.6-6.6 1.764 0 3.42.69 4.67 1.94a6.56 6.56 0 0 1 1.93 4.668c0 3.637-2.96 6.6-6.6 6.6Zm3.61-4.885c-.198-.1-1.17-.578-1.352-.644-.18-.066-.312-.1-.444.1-.13.197-.51.644-.626.775-.115.13-.23.15-.428.05-.198-.1-.837-.308-1.594-.983-.59-.525-.99-1.174-1.11-1.372-.116-.198-.012-.305.088-.403.09-.09.198-.23.298-.345.1-.115.132-.197.2-.33.065-.13.032-.247-.017-.345-.05-.1-.444-1.07-.61-1.46-.16-.384-.323-.332-.444-.338l-.378-.007c-.13 0-.344.048-.525.23s-.688.672-.688 1.64c0 .967.704 1.9.802 2.03.1.13 1.386 2.116 3.365 2.963.47.203.837.324 1.122.414.472.15.902.13 1.24.08.378-.057 1.17-.48 1.336-.942.165-.462.165-.858.116-.943-.048-.084-.18-.132-.378-.23Z" />
+                                            </svg>
+                                        </Button>
+                                    </div>
+                                    {errors.phone && <div style={{ color: 'red', fontSize: '11px' }}>{errors.phone}</div>}
+                                </div>
+                                {/* R1C3: VAT NO. */}
+                                <div>
+                                    <label className="form-label" style={{ fontSize: '12px', marginBottom: '2px' }}>VAT NO.(15 digits)</label>
+                                    <input
+                                        id="quotationsales_vat_no" name="quotationsales_vat_no"
+                                        value={formData.vat_no || ''}
+                                        type="text"
+                                        onChange={(e) => { delete errors["vat_no"]; setErrors({ ...errors }); formData.vat_no = e.target.value; setFormData({ ...formData }); }}
+                                        className={`form-control${errors.vat_no ? ' is-invalid' : ''}`}
+                                        placeholder="VAT NO."
+                                    />
+                                    {errors.vat_no && <div style={{ color: 'red', fontSize: '11px' }}>{errors.vat_no}</div>}
+                                </div>
+                                {/* R2C2: Address */}
+                                <div style={{ gridColumn: '2' }}>
+                                    <label className="form-label" style={{ fontSize: '12px', marginBottom: '2px' }}>Address</label>
+                                    <textarea
+                                        value={formData.address || ''}
+                                        onChange={(e) => { delete errors["address"]; setErrors({ ...errors }); formData.address = e.target.value; setFormData({ ...formData }); }}
+                                        className={`form-control${errors.address ? ' is-invalid' : ''}`}
+                                        id="address" placeholder="Address"
+                                        style={{ width: '100%' }}
+                                    />
+                                    {errors.address && <div style={{ color: 'red', fontSize: '11px' }}>{errors.address}</div>}
+                                </div>
+                                {/* R2C3: Remarks */}
+                                <div>
+                                    <label className="form-label" style={{ fontSize: '12px', marginBottom: '2px' }}>Remarks</label>
+                                    <textarea
+                                        value={formData.remarks || ''}
+                                        onChange={(e) => { formData.remarks = e.target.value; setFormData({ ...formData }); }}
+                                        className="form-control"
+                                        id="remarks" placeholder="Remarks"
+                                        style={{ width: '100%' }}
+                                    />
+                                </div>
                             </div>
-                            {errors.vat_no && (
-                                <div style={{ color: "red" }}>
-
-                                    {errors.vat_no}
-                                </div>
-                            )}
-                        </div>}
-
-                        {selectedProducts?.length > 0 && <div className="col-md-3">
-                            <label className="form-label">Address</label>
-                            <div className="input-group mb-3">
-                                <textarea
-                                    value={formData.address}
-                                    type='string'
-                                    onChange={(e) => {
-                                        delete errors["address"];
-                                        setErrors({ ...errors });
-                                        formData.address = e.target.value;
-                                        setFormData({ ...formData });
-                                        console.log(formData);
-                                    }}
-                                    className="form-control"
-                                    id="address"
-                                    placeholder="Address"
-                                />
-                            </div>
-                            {errors.address && (
-                                <div style={{ color: "red" }}>
-
-                                    {errors.address}
-                                </div>
-                            )}
-                        </div>}
-
-                        {selectedProducts?.length > 0 && <div className="col-md-3" >
-                            <label className="form-label">Remarks</label>
-                            <div className="input-group mb-3">
-                                <textarea
-                                    value={formData.remarks}
-                                    type='string'
-                                    onChange={(e) => {
-                                        delete errors["address"];
-                                        setErrors({ ...errors });
-                                        formData.remarks = e.target.value;
-                                        setFormData({ ...formData });
-                                        console.log(formData);
-                                    }}
-                                    className="form-control"
-                                    id="remarks"
-                                    placeholder="Remarks"
-                                />
-                            </div>
-                            {errors.remarks && (
-                                <div style={{ color: "red" }}>
-                                    {errors.remarks}
-                                </div>
-                            )}
-                        </div>}
+                        </div>
+                        {/* RIGHT: customer detail card */}
+                        <div style={{ alignSelf: 'start' }}>
+                            {selectedCustomers.length > 0 && formData.customer_id && (() => {
+                                const c = selectedCustomers[0];
+                                const storeId = localStorage.getItem("store_id");
+                                const cs = c?.stores?.[storeId];
+                                return (
+                                    <div style={{ padding: '10px 16px', background: 'rgba(0,74,198,0.04)', border: '1px solid #c7d7f5', borderRadius: '8px', display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+                                            {c.code && <span style={{ background: '#dbeafe', color: '#1e40af', borderRadius: '4px', padding: '2px 8px', fontSize: '12px', fontWeight: 700, letterSpacing: '0.03em', flexShrink: 0 }}>{c.code}</span>}
+                                            <span className="entity-detail-name" style={{ fontWeight: 700, fontSize: '15px', color: '#191c1e', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: '260px' }} title={c.name}>{c.name}</span>
+                                            {c.name_in_arabic && <span style={{ fontSize: '13px', color: '#64748b', fontFamily: 'Arial, sans-serif', flexShrink: 0 }}>{c.name_in_arabic}</span>}
+                                        </div>
+                                        {(c.phone || c.phone2 || c.vat_no) && (
+                                            <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
+                                                {c.phone && <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', fontSize: '13px', color: '#374151' }}><i className="bi bi-telephone" style={{ color: '#6b7280', fontSize: '12px' }} />{c.phone}</span>}
+                                                {c.phone2 && <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', fontSize: '13px', color: '#374151' }}><i className="bi bi-telephone" style={{ color: '#6b7280', fontSize: '12px' }} />{c.phone2}</span>}
+                                                {c.vat_no && <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', fontSize: '13px', color: '#374151' }}><i className="bi bi-receipt" style={{ color: '#6b7280', fontSize: '12px' }} /><span style={{ color: '#6b7280' }}>VAT:</span><strong>{c.vat_no}</strong></span>}
+                                            </div>
+                                        )}
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: '16px', flexWrap: 'wrap', borderTop: '1px solid #e2e8f0', paddingTop: '4px', marginTop: '2px' }}>
+                                            <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', cursor: 'pointer', userSelect: 'none' }} onClick={() => openCustomerPending(selectedCustomers[0])} title="Click to view pendings">
+                                                <i className="bi bi-wallet2" style={{ color: '#004ac6', fontSize: '13px' }} />
+                                                <span style={{ fontSize: '13px', color: '#6b7280', fontWeight: 500 }}>Cr.Balance:</span>
+                                                <strong style={{ fontSize: '17px', fontWeight: 700, color: (c.credit_balance ?? cs?.credit_balance ?? 0) > 0 ? '#dc2626' : '#16a34a', letterSpacing: '-0.5px', textDecoration: 'underline dotted' }}><Amount amount={trimTo2Decimals(c.credit_balance ?? cs?.credit_balance ?? 0)} /></strong>
+                                                <i className="bi bi-box-arrow-up-right" style={{ color: '#004ac6', fontSize: '10px' }} />
+                                            </span>
+                                            {(c.credit_limit > 0) && (
+                                                <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+                                                    <i className="bi bi-shield-check" style={{ color: '#6b7280', fontSize: '13px' }} />
+                                                    <span style={{ fontSize: '13px', color: '#6b7280', fontWeight: 500 }}>Limit:</span>
+                                                    <strong style={{ fontSize: '15px', fontWeight: 700, color: '#374151' }}><Amount amount={trimTo2Decimals(c.credit_limit)} /></strong>
+                                                </span>
+                                            )}
+                                        </div>
+                                    </div>
+                                );
+                            })()}
+                        </div>
                     </div>
 
                     {selectedProducts?.length === 0 && "Already returned all products"}
-                    {selectedProducts?.length > 0 && <form className="row g-3 needs-validation" onSubmit={handleCreate}>
-                        <h2>Select Products</h2>
+                    {selectedProducts?.length > 0 && <form className="needs-validation" onSubmit={handleCreate}>
                         <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: "0" }}>
                             <Button variant="light" size="sm" title="Table Settings" onClick={() => setShowQSRSPSettings(true)}>
                                 <i className="bi bi-gear"></i>
@@ -3010,6 +2988,7 @@ const QuotationSalesReturnCreate = forwardRef((props, ref) => {
                                                                             timerRef.current = setTimeout(() => {
                                                                                 CalCulateLineTotals(index);
                                                                                 reCalculate(index);
+                                                                                checkErrors(index);
                                                                             }, 100);
                                                                         } else if (e.key === "ArrowLeft") {
                                                                             timerRef.current = setTimeout(() => {
@@ -3034,6 +3013,7 @@ const QuotationSalesReturnCreate = forwardRef((props, ref) => {
                                                                             timerRef.current = setTimeout(() => {
                                                                                 CalCulateLineTotals(index);
                                                                                 reCalculate(index);
+                                                                                checkErrors(index);
                                                                             }, 100);
                                                                             return;
                                                                         }
@@ -3049,6 +3029,7 @@ const QuotationSalesReturnCreate = forwardRef((props, ref) => {
                                                                             timerRef.current = setTimeout(() => {
                                                                                 CalCulateLineTotals(index);
                                                                                 reCalculate(index);
+                                                                                checkErrors(index);
                                                                             }, 100);
                                                                             return;
                                                                         }
@@ -3073,6 +3054,7 @@ const QuotationSalesReturnCreate = forwardRef((props, ref) => {
 
                                                                             CalCulateLineTotals(index);
                                                                             reCalculate(index);
+                                                                            checkErrors(index);
                                                                         }, 100);
                                                                     }} />
                                                             </div>
@@ -4582,7 +4564,7 @@ const QuotationSalesReturnCreate = forwardRef((props, ref) => {
                                                             </div>
                                                         )}
                                                     </td>
-                                                    <td style={{ width: "200px" }}>
+                                                    <td style={{ width: "420px", position: 'relative' }}>
                                                         <select value={formData.payments_input[key].method} disabled={quotation.payment_status === "not_paid"} className="form-control "
                                                             onChange={(e) => {
                                                                 // errors["payment_method"] = [];
@@ -4617,12 +4599,12 @@ const QuotationSalesReturnCreate = forwardRef((props, ref) => {
                                                             <option value="customer_account">Customer Account</option>
                                                         </select>
                                                         {errors["payment_method_" + key] && (
-                                                            <div style={{ color: "red" }}>
+                                                            <div style={{ color: "red", position: 'absolute', left: 0, top: '100%', whiteSpace: 'nowrap', zIndex: 100, backgroundColor: '#fff', fontSize: '12px', padding: '2px 4px' }}>
                                                                 {errors["payment_method_" + key]}
                                                             </div>
                                                         )}
                                                     </td>
-                                                    <td style={{ width: "200px" }}>
+                                                    <td style={{ width: "672px" }}>
                                                         <input type='text' value={formData.payments_input[key].description || ""} className="form-control"
                                                             disabled={quotation.payment_status === "not_paid"}
                                                             onChange={(e) => { formData.payments_input[key].description = e.target.value; setFormData({ ...formData }); }}

@@ -865,6 +865,10 @@ const ExpenseCreate = forwardRef((props, ref) => {
                                                         <div style={{ flex: 1, minWidth: 0 }}>
                                                             <Typeahead
                                                                 id="vendor_search"
+                                                                positionFixed={true}
+                                                                popperConfig={{
+                                                                    modifiers: [{ name: 'offset', options: { offset: ({ reference }) => [30 - Math.round(reference.x), 0] } }]
+                                                                }}
                                                                 filterBy={() => true}
                                                                 labelKey="search_label"
                                                                 open={openVendorSearchResult}
@@ -921,7 +925,7 @@ const ExpenseCreate = forwardRef((props, ref) => {
                                                                     const searchWords = state.text.toLowerCase().split(" ").filter(Boolean);
 
                                                                     return (
-                                                                        <Menu {...menuProps}>
+                                                                        <Menu {...menuProps} style={{ width: 'calc(100vw - 60px)' }}>
                                                                             {/* Header */}
                                                                             <MenuItem disabled>
                                                                                 <div style={{ display: 'flex', fontWeight: 'bold', padding: '4px 8px', borderBottom: '1px solid #ddd' }}>

@@ -598,51 +598,70 @@ const DividentCreate = forwardRef((props, ref) => {
                                 <div className="row g-3">
                                     <div className="col-md-6">
                                         <Label>Image (Optional)</Label>
-                                        <input
-                                            value={selectedImage ? selectedImage : ""}
-                                            type="file"
-                                            onChange={(e) => {
-                                                errors["image"] = "";
-                                                setErrors({ ...errors });
-
-                                                if (!e.target.value) {
-                                                    errors["image"] = "Invalid Image File";
-                                                    setErrors({ ...errors });
-                                                    return;
-                                                }
-
-                                                selectedImage = e.target.value;
-                                                setSelectedImage(selectedImage);
-
-                                                let file = document.querySelector('#image').files[0];
-
-                                                let targetHeight = 400;
-                                                let targetWidth = 400;
-
-                                                let url = URL.createObjectURL(file);
-                                                let img = new Image();
-
+                                        <label
+                                            style={{
+                                                display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+                                                border: '2px dashed #c3c6d7', borderRadius: '8px', padding: '24px 20px',
+                                                cursor: 'pointer', background: '#f7f9fb', gap: '8px',
+                                            }}
+                                            onDragOver={e => { e.preventDefault(); e.currentTarget.style.borderColor = '#004ac6'; }}
+                                            onDragLeave={e => { e.currentTarget.style.borderColor = '#c3c6d7'; }}
+                                            onDrop={e => {
+                                                e.preventDefault();
+                                                e.currentTarget.style.borderColor = '#c3c6d7';
+                                                const file = e.dataTransfer.files[0];
+                                                if (!file) return;
+                                                let targetHeight = 400, targetWidth = 400;
+                                                const url = URL.createObjectURL(file);
+                                                const img = new Image();
                                                 img.onload = function () {
-                                                    let originaleWidth = img.width;
-                                                    let originalHeight = img.height;
-
-                                                    let targetDimensions = getTargetDimension(originaleWidth, originalHeight, targetWidth, targetHeight);
-                                                    targetWidth = targetDimensions.targetWidth;
-                                                    targetHeight = targetDimensions.targetHeight;
-
-                                                    resizeFIle(file, targetWidth, targetHeight, (result) => {
+                                                    const dims = getTargetDimension(img.width, img.height, targetWidth, targetHeight);
+                                                    resizeFIle(file, dims.targetWidth, dims.targetHeight, (result) => {
                                                         formData.images_content = [];
                                                         formData.images_content[0] = result;
                                                         setFormData({ ...formData });
-
-                                                        console.log("formData.images_content[0]:", formData.images_content[0]);
                                                     });
                                                 };
                                                 img.src = url;
                                             }}
-                                            style={INPUT}
-                                            id="image"
-                                        />
+                                        >
+                                            <i className="bi bi-cloud-upload" style={{ fontSize: '32px', color: '#004ac6' }}></i>
+                                            {selectedImage
+                                                ? <span style={{ fontSize: '13px', fontWeight: 600, color: '#191c1e' }}>{selectedImage.split(/[/\\]/).pop()}</span>
+                                                : <>
+                                                    <span style={{ fontSize: '14px', fontWeight: 600, color: '#191c1e' }}>Click or drag image here</span>
+                                                    <span style={{ fontSize: '12px', color: '#737686' }}>JPG, PNG, GIF, WebP</span>
+                                                </>
+                                            }
+                                            <input
+                                                type="file" accept="image/*" id="image" style={{ display: 'none' }}
+                                                value={selectedImage ? selectedImage : ""}
+                                                onChange={(e) => {
+                                                    errors["image"] = "";
+                                                    setErrors({ ...errors });
+                                                    if (!e.target.value) {
+                                                        errors["image"] = "Invalid Image File";
+                                                        setErrors({ ...errors });
+                                                        return;
+                                                    }
+                                                    selectedImage = e.target.value;
+                                                    setSelectedImage(selectedImage);
+                                                    let file = document.querySelector('#image').files[0];
+                                                    let targetHeight = 400, targetWidth = 400;
+                                                    let url = URL.createObjectURL(file);
+                                                    let img = new Image();
+                                                    img.onload = function () {
+                                                        let targetDimensions = getTargetDimension(img.width, img.height, targetWidth, targetHeight);
+                                                        resizeFIle(file, targetDimensions.targetWidth, targetDimensions.targetHeight, (result) => {
+                                                            formData.images_content = [];
+                                                            formData.images_content[0] = result;
+                                                            setFormData({ ...formData });
+                                                        });
+                                                    };
+                                                    img.src = url;
+                                                }}
+                                            />
+                                        </label>
                                         {errors.image && (
                                             <ErrMsg><i className="bi bi-x-lg me-1"></i>{errors.image}</ErrMsg>
                                         )}
