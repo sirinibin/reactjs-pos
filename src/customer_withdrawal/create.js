@@ -36,6 +36,7 @@ const columnStyle = {
 const CustomerWithdrawalCreate = forwardRef((props, ref) => {
     useImperativeHandle(ref, () => ({
         open(id) {
+            setErrors({});
             formData = {
                 type: "customer",
                 images_content: [],

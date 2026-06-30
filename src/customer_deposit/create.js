@@ -37,6 +37,7 @@ const columnStyle = {
 const CustomerDepositCreate = forwardRef((props, ref) => {
     useImperativeHandle(ref, () => ({
         open(id) {
+            setErrors({});
             formData = {
                 type: "customer",
                 images_content: [],
