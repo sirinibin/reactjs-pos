@@ -352,7 +352,7 @@ const CustomerWithdrawalCreate = forwardRef((props, ref) => {
             },
         };
 
-        let Select = "select=id,credit_balance,credit_limit,additional_keywords,code,vat_no,name,phone,name_in_arabic,phone_in_arabic,search_label";
+        let Select = "select=id,credit_balance,credit_limit,additional_keywords,code,vat_no,name,phone,phone2,name_in_arabic,phone_in_arabic,search_label";
         // setIsCustomersLoading(true);
         let result = await fetch(
             "/v1/customer?limit=100&" + Select + queryString,
@@ -490,7 +490,7 @@ const CustomerWithdrawalCreate = forwardRef((props, ref) => {
             },
         };
 
-        let Select = "select=id,credit_balance,credit_limit,additional_keywords,code,vat_no,name,phone,name_in_arabic,phone_in_arabic,search_label";
+        let Select = "select=id,credit_balance,credit_limit,additional_keywords,code,vat_no,name,phone,phone2,name_in_arabic,phone_in_arabic,search_label";
         // setIsCustomersLoading(true);
         let result = await fetch(
             "/v1/vendor?limit=100&" + Select + queryString,
@@ -1428,7 +1428,7 @@ const CustomerWithdrawalCreate = forwardRef((props, ref) => {
                                         <div style={CARD} className="pw-card">
                                             <SectionTitle icon="bi-people">Customer / Vendor</SectionTitle>
 
-                                            <div className="entity-header-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 350px', gap: '20px', alignItems: 'start' }}>
+                                            <div className="entity-header-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 350px', gap: '20px', alignItems: 'stretch' }}>
                                                 {/* LEFT: Type/Date/Remarks + active Typeahead */}
                                                 <div>
                                                     <div className="row g-3">
@@ -1792,7 +1792,7 @@ const CustomerWithdrawalCreate = forwardRef((props, ref) => {
                                                 </div>
 
                                                 {/* RIGHT: entity detail panel (fixed 350px column) */}
-                                                <div style={{ alignSelf: 'start' }}>
+                                                <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'flex-end' }}>
                                                     {formData.type === 'customer' && selectedCustomers.length > 0 && formData.customer_id && (() => {
                                                         const c = selectedCustomers[0];
                                                         return (

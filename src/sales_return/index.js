@@ -1621,7 +1621,7 @@ const SalesReturnIndex = forwardRef((props, ref) => {
     return (
         <>
             {showSalesUpdateForm && <OrderCreate ref={SalesUpdateFormRef} />}
-            {showCustomerUpdateForm && <CustomerCreate ref={CustomerUpdateFormRef} />}
+            {showCustomerUpdateForm && <CustomerCreate ref={CustomerUpdateFormRef} onUpdated={() => list()} />}
             {/* ⚙️ Settings Modal */}
             <Modal
                 show={showSettings}

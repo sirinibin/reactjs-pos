@@ -2301,7 +2301,7 @@ const SalesReturnCreate = forwardRef((props, ref) => {
             <Preview ref={PreviewRef} />
             <SalesReturnView ref={DetailsViewRef} />
             <StoreCreate ref={StoreCreateFormRef} showToastMessage={props.showToastMessage} />
-            <CustomerCreate ref={CustomerCreateFormRef} showToastMessage={props.showToastMessage} />
+            <CustomerCreate ref={CustomerCreateFormRef} showToastMessage={props.showToastMessage} onUpdated={(updated) => { if (updated && updated.id) { fetchAndSetCustomer(updated.id, updated); if (props.refreshList) { props.refreshList(); } } }} />
             <ProductCreate ref={ProductCreateFormRef} showToastMessage={props.showToastMessage} />
             <UserCreate ref={UserCreateFormRef} showToastMessage={props.showToastMessage} />
             <SignatureCreate ref={SignatureCreateFormRef} showToastMessage={props.showToastMessage} />
@@ -4231,14 +4231,21 @@ const SalesReturnCreate = forwardRef((props, ref) => {
                                     {/* Row 1: Customer (disabled) */}
                                     <div>
                                         <label className="form-label" style={{ fontSize: '12px', marginBottom: '2px' }}>{t('Customer')}</label>
-                                        <input
-                                            type="text"
-                                            className="form-control"
-                                            disabled
-                                            value={selectedCustomers?.[0]?.name || formData.customer_name || ''}
-                                            placeholder={t('Customer')}
-                                            style={{ backgroundColor: '#f8f9fa' }}
-                                        />
+                                        <div className="d-flex gap-1 align-items-center">
+                                            <input
+                                                type="text"
+                                                className="form-control"
+                                                disabled
+                                                value={selectedCustomers?.[0]?.name || formData.customer_name || ''}
+                                                placeholder={t('Customer')}
+                                                style={{ backgroundColor: '#f8f9fa', flex: 1 }}
+                                            />
+                                            {selectedCustomers.length > 0 && formData.customer_id && (
+                                                <Button onClick={() => CustomerCreateFormRef.current.open(formData.customer_id)} className="btn btn-primary btn-sm" type="button" title={t('Edit Customer')}>
+                                                    <i className="bi bi-pencil"></i>
+                                                </Button>
+                                            )}
+                                        </div>
                                     </div>
                                     {/* Row 2: 5-column table — Date | Phone+WA | VAT | Address | Remarks */}
                                     <table style={{ width: '100%', borderCollapse: 'separate', borderSpacing: '10px 0', tableLayout: 'fixed' }}>

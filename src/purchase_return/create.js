@@ -2171,7 +2171,7 @@ async function reCalculate(productIndex) {
             <StoreCreate ref={StoreCreateFormRef} showToastMessage={props.showToastMessage} />
             <UserCreate ref={UserCreateFormRef} showToastMessage={props.showToastMessage} />
             <SignatureCreate ref={SignatureCreateFormRef} showToastMessage={props.showToastMessage} />
-            <VendorCreate ref={VendorCreateFormRef} showToastMessage={props.showToastMessage} />
+            <VendorCreate ref={VendorCreateFormRef} showToastMessage={props.showToastMessage} onUpdated={(updated) => { if (updated && updated.id) { fetchAndSetVendor(updated.id, updated); if (props.refreshList) { props.refreshList(); } } }} />
             <PurchaseView ref={PurchaseDetailsViewRef} />
             <Modal show={show} size="xl" fullscreen onHide={handleClose} animation={false} backdrop="static" scrollable={true}>
                 <Modal.Header>
@@ -2240,14 +2240,21 @@ async function reCalculate(productIndex) {
                                     {/* Vendor search row */}
                                     <div style={{ marginBottom: '12px' }}>
                                         <label className="form-label">{t('Vendor')}</label>
-                                        <input
-                                            type="text"
-                                            className="form-control"
-                                            disabled
-                                            value={selectedVendors?.[0]?.name || formData.vendor_name || ''}
-                                            placeholder={t('Vendor')}
-                                            style={{ backgroundColor: '#f8f9fa' }}
-                                        />
+                                        <div className="d-flex gap-1 align-items-center">
+                                            <input
+                                                type="text"
+                                                className="form-control"
+                                                disabled
+                                                value={selectedVendors?.[0]?.name || formData.vendor_name || ''}
+                                                placeholder={t('Vendor')}
+                                                style={{ backgroundColor: '#f8f9fa', flex: 1 }}
+                                            />
+                                            {selectedVendors.length > 0 && formData.vendor_id && (
+                                                <Button onClick={() => VendorCreateFormRef.current.open(formData.vendor_id)} className="btn btn-primary btn-sm" type="button" title={t('Edit Vendor')}>
+                                                    <i className="bi bi-pencil"></i>
+                                                </Button>
+                                            )}
+                                        </div>
                                         {errors.vendor_id && <div style={{ color: 'red' }}>{errors.vendor_id}</div>}
                                     </div>
 

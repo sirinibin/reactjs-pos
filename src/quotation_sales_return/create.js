@@ -2173,7 +2173,7 @@ const QuotationSalesReturnCreate = forwardRef((props, ref) => {
             <Preview ref={PreviewRef} />
             <QuotationSalesReturnView ref={DetailsViewRef} />
             <StoreCreate ref={StoreCreateFormRef} showToastMessage={props.showToastMessage} />
-            <CustomerCreate ref={CustomerCreateFormRef} showToastMessage={props.showToastMessage} />
+            <CustomerCreate ref={CustomerCreateFormRef} showToastMessage={props.showToastMessage} onUpdated={(updated) => { if (updated && updated.id) { fetchAndSetCustomer(updated.id, updated); if (props.refreshList) { props.refreshList(); } } }} />
             {showCustomerPending && <CustomerPending ref={CustomerPendingRef} />}
             <ProductCreate ref={ProductCreateFormRef} showToastMessage={props.showToastMessage} />
             <UserCreate ref={UserCreateFormRef} showToastMessage={props.showToastMessage} />
@@ -2224,134 +2224,132 @@ const QuotationSalesReturnCreate = forwardRef((props, ref) => {
                             </ul>
                         </div>
                     )}
-                    <div className="entity-header-grid" style={{ gap: '10px', alignItems: 'start', marginBottom: '12px' }}>
-                        {/* LEFT: disabled customer input + CSS Grid fields */}
-                        <div style={{ minWidth: 0, display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                            <div>
-                                <label className="form-label mb-1">Customer</label>
-                                <input
-                                    type="text"
-                                    className="form-control"
-                                    disabled
-                                    value={selectedCustomers?.[0]?.name || formData.customer_name || ''}
-                                    placeholder="Customer"
-                                    style={{ backgroundColor: '#f8f9fa' }}
-                                />
-                            </div>
-                            <div style={{ display: 'grid', gridTemplateColumns: '231px 1fr 1fr', gap: '8px 18px', alignItems: 'start' }}>
-                                {/* R1C1: Date */}
-                                <div>
-                                    <label className="form-label" style={{ fontSize: '12px', marginBottom: '2px' }}>Date *</label>
-                                    <DatePicker
-                                        id="date_str"
-                                        selected={formData.date_str ? new Date(formData.date_str) : null}
-                                        value={formData.date_str ? format(new Date(formData.date_str), "MMMM d, yyyy h:mm aa") : null}
-                                        className={`form-control${errors.date_str ? ' is-invalid' : ''}`}
-                                        dateFormat="MMMM d, yyyy h:mm aa"
-                                        showTimeSelect
-                                        timeIntervals="1"
-                                        onChange={(value) => { formData.date_str = value; setFormData({ ...formData }); }}
-                                    />
-                                    {errors.date_str && <div style={{ color: 'red', fontSize: '11px' }}>{errors.date_str}</div>}
+                    <section style={{ backgroundColor: '#ffffff', borderRadius: '8px', border: '1px solid #e2e8f0', marginBottom: '8px' }}>
+                    <div className="sc-header-flex" style={{ borderBottom: '1px solid #c3c6d7' }}>
+                        {/* Left: customer display + date, phone, vat, remarks, address */}
+                        <div className="sc-header-left" style={{ padding: '4px 10px', display: 'flex', gap: '6px', alignItems: 'stretch', backgroundColor: '#f2f4f6', borderRight: '1px solid #c3c6d7' }}>
+                            <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                                {/* Customer row: disabled input + edit button */}
+                                <div className="sc-sub-row" style={{ alignItems: 'center' }}>
+                                    <div style={{ flex: '1 1 0', minWidth: 0 }}>
+                                        <input
+                                            type="text"
+                                            className="form-control form-control-lg"
+                                            disabled
+                                            value={selectedCustomers?.[0]?.name || formData.customer_name || ''}
+                                            placeholder="Customer"
+                                            style={{ backgroundColor: '#f8f9fa' }}
+                                        />
+                                    </div>
+                                    {selectedCustomers.length > 0 && formData.customer_id && (
+                                        <button type="button" onClick={() => CustomerCreateFormRef.current.open(formData.customer_id)} style={{ background: '#fff', border: '1px solid #c3c6d7', borderRadius: '4px', padding: '7px 12px', fontSize: '13px', cursor: 'pointer', flexShrink: 0 }} title="Edit Customer">
+                                            <i className="bi bi-pencil" />
+                                        </button>
+                                    )}
                                 </div>
-                                {/* R1C2: Phone + WhatsApp */}
-                                <div>
-                                    <label className="form-label" style={{ fontSize: '12px', marginBottom: '2px' }}>Phone ( 05.. / +966..)</label>
-                                    <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                                {/* Row 1: Date + Phone + WhatsApp + VAT NO. */}
+                                <div className="sc-sub-row" style={{ alignItems: 'center' }}>
+                                    <div className="sc-date-input" style={{ flexShrink: 0 }}>
+                                        <DatePicker
+                                            id="date_str"
+                                            selected={formData.date_str ? new Date(formData.date_str) : null}
+                                            value={formData.date_str ? format(new Date(formData.date_str), "MMMM d, yyyy h:mm aa") : null}
+                                            className={`form-control form-control-lg${errors.date_str ? ' is-invalid' : ''}`}
+                                            dateFormat="MMMM d, yyyy h:mm aa"
+                                            showTimeSelect
+                                            timeIntervals="1"
+                                            popperProps={{ strategy: 'fixed' }}
+                                            onChange={(value) => { formData.date_str = value; setFormData({ ...formData }); }}
+                                        />
+                                    </div>
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '2px', flexShrink: 0 }}>
                                         <input
                                             id="quotationsales_return_phone" name="quotationsales_return_phone"
                                             value={formData.phone || ''}
                                             type="text"
                                             onChange={(e) => { delete errors["phone"]; setErrors({ ...errors }); formData.phone = e.target.value; setFormData({ ...formData }); }}
-                                            className={`form-control${errors.phone ? ' is-invalid' : ''}`}
+                                            className={`form-control form-control-lg${errors["phone"] ? ' is-invalid' : ''}`}
                                             placeholder="Phone"
+                                            style={{ width: '154px' }}
                                         />
-                                        <Button className="btn btn-success btn-sm" onClick={sendWhatsAppMessage} style={{ flexShrink: 0 }}>
+                                        <button type="button" onClick={sendWhatsAppMessage} style={{ background: '#25d366', border: 'none', borderRadius: '4px', padding: '7px 8px', cursor: 'pointer', color: '#fff', display: 'inline-flex', alignItems: 'center', flexShrink: 0 }}>
                                             <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" fill="white" viewBox="0 0 16 16">
                                                 <path d="M13.601 2.326A7.875 7.875 0 0 0 8.036 0C3.596 0 0 3.597 0 8.036c0 1.417.37 2.805 1.07 4.03L0 16l3.993-1.05a7.968 7.968 0 0 0 4.043 1.085h.003c4.44 0 8.036-3.596 8.036-8.036 0-2.147-.836-4.166-2.37-5.673ZM8.036 14.6a6.584 6.584 0 0 1-3.35-.92l-.24-.142-2.37.622.63-2.31-.155-.238a6.587 6.587 0 0 1-1.018-3.513c0-3.637 2.96-6.6 6.6-6.6 1.764 0 3.42.69 4.67 1.94a6.56 6.56 0 0 1 1.93 4.668c0 3.637-2.96 6.6-6.6 6.6Zm3.61-4.885c-.198-.1-1.17-.578-1.352-.644-.18-.066-.312-.1-.444.1-.13.197-.51.644-.626.775-.115.13-.23.15-.428.05-.198-.1-.837-.308-1.594-.983-.59-.525-.99-1.174-1.11-1.372-.116-.198-.012-.305.088-.403.09-.09.198-.23.298-.345.1-.115.132-.197.2-.33.065-.13.032-.247-.017-.345-.05-.1-.444-1.07-.61-1.46-.16-.384-.323-.332-.444-.338l-.378-.007c-.13 0-.344.048-.525.23s-.688.672-.688 1.64c0 .967.704 1.9.802 2.03.1.13 1.386 2.116 3.365 2.963.47.203.837.324 1.122.414.472.15.902.13 1.24.08.378-.057 1.17-.48 1.336-.942.165-.462.165-.858.116-.943-.048-.084-.18-.132-.378-.23Z" />
                                             </svg>
-                                        </Button>
+                                        </button>
                                     </div>
-                                    {errors.phone && <div style={{ color: 'red', fontSize: '11px' }}>{errors.phone}</div>}
-                                </div>
-                                {/* R1C3: VAT NO. */}
-                                <div>
-                                    <label className="form-label" style={{ fontSize: '12px', marginBottom: '2px' }}>VAT NO.(15 digits)</label>
                                     <input
                                         id="quotationsales_vat_no" name="quotationsales_vat_no"
                                         value={formData.vat_no || ''}
                                         type="text"
                                         onChange={(e) => { delete errors["vat_no"]; setErrors({ ...errors }); formData.vat_no = e.target.value; setFormData({ ...formData }); }}
-                                        className={`form-control${errors.vat_no ? ' is-invalid' : ''}`}
+                                        className={`form-control form-control-lg${errors["vat_no"] ? ' is-invalid' : ''}`}
                                         placeholder="VAT NO."
+                                        style={{ width: '180px', flexShrink: 0 }}
                                     />
-                                    {errors.vat_no && <div style={{ color: 'red', fontSize: '11px' }}>{errors.vat_no}</div>}
                                 </div>
-                                {/* R2C2: Address */}
-                                <div style={{ gridColumn: '2' }}>
-                                    <label className="form-label" style={{ fontSize: '12px', marginBottom: '2px' }}>Address</label>
-                                    <textarea
-                                        value={formData.address || ''}
-                                        onChange={(e) => { delete errors["address"]; setErrors({ ...errors }); formData.address = e.target.value; setFormData({ ...formData }); }}
-                                        className={`form-control${errors.address ? ' is-invalid' : ''}`}
-                                        id="address" placeholder="Address"
-                                        style={{ width: '100%' }}
-                                    />
-                                    {errors.address && <div style={{ color: 'red', fontSize: '11px' }}>{errors.address}</div>}
-                                </div>
-                                {/* R2C3: Remarks */}
-                                <div>
-                                    <label className="form-label" style={{ fontSize: '12px', marginBottom: '2px' }}>Remarks</label>
+                                {/* Row 2: Remarks + Address */}
+                                <div className="sc-sub-row" style={{ alignItems: 'flex-end' }}>
                                     <textarea
                                         value={formData.remarks || ''}
                                         onChange={(e) => { formData.remarks = e.target.value; setFormData({ ...formData }); }}
+                                        onKeyDown={(e) => { if (e.key === 'Enter') { e.stopPropagation(); e.nativeEvent.stopImmediatePropagation(); } }}
                                         className="form-control"
-                                        id="remarks" placeholder="Remarks"
-                                        style={{ width: '100%' }}
+                                        id="remarks"
+                                        placeholder="Remarks"
+                                        style={{ resize: 'none', fontSize: '13px', height: '38px', flex: '1 1 0', minWidth: 0 }}
+                                    />
+                                    <textarea
+                                        value={formData.address || ''}
+                                        onChange={(e) => { delete errors["address"]; setErrors({ ...errors }); formData.address = e.target.value; setFormData({ ...formData }); }}
+                                        onKeyDown={(e) => { if (e.key === 'Enter') { e.stopPropagation(); e.nativeEvent.stopImmediatePropagation(); } }}
+                                        className={`form-control${errors["address"] ? ' is-invalid' : ''}`}
+                                        id="address"
+                                        placeholder="Address"
+                                        style={{ resize: 'none', fontSize: '13px', height: '38px', flex: '1 1 0', minWidth: 0 }}
                                     />
                                 </div>
                             </div>
                         </div>
-                        {/* RIGHT: customer detail card */}
-                        <div style={{ alignSelf: 'start' }}>
-                            {selectedCustomers.length > 0 && formData.customer_id && (() => {
-                                const c = selectedCustomers[0];
-                                const storeId = localStorage.getItem("store_id");
-                                const cs = c?.stores?.[storeId];
-                                return (
-                                    <div style={{ padding: '10px 16px', background: 'rgba(0,74,198,0.04)', border: '1px solid #c7d7f5', borderRadius: '8px', display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
-                                            {c.code && <span style={{ background: '#dbeafe', color: '#1e40af', borderRadius: '4px', padding: '2px 8px', fontSize: '12px', fontWeight: 700, letterSpacing: '0.03em', flexShrink: 0 }}>{c.code}</span>}
-                                            <span className="entity-detail-name" style={{ fontWeight: 700, fontSize: '15px', color: '#191c1e', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: '260px' }} title={c.name}>{c.name}</span>
-                                            {c.name_in_arabic && <span style={{ fontSize: '13px', color: '#64748b', fontFamily: 'Arial, sans-serif', flexShrink: 0 }}>{c.name_in_arabic}</span>}
-                                        </div>
-                                        {(c.phone || c.phone2 || c.vat_no) && (
-                                            <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
-                                                {c.phone && <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', fontSize: '13px', color: '#374151' }}><i className="bi bi-telephone" style={{ color: '#6b7280', fontSize: '12px' }} />{c.phone}</span>}
-                                                {c.phone2 && <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', fontSize: '13px', color: '#374151' }}><i className="bi bi-telephone" style={{ color: '#6b7280', fontSize: '12px' }} />{c.phone2}</span>}
-                                                {c.vat_no && <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', fontSize: '13px', color: '#374151' }}><i className="bi bi-receipt" style={{ color: '#6b7280', fontSize: '12px' }} /><span style={{ color: '#6b7280' }}>VAT:</span><strong>{c.vat_no}</strong></span>}
-                                            </div>
-                                        )}
-                                        <div style={{ display: 'flex', alignItems: 'center', gap: '16px', flexWrap: 'wrap', borderTop: '1px solid #e2e8f0', paddingTop: '4px', marginTop: '2px' }}>
-                                            <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', cursor: 'pointer', userSelect: 'none' }} onClick={() => openCustomerPending(selectedCustomers[0])} title="Click to view pendings">
-                                                <i className="bi bi-wallet2" style={{ color: '#004ac6', fontSize: '13px' }} />
-                                                <span style={{ fontSize: '13px', color: '#6b7280', fontWeight: 500 }}>Cr.Balance:</span>
-                                                <strong style={{ fontSize: '17px', fontWeight: 700, color: (c.credit_balance ?? cs?.credit_balance ?? 0) > 0 ? '#dc2626' : '#16a34a', letterSpacing: '-0.5px', textDecoration: 'underline dotted' }}><Amount amount={trimTo2Decimals(c.credit_balance ?? cs?.credit_balance ?? 0)} /></strong>
-                                                <i className="bi bi-box-arrow-up-right" style={{ color: '#004ac6', fontSize: '10px' }} />
-                                            </span>
-                                            {(c.credit_limit > 0) && (
-                                                <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
-                                                    <i className="bi bi-shield-check" style={{ color: '#6b7280', fontSize: '13px' }} />
-                                                    <span style={{ fontSize: '13px', color: '#6b7280', fontWeight: 500 }}>Limit:</span>
-                                                    <strong style={{ fontSize: '15px', fontWeight: 700, color: '#374151' }}><Amount amount={trimTo2Decimals(c.credit_limit)} /></strong>
-                                                </span>
-                                            )}
-                                        </div>
-                                    </div>
-                                );
-                            })()}
-                        </div>
+                        {/* Right: customer chip bar */}
+                        {selectedCustomers.length > 0 && formData.customer_id ? (() => {
+                            const c = selectedCustomers[0];
+                            const storeId = localStorage.getItem("store_id");
+                            const cs = c?.stores?.[storeId];
+                            const sep = <span style={{ width: '1px', height: '12px', background: '#c3c6d7', flexShrink: 0 }} />;
+                            const phone = c.phone || formData.phone;
+                            const phone2 = c.phone2;
+                            const vatNo = c.vat_no || formData.vat_no;
+                            return (
+                                <div className="sc-header-right" style={{ padding: '4px 14px', background: 'rgba(0,74,198,0.03)', borderLeft: '1px solid #e2e8f0', display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: '6px', overflow: 'hidden', minHeight: '40px' }}>
+                                    {c.code && <span style={{ background: '#dbeafe', color: '#1e40af', borderRadius: '4px', padding: '1px 7px', fontSize: '12px', fontWeight: 700, letterSpacing: '0.03em', flexShrink: 0 }}>{c.code}</span>}
+                                    <span style={{ fontWeight: 700, fontSize: '15px', color: '#191c1e', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', minWidth: 0, maxWidth: '280px' }}>{c.name}</span>
+                                    {c.name_in_arabic && <><span style={{ color: '#c3c6d7', fontSize: '13px', flexShrink: 0 }}>|</span><span style={{ fontSize: '13px', color: '#64748b', fontFamily: 'Arial, sans-serif', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', minWidth: 0, maxWidth: '200px' }}>{c.name_in_arabic}</span></>}
+                                    {(phone || phone2 || vatNo) && sep}
+                                    {phone && <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', fontSize: '13px', color: '#374151', flexShrink: 0 }}><i className="bi bi-telephone" style={{ color: '#6b7280', fontSize: '12px' }} />{phone}</span>}
+                                    {phone && phone2 && sep}
+                                    {phone2 && <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', fontSize: '13px', color: '#374151', flexShrink: 0 }}><i className="bi bi-telephone" style={{ color: '#6b7280', fontSize: '12px' }} />{phone2}</span>}
+                                    {(phone || phone2) && vatNo && sep}
+                                    {vatNo && <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', fontSize: '13px', color: '#374151', flexShrink: 0 }}><i className="bi bi-receipt" style={{ color: '#6b7280', fontSize: '12px' }} /><span style={{ color: '#6b7280' }}>VAT:</span>{vatNo}</span>}
+                                    {sep}
+                                    <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', fontSize: '13px', cursor: 'pointer', userSelect: 'none', flexShrink: 0 }}
+                                        onClick={() => openCustomerPending(selectedCustomers[0])}
+                                        title="Click to view pendings">
+                                        <i className="bi bi-wallet2" style={{ color: '#004ac6', fontSize: '13px' }} />
+                                        <span style={{ color: '#6b7280' }}>Cr.Balance:</span>
+                                        <strong style={{ fontSize: '17px', fontWeight: 700, color: (c.credit_balance ?? cs?.credit_balance ?? 0) > 0 ? '#dc2626' : '#16a34a', textDecoration: 'underline dotted' }}><Amount amount={trimTo2Decimals(c.credit_balance ?? cs?.credit_balance ?? 0)} /></strong>
+                                        <i className="bi bi-box-arrow-up-right" style={{ color: '#004ac6', fontSize: '10px' }} />
+                                    </span>
+                                    {(c.credit_limit > 0) && <>{sep}<span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', fontSize: '13px', flexShrink: 0 }}>
+                                        <i className="bi bi-shield-check" style={{ color: '#6b7280', fontSize: '13px' }} />
+                                        <span style={{ color: '#6b7280' }}>Limit:</span>
+                                        <strong style={{ fontSize: '15px', fontWeight: 700, color: '#374151' }}><Amount amount={trimTo2Decimals(c.credit_limit)} /></strong>
+                                    </span></>}
+                                </div>
+                            );
+                        })() : <div className="sc-header-right" />}
                     </div>
+                    </section>
 
                     {selectedProducts?.length === 0 && "Already returned all products"}
                     {selectedProducts?.length > 0 && <form className="needs-validation" onSubmit={handleCreate}>
