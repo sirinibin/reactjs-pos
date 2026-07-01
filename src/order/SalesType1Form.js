@@ -2693,14 +2693,14 @@ export function SalesType1Body({
                                 )}
                             </div>
 
-                            <div className="col-md-8">
+                            <div className="col-md-12" style={{ maxWidth: "90%" }}>
                                 <label className="form-label">{t("Payments Received")}</label>
 
-                                <div class="table-responsive" style={{ maxWidth: "900px" }}>
+                                <div class="table-responsive">
                                     <Button variant="secondary" style={{ alignContent: "right", marginBottom: "10px" }} onClick={addNewPayment}>
                                         {t("Create New Payment")}
                                     </Button>
-                                    <table class="table table-striped table-sm table-bordered">
+                                    <table class="table table-striped table-sm table-bordered" style={{ width: "100%" }}>
                                         {formData.payments_input && formData.payments_input?.length > 0 &&
                                             <thead>
                                                 <th>
@@ -2726,7 +2726,7 @@ export function SalesType1Body({
                                             {formData.payments_input &&
                                                 formData.payments_input.filter(payment => !payment.deleted).map((payment, key) => (
                                                     <tr key={key}>
-                                                        <td style={{ minWidth: "220px" }}>
+                                                        <td style={{ minWidth: "80px" }}>
 
                                                             <DatePicker
                                                                 id="payment_date_str"
@@ -2754,7 +2754,7 @@ export function SalesType1Body({
                                                                 </div>
                                                             )}
                                                         </td>
-                                                        <td style={{ width: "300px" }}>
+                                                        <td style={{ position: 'relative', minWidth: "96px" }}>
                                                             <input type='number' id={`${"sales_payment_amount" + key}`} name={`${"sales_payment_amount" + key}`} value={formData.payments_input[key].amount} className="form-control "
                                                                 onChange={(e) => {
                                                                     delete errors["payment_amount_" + key];
@@ -2775,13 +2775,12 @@ export function SalesType1Body({
                                                                 }}
                                                             />
                                                             {errors["payment_amount_" + key] && (
-                                                                <div style={{ color: "red" }}>
-
-                                                                    {t(errors["payment_amount_" + key])}
+                                                                <div style={{ position: 'absolute', top: '100%', left: 0, color: 'red', whiteSpace: 'nowrap', zIndex: 10, fontSize: '11px', background: '#fff', padding: '1px 2px' }}>
+                                                                    <i className="bi bi-x-lg"> </i>{t(errors["payment_amount_" + key])}
                                                                 </div>
                                                             )}
                                                         </td>
-                                                        <td style={{ width: "420px", position: 'relative' }}>
+                                                        <td style={{ position: 'relative', minWidth: "80px" }}>
                                                             <select value={formData.payments_input[key].method} className="form-control "
                                                                 onChange={(e) => {
                                                                     // errors["payment_method"] = [];
@@ -2821,13 +2820,13 @@ export function SalesType1Body({
                                                                 </div>
                                                             )}
                                                         </td>
-                                                        <td style={{ width: "672px" }}>
+                                                        <td style={{ minWidth: "347px" }}>
                                                             <input type='text' value={formData.payments_input[key].description || ""} className="form-control"
                                                                 onChange={(e) => { formData.payments_input[key].description = e.target.value; setFormData({ ...formData }); }}
                                                                 placeholder={t("Description")}
                                                             />
                                                         </td>
-                                                        <td style={{ width: "200px" }}>
+                                                        <td style={{ minWidth: "240px" }}>
                                                             {formData.payments_input[key] && (
                                                                 <span
                                                                     style={{ cursor: "pointer", color: "blue" }}
@@ -2837,13 +2836,10 @@ export function SalesType1Body({
                                                                 </span>
                                                             )}
                                                         </td>
-                                                        <td style={{ width: "200px" }}>
-                                                            <Button variant="danger" onClick={(event) => {
-                                                                removePayment(key);
-                                                            }}>
-                                                                {t("Remove")}
-                                                            </Button>
-
+                                                        <td style={{ width: "40px", textAlign: 'center' }}>
+                                                            <button type="button" onClick={() => removePayment(key)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#dc2626', padding: '2px 6px', borderRadius: '4px' }} onMouseEnter={e => e.currentTarget.style.backgroundColor = '#fef2f2'} onMouseLeave={e => e.currentTarget.style.backgroundColor = 'transparent'}>
+                                                                <i className="bi bi-trash" style={{ fontSize: '14px' }}></i>
+                                                            </button>
                                                         </td>
                                                     </tr>
                                                 ))}
@@ -2866,7 +2862,7 @@ export function SalesType1Body({
                                                         </div>
                                                     )}
                                                 </td>
-                                                <td colSpan={2}>
+                                                <td colSpan={3}>
                                                     <b>{t("Payment status")}: </b>
                                                     {paymentStatus === "paid" ?
                                                         <span className="badge bg-success">

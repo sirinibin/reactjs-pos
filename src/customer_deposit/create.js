@@ -1907,7 +1907,7 @@ const CustomerDepositCreate = forwardRef((props, ref) => {
                                                                         <ErrMsg>{errors["customer_receivable_payment_date_" + key]}</ErrMsg>
                                                                     )}
                                                                 </td>
-                                                                <td>
+                                                                <td style={{ position: 'relative' }}>
                                                                     <input type='number' id={`${"customer_receivable_payment_amount_" + key}`} name={`${"customer_receivable_payment_amount_" + key}`} value={formData.payments[key].amount} style={INPUT}
                                                                         ref={(el) => {
                                                                             if (!inputRefs.current[key]) inputRefs.current[key] = {};
@@ -1956,7 +1956,7 @@ const CustomerDepositCreate = forwardRef((props, ref) => {
                                                                         }}
                                                                     />
                                                                     {errors["customer_receivable_payment_amount_" + key] && (
-                                                                        <ErrMsg>{errors["customer_receivable_payment_amount_" + key]}</ErrMsg>
+                                                                        <div style={{ position: 'absolute', top: '100%', left: 0, color: 'red', whiteSpace: 'nowrap', zIndex: 10, fontSize: '11px', background: '#fff', padding: '1px 2px' }}>{errors["customer_receivable_payment_amount_" + key]}</div>
                                                                     )}
                                                                 </td>
                                                                 <td>
@@ -2048,7 +2048,7 @@ const CustomerDepositCreate = forwardRef((props, ref) => {
                                                                         <ErrMsg>{errors["customer_receivable_payment_invoice_" + key]}</ErrMsg>
                                                                     )}
                                                                 </td>
-                                                                <td>
+                                                                <td style={{ position: 'relative' }}>
                                                                     <select
                                                                         id={`${"customer_receivable_payment_method_" + key}`} name={`${"customer_receivable_payment_method_" + key}`}
                                                                         value={formData.payments[key].method} style={INPUT}
@@ -2101,7 +2101,7 @@ const CustomerDepositCreate = forwardRef((props, ref) => {
                                                                         <option value="purchase_fund">Purchase Fund A/c</option>
                                                                     </select>
                                                                     {errors["customer_receivable_payment_method_" + key] && (
-                                                                        <ErrMsg>{errors["customer_receivable_payment_method_" + key]}</ErrMsg>
+                                                                        <div style={{ position: 'absolute', top: '100%', left: 0, color: 'red', whiteSpace: 'nowrap', zIndex: 10, fontSize: '11px', background: '#fff', padding: '1px 2px' }}>{errors["customer_receivable_payment_method_" + key]}</div>
                                                                     )}
                                                                 </td>
                                                                 <td>

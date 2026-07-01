@@ -6950,14 +6950,14 @@ const PurchaseCreate = forwardRef((props, ref) => {
                         </div>
 
 
-                        <div className="col-md-8">
+                        <div className="col-md-12" style={{ maxWidth: "90%" }}>
                             <label className="form-label">{t('Payments Paid')}</label>
 
-                            <div class="table-responsive" style={{ maxWidth: "900px" }}>
+                            <div class="table-responsive">
                                 <Button variant="secondary" style={{ alignContent: "right", marginBottom: "10px" }} onClick={addNewPayment}>
                                     {t("Create new payment")}
                                 </Button>
-                                <table class="table table-striped table-sm table-bordered">
+                                <table class="table table-striped table-sm table-bordered" style={{ width: "100%" }}>
                                     {formData.payments_input && formData.payments_input.length > 0 &&
                                         <thead>
                                             <th>
@@ -6983,7 +6983,7 @@ const PurchaseCreate = forwardRef((props, ref) => {
                                         {formData.payments_input &&
                                             formData.payments_input.filter(payment => !payment.deleted).map((payment, key) => (
                                                 <tr key={key}>
-                                                    <td style={{ minWidth: "220px" }}>
+                                                    <td>
 
                                                         <DatePicker
                                                             id="payment_date_str"
@@ -7011,7 +7011,7 @@ const PurchaseCreate = forwardRef((props, ref) => {
                                                             </div>
                                                         )}
                                                     </td>
-                                                    <td style={{ width: "300px", position: 'relative' }}>
+                                                    <td style={{ position: 'relative', minWidth: "96px" }}>
                                                         <input id={`${"purchase_payment_amount" + key}`} name={`${"purchase_payment_amount" + key}`}
                                                             type='number' value={formData.payments_input[key].amount} className="form-control "
                                                             onChange={(e) => {
@@ -7041,7 +7041,7 @@ const PurchaseCreate = forwardRef((props, ref) => {
                                                             </div>
                                                         )}
                                                     </td>
-                                                    <td style={{ width: "420px", position: 'relative' }}>
+                                                    <td style={{ position: 'relative' }}>
                                                         <select value={formData.payments_input[key].method} className="form-control "
                                                             onChange={(e) => {
                                                                 // errors["payment_method"] = [];
@@ -7083,13 +7083,13 @@ const PurchaseCreate = forwardRef((props, ref) => {
                                                             </div>
                                                         )}
                                                     </td>
-                                                    <td style={{ width: "672px" }}>
+                                                    <td style={{ minWidth: "347px" }}>
                                                         <input type='text' value={formData.payments_input[key].description || ""} className="form-control"
                                                             onChange={(e) => { formData.payments_input[key].description = e.target.value; setFormData({ ...formData }); }}
                                                             placeholder={t("Description")}
                                                         />
                                                     </td>
-                                                    <td style={{ width: "200px" }}>
+                                                    <td style={{ minWidth: "400px" }}>
                                                         {formData.payments_input[key] && (
                                                             <span
                                                                 style={{ cursor: "pointer", color: "blue" }}
@@ -7099,13 +7099,10 @@ const PurchaseCreate = forwardRef((props, ref) => {
                                                             </span>
                                                         )}
                                                     </td>
-                                                    <td style={{ width: "200px" }}>
-                                                        <Button variant="danger" onClick={(event) => {
-                                                            removePayment(key);
-                                                        }}>
-                                                            {t("Remove")}
-                                                        </Button>
-
+                                                    <td style={{ width: "40px", textAlign: 'center' }}>
+                                                        <button type="button" onClick={() => removePayment(key)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#dc2626', padding: '2px 6px', borderRadius: '4px' }} onMouseEnter={e => e.currentTarget.style.backgroundColor = '#fef2f2'} onMouseLeave={e => e.currentTarget.style.backgroundColor = 'transparent'}>
+                                                            <i className="bi bi-trash" style={{ fontSize: '14px' }}></i>
+                                                        </button>
                                                     </td>
                                                 </tr>
                                             ))}
@@ -7128,7 +7125,7 @@ const PurchaseCreate = forwardRef((props, ref) => {
                                                     </div>
                                                 )}
                                             </td>
-                                            <td colSpan={2}>
+                                            <td colSpan={3}>
                                                 <b>{t("Payment status")}: </b>
                                                 {paymentStatus === "paid" ?
                                                     <span className="badge bg-success">

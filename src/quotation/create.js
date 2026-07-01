@@ -7615,14 +7615,14 @@ async function checkWarning(i) {
               </div>
 
 
-              <div className="col-md-8">
+              <div className="col-md-12" style={{ maxWidth: "90%" }}>
                 <label className="form-label">Payments Received</label>
 
-                <div class="table-responsive" style={{ maxWidth: "900px" }}>
+                <div class="table-responsive">
                   <Button variant="secondary" style={{ alignContent: "right", marginBottom: "10px" }} onClick={addNewPayment}>
                     Create new payment
                   </Button>
-                  <table class="table table-striped table-sm table-bordered">
+                  <table class="table table-striped table-sm table-bordered" style={{ width: "100%" }}>
                     {formData.payments_input && formData.payments_input.length > 0 &&
                       <thead>
                         <th>
@@ -7648,7 +7648,7 @@ async function checkWarning(i) {
                       {formData.payments_input &&
                         formData.payments_input.filter(payment => !payment.deleted).map((payment, key) => (
                           <tr key={key}>
-                            <td style={{ minWidth: "220px" }}>
+                            <td>
 
                               <DatePicker
                                 id="payment_date_str"
@@ -7674,7 +7674,7 @@ async function checkWarning(i) {
                                 </div>
                               )}
                             </td>
-                            <td style={{ width: "300px", position: 'relative' }}>
+                            <td style={{ position: 'relative', minWidth: "96px" }}>
                               <input type='number' id={`${"quotation_payment_amount" + key}`} name={`${"quotation_payment_amount" + key}`} value={formData.payments_input[key].amount} className="form-control "
                                 onChange={(e) => {
                                   delete errors["payment_amount_" + key];
@@ -7702,7 +7702,7 @@ async function checkWarning(i) {
                                 </div>
                               )}
                             </td>
-                            <td style={{ width: "420px", position: 'relative' }}>
+                            <td style={{ position: 'relative' }}>
                               <select value={formData.payments_input[key].method} className="form-control "
                                 onChange={(e) => {
                                   // errors["payment_method"] = [];
@@ -7742,13 +7742,13 @@ async function checkWarning(i) {
                                 </div>
                               )}
                             </td>
-                            <td style={{ width: "672px" }}>
+                            <td style={{ minWidth: "347px" }}>
                               <input type='text' value={formData.payments_input[key].description || ""} className="form-control"
                                 onChange={(e) => { formData.payments_input[key].description = e.target.value; setFormData({ ...formData }); }}
                                 placeholder="Description"
                               />
                             </td>
-                            <td style={{ width: "200px" }}>
+                            <td style={{ minWidth: "400px" }}>
                               {formData.payments_input[key] && (
                                 <span
                                   style={{ cursor: "pointer", color: "blue" }}
@@ -7758,13 +7758,10 @@ async function checkWarning(i) {
                                 </span>
                               )}
                             </td>
-                            <td style={{ width: "200px" }}>
-                              <Button variant="danger" onClick={(event) => {
-                                removePayment(key);
-                              }}>
-                                Remove
-                              </Button>
-
+                            <td style={{ width: "40px", textAlign: 'center' }}>
+                              <button type="button" onClick={() => removePayment(key)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#dc2626', padding: '2px 6px', borderRadius: '4px' }} onMouseEnter={e => e.currentTarget.style.backgroundColor = '#fef2f2'} onMouseLeave={e => e.currentTarget.style.backgroundColor = 'transparent'}>
+                                <i className="bi bi-trash" style={{ fontSize: '14px' }}></i>
+                              </button>
                             </td>
                           </tr>
                         ))}
@@ -7787,7 +7784,7 @@ async function checkWarning(i) {
                             </div>
                           )}
                         </td>
-                        <td colSpan={2}>
+                        <td colSpan={3}>
                           <b>Payment status: </b>
                           {paymentStatus === "paid" ?
                             <span className="badge bg-success">

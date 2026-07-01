@@ -7752,13 +7752,13 @@ const SalesReturnCreate = forwardRef((props, ref) => {
                         </div>
 
 
-                        <div className="col-md-8">
+                        <div className="col-md-12" style={{ maxWidth: "90%" }}>
                             <label className="form-label">{t("Payments given")}</label>
-                            <div class="table-responsive" style={{ maxWidth: "900px" }} >
+                            <div class="table-responsive">
                                 <Button variant="secondary" style={{ alignContent: "right" }} disabled={order.payment_status === "not_paid"} onClick={addNewPayment}>
                                     {t("Create new payment")}
                                 </Button>
-                                <table class="table table-striped table-sm table-bordered">
+                                <table class="table table-striped table-sm table-bordered" style={{ width: "100%" }}>
                                     <thead>
                                         <th>
                                             {t("Date")}
@@ -7783,7 +7783,7 @@ const SalesReturnCreate = forwardRef((props, ref) => {
                                         {formData.payments_input &&
                                             formData.payments_input.filter(payment => !payment.deleted).map((payment, key) => (
                                                 <tr key={key}>
-                                                    <td style={{ minWidth: "220px" }}>
+                                                    <td style={{ minWidth: "80px" }}>
                                                         <DatePicker
                                                             disabled={order.payment_status === "not_paid"}
                                                             id="date_str"
@@ -7811,7 +7811,7 @@ const SalesReturnCreate = forwardRef((props, ref) => {
                                                             </div>
                                                         )}
                                                     </td>
-                                                    <td style={{ width: "300px" }}>
+                                                    <td style={{ position: 'relative', minWidth: "96px" }}>
                                                         <input id={`${"sales_return_payment_amount" + key}`} name={`${"sales_return_payment_amount" + key}`}
                                                             type='number' disabled={order.payment_status === "not_paid"} value={formData.payments_input[key].amount} className="form-control "
                                                             onChange={(e) => {
@@ -7835,13 +7835,12 @@ const SalesReturnCreate = forwardRef((props, ref) => {
                                                             }}
                                                         />
                                                         {errors["payment_amount_" + key] && (
-                                                            <div style={{ color: "red" }}>
-                                                                <i className="bi bi-x-lg"> </i>
-                                                                {t(errors["payment_amount_" + key])}
+                                                            <div style={{ position: 'absolute', top: '100%', left: 0, color: 'red', whiteSpace: 'nowrap', zIndex: 10, fontSize: '11px', background: '#fff', padding: '1px 2px' }}>
+                                                                <i className="bi bi-x-lg"> </i>{t(errors["payment_amount_" + key])}
                                                             </div>
                                                         )}
                                                     </td>
-                                                    <td style={{ width: "420px" }}>
+                                                    <td style={{ position: 'relative', minWidth: "80px" }}>
                                                         <select value={formData.payments_input[key].method} disabled={order.payment_status === "not_paid"} className="form-control "
                                                             onChange={(e) => {
                                                                 // errors["payment_method"] = [];
@@ -7876,19 +7875,19 @@ const SalesReturnCreate = forwardRef((props, ref) => {
                                                             <option value="customer_account">{t("Customer Account")}</option>
                                                         </select>
                                                         {errors["payment_method_" + key] && (
-                                                            <div style={{ color: "red" }}>
+                                                            <div style={{ position: 'absolute', top: '100%', left: 0, color: 'red', whiteSpace: 'nowrap', zIndex: 10, fontSize: '11px', background: '#fff', padding: '1px 2px' }}>
                                                                 {t(errors["payment_method_" + key])}
                                                             </div>
                                                         )}
                                                     </td>
-                                                    <td style={{ width: "672px" }}>
+                                                    <td style={{ minWidth: "347px" }}>
                                                         <input type='text' value={formData.payments_input[key].description || ""} className="form-control"
                                                             disabled={order.payment_status === "not_paid"}
                                                             onChange={(e) => { formData.payments_input[key].description = e.target.value; setFormData({ ...formData }); }}
                                                             placeholder={t("Description")}
                                                         />
                                                     </td>
-                                                    <td style={{ width: "200px" }}>
+                                                    <td style={{ minWidth: "240px" }}>
                                                         {formData.payments_input[key] && (
                                                             <span
                                                                 style={{ cursor: "pointer", color: "blue" }}
@@ -7898,13 +7897,10 @@ const SalesReturnCreate = forwardRef((props, ref) => {
                                                             </span>
                                                         )}
                                                     </td>
-                                                    <td style={{ width: "200px" }}>
-                                                        <Button variant="danger" disabled={order.payment_status === "not_paid"} onClick={(event) => {
-                                                            removePayment(key);
-                                                        }}>
-                                                            {t("Remove")}
-                                                        </Button>
-
+                                                    <td style={{ width: "40px", textAlign: 'center' }}>
+                                                        <button type="button" disabled={order.payment_status === "not_paid"} onClick={() => removePayment(key)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#dc2626', padding: '2px 6px', borderRadius: '4px' }} onMouseEnter={e => e.currentTarget.style.backgroundColor = '#fef2f2'} onMouseLeave={e => e.currentTarget.style.backgroundColor = 'transparent'}>
+                                                            <i className="bi bi-trash" style={{ fontSize: '14px' }}></i>
+                                                        </button>
                                                     </td>
                                                 </tr>
                                             ))}
@@ -7927,7 +7923,7 @@ const SalesReturnCreate = forwardRef((props, ref) => {
                                                     </div>
                                                 )}
                                             </td>
-                                            <td colSpan={2}>
+                                            <td colSpan={3}>
                                                 <b>{t("Payment status")}: </b>
                                                 {paymentStatus === "paid" ?
                                                     <span className="badge bg-success">

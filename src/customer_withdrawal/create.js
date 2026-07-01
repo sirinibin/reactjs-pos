@@ -1934,7 +1934,7 @@ const CustomerWithdrawalCreate = forwardRef((props, ref) => {
                                                                             <ErrMsg>{errors["customer_payable_payment_date_" + key]}</ErrMsg>
                                                                         )}
                                                                     </td>
-                                                                    <td >
+                                                                    <td style={{ position: 'relative' }}>
                                                                         <input type='number' id={`${"customer_payable_payment_amount_" + key}`} name={`${"customer_payable_payment_amount_" + key}`} value={formData.payments[key].amount} style={INPUT}
                                                                             ref={(el) => {
                                                                                 if (!inputRefs.current[key]) inputRefs.current[key] = {};
@@ -1983,7 +1983,7 @@ const CustomerWithdrawalCreate = forwardRef((props, ref) => {
                                                                             }}
                                                                         />
                                                                         {errors["customer_payable_payment_amount_" + key] && (
-                                                                            <ErrMsg>{errors["customer_payable_payment_amount_" + key]}</ErrMsg>
+                                                                            <div style={{ position: 'absolute', top: '100%', left: 0, color: 'red', whiteSpace: 'nowrap', zIndex: 10, fontSize: '11px', background: '#fff', padding: '1px 2px' }}>{errors["customer_payable_payment_amount_" + key]}</div>
                                                                         )}
                                                                     </td>
                                                                     <td>
@@ -2075,7 +2075,7 @@ const CustomerWithdrawalCreate = forwardRef((props, ref) => {
                                                                             <ErrMsg>{errors["customer_payable_payment_invoice_" + key]}</ErrMsg>
                                                                         )}
                                                                     </td>
-                                                                    <td >
+                                                                    <td style={{ position: 'relative' }}>
                                                                         <select
                                                                             id={`${"customer_payable_payment_method_" + key}`} name={`${"customer_payable_payment_method_" + key}`}
                                                                             value={formData.payments[key].method} style={INPUT}
@@ -2127,7 +2127,7 @@ const CustomerWithdrawalCreate = forwardRef((props, ref) => {
                                                                             <option value="bank_cheque">Bank Cheque</option>
                                                                         </select>
                                                                         {errors["customer_payable_payment_method_" + key] && (
-                                                                            <ErrMsg>{errors["customer_payable_payment_method_" + key]}</ErrMsg>
+                                                                            <div style={{ position: 'absolute', top: '100%', left: 0, color: 'red', whiteSpace: 'nowrap', zIndex: 10, fontSize: '11px', background: '#fff', padding: '1px 2px' }}>{errors["customer_payable_payment_method_" + key]}</div>
                                                                         )}
                                                                     </td>
                                                                     <td >

@@ -5898,14 +5898,14 @@ const QuotationSalesReturnCreate = forwardRef((props, ref) => {
                         </div>
 
 
-                        <div className="col-md-8">
+                        <div className="col-md-12" style={{ maxWidth: "90%" }}>
                             <label className="form-label">Payments given</label>
 
-                            <div class="table-responsive" style={{ maxWidth: "900px" }} >
+                            <div class="table-responsive">
                                 <Button variant="secondary" style={{ alignContent: "right" }} disabled={quotation.payment_status === "not_paid"} onClick={addNewPayment}>
                                     Create new payment
                                 </Button>
-                                <table class="table table-striped table-sm table-bordered">
+                                <table class="table table-striped table-sm table-bordered" style={{ width: "100%" }}>
                                     <thead>
                                         <th>
                                             Date
@@ -5930,7 +5930,7 @@ const QuotationSalesReturnCreate = forwardRef((props, ref) => {
                                         {formData.payments_input &&
                                             formData.payments_input.filter(payment => !payment.deleted).map((payment, key) => (
                                                 <tr key={key}>
-                                                    <td style={{ minWidth: "220px" }}>
+                                                    <td>
 
                                                         <DatePicker
                                                             disabled={quotation.payment_status === "not_paid"}
@@ -5957,7 +5957,7 @@ const QuotationSalesReturnCreate = forwardRef((props, ref) => {
                                                             </div>
                                                         )}
                                                     </td>
-                                                    <td style={{ width: "300px", position: 'relative' }}>
+                                                    <td style={{ position: 'relative', minWidth: "96px" }}>
                                                         <input id={`${"quotationsales_return_payment_amount" + key}`} name={`${"quotationsales_return_payment_amount" + key}`}
                                                             type='number' disabled={quotation.payment_status === "not_paid"} value={formData.payments_input[key].amount} className="form-control "
                                                             onChange={(e) => {
@@ -5987,7 +5987,7 @@ const QuotationSalesReturnCreate = forwardRef((props, ref) => {
                                                             </div>
                                                         )}
                                                     </td>
-                                                    <td style={{ width: "420px", position: 'relative' }}>
+                                                    <td style={{ position: 'relative' }}>
                                                         <select value={formData.payments_input[key].method} disabled={quotation.payment_status === "not_paid"} className="form-control "
                                                             onChange={(e) => {
                                                                 // errors["payment_method"] = [];
@@ -6027,14 +6027,14 @@ const QuotationSalesReturnCreate = forwardRef((props, ref) => {
                                                             </div>
                                                         )}
                                                     </td>
-                                                    <td style={{ width: "672px" }}>
+                                                    <td style={{ minWidth: "347px" }}>
                                                         <input type='text' value={formData.payments_input[key].description || ""} className="form-control"
                                                             disabled={quotation.payment_status === "not_paid"}
                                                             onChange={(e) => { formData.payments_input[key].description = e.target.value; setFormData({ ...formData }); }}
                                                             placeholder="Description"
                                                         />
                                                     </td>
-                                                    <td style={{ width: "200px" }}>
+                                                    <td style={{ minWidth: "400px" }}>
                                                         {formData.payments_input[key] && (
                                                             <span
                                                                 style={{ cursor: "pointer", color: "blue" }}
@@ -6044,13 +6044,10 @@ const QuotationSalesReturnCreate = forwardRef((props, ref) => {
                                                             </span>
                                                         )}
                                                     </td>
-                                                    <td style={{ width: "200px" }}>
-                                                        <Button variant="danger" disabled={quotation.payment_status === "not_paid"} onClick={(event) => {
-                                                            removePayment(key);
-                                                        }}>
-                                                            Remove
-                                                        </Button>
-
+                                                    <td style={{ width: "40px", textAlign: 'center' }}>
+                                                        <button type="button" disabled={quotation.payment_status === "not_paid"} onClick={() => removePayment(key)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#dc2626', padding: '2px 6px', borderRadius: '4px' }} onMouseEnter={e => e.currentTarget.style.backgroundColor = '#fef2f6'} onMouseLeave={e => e.currentTarget.style.backgroundColor = 'transparent'}>
+                                                            <i className="bi bi-trash" style={{ fontSize: '14px' }}></i>
+                                                        </button>
                                                     </td>
                                                 </tr>
                                             ))}
@@ -6073,7 +6070,7 @@ const QuotationSalesReturnCreate = forwardRef((props, ref) => {
                                                     </div>
                                                 )}
                                             </td>
-                                            <td colSpan={2}>
+                                            <td colSpan={3}>
                                                 <b>Payment status: </b>
                                                 {paymentStatus === "paid" ?
                                                     <span className="badge bg-success">
