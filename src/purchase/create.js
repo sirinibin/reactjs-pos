@@ -553,8 +553,8 @@ const PurchaseCreate = forwardRef((props, ref) => {
                         item.vat_no,
                         ...(Array.isArray(item.additional_keywords) ? item.additional_keywords : []),
                     ];
-                    // Normalize: lowercase, collapse spaces, remove punctuation except spaces
-                    return fields.join(" ").toLowerCase().replace(/[^\w\s]/g, " ").replace(/\s+/g, " ").trim();
+                    // Use \p{L}\p{N} (Unicode-aware) so Arabic letters are preserved
+                    return fields.join(" ").toLowerCase().replace(/[^\p{L}\p{N}\s]/gu, " ").replace(/\s+/g, " ").trim();
                 };
 
                 const aSearchable = getSearchable(a);
@@ -770,8 +770,8 @@ const PurchaseCreate = forwardRef((props, ref) => {
                     item.brand_name,
                     ...(Array.isArray(item.additional_keywords) ? item.additional_keywords : []),
                 ];
-                // Normalize: lowercase, collapse spaces, remove punctuation except spaces
-                return fields.join(" ").toLowerCase().replace(/[^\w\s]/g, " ").replace(/\s+/g, " ").trim();
+                // Use \p{L}\p{N} (Unicode-aware) so Arabic letters are preserved
+                return fields.join(" ").toLowerCase().replace(/[^\p{L}\p{N}\s]/gu, " ").replace(/\s+/g, " ").trim();
             };
 
             const aSearchable = getSearchable(a);

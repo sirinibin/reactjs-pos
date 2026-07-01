@@ -1599,7 +1599,7 @@ async function reCalculate(productIndex) {
                 const getSearchable = (item) => {
                     const fields = [item.code, item.name, item.name_in_arabic, item.phone, item.phone2, item.vat_no,
                         ...(Array.isArray(item.additional_keywords) ? item.additional_keywords : [])];
-                    return fields.join(" ").toLowerCase().replace(/[^\w\s]/g, " ").replace(/\s+/g, " ").trim();
+                    return fields.join(" ").toLowerCase().replace(/[^\p{L}\p{N}\s]/gu, " ").replace(/\s+/g, " ").trim();
                 };
                 const aSearchable = getSearchable(a);
                 const bSearchable = getSearchable(b);

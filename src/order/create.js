@@ -1271,8 +1271,8 @@ const OrderCreate = forwardRef((props, ref) => {
                     item.vat_no,
                     ...(Array.isArray(item.additional_keywords) ? item.additional_keywords : []),
                 ];
-                // Normalize: lowercase, collapse spaces, remove punctuation except spaces
-                return fields.join(" ").toLowerCase().replace(/[^\w\s]/g, " ").replace(/\s+/g, " ").trim();
+                // Use \p{L}\p{N} (Unicode-aware) so Arabic letters are preserved
+                return fields.join(" ").toLowerCase().replace(/[^\p{L}\p{N}\s]/gu, " ").replace(/\s+/g, " ").trim();
             };
 
             const aSearchable = getSearchable(a);
@@ -1451,7 +1451,7 @@ const OrderCreate = forwardRef((props, ref) => {
 
         let Select = `select=id,rack,allow_duplicates,additional_keywords,search_label,set.name,item_code,prefix_part_number,country_name,brand_name,part_number,name,unit,name_in_arabic,is_service,product_stores.${localStorage.getItem('store_id')}.purchase_unit_price,product_stores.${localStorage.getItem('store_id')}.purchase_unit_price_with_vat,product_stores.${localStorage.getItem('store_id')}.retail_unit_price,product_stores.${localStorage.getItem('store_id')}.retail_unit_price_with_vat,product_stores.${localStorage.getItem('store_id')}.stock,product_stores.${localStorage.getItem('store_id')}.warehouse_stocks,product_stores.${localStorage.getItem('store_id')}.warehouse_racks`;
 
-        const result = await fetch("/v1/product?" + Select + queryString + "&limit=100&sort=country_name", requestOptions);
+        const result = await fetch("/v1/product?" + Select + queryString + "&limit=500&sort=country_name", requestOptions);
         const data = await result.json();
 
         // Only update if this is the latest request
@@ -1496,8 +1496,8 @@ const OrderCreate = forwardRef((props, ref) => {
                     item.brand_name,
                     ...(Array.isArray(item.additional_keywords) ? item.additional_keywords : []),
                 ];
-                // Normalize: lowercase, collapse spaces, remove punctuation except spaces
-                return fields.join(" ").toLowerCase().replace(/[^\w\s]/g, " ").replace(/\s+/g, " ").trim();
+                // Use \p{L}\p{N} (Unicode-aware) so Arabic letters are preserved
+                return fields.join(" ").toLowerCase().replace(/[^\p{L}\p{N}\s]/gu, " ").replace(/\s+/g, " ").trim();
             };
 
             const aSearchable = getSearchable(a);
