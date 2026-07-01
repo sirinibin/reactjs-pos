@@ -263,4 +263,26 @@ code {
   overflow: visible;
 }
 
+/* Type2 resizable table cell borders */
+.sc-type2-table td {
+  border-bottom: 1px solid #e2e8f0;
+  border-right: 1px solid #dee2e6;
+}
+.sc-type2-table td:last-child {
+  border-right: none;
+}
+
+/* sc-header layout classes (used by type2 compact headers across all forms) */
+.sc-header-flex { display: flex; }
+.sc-header-left { flex: 0 0 70%; }
+.sc-header-right { flex: 1; min-width: 0; }
+.sc-sub-row { display: flex; gap: 6px; flex-wrap: wrap; }
+.sc-customer-search-group { display: flex; align-items: center; gap: 6px; min-width: 0; align-self: center; }
+.sc-product-search-group { display: flex; align-items: flex-end; gap: 6px; min-width: 0; align-self: end; }
+@media (max-width: 900px) {
+  .sc-header-flex { flex-direction: column !important; }
+  .sc-header-left { flex: 1 1 100% !important; }
+  .sc-header-right { flex: 1 1 100% !important; }
+}
+
 

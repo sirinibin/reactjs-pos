@@ -2129,7 +2129,7 @@ const ProductCreate = forwardRef((props, ref) => {
                 </div>
 
               {/* ===== INVENTORY / STOCK ===== */}
-              <div>
+              <div className="pw-tab-wrap">
 
                   <div className="pw-card" style={CARD}>
                     <SectionTitle icon="bi-boxes">Current Stock Levels</SectionTitle>
@@ -2348,7 +2348,7 @@ const ProductCreate = forwardRef((props, ref) => {
                         <table style={{ borderCollapse: 'collapse', width: '100%' }}>
                           <thead>
                             <tr style={{ background: '#eceef0' }}>
-                              <th style={TH}>Part No.</th><th style={TH}>Name</th><th style={TH}>Info</th>
+                              <th style={TH}>Part No.</th><th style={{ ...TH, minWidth: '200px' }}>Name</th><th style={TH}>Info</th>
                               <th style={TH}>Qty</th><th style={TH}>Unit</th>
                               <th style={TH}>Purchase Price</th><th style={TH}>Purchase (VAT)</th><th style={TH}>Purchase %</th>
                               <th style={TH}>Retail Price</th><th style={TH}>Retail (VAT)</th><th style={TH}>Retail %</th>
@@ -2359,7 +2359,7 @@ const ProductCreate = forwardRef((props, ref) => {
                             {formData.set.products.map((product, key) => (
                               <tr key={key} style={{ borderBottom: '1px solid #e0e3e5' }}>
                                 <td style={TD}><span style={{ color: '#004ac6', cursor: 'pointer' }} onClick={() => openUpdateForm(product.product_id)}>{product.part_number}</span></td>
-                                <td style={TD}><span style={{ color: '#004ac6', cursor: 'pointer' }} onClick={() => openUpdateForm(product.product_id)}>{product.name}</span></td>
+                                <td style={{ ...TD, minWidth: '200px' }}><span style={{ color: '#004ac6', cursor: 'pointer' }} onClick={() => openUpdateForm(product.product_id)}>{product.name}</span></td>
                                 <td style={{ ...TD, verticalAlign: 'middle', padding: '0.25rem' }}>
                                   <div style={{ zIndex: '9999 !important', position: 'absolute !important' }}>
                                     <Dropdown drop="top">
@@ -2472,7 +2472,7 @@ const ProductCreate = forwardRef((props, ref) => {
                 </div>
 
               {/* ===== LINKED PRODUCTS & PHOTOS ===== */}
-              <div>
+              <div className="pw-tab-wrap">
 
                   <div className="pw-card" style={CARD}>
                     <SectionTitle icon="bi-link-45deg">Linked Products</SectionTitle>

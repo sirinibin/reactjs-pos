@@ -426,3 +426,12 @@ thead th {
   }
   #sales_return_create_form .sc-header-title h1 { font-size: 16px !important; }
 }
+
+/* Type2 resizable table cell borders */
+.sc-type2-table td {
+  border-bottom: 1px solid #e2e8f0;
+  border-right: 1px solid #dee2e6;
+}
+.sc-type2-table td:last-child {
+  border-right: none;
+}

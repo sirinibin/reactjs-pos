@@ -1132,6 +1132,7 @@ const StoreCreate = forwardRef((props, ref) => {
                                         console.log(formData);
                                     }}
                                     className="form-control"
+                                    disabled
                                 >
                                     <option value="1" SELECTED>Phase 1</option>
                                     <option value="2">Phase 2</option>
@@ -1166,6 +1167,7 @@ const StoreCreate = forwardRef((props, ref) => {
                                         console.log(formData);
                                     }}
                                     className="form-control"
+                                    disabled
                                 >
                                     <option value="NonProduction" SELECTED>NonProduction</option>
                                     <option value="Simulation" >Simulation</option>
@@ -5696,6 +5698,54 @@ const StoreCreate = forwardRef((props, ref) => {
                                     </select>
                                     <div style={{ color: '#6c757d', fontSize: '12px', marginTop: '4px' }}>Layout style for the sales return creation and update form</div>
                                 </div>
+                                <div className="col-md-4">
+                                    <label className="form-label fw-semibold" style={{ fontFamily: '"Inter", sans-serif', fontSize: '13px' }}>Purchase Create/Update Form</label>
+                                    <select
+                                        className="form-select"
+                                        value={formData.settings?.purchase_create_form_design || 'type1'}
+                                        onChange={(e) => { formData.settings.purchase_create_form_design = e.target.value; setFormData({ ...formData }); }}
+                                    >
+                                        <option value="type1">Type 1 (Default)</option>
+                                        <option value="type2">Type 2</option>
+                                    </select>
+                                    <div style={{ color: '#6c757d', fontSize: '12px', marginTop: '4px' }}>Layout style for the purchase creation and update form</div>
+                                </div>
+                                <div className="col-md-4">
+                                    <label className="form-label fw-semibold" style={{ fontFamily: '"Inter", sans-serif', fontSize: '13px' }}>Purchase Return Create/Update Form</label>
+                                    <select
+                                        className="form-select"
+                                        value={formData.settings?.purchase_return_create_form_design || 'type1'}
+                                        onChange={(e) => { formData.settings.purchase_return_create_form_design = e.target.value; setFormData({ ...formData }); }}
+                                    >
+                                        <option value="type1">Type 1 (Default)</option>
+                                        <option value="type2">Type 2</option>
+                                    </select>
+                                    <div style={{ color: '#6c757d', fontSize: '12px', marginTop: '4px' }}>Layout style for the purchase return creation and update form</div>
+                                </div>
+                                <div className="col-md-4">
+                                    <label className="form-label fw-semibold" style={{ fontFamily: '"Inter", sans-serif', fontSize: '13px' }}>Quotation Create/Update Form</label>
+                                    <select
+                                        className="form-select"
+                                        value={formData.settings?.quotation_create_form_design || 'type1'}
+                                        onChange={(e) => { formData.settings.quotation_create_form_design = e.target.value; setFormData({ ...formData }); }}
+                                    >
+                                        <option value="type1">Type 1 (Default)</option>
+                                        <option value="type2">Type 2</option>
+                                    </select>
+                                    <div style={{ color: '#6c757d', fontSize: '12px', marginTop: '4px' }}>Layout style for the quotation creation and update form</div>
+                                </div>
+                                <div className="col-md-4">
+                                    <label className="form-label fw-semibold" style={{ fontFamily: '"Inter", sans-serif', fontSize: '13px' }}>Quotation Sales Return Create/Update Form</label>
+                                    <select
+                                        className="form-select"
+                                        value={formData.settings?.quotation_sales_return_create_form_design || 'type1'}
+                                        onChange={(e) => { formData.settings.quotation_sales_return_create_form_design = e.target.value; setFormData({ ...formData }); }}
+                                    >
+                                        <option value="type1">Type 1 (Default)</option>
+                                        <option value="type2">Type 2</option>
+                                    </select>
+                                    <div style={{ color: '#6c757d', fontSize: '12px', marginTop: '4px' }}>Layout style for the quotation sales return creation and update form</div>
+                                </div>
                             </div>
                         </div>
 
@@ -5728,13 +5778,7 @@ const StoreCreate = forwardRef((props, ref) => {
                                         {value == null || value === '' || value === 0 ? (
                                             <span className="text-muted" style={{ fontSize: '13px' }}>—</span>
                                         ) : (
-                                            <textarea
-                                                readOnly
-                                                className="form-control form-control-sm font-monospace"
-                                                value={String(value)}
-                                                rows={String(value).length > 80 ? 4 : 1}
-                                                style={{ fontSize: '12px', resize: 'vertical', backgroundColor: '#f8f9fa' }}
-                                            />
+                                            <span className="font-monospace d-block" style={{ fontSize: '12px', color: '#212529', wordBreak: 'break-all' }}>{String(value)}</span>
                                         )}
                                     </div>
                                 </div>
