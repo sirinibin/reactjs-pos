@@ -3418,7 +3418,7 @@ const PurchaseCreate = forwardRef((props, ref) => {
                                         {errors.vendor_id && <div style={{ color: 'red' }}>{errors.vendor_id}</div>}
                                     </div>
                                     {/* Other form fields — 2×3 CSS Grid matching Sales form */}
-                                    <div style={{ display: 'grid', gridTemplateColumns: '231px 1fr 1fr', gap: '8px 40px', alignItems: 'start', maxWidth: '80%', marginTop: '8px' }}>
+                                    <div style={{ display: 'grid', gridTemplateColumns: '231px 1fr 1fr', gap: '8px 45px', alignItems: 'start', maxWidth: '80%', marginTop: '8px' }}>
 
                                         {/* R1C1: Date */}
                                         <div>
