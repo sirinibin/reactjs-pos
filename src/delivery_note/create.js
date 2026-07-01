@@ -133,13 +133,16 @@ const DeliveryNoteCreate = forwardRef((props, ref) => {
   }
 
   async function checkErrors(index) {
-    if (index) {
-      checkError(index);
-    } else {
-      for (let i = 0; i < selectedProducts.length; i++) {
-        checkError(i);
+    if (priceValidationTimer.current) clearTimeout(priceValidationTimer.current);
+    priceValidationTimer.current = setTimeout(() => {
+      if (index) {
+        checkError(index);
+      } else {
+        for (let i = 0; i < selectedProducts.length; i++) {
+          checkError(i);
+        }
       }
-    }
+    }, 3000);
   }
 
   function checkError(i) {
@@ -155,14 +158,19 @@ const DeliveryNoteCreate = forwardRef((props, ref) => {
   }
 
 
+  const priceValidationTimer = useRef(null);
+  const warningValidationTimer = useRef(null);
   async function checkWarnings(index) {
-    if (index) {
-      checkWarning(index);
-    } else {
-      for (let i = 0; i < selectedProducts.length; i++) {
-        checkWarning(i);
+    if (warningValidationTimer.current) clearTimeout(warningValidationTimer.current);
+    warningValidationTimer.current = setTimeout(async () => {
+      if (index) {
+        checkWarning(index);
+      } else {
+        for (let i = 0; i < selectedProducts.length; i++) {
+          checkWarning(i);
+        }
       }
-    }
+    }, 3000);
   }
 
   let [oldProducts, setOldProducts] = useState([]);

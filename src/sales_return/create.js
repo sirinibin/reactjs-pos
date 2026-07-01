@@ -1938,68 +1938,73 @@ const SalesReturnCreate = forwardRef((props, ref) => {
         ProductDetailsViewRef.current.open(id);
     }
 
+    const priceValidationTimer = useRef(null);
+    const warningValidationTimer = useRef(null);
     async function checkWarnings(index) {
-        if (index) {
-            checkWarning(index);
-        } else {
-            const storeId = localStorage.getItem("store_id");
-            const productIds = [...new Set(selectedProducts.map(p => p.product_id).filter(Boolean))];
-            if (productIds.length === 0) return;
+        if (warningValidationTimer.current) clearTimeout(warningValidationTimer.current);
+        warningValidationTimer.current = setTimeout(async () => {
+            if (index) {
+                checkWarning(index);
+            } else {
+                const storeId = localStorage.getItem("store_id");
+                const productIds = [...new Set(selectedProducts.map(p => p.product_id).filter(Boolean))];
+                if (productIds.length === 0) return;
 
-            const requestOptions = {
-                method: "GET",
-                headers: {
-                    "Content-Type": "application/json",
-                    Authorization: localStorage.getItem("access_token"),
-                },
-            };
+                const requestOptions = {
+                    method: "GET",
+                    headers: {
+                        "Content-Type": "application/json",
+                        Authorization: localStorage.getItem("access_token"),
+                    },
+                };
 
-            const CHUNK = 100;
-            const chunks = [];
-            for (let i = 0; i < productIds.length; i += CHUNK) {
-                chunks.push(productIds.slice(i, i + CHUNK));
-            }
-
-            const batchResults = await Promise.all(
-                chunks.map(async (chunk) => {
-                    const queryParams = ObjectToSearchQueryParams({ ids: chunk.join(","), store_id: storeId });
-                    try {
-                        const res = await fetch(`/v1/product?${queryParams}&limit=${chunk.length}`, requestOptions);
-                        const isJson = res.headers.get("content-type")?.includes("application/json");
-                        const data = isJson ? await res.json() : null;
-                        if (res.ok && data?.result) return data.result;
-                    } catch (e) {}
-                    return [];
-                })
-            );
-
-            const productMap = {};
-            for (const batch of batchResults) {
-                for (const p of batch) { productMap[p.id] = p; }
-            }
-
-            for (let i = 0; i < selectedProducts.length; i++) {
-                const product = productMap[selectedProducts[i].product_id];
-                if (!product || !product.product_stores || !product.product_stores[storeId]) continue;
-
-                const storeData = product.product_stores[storeId];
-                const stock = storeData.stock;
-                selectedProducts[i].warehouse_stocks = storeData.warehouse_stocks || null;
-
-                if (!selectedProducts[i].warehouse_stocks) {
-                    selectedProducts[i].warehouse_stocks = { main_store: stock };
-                    for (let j = 0; j < warehouseList.length; j++) {
-                        selectedProducts[i].warehouse_stocks[warehouseList[j].code] = 0;
-                    }
+                const CHUNK = 100;
+                const chunks = [];
+                for (let i = 0; i < productIds.length; i += CHUNK) {
+                    chunks.push(productIds.slice(i, i + CHUNK));
                 }
 
-                const warehouseCode = selectedProducts[i].warehouse_code || "main_store";
-                selectedProducts[i].stock = selectedProducts[i].warehouse_stocks[warehouseCode] || 0;
-            }
+                const batchResults = await Promise.all(
+                    chunks.map(async (chunk) => {
+                        const queryParams = ObjectToSearchQueryParams({ ids: chunk.join(","), store_id: storeId });
+                        try {
+                            const res = await fetch(`/v1/product?${queryParams}&limit=${chunk.length}`, requestOptions);
+                            const isJson = res.headers.get("content-type")?.includes("application/json");
+                            const data = isJson ? await res.json() : null;
+                            if (res.ok && data?.result) return data.result;
+                        } catch (e) {}
+                        return [];
+                    })
+                );
 
-            setSelectedProducts([...selectedProducts]);
-            setWarnings({ ...warnings });
-        }
+                const productMap = {};
+                for (const batch of batchResults) {
+                    for (const p of batch) { productMap[p.id] = p; }
+                }
+
+                for (let i = 0; i < selectedProducts.length; i++) {
+                    const product = productMap[selectedProducts[i].product_id];
+                    if (!product || !product.product_stores || !product.product_stores[storeId]) continue;
+
+                    const storeData = product.product_stores[storeId];
+                    const stock = storeData.stock;
+                    selectedProducts[i].warehouse_stocks = storeData.warehouse_stocks || null;
+
+                    if (!selectedProducts[i].warehouse_stocks) {
+                        selectedProducts[i].warehouse_stocks = { main_store: stock };
+                        for (let j = 0; j < warehouseList.length; j++) {
+                            selectedProducts[i].warehouse_stocks[warehouseList[j].code] = 0;
+                        }
+                    }
+
+                    const warehouseCode = selectedProducts[i].warehouse_code || "main_store";
+                    selectedProducts[i].stock = selectedProducts[i].warehouse_stocks[warehouseCode] || 0;
+                }
+
+                setSelectedProducts([...selectedProducts]);
+                setWarnings({ ...warnings });
+            }
+        }, 3000);
     }
 
 
@@ -2057,13 +2062,16 @@ const SalesReturnCreate = forwardRef((props, ref) => {
 
 
     async function checkErrors(index) {
-        if (index) {
-            checkError(index);
-        } else {
-            for (let i = 0; i < selectedProducts.length; i++) {
-                checkError(i);
+        if (priceValidationTimer.current) clearTimeout(priceValidationTimer.current);
+        priceValidationTimer.current = setTimeout(() => {
+            if (index) {
+                checkError(index);
+            } else {
+                for (let i = 0; i < selectedProducts.length; i++) {
+                    checkError(i);
+                }
             }
-        }
+        }, 3000);
     }
 
     function checkError(i) {
@@ -2138,6 +2146,7 @@ const SalesReturnCreate = forwardRef((props, ref) => {
     //Payment Reference form
     const CustomerWithdrawalUpdateFormRef = useRef();
     const SalesUpdateFormRef = useRef();
+    const paymentValidationTimer = useRef(null);
 
     let [showReferenceUpdateForm, setShowReferenceUpdateForm] = useState(false);
     // ── Table Settings state ──
@@ -2199,7 +2208,7 @@ const SalesReturnCreate = forwardRef((props, ref) => {
             setFormType(store.settings.sales_return_create_form_design);
         }
     }, [store?.settings?.sales_return_create_form_design]);
-    const SC_COL_DEFAULTS_SR = { select: 50, si_no: 40, part_number: 100, name: 200, info: 50, purchase_unit_price: 130, stock: 60, qty: 70, warehouse: 130, unit_price: 130, unit_price_with_vat: 130, unit_discount: 120, unit_discount_with_vat: 120, unit_discount_percent: 90, price: 120, price_with_vat: 120 };
+    const SC_COL_DEFAULTS_SR = { select: 50, si_no: 40, part_number: 100, name: 200, info: 50, purchase_unit_price: 130, stock: 60, qty: 137, warehouse: 130, unit_price: 130, unit_price_with_vat: 130, unit_discount: 120, unit_discount_with_vat: 120, unit_discount_percent: 90, price: 120, price_with_vat: 120 };
     const [scColWidths, setScColWidths] = useState(() => { try { return JSON.parse(localStorage.getItem('sr_sc_col_widths')) || {}; } catch { return {}; } });
     useEffect(() => { localStorage.setItem('sr_sc_col_widths', JSON.stringify(scColWidths)); }, [scColWidths]);
     function startScColResize(e, colKey, startWidth) {
@@ -2494,12 +2503,17 @@ const SalesReturnCreate = forwardRef((props, ref) => {
                     {selectedProducts && selectedProducts.length === 0 && "Already returned all products"}
                     {selectedProducts && selectedProducts.length > 0 && <form className="needs-validation" onSubmit={handleCreate}>
                         {formType === 'type2' ? (
-                        <div style={{ overflowX: 'auto', maxHeight: '55vh', overflowY: 'auto', marginTop: '6px' }}>
-                            <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: '600px', tableLayout: 'fixed' }}>
+                        <div style={{ overflowX: 'auto', maxHeight: '55vh', overflowY: 'auto', marginTop: '6px', border: '1px solid #c3c6d7', borderRadius: '8px' }}>
+                            <table style={{ width: '100%', borderCollapse: 'collapse', tableLayout: 'fixed' }}>
                                 <colgroup>
-                                    {spColumns.filter(c => c.visible).map(col => (
-                                        <col key={col.key} style={{ width: `${scColWidths[col.key] ?? SC_COL_DEFAULTS_SR[col.key] ?? 100}px` }} />
-                                    ))}
+                                    {(() => {
+                                        const visCols = spColumns.filter(c => c.visible);
+                                        const totalW = visCols.reduce((sum, col) => sum + (scColWidths[col.key] ?? SC_COL_DEFAULTS_SR[col.key] ?? 100), 0);
+                                        return visCols.map(col => {
+                                            const w = scColWidths[col.key] ?? SC_COL_DEFAULTS_SR[col.key] ?? 100;
+                                            return <col key={col.key} style={{ width: `${(w / totalW * 100).toFixed(2)}%` }} />;
+                                        });
+                                    })()}
                                 </colgroup>
                                 <thead style={{ backgroundColor: '#f1f5f9', position: 'sticky', top: 0, zIndex: 1 }}>
                                     {(() => {
@@ -2864,7 +2878,7 @@ const SalesReturnCreate = forwardRef((props, ref) => {
                                                         <div className="d-flex align-items-center" style={{ minWidth: 0 }}>
                                                             <div className="input-group flex-nowrap" style={{ flex: '1 1 auto', minWidth: 0 }}>
                                                                 <input type="number"
-                                                                    style={{ minWidth: "40px", maxWidth: "120px" }}
+                                                                    style={{ minWidth: "56px", maxWidth: "168px" }}
                                                                     id={`${"sales_return_product_quantity_" + index}`}
                                                                     name={`${"sales_return_product_quantity_" + index}`}
                                                                     className={`form-control text-end ${errors["quantity_" + index] ? 'is-invalid' : warnings["quantity_" + index] ? 'border-warning text-warning' : ''}`}
@@ -5291,16 +5305,16 @@ const SalesReturnCreate = forwardRef((props, ref) => {
                                         />
                                         {errors["payment_date_" + key] && <div style={{ color: "red", fontSize: '11px' }}>{t(errors["payment_date_" + key])}</div>}
                                       </td>
-                                      <td style={{ padding: '3px 6px', width: '120px' }}>
+                                      <td style={{ padding: '3px 6px', width: '120px', position: 'relative' }}>
                                         <input id={`${"sales_return_payment_amount" + key}`} name={`${"sales_return_payment_amount" + key}`}
                                           type='number' disabled={order.payment_status === "not_paid"} value={formData.payments_input[key].amount}
                                           className={`form-control form-control-sm text-end${errors["payment_amount_" + key] ? ' is-invalid' : ''}`}
                                           onChange={(e) => {
                                             delete errors["payment_amount_" + key]; setErrors({ ...errors });
-                                            if (!e.target.value) { formData.payments_input[key].amount = e.target.value; setFormData({ ...formData }); validatePaymentAmounts(); return; }
-                                            formData.payments_input[key].amount = parseFloat(e.target.value); validatePaymentAmounts(); setFormData({ ...formData });
+                                            if (!e.target.value) { formData.payments_input[key].amount = e.target.value; setFormData({ ...formData }); if (paymentValidationTimer.current) clearTimeout(paymentValidationTimer.current); paymentValidationTimer.current = setTimeout(() => validatePaymentAmounts(), 1000); return; }
+                                            formData.payments_input[key].amount = parseFloat(e.target.value); if (paymentValidationTimer.current) clearTimeout(paymentValidationTimer.current); paymentValidationTimer.current = setTimeout(() => validatePaymentAmounts(), 1000); setFormData({ ...formData });
                                           }} />
-                                        {errors["payment_amount_" + key] && <div style={{ color: "red", fontSize: '11px' }}>{t(errors["payment_amount_" + key])}</div>}
+                                        {errors["payment_amount_" + key] && <div style={{ position: 'absolute', top: '100%', left: 0, color: 'red', whiteSpace: 'nowrap', zIndex: 10, fontSize: '11px', background: '#fff', padding: '1px 2px' }}><i className="bi bi-x-lg"> </i>{t(errors["payment_amount_" + key])}</div>}
                                       </td>
                                       <td style={{ padding: '3px 6px', width: '315px', position: 'relative' }}>
                                         <select value={formData.payments_input[key].method} disabled={order.payment_status === "not_paid"}
@@ -7807,13 +7821,15 @@ const SalesReturnCreate = forwardRef((props, ref) => {
                                                                 if (!e.target.value) {
                                                                     formData.payments_input[key].amount = e.target.value;
                                                                     setFormData({ ...formData });
-                                                                    validatePaymentAmounts();
+                                                                    if (paymentValidationTimer.current) clearTimeout(paymentValidationTimer.current);
+                                                                    paymentValidationTimer.current = setTimeout(() => validatePaymentAmounts(), 1000);
                                                                     return;
                                                                 }
 
                                                                 formData.payments_input[key].amount = parseFloat(e.target.value);
 
-                                                                validatePaymentAmounts();
+                                                                if (paymentValidationTimer.current) clearTimeout(paymentValidationTimer.current);
+                                                                paymentValidationTimer.current = setTimeout(() => validatePaymentAmounts(), 1000);
                                                                 setFormData({ ...formData });
                                                                 console.log(formData);
                                                             }}

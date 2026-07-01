@@ -1983,13 +1983,16 @@ const OrderCreate = forwardRef((props, ref) => {
     }
 
     async function checkErrors(index) {
-        if (index) {
-            checkError(index);
-        } else {
-            for (let i = 0; i < selectedProducts.length; i++) {
-                checkError(i);
+        if (priceValidationTimer.current) clearTimeout(priceValidationTimer.current);
+        priceValidationTimer.current = setTimeout(() => {
+            if (index) {
+                checkError(index);
+            } else {
+                for (let i = 0; i < selectedProducts.length; i++) {
+                    checkError(i);
+                }
             }
-        }
+        }, 3000);
     }
 
     function checkError(i) {
@@ -2043,73 +2046,76 @@ const OrderCreate = forwardRef((props, ref) => {
 
 
     async function checkWarnings(index) {
-        if (index) {
-            checkWarning(index);
-        } else {
-            const storeId = localStorage.getItem("store_id");
-            const productIds = [...new Set(selectedProducts.map(p => p.product_id).filter(Boolean))];
-            if (productIds.length === 0) return;
+        if (warningValidationTimer.current) clearTimeout(warningValidationTimer.current);
+        warningValidationTimer.current = setTimeout(async () => {
+            if (index) {
+                checkWarning(index);
+            } else {
+                const storeId = localStorage.getItem("store_id");
+                const productIds = [...new Set(selectedProducts.map(p => p.product_id).filter(Boolean))];
+                if (productIds.length === 0) return;
 
-            const requestOptions = {
-                method: "GET",
-                headers: {
-                    "Content-Type": "application/json",
-                    Authorization: localStorage.getItem("access_token"),
-                },
-            };
+                const requestOptions = {
+                    method: "GET",
+                    headers: {
+                        "Content-Type": "application/json",
+                        Authorization: localStorage.getItem("access_token"),
+                    },
+                };
 
-            const CHUNK = 100;
-            const chunks = [];
-            for (let i = 0; i < productIds.length; i += CHUNK) {
-                chunks.push(productIds.slice(i, i + CHUNK));
-            }
+                const CHUNK = 100;
+                const chunks = [];
+                for (let i = 0; i < productIds.length; i += CHUNK) {
+                    chunks.push(productIds.slice(i, i + CHUNK));
+                }
 
-            const batchResults = await Promise.all(
-                chunks.map(async (chunk) => {
-                    const queryParams = ObjectToSearchQueryParams({ ids: chunk.join(","), store_id: storeId });
-                    try {
-                        const res = await fetch(`/v1/product?${queryParams}&limit=${chunk.length}`, requestOptions);
-                        const isJson = res.headers.get("content-type")?.includes("application/json");
-                        const data = isJson ? await res.json() : null;
-                        if (res.ok && data?.result) return data.result;
-                    } catch (e) {}
-                    return [];
-                })
-            );
+                const batchResults = await Promise.all(
+                    chunks.map(async (chunk) => {
+                        const queryParams = ObjectToSearchQueryParams({ ids: chunk.join(","), store_id: storeId });
+                        try {
+                            const res = await fetch(`/v1/product?${queryParams}&limit=${chunk.length}`, requestOptions);
+                            const isJson = res.headers.get("content-type")?.includes("application/json");
+                            const data = isJson ? await res.json() : null;
+                            if (res.ok && data?.result) return data.result;
+                        } catch (e) {}
+                        return [];
+                    })
+                );
 
-            const productMap = {};
-            for (const batch of batchResults) {
-                for (const p of batch) { productMap[p.id] = p; }
-            }
+                const productMap = {};
+                for (const batch of batchResults) {
+                    for (const p of batch) { productMap[p.id] = p; }
+                }
 
-            for (let i = 0; i < selectedProducts.length; i++) {
-                const product = productMap[selectedProducts[i].product_id];
-                if (!product || !product.product_stores || !product.product_stores[storeId]) continue;
+                for (let i = 0; i < selectedProducts.length; i++) {
+                    const product = productMap[selectedProducts[i].product_id];
+                    if (!product || !product.product_stores || !product.product_stores[storeId]) continue;
 
-                const storeData = product.product_stores[storeId];
-                const stock = storeData.stock;
-                selectedProducts[i].warehouse_stocks = storeData.warehouse_stocks || null;
+                    const storeData = product.product_stores[storeId];
+                    const stock = storeData.stock;
+                    selectedProducts[i].warehouse_stocks = storeData.warehouse_stocks || null;
 
-                if (!selectedProducts[i].warehouse_stocks) {
-                    selectedProducts[i].warehouse_stocks = { main_store: stock };
-                    for (let j = 0; j < warehouseList.length; j++) {
-                        selectedProducts[i].warehouse_stocks[warehouseList[j].code] = 0;
+                    if (!selectedProducts[i].warehouse_stocks) {
+                        selectedProducts[i].warehouse_stocks = { main_store: stock };
+                        for (let j = 0; j < warehouseList.length; j++) {
+                            selectedProducts[i].warehouse_stocks[warehouseList[j].code] = 0;
+                        }
+                    }
+
+                    const warehouseCode = selectedProducts[i].warehouse_code || "main_store";
+                    selectedProducts[i].stock = selectedProducts[i].warehouse_stocks[warehouseCode] || 0;
+
+                    if (!formData.id && selectedProducts[i].quantity > selectedProducts[i].stock) {
+                        warnings["quantity_" + i] = t("Warning: Available stock is") + " " + selectedProducts[i].stock;
+                    } else {
+                        delete warnings["quantity_" + i];
                     }
                 }
 
-                const warehouseCode = selectedProducts[i].warehouse_code || "main_store";
-                selectedProducts[i].stock = selectedProducts[i].warehouse_stocks[warehouseCode] || 0;
-
-                if (!formData.id && selectedProducts[i].quantity > selectedProducts[i].stock) {
-                    warnings["quantity_" + i] = t("Warning: Available stock is") + " " + selectedProducts[i].stock;
-                } else {
-                    delete warnings["quantity_" + i];
-                }
+                setSelectedProducts([...selectedProducts]);
+                setWarnings({ ...warnings });
             }
-
-            setSelectedProducts([...selectedProducts]);
-            setWarnings({ ...warnings });
-        }
+        }, 3000);
     }
 
 
@@ -3401,6 +3407,8 @@ const OrderCreate = forwardRef((props, ref) => {
     const productSearchRef = useRef();
 
     const timerRef = useRef(null);
+    const priceValidationTimer = useRef(null);
+    const warningValidationTimer = useRef(null);
 
 
     const _scPopoverStyle = { maxWidth: '340px', minWidth: '240px', background: '#212529', border: '1px solid #495057', boxShadow: '0 4px 14px rgba(0,0,0,.45)', borderRadius: '6px', color: '#f8f9fa' };
@@ -3762,6 +3770,7 @@ const OrderCreate = forwardRef((props, ref) => {
 
     const printButtonRef = useRef();
     const printA4ButtonRef = useRef();
+    const paymentValidationTimer = useRef(null);
 
     //const CreateFormRef = useRef();
     let [disablePreviousButton, setDisablePreviousButton] = useState(false)
@@ -4358,7 +4367,28 @@ const OrderCreate = forwardRef((props, ref) => {
 
     const totalWidth = visibleColumns.reduce((sum, col) => sum + col.width, 0);
 
-    const getColumnWidth = (col) => `${(col.width / totalWidth) * 100}%`;
+    const [isWideScreen, setIsWideScreen] = useState(() => window.innerWidth > 1920);
+    useEffect(() => {
+        const onResize = () => setIsWideScreen(window.innerWidth > 1920);
+        window.addEventListener('resize', onResize);
+        return () => window.removeEventListener('resize', onResize);
+    }, []);
+
+    const getColumnWidth = (col) => {
+        if (isWideScreen) {
+            const nameCol = visibleColumns.find(c => c.key === 'name');
+            if (nameCol) {
+                if (col.key === 'name') return `${(col.width * 1.2 / totalWidth) * 100}%`;
+                const afterNameKeys = new Set(['unit_price', 'stock', 'photos', 'brand', 'purchase_price', 'country', 'rack']);
+                if (afterNameKeys.has(col.key)) {
+                    const afterNameTotal = visibleColumns.filter(c => afterNameKeys.has(c.key)).reduce((s, c) => s + c.width, 0);
+                    const boost = nameCol.width * 0.2;
+                    return `${((col.width - (col.width / afterNameTotal) * boost) / totalWidth) * 100}%`;
+                }
+            }
+        }
+        return `${(col.width / totalWidth) * 100}%`;
+    };
 
     const handleToggleColumn = (index) => {
         const updated = [...searchProductsColumns];
@@ -6315,7 +6345,6 @@ const OrderCreate = forwardRef((props, ref) => {
                                                                             selectedProducts[index].purchase_unit_price = "";
                                                                             setSelectedProducts([...selectedProducts]);
                                                                             timerRef.current = setTimeout(() => {
-                                                                                checkErrors(index);
                                                                                 reCalculate(index);
                                                                             }, 100);
                                                                         } else if (e.key === "ArrowLeft") {
@@ -6332,12 +6361,12 @@ const OrderCreate = forwardRef((props, ref) => {
                                                                     }}
                                                                     onChange={(e) => {
                                                                         if (timerRef.current) clearTimeout(timerRef.current);
+                                                                        if (priceValidationTimer.current) clearTimeout(priceValidationTimer.current);
 
                                                                         if (parseFloat(e.target.value) === 0) {
                                                                             selectedProducts[index].purchase_unit_price = e.target.value;
                                                                             setSelectedProducts([...selectedProducts]);
                                                                             timerRef.current = setTimeout(() => {
-                                                                                checkErrors(index);
                                                                                 reCalculate(index);
                                                                             }, 100);
                                                                             return;
@@ -6348,7 +6377,6 @@ const OrderCreate = forwardRef((props, ref) => {
                                                                             setSelectedProducts([...selectedProducts]);
                                                                             timerRef.current = setTimeout(() => {
                                                                                 checkWarnings(index);
-                                                                                checkErrors(index);
                                                                                 reCalculate(index);
                                                                             }, 100);
                                                                             return;
@@ -6358,9 +6386,8 @@ const OrderCreate = forwardRef((props, ref) => {
                                                                             selectedProducts[index].purchase_unit_price = parseFloat(e.target.value);
                                                                             setSelectedProducts([...selectedProducts]);
                                                                         }
-
-                                                                        checkErrors(index);
                                                                     }}
+                                                                    onBlur={() => { checkErrors(index); }}
                                                                 />
 
                                                                 {(errors[`purchase_unit_price_${index}`] || warnings[`purchase_unit_price_${index}`]) && (
@@ -6588,7 +6615,6 @@ const OrderCreate = forwardRef((props, ref) => {
                                                                                 setSelectedProducts([...selectedProducts]);
                                                                                 timerRef.current = setTimeout(() => {
                                                                                     CalCulateLineTotals(index);
-                                                                                    checkErrors(index);
                                                                                     reCalculate(index);
                                                                                 }, 100);
                                                                             } else if (e.key === "ArrowLeft") {
@@ -6600,6 +6626,7 @@ const OrderCreate = forwardRef((props, ref) => {
 
                                                                         onChange={(e) => {
                                                                             if (timerRef.current) clearTimeout(timerRef.current);
+                                                                            if (priceValidationTimer.current) clearTimeout(priceValidationTimer.current);
                                                                             if (parseFloat(e.target.value) === 0) {
                                                                                 selectedProducts[index].unit_price = e.target.value;
                                                                                 selectedProducts[index].unit_price_with_vat = e.target.value;
@@ -6607,7 +6634,6 @@ const OrderCreate = forwardRef((props, ref) => {
                                                                                 timerRef.current = setTimeout(() => {
                                                                                     //  checkWarnings(index);
                                                                                     CalCulateLineTotals(index);
-                                                                                    checkErrors(index);
                                                                                     reCalculate(index);
                                                                                 }, 100);
                                                                                 return;
@@ -6620,7 +6646,6 @@ const OrderCreate = forwardRef((props, ref) => {
                                                                                 timerRef.current = setTimeout(() => {
                                                                                     //checkWarnings(index);
                                                                                     CalCulateLineTotals(index);
-                                                                                    checkErrors(index);
                                                                                     reCalculate(index);
                                                                                 }, 100);
                                                                                 return;
@@ -6641,9 +6666,9 @@ const OrderCreate = forwardRef((props, ref) => {
                                                                                 selectedProducts[index].unit_discount_percent_with_vat = parseFloat(trimTo2Decimals(((selectedProducts[index].unit_discount_with_vat / selectedProducts[index].unit_price_with_vat) * 100)))
                                                                                 CalCulateLineTotals(index);
                                                                                 reCalculate(index);
-                                                                                checkErrors(index);
                                                                             }, 100);
-                                                                        }} />
+                                                                        }}
+                                                                        onBlur={() => { checkErrors(index); }} />
 
                                                                 </div>
                                                                 {(errors[`unit_price_${index}`] || warnings[`unit_price_${index}`]) && (
@@ -6685,7 +6710,6 @@ const OrderCreate = forwardRef((props, ref) => {
                                                                                 timerRef.current = setTimeout(() => {
                                                                                     CalCulateLineTotals(index);
                                                                                     reCalculate(index);
-                                                                                    checkErrors(index);
                                                                                 }, 100);
                                                                             } else if (e.key === "ArrowLeft") {
                                                                                 timerRef.current = setTimeout(() => {
@@ -6697,6 +6721,7 @@ const OrderCreate = forwardRef((props, ref) => {
                                                                             delete errors["unit_price_with_vat_" + index];
 
                                                                             if (timerRef.current) clearTimeout(timerRef.current);
+                                                                            if (priceValidationTimer.current) clearTimeout(priceValidationTimer.current);
 
                                                                             setErrors({ ...errors });
                                                                             if (!e.target.value) {
@@ -6710,7 +6735,6 @@ const OrderCreate = forwardRef((props, ref) => {
                                                                                 timerRef.current = setTimeout(() => {
                                                                                     CalCulateLineTotals(index);
                                                                                     reCalculate(index);
-                                                                                    checkErrors(index);
                                                                                 }, 100);
                                                                                 return;
                                                                             }
@@ -6726,7 +6750,6 @@ const OrderCreate = forwardRef((props, ref) => {
                                                                                 timerRef.current = setTimeout(() => {
                                                                                     CalCulateLineTotals(index);
                                                                                     reCalculate(index);
-                                                                                    checkErrors(index);
                                                                                 }, 100);
                                                                                 return;
                                                                             }
@@ -6751,9 +6774,9 @@ const OrderCreate = forwardRef((props, ref) => {
 
                                                                                 CalCulateLineTotals(index);
                                                                                 reCalculate(index);
-                                                                                checkErrors(index);
                                                                             }, 100);
-                                                                        }} />
+                                                                        }}
+                                                                        onBlur={() => { checkErrors(index); }} />
                                                                 </div>
                                                                 {(errors[`unit_price_with_vat_${index}`] || warnings[`unit_price_with_vat_${index}`]) && (
                                                                     <OverlayTrigger placement="top" overlay={<Tooltip>{errors[`unit_price_with_vat_${index}`] || warnings[`unit_price_with_vat_${index}`]}</Tooltip>}><i className={`bi bi-exclamation-circle-fill ${errors[`unit_price_with_vat_${index}`] ? 'text-danger' : 'text-warning'} ms-2`} style={{ fontSize: '1rem', cursor: 'help' }}></i></OverlayTrigger>
@@ -7430,8 +7453,8 @@ const OrderCreate = forwardRef((props, ref) => {
                                               <input type='number' id={`${"sales_payment_amount" + key}`} name={`${"sales_payment_amount" + key}`} value={formData.payments_input[key].amount} className={`form-control form-control-sm text-end${errors["payment_amount_" + key] ? ' is-invalid' : ''}`}
                                                 onChange={(e) => {
                                                   delete errors["payment_amount_" + key]; setErrors({ ...errors });
-                                                  if (!e.target.value) { formData.payments_input[key].amount = e.target.value; setFormData({ ...formData }); validatePaymentAmounts(); return; }
-                                                  formData.payments_input[key].amount = parseFloat(e.target.value); validatePaymentAmounts(); setFormData({ ...formData });
+                                                  if (!e.target.value) { formData.payments_input[key].amount = e.target.value; setFormData({ ...formData }); if (paymentValidationTimer.current) clearTimeout(paymentValidationTimer.current); paymentValidationTimer.current = setTimeout(() => validatePaymentAmounts(), 1000); return; }
+                                                  formData.payments_input[key].amount = parseFloat(e.target.value); if (paymentValidationTimer.current) clearTimeout(paymentValidationTimer.current); paymentValidationTimer.current = setTimeout(() => validatePaymentAmounts(), 1000); setFormData({ ...formData });
                                                 }} />
                                             </td>
                                             <td style={{ padding: '3px 6px', width: '273px' }}>
@@ -9926,11 +9949,13 @@ const OrderCreate = forwardRef((props, ref) => {
                                                                         if (!e.target.value) {
                                                                             formData.payments_input[key].amount = e.target.value;
                                                                             setFormData({ ...formData });
-                                                                            validatePaymentAmounts();
+                                                                            if (paymentValidationTimer.current) clearTimeout(paymentValidationTimer.current);
+                                                                            paymentValidationTimer.current = setTimeout(() => validatePaymentAmounts(), 1000);
                                                                             return;
                                                                         }
                                                                         formData.payments_input[key].amount = parseFloat(e.target.value);
-                                                                        validatePaymentAmounts();
+                                                                        if (paymentValidationTimer.current) clearTimeout(paymentValidationTimer.current);
+                                                                        paymentValidationTimer.current = setTimeout(() => validatePaymentAmounts(), 1000);
                                                                         setFormData({ ...formData });
                                                                     }}
                                                                 />

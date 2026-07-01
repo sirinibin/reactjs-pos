@@ -1848,14 +1848,19 @@ const QuotationSalesReturnCreate = forwardRef((props, ref) => {
         ProductDetailsViewRef.current.open(id);
     }
 
+    const priceValidationTimer = useRef(null);
+    const warningValidationTimer = useRef(null);
     async function checkWarnings(index) {
-        if (index) {
-            checkWarning(index);
-        } else {
-            for (let i = 0; i < selectedProducts.length; i++) {
-                checkWarning(i);
+        if (warningValidationTimer.current) clearTimeout(warningValidationTimer.current);
+        warningValidationTimer.current = setTimeout(async () => {
+            if (index) {
+                checkWarning(index);
+            } else {
+                for (let i = 0; i < selectedProducts.length; i++) {
+                    checkWarning(i);
+                }
             }
-        }
+        }, 3000);
     }
 
 
@@ -1914,13 +1919,16 @@ const QuotationSalesReturnCreate = forwardRef((props, ref) => {
 
 
     async function checkErrors(index) {
-        if (index) {
-            checkError(index);
-        } else {
-            for (let i = 0; i < selectedProducts.length; i++) {
-                checkError(i);
+        if (priceValidationTimer.current) clearTimeout(priceValidationTimer.current);
+        priceValidationTimer.current = setTimeout(() => {
+            if (index) {
+                checkError(index);
+            } else {
+                for (let i = 0; i < selectedProducts.length; i++) {
+                    checkError(i);
+                }
             }
-        }
+        }, 3000);
     }
 
     function checkError(i) {
@@ -2014,6 +2022,7 @@ const QuotationSalesReturnCreate = forwardRef((props, ref) => {
     //Payment Reference form
     const CustomerWithdrawalUpdateFormRef = useRef();
     const QuotationSalesUpdateFormRef = useRef();
+    const paymentValidationTimer = useRef(null);
 
     let [showReferenceUpdateForm, setShowReferenceUpdateForm] = useState(false);
     let [showQSRSPSettings, setShowQSRSPSettings] = useState(false);
@@ -5948,7 +5957,7 @@ const QuotationSalesReturnCreate = forwardRef((props, ref) => {
                                                             </div>
                                                         )}
                                                     </td>
-                                                    <td style={{ width: "300px" }}>
+                                                    <td style={{ width: "300px", position: 'relative' }}>
                                                         <input id={`${"quotationsales_return_payment_amount" + key}`} name={`${"quotationsales_return_payment_amount" + key}`}
                                                             type='number' disabled={quotation.payment_status === "not_paid"} value={formData.payments_input[key].amount} className="form-control "
                                                             onChange={(e) => {
@@ -5958,19 +5967,21 @@ const QuotationSalesReturnCreate = forwardRef((props, ref) => {
                                                                 if (!e.target.value) {
                                                                     formData.payments_input[key].amount = e.target.value;
                                                                     setFormData({ ...formData });
-                                                                    validatePaymentAmounts();
+                                                                    if (paymentValidationTimer.current) clearTimeout(paymentValidationTimer.current);
+                                                                    paymentValidationTimer.current = setTimeout(() => validatePaymentAmounts(), 1000);
                                                                     return;
                                                                 }
 
                                                                 formData.payments_input[key].amount = parseFloat(e.target.value);
 
-                                                                validatePaymentAmounts();
+                                                                if (paymentValidationTimer.current) clearTimeout(paymentValidationTimer.current);
+                                                                paymentValidationTimer.current = setTimeout(() => validatePaymentAmounts(), 1000);
                                                                 setFormData({ ...formData });
                                                                 console.log(formData);
                                                             }}
                                                         />
                                                         {errors["payment_amount_" + key] && (
-                                                            <div style={{ color: "red" }}>
+                                                            <div style={{ position: 'absolute', top: '100%', left: 0, color: 'red', whiteSpace: 'nowrap', zIndex: 10, fontSize: '11px', background: '#fff', padding: '1px 2px' }}>
                                                                 <i className="bi bi-x-lg"> </i>
                                                                 {errors["payment_amount_" + key]}
                                                             </div>

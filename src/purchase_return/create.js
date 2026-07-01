@@ -1943,68 +1943,73 @@ async function reCalculate(productIndex) {
 
     let [warnings, setWarnings] = useState({});
 
+    const priceValidationTimer = useRef(null);
+    const warningValidationTimer = useRef(null);
     async function checkWarnings(index) {
-        if (index) {
-            checkWarning(index);
-        } else {
-            const storeId = localStorage.getItem("store_id");
-            const productIds = [...new Set(selectedProducts.map(p => p.product_id).filter(Boolean))];
-            if (productIds.length === 0) return;
+        if (warningValidationTimer.current) clearTimeout(warningValidationTimer.current);
+        warningValidationTimer.current = setTimeout(async () => {
+            if (index) {
+                checkWarning(index);
+            } else {
+                const storeId = localStorage.getItem("store_id");
+                const productIds = [...new Set(selectedProducts.map(p => p.product_id).filter(Boolean))];
+                if (productIds.length === 0) return;
 
-            const requestOptions = {
-                method: "GET",
-                headers: {
-                    "Content-Type": "application/json",
-                    Authorization: localStorage.getItem("access_token"),
-                },
-            };
+                const requestOptions = {
+                    method: "GET",
+                    headers: {
+                        "Content-Type": "application/json",
+                        Authorization: localStorage.getItem("access_token"),
+                    },
+                };
 
-            const CHUNK = 100;
-            const chunks = [];
-            for (let i = 0; i < productIds.length; i += CHUNK) {
-                chunks.push(productIds.slice(i, i + CHUNK));
-            }
-
-            const batchResults = await Promise.all(
-                chunks.map(async (chunk) => {
-                    const queryParams = ObjectToSearchQueryParams({ ids: chunk.join(","), store_id: storeId });
-                    try {
-                        const res = await fetch(`/v1/product?${queryParams}&limit=${chunk.length}`, requestOptions);
-                        const isJson = res.headers.get("content-type")?.includes("application/json");
-                        const data = isJson ? await res.json() : null;
-                        if (res.ok && data?.result) return data.result;
-                    } catch (e) {}
-                    return [];
-                })
-            );
-
-            const productMap = {};
-            for (const batch of batchResults) {
-                for (const p of batch) { productMap[p.id] = p; }
-            }
-
-            for (let i = 0; i < selectedProducts.length; i++) {
-                const product = productMap[selectedProducts[i].product_id];
-                if (!product || !product.product_stores || !product.product_stores[storeId]) continue;
-
-                const storeData = product.product_stores[storeId];
-                const stock = storeData.stock;
-                selectedProducts[i].warehouse_stocks = storeData.warehouse_stocks || null;
-
-                if (!selectedProducts[i].warehouse_stocks) {
-                    selectedProducts[i].warehouse_stocks = { main_store: stock };
-                    for (let j = 0; j < warehouseList.length; j++) {
-                        selectedProducts[i].warehouse_stocks[warehouseList[j].code] = 0;
-                    }
+                const CHUNK = 100;
+                const chunks = [];
+                for (let i = 0; i < productIds.length; i += CHUNK) {
+                    chunks.push(productIds.slice(i, i + CHUNK));
                 }
 
-                const warehouseCode = selectedProducts[i].warehouse_code || "main_store";
-                selectedProducts[i].stock = selectedProducts[i].warehouse_stocks[warehouseCode] || 0;
-            }
+                const batchResults = await Promise.all(
+                    chunks.map(async (chunk) => {
+                        const queryParams = ObjectToSearchQueryParams({ ids: chunk.join(","), store_id: storeId });
+                        try {
+                            const res = await fetch(`/v1/product?${queryParams}&limit=${chunk.length}`, requestOptions);
+                            const isJson = res.headers.get("content-type")?.includes("application/json");
+                            const data = isJson ? await res.json() : null;
+                            if (res.ok && data?.result) return data.result;
+                        } catch (e) {}
+                        return [];
+                    })
+                );
 
-            setSelectedProducts([...selectedProducts]);
-            setWarnings({ ...warnings });
-        }
+                const productMap = {};
+                for (const batch of batchResults) {
+                    for (const p of batch) { productMap[p.id] = p; }
+                }
+
+                for (let i = 0; i < selectedProducts.length; i++) {
+                    const product = productMap[selectedProducts[i].product_id];
+                    if (!product || !product.product_stores || !product.product_stores[storeId]) continue;
+
+                    const storeData = product.product_stores[storeId];
+                    const stock = storeData.stock;
+                    selectedProducts[i].warehouse_stocks = storeData.warehouse_stocks || null;
+
+                    if (!selectedProducts[i].warehouse_stocks) {
+                        selectedProducts[i].warehouse_stocks = { main_store: stock };
+                        for (let j = 0; j < warehouseList.length; j++) {
+                            selectedProducts[i].warehouse_stocks[warehouseList[j].code] = 0;
+                        }
+                    }
+
+                    const warehouseCode = selectedProducts[i].warehouse_code || "main_store";
+                    selectedProducts[i].stock = selectedProducts[i].warehouse_stocks[warehouseCode] || 0;
+                }
+
+                setSelectedProducts([...selectedProducts]);
+                setWarnings({ ...warnings });
+            }
+        }, 3000);
     }
 
     async function checkWarning(i, selectedProduct, skipUpdate) {
@@ -2057,13 +2062,16 @@ async function reCalculate(productIndex) {
     }
 
     async function checkErrors(index) {
-        if (index) {
-            checkError(index);
-        } else {
-            for (let i = 0; i < selectedProducts.length; i++) {
-                checkError(i);
+        if (priceValidationTimer.current) clearTimeout(priceValidationTimer.current);
+        priceValidationTimer.current = setTimeout(() => {
+            if (index) {
+                checkError(index);
+            } else {
+                for (let i = 0; i < selectedProducts.length; i++) {
+                    checkError(i);
+                }
             }
-        }
+        }, 3000);
     }
 
     function checkError(i) {
@@ -2130,6 +2138,7 @@ async function reCalculate(productIndex) {
     //Payment Reference form
     const VendorDepositUpdateFormRef = useRef();
     const PurchaseUpdateFormRef = useRef();
+    const paymentValidationTimer = useRef(null);
 
     let [showReferenceUpdateForm, setShowReferenceUpdateForm] = useState(false);
     let [showPurchaseReturnSPSettings, setShowPurchaseReturnSPSettings] = useState(false);
@@ -2404,7 +2413,7 @@ async function reCalculate(productIndex) {
                                     </div>
 
                                     {/* Other form fields — 2×3 CSS Grid matching Purchase form */}
-                                    <div style={{ display: 'grid', gridTemplateColumns: '231px 1fr 1fr', gap: '8px 18px', alignItems: 'start', maxWidth: '80%', marginTop: '8px' }}>
+                                    <div style={{ display: 'grid', gridTemplateColumns: '231px 1fr 1fr', gap: '8px 40px', alignItems: 'start', maxWidth: '80%', marginTop: '8px' }}>
 
                                         {/* R1C1: Date */}
                                         <div>
@@ -6070,7 +6079,7 @@ async function reCalculate(productIndex) {
                                                             </div>
                                                         )}
                                                     </td>
-                                                    <td style={{ width: "300px" }}>
+                                                    <td style={{ width: "300px", position: 'relative' }}>
                                                         <input
                                                             id={`${"purchase_return_payment_amount" + key}`} name={`${"purchase_return_payment_amount" + key}`}
                                                             type='number' value={formData.payments_input[key].amount} className="form-control "
@@ -6081,19 +6090,21 @@ async function reCalculate(productIndex) {
                                                                 if (!e.target.value) {
                                                                     formData.payments_input[key].amount = e.target.value;
                                                                     setFormData({ ...formData });
-                                                                    validatePaymentAmounts();
+                                                                    if (paymentValidationTimer.current) clearTimeout(paymentValidationTimer.current);
+                                                                    paymentValidationTimer.current = setTimeout(() => validatePaymentAmounts(), 1000);
                                                                     return;
                                                                 }
 
                                                                 formData.payments_input[key].amount = parseFloat(e.target.value);
 
-                                                                validatePaymentAmounts();
+                                                                if (paymentValidationTimer.current) clearTimeout(paymentValidationTimer.current);
+                                                                paymentValidationTimer.current = setTimeout(() => validatePaymentAmounts(), 1000);
                                                                 setFormData({ ...formData });
                                                                 console.log(formData);
                                                             }}
                                                         />
                                                         {errors["payment_amount_" + key] && (
-                                                            <div style={{ color: "red" }}>
+                                                            <div style={{ position: 'absolute', top: '100%', left: 0, color: 'red', whiteSpace: 'nowrap', zIndex: 10, fontSize: '11px', background: '#fff', padding: '1px 2px' }}>
                                                                 <i className="bi bi-x-lg"> </i>
                                                                 {t(errors["payment_amount_" + key])}
                                                             </div>

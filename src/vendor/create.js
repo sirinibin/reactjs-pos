@@ -564,6 +564,25 @@ const VendorCreate = forwardRef((props, ref) => {
                                                 </div>
 
                                                 <div className="col-md-4">
+                                                    <Label>Phone 2</Label>
+                                                    <input
+                                                        id="vendor_phone2"
+                                                        name="vendor_phone2"
+                                                        value={formData.phone2 ? formData.phone2 : ""}
+                                                        type="text"
+                                                        onChange={(e) => {
+                                                            errors["phone2"] = "";
+                                                            setErrors({ ...errors });
+                                                            formData.phone2 = e.target.value;
+                                                            setFormData({ ...formData });
+                                                        }}
+                                                        style={INPUT}
+                                                        placeholder="Phone 2"
+                                                    />
+                                                    {errors.phone2 && <ErrMsg>{errors.phone2}</ErrMsg>}
+                                                </div>
+
+                                                <div className="col-md-4">
                                                     <Label>Contact Person</Label>
                                                     <input
                                                         id="vendor_contact_person"

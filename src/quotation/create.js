@@ -2228,13 +2228,16 @@ const QuotationCreate = forwardRef((props, ref) => {
   }
 
   async function checkErrors(index) {
-    if (index) {
-      checkError(index);
-    } else {
-      for (let i = 0; i < selectedProducts.length; i++) {
-        checkError(i);
+    if (priceValidationTimer.current) clearTimeout(priceValidationTimer.current);
+    priceValidationTimer.current = setTimeout(() => {
+      if (index) {
+        checkError(index);
+      } else {
+        for (let i = 0; i < selectedProducts.length; i++) {
+          checkError(i);
+        }
       }
-    }
+    }, 3000);
   }
 
   function checkError(i) {
@@ -2289,81 +2292,86 @@ const QuotationCreate = forwardRef((props, ref) => {
 
   let [oldProducts, setOldProducts] = useState([]);
 
+  const priceValidationTimer = useRef(null);
+  const warningValidationTimer = useRef(null);
   async function checkWarnings(index) {
-    if (index) {
-      // Single-product check (from an edit event) — update immediately.
-      checkWarning(index);
-    } else {
-      // Bulk-fetch stock for all products. Chunk into 100-ID batches to stay
-      // within URL length limits, then run all batches in parallel.
-      const storeId = localStorage.getItem("store_id");
-      const productIds = [...new Set(selectedProducts.map(p => p.product_id).filter(Boolean))];
-      if (productIds.length === 0) return;
+    if (warningValidationTimer.current) clearTimeout(warningValidationTimer.current);
+    warningValidationTimer.current = setTimeout(async () => {
+      if (index) {
+        // Single-product check (from an edit event) — update immediately.
+        checkWarning(index);
+      } else {
+        // Bulk-fetch stock for all products. Chunk into 100-ID batches to stay
+        // within URL length limits, then run all batches in parallel.
+        const storeId = localStorage.getItem("store_id");
+        const productIds = [...new Set(selectedProducts.map(p => p.product_id).filter(Boolean))];
+        if (productIds.length === 0) return;
 
-      const requestOptions = {
-        method: "GET",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: localStorage.getItem("access_token"),
-        },
-      };
+        const requestOptions = {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: localStorage.getItem("access_token"),
+          },
+        };
 
-      const CHUNK = 100;
-      const chunks = [];
-      for (let i = 0; i < productIds.length; i += CHUNK) {
-        chunks.push(productIds.slice(i, i + CHUNK));
-      }
-
-      const batchResults = await Promise.all(
-        chunks.map(async (chunk) => {
-          const queryParams = ObjectToSearchQueryParams({ ids: chunk.join(","), store_id: storeId });
-          try {
-            const res = await fetch(`/v1/product?${queryParams}&limit=${chunk.length}`, requestOptions);
-            const isJson = res.headers.get("content-type")?.includes("application/json");
-            const data = isJson ? await res.json() : null;
-            if (res.ok && data?.result) return data.result;
-          } catch (e) {}
-          return [];
-        })
-      );
-
-      // Flatten all batch results into a single id → product map.
-      const productMap = {};
-      for (const batch of batchResults) {
-        for (const p of batch) {
-          productMap[p.id] = p;
+        const CHUNK = 100;
+        const chunks = [];
+        for (let i = 0; i < productIds.length; i += CHUNK) {
+          chunks.push(productIds.slice(i, i + CHUNK));
         }
-      }
 
-      for (let i = 0; i < selectedProducts.length; i++) {
-        const product = productMap[selectedProducts[i].product_id];
-        if (!product || !product.product_stores || !product.product_stores[storeId]) continue;
+        const batchResults = await Promise.all(
+          chunks.map(async (chunk) => {
+            const queryParams = ObjectToSearchQueryParams({ ids: chunk.join(","), store_id: storeId });
+            try {
+              const res = await fetch(`/v1/product?${queryParams}&limit=${chunk.length}`, requestOptions);
+              const isJson = res.headers.get("content-type")?.includes("application/json");
+              const data = isJson ? await res.json() : null;
+              if (res.ok && data?.result) return data.result;
+            } catch (e) {}
+            return [];
+          })
+        );
 
-        const storeData = product.product_stores[storeId];
-        const stock = storeData.stock;
-        selectedProducts[i].warehouse_stocks = storeData.warehouse_stocks || null;
-
-        if (!selectedProducts[i].warehouse_stocks) {
-          selectedProducts[i].warehouse_stocks = { main_store: stock };
-          for (let j = 0; j < warehouseList.length; j++) {
-            selectedProducts[i].warehouse_stocks[warehouseList[j].code] = 0;
+        // Flatten all batch results into a single id → product map.
+        const productMap = {};
+        for (const batch of batchResults) {
+          for (const p of batch) {
+            productMap[p.id] = p;
           }
         }
 
-        const warehouseCode = selectedProducts[i].warehouse_code || "main_store";
-        selectedProducts[i].stock = selectedProducts[i].warehouse_stocks[warehouseCode] || 0;
+        for (let i = 0; i < selectedProducts.length; i++) {
+          const product = productMap[selectedProducts[i].product_id];
+          if (!product || !product.product_stores || !product.product_stores[storeId]) continue;
 
-        if (!formData.id && selectedProducts[i].quantity > selectedProducts[i].stock) {
-          warnings["quantity_" + i] = "Warning: Available stock is " + selectedProducts[i].stock;
-        } else {
-          delete warnings["quantity_" + i];
+          const storeData = product.product_stores[storeId];
+          const stock = storeData.stock;
+          selectedProducts[i].warehouse_stocks = storeData.warehouse_stocks || null;
+
+          if (!selectedProducts[i].warehouse_stocks) {
+            selectedProducts[i].warehouse_stocks = { main_store: stock };
+            for (let j = 0; j < warehouseList.length; j++) {
+              selectedProducts[i].warehouse_stocks[warehouseList[j].code] = 0;
+            }
+          }
+
+          const warehouseCode = selectedProducts[i].warehouse_code || "main_store";
+          selectedProducts[i].stock = selectedProducts[i].warehouse_stocks[warehouseCode] || 0;
+
+          if (!formData.id && selectedProducts[i].quantity > selectedProducts[i].stock) {
+            warnings["quantity_" + i] = "Warning: Available stock is " + selectedProducts[i].stock;
+          } else {
+            delete warnings["quantity_" + i];
+          }
         }
-      }
 
-      // One single state update after all batches complete.
-      setSelectedProducts([...selectedProducts]);
-      setWarnings({ ...warnings });
-    }
+        // One single state update after all batches complete.
+        setSelectedProducts([...selectedProducts]);
+        setWarnings({ ...warnings });
+      }
+    }, 3000);
   }
 
 
@@ -2579,7 +2587,28 @@ async function checkWarning(i) {
 
   const totalWidth = visibleColumns.reduce((sum, col) => sum + col.width, 0);
 
-  const getColumnWidth = (col) => `${(col.width / totalWidth) * 100}%`;
+  const [isWideScreen, setIsWideScreen] = useState(() => window.innerWidth > 1920);
+  useEffect(() => {
+      const onResize = () => setIsWideScreen(window.innerWidth > 1920);
+      window.addEventListener('resize', onResize);
+      return () => window.removeEventListener('resize', onResize);
+  }, []);
+
+  const getColumnWidth = (col) => {
+      if (isWideScreen) {
+          const nameCol = visibleColumns.find(c => c.key === 'name');
+          if (nameCol) {
+              if (col.key === 'name') return `${(col.width * 1.2 / totalWidth) * 100}%`;
+              const afterNameKeys = new Set(['unit_price', 'stock', 'photos', 'brand', 'purchase_price', 'country', 'rack']);
+              if (afterNameKeys.has(col.key)) {
+                  const afterNameTotal = visibleColumns.filter(c => afterNameKeys.has(c.key)).reduce((s, c) => s + c.width, 0);
+                  const boost = nameCol.width * 0.2;
+                  return `${((col.width - (col.width / afterNameTotal) * boost) / totalWidth) * 100}%`;
+              }
+          }
+      }
+      return `${(col.width / totalWidth) * 100}%`;
+  };
 
   const handleToggleColumn = (index) => {
     const updated = [...searchProductsColumns];
@@ -2825,6 +2854,7 @@ async function checkWarning(i) {
 
 
   const CustomerUpdateFormRef = useRef();
+  const paymentValidationTimer = useRef(null);
   function openCustomerUpdateForm(id) {
     CustomerUpdateFormRef.current.open(id);
   }
@@ -3274,7 +3304,7 @@ async function checkWarning(i) {
                     </div>
 
                     {/* 2×3 CSS Grid: Date | Phone+WA | VAT  /  Barcode | Address | Remarks */}
-                    <div style={{ display: 'grid', gridTemplateColumns: '231px 1fr 1fr', gap: '8px 18px', alignItems: 'start', maxWidth: '80%' }}>
+                    <div style={{ display: 'grid', gridTemplateColumns: '231px 1fr 1fr', gap: '8px 40px', alignItems: 'start', maxWidth: '80%' }}>
 
                       {/* R1C1: Date */}
                       <div>
@@ -3491,7 +3521,7 @@ async function checkWarning(i) {
                     const searchWords = state.text.toLowerCase().split(" ").filter(Boolean);
 
                     return (
-                      <Menu {...menuProps}>
+                      <Menu {...menuProps} style={{ ...(menuProps.style || {}), width: '95vw', maxWidth: '95vw', minWidth: '300px', zIndex: 9999 }}>
                         {/* Header */}
                         <MenuItem disabled style={{ position: 'sticky', top: 0, padding: 0, margin: 0 }}>
                           <div style={{
@@ -7644,7 +7674,7 @@ async function checkWarning(i) {
                                 </div>
                               )}
                             </td>
-                            <td style={{ width: "300px" }}>
+                            <td style={{ width: "300px", position: 'relative' }}>
                               <input type='number' id={`${"quotation_payment_amount" + key}`} name={`${"quotation_payment_amount" + key}`} value={formData.payments_input[key].amount} className="form-control "
                                 onChange={(e) => {
                                   delete errors["payment_amount_" + key];
@@ -7653,20 +7683,21 @@ async function checkWarning(i) {
                                   if (!e.target.value) {
                                     formData.payments_input[key].amount = e.target.value;
                                     setFormData({ ...formData });
-                                    validatePaymentAmounts();
+                                    if (paymentValidationTimer.current) clearTimeout(paymentValidationTimer.current);
+                                    paymentValidationTimer.current = setTimeout(() => validatePaymentAmounts(), 1000);
                                     return;
                                   }
 
                                   formData.payments_input[key].amount = parseFloat(e.target.value);
 
-                                  validatePaymentAmounts();
+                                  if (paymentValidationTimer.current) clearTimeout(paymentValidationTimer.current);
+                                  paymentValidationTimer.current = setTimeout(() => validatePaymentAmounts(), 1000);
                                   setFormData({ ...formData });
                                   console.log(formData);
                                 }}
                               />
                               {errors["payment_amount_" + key] && (
-                                <div style={{ color: "red" }}>
-
+                                <div style={{ position: 'absolute', top: '100%', left: 0, color: 'red', whiteSpace: 'nowrap', zIndex: 10, fontSize: '11px', background: '#fff', padding: '1px 2px' }}>
                                   {errors["payment_amount_" + key]}
                                 </div>
                               )}

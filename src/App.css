@@ -11982,3 +11982,24 @@ span.flatpickr-weekday {
         white-space: normal !important;
     }
 }
+
+/* ── Purchase / Sales compact form (type2 / type3) shared layout ── */
+.sc-header-title { display: flex; align-items: center; gap: 10px; min-width: 0; flex-shrink: 1; }
+.sc-header-actions { display: flex; align-items: center; gap: 6px; flex-shrink: 0; }
+.sc-search-input { flex: 1 1 0; min-width: 0; }
+.sc-post-table { display: flex; gap: 12px; align-items: flex-start; padding: 8px 0 0 0; flex-wrap: wrap; }
+.sc-post-table-left { flex: 1 1 300px; min-width: 0; display: flex; flex-direction: column; gap: 8px; order: 1; }
+.sc-post-table-right { flex: 0 0 380px; position: relative; order: 2; }
+
+@media (max-width: 900px) {
+  .sc-header-actions { flex-wrap: wrap !important; gap: 4px !important; flex-shrink: 1 !important; }
+  .sc-header-actions button { font-size: 11px !important; padding: 4px 8px !important; }
+  .sc-header-actions select { font-size: 10px !important; }
+  .sc-post-table-left { flex: 1 1 100%; }
+  .sc-post-table-right { flex: 1 1 100%; }
+}
+
+@media (max-width: 600px) {
+  .sc-header-actions button { font-size: 10px !important; padding: 3px 6px !important; }
+  .sc-post-table-right { flex: 0 0 100%; }
+}
