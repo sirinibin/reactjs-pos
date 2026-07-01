@@ -213,6 +213,7 @@ export function SalesType1Body({
     RunKeyActions,
     CalCulateLineTotals,
     reCalculate,
+    reCalculateRef,
     checkErrors,
     checkWarnings,
     checkWarning,
@@ -2676,58 +2677,14 @@ export function SalesType1Body({
                                     value={cashDiscount}
                                     className="form-control"
                                     onChange={(e) => {
-                                        delete errors["cash_discount"];
-                                        setErrors({ ...errors });
-                                        if (!e.target.value) {
-                                            cashDiscount = e.target.value;
-                                            setCashDiscount(cashDiscount);
-
-                                            if (timerRef.current) clearTimeout(timerRef.current);
-                                            timerRef.current = setTimeout(() => {
-                                                // validatePaymentAmounts();
-                                                reCalculate();
-                                            }, 100);
-
-                                            return;
-                                        }
-
-                                        cashDiscount = parseFloat(e.target.value);
-                                        setCashDiscount(cashDiscount);
-
-                                        if (cashDiscount > 0 && cashDiscount >= formData.net_total) {
-                                            errors["cash_discount"] = t("Cash discount should not be greater than or equal to Net Total: ") + formData.net_total?.toString();
-                                            setErrors({ ...errors });
-                                            return;
-                                        }
-
-                                        if (timerRef.current) clearTimeout(timerRef.current);
-                                        timerRef.current = setTimeout(() => {
-                                            //  validatePaymentAmounts();
-                                            reCalculate();
-                                        }, 100);
-                                        console.log(formData);
+                                        delete errors["cash_discount"]; setErrors({ ...errors });
+                                        if (!e.target.value) { cashDiscount = e.target.value; setCashDiscount(cashDiscount); if (timerRef.current) clearTimeout(timerRef.current); timerRef.current = setTimeout(() => { reCalculateRef.current(); }, 100); return; }
+                                        cashDiscount = parseFloat(e.target.value); setCashDiscount(cashDiscount);
+                                        if (cashDiscount > 0 && cashDiscount >= formData.net_total) { errors["cash_discount"] = t("Cash discount should not be greater than or equal to Net Total: ") + formData.net_total?.toString(); setErrors({ ...errors }); return; }
+                                        if (timerRef.current) clearTimeout(timerRef.current); timerRef.current = setTimeout(() => { reCalculateRef.current(); }, 100);
                                     }}
-
-                                    onKeyDown={(e) => {
-                                        if (timerRef.current) clearTimeout(timerRef.current);
-
-                                        if (e.key === "Backspace") {
-                                            cashDiscount = "";
-                                            setCashDiscount(cashDiscount);
-
-                                            if (timerRef.current) clearTimeout(timerRef.current);
-                                            timerRef.current = setTimeout(() => {
-                                                reCalculate();
-                                            }, 100);
-                                            return;
-                                        }
-                                    }}
-                                    onFocus={() => {
-                                        if (timerRef.current) clearTimeout(timerRef.current);
-                                        timerRef.current = setTimeout(() => {
-                                            cashDiscountRef.current?.select();
-                                        }, 20);
-                                    }}
+                                    onKeyDown={(e) => { if (timerRef.current) clearTimeout(timerRef.current); if (e.key === "Backspace") { cashDiscount = ""; setCashDiscount(cashDiscount); timerRef.current = setTimeout(() => { reCalculateRef.current(); }, 100); return; } }}
+                                    onFocus={() => { if (timerRef.current) clearTimeout(timerRef.current); timerRef.current = setTimeout(() => { cashDiscountRef.current?.select(); }, 20); }}
                                 />
                                 {errors.cash_discount && (
                                     <div style={{ color: "red" }}>
