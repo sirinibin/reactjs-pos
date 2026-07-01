@@ -2120,6 +2120,7 @@ const ProductHistory = forwardRef((props, ref) => {
                                                                 {col.key === "warehouse_code" &&
                                                                     <td style={{ width: "auto", whiteSpace: "nowrap" }}>
                                                                         {(() => {
+                                                                            if (history.is_service) return "—";
                                                                             const type = history.reference_type;
                                                                             const warehouse = history["warehouse_code"] || "Main Store";
                                                                             const from_warehouse_code = history["from_warehouse_code"] || "Main Store";

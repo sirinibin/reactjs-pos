@@ -930,8 +930,6 @@ export function SalesType1Body({
                                 </div>
                             </div>
 
-
-
                             <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: "0" }}>
                                 <button
                                     type="button"
@@ -1056,7 +1054,7 @@ export function SalesType1Body({
                                                                     <div
                                                                         style={{ color: "blue", cursor: "pointer", marginLeft: "2px" }}
                                                                         onClick={() => {
-                                                                            openUpdateProductForm(product.product_id);
+                                                                            openUpdateProductForm(product.product_id, product.is_service);
                                                                         }}
                                                                     >
                                                                         <i className="bi bi-pencil"> </i>
@@ -1065,7 +1063,7 @@ export function SalesType1Body({
                                                                     <div
                                                                         style={{ color: "blue", cursor: "pointer", marginLeft: "8px" }}
                                                                         onClick={() => {
-                                                                            openProductDetails(product.product_id);
+                                                                            openProductDetails(product.product_id, product.is_service);
                                                                         }}
                                                                     >
                                                                         <i className="bi bi-eye"> </i>

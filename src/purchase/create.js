@@ -691,6 +691,7 @@ const PurchaseCreate = forwardRef((props, ref) => {
 
         var params = {
             search_text: searchTerm,
+            is_service: false,
         };
 
         if (localStorage.getItem("store_id")) {
@@ -1015,6 +1016,12 @@ const PurchaseCreate = forwardRef((props, ref) => {
     function addProduct(product) {
         if (!product.id && product.product_id) {
             product.id = product.product_id
+        }
+
+        if (product.is_service) {
+            errors["product_id"] = "Services cannot be added to a purchase order";
+            setErrors({ ...errors });
+            return false;
         }
 
         let alreadyAdded = isProductAdded(product.id);

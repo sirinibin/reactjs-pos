@@ -11,6 +11,8 @@ import Preview from "./../order/preview.js";
 import { Modal, Button, } from "react-bootstrap";
 import CustomerCreate from "./../customer/create.js";
 import ProductCreate from "./../product/create.js";
+import ServiceCreate from "./../service/create.js";
+import ServiceView from "./../service/view.js";
 import UserCreate from "./../user/create.js";
 import SignatureCreate from "./../signature/create.js";
 import { Typeahead, Menu, MenuItem } from "react-bootstrap-typeahead";
@@ -770,7 +772,7 @@ const QuotationCreate = forwardRef((props, ref) => {
       },
     };
 
-    let Select = `select=id,rack,allow_duplicates,additional_keywords,search_label,set.name,item_code,prefix_part_number,country_name,brand_name,part_number,name,unit,name_in_arabic,product_stores.${localStorage.getItem('store_id')}.purchase_unit_price,product_stores.${localStorage.getItem('store_id')}.purchase_unit_price_with_vat,product_stores.${localStorage.getItem('store_id')}.retail_unit_price,product_stores.${localStorage.getItem('store_id')}.retail_unit_price_with_vat,product_stores.${localStorage.getItem('store_id')}.stock,product_stores.${localStorage.getItem('store_id')}.warehouse_stocks,product_stores.${localStorage.getItem('store_id')}.warehouse_racks`;
+    let Select = `select=id,rack,allow_duplicates,additional_keywords,search_label,set.name,item_code,prefix_part_number,country_name,brand_name,part_number,name,unit,name_in_arabic,is_service,product_stores.${localStorage.getItem('store_id')}.purchase_unit_price,product_stores.${localStorage.getItem('store_id')}.purchase_unit_price_with_vat,product_stores.${localStorage.getItem('store_id')}.retail_unit_price,product_stores.${localStorage.getItem('store_id')}.retail_unit_price_with_vat,product_stores.${localStorage.getItem('store_id')}.stock,product_stores.${localStorage.getItem('store_id')}.warehouse_stocks,product_stores.${localStorage.getItem('store_id')}.warehouse_racks`;
 
     const result = await fetch("/v1/product?" + Select + queryString + "&limit=100&sort=-country_name", requestOptions);
     const data = await result.json();
@@ -1243,6 +1245,7 @@ const QuotationCreate = forwardRef((props, ref) => {
         unit_discount_percent: 0,
         unit_discount_percent_vat: 0,
         stock: product.product_stores[localStorage.getItem("store_id")]?.stock ? product.product_stores[localStorage.getItem("store_id")]?.stock : 0,
+        is_service: product.is_service || false,
 
       });
     }
@@ -2185,8 +2188,13 @@ const QuotationCreate = forwardRef((props, ref) => {
   }
 
   const ProductDetailsViewRef = useRef();
-  function openProductDetails(id) {
-    ProductDetailsViewRef.current.open(id);
+  const ServiceDetailsViewRef = useRef();
+  function openProductDetails(id, isService) {
+    if (isService) {
+      ServiceDetailsViewRef.current.open(id);
+    } else {
+      ProductDetailsViewRef.current.open(id);
+    }
   }
 
 
@@ -2527,8 +2535,13 @@ async function checkWarning(i) {
 }
   */
 
-  function openUpdateProductForm(id) {
-    ProductCreateFormRef.current.open(id);
+  const ServiceCreateFormRef = useRef();
+  function openUpdateProductForm(id, isService) {
+    if (isService) {
+      ServiceCreateFormRef.current.open(id);
+    } else {
+      ProductCreateFormRef.current.open(id);
+    }
   }
 
   const imageViewerRef = useRef();
@@ -3048,6 +3061,8 @@ async function checkWarning(i) {
         showToastMessage={props.showToastMessage}
         openDetailsView={openProductDetails}
       />
+      <ServiceCreate ref={ServiceCreateFormRef} showToastMessage={props.showToastMessage} />
+      <ServiceView ref={ServiceDetailsViewRef} showToastMessage={props.showToastMessage} />
 
       <CustomerCreate
         ref={CustomerCreateFormRef}
@@ -4116,7 +4131,7 @@ async function checkWarning(i) {
                                 <div
                                   style={{ color: "blue", cursor: "pointer", marginLeft: "2px" }}
                                   onClick={() => {
-                                    openUpdateProductForm(product.product_id);
+                                    openUpdateProductForm(product.product_id, product.is_service);
                                   }}
                                 >
                                   <i className="bi bi-pencil"> </i>
@@ -4125,7 +4140,7 @@ async function checkWarning(i) {
                                 <div
                                   style={{ color: "blue", cursor: "pointer", marginLeft: "8px" }}
                                   onClick={() => {
-                                    openProductDetails(product.product_id);
+                                    openProductDetails(product.product_id, product.is_service);
                                   }}
                                 >
                                   <i className="bi bi-eye"> </i>
@@ -4381,7 +4396,7 @@ async function checkWarning(i) {
                               </span>
                             </OverlayTrigger>
                           </td>);
-                          if (col.key === 'warehouse') return (store.settings?.enable_warehouse_module && formData.type === "invoice") ? (<td key="warehouse" style={{
+                          if (col.key === 'warehouse') return (store.settings?.enable_warehouse_module && formData.type === "invoice" && !selectedProducts[index].is_service) ? (<td key="warehouse" style={{
                             verticalAlign: 'middle',
                             padding: '0.25rem',
                             whiteSpace: 'nowrap',
@@ -4423,7 +4438,7 @@ async function checkWarning(i) {
                                 {errors[`warehouse_${index}`]}
                               </div>
                             )}
-                          </td>) : null;
+                          </td>) : (store.settings?.enable_warehouse_module && formData.type === "invoice" && selectedProducts[index].is_service ? <td><span style={{ fontSize: '11px', color: '#737686' }}>—</span></td> : null);
                           if (col.key === 'qty') return (<td key="qty" style={{
                             verticalAlign: 'middle',
                             padding: '0.25rem',
@@ -5573,7 +5588,7 @@ async function checkWarning(i) {
                                 <div
                                   style={{ color: "blue", cursor: "pointer", marginLeft: "2px" }}
                                   onClick={() => {
-                                    openUpdateProductForm(product.product_id);
+                                    openUpdateProductForm(product.product_id, product.is_service);
                                   }}
                                 >
                                   <i className="bi bi-pencil"> </i>
@@ -5582,7 +5597,7 @@ async function checkWarning(i) {
                                 <div
                                   style={{ color: "blue", cursor: "pointer", marginLeft: "8px" }}
                                   onClick={() => {
-                                    openProductDetails(product.product_id);
+                                    openProductDetails(product.product_id, product.is_service);
                                   }}
                                 >
                                   <i className="bi bi-eye"> </i>
@@ -5838,7 +5853,7 @@ async function checkWarning(i) {
                               </span>
                             </OverlayTrigger>
                           </td>);
-                          if (col.key === 'warehouse') return (store.settings?.enable_warehouse_module && formData.type === "invoice") ? (<td key="warehouse" style={{
+                          if (col.key === 'warehouse') return (store.settings?.enable_warehouse_module && formData.type === "invoice" && !selectedProducts[index].is_service) ? (<td key="warehouse" style={{
                             verticalAlign: 'middle',
                             padding: '0.25rem',
                             whiteSpace: 'nowrap',
@@ -5880,7 +5895,7 @@ async function checkWarning(i) {
                                 {errors[`warehouse_${index}`]}
                               </div>
                             )}
-                          </td>) : null;
+                          </td>) : (store.settings?.enable_warehouse_module && formData.type === "invoice" && selectedProducts[index].is_service ? <td><span style={{ fontSize: '11px', color: '#737686' }}>—</span></td> : null);
                           if (col.key === 'qty') return (<td key="qty" style={{
                             verticalAlign: 'middle',
                             padding: '0.25rem',

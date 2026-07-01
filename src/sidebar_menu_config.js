@@ -1,12 +1,12 @@
 // Central definition of all sidebar menu items.
-// adminOnly / warehouseOnly items are hidden by the sidebar at runtime
+// adminOnly / warehouseOnly / productsOnly items are hidden by the sidebar at runtime
 // based on user_role / store settings — they still appear in the settings page.
 export const DEFAULT_MENU = [
     { id: "dashboard",        label: "Dashboard",                 path: "/dashboard/business-dashboard",      icon: "bi-speedometer2" },
     { id: "sales",            label: "Sales",                     path: "/dashboard/sales",                   icon: "bi-receipt" },
     { id: "sales_return",     label: "Sales Returns",             path: "/dashboard/salesreturn",             icon: "bi-receipt-cutoff" },
-    { id: "purchases",        label: "Purchases",                 path: "/dashboard/purchases",               icon: "bi-cart4" },
-    { id: "purchase_return",  label: "Purchase Returns",          path: "/dashboard/purchasereturn",          icon: "bi-cart-x" },
+    { id: "purchases",        label: "Purchases",                 path: "/dashboard/purchases",               icon: "bi-cart4",         productsOnly: true },
+    { id: "purchase_return",  label: "Purchase Returns",          path: "/dashboard/purchasereturn",          icon: "bi-cart-x",        productsOnly: true },
     { id: "delivery_notes",   label: "Delivery Notes",            path: "/dashboard/delivery-notes",          icon: "bi-truck" },
     { id: "quotations",       label: "Quotations",                path: "/dashboard/quotations",              icon: "bi-clipboard2-check" },
     { id: "qtn_sales_return", label: "Quotation Sales Returns",   path: "/dashboard/quotation_sales_returns", icon: "bi-clipboard2-minus" },
@@ -16,9 +16,11 @@ export const DEFAULT_MENU = [
     { id: "warehouses",       label: "Warehouses",                path: "/dashboard/warehouses",              icon: "bi-boxes",         warehouseOnly: true },
     { id: "stock_transfers",  label: "Stock Transfers",           path: "/dashboard/stock-transfers",         icon: "bi-arrow-left-right", warehouseOnly: true },
     { id: "customers",        label: "Customers",                 path: "/dashboard/customers",               icon: "bi-people" },
-    { id: "products",         label: "Products",                  path: "/dashboard/products",                icon: "bi-box-seam" },
-    { id: "product_category", label: "Product Categories",        path: "/dashboard/product_category",        icon: "bi-grid" },
-    { id: "product_brand",    label: "Product Brands",            path: "/dashboard/product_brand",           icon: "bi-award" },
+    { id: "products",          label: "Products",                  path: "/dashboard/products",               icon: "bi-box-seam",            productsOnly: true },
+    { id: "services",          label: "Services",                  path: "/dashboard/services",               icon: "bi-clipboard-check",     requiresServices: true },
+    { id: "product_category",  label: "Product Categories",        path: "/dashboard/product_category",       icon: "bi-grid",                productsOnly: true },
+    { id: "service_category",  label: "Service Categories",        path: "/dashboard/service_category",       icon: "bi-grid-3x3-gap",        requiresServices: true },
+    { id: "product_brand",     label: "Product Brands",            path: "/dashboard/product_brand",          icon: "bi-award",               productsOnly: true },
     { id: "expense_category", label: "Expense Categories",        path: "/dashboard/expense_category",        icon: "bi-folder2-open" },
     { id: "expenses",         label: "Expenses",                  path: "/dashboard/expenses",                icon: "bi-wallet2" },
     { id: "analytics",        label: "Analytics",                 path: "/dashboard/analytics",               icon: "bi-graph-up-arrow", adminOnly: true },

@@ -4767,6 +4767,14 @@ const StoreCreate = forwardRef((props, ref) => {
                                     <input type="checkbox" id="allow_products_duplicates_by_default" checked={!!formData.settings.allow_products_duplicates_by_default} value={formData.settings.allow_products_duplicates_by_default} onChange={() => { formData.settings.allow_products_duplicates_by_default = !formData.settings.allow_products_duplicates_by_default; setFormData({ ...formData }); }} />
                                     <span>Mark Allow Products Duplicates by Default</span>
                                 </label>
+                                <label className="pw-check" htmlFor="enable_products">
+                                    <input type="checkbox" id="enable_products" checked={!!formData.settings.enable_products} value={formData.settings.enable_products} onChange={() => { formData.settings.enable_products = !formData.settings.enable_products; setFormData({ ...formData }); }} />
+                                    <span>Enable Products</span>
+                                </label>
+                                <label className="pw-check" htmlFor="enable_services">
+                                    <input type="checkbox" id="enable_services" checked={!!formData.settings.enable_services} value={formData.settings.enable_services} onChange={() => { formData.settings.enable_services = !formData.settings.enable_services; setFormData({ ...formData }); }} />
+                                    <span>Enable Services</span>
+                                </label>
                             </div>
                         </div>
 

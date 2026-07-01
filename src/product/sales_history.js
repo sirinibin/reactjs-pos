@@ -1601,7 +1601,7 @@ const SalesHistory = forwardRef((props, ref) => {
                                                                 ) &&
                                                                     <td style={{ width: "auto", whiteSpace: "nowrap" }} >
                                                                         {col.key === "warehouse_code" ? (
-                                                                            history[col.key] || "Main Store"
+                                                                            history.is_service ? "—" : (history[col.key] || "Main Store")
                                                                         ) : (
                                                                             history[col.key] && typeof history[col.key] === "number" ?
                                                                                 <Amount amount={trimTo2Decimals(history[col.key])} /> : history[col.key]

@@ -1617,7 +1617,6 @@ const ProductCreate = forwardRef((props, ref) => {
 
   const allErrors = Object.entries(errors).filter(([, v]) => v);
   const totalErrors = allErrors.length;
-  // ─────────────────────────────────────────────────────────────────────
 
   return (
     <>
@@ -1872,17 +1871,28 @@ const ProductCreate = forwardRef((props, ref) => {
                         <Label required>Unit</Label>
                         <select className="form-select form-select-sm" style={{ height: '30px', padding: '2px 8px' }} value={formData.unit}
                           onChange={(e) => { formData.unit = e.target.value; setFormData({ ...formData }); }}>
-                          <option value="">PC</option>
-                          <option value="drum">Drum</option>
-                          <option value="set">Set</option>
-                          <option value="Kg">Kg</option>
-                          <option value="Meter(s)">Meter(s)</option>
-                          <option value="CMT">Centi Meter(s)</option>
-                          <option value="MMT">Milli Meter(s)</option>
-                          <option value="Gm">Gm</option>
-                          <option value="L">Liter (L)</option>
-                          <option value="Mg">Mg</option>
+                          <option value="">Piece (PCE)</option>
+                          <option value="drum">Drum (DRM)</option>
+                          <option value="set">Set (SET)</option>
+                          <option value="Kg">Kilogram (KGM)</option>
+                          <option value="Meter(s)">Metre (MTR)</option>
+                          <option value="CMT">Centimetre (CMT)</option>
+                          <option value="MMT">Millimetre (MMT)</option>
+                          <option value="Gm">Gram (GRM)</option>
+                          <option value="L">Litre (LTR)</option>
+                          <option value="Mg">Milligram (MG)</option>
                         </select>
+                        {(() => {
+                          const map = { '': {code:'PCE', label:'Piece'}, drum: {code:'DRM', label:'Drum'}, set: {code:'SET', label:'Set'}, Kg: {code:'KGM', label:'Kilogram'}, 'Meter(s)': {code:'MTR', label:'Metre'}, CMT: {code:'CMT', label:'Centimetre'}, MMT: {code:'MMT', label:'Millimetre'}, Gm: {code:'GRM', label:'Gram'}, L: {code:'LTR', label:'Litre'}, Mg: {code:'MG', label:'Milligram'} };
+                          const { code, label } = map[formData.unit ?? ''] || { code: 'PCE', label: 'Piece' };
+                          return (
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '5px', marginTop: '4px' }}>
+                              <span style={{ fontSize: '10px', color: '#737686' }}>ZATCA code:</span>
+                              <span style={{ fontSize: '11px', fontWeight: 700, fontFamily: 'monospace', color: '#004ac6', background: '#eef2ff', padding: '1px 5px', borderRadius: '3px' }}>({code})</span>
+                              <span style={{ fontSize: '11px', color: '#737686' }}>{label}</span>
+                            </div>
+                          );
+                        })()}
                       </div>
                     </div>
                   </div>

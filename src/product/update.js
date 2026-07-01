@@ -1235,8 +1235,24 @@ const ProductUpdate = forwardRef((props, ref) => {
 
 
 
-            <h4>Unit Prices</h4>
-            <div className="table-responsive" style={{ overflowX: "auto" }}>
+            <div style={{ margin: '12px 0', padding: '12px 16px', border: formData.is_service ? '2px solid #004ac6' : '1px solid #dee2e6', borderRadius: '6px', background: formData.is_service ? '#f0f5ff' : undefined, display: 'flex', alignItems: 'flex-start', gap: '10px' }}>
+              <input type="checkbox" id="is_service_update"
+                style={{ width: '16px', height: '16px', accentColor: '#004ac6', cursor: 'pointer', flexShrink: 0, marginTop: '2px' }}
+                checked={formData.is_service || false}
+                onChange={() => { formData.is_service = !formData.is_service; setFormData({ ...formData }); }}
+              />
+              <div>
+                <label htmlFor="is_service_update" style={{ fontSize: '13px', fontWeight: 600, color: '#004ac6', cursor: 'pointer', marginBottom: '2px', display: 'block' }}>
+                  This is a Service (not a physical product)
+                </label>
+                <p style={{ fontSize: '12px', color: '#737686', marginBottom: 0 }}>
+                  Services have no stock, no inventory tracking, and no purchase orders.
+                </p>
+              </div>
+            </div>
+
+            {!formData.is_service && <h4>Unit Prices</h4>}
+            {!formData.is_service && <div className="table-responsive" style={{ overflowX: "auto" }}>
               <table className="table table-striped table-sm table-bordered">
                 <thead>
                   <tr className="text-center">
@@ -1453,10 +1469,17 @@ const ProductUpdate = forwardRef((props, ref) => {
                   </tr>
                 </tbody>
               </table>
-            </div>
+            </div>}
 
-            <h4>Stock</h4>
-            <div className="table-responsive" style={{ overflowX: "auto" }}>
+            {formData.is_service && (
+              <div style={{ margin: '12px 0', padding: '12px 16px', background: '#f0f5ff', border: '1px solid #c7d9ff', borderRadius: '6px', display: 'flex', alignItems: 'center', gap: '8px', color: '#004ac6', fontSize: '13px', fontWeight: 600 }}>
+                <i className="bi bi-tools"></i>
+                <span>Service — no stock tracking applies. Set the retail price below.</span>
+              </div>
+            )}
+
+            {!formData.is_service && <h4>Stock</h4>}
+            {!formData.is_service && <div className="table-responsive" style={{ overflowX: "auto" }}>
               <table className="table table-striped table-sm table-bordered">
                 <thead>
                   <tr className="text-center">
@@ -1589,7 +1612,7 @@ const ProductUpdate = forwardRef((props, ref) => {
                   </tr>
                 </tbody>
               </table>
-            </div>
+            </div>}
 
             <h4>SET</h4>
             <div className="col-md-3">

@@ -97,6 +97,7 @@ function ProductIndex(props) {
 
 
         searchParams.current["linked_products_of_product_id"] = "";
+        searchParams.current["is_service"] = "0";
 
         if (props.type === "linked_products") {
             if (props.model?.product_id) {
@@ -2274,13 +2275,12 @@ function ProductIndex(props) {
                     </div>
                 </div >
 
-                <div className="row">
+                <div className="row mb-1">
                     <div className="col">
-                        <h1 className="h3">Products</h1>
+                        <h1 className="h3 mb-0">Products</h1>
                     </div>
 
-
-                    <div className="col text-end">
+                    <div className="col-auto">
                         <Button
                             hide={true.toString()}
                             variant="primary"

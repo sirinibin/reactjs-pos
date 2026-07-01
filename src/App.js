@@ -125,6 +125,14 @@ function App() {
             <Dashboard />
           </Route>
 
+          <Route path="/dashboard/services">
+            <Dashboard />
+          </Route>
+
+          <Route path="/dashboard/service_category">
+            <Dashboard />
+          </Route>
+
           <Route path="/dashboard/product_category">
             <Dashboard />
           </Route>

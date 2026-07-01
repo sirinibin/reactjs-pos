@@ -30,6 +30,8 @@ import CustomerPending from "../utils/customer_pending.js";
 
 import ProductCreate from "../product/create.js";
 import ProductView from "../product/view.js";
+import ServiceCreate from "../service/create.js";
+import ServiceView from "../service/view.js";
 import ImageViewerModal from '../utils/ImageViewerModal.js';
 import OverflowTooltip from "../utils/OverflowTooltip.js";
 import { DragDropContext, Droppable, Draggable } from 'react-beautiful-dnd';
@@ -1839,13 +1841,23 @@ const QuotationSalesReturnCreate = forwardRef((props, ref) => {
     const inputRefs = useRef({});
     const cashDiscountRef = useRef(null);
 
-    function openUpdateProductForm(id) {
-        ProductCreateFormRef.current.open(id);
+    const ServiceCreateFormRef = useRef();
+    function openUpdateProductForm(id, isService) {
+        if (isService) {
+            ServiceCreateFormRef.current.open(id);
+        } else {
+            ProductCreateFormRef.current.open(id);
+        }
     }
 
     const ProductDetailsViewRef = useRef();
-    function openProductDetails(id) {
-        ProductDetailsViewRef.current.open(id);
+    const ServiceDetailsViewRef = useRef();
+    function openProductDetails(id, isService) {
+        if (isService) {
+            ServiceDetailsViewRef.current.open(id);
+        } else {
+            ProductDetailsViewRef.current.open(id);
+        }
     }
 
     const priceValidationTimer = useRef(null);
@@ -2205,6 +2217,8 @@ const QuotationSalesReturnCreate = forwardRef((props, ref) => {
             <CustomerCreate ref={CustomerCreateFormRef} showToastMessage={props.showToastMessage} onUpdated={(updated) => { if (updated && updated.id) { fetchAndSetCustomer(updated.id, updated); if (props.refreshList) { props.refreshList(); } } }} />
             {showCustomerPending && <CustomerPending ref={CustomerPendingRef} />}
             <ProductCreate ref={ProductCreateFormRef} showToastMessage={props.showToastMessage} />
+            <ServiceCreate ref={ServiceCreateFormRef} showToastMessage={props.showToastMessage} />
+            <ServiceView ref={ServiceDetailsViewRef} showToastMessage={props.showToastMessage} />
             <UserCreate ref={UserCreateFormRef} showToastMessage={props.showToastMessage} />
             <SignatureCreate ref={SignatureCreateFormRef} showToastMessage={props.showToastMessage} />
 
@@ -2562,7 +2576,7 @@ const QuotationSalesReturnCreate = forwardRef((props, ref) => {
                                                                 <div
                                                                     style={{ color: "blue", cursor: "pointer", marginLeft: "2px" }}
                                                                     onClick={() => {
-                                                                        openUpdateProductForm(product.product_id);
+                                                                        openUpdateProductForm(product.product_id, product.is_service);
                                                                     }}
                                                                 >
                                                                     <i className="bi bi-pencil"> </i>
@@ -2571,7 +2585,7 @@ const QuotationSalesReturnCreate = forwardRef((props, ref) => {
                                                                 <div
                                                                     style={{ color: "blue", cursor: "pointer", marginLeft: "8px" }}
                                                                     onClick={() => {
-                                                                        openProductDetails(product.product_id);
+                                                                        openProductDetails(product.product_id, product.is_service);
                                                                     }}
                                                                 >
                                                                     <i className="bi bi-eye"> </i>
@@ -3954,7 +3968,7 @@ const QuotationSalesReturnCreate = forwardRef((props, ref) => {
                                                                 <div
                                                                     style={{ color: "blue", cursor: "pointer", marginLeft: "2px" }}
                                                                     onClick={() => {
-                                                                        openUpdateProductForm(product.product_id);
+                                                                        openUpdateProductForm(product.product_id, product.is_service);
                                                                     }}
                                                                 >
                                                                     <i className="bi bi-pencil"> </i>
@@ -3963,7 +3977,7 @@ const QuotationSalesReturnCreate = forwardRef((props, ref) => {
                                                                 <div
                                                                     style={{ color: "blue", cursor: "pointer", marginLeft: "8px" }}
                                                                     onClick={() => {
-                                                                        openProductDetails(product.product_id);
+                                                                        openProductDetails(product.product_id, product.is_service);
                                                                     }}
                                                                 >
                                                                     <i className="bi bi-eye"> </i>

@@ -44,11 +44,15 @@ function Sidebar(props) {
         if (window.innerWidth <= 991.98) props.parentCallback();
     }
 
-    // Filter items: respect visibility, adminOnly, warehouseOnly
+    // Filter items: respect visibility, adminOnly, warehouseOnly, productsOnly
     const visibleItems = menuItems.filter(item => {
         if (!item.visible) return false;
         if (item.adminOnly && !isAdmin) return false;
         if (item.warehouseOnly && !store?.settings?.enable_warehouse_module) return false;
+        // productsOnly: hide only when services mode is active but products are not enabled.
+        // Backward compat: if neither flag is set (old stores), show everything.
+        if (item.productsOnly && store?.settings?.enable_services && !store?.settings?.enable_products) return false;
+        if (item.requiresServices && !store?.settings?.enable_services) return false;
         return true;
     });
 
