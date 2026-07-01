@@ -2288,16 +2288,16 @@ const DeliveryNoteCreate = forwardRef((props, ref) => {
                   const searchWords = state.text.toLowerCase().split(" ").filter(Boolean);
 
                   return (
-                    <Menu {...menuProps} style={{ ...(menuProps.style || {}), minWidth: '900px', width: 'max-content', maxWidth: '95vw', zIndex: 9999 }}>
+                    <Menu {...menuProps} style={{ ...(menuProps.style || {}), width: '95vw', maxWidth: '95vw', minWidth: '300px', zIndex: 9999 }}>
                       {/* Header */}
-                      <MenuItem disabled>
+                      <MenuItem disabled style={{ padding: 0, margin: 0 }}>
                         <div style={{ display: 'flex', fontWeight: 'bold', padding: '4px 8px', borderBottom: '1px solid #ddd' }}>
                           <div style={{ width: '15%' }}>ID</div>
-                          <div style={{ width: '42%' }}>Name</div>
+                          <div style={{ width: '45%' }}>Name</div>
                           <div style={{ width: '10%' }}>Phone</div>
                           <div style={{ width: '13%' }}>VAT</div>
                           <div style={{ width: '10%' }}>Credit Balance</div>
-                          <div style={{ width: '10%' }}>Credit Limit</div>
+                          <div style={{ width: '7%' }}>Credit Limit</div>
                         </div>
                       </MenuItem>
 
@@ -2306,7 +2306,7 @@ const DeliveryNoteCreate = forwardRef((props, ref) => {
                         const onlyOneResult = results.length === 1;
                         const isActive = state.activeIndex === index || onlyOneResult;
                         return (
-                          <MenuItem option={option} position={index} key={index}>
+                          <MenuItem option={option} position={index} key={index} style={{ padding: "0px" }}>
                             <div style={{ display: 'flex', padding: '4px 8px' }}>
                               <div style={{ ...columnStyle, width: '15%' }}>
                                 {highlightWords(
@@ -2315,7 +2315,7 @@ const DeliveryNoteCreate = forwardRef((props, ref) => {
                                   isActive
                                 )}
                               </div>
-                              <div style={{ ...columnStyle, width: '42%' }}>
+                              <div style={{ ...columnStyle, width: '45%' }}>
                                 {highlightWords(
                                   option.name_in_arabic
                                     ? `${option.name} - ${option.name_in_arabic}`
@@ -2335,7 +2335,7 @@ const DeliveryNoteCreate = forwardRef((props, ref) => {
                                   <Amount amount={trimTo2Decimals(option.credit_balance)} />
                                 )}
                               </div>
-                              <div style={{ ...columnStyle, width: '10%' }}>
+                              <div style={{ ...columnStyle, width: '7%' }}>
                                 {option.credit_limit && (
                                   <Amount amount={trimTo2Decimals(option.credit_limit)} />
                                 )}

@@ -1578,27 +1578,27 @@ const CustomerDepositCreate = forwardRef((props, ref) => {
                                                                         renderMenu={(results, menuProps, state) => {
                                                                             const searchWords = state.text.toLowerCase().split(" ").filter(Boolean);
                                                                             return (
-                                                                                <Menu {...menuProps} style={{ minWidth: 'calc(100vw - 60px)' }}>
-                                                                                    <MenuItem disabled>
+                                                                                <Menu {...menuProps} style={{ ...(menuProps.style || {}), width: '95vw', maxWidth: '95vw', minWidth: '300px', zIndex: 9999 }}>
+                                                                                    <MenuItem disabled style={{ padding: 0, margin: 0 }}>
                                                                                         <div style={{ display: 'flex', fontWeight: 'bold', padding: '4px 8px', borderBottom: '1px solid #ddd' }}>
                                                                                             <div style={{ width: '10%' }}>ID</div>
-                                                                                            <div style={{ width: '47%' }}>Name</div>
+                                                                                            <div style={{ width: '50%' }}>Name</div>
                                                                                             <div style={{ width: '10%' }}>Phone</div>
                                                                                             <div style={{ width: '13%' }}>VAT</div>
                                                                                             <div style={{ width: '10%' }}>Credit Balance</div>
-                                                                                            <div style={{ width: '10%' }}>Credit Limit</div>
+                                                                                            <div style={{ width: '7%' }}>Credit Limit</div>
                                                                                         </div>
                                                                                     </MenuItem>
                                                                                     {results.map((option, index) => {
                                                                                         const onlyOneResult = results.length === 1;
                                                                                         const isActive = state.activeIndex === index || onlyOneResult;
                                                                                         return (
-                                                                                            <MenuItem option={option} position={index} key={index}>
+                                                                                            <MenuItem option={option} position={index} key={index} style={{ padding: "0px" }}>
                                                                                                 <div style={{ display: 'flex', padding: '4px 8px' }}>
                                                                                                     <div style={{ ...columnStyle, width: '10%' }}>
                                                                                                         {highlightWords(option.code, searchWords, isActive)}
                                                                                                     </div>
-                                                                                                    <div style={{ ...columnStyle, width: '47%' }}>
+                                                                                                    <div style={{ ...columnStyle, width: '50%' }}>
                                                                                                         {highlightWords(
                                                                                                             option.name_in_arabic ? `${option.name} - ${option.name_in_arabic}` : option.name,
                                                                                                             searchWords, isActive
@@ -1615,7 +1615,7 @@ const CustomerDepositCreate = forwardRef((props, ref) => {
                                                                                                             <Amount amount={trimTo2Decimals(option.credit_balance)} />
                                                                                                         )}
                                                                                                     </div>
-                                                                                                    <div style={{ ...columnStyle, width: '10%' }}>
+                                                                                                    <div style={{ ...columnStyle, width: '7%' }}>
                                                                                                         {option.credit_limit && (
                                                                                                             <Amount amount={trimTo2Decimals(option.credit_limit)} />
                                                                                                         )}
@@ -1703,27 +1703,27 @@ const CustomerDepositCreate = forwardRef((props, ref) => {
                                                                         renderMenu={(results, menuProps, state) => {
                                                                             const searchWords = state.text.toLowerCase().split(" ").filter(Boolean);
                                                                             return (
-                                                                                <Menu {...menuProps} style={{ minWidth: 'calc(100vw - 60px)' }}>
-                                                                                    <MenuItem disabled>
+                                                                                <Menu {...menuProps} style={{ ...(menuProps.style || {}), width: '95vw', maxWidth: '95vw', minWidth: '300px', zIndex: 9999 }}>
+                                                                                    <MenuItem disabled style={{ padding: 0, margin: 0 }}>
                                                                                         <div style={{ display: 'flex', fontWeight: 'bold', padding: '4px 8px', borderBottom: '1px solid #ddd' }}>
                                                                                             <div style={{ width: '10%' }}>ID</div>
-                                                                                            <div style={{ width: '47%' }}>Name</div>
+                                                                                            <div style={{ width: '50%' }}>Name</div>
                                                                                             <div style={{ width: '10%' }}>Phone</div>
                                                                                             <div style={{ width: '13%' }}>VAT</div>
                                                                                             <div style={{ width: '10%' }}>Credit Balance</div>
-                                                                                            <div style={{ width: '10%' }}>Credit Limit</div>
+                                                                                            <div style={{ width: '7%' }}>Credit Limit</div>
                                                                                         </div>
                                                                                     </MenuItem>
                                                                                     {results.map((option, index) => {
                                                                                         const onlyOneResult = results.length === 1;
                                                                                         const isActive = state.activeIndex === index || onlyOneResult;
                                                                                         return (
-                                                                                            <MenuItem option={option} position={index} key={index}>
+                                                                                            <MenuItem option={option} position={index} key={index} style={{ padding: "0px" }}>
                                                                                                 <div style={{ display: 'flex', padding: '4px 8px' }}>
                                                                                                     <div style={{ ...columnStyle, width: '10%' }}>
                                                                                                         {highlightWords(option.code, searchWords, isActive)}
                                                                                                     </div>
-                                                                                                    <div style={{ ...columnStyle, width: '47%' }}>
+                                                                                                    <div style={{ ...columnStyle, width: '50%' }}>
                                                                                                         {highlightWords(
                                                                                                             option.name_in_arabic ? `${option.name} - ${option.name_in_arabic}` : option.name,
                                                                                                             searchWords, isActive
@@ -1740,7 +1740,7 @@ const CustomerDepositCreate = forwardRef((props, ref) => {
                                                                                                             <Amount amount={trimTo2Decimals(option.credit_balance)} />
                                                                                                         )}
                                                                                                     </div>
-                                                                                                    <div style={{ ...columnStyle, width: '10%' }}>
+                                                                                                    <div style={{ ...columnStyle, width: '7%' }}>
                                                                                                         {option.credit_limit && (
                                                                                                             <Amount amount={trimTo2Decimals(option.credit_limit)} />
                                                                                                         )}

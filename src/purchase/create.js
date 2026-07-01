@@ -3350,16 +3350,16 @@ const PurchaseCreate = forwardRef((props, ref) => {
                                                         const searchWords = state.text.toLowerCase().split(" ").filter(Boolean);
 
                                                         return (
-                                                            <Menu {...menuProps} style={{ minWidth: 'calc(100vw - 60px)' }}>
+                                                            <Menu {...menuProps} style={{ ...(menuProps.style || {}), width: '95vw', maxWidth: '95vw', minWidth: '300px', zIndex: 9999 }}>
                                                                 {/* Header */}
-                                                                <MenuItem disabled>
+                                                                <MenuItem disabled style={{ padding: 0, margin: 0 }}>
                                                                     <div style={{ display: 'flex', fontWeight: 'bold', padding: '4px 8px', borderBottom: '1px solid #ddd' }}>
                                                                         <div style={{ width: '10%' }}>ID</div>
-                                                                        <div style={{ width: '47%' }}>Name</div>
+                                                                        <div style={{ width: '50%' }}>Name</div>
                                                                         <div style={{ width: '10%' }}>Phone</div>
                                                                         <div style={{ width: '13%' }}>VAT</div>
                                                                         <div style={{ width: '10%' }}>Credit Balance</div>
-                                                                        <div style={{ width: '10%' }}>Credit Limit</div>
+                                                                        <div style={{ width: '7%' }}>Credit Limit</div>
                                                                     </div>
                                                                 </MenuItem>
 
@@ -3368,7 +3368,7 @@ const PurchaseCreate = forwardRef((props, ref) => {
                                                                     const onlyOneResult = results.length === 1;
                                                                     const isActive = state.activeIndex === index || onlyOneResult;
                                                                     return (
-                                                                        <MenuItem option={option} position={index} key={index}>
+                                                                        <MenuItem option={option} position={index} key={index} style={{ padding: "0px" }}>
                                                                             <div style={{ display: 'flex', padding: '4px 8px' }}>
                                                                                 <div style={{ ...columnStyle, width: '10%' }}>
                                                                                     {highlightWords(
@@ -3377,7 +3377,7 @@ const PurchaseCreate = forwardRef((props, ref) => {
                                                                                         isActive
                                                                                     )}
                                                                                 </div>
-                                                                                <div style={{ ...columnStyle, width: '47%' }}>
+                                                                                <div style={{ ...columnStyle, width: '50%' }}>
                                                                                     {highlightWords(
                                                                                         option.name_in_arabic
                                                                                             ? `${option.name} - ${option.name_in_arabic}`
@@ -3397,8 +3397,8 @@ const PurchaseCreate = forwardRef((props, ref) => {
                                                                                         <Amount amount={trimTo2Decimals(option.credit_balance)} />
                                                                                     )}
                                                                                 </div>
-                                                                                <div style={{ ...columnStyle, width: '10%' }}>
-                                                                                    {option.credit_limit && (
+                                                                                <div style={{ ...columnStyle, width: '7%' }}>
+                                                                                                        {option.credit_limit && (
                                                                                         <Amount amount={trimTo2Decimals(option.credit_limit)} />
                                                                                     )}
                                                                                 </div>
@@ -3658,7 +3658,7 @@ const PurchaseCreate = forwardRef((props, ref) => {
                                     const searchWords = state.text.toLowerCase().split(" ").filter(Boolean);
 
                                     return (
-                                        <Menu {...menuProps} style={{ minWidth: 'calc(100vw - 60px)' }}>
+                                        <Menu {...menuProps} style={{ ...(menuProps.style || {}), width: '95vw', maxWidth: '95vw', minWidth: '300px', zIndex: 9999 }}>
                                             {/* Header */}
                                             <MenuItem disabled style={{ position: 'sticky', top: 0, padding: 0, margin: 0 }}>
                                                 <div style={{
@@ -5378,7 +5378,7 @@ const PurchaseCreate = forwardRef((props, ref) => {
                                     renderMenu={(results, menuProps, state) => {
                                       const searchWords = state.text.toLowerCase().split(" ").filter(Boolean);
                                       return (
-                                        <Menu {...menuProps} style={{ ...(menuProps.style || {}), width: 'calc(100vw - 60px)', maxWidth: 'calc(100vw - 60px)', minWidth: '400px', zIndex: 9999 }}>
+                                        <Menu {...menuProps} style={{ ...(menuProps.style || {}), width: '95vw', maxWidth: '95vw', minWidth: '400px', zIndex: 9999 }}>
                                           <MenuItem disabled style={{ position: 'sticky', top: 0, padding: 0, margin: 0 }}>
                                             <div style={{ display: 'flex', fontWeight: 'bold', color: '#6b7280', padding: '4px 8px', background: '#f8f9fa', borderBottom: '1px solid #e2e8f0', pointerEvents: 'auto' }}>
                                               <div style={{ ...columnStyle, width: '8%' }}>{t('Code')}</div>
@@ -5393,7 +5393,7 @@ const PurchaseCreate = forwardRef((props, ref) => {
                                             const onlyOne = results.length === 1;
                                             const isActive = state.activeIndex === index || onlyOne;
                                             return (
-                                              <MenuItem option={option} position={index} key={index}>
+                                              <MenuItem option={option} position={index} key={index} style={{ padding: "0px" }}>
                                                 <div style={{ display: 'flex', padding: '4px 8px' }}>
                                                   <div style={{ ...columnStyle, width: '8%' }}>{highlightWords(option.code, searchWords, isActive)}</div>
                                                   <div style={{ ...columnStyle, width: '37%' }}>{highlightWords(option.name_in_arabic ? `${option.name} - ${option.name_in_arabic}` : option.name, searchWords, isActive)}</div>
@@ -5512,14 +5512,15 @@ const PurchaseCreate = forwardRef((props, ref) => {
                           </div>
                         </div>{/* end white card */}
 
-                        {/* Selected Vendor section */}
+                        {/* Selected Vendor section — always occupies flex:2 space so vendor search width stays stable */}
+                        <div style={{ flex: 2, minWidth: 0 }}>
                         {formData.vendor_id && selectedVendors.slice(0, 1).map(v => {
                           const phone = v.phone || formData.phone;
                           const phone2 = v.phone2;
                           const vatNo = v.vat_no || formData.vat_no;
                           const creditBalance = v.credit_balance;
                           return (
-                            <div key={v.id || 'sel-vendor'} style={{ flex: 2, minWidth: 0, position: 'relative' }}>
+                            <div key={v.id || 'sel-vendor'} style={{ position: 'relative' }}>
                               <span style={{ position: 'absolute', top: '-8px', left: '14px', fontSize: '10px', fontWeight: 600, color: '#6b7280', background: '#fff', padding: '0 4px', lineHeight: 1, zIndex: 1, pointerEvents: 'none' }}>{t('Selected Vendor')}</span>
                               {/* Selected Vendor settings gear */}
                               <button type="button" onClick={() => setShowSelVendorSettings(s => !s)}
@@ -5644,7 +5645,8 @@ const PurchaseCreate = forwardRef((props, ref) => {
                             </div>
                           );
                         })}
-                        </div>
+                        </div>{/* end flex:2 placeholder */}
+                        </div>{/* end flex row */}
 
                         <div style={{ position: 'relative', marginTop: '14px' }}>
                           <span style={{ position: 'absolute', top: '-8px', left: '14px', fontSize: '10px', fontWeight: 600, color: '#6b7280', background: '#fff', padding: '0 4px', lineHeight: 1, zIndex: 1, pointerEvents: 'none' }}>{t('Products')}</span>
@@ -5828,7 +5830,7 @@ const PurchaseCreate = forwardRef((props, ref) => {
                           </div>{/* end products card */}
                         </div>
 
-                        <div className="sc-post-table">
+                        <div className="sc-post-table" style={{ marginTop: '10px' }}>
                           <div className="sc-post-table-left" style={{ position: 'relative' }}>
                               <span style={{ position: 'absolute', top: '-8px', left: '14px', fontSize: '10px', fontWeight: 600, color: '#6b7280', background: '#fff', padding: '0 4px', lineHeight: 1, zIndex: 1, pointerEvents: 'none' }}>{t('Payments')}</span>
                             <div style={{ backgroundColor: '#ffffff', borderRadius: '8px', border: '1px solid #e2e8f0' }}>

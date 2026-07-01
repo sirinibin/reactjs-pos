@@ -337,24 +337,24 @@ export function SalesType1Body({
                                                             const searchWords = state.text.toLowerCase().split(" ").filter(Boolean);
                                                             return (
                                                                 <Menu {...menuProps} style={{ ...(menuProps.style || {}), width: '95vw', maxWidth: '95vw', minWidth: '300px', zIndex: 9999 }}>
-                                                                    <MenuItem disabled>
+                                                                    <MenuItem disabled style={{ padding: 0, margin: 0 }}>
                                                                         <div style={{ display: 'flex', fontWeight: 'bold', padding: '4px 8px', borderBottom: '1px solid #ddd' }}>
                                                                             <div style={{ width: '10%' }}>{t("ID")}</div>
-                                                                            <div style={{ width: '47%' }}>{t("Name")}</div>
+                                                                            <div style={{ width: '50%' }}>{t("Name")}</div>
                                                                             <div style={{ width: '10%' }}>{t("Phone")}</div>
                                                                             <div style={{ width: '13%' }}>{t("VAT NO.")}</div>
                                                                             <div style={{ width: '10%' }}>{t("Credit Balance")}</div>
-                                                                            <div style={{ width: '10%' }}>{t("Credit Limit")}</div>
+                                                                            <div style={{ width: '7%' }}>{t("Credit Limit")}</div>
                                                                         </div>
                                                                     </MenuItem>
                                                                     {results.map((option, index) => {
                                                                         const onlyOneResult = results.length === 1;
                                                                         const isActive = state.activeIndex === index || onlyOneResult;
                                                                         return (
-                                                                            <MenuItem option={option} position={index} key={index}>
+                                                                            <MenuItem option={option} position={index} key={index} style={{ padding: "0px" }}>
                                                                                 <div style={{ display: 'flex', padding: '4px 8px' }}>
                                                                                     <div style={{ ...columnStyle, width: '10%' }}>{highlightWords(option.code, searchWords, isActive)}</div>
-                                                                                    <div style={{ ...columnStyle, width: '47%' }}>{highlightWords(option.name_in_arabic ? `${option.name} - ${option.name_in_arabic}` : option.name, searchWords, isActive)}</div>
+                                                                                    <div style={{ ...columnStyle, width: '50%' }}>{highlightWords(option.name_in_arabic ? `${option.name} - ${option.name_in_arabic}` : option.name, searchWords, isActive)}</div>
                                                                                     <div style={{ ...columnStyle, width: '10%' }}>{highlightWords(option.phone, searchWords, isActive)}</div>
                                                                                     <div style={{ ...columnStyle, width: '13%' }}>{highlightWords(option.vat_no, searchWords, isActive)}</div>
                                                                                     <div style={{ ...columnStyle, width: '10%' }}>
@@ -362,7 +362,7 @@ export function SalesType1Body({
                                                                                             <Amount amount={trimTo2Decimals(option.credit_balance)} />
                                                                                         </div>
                                                                                     </div>
-                                                                                    <div style={{ ...columnStyle, width: '10%' }}>{option.credit_limit && (<Amount amount={trimTo2Decimals(option.credit_limit)} />)}</div>
+                                                                                    <div style={{ ...columnStyle, width: '7%' }}>{option.credit_limit && (<Amount amount={trimTo2Decimals(option.credit_limit)} />)}</div>
                                                                                 </div>
                                                                             </MenuItem>
                                                                         );
