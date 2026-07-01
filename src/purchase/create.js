@@ -6983,7 +6983,7 @@ const PurchaseCreate = forwardRef((props, ref) => {
                                         {formData.payments_input &&
                                             formData.payments_input.filter(payment => !payment.deleted).map((payment, key) => (
                                                 <tr key={key}>
-                                                    <td>
+                                                    <td style={{ minWidth: "80px" }}>
 
                                                         <DatePicker
                                                             id="payment_date_str"
@@ -7041,7 +7041,7 @@ const PurchaseCreate = forwardRef((props, ref) => {
                                                             </div>
                                                         )}
                                                     </td>
-                                                    <td style={{ position: 'relative' }}>
+                                                    <td style={{ position: 'relative', minWidth: "80px" }}>
                                                         <select value={formData.payments_input[key].method} className="form-control "
                                                             onChange={(e) => {
                                                                 // errors["payment_method"] = [];
@@ -7089,7 +7089,7 @@ const PurchaseCreate = forwardRef((props, ref) => {
                                                             placeholder={t("Description")}
                                                         />
                                                     </td>
-                                                    <td style={{ minWidth: "400px" }}>
+                                                    <td style={{ minWidth: "240px" }}>
                                                         {formData.payments_input[key] && (
                                                             <span
                                                                 style={{ cursor: "pointer", color: "blue" }}
