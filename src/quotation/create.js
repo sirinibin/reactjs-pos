@@ -7648,7 +7648,7 @@ async function checkWarning(i) {
                       {formData.payments_input &&
                         formData.payments_input.filter(payment => !payment.deleted).map((payment, key) => (
                           <tr key={key}>
-                            <td>
+                            <td style={{ minWidth: "80px" }}>
 
                               <DatePicker
                                 id="payment_date_str"
@@ -7702,7 +7702,7 @@ async function checkWarning(i) {
                                 </div>
                               )}
                             </td>
-                            <td style={{ position: 'relative' }}>
+                            <td style={{ position: 'relative', minWidth: "80px" }}>
                               <select value={formData.payments_input[key].method} className="form-control "
                                 onChange={(e) => {
                                   // errors["payment_method"] = [];
@@ -7748,7 +7748,7 @@ async function checkWarning(i) {
                                 placeholder="Description"
                               />
                             </td>
-                            <td style={{ minWidth: "400px" }}>
+                            <td style={{ minWidth: "240px" }}>
                               {formData.payments_input[key] && (
                                 <span
                                   style={{ cursor: "pointer", color: "blue" }}
