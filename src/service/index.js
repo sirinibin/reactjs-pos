@@ -220,9 +220,6 @@ function ServiceIndex(props) {
         list();
     }
 
-    function toggleShowDeleted() {
-        setDeletedFilter(showDeleted ? "" : "1");
-    }
 
     // ── Misc ──
 
