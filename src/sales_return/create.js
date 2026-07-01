@@ -7693,79 +7693,6 @@ const SalesReturnCreate = forwardRef((props, ref) => {
                             </table>
                         </div>
 
-                        <div className="col-md-2">
-                            <label className="form-label">{t("Cash discount")}</label>
-                            <input
-                                type='number'
-                                ref={cashDiscountRef}
-                                id="sales_cash_discount"
-                                name="sales_cash_discount"
-                                value={cashDiscount}
-                                className="form-control"
-                                onChange={(e) => {
-                                    delete errors["cash_discount"];
-                                    setErrors({ ...errors });
-                                    if (!e.target.value) {
-                                        cashDiscount = e.target.value;
-                                        setCashDiscount(cashDiscount);
-
-                                        if (timerRef.current) clearTimeout(timerRef.current);
-                                        timerRef.current = setTimeout(() => {
-                                            // validatePaymentAmounts();
-                                            reCalculate();
-                                        }, 100);
-
-                                        return;
-                                    }
-
-                                    cashDiscount = parseFloat(e.target.value);
-                                    setCashDiscount(cashDiscount);
-
-                                    if (cashDiscount > 0 && cashDiscount >= formData.net_total) {
-                                        errors["cash_discount"] = t("Cash discount should not be greater than or equal to Net Total: {{netTotal}}", {
-                                            netTotal: formData.net_total?.toString(),
-                                        });
-                                        setErrors({ ...errors });
-                                        return;
-                                    }
-
-                                    if (timerRef.current) clearTimeout(timerRef.current);
-                                    timerRef.current = setTimeout(() => {
-                                        //  validatePaymentAmounts();
-                                        reCalculate();
-                                    }, 100);
-                                    console.log(formData);
-                                }}
-
-                                onKeyDown={(e) => {
-                                    if (timerRef.current) clearTimeout(timerRef.current);
-
-                                    if (e.key === "Backspace") {
-                                        cashDiscount = "";
-                                        setCashDiscount(cashDiscount);
-
-                                        if (timerRef.current) clearTimeout(timerRef.current);
-                                        timerRef.current = setTimeout(() => {
-                                            reCalculate();
-                                        }, 100);
-                                        return;
-                                    }
-                                }}
-                                onFocus={() => {
-                                    if (timerRef.current) clearTimeout(timerRef.current);
-                                    timerRef.current = setTimeout(() => {
-                                        cashDiscountRef.current.select();
-                                    }, 20);
-                                }}
-                            />
-                            {errors.cash_discount && (
-                                <div style={{ color: "red" }}>
-                                    {t(errors.cash_discount)}
-                                </div>
-                            )}
-                        </div>
-
-
                         <div className="col-md-12" style={{ maxWidth: "90%" }}>
                             <label className="form-label">{t("Payments given")}</label>
                             <div class="table-responsive">
@@ -7911,7 +7838,7 @@ const SalesReturnCreate = forwardRef((props, ref) => {
                                                             </span>
                                                         )}
                                                     </td>
-                                                    <td style={{ width: "40px", textAlign: 'center' }}>
+                                                    <td style={{ width: "80px", textAlign: 'center' }}>
                                                         <button type="button" disabled={order.payment_status === "not_paid"} onClick={() => removePayment(key)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#dc2626', padding: '2px 6px', borderRadius: '4px' }} onMouseEnter={e => e.currentTarget.style.backgroundColor = '#fef2f2'} onMouseLeave={e => e.currentTarget.style.backgroundColor = 'transparent'}>
                                                             <i className="bi bi-trash" style={{ fontSize: '14px' }}></i>
                                                         </button>
@@ -8027,7 +7954,7 @@ const SalesReturnCreate = forwardRef((props, ref) => {
                                 )}
                             </div>
                             <div className="col-md-2">
-                                <label className="form-label">{t("Commission Payment Method")}</label>
+                                <label className="form-label">{t("C. Payment Method")}</label>
                                 <select value={formData.commission_payment_method} className="form-control "
                                     onChange={(e) => {
                                         // errors["payment_method"] = [];
@@ -8063,6 +7990,54 @@ const SalesReturnCreate = forwardRef((props, ref) => {
                                     <div style={{ color: "red" }}>
                                         {t(errors["commission_payment_method"])}
                                     </div>
+                                )}
+                            </div>
+                            <div className="col-md-2">
+                                <label className="form-label">{t("Cash discount")}</label>
+                                <input
+                                    type='number'
+                                    ref={cashDiscountRef}
+                                    id="sales_cash_discount"
+                                    name="sales_cash_discount"
+                                    value={cashDiscount}
+                                    className="form-control"
+                                    onChange={(e) => {
+                                        delete errors["cash_discount"];
+                                        setErrors({ ...errors });
+                                        if (!e.target.value) {
+                                            cashDiscount = e.target.value;
+                                            setCashDiscount(cashDiscount);
+                                            if (timerRef.current) clearTimeout(timerRef.current);
+                                            timerRef.current = setTimeout(() => { reCalculate(); }, 100);
+                                            return;
+                                        }
+                                        cashDiscount = parseFloat(e.target.value);
+                                        setCashDiscount(cashDiscount);
+                                        if (cashDiscount > 0 && cashDiscount >= formData.net_total) {
+                                            errors["cash_discount"] = t("Cash discount should not be greater than or equal to Net Total: {{netTotal}}", { netTotal: formData.net_total?.toString() });
+                                            setErrors({ ...errors });
+                                            return;
+                                        }
+                                        if (timerRef.current) clearTimeout(timerRef.current);
+                                        timerRef.current = setTimeout(() => { reCalculate(); }, 100);
+                                    }}
+                                    onKeyDown={(e) => {
+                                        if (timerRef.current) clearTimeout(timerRef.current);
+                                        if (e.key === "Backspace") {
+                                            cashDiscount = "";
+                                            setCashDiscount(cashDiscount);
+                                            if (timerRef.current) clearTimeout(timerRef.current);
+                                            timerRef.current = setTimeout(() => { reCalculate(); }, 100);
+                                            return;
+                                        }
+                                    }}
+                                    onFocus={() => {
+                                        if (timerRef.current) clearTimeout(timerRef.current);
+                                        timerRef.current = setTimeout(() => { cashDiscountRef.current?.select(); }, 20);
+                                    }}
+                                />
+                                {errors.cash_discount && (
+                                    <div style={{ color: "red" }}>{t(errors.cash_discount)}</div>
                                 )}
                             </div>
                         </div>

@@ -1150,10 +1150,9 @@ function QuotationIndex(props) {
       {showQuotationCreate && <QuotationCreate ref={CreateFormRef} handleUpdated={handleUpdated} refreshList={list} showToastMessage={props.showToastMessage} openDetailsView={openDetailsView} />}
       {showQuotationView && <QuotationView ref={DetailsViewRef} openUpdateForm={openUpdateForm} openCreateForm={openCreateForm} />}
       <div className="container-fluid p-0">
-        <div className="row">
-
-          <div className="col">
-            <span className="text-end">
+        <div className="row mb-2">
+          <div className="col-12">
+            <div className="d-flex gap-3 flex-wrap justify-content-end">
               <StatsSummary
                 title="Quotation Summary"
                 filters={{
@@ -1180,8 +1179,6 @@ function QuotationIndex(props) {
                 }}
                 onToggle={handleSummaryToggle}
               />
-            </span>
-            <span className="text-end">
               <StatsSummary
                 title="Qtn. Sales Summary"
                 filters={{
@@ -1213,58 +1210,28 @@ function QuotationIndex(props) {
                   "Net Profit": invoiceNetProfit,
                   "Net Loss": invoiceLoss,
                 }}
-
                 onToggle={handleSummaryToggle}
               />
-            </span>
-
-          </div>
-
-          {/*<div className="col">
-
-          </div>*/}
-
-        </div>
-
-        <div className="row">
-          <div className="col">
-            <h1 className="h3">Quotations</h1>
-          </div>
-
-          <div className="col text-end">
-            <Button variant="primary" onClick={() => {
-              openReportPreview("quotation_invoice_report");
-            }} style={{ marginRight: "8px" }} className="btn btn-primary mb-1">
-              <i className="bi bi-printer"></i>&nbsp;
-              Print Sales Report
-            </Button>
-
-            <Button variant="primary" onClick={() => {
-              openReportPreview("quotation_report");
-            }} style={{ marginRight: "8px" }} className="btn btn-primary mb-1">
-              <i className="bi bi-printer"></i>&nbsp;
-              Print Quotation Report
-            </Button>
-
-            <Button
-              hide={true.toString()}
-              variant="primary"
-              className="btn btn-primary mb-1"
-              onClick={openCreateForm}
-            >
-              <i className="bi bi-plus-lg"></i> Create
-            </Button>
+            </div>
           </div>
         </div>
-
         <div className="row">
           <div className="col-12">
             <div className="card">
-              {/*
-  <div   className="card-header">
-                        <h5   className="card-title mb-0"></h5>
-                    </div>
-                    */}
+              <div className="card-header p-2 d-flex align-items-center justify-content-between flex-wrap gap-2">
+                <h1 className="h3 mb-0">Quotations</h1>
+                <div className="d-flex gap-2 flex-wrap">
+                  <Button size="sm" variant="primary" onClick={() => openReportPreview("quotation_invoice_report")}>
+                    <i className="bi bi-printer"></i> Print Sales Report
+                  </Button>
+                  <Button size="sm" variant="primary" onClick={() => openReportPreview("quotation_report")}>
+                    <i className="bi bi-printer"></i> Print Quotation Report
+                  </Button>
+                  <Button size="sm" variant="primary" onClick={openCreateForm}>
+                    <i className="bi bi-plus-lg"></i> Create
+                  </Button>
+                </div>
+              </div>
               <div className="card-body p-2">
                 <div className="row">
                   {totalItems === 0 && (

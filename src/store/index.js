@@ -7,6 +7,7 @@ import WhatsAppContactsModal from "./WhatsAppContactsModal.js";
 import StoreBackup from "./StoreBackup.js";
 import StoreDuplicate from "./StoreDuplicate.js";
 import StoreDuplicateProducts from "./StoreDuplicateProducts.js";
+import StoreDuplicateProductsNoImages from "./StoreDuplicateProductsNoImages.js";
 import StoreDuplicateWithoutData from "./StoreDuplicateWithoutData.js";
 
 import "react-datepicker/dist/react-datepicker.css";
@@ -386,6 +387,11 @@ function StoreIndex(props) {
         StoreDuplicateProductsRef.current.open(store);
     }
 
+    const StoreDuplicateProductsNoImagesRef = useRef();
+    function openDuplicateWithProductsNoImages(store) {
+        StoreDuplicateProductsNoImagesRef.current.open(store);
+    }
+
     const StoreDuplicateWithoutDataRef = useRef();
     function openDuplicateWithoutData(store) {
         StoreDuplicateWithoutDataRef.current.open(store);
@@ -517,6 +523,7 @@ function StoreIndex(props) {
             <StoreBackup ref={StoreBackupRef} />
             <StoreDuplicate ref={StoreDuplicateRef} onDuplicated={list} />
             <StoreDuplicateProducts ref={StoreDuplicateProductsRef} onDuplicated={list} />
+            <StoreDuplicateProductsNoImages ref={StoreDuplicateProductsNoImagesRef} onDuplicated={list} />
             <StoreDuplicateWithoutData ref={StoreDuplicateWithoutDataRef} onDuplicated={list} />
 
             <div className="container-fluid p-0">
@@ -891,6 +898,11 @@ function StoreIndex(props) {
                                                                     {localStorage.getItem('user_role') === "Admin" && !store.deleted && (
                                                                         <Dropdown.Item onClick={() => openDuplicateWithProducts(store)}>
                                                                             <i className="bi bi-box-seam me-2"></i>Duplicate with Products
+                                                                        </Dropdown.Item>
+                                                                    )}
+                                                                    {localStorage.getItem('user_role') === "Admin" && !store.deleted && (
+                                                                        <Dropdown.Item onClick={() => openDuplicateWithProductsNoImages(store)}>
+                                                                            <i className="bi bi-box-seam me-2"></i>Duplicate with Products (without images)
                                                                         </Dropdown.Item>
                                                                     )}
                                                                     {localStorage.getItem('user_role') === "Admin" && !store.deleted && (

@@ -309,6 +309,16 @@ const PurchaseReturnedCreate = forwardRef((props, ref) => {
                     setCashDiscount(cashDiscount);
                 }
 
+                if (data.result?.commission) {
+                    commission = data.result.commission;
+                    setCommission(commission);
+                    formData.commission_payment_method = data.result.commission_payment_method || "";
+                } else {
+                    commission = "";
+                    setCommission(commission);
+                    formData.commission_payment_method = "";
+                }
+
                 if (data.result?.rounding_amount) {
                     roundingAmount = data.result.rounding_amount;
                     setRoundingAmount(roundingAmount);
@@ -658,6 +668,12 @@ const PurchaseReturnedCreate = forwardRef((props, ref) => {
             formData.cash_discount = cashDiscount;
         }
 
+        if (!commission) {
+            formData.commission = 0;
+        } else {
+            formData.commission = commission;
+        }
+
         if (discount) {
             formData.discount = discount;
         } else {
@@ -767,6 +783,12 @@ const PurchaseReturnedCreate = forwardRef((props, ref) => {
         delete errors["payment_method"];
         setErrors({ ...errors });
 
+        if (commission > 0 && !formData.commission_payment_method) {
+            errors["commission_payment_method"] = "Payment method is required";
+            setErrors({ ...errors });
+            haveErrors = true;
+        }
+
         if (haveErrors) {
             console.log("Errors: ", errors);
             return;
@@ -870,6 +892,7 @@ const PurchaseReturnedCreate = forwardRef((props, ref) => {
     }
 
     let [cashDiscount, setCashDiscount] = useState("");
+    let [commission, setCommission] = useState("");
     let [roundingAmount, setRoundingAmount] = useState(0.00);
     let [shipping, setShipping] = useState(0.00);
     let [discount, setDiscount] = useState(0.00);
@@ -891,6 +914,12 @@ const PurchaseReturnedCreate = forwardRef((props, ref) => {
             formData.cash_discount = 0;
         } else {
             formData.cash_discount = cashDiscount;
+        }
+
+        if (!commission) {
+            formData.commission = 0;
+        } else {
+            formData.commission = commission;
         }
 
         if (!roundingAmount) {
@@ -1931,6 +1960,7 @@ async function reCalculate(productIndex) {
 
     const inputRefs = useRef({});
     const cashDiscountRef = useRef(null);
+    const commissionRef = useRef(null);
 
     const ProductDetailsViewRef = useRef();
     function openProductDetails(id) {
@@ -5949,76 +5979,6 @@ async function reCalculate(productIndex) {
                             </table>
                         </div>
 
-                        <div className="col-md-2">
-                            <label className="form-label">{t('Cash discount')}</label>
-                            <input
-                                type='number'
-                                ref={cashDiscountRef}
-                                id="sales_cash_discount"
-                                name="sales_cash_discount"
-                                value={cashDiscount}
-                                className="form-control"
-                                onChange={(e) => {
-                                    delete errors["cash_discount"];
-                                    setErrors({ ...errors });
-                                    if (!e.target.value) {
-                                        cashDiscount = e.target.value;
-                                        setCashDiscount(cashDiscount);
-
-                                        if (timerRef.current) clearTimeout(timerRef.current);
-                                        timerRef.current = setTimeout(() => {
-                                            // validatePaymentAmounts();
-                                            reCalculate();
-                                        }, 100);
-
-                                        return;
-                                    }
-
-                                    cashDiscount = parseFloat(e.target.value);
-                                    setCashDiscount(cashDiscount);
-
-                                    if (cashDiscount > 0 && cashDiscount >= formData.net_total) {
-                                        errors["cash_discount"] = "Cash discount should not be greater than or equal to Net Total: " + formData.net_total?.toString();
-                                        setErrors({ ...errors });
-                                        return;
-                                    }
-
-                                    if (timerRef.current) clearTimeout(timerRef.current);
-                                    timerRef.current = setTimeout(() => {
-                                        //  validatePaymentAmounts();
-                                        reCalculate();
-                                    }, 100);
-                                    console.log(formData);
-                                }}
-
-                                onKeyDown={(e) => {
-                                    if (timerRef.current) clearTimeout(timerRef.current);
-
-                                    if (e.key === "Backspace") {
-                                        cashDiscount = "";
-                                        setCashDiscount(cashDiscount);
-
-                                        if (timerRef.current) clearTimeout(timerRef.current);
-                                        timerRef.current = setTimeout(() => {
-                                            reCalculate();
-                                        }, 100);
-                                        return;
-                                    }
-                                }}
-                                onFocus={() => {
-                                    if (timerRef.current) clearTimeout(timerRef.current);
-                                    timerRef.current = setTimeout(() => {
-                                        cashDiscountRef.current.select();
-                                    }, 20);
-                                }}
-                            />
-                            {errors.cash_discount && (
-                                <div style={{ color: "red" }}>
-                                    {t(errors.cash_discount)}
-                                </div>
-                            )}
-                        </div>
-
                         <div className="col-md-12" style={{ maxWidth: "90%" }}>
                             <label className="form-label">{t('Payments received')}</label>
 
@@ -6167,7 +6127,7 @@ async function reCalculate(productIndex) {
                                                             </span>
                                                         )}
                                                     </td>
-                                                    <td style={{ width: "40px", textAlign: 'center' }}>
+                                                    <td style={{ width: "80px", textAlign: 'center' }}>
                                                         <button type="button" onClick={() => removePayment(key)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#dc2626', padding: '2px 6px', borderRadius: '4px' }} onMouseEnter={e => e.currentTarget.style.backgroundColor = '#fef2f2'} onMouseLeave={e => e.currentTarget.style.backgroundColor = 'transparent'}>
                                                             <i className="bi bi-trash" style={{ fontSize: '14px' }}></i>
                                                         </button>
@@ -6215,7 +6175,135 @@ async function reCalculate(productIndex) {
                             </div>
                         </div>
 
-
+                        <div className="row" style={{ marginTop: "12px" }}>
+                            <div className="col-md-2">
+                                <label className="form-label">{t("Commission")}</label>
+                                <input
+                                    type='number'
+                                    ref={commissionRef}
+                                    id="purchase_return_commission"
+                                    name="purchase_return_commission"
+                                    value={commission}
+                                    className="form-control"
+                                    onChange={(e) => {
+                                        delete errors["commission"];
+                                        delete errors["commission_payment_method"];
+                                        setErrors({ ...errors });
+                                        if (!e.target.value) {
+                                            commission = e.target.value;
+                                            setCommission(commission);
+                                            return;
+                                        }
+                                        commission = parseFloat(e.target.value);
+                                        setCommission(commission);
+                                        if (commission > 0 && commission >= formData.net_total) {
+                                            errors["commission"] = t("Commission should not be greater than or equal to Net Total: ") + formData.net_total?.toString();
+                                            setErrors({ ...errors });
+                                            return;
+                                        }
+                                        if (commission > 0 && !formData.commission_payment_method) {
+                                            errors["commission_payment_method"] = t("Payment method is required");
+                                            setErrors({ ...errors });
+                                        }
+                                    }}
+                                    onKeyDown={(e) => {
+                                        if (e.key === "Backspace") {
+                                            commission = "";
+                                            setCommission(commission);
+                                            delete errors["commission"];
+                                            delete errors["commission_payment_method"];
+                                            setErrors({ ...errors });
+                                        }
+                                    }}
+                                    onFocus={() => {
+                                        if (timerRef.current) clearTimeout(timerRef.current);
+                                        timerRef.current = setTimeout(() => { commissionRef.current?.select(); }, 20);
+                                    }}
+                                />
+                                {errors.commission && (
+                                    <div style={{ color: "red" }}>{t(errors.commission)}</div>
+                                )}
+                            </div>
+                            <div className="col-md-2">
+                                <label className="form-label">{t("C. Payment Method")}</label>
+                                <select
+                                    value={formData.commission_payment_method || ""}
+                                    className="form-control"
+                                    onChange={(e) => {
+                                        delete errors["commission_payment_method"];
+                                        setErrors({ ...errors });
+                                        if (!e.target.value && commission > 0) {
+                                            errors["commission_payment_method"] = t("Payment method is required");
+                                            setErrors({ ...errors });
+                                            formData.commission_payment_method = "";
+                                            setFormData({ ...formData });
+                                            return;
+                                        }
+                                        formData.commission_payment_method = e.target.value;
+                                        setFormData({ ...formData });
+                                    }}
+                                >
+                                    <option value="">{t("Select")}</option>
+                                    <option value="cash">{t("Cash")}</option>
+                                    <option value="debit_card">{t("Debit Card")}</option>
+                                    <option value="credit_card">{t("Credit Card")}</option>
+                                    <option value="bank_card">{t("Bank Card")}</option>
+                                    <option value="bank_transfer">{t("Bank Transfer")}</option>
+                                    <option value="bank_cheque">{t("Bank Cheque")}</option>
+                                </select>
+                                {errors["commission_payment_method"] && (
+                                    <div style={{ color: "red" }}>{t(errors["commission_payment_method"])}</div>
+                                )}
+                            </div>
+                            <div className="col-md-2">
+                                <label className="form-label">{t('Cash discount')}</label>
+                                <input
+                                    type='number'
+                                    ref={cashDiscountRef}
+                                    id="sales_cash_discount"
+                                    name="sales_cash_discount"
+                                    value={cashDiscount}
+                                    className="form-control"
+                                    onChange={(e) => {
+                                        delete errors["cash_discount"];
+                                        setErrors({ ...errors });
+                                        if (!e.target.value) {
+                                            cashDiscount = e.target.value;
+                                            setCashDiscount(cashDiscount);
+                                            if (timerRef.current) clearTimeout(timerRef.current);
+                                            timerRef.current = setTimeout(() => { reCalculate(); }, 100);
+                                            return;
+                                        }
+                                        cashDiscount = parseFloat(e.target.value);
+                                        setCashDiscount(cashDiscount);
+                                        if (cashDiscount > 0 && cashDiscount >= formData.net_total) {
+                                            errors["cash_discount"] = "Cash discount should not be greater than or equal to Net Total: " + formData.net_total?.toString();
+                                            setErrors({ ...errors });
+                                            return;
+                                        }
+                                        if (timerRef.current) clearTimeout(timerRef.current);
+                                        timerRef.current = setTimeout(() => { reCalculate(); }, 100);
+                                    }}
+                                    onKeyDown={(e) => {
+                                        if (timerRef.current) clearTimeout(timerRef.current);
+                                        if (e.key === "Backspace") {
+                                            cashDiscount = "";
+                                            setCashDiscount(cashDiscount);
+                                            if (timerRef.current) clearTimeout(timerRef.current);
+                                            timerRef.current = setTimeout(() => { reCalculate(); }, 100);
+                                            return;
+                                        }
+                                    }}
+                                    onFocus={() => {
+                                        if (timerRef.current) clearTimeout(timerRef.current);
+                                        timerRef.current = setTimeout(() => { cashDiscountRef.current?.select(); }, 20);
+                                    }}
+                                />
+                                {errors.cash_discount && (
+                                    <div style={{ color: "red" }}>{t(errors.cash_discount)}</div>
+                                )}
+                            </div>
+                        </div>
 
 
 
