@@ -46,7 +46,7 @@ const TimeAgo = ({ date }) => {
 
 
 function QuotationIndex(props) {
-  let [enableSelection, setEnableSelection] = useState(false);
+  let [enableSelection, setEnableSelection] = useState(props.enableSelection || false);
   let [pendingView, setPendingView] = useState(false);
 
   const { lastMessage } = useContext(WebSocketContext);
@@ -563,6 +563,7 @@ function QuotationIndex(props) {
 
 
   useEffect(() => {
+    if (enableSelection) return;
     if (lastMessage) {
       const jsonMessage = JSON.parse(lastMessage.data);
       console.log("Received Message in User list:", jsonMessage);
@@ -570,9 +571,11 @@ function QuotationIndex(props) {
         list();
       }
     }
-  }, [lastMessage, list]);
+  }, [lastMessage, list, enableSelection]);
 
   useEffect(() => {
+    if (enableSelection) return;
+
     const handleSocketOpen = () => {
       //console.log("WebSocket Opened in sales list");
       list();
@@ -583,7 +586,7 @@ function QuotationIndex(props) {
     return () => {
       eventEmitter.off("socket_connection_open", handleSocketOpen); // Cleanup
     };
-  }, [list]); // Runs only once when component mounts
+  }, [list, enableSelection]);
 
   function sort(field) {
     sortField = field;
