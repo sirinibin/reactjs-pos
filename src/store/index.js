@@ -7,6 +7,7 @@ import WhatsAppContactsModal from "./WhatsAppContactsModal.js";
 import StoreBackup from "./StoreBackup.js";
 import StoreDuplicate from "./StoreDuplicate.js";
 import StoreDuplicateProducts from "./StoreDuplicateProducts.js";
+import StoreDuplicateWithoutData from "./StoreDuplicateWithoutData.js";
 
 import "react-datepicker/dist/react-datepicker.css";
 import { Button, Spinner, Dropdown } from "react-bootstrap";
@@ -385,6 +386,11 @@ function StoreIndex(props) {
         StoreDuplicateProductsRef.current.open(store);
     }
 
+    const StoreDuplicateWithoutDataRef = useRef();
+    function openDuplicateWithoutData(store) {
+        StoreDuplicateWithoutDataRef.current.open(store);
+    }
+
     async function softDeleteStore(store) {
         if (!window.confirm(`Delete "${store.name}"? It can be recovered later.`)) return;
         try {
@@ -511,6 +517,7 @@ function StoreIndex(props) {
             <StoreBackup ref={StoreBackupRef} />
             <StoreDuplicate ref={StoreDuplicateRef} onDuplicated={list} />
             <StoreDuplicateProducts ref={StoreDuplicateProductsRef} onDuplicated={list} />
+            <StoreDuplicateWithoutData ref={StoreDuplicateWithoutDataRef} onDuplicated={list} />
 
             <div className="container-fluid p-0">
                 <div className="row">
@@ -884,6 +891,11 @@ function StoreIndex(props) {
                                                                     {localStorage.getItem('user_role') === "Admin" && !store.deleted && (
                                                                         <Dropdown.Item onClick={() => openDuplicateWithProducts(store)}>
                                                                             <i className="bi bi-box-seam me-2"></i>Duplicate with Products
+                                                                        </Dropdown.Item>
+                                                                    )}
+                                                                    {localStorage.getItem('user_role') === "Admin" && !store.deleted && (
+                                                                        <Dropdown.Item onClick={() => openDuplicateWithoutData(store)}>
+                                                                            <i className="bi bi-shop me-2"></i>Duplicate without Data
                                                                         </Dropdown.Item>
                                                                     )}
                                                                     <Dropdown.Divider />
