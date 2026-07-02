@@ -188,7 +188,9 @@ export function SalesType1Body({
     openCustomerPending,
     openCustomers,
     openProducts,
+    openServices,
     openProductCreateForm,
+    openServiceCreateForm,
     openUpdateProductForm,
     openProductDetails,
     openProductImages,
@@ -862,7 +864,19 @@ export function SalesType1Body({
                                     }}
                                 />
 
-                                <Button hide={true.toString()} onClick={openProductCreateForm} className="btn btn-outline-secondary btn-primary btn-sm" type="button" id="button-addon1"> <i className="bi bi-plus-lg"></i> {t('New')}</Button>
+                                {store?.settings?.enable_services && store?.settings?.enable_products ? (
+                                    <Dropdown>
+                                        <Dropdown.Toggle bsPrefix="btn btn-outline-secondary btn-primary btn-sm" type="button">
+                                            <i className="bi bi-plus-lg"></i> {t('New')}
+                                        </Dropdown.Toggle>
+                                        <Dropdown.Menu>
+                                            <Dropdown.Item onClick={openProductCreateForm}>{t('Product')}</Dropdown.Item>
+                                            <Dropdown.Item onClick={openServiceCreateForm}>{t('Service')}</Dropdown.Item>
+                                        </Dropdown.Menu>
+                                    </Dropdown>
+                                ) : (
+                                    <Button hide={true.toString()} onClick={openProductCreateForm} className="btn btn-outline-secondary btn-primary btn-sm" type="button" id="button-addon1"> <i className="bi bi-plus-lg"></i> {t('New')}</Button>
+                                )}
                                 {errors.product_id ? (
                                     <div style={{ color: "red" }}>
 
@@ -872,9 +886,21 @@ export function SalesType1Body({
                             </div>
 
                             <div className="col-md-1">
-                                <Button className="btn btn-primary" style={{ marginTop: "30px" }} onClick={openProducts}>
-                                    <i class="bi bi-list"></i>
-                                </Button>
+                                {store?.settings?.enable_services && store?.settings?.enable_products ? (
+                                    <Dropdown style={{ marginTop: "30px" }}>
+                                        <Dropdown.Toggle bsPrefix="btn btn-primary" type="button">
+                                            <i className="bi bi-list"></i>
+                                        </Dropdown.Toggle>
+                                        <Dropdown.Menu>
+                                            <Dropdown.Item onClick={openProducts}>{t('Products')}</Dropdown.Item>
+                                            <Dropdown.Item onClick={openServices}>{t('Services')}</Dropdown.Item>
+                                        </Dropdown.Menu>
+                                    </Dropdown>
+                                ) : (
+                                    <Button className="btn btn-primary" style={{ marginTop: "30px" }} onClick={openProducts}>
+                                        <i className="bi bi-list"></i>
+                                    </Button>
+                                )}
                             </div>
 
                             <div className="col-md-1">

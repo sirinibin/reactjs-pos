@@ -2845,7 +2845,16 @@ const OrderCreate = forwardRef((props, ref) => {
 
     const ProductCreateFormRef = useRef();
     function openProductCreateForm() {
-        ProductCreateFormRef.current.open();
+        const hasServices = store?.settings?.enable_services;
+        const hasProducts = store?.settings?.enable_products;
+        if (hasServices && !hasProducts) {
+            ServiceCreateFormRef.current.open();
+        } else {
+            ProductCreateFormRef.current.open();
+        }
+    }
+    function openServiceCreateForm() {
+        ServiceCreateFormRef.current.open();
     }
 
 
@@ -3089,7 +3098,16 @@ const OrderCreate = forwardRef((props, ref) => {
     }
 
     function openProducts() {
-        ProductsRef.current.open(true);
+        const hasServices = store?.settings?.enable_services;
+        const hasProducts = store?.settings?.enable_products;
+        if (hasServices && !hasProducts) {
+            ProductsRef.current.open(true, null, null, true);
+        } else {
+            ProductsRef.current.open(true);
+        }
+    }
+    function openServices() {
+        ProductsRef.current.open(true, null, null, true);
     }
 
     // ...existing code...
@@ -3294,8 +3312,9 @@ const OrderCreate = forwardRef((props, ref) => {
             }
         }
 
-
-        setToastMessage(t(`{{addedCount}} product(s) are added`, { addedCount: addedCount }) + "✅");
+        const isService = selected?.length > 0 && selected[0].is_service;
+        const itemWord = isService ? "service" : "product";
+        setToastMessage(`${addedCount} ${itemWord}${addedCount !== 1 ? "s" : ""} added ✅`);
         setShowToast(true);
 
         setTimeout(() => setShowToast(false), 3000);
@@ -5998,14 +6017,38 @@ const OrderCreate = forwardRef((props, ref) => {
                                                             />
                                                         </div>
                                                     </div>
-                                                    <button type="button" onClick={openProductCreateForm}
-                                                        style={{ background: '#fff', border: '1px solid #c3c6d7', borderRadius: '4px', padding: '7px 12px', fontSize: '13px', cursor: 'pointer', flexShrink: 0 }}>
-                                                        <i className="bi bi-plus-lg" />
-                                                    </button>
-                                                    <button type="button" onClick={openProducts}
-                                                        style={{ background: '#004ac6', color: '#fff', border: '1px solid transparent', borderRadius: '4px', padding: '7px 12px', fontSize: '13px', cursor: 'pointer', flexShrink: 0 }}>
-                                                        <i className="bi bi-list" />
-                                                    </button>
+                                                    {store?.settings?.enable_services && store?.settings?.enable_products ? (
+                                                        <Dropdown style={{ flexShrink: 0 }}>
+                                                            <Dropdown.Toggle bsPrefix="btn" style={{ background: '#fff', border: '1px solid #c3c6d7', borderRadius: '4px', padding: '7px 12px', fontSize: '13px', cursor: 'pointer' }}>
+                                                                <i className="bi bi-plus-lg" />
+                                                            </Dropdown.Toggle>
+                                                            <Dropdown.Menu>
+                                                                <Dropdown.Item onClick={() => ProductCreateFormRef.current.open()}>Product</Dropdown.Item>
+                                                                <Dropdown.Item onClick={() => ServiceCreateFormRef.current.open()}>Service</Dropdown.Item>
+                                                            </Dropdown.Menu>
+                                                        </Dropdown>
+                                                    ) : (
+                                                        <button type="button" onClick={openProductCreateForm}
+                                                            style={{ background: '#fff', border: '1px solid #c3c6d7', borderRadius: '4px', padding: '7px 12px', fontSize: '13px', cursor: 'pointer', flexShrink: 0 }}>
+                                                            <i className="bi bi-plus-lg" />
+                                                        </button>
+                                                    )}
+                                                    {store?.settings?.enable_services && store?.settings?.enable_products ? (
+                                                        <Dropdown style={{ flexShrink: 0 }}>
+                                                            <Dropdown.Toggle bsPrefix="btn" style={{ background: '#004ac6', color: '#fff', border: 'none', borderRadius: '4px', padding: '7px 12px', fontSize: '13px', cursor: 'pointer' }}>
+                                                                <i className="bi bi-list" />
+                                                            </Dropdown.Toggle>
+                                                            <Dropdown.Menu>
+                                                                <Dropdown.Item onClick={() => ProductsRef.current.open(true)}>Products</Dropdown.Item>
+                                                                <Dropdown.Item onClick={openServices}>Services</Dropdown.Item>
+                                                            </Dropdown.Menu>
+                                                        </Dropdown>
+                                                    ) : (
+                                                        <button type="button" onClick={openProducts}
+                                                            style={{ background: '#004ac6', color: '#fff', border: '1px solid transparent', borderRadius: '4px', padding: '7px 12px', fontSize: '13px', cursor: 'pointer', flexShrink: 0 }}>
+                                                            <i className="bi bi-list" />
+                                                        </button>
+                                                    )}
                                                     <Dropdown style={{ flexShrink: 0 }}>
                                                         <Dropdown.Toggle bsPrefix="btn" id="dropdown-import" style={{ background: '#198754', color: '#fff', border: 'none', borderRadius: '4px', padding: '7px 12px', fontSize: '13px', cursor: 'pointer', display: 'inline-flex', alignItems: 'center' }}>
                                                             <i className="bi bi-download" />
@@ -7905,7 +7948,9 @@ const OrderCreate = forwardRef((props, ref) => {
                         openCustomerPending={openCustomerPending}
                         openCustomers={openCustomers}
                         openProducts={openProducts}
+                        openServices={openServices}
                         openProductCreateForm={openProductCreateForm}
+                        openServiceCreateForm={openServiceCreateForm}
                         openUpdateProductForm={openUpdateProductForm}
                         openProductDetails={openProductDetails}
                         openProductImages={openProductImages}
@@ -8258,9 +8303,21 @@ const OrderCreate = forwardRef((props, ref) => {
                                         </div>
 
                                         <div className="flex gap-xs align-items-center shrink-0">
-                                            <button type="button" className="px-3 bg-primary hover:opacity-90 text-on-primary rounded font-label-md flex items-center gap-1 border-0 cursor-pointer" style={{ height: '34px' }} onClick={openProducts}>
-                                                <i className="bi bi-plus-circle text-[16px]"></i> {t("Add")}
-                                            </button>
+                                            {store?.settings?.enable_services && store?.settings?.enable_products ? (
+                                                <Dropdown>
+                                                    <Dropdown.Toggle bsPrefix="btn px-3 bg-primary hover:opacity-90 text-on-primary rounded font-label-md border-0 cursor-pointer" style={{ height: '34px', display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                                                        <i className="bi bi-plus-circle text-[16px]"></i> {t("Add")}
+                                                    </Dropdown.Toggle>
+                                                    <Dropdown.Menu>
+                                                        <Dropdown.Item onClick={() => ProductsRef.current.open(true)}>{t('Products')}</Dropdown.Item>
+                                                        <Dropdown.Item onClick={openServices}>{t('Services')}</Dropdown.Item>
+                                                    </Dropdown.Menu>
+                                                </Dropdown>
+                                            ) : (
+                                                <button type="button" className="px-3 bg-primary hover:opacity-90 text-on-primary rounded font-label-md flex items-center gap-1 border-0 cursor-pointer" style={{ height: '34px' }} onClick={openProducts}>
+                                                    <i className="bi bi-plus-circle text-[16px]"></i> {t("Add")}
+                                                </button>
+                                            )}
 
                                             {/* Compact Green Import Dropdown */}
                                             <div style={{ height: '34px' }}>

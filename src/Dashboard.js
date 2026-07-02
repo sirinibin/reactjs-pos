@@ -45,6 +45,8 @@ import LedgerIndex from './ledger/index.js';
 import AccountIndex from './account/index.js';
 
 import UserIndex from './user/index.js';
+// eslint-disable-next-line no-unused-vars
+import CustomerPackageIndex from './customer_package/index.js';
 import SignatureIndex from './signature/index.js';
 import Footer from './Footer';
 import Sidebar from './Sidebar';
@@ -614,6 +616,18 @@ function Dashboard() {
                         <Topbar parentCallback={handleToggle} />
                         <main className="content">
                             <ProductBrandIndex showToastMessage={showToastMessage} />
+                        </main>
+                        <Footer />
+                    </div>
+                </div>
+            </Route>
+            <Route path="/dashboard/customer-packages">
+                <div className="wrapper">
+                    <Sidebar isSidebarOpen={isSidebarOpen} parentCallback={handleToggle} />
+                    <div className="main">
+                        <Topbar parentCallback={handleToggle} />
+                        <main className="content">
+                            <CustomerPackageIndex showToastMessage={showToastMessage} />
                         </main>
                         <Footer />
                     </div>

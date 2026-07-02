@@ -31,6 +31,7 @@ export const DEFAULT_MENU = [
     { id: "ledger",           label: "Ledger",                    path: "/dashboard/ledger",                  icon: "bi-journal-text" },
     { id: "accounts",         label: "Accounts & Trial Balances", path: "/dashboard/accounts",                icon: "bi-calculator" },
     { id: "users",            label: "Users",                     path: "/dashboard/users",                   icon: "bi-person-gear",   adminOnly: true },
+    { id: "customer_packages", label: "Customer Packages",        path: "/dashboard/customer-packages",       icon: "bi-box-seam",      adminOnly: true },
 ];
 
 const STORAGE_KEY = "sidebar_config";

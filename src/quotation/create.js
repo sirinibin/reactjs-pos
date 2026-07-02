@@ -1659,7 +1659,13 @@ const QuotationCreate = forwardRef((props, ref) => {
 
   const ProductCreateFormRef = useRef();
   function openProductCreateForm() {
-    ProductCreateFormRef.current.open();
+    const hasServices = store?.settings?.enable_services;
+    const hasProducts = store?.settings?.enable_products;
+    if (hasServices && !hasProducts) {
+      ServiceCreateFormRef.current.open();
+    } else {
+      ProductCreateFormRef.current.open();
+    }
   }
 
   function openProductUpdateForm(id) {
@@ -1790,7 +1796,16 @@ const QuotationCreate = forwardRef((props, ref) => {
 
 
   function openProducts() {
-    ProductsRef.current.open(true);
+    const hasServices = store?.settings?.enable_services;
+    const hasProducts = store?.settings?.enable_products;
+    if (hasServices && !hasProducts) {
+      ProductsRef.current.open(true, null, null, true);
+    } else {
+      ProductsRef.current.open(true);
+    }
+  }
+  function openServices() {
+    ProductsRef.current.open(true, null, null, true);
   }
 
 
@@ -1802,7 +1817,9 @@ const QuotationCreate = forwardRef((props, ref) => {
         addedCount++;
       }
     }
-    setToastMessage(`${addedCount} product${addedCount !== 1 ? "s" : ""} added ✅`);
+    const isService = selected?.length > 0 && selected[0].is_service;
+    const itemWord = isService ? "service" : "product";
+    setToastMessage(`${addedCount} ${itemWord}${addedCount !== 1 ? "s" : ""} added ✅`);
     setShowToast(true);
     setTimeout(() => setShowToast(false), 3000);
   };
@@ -3796,16 +3813,28 @@ async function checkWarning(i) {
                     );
                   }}
                 />
-                <Button
-                  hide={true.toString()}
-                  onClick={openProductCreateForm}
-                  className="btn btn-outline-secondary btn-primary btn-sm"
-                  type="button"
-                  id="button-addon1"
-                >
-                  {" "}
-                  <i className="bi bi-plus-lg"></i> New
-                </Button>
+                {store?.settings?.enable_services && store?.settings?.enable_products ? (
+                  <Dropdown>
+                    <Dropdown.Toggle bsPrefix="btn btn-outline-secondary btn-primary btn-sm" type="button">
+                      <i className="bi bi-plus-lg"></i> New
+                    </Dropdown.Toggle>
+                    <Dropdown.Menu>
+                      <Dropdown.Item onClick={() => ProductCreateFormRef.current.open()}>Product</Dropdown.Item>
+                      <Dropdown.Item onClick={() => ServiceCreateFormRef.current.open()}>Service</Dropdown.Item>
+                    </Dropdown.Menu>
+                  </Dropdown>
+                ) : (
+                  <Button
+                    hide={true.toString()}
+                    onClick={openProductCreateForm}
+                    className="btn btn-outline-secondary btn-primary btn-sm"
+                    type="button"
+                    id="button-addon1"
+                  >
+                    {" "}
+                    <i className="bi bi-plus-lg"></i> New
+                  </Button>
+                )}
                 {errors.product_id ? (
                   <div style={{ color: "red" }}>
                     <i className="bi bi-x-lg"> </i>
@@ -3815,9 +3844,21 @@ async function checkWarning(i) {
               </div>
 
               <div className="col-md-1">
-                <Button className="btn btn-primary" style={{ marginTop: "30px" }} onClick={openProducts}>
-                  <i class="bi bi-list"></i>
-                </Button>
+                {store?.settings?.enable_services && store?.settings?.enable_products ? (
+                  <Dropdown style={{ marginTop: "30px" }}>
+                    <Dropdown.Toggle bsPrefix="btn btn-primary" type="button">
+                      <i className="bi bi-list"></i>
+                    </Dropdown.Toggle>
+                    <Dropdown.Menu>
+                      <Dropdown.Item onClick={openProducts}>Products</Dropdown.Item>
+                      <Dropdown.Item onClick={openServices}>Services</Dropdown.Item>
+                    </Dropdown.Menu>
+                  </Dropdown>
+                ) : (
+                  <Button className="btn btn-primary" style={{ marginTop: "30px" }} onClick={openProducts}>
+                    <i className="bi bi-list"></i>
+                  </Button>
+                )}
               </div>
             </>}
 

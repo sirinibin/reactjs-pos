@@ -44,7 +44,11 @@ function Sidebar(props) {
         if (window.innerWidth <= 991.98) props.parentCallback();
     }
 
-    // Filter items: respect visibility, adminOnly, warehouseOnly, productsOnly
+    // Package tab restriction for non-admin users
+    const packageTabIDs = store?.customer_package_tab_ids;
+    const hasPackage = Array.isArray(packageTabIDs) && packageTabIDs.length > 0;
+
+    // Filter items: respect visibility, adminOnly, warehouseOnly, productsOnly, package
     const visibleItems = menuItems.filter(item => {
         if (!item.visible) return false;
         if (item.adminOnly && !isAdmin) return false;
@@ -53,6 +57,8 @@ function Sidebar(props) {
         // Backward compat: if neither flag is set (old stores), show everything.
         if (item.productsOnly && store?.settings?.enable_services && !store?.settings?.enable_products) return false;
         if (item.requiresServices && !store?.settings?.enable_services) return false;
+        // Package restriction: non-admin users only see tabs in the assigned package
+        if (!isAdmin && hasPackage && !packageTabIDs.includes(item.id)) return false;
         return true;
     });
 

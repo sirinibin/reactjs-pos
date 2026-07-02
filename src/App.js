@@ -141,6 +141,9 @@ function App() {
             <Dashboard />
           </Route>
 
+          <Route path="/dashboard/customer-packages">
+            <Dashboard />
+          </Route>
 
           <Route path="/dashboard/expense_category">
             <Dashboard />

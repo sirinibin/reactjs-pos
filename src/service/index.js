@@ -27,6 +27,12 @@ function ServiceIndex(props) {
     const [isListLoading, setIsListLoading]     = useState(false);
     const [isRefreshing, setIsRefreshing]       = useState(false);
     let   [showDeleted,  setShowDeleted]        = useState(false);
+    const [enableSelection, setEnableSelection] = useState(false);
+    const [choosenServices, setChoosenServices] = useState([]);
+
+    useEffect(() => {
+        setEnableSelection(!!props.enableSelection);
+    }, [props.enableSelection]);
 
     let [sortField, setSortField] = useState("created_at");
     let [sortDir,   setSortDir]   = useState("-");
@@ -329,6 +335,13 @@ function ServiceIndex(props) {
                                         ? <Spinner as="span" animation="border" size="sm" role="status" aria-hidden={true} />
                                         : <i className="fa fa-refresh"></i>}
                                 </Button>
+                                {enableSelection && choosenServices.length > 0 && (
+                                    <Button variant="success" onClick={() => {
+                                        if (props.onSelectServices) props.onSelectServices(choosenServices);
+                                    }}>
+                                        Use Selected ({choosenServices.length})
+                                    </Button>
+                                )}
                                 {totalItems > 0 && <>
                                     <label className="form-label mb-0">Size:&nbsp;</label>
                                     <select
@@ -501,6 +514,7 @@ function ServiceIndex(props) {
                                 <table className="table table-striped table-sm table-bordered">
                                     <thead>
                                         <tr className="text-center">
+                                            {enableSelection && <th>Select</th>}
                                             <th>#</th>
                                             <SortTh field="name"                  label="Name" />
                                             <SortTh field="service_category_name" label="Category" />
@@ -509,11 +523,12 @@ function ServiceIndex(props) {
                                             <SortTh field="delivery_mode"         label="Delivery" />
                                             <th>Booking</th>
                                             <SortTh field="retail_unit_price" label="Retail Price" align="right" />
-                                            <th>Deleted</th>
-                                            <th>Actions</th>
+                                            {!enableSelection && <th>Deleted</th>}
+                                            {!enableSelection && <th>Actions</th>}
                                         </tr>
                                         {/* Filter row */}
                                         <tr>
+                                            {enableSelection && <th></th>}
                                             <th></th>
                                             <th>
                                                 <input type="text" className="form-control form-control-sm" placeholder="Search name..."
@@ -570,6 +585,7 @@ function ServiceIndex(props) {
                                             </th>
                                             <th>
                                                 <select className="form-select form-select-sm"
+                                                    style={{ paddingRight: "1.4rem", backgroundPosition: "right 0.3rem center" }}
                                                     onChange={(e) => searchByFieldValue("delivery_mode", e.target.value)}>
                                                     <option value="">All</option>
                                                     <option value="in_store">In Store</option>
@@ -579,6 +595,7 @@ function ServiceIndex(props) {
                                             </th>
                                             <th>
                                                 <select className="form-select form-select-sm"
+                                                    style={{ paddingRight: "1.4rem", backgroundPosition: "right 0.3rem center" }}
                                                     onChange={(e) => searchByFieldValue("booking_required", e.target.value)}>
                                                     <option value="">All</option>
                                                     <option value="1">Required</option>
@@ -594,21 +611,24 @@ function ServiceIndex(props) {
                                                     }}
                                                 />
                                             </th>
-                                            <th>
-                                                <select className="form-select form-select-sm"
-                                                    value={deletedFilter}
-                                                    onChange={(e) => setDeletedFilter(e.target.value)}>
-                                                    <option value="">Active</option>
-                                                    <option value="1">Yes</option>
-                                                    <option value="2">All</option>
-                                                </select>
-                                            </th>
-                                            <th></th>
+                                            {!enableSelection && (
+                                                <th>
+                                                    <select className="form-select form-select-sm"
+                                                        style={{ paddingRight: "1.4rem", backgroundPosition: "right 0.3rem center" }}
+                                                        value={deletedFilter}
+                                                        onChange={(e) => setDeletedFilter(e.target.value)}>
+                                                        <option value="">Active</option>
+                                                        <option value="1">Yes</option>
+                                                        <option value="2">All</option>
+                                                    </select>
+                                                </th>
+                                            )}
+                                            {!enableSelection && <th></th>}
                                         </tr>
                                     </thead>
                                     <tbody>
                                         {!isListLoading && serviceList.length === 0 && (
-                                            <tr><td colSpan={10} className="text-center py-4 text-muted">
+                                            <tr><td colSpan={enableSelection ? 8 : 10} className="text-center py-4 text-muted">
                                                 No services found
                                             </td></tr>
                                         )}
@@ -616,10 +636,28 @@ function ServiceIndex(props) {
                                             const storeId = localStorage.getItem("store_id");
                                             const ps = svc.product_stores?.[storeId] || {};
                                             const isDeleted = !!svc.deleted;
+                                            const isChosen = choosenServices.some(s => s.id === svc.id);
                                             return (
                                                 <tr key={svc.id}
-                                                    style={{ cursor: isDeleted ? "default" : "pointer", background: isDeleted ? "#fff5f5" : undefined, opacity: isDeleted ? 0.75 : 1 }}
-                                                    onDoubleClick={() => { if (!isDeleted) createFormRef.current?.open(svc.id); }}>
+                                                    style={{ cursor: "pointer", background: isChosen ? "#e8f4e8" : isDeleted ? "#fff5f5" : undefined, opacity: isDeleted ? 0.75 : 1 }}
+                                                    onDoubleClick={() => {
+                                                        if (enableSelection && !isDeleted) {
+                                                            if (props.onSelectServices) props.onSelectServices([svc]);
+                                                        } else if (!isDeleted) {
+                                                            createFormRef.current?.open(svc.id);
+                                                        }
+                                                    }}>
+                                                    {enableSelection && (
+                                                        <td className="text-center" onClick={(e) => {
+                                                            e.stopPropagation();
+                                                            if (isDeleted) return;
+                                                            setChoosenServices(prev =>
+                                                                isChosen ? prev.filter(s => s.id !== svc.id) : [...prev, svc]
+                                                            );
+                                                        }}>
+                                                            <input type="checkbox" checked={isChosen} onChange={() => {}} style={{ width: "18px", height: "18px", cursor: "pointer" }} />
+                                                        </td>
+                                                    )}
                                                     <td>{offset + i + 1}</td>
                                                     <td>
                                                         <OverflowTooltip value={svc.name || ""} maxWidth={200} style={isDeleted ? { textDecoration: "line-through", color: "#999" } : {}} />
@@ -653,36 +691,40 @@ function ServiceIndex(props) {
                                                     <td style={{ textAlign: "right" }}>
                                                         {ps.retail_unit_price != null ? ps.retail_unit_price.toFixed(2) : "—"}
                                                     </td>
-                                                    <td className="text-center">
-                                                        {isDeleted
-                                                            ? <span className="badge bg-danger">YES</span>
-                                                            : <span className="badge bg-success">NO</span>}
-                                                    </td>
-                                                    <td>
-                                                        {isDeleted ? (
-                                                            <button className="btn btn-sm btn-outline-success"
-                                                                onClick={(e) => { e.stopPropagation(); handleRestore(svc.id); }}
-                                                                title="Restore service">
-                                                                <i className="bi bi-arrow-counterclockwise"></i> Restore
-                                                            </button>
-                                                        ) : (
-                                                            <>
-                                                                <button className="btn btn-sm btn-outline-secondary me-1"
-                                                                    onClick={(e) => { e.stopPropagation(); viewRef.current?.open(svc.id); }}
-                                                                    title="View">
-                                                                    <i className="bi bi-eye"></i>
+                                                    {!enableSelection && (
+                                                        <td className="text-center">
+                                                            {isDeleted
+                                                                ? <span className="badge bg-danger">YES</span>
+                                                                : <span className="badge bg-success">NO</span>}
+                                                        </td>
+                                                    )}
+                                                    {!enableSelection && (
+                                                        <td>
+                                                            {isDeleted ? (
+                                                                <button className="btn btn-sm btn-outline-success"
+                                                                    onClick={(e) => { e.stopPropagation(); handleRestore(svc.id); }}
+                                                                    title="Restore service">
+                                                                    <i className="bi bi-arrow-counterclockwise"></i> Restore
                                                                 </button>
-                                                                <button className="btn btn-sm btn-outline-primary me-1"
-                                                                    onClick={(e) => { e.stopPropagation(); createFormRef.current?.open(svc.id); }}>
-                                                                    <i className="bi bi-pencil"></i>
-                                                                </button>
-                                                                <button className="btn btn-sm btn-outline-danger"
-                                                                    onClick={(e) => { e.stopPropagation(); handleDelete(svc.id); }}>
-                                                                    <i className="bi bi-trash"></i>
-                                                                </button>
-                                                            </>
-                                                        )}
-                                                    </td>
+                                                            ) : (
+                                                                <>
+                                                                    <button className="btn btn-sm btn-outline-secondary me-1"
+                                                                        onClick={(e) => { e.stopPropagation(); viewRef.current?.open(svc.id); }}
+                                                                        title="View">
+                                                                        <i className="bi bi-eye"></i>
+                                                                    </button>
+                                                                    <button className="btn btn-sm btn-outline-primary me-1"
+                                                                        onClick={(e) => { e.stopPropagation(); createFormRef.current?.open(svc.id); }}>
+                                                                        <i className="bi bi-pencil"></i>
+                                                                    </button>
+                                                                    <button className="btn btn-sm btn-outline-danger"
+                                                                        onClick={(e) => { e.stopPropagation(); handleDelete(svc.id); }}>
+                                                                        <i className="bi bi-trash"></i>
+                                                                    </button>
+                                                                </>
+                                                            )}
+                                                        </td>
+                                                    )}
                                                 </tr>
                                             );
                                         })}

@@ -97,7 +97,7 @@ function ProductIndex(props) {
 
 
         searchParams.current["linked_products_of_product_id"] = "";
-        searchParams.current["is_service"] = "0";
+        searchParams.current["is_service"] = props.isService ? "1" : "0";
 
         if (props.type === "linked_products") {
             if (props.model?.product_id) {

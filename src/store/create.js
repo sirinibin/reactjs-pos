@@ -113,7 +113,7 @@ const StoreCreate = forwardRef((props, ref) => {
             if (id) {
                 getStore(id);
             }
-
+            fetchCustomerPackages();
             SetShow(true);
         },
 
@@ -263,6 +263,7 @@ const StoreCreate = forwardRef((props, ref) => {
     let [errors, setErrors] = useState({});
     const [isProcessing, setProcessing] = useState(false);
     const [activeTab, setActiveTab] = useState('general');
+    const [customerPackages, setCustomerPackages] = useState([]);
     const [flash, setFlash] = useState(null);
     const flashTimerRef = useRef(null);
     function showFlash(text, type = 'success') {
@@ -380,6 +381,16 @@ const StoreCreate = forwardRef((props, ref) => {
         }
     });
 
+
+    function fetchCustomerPackages() {
+        fetch('/v1/customer-package?limit=500', {
+            headers: { Authorization: localStorage.getItem('access_token') },
+        })
+            .then(r => r.json())
+            .then(data => {
+                if (data.status) setCustomerPackages(data.result || []);
+            });
+    }
 
     function getStore(id) {
         console.log("inside get Order");
@@ -1109,6 +1120,31 @@ const StoreCreate = forwardRef((props, ref) => {
                         {activeTab === 'general' && (<div className="pw-tab-wrap"><div className="pw-card">
                         <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '20px' }}><i className="bi bi-building" style={{ fontSize: '18px', color: '#004ac6' }}></i><h3 style={{ fontFamily: '"Hanken Grotesk", sans-serif', fontSize: '16px', fontWeight: 600, color: '#191c1e', margin: 0 }}>General Details</h3></div>
                         <div className="row g-3">
+
+                        <div className="col-md-3">
+                            <label className="form-label">Customer Package</label>
+                            <div className="input-group mb-3">
+                                <select
+                                    className="form-control"
+                                    value={formData.customer_package_id || ""}
+                                    onChange={(e) => {
+                                        formData.customer_package_id = e.target.value || null;
+                                        setFormData({ ...formData });
+                                    }}
+                                >
+                                    <option value="">— No Package —</option>
+                                    {customerPackages.map(pkg => (
+                                        <option key={pkg.id} value={pkg.id}>{pkg.name}</option>
+                                    ))}
+                                </select>
+                            </div>
+                            {formData.customer_package_id && (
+                                <div style={{ fontSize: '12px', color: '#6b7280', fontFamily: 'Inter, sans-serif', marginTop: '-8px' }}>
+                                    Non-admin users will only see tabs defined in this package.
+                                </div>
+                            )}
+                        </div>
+
                         <div className="col-md-2">
                             <label className="form-label">Zatca phase*</label>
 

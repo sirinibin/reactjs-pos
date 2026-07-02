@@ -701,7 +701,7 @@ const PurchaseCreate = forwardRef((props, ref) => {
 
         var params = {
             search_text: searchTerm,
-            is_service: false,
+            is_service: 0,
         };
 
         if (localStorage.getItem("store_id")) {
@@ -3662,21 +3662,15 @@ const PurchaseCreate = forwardRef((props, ref) => {
                                 options={productOptions}
                                 selected={selectedProduct}
                                 onKeyDown={(e) => {
-                                    if (timerRef.current) clearTimeout(timerRef.current);
-
                                     if (e.key === "Escape") {
                                         setProductOptions([]);
                                         setOpenProductSearchResult(false);
-                                        timerRef.current = setTimeout(() => {
-                                            productSearchRef.current?.clear();
-                                        }, 100);
+                                        productSearchRef.current?.clear();
                                     }
 
                                     timerRef.current = setTimeout(() => {
-                                        productSearchRef.current.focus();
+                                        productSearchRef.current?.focus();
                                     }, 100);
-
-
                                 }}
                                 placeholder={t('Part No. | Name | Name in Arabic | Brand | Country')}
                                 highlightOnlyResult={true}

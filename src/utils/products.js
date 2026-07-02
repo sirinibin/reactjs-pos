@@ -3,6 +3,7 @@ import { Modal } from "react-bootstrap";
 import "react-datepicker/dist/react-datepicker.css";
 import Draggable from "react-draggable";
 import ProductIndex from "../product/index.js";
+import ServiceIndex from "../service/index.js";
 
 
 const Products = forwardRef((props, ref) => {
@@ -33,9 +34,10 @@ const Products = forwardRef((props, ref) => {
     let [enableSelection, setEnableSelection] = useState(false);
     let [type, setType] = useState("");
     let [product, setProduct] = useState({});
+    let [isService, setIsService] = useState(false);
 
     useImperativeHandle(ref, () => ({
-        open(enableSelectionValue, productType, model) {
+        open(enableSelectionValue, productType, model, serviceOnly = false) {
             enableSelection = enableSelectionValue;
             setEnableSelection(enableSelection);
 
@@ -44,6 +46,9 @@ const Products = forwardRef((props, ref) => {
 
             product = model;
             setProduct(product);
+
+            isService = serviceOnly;
+            setIsService(isService);
 
             /*
             if (selectedCustomersValue?.length > 0) {
@@ -102,7 +107,7 @@ const Products = forwardRef((props, ref) => {
                     <Modal.Title>
                         {enableSelection ? "Select" : ""}
 
-                        {type && product && type === "linked_products" ? ` Linked Products of #${product.name}` : " Products"}
+                        {type && product && type === "linked_products" ? ` Linked Products of #${product.name}` : isService ? " Services" : " Products"}
                     </Modal.Title>
                     <div className="col align-self-end text-end">
                         <button
@@ -116,12 +121,20 @@ const Products = forwardRef((props, ref) => {
                 </Modal.Header>
                 <Modal.Body>
                     <>
-                        <ProductIndex
-                            enableSelection={enableSelection}
-                            type={type}
-                            model={product}
-                            onSelectProducts={handleSelected}
-                        />
+                        {isService ? (
+                            <ServiceIndex
+                                enableSelection={enableSelection}
+                                onSelectServices={handleSelected}
+                            />
+                        ) : (
+                            <ProductIndex
+                                enableSelection={enableSelection}
+                                type={type}
+                                model={product}
+                                isService={false}
+                                onSelectProducts={handleSelected}
+                            />
+                        )}
                     </>
                 </Modal.Body>
             </Modal>
