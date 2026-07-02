@@ -5,6 +5,7 @@ import ReceiptPrintPage from './customer_deposit/ReceiptPrintPage';
 import PostingPrintPage from './posting/PostingPrintPage';
 import ReportPrintPage from './order/ReportPrintPage';
 import { WebSocketProvider } from "./utils/WebSocketContext.js";
+import AutoRefresh from "./utils/AutoRefresh.js";
 import {
   BrowserRouter as Router,
   Switch,
@@ -22,6 +23,7 @@ function App() {
 
   return (
     <WebSocketProvider userId={userId}>
+      <AutoRefresh />
       <Router>
         <Switch>
           <Route path="/invoice-print">
