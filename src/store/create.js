@@ -1132,7 +1132,6 @@ const StoreCreate = forwardRef((props, ref) => {
                                         console.log(formData);
                                     }}
                                     className="form-control"
-                                    disabled
                                 >
                                     <option value="1" SELECTED>Phase 1</option>
                                     <option value="2">Phase 2</option>
