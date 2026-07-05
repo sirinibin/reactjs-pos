@@ -2243,8 +2243,6 @@ function ProductIndex(props) {
                                             multiple
                                             renderMenu={(results, menuProps, state) => {
                                                 const searchWords = state.text.toLowerCase().split(" ").filter(Boolean);
-                                                const isPositioned = !!menuProps['data-popper-placement'];
-
                                                 return (
                                                     <Menu {...menuProps} style={{ ...(menuProps.style || {}), width: '80vw', maxWidth: '80vw', minWidth: '300px', zIndex: 9999 }}>
                                                         {/* Header */}
