@@ -660,7 +660,11 @@ function ProductIndex(props) {
 
         const searchable = normalize(fields.join(" "));
 
-        return qWords.every((word) => searchable.includes(word));
+        if (qWords.every((word) => searchable.includes(word))) return true;
+        // "toy116" should match product named "toy 116": compare with spaces stripped
+        const qNoSpace = q.replace(/\s+/g, "");
+        const searchableNoSpace = searchable.replace(/\s+/g, "");
+        return qNoSpace.length >= 2 && searchableNoSpace.includes(qNoSpace);
     }, []);
 
     const latestRequestRef = useRef(0);
@@ -682,7 +686,15 @@ function ProductIndex(props) {
             return;
         }
 
-        const apiSearchTerm = searchTerm.split(/\s+/).map(w => w.replace(/^-+/, "")).filter(Boolean).join(" ");
+        // Insert spaces at letter↔digit boundaries so "toy116" → "toy 116",
+        // then split on whitespace and strip leading dashes from each token.
+        const apiSearchTerm = searchTerm
+            .replace(/([a-zA-Z؀-ۿ])(\d)/g, "$1 $2")
+            .replace(/(\d)([a-zA-Z؀-ۿ])/g, "$1 $2")
+            .split(/\s+/)
+            .map(w => w.replace(/^-+/, ""))
+            .filter(Boolean)
+            .join(" ");
         var params = {
             search_text: apiSearchTerm || searchTerm,
         };

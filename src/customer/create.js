@@ -460,7 +460,7 @@ const CustomerCreate = forwardRef((props, ref) => {
                         <i className="bi bi-arrow-left" style={{ fontSize: '16px' }}></i> Back
                     </button>
                     <Modal.Title style={{ fontFamily: '"Hanken Grotesk", sans-serif', fontSize: '17px', fontWeight: 700, color: '#191c1e', letterSpacing: '-0.01em', flex: 1 }}>
-                        {formData.id ? <>Update Customer{formData.code ? <span style={{ fontWeight: 400, color: '#5a6478', marginLeft: '8px', fontSize: '14px' }}>#{formData.code}</span> : ''} — {formData.name}</> : 'Create New Customer'}
+                        {formData.id ? <>Update Customer{formData.code ? <span style={{ fontWeight: 700, color: '#5a6478', marginLeft: '8px', fontSize: '17px' }}>#{formData.code}</span> : ''} — {formData.name}</> : 'Create New Customer'}
                     </Modal.Title>
                     <div className="d-flex align-items-center gap-2">
                         {formData.id && (
