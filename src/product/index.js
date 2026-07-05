@@ -2210,9 +2210,10 @@ function ProductIndex(props) {
                                             multiple
                                             renderMenu={(results, menuProps, state) => {
                                                 const searchWords = state.text.toLowerCase().split(" ").filter(Boolean);
+                                                const isPositioned = !!menuProps['data-popper-placement'];
 
                                                 return (
-                                                    <Menu {...menuProps}>
+                                                    <Menu {...menuProps} style={{ ...menuProps.style, visibility: isPositioned ? 'visible' : 'hidden' }}>
                                                         {/* Header */}
                                                         <MenuItem disabled style={{ position: 'sticky', top: 0, padding: 0, margin: 0 }}>
                                                             <div style={{

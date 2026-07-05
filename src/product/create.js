@@ -1672,7 +1672,7 @@ const ProductCreate = forwardRef((props, ref) => {
             <i className="bi bi-arrow-left" style={{ fontSize: '16px' }}></i> Back
           </button>
           <Modal.Title style={{ fontFamily: '"Hanken Grotesk", sans-serif', fontSize: '17px', fontWeight: 700, color: '#191c1e', letterSpacing: '-0.01em', flex: 1 }}>
-            {formData.id ? `Update Product — ${formData.name}` : 'Create New Product'}
+            {formData.id ? <>Update Product{formData.part_number ? <span style={{ fontWeight: 400, color: '#5a6478', marginLeft: '8px', fontSize: '14px' }}>#{formData.part_number}</span> : ''} — {formData.name}</> : 'Create New Product'}
           </Modal.Title>
           <div className="d-flex align-items-center gap-2">
             {formData.id && (
@@ -1703,7 +1703,7 @@ const ProductCreate = forwardRef((props, ref) => {
           .pw-sidebar-header { margin-bottom: 16px; }
           .pw-content { flex: 1; display: flex; flex-direction: column; background: #f7f9fb; min-width: 0; overflow: hidden; }
           .pw-content-scroll { flex: 1; overflow-y: auto; padding: 20px 28px; }
-          .pw-tab-wrap { max-width: 900px; }
+          .pw-tab-wrap { max-width: 900px; width: 100%; margin: 0 auto; }
           .pw-price-cards .col-md-4 { margin-bottom: 16px; }
           @media (max-width: 767px) {
             .pw-form { flex-direction: column; }
@@ -1719,7 +1719,7 @@ const ProductCreate = forwardRef((props, ref) => {
             .pw-tab-wrap { max-width: 100%; }
           }
           @media (min-height: 600px) and (max-height: 800px) {
-            .pw-content-scroll { padding: 14px 24px; }
+            .pw-content-scroll { padding-top: 14px; padding-bottom: 14px; }
           }
           @media (max-width: 767px) {
             .pw-card { padding: 14px !important; margin-bottom: 12px !important; }

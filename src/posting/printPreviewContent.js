@@ -589,7 +589,8 @@ const BalanceSheetPrintPreviewContent = forwardRef((props, ref) => {
                                         </tr>}
                                         {props.model.pages.length === (pageIndex + 1) ? <tr style={{ borderBottom: tableBorderThickness }}>
                                             <th colSpan="2" className="text-end" style={{ padding: "2px", borderRight: tableBorderThickness }}>
-                                                Balance In Words التوازن في الكلمات:
+                                                <div>Balance In Words</div>
+                                                <div style={{ color: '#555', marginTop: '2px' }}>التوازن في الكلمات</div>
                                             </th>
                                             <th
                                                 colSpan="6"
@@ -598,10 +599,10 @@ const BalanceSheetPrintPreviewContent = forwardRef((props, ref) => {
                                             >
                                                 <ul
                                                     className="list-unstyled"
-                                                    style={{ marginBottom: "0px" }}
+                                                    style={{ marginBottom: "0px", paddingLeft: "8px" }}
                                                 >
-                                                    <li>{n2words(props.model.balance, { lang: 'ar' }) + " ريال سعودي  "}</li>
-                                                    <li>{n2words(props.model.balance, { lang: 'en' }) + " saudi riyals"}</li>
+                                                    <li>{(() => { const w = n2words(props.model.balance, { lang: 'en' }) + " saudi riyals"; return w.charAt(0).toUpperCase() + w.slice(1); })()}</li>
+                                                    <li style={{ textAlign: 'left' }}>{n2words(props.model.balance, { lang: 'ar' }) + " ريال سعودي"}</li>
                                                 </ul>
                                             </th>
                                         </tr> : ""}
@@ -621,7 +622,8 @@ const BalanceSheetPrintPreviewContent = forwardRef((props, ref) => {
                             </tr> */}
                                         <tr style={{ borderBottom: tableBorderThickness }}>
                                             <th className="text-end" style={{ padding: "2px", borderRight: tableBorderThickness }}>
-                                                Signature إمضاء:
+                                                <div>Signature</div>
+                                                <div style={{ color: '#555', marginTop: '2px' }}>إمضاء</div>
                                             </th>
                                             <th style={{ width: "30%", height: "60px" }}>
                                                 {/*props.model.delivered_by_signature ?
@@ -637,10 +639,12 @@ const BalanceSheetPrintPreviewContent = forwardRef((props, ref) => {
                                         </tr>
                                         <tr style={{ borderBottom: tableBorderThickness }}>
                                             <th className="text-end" style={{ padding: "2px", borderRight: tableBorderThickness }}>
-                                                Date تاريخ:
+                                                <div>Date</div>
+                                                <div style={{ color: '#555', marginTop: '2px' }}>تاريخ</div>
                                             </th>
-                                            <th style={{ padding: "2px" }} className="text-center">
-                                                {format(new Date(), "MMM dd yyyy h:mma")}  {" / " + getArabicDateTime(new Date())}
+                                            <th style={{ padding: "2px 2px 2px 10px" }}>
+                                                <div style={{ textAlign: 'left' }}>{format(new Date(), "MMM dd yyyy h:mma")}</div>
+                                                <div style={{ color: '#555', marginTop: '2px', textAlign: 'left' }}>{getArabicDateTime(new Date())}</div>
                                             </th>
                                             {/*
                                         <th className="text-end" style={{ padding: "2px" }}>

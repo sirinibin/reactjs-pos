@@ -236,6 +236,26 @@ const QuotationCreate = forwardRef((props, ref) => {
   //const [isProductsLoading, setIsProductsLoading] = useState(false);
   const pendingQuotationIdRef = useRef(null);
   const quotationDragRef = useRef(null);
+  const draggableDialogAs = useMemo(() => ({ children, ...dialogProps }) => (
+    <ReactDraggable handle=".modal-header" nodeRef={quotationDragRef}>
+      <div
+        ref={quotationDragRef}
+        className="modal-dialog modal-xl"
+        {...dialogProps}
+        style={{
+          position: "absolute",
+          top: "10%",
+          left: "20%",
+          transform: "translate(-50%, -50%)",
+          margin: "0",
+          zIndex: 1055,
+          width: "65%",
+        }}
+      >
+        <div className="modal-content">{children}</div>
+      </div>
+    </ReactDraggable>
+  ), []); // eslint-disable-line react-hooks/exhaustive-deps
 
   //Delivered By Auto Suggestion
   let [selectedDeliveredByUsers, setSelectedDeliveredByUsers] = useState([]);
@@ -3052,26 +3072,7 @@ async function checkWarning(i) {
           keyboard: false,
           centered: false,
           enforceFocus: false,
-          dialogAs: ({ children, ...dialogProps }) => (
-            <ReactDraggable handle=".modal-header" nodeRef={quotationDragRef}>
-              <div
-                ref={quotationDragRef}
-                className="modal-dialog modal-xl"
-                {...dialogProps}
-                style={{
-                  position: "absolute",
-                  top: "10%",
-                  left: "20%",
-                  transform: "translate(-50%, -50%)",
-                  margin: "0",
-                  zIndex: 1055,
-                  width: "65%",
-                }}
-              >
-                <div className="modal-content">{children}</div>
-              </div>
-            </ReactDraggable>
-          ),
+          dialogAs: draggableDialogAs,
         } : {})}
       >
         <Modal.Header>

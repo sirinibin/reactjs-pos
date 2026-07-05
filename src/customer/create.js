@@ -460,7 +460,7 @@ const CustomerCreate = forwardRef((props, ref) => {
                         <i className="bi bi-arrow-left" style={{ fontSize: '16px' }}></i> Back
                     </button>
                     <Modal.Title style={{ fontFamily: '"Hanken Grotesk", sans-serif', fontSize: '17px', fontWeight: 700, color: '#191c1e', letterSpacing: '-0.01em', flex: 1 }}>
-                        {formData.id ? `Update Customer — ${formData.name}` : 'Create New Customer'}
+                        {formData.id ? <>Update Customer{formData.code ? <span style={{ fontWeight: 400, color: '#5a6478', marginLeft: '8px', fontSize: '14px' }}>#{formData.code}</span> : ''} — {formData.name}</> : 'Create New Customer'}
                     </Modal.Title>
                     <div className="d-flex align-items-center gap-2">
                         {formData.id && (
@@ -490,7 +490,7 @@ const CustomerCreate = forwardRef((props, ref) => {
                     .pw-sidebar { width: 200px; background: #f2f4f6; border-right: 1px solid #c3c6d7; padding: 16px 10px; flex-shrink: 0; overflow-y: auto; display: flex; flex-direction: column; gap: 4px; }
                     .pw-sidebar-header { margin-bottom: 16px; }
                     .pw-content { flex: 1; display: flex; flex-direction: column; background: #f7f9fb; min-width: 0; overflow: hidden; }
-                    .pw-tab-wrap { max-width: 900px; }
+                    .pw-tab-wrap { max-width: 900px; width: 100%; margin: 0 auto; }
                     @media (max-width: 767px) {
                         .pw-form { flex-direction: column; }
                         .pw-sidebar { width: 100%; height: auto; flex-direction: row; overflow-x: auto; overflow-y: hidden; border-right: none; border-bottom: 1px solid #c3c6d7; padding: 6px 8px; gap: 4px; }
