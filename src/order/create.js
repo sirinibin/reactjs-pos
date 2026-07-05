@@ -1324,7 +1324,7 @@ const OrderCreate = forwardRef((props, ref) => {
             .replace(/[^\p{L}\p{N}\s]/gu, "")
             .replace(/\s+/g, " ").trim();
 
-        return qWords.every((word) => {
+        if (qWords.every((word) => {
             if (searchable.includes(word)) return true;
             // Compact fallback strips special chars so "cna40057" matches "cn-a-40057".
             // Skip it when the word STARTS with a special char (e.g. "-4477"): the user
@@ -1332,7 +1332,11 @@ const OrderCreate = forwardRef((props, ref) => {
             const wordCompact = word.replace(/[^\p{L}\p{N}]/gu, "");
             if (!wordCompact || /^[^\p{L}\p{N}]/u.test(word)) return false;
             return searchableCompact.includes(wordCompact);
-        });
+        })) return true;
+        // "toy116" should match "toy 116": compare with all spaces stripped
+        const qNoSpace = q.replace(/\s+/g, "");
+        const searchableNoSpace = searchable.replace(/\s+/g, "");
+        return qNoSpace.length >= 2 && searchableNoSpace.includes(qNoSpace);
     }, []);
 
 
@@ -1406,8 +1410,14 @@ const OrderCreate = forwardRef((props, ref) => {
             return;
         }
 
-        // Strip leading hyphens from each word: MongoDB $text search treats "-word" as NOT.
-        const apiSearchTerm = searchTerm.split(/\s+/).map(w => w.replace(/^-+/, "")).filter(Boolean).join(" ");
+        // Strip leading hyphens; also split letter↔digit boundaries so "toy116" → "toy 116".
+        const apiSearchTerm = searchTerm
+            .replace(/([a-zA-Z؀-ۿ])(\d)/g, "$1 $2")
+            .replace(/(\d)([a-zA-Z؀-ۿ])/g, "$1 $2")
+            .split(/\s+/)
+            .map(w => w.replace(/^-+/, ""))
+            .filter(Boolean)
+            .join(" ");
 
         var params = {
             search_text: apiSearchTerm || searchTerm,

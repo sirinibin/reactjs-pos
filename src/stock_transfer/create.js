@@ -954,7 +954,10 @@ const StockTransferCreate = forwardRef((props, ref) => {
 
         const searchable = normalize(fields.join(" "));
 
-        return qWords.every((word) => searchable.includes(word));
+        if (qWords.every((word) => searchable.includes(word))) return true;
+        const qNoSpace = q.replace(/\s+/g, "");
+        const searchableNoSpace = searchable.replace(/\s+/g, "");
+        return qNoSpace.length >= 2 && searchableNoSpace.includes(qNoSpace);
     }, []);
 
 
@@ -1001,7 +1004,13 @@ const StockTransferCreate = forwardRef((props, ref) => {
             return;
         }
 
-        const apiSearchTerm = searchTerm.split(/\s+/).map(w => w.replace(/^-+/, "")).filter(Boolean).join(" ");
+        const apiSearchTerm = searchTerm
+            .replace(/([a-zA-Z؀-ۿ])(\d)/g, "$1 $2")
+            .replace(/(\d)([a-zA-Z؀-ۿ])/g, "$1 $2")
+            .split(/\s+/)
+            .map(w => w.replace(/^-+/, ""))
+            .filter(Boolean)
+            .join(" ");
         var params = {
             search_text: apiSearchTerm || searchTerm,
         };
@@ -3342,7 +3351,7 @@ const StockTransferCreate = forwardRef((props, ref) => {
                                     const searchWords = state.text.toLowerCase().split(" ").filter(Boolean);
 
                                     return (
-                                        <Menu {...menuProps}>
+                                        <Menu {...menuProps} style={{ ...(menuProps.style || {}), width: '95vw', maxWidth: '95vw', minWidth: '300px', zIndex: 9999 }}>
                                             {/* Header */}
                                             <MenuItem disabled style={{ position: 'sticky', top: 0, padding: 0, margin: 0 }}>
                                                 <div style={{
@@ -3489,20 +3498,23 @@ const StockTransferCreate = forwardRef((props, ref) => {
                                                                                 const totalStock = productStore?.stock ?? 0;
                                                                                 const warehouseStocks = productStore?.warehouse_stocks ?? {};
 
-                                                                                // Build warehouse stock details string
-                                                                                const warehouseDetails = Object.entries(warehouseStocks)
-                                                                                    .map(([key, value]) => {
-                                                                                        // Format warehouse name (capitalize and replace underscores)
-                                                                                        let name = key === "main_store" ? "MS" : key.replace(/^w/, "W").toUpperCase();
-                                                                                        return `${name}:${value}`;
-                                                                                    })
-                                                                                    .join(", ");
+                                                                                const warehouseDetails = (() => {
+                                                                                    let details = [];
+                                                                                    if (warehouseStocks["main_store"] !== undefined) {
+                                                                                        details.push(`MS: ${warehouseStocks["main_store"]}`);
+                                                                                    }
+                                                                                    Object.entries(warehouseStocks)
+                                                                                        .filter(([key]) => key !== "main_store")
+                                                                                        .forEach(([key, value]) => {
+                                                                                            details.push(`${key.replace(/^w/, "WH").toUpperCase()}: ${value}`);
+                                                                                        });
+                                                                                    return details.join(", ");
+                                                                                })();
 
-                                                                                // Final display string
                                                                                 return (
                                                                                     <span>
                                                                                         {totalStock}
-                                                                                        {warehouseDetails ? ` (${warehouseDetails})` : ""}
+                                                                                        {warehouseDetails && store.settings.enable_warehouse_module ? ` (${warehouseDetails})` : ""}
                                                                                     </span>
                                                                                 );
                                                                             })()}
@@ -3547,11 +3559,18 @@ const StockTransferCreate = forwardRef((props, ref) => {
                                                                             {highlightWords(option.country_name, searchWords, isActive)}
                                                                         </div>
                                                                     }
-                                                                    {col.key === "rack" &&
-                                                                        <div style={{ ...columnStyle, width: getColumnWidth(col) }}>
-                                                                            {highlightWords(option.rack, searchWords, isActive)}
-                                                                        </div>
-                                                                    }
+                                                                    {col.key === "rack" && (() => {
+                                                                        if (store?.settings?.enable_warehouse_module) {
+                                                                            const storeId = localStorage.getItem("store_id");
+                                                                            const wRacks = option.product_stores?.[storeId]?.warehouse_racks;
+                                                                            const parts = [];
+                                                                            if (wRacks?.main_store) parts.push(`MS:${wRacks.main_store}`);
+                                                                            if (wRacks) Object.entries(wRacks).filter(([k]) => k !== "main_store").forEach(([k, v]) => { if (v) parts.push(`${k}:${v}`); });
+                                                                            const rackText = parts.join(" | ") || option.rack || "";
+                                                                            return <div style={{ ...columnStyle, width: getColumnWidth(col), whiteSpace: 'normal', overflow: 'visible' }} title={rackText}>{rackText}</div>;
+                                                                        }
+                                                                        return <div style={{ ...columnStyle, width: getColumnWidth(col) }}>{highlightWords(option.rack, searchWords, isActive)}</div>;
+                                                                    })()}
                                                                 </>)
                                                             })}
                                                         </div>

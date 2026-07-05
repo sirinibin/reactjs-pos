@@ -724,7 +724,7 @@ const ProductCreate = forwardRef((props, ref) => {
       partNoLabel = option.prefix_part_number + "-" + option.part_number;
     }
 
-    return (
+    if (
       normalize(partNoLabel).includes(q) ||
       normalize(option.prefix_part_number).includes(q) ||
       normalize(option.part_number).includes(q) ||
@@ -734,7 +734,13 @@ const ProductCreate = forwardRef((props, ref) => {
       normalize(option.brand_name).includes(q) ||
       (Array.isArray(option.additional_keywords) &&
         option.additional_keywords.some((kw) => normalize(kw).includes(q)))
-    );
+    ) return true;
+    // "toy116" should match "toy 116": compare with all spaces stripped
+    const qNoSpace = q.replace(/\s+/g, "");
+    if (qNoSpace.length < 2) return false;
+    const allFields = [partNoLabel, option.prefix_part_number, option.part_number, option.name, option.name_in_arabic, option.country_name, option.brand_name, ...(Array.isArray(option.additional_keywords) ? option.additional_keywords : [])];
+    const searchableNoSpace = allFields.map(f => (f || '').toString().toLowerCase()).join("").replace(/\s+/g, "");
+    return searchableNoSpace.includes(qNoSpace);
   }, []);
 
   const suggestProducts = useCallback(async (searchTerm, type) => {
@@ -756,7 +762,13 @@ const ProductCreate = forwardRef((props, ref) => {
       return;
     }
 
-    const apiSearchTerm = searchTerm.split(/\s+/).map(w => w.replace(/^-+/, "")).filter(Boolean).join(" ");
+    const apiSearchTerm = searchTerm
+      .replace(/([a-zA-Z؀-ۿ])(\d)/g, "$1 $2")
+      .replace(/(\d)([a-zA-Z؀-ۿ])/g, "$1 $2")
+      .split(/\s+/)
+      .map(w => w.replace(/^-+/, ""))
+      .filter(Boolean)
+      .join(" ");
     var params = {
       search_text: apiSearchTerm || searchTerm,
     };

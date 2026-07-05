@@ -663,7 +663,10 @@ const QuotationCreate = forwardRef((props, ref) => {
 
     const searchable = normalize(fields.join(" "));
 
-    return qWords.every((word) => searchable.includes(word));
+    if (qWords.every((word) => searchable.includes(word))) return true;
+    const qNoSpace = q.replace(/\s+/g, "");
+    const searchableNoSpace = searchable.replace(/\s+/g, "");
+    return qNoSpace.length >= 2 && searchableNoSpace.includes(qNoSpace);
   }, []);
 
 
@@ -736,7 +739,13 @@ const QuotationCreate = forwardRef((props, ref) => {
       return;
     }
 
-    const apiSearchTerm = searchTerm.split(/\s+/).map(w => w.replace(/^-+/, "")).filter(Boolean).join(" ");
+    const apiSearchTerm = searchTerm
+      .replace(/([a-zA-Z؀-ۿ])(\d)/g, "$1 $2")
+      .replace(/(\d)([a-zA-Z؀-ۿ])/g, "$1 $2")
+      .split(/\s+/)
+      .map(w => w.replace(/^-+/, ""))
+      .filter(Boolean)
+      .join(" ");
     var params = {
       search_text: apiSearchTerm || searchTerm,
     };

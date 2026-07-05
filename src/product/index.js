@@ -1513,7 +1513,28 @@ function ProductIndex(props) {
 
     const totalWidth = visibleColumns.reduce((sum, col) => sum + col.width, 0);
 
-    const getColumnWidth = (col) => `${(col.width / totalWidth) * 100}%`;
+    const [isWideScreen, setIsWideScreen] = useState(() => window.innerWidth > 1920);
+    useEffect(() => {
+        const onResize = () => setIsWideScreen(window.innerWidth > 1920);
+        window.addEventListener('resize', onResize);
+        return () => window.removeEventListener('resize', onResize);
+    }, []);
+
+    const getColumnWidth = (col) => {
+        if (isWideScreen) {
+            const nameCol = visibleColumns.find(c => c.key === 'name');
+            if (nameCol) {
+                if (col.key === 'name') return `${(col.width * 1.2 / totalWidth) * 100}%`;
+                const afterNameKeys = new Set(['unit_price', 'stock', 'photos', 'brand', 'purchase_price', 'country', 'rack']);
+                if (afterNameKeys.has(col.key)) {
+                    const afterNameTotal = visibleColumns.filter(c => afterNameKeys.has(c.key)).reduce((s, c) => s + c.width, 0);
+                    const boost = nameCol.width * 0.2;
+                    return `${((col.width - (col.width / afterNameTotal) * boost) / totalWidth) * 100}%`;
+                }
+            }
+        }
+        return `${(col.width / totalWidth) * 100}%`;
+    };
 
     const handleSearchToggleColumn = (index) => {
         const updated = [...searchProductsColumns];
@@ -2225,7 +2246,7 @@ function ProductIndex(props) {
                                                 const isPositioned = !!menuProps['data-popper-placement'];
 
                                                 return (
-                                                    <Menu {...menuProps} style={{ ...menuProps.style, visibility: isPositioned ? 'visible' : 'hidden' }}>
+                                                    <Menu {...menuProps} style={{ ...(menuProps.style || {}), width: '80vw', maxWidth: '80vw', minWidth: '300px', zIndex: 9999 }}>
                                                         {/* Header */}
                                                         <MenuItem disabled style={{ position: 'sticky', top: 0, padding: 0, margin: 0 }}>
                                                             <div style={{
