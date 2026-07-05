@@ -6,7 +6,7 @@ import OrderPrintContent3 from './printContent3.js';
 import OrderPrintContent4 from './printContent4.js';
 
 import { useReactToPrint } from 'react-to-print';
-import {} from '@axenda/zatca';
+import { Invoice } from '@axenda/zatca';
 import { useTranslation } from 'react-i18next';
 import { ObjectToSearchQueryParams } from '../utils/queryUtils.js';
 import { fetchStore } from '../utils/storeUtils.js';
@@ -36,6 +36,20 @@ const OrderPrint = forwardRef((props, ref) => {
 
                 if (model.store_id) {
                     await getStore(model.store_id);
+                }
+
+                if (!model.zatca?.qr_code && model.store?.vat_no) {
+                    try {
+                        const qrInvoice = new Invoice({
+                            sellerName: model.store.name || '',
+                            vatRegistrationNumber: model.store.vat_no || '',
+                            invoiceTimestamp: model.date || model.created_at || new Date().toISOString(),
+                            invoiceTotal: (model.net_total || 0).toFixed(2),
+                            invoiceVatTotal: (model.vat_price || 0).toFixed(2),
+                        });
+                        model.QRImageData = await qrInvoice.render();
+                        setModel({ ...model });
+                    } catch (e) { }
                 }
 
                 if (model.customer_id) {
@@ -672,7 +686,7 @@ const OrderPrint = forwardRef((props, ref) => {
 
     async function getStore(id) {
         try {
-            const storeData = await fetchStore(id, "id,code,name,branch_name,zatca,settings");
+            const storeData = await fetchStore(id, "id,code,name,branch_name,zatca,settings,vat_no");
             if (storeData) {
                 model.store = storeData;
                 setModel({ ...model });
