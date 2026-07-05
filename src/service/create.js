@@ -7,6 +7,8 @@ import { trimTo8Decimals } from "../utils/numberUtils";
 import SalesHistory from "../utils/product_sales_history.js";
 import SalesReturnHistory from "../utils/product_sales_return_history.js";
 import QuotationHistory from "../utils/product_quotation_history.js";
+import { ObjectToSearchQueryParams } from '../utils/queryUtils.js';
+import { fetchStore } from '../utils/storeUtils.js';
 
 // ── Design tokens ────────────────────────────────────────────────────────────
 const CARD = {
@@ -127,13 +129,11 @@ const ServiceCreate = forwardRef((props, ref) => {
     }));
 
     async function getStore(id) {
-        if (!id) return;
-        const headers = { 'Content-Type': 'application/json', Authorization: localStorage.getItem('access_token') };
         try {
-            const r = await fetch('/v1/store/' + id, { method: 'GET', headers });
-            const data = await r.json();
-            if (r.ok) { store = data.result; setStore(store); }
-        } catch (e) {}
+            const data = await fetchStore(id);
+            store = data;
+            setStore({ ...data });
+        } catch (error) { }
     }
 
     async function getService(id) {
@@ -170,10 +170,6 @@ const ServiceCreate = forwardRef((props, ref) => {
                 setSelectedCategories([...selectedCategories]);
             }
         } catch (e) {}
-    }
-
-    function ObjectToSearchQueryParams(object) {
-        return Object.keys(object).map(key => `search[${key}]=${object[key]}`).join("&");
     }
 
     async function suggestCategories(searchTerm) {

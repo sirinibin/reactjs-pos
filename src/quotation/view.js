@@ -6,6 +6,9 @@ import OrderPreview from './../order/preview.js';
 import OrderPrint from './../order/print.js';
 import { trimTo2Decimals } from "../utils/numberUtils";
 import { useTranslation } from 'react-i18next';
+import { ObjectToSearchQueryParams } from '../utils/queryUtils.js';
+import { formatInStoreTimezone, formatPaymentMethod } from '../utils/dateUtils.js';
+import { fetchStore } from '../utils/storeUtils.js';
 
 const QuotationView = forwardRef((props, ref) => {
     const { t } = useTranslation('common');
@@ -28,49 +31,14 @@ const QuotationView = forwardRef((props, ref) => {
     let [store, setStore] = useState({});
 
     async function getStore(id) {
-        console.log("inside get Store");
-        const requestOptions = {
-            method: 'GET',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': localStorage.getItem('access_token'),
-            },
-        };
-
-        await fetch('/v1/store/' + id, requestOptions)
-            .then(async response => {
-                const isJson = response.headers.get('content-type')?.includes('application/json');
-                const data = isJson && await response.json();
-
-                // check for error response
-                if (!response.ok) {
-                    const error = (data && data.errors);
-                    return Promise.reject(error);
-                }
-
-                console.log("Response:");
-                console.log(data);
-                store = data.result;
-                setStore({ ...store });
-                if (store.country_code) {
-                    localStorage.setItem('store_country_code', store.country_code);
-                }
-            })
-            .catch(error => {
-
-            });
+        try {
+            const data = await fetchStore(id);
+            setStore({ ...data });
+        } catch (error) { }
     }
 
 
     let [model, setModel] = useState({});
-
-    function ObjectToSearchQueryParams(object) {
-        return Object.keys(object)
-            .map(function (key) {
-                return `search[${key}]=${object[key]}`;
-            })
-            .join("&");
-    }
 
 
     function getQuotation(id) {
@@ -202,40 +170,8 @@ const QuotationView = forwardRef((props, ref) => {
         };
     }, [handleEnterKey]);
 
-    const countryTimezoneMap = {
-        'SA': 'Asia/Riyadh', 'AE': 'Asia/Dubai', 'KW': 'Asia/Kuwait',
-        'QA': 'Asia/Qatar', 'BH': 'Asia/Bahrain', 'OM': 'Asia/Muscat',
-        'IN': 'Asia/Kolkata', 'PK': 'Asia/Karachi', 'BD': 'Asia/Dhaka',
-        'LK': 'Asia/Colombo', 'NP': 'Asia/Kathmandu', 'MY': 'Asia/Kuala_Lumpur',
-        'SG': 'Asia/Singapore', 'PH': 'Asia/Manila', 'ID': 'Asia/Jakarta',
-        'EG': 'Africa/Cairo', 'JO': 'Asia/Amman', 'LB': 'Asia/Beirut',
-        'IQ': 'Asia/Baghdad', 'IR': 'Asia/Tehran', 'TR': 'Europe/Istanbul',
-        'GB': 'Europe/London', 'DE': 'Europe/Berlin', 'FR': 'Europe/Paris',
-        'US': 'America/New_York', 'CA': 'America/Toronto', 'AU': 'Australia/Sydney',
-    };
 
-    function formatPaymentMethod(method) {
-        if (!method) return "—";
-        return method.split('_').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
-    }
 
-    function formatInStoreTimezone(dateStr) {
-        if (!dateStr) return '';
-        const tz = countryTimezoneMap[localStorage.getItem('store_country_code')] || countryTimezoneMap[store?.country_code] || 'UTC';
-        const tzLabel = tz.replace('_', ' ');
-        try {
-            const d = new Date(dateStr);
-            const formatted = d.toLocaleString('en-US', {
-                timeZone: tz,
-                year: 'numeric', month: 'short', day: '2-digit',
-                hour: '2-digit', minute: '2-digit', second: '2-digit',
-                hour12: true,
-            });
-            return `${formatted} (${tzLabel})`;
-        } catch {
-            return dateStr;
-        }
-    }
 
     return (<>
 
@@ -319,7 +255,7 @@ const QuotationView = forwardRef((props, ref) => {
                         </div>
                         {model.date && (
                             <p style={{ margin: 0, fontSize: '14px', lineHeight: '20px', color: '#434655', fontWeight: 400 }}>
-                                {t("Quotation created on")} {formatInStoreTimezone(model.date)}
+                                {t("Quotation created on")} {formatInStoreTimezone(model.date, store?.country_code)}
                             </p>
                         )}
                     </div>
@@ -557,7 +493,7 @@ const QuotationView = forwardRef((props, ref) => {
                                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingBottom: '8px', borderBottom: '1px solid #c3c6d7' }}>
                                             <span style={{ fontSize: '14px', color: '#434655' }}>{t("Date")}</span>
                                             <span style={{ fontSize: '14px', fontWeight: 500, color: '#191c1e' }}>
-                                                {formatInStoreTimezone(model.date)}
+                                                {formatInStoreTimezone(model.date, store?.country_code)}
                                             </span>
                                         </div>
                                     )}
@@ -612,13 +548,13 @@ const QuotationView = forwardRef((props, ref) => {
                                     {model.created_at && (
                                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingBottom: '8px', borderBottom: '1px solid #c3c6d7' }}>
                                             <span style={{ fontSize: '14px', color: '#434655' }}>{t("Created At")}</span>
-                                            <span style={{ fontSize: '14px', fontWeight: 500, color: '#191c1e' }}>{formatInStoreTimezone(model.created_at)}</span>
+                                            <span style={{ fontSize: '14px', fontWeight: 500, color: '#191c1e' }}>{formatInStoreTimezone(model.created_at, store?.country_code)}</span>
                                         </div>
                                     )}
                                     {model.updated_at && (
                                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '8px' }}>
                                             <span style={{ fontSize: '14px', color: '#434655', flexShrink: 0 }}>{t("Last Updated")}</span>
-                                            <span style={{ fontSize: '14px', fontWeight: 500, color: '#191c1e', textAlign: 'right' }}>{formatInStoreTimezone(model.updated_at)}</span>
+                                            <span style={{ fontSize: '14px', fontWeight: 500, color: '#191c1e', textAlign: 'right' }}>{formatInStoreTimezone(model.updated_at, store?.country_code)}</span>
                                         </div>
                                     )}
                                     {model.updated_by_name && (

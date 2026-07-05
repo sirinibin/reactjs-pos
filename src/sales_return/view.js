@@ -10,6 +10,9 @@ import { trimTo2Decimals } from "../utils/numberUtils";
 import OrderPreview from './../order/preview.js';
 import { useTranslation } from 'react-i18next';
 import { getDateLocale } from "../i18n/dateLocales";
+import { ObjectToSearchQueryParams } from '../utils/queryUtils.js';
+import { formatInStoreTimezone, formatPaymentMethod } from '../utils/dateUtils.js';
+import { fetchStore } from '../utils/storeUtils.js';
 
 const SalesReturnView = forwardRef((props, ref) => {
     const { t, i18n } = useTranslation('common');
@@ -40,37 +43,10 @@ const SalesReturnView = forwardRef((props, ref) => {
     let [store, setStore] = useState({});
 
     async function getStore(id) {
-        console.log("inside get Store");
-        const requestOptions = {
-            method: 'GET',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': localStorage.getItem('access_token'),
-            },
-        };
-
-        await fetch('/v1/store/' + id, requestOptions)
-            .then(async response => {
-                const isJson = response.headers.get('content-type')?.includes('application/json');
-                const data = isJson && await response.json();
-
-                // check for error response
-                if (!response.ok) {
-                    const error = (data && data.errors);
-                    return Promise.reject(error);
-                }
-
-                console.log("Response:");
-                console.log(data);
-                store = data.result;
-                setStore({ ...store });
-                if (store.country_code) {
-                    localStorage.setItem('store_country_code', store.country_code);
-                }
-            })
-            .catch(error => {
-
-            });
+        try {
+            const data = await fetchStore(id);
+            setStore({ ...data });
+        } catch (error) { }
     }
 
 
@@ -81,14 +57,6 @@ const SalesReturnView = forwardRef((props, ref) => {
     let [totalPayments, setTotalPayments] = useState(0.00);
 
     const [searchParams, setSearchParams] = useState({});
-
-    function ObjectToSearchQueryParams(object) {
-        return Object.keys(object)
-            .map(function (key) {
-                return `search[${key}]=${object[key]}`;
-            })
-            .join("&");
-    }
 
 
     function getPayments(sales_return_id) {
@@ -275,40 +243,8 @@ const SalesReturnView = forwardRef((props, ref) => {
         };
     }, [handleEnterKey]);
 
-    const countryTimezoneMap = {
-        'SA': 'Asia/Riyadh', 'AE': 'Asia/Dubai', 'KW': 'Asia/Kuwait',
-        'QA': 'Asia/Qatar', 'BH': 'Asia/Bahrain', 'OM': 'Asia/Muscat',
-        'IN': 'Asia/Kolkata', 'PK': 'Asia/Karachi', 'BD': 'Asia/Dhaka',
-        'LK': 'Asia/Colombo', 'NP': 'Asia/Kathmandu', 'MY': 'Asia/Kuala_Lumpur',
-        'SG': 'Asia/Singapore', 'PH': 'Asia/Manila', 'ID': 'Asia/Jakarta',
-        'EG': 'Africa/Cairo', 'JO': 'Asia/Amman', 'LB': 'Asia/Beirut',
-        'IQ': 'Asia/Baghdad', 'IR': 'Asia/Tehran', 'TR': 'Europe/Istanbul',
-        'GB': 'Europe/London', 'DE': 'Europe/Berlin', 'FR': 'Europe/Paris',
-        'US': 'America/New_York', 'CA': 'America/Toronto', 'AU': 'Australia/Sydney',
-    };
 
-    function formatPaymentMethod(method) {
-        if (!method) return "—";
-        return method.split('_').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
-    }
 
-    function formatInStoreTimezone(dateStr) {
-        if (!dateStr) return '';
-        const tz = countryTimezoneMap[localStorage.getItem('store_country_code')] || countryTimezoneMap[store?.country_code] || 'UTC';
-        const tzLabel = tz.replace('_', ' ');
-        try {
-            const d = new Date(dateStr);
-            const formatted = d.toLocaleString('en-US', {
-                timeZone: tz,
-                year: 'numeric', month: 'short', day: '2-digit',
-                hour: '2-digit', minute: '2-digit', second: '2-digit',
-                hour12: true,
-            });
-            return `${formatted} (${tzLabel})`;
-        } catch {
-            return dateStr;
-        }
-    }
 
     return (<>
         <Modal show={showPrintTypeSelection} onHide={() => {
@@ -391,7 +327,7 @@ const SalesReturnView = forwardRef((props, ref) => {
                         </div>
                         {model.date && (
                             <p style={{ margin: 0, fontSize: '14px', lineHeight: '20px', color: '#434655', fontWeight: 400 }}>
-                                {t("Return processed on")} {formatInStoreTimezone(model.date)}
+                                {t("Return processed on")} {formatInStoreTimezone(model.date, store?.country_code)}
                             </p>
                         )}
                     </div>
@@ -579,7 +515,7 @@ const SalesReturnView = forwardRef((props, ref) => {
                                                 <div style={{ display: 'flex', flexDirection: 'column' }}>
                                                     <span style={{ fontSize: '12px', fontWeight: 500, color: '#434655', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{t("Date")}</span>
                                                     <span style={{ fontSize: '14px', color: '#191c1e' }}>
-                                                        {formatInStoreTimezone(payment.date || payment.created_at)}
+                                                        {formatInStoreTimezone(payment.date || payment.created_at, store?.country_code)}
                                                     </span>
                                                 </div>
                                             </div>
@@ -608,7 +544,7 @@ const SalesReturnView = forwardRef((props, ref) => {
                                         <div style={{ display: 'flex', flexDirection: 'column' }}>
                                             <span style={{ fontSize: '12px', fontWeight: 500, color: '#434655' }}>{t("Reported At")}</span>
                                             <span style={{ fontSize: '14px', color: model.zatca?.reporting_passed_at ? '#191c1e' : '#434655', fontStyle: model.zatca?.reporting_passed_at ? 'normal' : 'italic' }}>
-                                                {model.zatca?.reporting_passed_at ? formatInStoreTimezone(model.zatca.reporting_passed_at) : t("Not set")}
+                                                {model.zatca?.reporting_passed_at ? formatInStoreTimezone(model.zatca.reporting_passed_at, store?.country_code) : t("Not set")}
                                             </span>
                                         </div>
                                     </div>
@@ -635,7 +571,7 @@ const SalesReturnView = forwardRef((props, ref) => {
                                     {model.zatca?.signing_time && (
                                         <div style={{ display: 'flex', flexDirection: 'column' }}>
                                             <span style={{ fontSize: '12px', fontWeight: 500, color: '#434655' }}>{t("Signing time")}</span>
-                                            <span style={{ fontSize: '14px', color: '#191c1e' }}>{formatInStoreTimezone(model.zatca.signing_time)}</span>
+                                            <span style={{ fontSize: '14px', color: '#191c1e' }}>{formatInStoreTimezone(model.zatca.signing_time, store?.country_code)}</span>
                                         </div>
                                     )}
                                     {model.prev_hash && (
@@ -715,7 +651,7 @@ const SalesReturnView = forwardRef((props, ref) => {
                                     {model.updated_at && (
                                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '8px' }}>
                                             <span style={{ fontSize: '14px', color: '#434655', flexShrink: 0 }}>{t("Last Updated")}</span>
-                                            <span style={{ fontSize: '14px', fontWeight: 500, color: '#191c1e', textAlign: 'right' }}>{formatInStoreTimezone(model.updated_at)}</span>
+                                            <span style={{ fontSize: '14px', fontWeight: 500, color: '#191c1e', textAlign: 'right' }}>{formatInStoreTimezone(model.updated_at, store?.country_code)}</span>
                                         </div>
                                     )}
                                     {model.updated_by_name && (

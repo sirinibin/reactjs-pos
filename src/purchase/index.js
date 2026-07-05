@@ -7,10 +7,8 @@ import { format } from "date-fns";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import { getDateLocale } from "../i18n/dateLocales";
-import { Button, Spinner, Modal, Alert } from "react-bootstrap";
-import ReactPaginate from "react-paginate";
+import { Button, Spinner, Modal } from "react-bootstrap";
 import PurchaseReturnCreate from "./../purchase_return/create.js";
-import { DragDropContext, Droppable, Draggable } from "react-beautiful-dnd";
 import PurchasePaymentIndex from "./../purchase_payment/index.js";
 import PurchaseReturnIndex from "./../purchase_return/index.js";
 import OverflowTooltip from "../utils/OverflowTooltip.js";
@@ -27,6 +25,12 @@ import VendorCreate from "./../vendor/create.js";
 import Draggable2 from "react-draggable";
 
 import ReactExport from 'react-data-export';
+import { ObjectToSearchQueryParams } from '../utils/queryUtils.js';
+import { fetchStore } from '../utils/storeUtils.js';
+import SuccessModal from '../utils/SuccessModal.js';
+import { useTableSettings } from '../utils/useTableSettings.js';
+import PaginationControls from '../utils/PaginationControls.js';
+import TableSettingsModal from '../utils/TableSettingsModal.js';
 
 const ExcelFile = ReactExport.ExcelFile;
 const ExcelSheet = ReactExport.ExcelFile.ExcelSheet;
@@ -205,34 +209,10 @@ function PurchaseIndex(props) {
     let [store, setStore] = useState({});
 
     async function getStore(id) {
-        console.log("inside get Store");
-        const requestOptions = {
-            method: 'GET',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': localStorage.getItem('access_token'),
-            },
-        };
-
-        await fetch('/v1/store/' + id, requestOptions)
-            .then(async response => {
-                const isJson = response.headers.get('content-type')?.includes('application/json');
-                const data = isJson && await response.json();
-
-                // check for error response
-                if (!response.ok) {
-                    const error = (data && data.errors);
-                    return Promise.reject(error);
-                }
-
-                console.log("Response:");
-                console.log(data);
-                store = data.result;
-                setStore(store);
-            })
-            .catch(error => {
-
-            });
+        try {
+            const data = await fetchStore(id);
+            setStore({ ...data });
+        } catch (error) { }
     }
 
 
@@ -493,14 +473,6 @@ function PurchaseIndex(props) {
     const [searchParams, setSearchParams] = useState({});
     let [sortField, setSortField] = useState("created_at");
     let [sortOrder, setSortOrder] = useState("-");
-
-    function ObjectToSearchQueryParams(object) {
-        return Object.keys(object)
-            .map(function (key) {
-                return `search[${key}]=${object[key]}`;
-            })
-            .join("&");
-    }
 
     async function suggestVendors(searchTerm) {
         console.log("Inside handle suggestVendors");
@@ -1032,124 +1004,14 @@ function PurchaseIndex(props) {
     ], [t]);
 
 
-    const [columns, setColumns] = useState(defaultColumns);
-    const [showSettings, setShowSettings] = useState(false);
-    // Load settings from localStorage
-    useEffect(() => {
-        let saved = "";
-        if (enableSelection === true) {
-            saved = localStorage.getItem("select_purchase_table_settings");
-        } else if (pendingView === true) {
-            saved = localStorage.getItem("pending_purchase_table_settings");
-        } else {
-            saved = localStorage.getItem("purchase_table_settings");
-        }
-
-        if (saved) setColumns(JSON.parse(saved));
-
-        let missingOrUpdated = false;
-        for (let i = 0; i < defaultColumns.length; i++) {
-            if (!saved)
-                break;
-
-            const savedCol = JSON.parse(saved)?.find(col => col.fieldName === defaultColumns[i].fieldName);
-
-            missingOrUpdated = !savedCol || savedCol.label !== defaultColumns[i].label || savedCol.key !== defaultColumns[i].key;
-
-            if (missingOrUpdated) {
-                break
-            }
-        }
-
-        /*
-        for (let i = 0; i < saved.length; i++) {
-            const savedCol = defaultColumns.find(col => col.fieldName === saved[i].fieldName);
- 
-            missingOrUpdated = !savedCol || savedCol.label !== saved[i].label || savedCol.key !== saved[i].key;
- 
-            if (missingOrUpdated) {
-                break
-            }
-        }*/
-
-        if (missingOrUpdated) {
-            if (enableSelection === true) {
-                localStorage.setItem("select_purchase_table_settings", JSON.stringify(defaultColumns));
-            } else if (pendingView === true) {
-                localStorage.setItem("pending_purchase_table_settings", JSON.stringify(defaultColumns));
-            } else {
-                localStorage.setItem("purchase_table_settings", JSON.stringify(defaultColumns));
-            }
-            setColumns(defaultColumns);
-        }
-
-        //2nd
-
-    }, [defaultColumns, enableSelection, pendingView]);
-
-    useEffect(() => {
-        setColumns(prev => prev.map(col =>
-            col.key === "enable_on_accounts"
-                ? { ...col, visible: !!store.settings?.disable_purchases_on_accounts }
-                : col
-        ));
-    }, [store]);
+    const { columns, showSettings, setShowSettings, handleToggleColumn, onDragEnd, restoreDefaults } = useTableSettings({ storageKey: "purchase_table_settings", selectStorageKey: "select_purchase_table_settings", pendingStorageKey: "pending_purchase_table_settings", defaultColumns, enableSelection, pendingView });
 
     function RestoreDefaultSettings() {
-        if (enableSelection === true) {
-            localStorage.setItem("select_purchase_table_settings", JSON.stringify(defaultColumns));
-        } else if (pendingView === true) {
-            localStorage.setItem("pending_purchase_table_settings", JSON.stringify(defaultColumns));
-        } else {
-            localStorage.setItem("purchase_table_settings", JSON.stringify(defaultColumns));
-        }
-
-        setColumns(defaultColumns);
-
+        restoreDefaults();
         setShowSuccess(true);
-        setSuccessMessage(t("Successfully restored to default settings!"))
+        setSuccessMessage("Successfully restored to default settings!");
     }
 
-    // Save column settings to localStorage
-    /*
-    useEffect(() => {
-        if (enableSelection === true) {
-            localStorage.setItem("select_purchase_table_settings", JSON.stringify(columns));
-        } else if (pendingView === true) {
-            localStorage.setItem("pending_purchase_table_settings", JSON.stringify(columns));
-        } else {
-            localStorage.setItem("purchase_table_settings", JSON.stringify(columns));
-        }
-    }, [columns, enableSelection, pendingView]);
-    */
-
-    const handleToggleColumn = (index) => {
-        const updated = [...columns];
-        updated[index].visible = !updated[index].visible;
-        setColumns(updated);
-        if (enableSelection === true) {
-            localStorage.setItem("select_purchase_table_settings", JSON.stringify(updated));
-        } else if (pendingView === true) {
-            localStorage.setItem("pending_purchase_table_settings", JSON.stringify(updated));
-        } else {
-            localStorage.setItem("purchase_table_settings", JSON.stringify(updated));
-        }
-    };
-
-    const onDragEnd = (result) => {
-        if (!result.destination) return;
-        const reordered = Array.from(columns);
-        const [moved] = reordered.splice(result.source.index, 1);
-        reordered.splice(result.destination.index, 0, moved);
-        setColumns(reordered);
-        if (enableSelection === true) {
-            localStorage.setItem("select_purchase_table_settings", JSON.stringify(reordered));
-        } else if (pendingView === true) {
-            localStorage.setItem("pending_purchase_table_settings", JSON.stringify(reordered));
-        } else {
-            localStorage.setItem("purchase_table_settings", JSON.stringify(reordered));
-        }
-    };
 
     //Print
 
@@ -1276,107 +1138,18 @@ function PurchaseIndex(props) {
             </Modal>
 
             {/* ⚙️ Settings Modal */}
-            <Modal
+            <TableSettingsModal
                 show={showSettings}
                 onHide={() => setShowSettings(false)}
-                centered
-                size="lg"
-            >
-                <Modal.Header closeButton>
-                    <Modal.Title>
-                        <i
-                            className="bi bi-gear-fill"
-                            style={{ fontSize: "1.2rem", marginRight: "4px" }}
-                            title={t('Table Settings')}
-                        />
-                        {t('Purchase Settings')}
-                    </Modal.Title>
-                </Modal.Header>
-                <Modal.Body>
-                    {/* Column Settings */}
-                    {showSettings && (
-                        <>
-                            <h6 className="mb-2">{t('Customize Columns')}</h6>
-                            <DragDropContext onDragEnd={onDragEnd}>
-                                <Droppable droppableId="columns">
-                                    {(provided) => (
-                                        <ul
-                                            className="list-group"
-                                            {...provided.droppableProps}
-                                            ref={provided.innerRef}
-                                        >
-                                            {columns.map((col, index) => {
-                                                return (
-                                                    <>
-                                                        {((col.key === "select" && enableSelection) || col.key !== "select") && <Draggable
-                                                            key={col.key}
-                                                            draggableId={col.key}
-                                                            index={index}
-                                                        >
-                                                            {(provided) => (
-                                                                <li
-                                                                    className="list-group-item d-flex justify-content-between align-items-center"
-                                                                    ref={provided.innerRef}
-                                                                    {...provided.draggableProps}
-                                                                    {...provided.dragHandleProps}                                                        >
-                                                                    <div>
-                                                                        <input
-                                                                            style={{ width: "20px", height: "20px" }}
-                                                                            type="checkbox"
-                                                                            className="form-check-input me-2"
-                                                                            checked={col.visible}
-                                                                            onChange={() => {
-                                                                                handleToggleColumn(index);
-                                                                            }}
-                                                                        />
-                                                                        {col.label}
-                                                                    </div>
-                                                                    <span style={{ cursor: "grab" }}>☰</span>
-                                                                </li>
-                                                            )}
-                                                        </Draggable>}
-                                                    </>)
-                                            })}
-                                            {provided.placeholder}
-                                        </ul>
-                                    )}
-                                </Droppable>
-                            </DragDropContext>
-                        </>
-                    )}
-                </Modal.Body>
-                <Modal.Footer>
-                    <Button variant="secondary" onClick={() => setShowSettings(false)}>
-                        {t('Close')}
-                    </Button>
-                    <Button
-                        variant="primary"
-                        onClick={() => {
-                            RestoreDefaultSettings();
-                            // Save to localStorage here if needed
-                            //setShowSettings(false);
-                        }}
-                    >
-                        {t('Restore to Default')}
-                    </Button>
-                </Modal.Footer>
-            </Modal>
+                title="Purchase Settings"
+                columns={columns}
+                onToggleColumn={handleToggleColumn}
+                onDragEnd={onDragEnd}
+                onRestoreDefaults={RestoreDefaultSettings}
+                enableSelection={enableSelection}
+            />
 
-            <Modal show={showSuccess} onHide={() => setShowSuccess(false)} centered>
-                <Modal.Header closeButton>
-                    <Modal.Title>{t('Success')}</Modal.Title>
-                </Modal.Header>
-                <Modal.Body>
-                    <Alert variant="success">
-                        {successMessage}
-                    </Alert>
-                </Modal.Body>
-                <Modal.Footer>
-                    <Button variant="secondary" onClick={() => setShowSuccess(false)}>
-                        {t('Close')}
-                    </Button>
-                </Modal.Footer>
-            </Modal>
+            <SuccessModal show={showSuccess} message={successMessage} onClose={() => setShowSuccess(false)} />
 
 
             {showReportPreview && <ReportPreview ref={ReportPreviewRef} searchParams={searchParams} sortOrder={sortOrder} sortField={sortField} />}
@@ -1493,54 +1266,17 @@ function PurchaseIndex(props) {
                                         <span className="visually-hidden">{t('Loading...')}</span>
                                     </Button>
 
-                                    {totalItems > 0 && (
-                                        <>
-                                            <label className="form-label mb-0">{t('Size')}:&nbsp;</label>
-                                            <select
-                                                value={pageSize}
-                                                onChange={(e) => { changePageSize(e.target.value); }}
-                                                className="form-control"
-                                                style={{ border: "solid 1px", borderColor: "silver", width: "55px" }}
-                                            >
-                                                <option value="5">5</option>
-                                                <option value="10">10</option>
-                                                <option value="20">20</option>
-                                                <option value="40">40</option>
-                                                <option value="50">50</option>
-                                                <option value="100">100</option>
-                                            </select>
-                                        </>
-                                    )}
-
-                                    <div className="w-100" style={{ overflowX: "auto" }}>
-                                        {totalPages ? <ReactPaginate
-                                            breakLabel="..."
-                                            nextLabel={t('next >')}
-                                            onPageChange={(event) => { changePage(event.selected + 1); }}
-                                            pageRangeDisplayed={3}
-                                            marginPagesDisplayed={1}
-                                            pageCount={totalPages}
-                                            previousLabel={t('< prev')}
-                                            renderOnZeroPageCount={null}
-                                            className="pagination flex-wrap mb-0"
-                                            pageClassName="page-item"
-                                            pageLinkClassName="page-link"
-                                            activeClassName="active"
-                                            previousClassName="page-item"
-                                            nextClassName="page-item"
-                                            previousLinkClassName="page-link"
-                                            nextLinkClassName="page-link"
-                                            forcePage={page - 1}
-                                        /> : ""}
-                                    </div>
-
-                                    {totalItems > 0 && (
-                                        <span className="text-muted small">
-                                            {t("Showing {{from}}-{{to}} of {{totalItems}}", { from: (offset + 1), to: (offset + currentPageItemsCount), totalItems: totalItems })}
-                                            &nbsp;|&nbsp;
-                                            {t("Page {{page}} of {{totalPages}}", { page: page, totalPages: totalPages })}
-                                        </span>
-                                    )}
+                                    <PaginationControls
+                                        totalPages={totalPages}
+                                        page={page}
+                                        totalItems={totalItems}
+                                        offset={offset}
+                                        currentPageItemsCount={currentPageItemsCount}
+                                        pageSize={pageSize}
+                                        onPageChange={changePage}
+                                        onPageSizeChange={changePageSize}
+                                        pageSizes={[5, 10, 20, 40, 50, 100]}
+                                    />
 
                                     <button
                                         className="btn btn-sm btn-outline-secondary ms-auto"
@@ -1571,7 +1307,7 @@ function PurchaseIndex(props) {
                                         <thead>
                                             <tr className="text-center">
                                                 {columns.filter(c => c.visible).map((col) => {
-                                                    return (<>
+                                                    return (<React.Fragment key={col.key}>
                                                         {col.key === "actions" && <th key={col.key}>{col.label}</th>}
                                                         {col.key === "select" && enableSelection && <th key={col.key}>{col.label}</th>}
                                                         {col.key !== "actions" && col.key !== "select" && <th>
@@ -1593,7 +1329,7 @@ function PurchaseIndex(props) {
                                                                 ) : null}
                                                             </b>
                                                         </th>}
-                                                    </>);
+                                                    </React.Fragment>);
                                                 })}
                                             </tr>
                                         </thead>
@@ -1601,7 +1337,7 @@ function PurchaseIndex(props) {
                                         <thead>
                                             <tr className="text-center">
                                                 {columns.filter(c => c.visible).map((col) => {
-                                                    return (<>
+                                                    return (<React.Fragment key={col.key}>
                                                         {(col.key === "actions" || col.key === "actions_end") && <th></th>}
                                                         {col.key === "select" && enableSelection && <th></th>}
                                                         {col.key !== "actions" &&
@@ -1885,7 +1621,7 @@ function PurchaseIndex(props) {
                                                                 ) : null}
                                                             </div>
                                                         </th>}
-                                                    </>);
+                                                    </React.Fragment>);
                                                 })}
 
                                                 {/* <th></th>
@@ -2351,7 +2087,7 @@ function PurchaseIndex(props) {
                                                 purchaseList.map((purchase) => (
                                                     <tr key={purchase.code}>
                                                         {columns.filter(c => c.visible).map((col) => {
-                                                            return (<>
+                                                            return (<React.Fragment key={col.key}>
                                                                 {(col.key === "actions" || col.key === "actions_end") && <td style={{ width: "auto", whiteSpace: "nowrap" }}>
                                                                     <Button className="btn btn-light btn-sm" onClick={() => {
                                                                         openUpdateForm(purchase.id);
@@ -2446,8 +2182,8 @@ function PurchaseIndex(props) {
                                                                 </td>}
                                                                 {(col.fieldName === "payment_methods") && <td style={{ width: "auto", whiteSpace: "nowrap" }}>
                                                                     {purchase.payment_methods &&
-                                                                        purchase.payment_methods.map((name) => (
-                                                                            <span className="badge bg-info">{name}</span>
+                                                                        purchase.payment_methods.map((name, idx) => (
+                                                                            <span key={idx} className="badge bg-info">{name}</span>
                                                                         ))}
                                                                 </td>}
                                                                 {(col.fieldName === "cash_discount") && <td style={{ width: "auto", whiteSpace: "nowrap" }}>
@@ -2479,7 +2215,7 @@ function PurchaseIndex(props) {
                                                                 {(col.fieldName === "created_by") && <td style={{ width: "auto", whiteSpace: "nowrap" }}>
                                                                     {purchase.created_by_name}
                                                                 </td>}
-                                                            </>)
+                                                            </React.Fragment>)
                                                         })}
 
                                                         {/*<td style={{ width: "auto", whiteSpace: "nowrap" }} >
@@ -2567,8 +2303,8 @@ function PurchaseIndex(props) {
                                                         </td>
                                                         <td style={{ width: "auto", whiteSpace: "nowrap" }} >
                                                             {purchase.payment_methods &&
-                                                                purchase.payment_methods.map((name) => (
-                                                                    <span className="badge bg-info">{name}</span>
+                                                                purchase.payment_methods.map((name, idx) => (
+                                                                    <span key={idx} className="badge bg-info">{name}</span>
                                                                 ))}
                                                         </td>
                                                         <td style={{ width: "auto", whiteSpace: "nowrap" }} >

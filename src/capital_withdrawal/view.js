@@ -1,6 +1,8 @@
 import React, { useState, forwardRef, useImperativeHandle } from "react";
 import { Modal } from 'react-bootstrap';
 import AttachmentsViewer from '../utils/AttachmentsViewer.js';
+import { ObjectToSearchQueryParams } from '../utils/queryUtils.js';
+import { formatPaymentMethod } from '../utils/dateUtils.js';
 
 const CapitalWithdrawalView = forwardRef((props, ref) => {
 
@@ -18,14 +20,6 @@ const CapitalWithdrawalView = forwardRef((props, ref) => {
 
     function handleClose() {
         SetShow(false);
-    }
-
-    function ObjectToSearchQueryParams(object) {
-        return Object.keys(object)
-            .map(function (key) {
-                return `search[${key}]=` + object[key];
-            })
-            .join("&");
     }
 
     function getCapitalWithdrawal(id) {
@@ -63,11 +57,6 @@ const CapitalWithdrawalView = forwardRef((props, ref) => {
             .catch(error => {
                 // setErrors(error);
             });
-    }
-
-    function formatPaymentMethod(method) {
-        if (!method) return "—";
-        return method.split('_').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
     }
 
     function formatDate(dateStr) {

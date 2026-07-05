@@ -1,6 +1,8 @@
 import React, { useState, forwardRef, useImperativeHandle, useRef } from "react";
 import { Modal } from 'react-bootstrap';
 import ImageGallery from '../utils/ImageGallery.js';
+import { ObjectToSearchQueryParams } from '../utils/queryUtils.js';
+import { formatInStoreTimezone } from '../utils/dateUtils.js';
 
 const CustomerView = forwardRef((props, ref) => {
     const timerRef = useRef(null);
@@ -24,10 +26,6 @@ const CustomerView = forwardRef((props, ref) => {
 
     function handleClose() { SetShow(false); }
 
-    function ObjectToSearchQueryParams(object) {
-        return Object.keys(object).map(k => `search[${k}]=${object[k]}`).join("&");
-    }
-
     async function getCustomer(id) {
         const requestOptions = {
             method: 'GET',
@@ -45,26 +43,6 @@ const CustomerView = forwardRef((props, ref) => {
                 setModel({ ...model });
             })
             .catch(() => {});
-    }
-
-    const countryTimezoneMap = {
-        'SA': 'Asia/Riyadh', 'AE': 'Asia/Dubai', 'KW': 'Asia/Kuwait',
-        'QA': 'Asia/Qatar', 'BH': 'Asia/Bahrain', 'OM': 'Asia/Muscat',
-        'IN': 'Asia/Kolkata', 'PK': 'Asia/Karachi', 'EG': 'Africa/Cairo',
-        'GB': 'Europe/London', 'US': 'America/New_York', 'AU': 'Australia/Sydney',
-    };
-
-    function formatInStoreTimezone(dateStr) {
-        if (!dateStr) return '';
-        const tz = countryTimezoneMap[localStorage.getItem('store_country_code')] || 'UTC';
-        const tzLabel = tz.replace('_', ' ');
-        try {
-            const formatted = new Date(dateStr).toLocaleString('en-US', {
-                timeZone: tz, year: 'numeric', month: 'short', day: '2-digit',
-                hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true,
-            });
-            return `${formatted} (${tzLabel})`;
-        } catch { return dateStr; }
     }
 
     /* ─── shared row style ─── */

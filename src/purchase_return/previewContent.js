@@ -35,6 +35,7 @@ const PurchaseReturnPreviewContent = forwardRef((props, ref) => {
     return (<>
         {props.model.pages && props.model.pages.map((page, pageIndex) => (
             <div
+                key={pageIndex}
                 className="container"
                 id="printableArea"
                 style={{
@@ -98,16 +99,16 @@ const PurchaseReturnPreviewContent = forwardRef((props, ref) => {
                 <div className="row table-active" style={{ fontSize: "3.5mm", border: "solid 0px" }}>
                     <div className="col-md-5" style={{ border: "solid 0px", width: "77%" }}>
 
-                        <div class="container fw-bold" style={{ border: "solid 0px", paddingLeft: "0px", fontSize: "2mm" }}>
-                            <div class="row">
-                                <div class="col-7 text-start fw-bold" dir="ltr">Invoice No. | رقم الفاتورة:</div>
-                                <div class="col-6" style={{ marginLeft: "-72px" }} dir="ltr">
+                        <div className="container fw-bold" style={{ border: "solid 0px", paddingLeft: "0px", fontSize: "2mm" }}>
+                            <div className="row">
+                                <div className="col-7 text-start fw-bold" dir="ltr">Invoice No. | رقم الفاتورة:</div>
+                                <div className="col-6" style={{ marginLeft: "-72px" }} dir="ltr">
                                     {props.model.code ? props.model.code : ""}
                                 </div>
                             </div>
-                            <div class="row">
-                                <div class="col-7 text-start fw-bold" dir="ltr">Invoice Date | تاريخ الفاتورة:</div>
-                                <div class="col-6 " style={{ marginLeft: "-72px" }} dir="ltr">
+                            <div className="row">
+                                <div className="col-7 text-start fw-bold" dir="ltr">Invoice Date | تاريخ الفاتورة:</div>
+                                <div className="col-6 " style={{ marginLeft: "-72px" }} dir="ltr">
                                     <span dir="ltr"> {props.model.date ? format(
                                         new Date(props.model.date),
                                         "yyyy-MM-dd h:mma"
@@ -115,21 +116,21 @@ const PurchaseReturnPreviewContent = forwardRef((props, ref) => {
                                     </span>
                                 </div>
                             </div>
-                            <div class="row">
-                                <div class="col-7 text-start fw-bold" dir="ltr">Original Invoice No. | رقم الفاتورة الأصلية:</div>
-                                <div class="col-6 " dir="ltr" style={{ marginLeft: "-72px" }}>
+                            <div className="row">
+                                <div className="col-7 text-start fw-bold" dir="ltr">Original Invoice No. | رقم الفاتورة الأصلية:</div>
+                                <div className="col-6 " dir="ltr" style={{ marginLeft: "-72px" }}>
                                     {props.model.purchase_code ? props.model.purchase_code : ""}
                                 </div>
                             </div>
-                            <div class="row">
-                                <div class="col-7 text-start fw-bold" dir="ltr">Vendor Name | اسم العميل:</div>
-                                <div class="col-6 " dir="ltr" style={{ marginLeft: "-72px" }}>
+                            <div className="row">
+                                <div className="col-7 text-start fw-bold" dir="ltr">Vendor Name | اسم العميل:</div>
+                                <div className="col-6 " dir="ltr" style={{ marginLeft: "-72px" }}>
                                     {props.model.vendor ? props.model.vendor.name : "N/A"}
                                 </div>
                             </div>
-                            <div class="row">
-                                <div class="col-7 text-start fw-bold" >Vendor VAT | ضريبة القيمة المضافة للعملاء:</div>
-                                <div class="col-6 " dir="ltr" style={{ marginLeft: "-72px" }}>
+                            <div className="row">
+                                <div className="col-7 text-start fw-bold" >Vendor VAT | ضريبة القيمة المضافة للعملاء:</div>
+                                <div className="col-6 " dir="ltr" style={{ marginLeft: "-72px" }}>
                                     <span dir="ltr">
                                         {props.model.vendor?.vat_no ? "#" + props.model.vendor.vat_no : "N/A"}
                                         {!props.model.vendor && props.model.vat_no ? props.model.vat_no : ""}
@@ -145,9 +146,9 @@ const PurchaseReturnPreviewContent = forwardRef((props, ref) => {
                                     </span>
                                 </div>
                             </div>
-                            <div class="row">
-                                <div class="col-7 text-start fw-bold" dir="ltr" >Vendor Address | عنوان العميل:</div>
-                                <div class="col-6 " dir="ltr" style={{ marginLeft: "-72px" }}>
+                            <div className="row">
+                                <div className="col-7 text-start fw-bold" dir="ltr" >Vendor Address | عنوان العميل:</div>
+                                <div className="col-6 " dir="ltr" style={{ marginLeft: "-72px" }}>
 
                                     <span dir="ltr">
                                         {props.model.address && !props.model.vendor ? props.model.address : ""}
@@ -401,7 +402,6 @@ const PurchaseReturnPreviewContent = forwardRef((props, ref) => {
 
                                         </th>
                                     </tr>
-
                                     <tr>
                                         <th colSpan="8" className="text-end" style={{ padding: "2px" }}>
                                             Net Total (with VAT)  الإجمالي الصافي (مع ضريبة القيمة المضافة):

@@ -53,6 +53,7 @@ const CustomerDepositPreviewContent = forwardRef((props, ref) => {
     return (<><span ref={ref}>
         {props.model.pages && props.model.pages.map((page, pageIndex) => (
             <div
+                key={pageIndex}
                 className="container"
                 id="printableArea"
                 style={{
@@ -461,7 +462,6 @@ const CustomerDepositPreviewContent = forwardRef((props, ref) => {
                                                 <Amount amount={trimTo2Decimals(props.model.total)} />
                                             </th>
                                         </tr>
-
                                         <tr
                                             style={{}}>
                                             <th colSpan="6" className="text-end print-label"
@@ -473,7 +473,6 @@ const CustomerDepositPreviewContent = forwardRef((props, ref) => {
                                                 <Amount amount={trimTo2Decimals(props.model.total_discount)} />
                                             </th>
                                         </tr>
-
                                         <tr
                                             style={{}}>
                                             <th colSpan="6" className="text-end print-label"

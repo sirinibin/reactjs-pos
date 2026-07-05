@@ -7,11 +7,13 @@ import WhatsAppModal from './../utils/WhatsAppModal';
 import MBDIInvoiceBackground from './../INVOICE.jpg';
 import LGKInvoiceBackground from './../LGK_WHATSAPP.png';
 import { PDFDocument } from 'pdf-lib';
+import { ObjectToSearchQueryParams } from '../utils/queryUtils.js';
+import { fetchStore } from '../utils/storeUtils.js';
 
 const BalanceSheetPrintPreview = forwardRef((props, ref) => {
 
     let [whatsAppShare, setWhatsAppShare] = useState(false);
-    let [InvoiceBackground, setInvoiceBackground] = useState("");
+    let InvoiceBackground = "";
 
     useImperativeHandle(ref, () => ({
         async open(modelObj, whatsapp) {
@@ -303,14 +305,6 @@ const BalanceSheetPrintPreview = forwardRef((props, ref) => {
             });
     }
 
-    function ObjectToSearchQueryParams(object) {
-        return Object.keys(object)
-            .map(function (key) {
-                return `search[${key}]=${object[key]}`;
-            })
-            .join("&");
-    }
-
     function getVendor(id) {
         console.log("inside get Customer");
         const requestOptions = {
@@ -350,60 +344,13 @@ const BalanceSheetPrintPreview = forwardRef((props, ref) => {
     }
 
     async function getStore(id) {
-        console.log("inside get Store");
-        const requestOptions = {
-            method: 'GET',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': localStorage.getItem('access_token'),
-            },
-        };
-
-        await fetch('/v1/store/' + id, requestOptions)
-            .then(async response => {
-                const isJson = response.headers.get('content-type')?.includes('application/json');
-                const data = isJson && await response.json();
-
-                // check for error response
-                if (!response.ok) {
-                    const error = (data && data.errors);
-                    return Promise.reject(error);
-                }
-
-                console.log("Response:");
-                console.log(data);
-                let storeData = data.result;
+        try {
+            const storeData = await fetchStore(id);
+            if (storeData) {
                 model.store = storeData;
-
-
-
-                if (whatsAppShare) {
-                    if (model.store.code === "MBDI") {
-                        InvoiceBackground = MBDIInvoiceBackground;
-                    } else if (model.store.code === "LGK-SIMULATION" || model.store.code === "LGK" || model.store.code === "PH2") {
-                        InvoiceBackground = LGKInvoiceBackground;
-                    }
-                    setInvoiceBackground(InvoiceBackground);
-                    fontSizes[modelName + "_storeHeader"] = {
-                        "visible": false,
-                    }
-                    if (fontSizes[modelName + "_marginTop"].value === 0) {
-                        fontSizes[modelName + "_marginTop"] = {
-                            "value": 153,
-                            "unit": "px",
-                            "size": "153px",
-                            "step": 3
-                        };
-                    }
-                    setFontSizes({ ...fontSizes });
-                    saveToLocalStorage("fontSizes", fontSizes);
-                }
-
                 setModel({ ...model });
-            })
-            .catch(error => {
-
-            });
+            }
+        } catch (error) { }
     }
 
 

@@ -1,6 +1,8 @@
 import React, { useState, forwardRef, useImperativeHandle } from "react";
 import { Modal } from 'react-bootstrap';
 import AttachmentsViewer from '../utils/AttachmentsViewer.js';
+import { ObjectToSearchQueryParams } from '../utils/queryUtils.js';
+import { formatInStoreTimezone, formatPaymentMethod } from '../utils/dateUtils.js';
 
 const DividentView = forwardRef((props, ref) => {
 
@@ -17,10 +19,6 @@ const DividentView = forwardRef((props, ref) => {
     const [show, SetShow] = useState(false);
 
     function handleClose() { SetShow(false); }
-
-    function ObjectToSearchQueryParams(object) {
-        return Object.keys(object).map(k => `search[${k}]=` + object[k]).join("&");
-    }
 
     function getDivident(id) {
         const requestOptions = {
@@ -40,30 +38,6 @@ const DividentView = forwardRef((props, ref) => {
                 setModel({ ...model });
             })
             .catch(() => {});
-    }
-
-    const tzMap = {
-        'SA': 'Asia/Riyadh', 'AE': 'Asia/Dubai', 'KW': 'Asia/Kuwait',
-        'QA': 'Asia/Qatar', 'BH': 'Asia/Bahrain', 'OM': 'Asia/Muscat',
-        'IN': 'Asia/Kolkata', 'PK': 'Asia/Karachi', 'EG': 'Africa/Cairo',
-        'GB': 'Europe/London', 'US': 'America/New_York', 'AU': 'Australia/Sydney',
-    };
-
-    function formatPaymentMethod(method) {
-        if (!method) return '—';
-        return method.split('_').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
-    }
-
-    function formatInStoreTimezone(dateStr) {
-        if (!dateStr) return '';
-        const tz = tzMap[localStorage.getItem('store_country_code')] || 'UTC';
-        try {
-            const formatted = new Date(dateStr).toLocaleString('en-US', {
-                timeZone: tz, year: 'numeric', month: 'short', day: '2-digit',
-                hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true,
-            });
-            return `${formatted} (${tz.replace('_', ' ')})`;
-        } catch { return dateStr; }
     }
 
     return (<>

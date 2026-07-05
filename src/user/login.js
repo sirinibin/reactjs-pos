@@ -3,6 +3,7 @@ import avatar from './../avatar.jpg';
 import React, { useState, useEffect } from "react";
 import Footer from './../Footer.js';
 import { getLandingPath } from './../sidebar_menu_config';
+import { fetchStore } from '../utils/storeUtils.js';
 
 //import { useHistory } from "react-router-dom";
 
@@ -128,38 +129,9 @@ function Login() {
     }
 
     async function getStore(id) {
-        console.log("inside get Store");
-        const requestOptions = {
-            method: 'GET',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': localStorage.getItem('access_token'),
-            },
-        };
-
-        await fetch('/v1/store/' + id, requestOptions)
-            .then(async response => {
-                const isJson = response.headers.get('content-type')?.includes('application/json');
-                const data = isJson && await response.json();
-
-                // check for error response
-                if (!response.ok) {
-                    const error = (data && data.errors);
-                    return Promise.reject(error);
-                }
-
-                console.log("Response:");
-                console.log(data);
-                let storeData = data.result;
-                if (storeData.branch_name) {
-                    localStorage.setItem("branch_name", storeData.branch_name);
-                }
-
-
-            })
-            .catch(error => {
-
-            });
+        try {
+            await fetchStore(id);
+        } catch (error) { }
     }
 
     useEffect(() => {

@@ -3,8 +3,10 @@ import { Modal, Button } from 'react-bootstrap';
 import OrderPrintContent from './printContent.js';
 
 import { useReactToPrint } from 'react-to-print';
-import { Invoice } from '@axenda/zatca';
-import { format } from "date-fns";
+import {} from '@axenda/zatca';
+import {} from "date-fns";
+import { ObjectToSearchQueryParams } from '../utils/queryUtils.js';
+import { fetchStore } from '../utils/storeUtils.js';
 
 const PurchasePrint = forwardRef((props, ref) => {
 
@@ -129,67 +131,12 @@ const PurchasePrint = forwardRef((props, ref) => {
         return model.qr_content;
     }
 
-    function getStore(id) {
-        console.log("inside get Store");
-        const requestOptions = {
-            method: 'GET',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': localStorage.getItem('access_token'),
-            },
-        };
-
-        fetch('/v1/store/' + id, requestOptions)
-            .then(async response => {
-                const isJson = response.headers.get('content-type')?.includes('application/json');
-                const data = isJson && await response.json();
-
-                // check for error response
-                if (!response.ok) {
-                    const error = (data && data.errors);
-                    return Promise.reject(error);
-                }
-
-                console.log("Response:");
-                console.log(data);
-                let storeData = data.result;
-                model.store = storeData;
-
-                var d = new Date(model.date);
-                console.log("d:", d);
-
-
-                let d2 = format(
-                    new Date(d),
-                    "yyyy-MM-dd h:m:mma"
-                );
-                console.log("d2:", d2);
-                const invoice = new Invoice({
-                    sellerName: model.store_name,
-                    vatRegistrationNumber: model.store.vat_no,
-                    invoiceTimestamp: d2,
-                    invoiceTotal: model.net_total,
-                    invoiceVatTotal: model.vat_price,
-                });
-
-                model.QRImageData = await invoice.render();
-                console.log("model.QRImageData:", model.QRImageData);
-
-                setModel({ ...model });
-            })
-            .catch(error => {
-
-            });
+    async function getStore(id) {
+        try {
+            await fetchStore(id);
+        } catch (error) { }
     }
 
-
-    function ObjectToSearchQueryParams(object) {
-        return Object.keys(object)
-            .map(function (key) {
-                return `search[${key}]=${object[key]}`;
-            })
-            .join("&");
-    }
 
 
     function getVendor(id) {

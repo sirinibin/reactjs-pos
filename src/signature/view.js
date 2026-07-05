@@ -3,6 +3,7 @@ import { resolveImageUrl } from '../utils/imageUtils';
 import { Modal, Table } from 'react-bootstrap';
 
 import { Button } from "react-bootstrap";
+import { ObjectToSearchQueryParams } from '../utils/queryUtils.js';
 
 const SignatureView = forwardRef((props, ref) => {
 
@@ -27,14 +28,6 @@ const SignatureView = forwardRef((props, ref) => {
         SetShow(false);
     };
 
-
-    function ObjectToSearchQueryParams(object) {
-        return Object.keys(object)
-            .map(function (key) {
-                return `search[${key}]=${object[key]}`;
-            })
-            .join("&");
-    }
 
     function getSignature(id) {
         console.log("inside get Signature");

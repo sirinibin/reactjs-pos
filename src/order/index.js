@@ -13,9 +13,8 @@ import "react-datepicker/dist/react-datepicker.css";
 import { getDateLocale } from "../i18n/dateLocales";
 import { Button, Spinner, Modal, Alert } from "react-bootstrap";
 import ReactPaginate from "react-paginate";
-import { formatDistanceToNowStrict } from "date-fns";
-import { enUS } from "date-fns/locale";
 import OverflowTooltip from "../utils/OverflowTooltip.js";
+import { TimeAgo } from '../utils/dateUtils.js';
 import { trimTo2Decimals } from "../utils/numberUtils";
 import Amount from "../utils/amount.js";
 import StatsSummary from "../utils/StatsSummary.js";
@@ -24,7 +23,6 @@ import eventEmitter from "./../utils/eventEmitter";
 import OrderPreview from "./preview.js";
 import ReportPreview from "./report.js";
 import OrderPrint from './print.js';
-import { DragDropContext, Droppable, Draggable } from "react-beautiful-dnd";
 import CustomerCreate from "./../customer/create.js";
 import Draggable2 from "react-draggable";
 
@@ -32,28 +30,14 @@ import "./../utils/stickyHeader.css";
 
 
 import ReactExport from 'react-data-export';
+import { ObjectToSearchQueryParams } from '../utils/queryUtils.js';
+import SuccessModal from '../utils/SuccessModal.js';
+import { useTableSettings } from '../utils/useTableSettings.js';
+import TableSettingsModal from '../utils/TableSettingsModal.js';
 const ExcelFile = ReactExport.ExcelFile;
 const ExcelSheet = ReactExport.ExcelFile.ExcelSheet;
 
 
-const shortLocale = {
-    ...enUS,
-    formatDistance: (token, count) => {
-        const format = {
-            xSeconds: `${count}s`,
-            xMinutes: `${count}m`,
-            xHours: `${count}h`,
-            xDays: `${count}d`,
-            xMonths: `${count}mo`,
-            xYears: `${count}y`,
-        };
-        return format[token] || "";
-    },
-};
-
-const TimeAgo = ({ date }) => {
-    return <span>{formatDistanceToNowStrict(new Date(date), { locale: shortLocale })} ago</span>;
-};
 
 
 const OrderIndex = forwardRef((props, ref) => {
@@ -761,14 +745,6 @@ const OrderIndex = forwardRef((props, ref) => {
             .catch(error => {
 
             });
-    }
-
-    function ObjectToSearchQueryParams(object) {
-        return Object.keys(object)
-            .map(function (key) {
-                return `search[${key}]=${object[key]}`;
-            })
-            .join("&");
     }
 
 
@@ -1513,119 +1489,14 @@ const OrderIndex = forwardRef((props, ref) => {
     ], []);
 
 
-    const [columns, setColumns] = useState(defaultColumns);
-    const [showSettings, setShowSettings] = useState(false);
-    // Load settings from localStorage
-    useEffect(() => {
-        let saved = "";
-        if (enableSelection === true) {
-            saved = localStorage.getItem("select_sales_table_settings");
-        } else if (pendingView === true) {
-            saved = localStorage.getItem("pending_sales_table_settings");
-        } else {
-            saved = localStorage.getItem("sales_table_settings");
-        }
-
-        if (saved) setColumns(JSON.parse(saved));
-
-        let missingOrUpdated = false;
-        for (let i = 0; i < defaultColumns.length; i++) {
-            if (!saved)
-                break;
-
-            const savedCol = JSON.parse(saved)?.find(col => col.fieldName === defaultColumns[i].fieldName);
-
-            missingOrUpdated = !savedCol || savedCol.label !== defaultColumns[i].label || savedCol.key !== defaultColumns[i].key;
-
-            if (missingOrUpdated) {
-                break
-            }
-        }
-
-        /*
-        for (let i = 0; i < saved.length; i++) {
-            const savedCol = defaultColumns.find(col => col.fieldName === saved[i].fieldName);
-
-            missingOrUpdated = !savedCol || savedCol.label !== saved[i].label || savedCol.key !== saved[i].key;
-
-            if (missingOrUpdated) {
-                break
-            }
-        }*/
-
-        if (missingOrUpdated) {
-            if (enableSelection === true) {
-                localStorage.setItem("select_sales_table_settings", JSON.stringify(defaultColumns));
-            } else if (pendingView === true) {
-                localStorage.setItem("pending_sales_table_settings", JSON.stringify(defaultColumns));
-            } else {
-                localStorage.setItem("sales_table_settings", JSON.stringify(defaultColumns));
-            }
-
-            setColumns(defaultColumns);
-        }
-
-        //2nd
-
-    }, [defaultColumns, enableSelection, pendingView]);
+    const { columns, showSettings, setShowSettings, handleToggleColumn, onDragEnd, restoreDefaults } = useTableSettings({ storageKey: "sales_table_settings", selectStorageKey: "select_sales_table_settings", pendingStorageKey: "pending_sales_table_settings", defaultColumns, enableSelection, pendingView });
 
     function RestoreDefaultSettings() {
-        const clonedDefaults = defaultColumns.map(col => ({ ...col }));
-
-        if (enableSelection === true) {
-            localStorage.setItem("select_sales_table_settings", JSON.stringify(clonedDefaults));
-        } else if (pendingView === true) {
-            localStorage.setItem("pending_sales_table_settings", JSON.stringify(clonedDefaults));
-        } else {
-            localStorage.setItem("sales_table_settings", JSON.stringify(clonedDefaults));
-        }
-
-        setColumns(clonedDefaults);
-
+        restoreDefaults();
         setShowSuccess(true);
-        setSuccessMessage("Successfully restored to default settings!")
+        setSuccessMessage("Successfully restored to default settings!");
     }
 
-    // Save column settings to localStorage
-    /*
-    useEffect(() => {
-        if (enableSelection === true) {
-            localStorage.setItem("select_sales_table_settings", JSON.stringify(columns));
-        } else if (pendingView === true) {
-            localStorage.setItem("pending_sales_table_settings", JSON.stringify(columns));
-        } else {
-            localStorage.setItem("sales_table_settings", JSON.stringify(columns));
-        }
-    }, [columns, enableSelection, pendingView]);*/
-
-    const handleToggleColumn = (index) => {
-        const updated = [...columns];
-        updated[index].visible = !updated[index].visible;
-        setColumns(updated);
-        if (enableSelection === true) {
-            localStorage.setItem("select_sales_table_settings", JSON.stringify(updated));
-        } else if (pendingView === true) {
-            localStorage.setItem("pending_sales_table_settings", JSON.stringify(updated));
-        } else {
-            localStorage.setItem("sales_table_settings", JSON.stringify(updated));
-        }
-    };
-
-    const onDragEnd = (result) => {
-        if (!result.destination) return;
-        const reordered = Array.from(columns);
-        const [moved] = reordered.splice(result.source.index, 1);
-        reordered.splice(result.destination.index, 0, moved);
-        setColumns(reordered);
-
-        if (enableSelection === true) {
-            localStorage.setItem("select_sales_table_settings", JSON.stringify(reordered));
-        } else if (pendingView === true) {
-            localStorage.setItem("pending_sales_table_settings", JSON.stringify(reordered));
-        } else {
-            localStorage.setItem("sales_table_settings", JSON.stringify(reordered));
-        }
-    };
 
     const CustomerUpdateFormRef = useRef();
     let [showCustomerUpdateForm, setShowCustomerUpdateForm] = useState(false);
@@ -1656,91 +1527,16 @@ const OrderIndex = forwardRef((props, ref) => {
 
             {showCustomerUpdateForm && <CustomerCreate ref={CustomerUpdateFormRef} />}
             {/* ⚙️ Settings Modal */}
-            <Modal
+            <TableSettingsModal
                 show={showSettings}
                 onHide={() => setShowSettings(false)}
-                centered
-                size="lg"
-            >
-                <Modal.Header closeButton>
-                    <Modal.Title>
-                        <i
-                            className="bi bi-gear-fill"
-                            style={{ fontSize: "1.2rem", marginRight: "4px" }}
-                            title={t('Table Settings')}
-                        />
-                        {t('Sales Settings')}
-                    </Modal.Title>
-                </Modal.Header>
-                <Modal.Body>
-                    {/* Column Settings */}
-                    {showSettings && (
-                        <>
-                            <h6 className="mb-2">{t('Customize Columns')}</h6>
-                            <DragDropContext onDragEnd={onDragEnd}>
-                                <Droppable droppableId="columns">
-                                    {(provided) => (
-                                        <ul
-                                            className="list-group"
-                                            {...provided.droppableProps}
-                                            ref={provided.innerRef}
-                                        >
-                                            {columns.map((col, index) => {
-                                                return (
-                                                    <>
-                                                        {((col.key === "select" && enableSelection) || col.key !== "select") && <Draggable
-                                                            key={col.key}
-                                                            draggableId={col.key}
-                                                            index={index}
-                                                        >
-                                                            {(provided) => (
-                                                                <li
-                                                                    className="list-group-item d-flex justify-content-between align-items-center"
-                                                                    ref={provided.innerRef}
-                                                                    {...provided.draggableProps}
-                                                                    {...provided.dragHandleProps}                                                        >
-                                                                    <div>
-                                                                        <input
-                                                                            style={{ width: "20px", height: "20px" }}
-                                                                            type="checkbox"
-                                                                            className="form-check-input me-2"
-                                                                            checked={col.visible}
-                                                                            onChange={() => {
-                                                                                handleToggleColumn(index);
-                                                                            }}
-                                                                        />
-                                                                        {t(col.label)}
-                                                                    </div>
-                                                                    <span style={{ cursor: "grab" }}>☰</span>
-                                                                </li>
-                                                            )}
-                                                        </Draggable>}
-                                                    </>)
-                                            })}
-                                            {provided.placeholder}
-                                        </ul>
-                                    )}
-                                </Droppable>
-                            </DragDropContext>
-                        </>
-                    )}
-                </Modal.Body>
-                <Modal.Footer>
-                    <Button variant="secondary" onClick={() => setShowSettings(false)}>
-                        {t('Close')}
-                    </Button>
-                    <Button
-                        variant="primary"
-                        onClick={() => {
-                            RestoreDefaultSettings();
-                            // Save to localStorage here if needed
-                            //setShowSettings(false);
-                        }}
-                    >
-                        {t('Restore to Default')}
-                    </Button>
-                </Modal.Footer>
-            </Modal>
+                title="Sales Settings"
+                columns={columns}
+                onToggleColumn={handleToggleColumn}
+                onDragEnd={onDragEnd}
+                onRestoreDefaults={RestoreDefaultSettings}
+                enableSelection={enableSelection}
+            />
 
             {showPrint && <OrderPrint ref={PrintRef} />}
             {showOrderPreview && <OrderPreview ref={PreviewRef} />}
@@ -1821,21 +1617,7 @@ const OrderIndex = forwardRef((props, ref) => {
                 </Modal.Footer>
             </Modal>
 
-            <Modal show={showSuccess} onHide={() => setShowSuccess(false)} centered>
-                <Modal.Header closeButton>
-                    <Modal.Title>{t('Success')}</Modal.Title>
-                </Modal.Header>
-                <Modal.Body>
-                    <Alert variant="success">
-                        {successMessage}
-                    </Alert>
-                </Modal.Body>
-                <Modal.Footer>
-                    <Button variant="secondary" onClick={() => setShowSuccess(false)}>
-                        {t('Close')}
-                    </Button>
-                </Modal.Footer>
-            </Modal>
+            <SuccessModal show={showSuccess} message={successMessage} onClose={() => setShowSuccess(false)} />
 
             <div className="container-fluid p-0">
                 <div className="row">
@@ -2069,9 +1851,9 @@ const OrderIndex = forwardRef((props, ref) => {
                                         <thead>
                                             <tr className="text-center main-header">
                                                 {columns.filter(c => c.visible).map((col) => {
-                                                    return (<>
-                                                        {col.key === "actions" && <th key={col.key}>{t(col.label)}</th>}
-                                                        {col.key === "select" && enableSelection && <th key={col.key}>{t(col.label)}</th>}
+                                                    return (<React.Fragment key={col.key}>
+                                                        {col.key === "actions" && <th>{t(col.label)}</th>}
+                                                        {col.key === "select" && enableSelection && <th>{t(col.label)}</th>}
                                                         {col.key === "reported_to_zatca" && store.zatca?.phase === "2" && store.zatca?.connected && <th>
                                                             <b
                                                                 style={{
@@ -2110,12 +1892,12 @@ const OrderIndex = forwardRef((props, ref) => {
                                                                 ) : null}
                                                             </b>
                                                         </th>}
-                                                    </>);
+                                                    </React.Fragment>);
                                                 })}
                                             </tr>
                                             <tr className="text-center sub-header">
                                                 {columns.filter(c => c.visible).map((col) => {
-                                                    return (<>
+                                                    return (<React.Fragment key={col.key}>
                                                         {(col.key === "actions" || col.key === "actions_end") && <th></th>}
                                                         {col.key === "select" && enableSelection && <th></th>}
                                                         {col.key !== "actions" &&
@@ -2303,7 +2085,7 @@ const OrderIndex = forwardRef((props, ref) => {
                                                                     searchByFieldValue("zatca.reporting_passed", e.target.value);
                                                                 }}
                                                             >
-                                                                <option value="" SELECTED>{t('Select')}</option>
+                                                                <option value="">{t('Select')}</option>
                                                                 <option value="reported">{t('REPORTED')}</option>
                                                                 <option value="compliance_failed">{t('COMPLIANCE FAILED')}</option>
                                                                 <option value="reporting_failed">{t('REPORTING FAILED')}</option>
@@ -2427,7 +2209,7 @@ const OrderIndex = forwardRef((props, ref) => {
                                                                 ) : null}
                                                             </div>
                                                         </th>}
-                                                    </>);
+                                                    </React.Fragment>);
                                                 })}
                                             </tr>
                                         </thead>
@@ -2437,7 +2219,7 @@ const OrderIndex = forwardRef((props, ref) => {
                                                 orderList.map((order, index) => (
                                                     <tr key={index}>
                                                         {columns.filter(c => c.visible).map((col) => {
-                                                            return (<>
+                                                            return (<React.Fragment key={col.key}>
                                                                 {(col.key === "actions" || col.key === "actions_end") && <td style={{ width: "auto", whiteSpace: "nowrap" }}>
                                                                     <Button className="btn btn-light btn-sm" onClick={() => {
                                                                         openUpdateForm(order.id);
@@ -2527,8 +2309,8 @@ const OrderIndex = forwardRef((props, ref) => {
                                                                     {!order.zatca.reporting_passed ? <span> &nbsp; <Button disabled={reportingInProgress} style={{ marginTop: "3px" }} className="btn btn btn-sm" onClick={() => {
                                                                         ReportInvoiceToZatca(order.id, index);
                                                                     }}>
-                                                                        {!order.zatca?.reportingInProgress && (order.zatca?.reporting_failed_count > 0 || order.zatca?.compliance_check_failed_count > 0) ? <i class="bi bi-bootstrap-reboot"></i> : ""}
-                                                                        {!order.zatca?.reportingInProgress && (!order.zatca?.reporting_failed_count > 0 && !order.zatca?.compliance_check_failed_count) ? <span class="bi-arrow-right-circle">&nbsp; {t("Report")}</span> : ""}
+                                                                        {!order.zatca?.reportingInProgress && (order.zatca?.reporting_failed_count > 0 || order.zatca?.compliance_check_failed_count > 0) ? <i className="bi bi-bootstrap-reboot"></i> : ""}
+                                                                        {!order.zatca?.reportingInProgress && (!order.zatca?.reporting_failed_count > 0 && !order.zatca?.compliance_check_failed_count) ? <span className="bi-arrow-right-circle">&nbsp; {t("Report")}</span> : ""}
 
                                                                         {order.zatca?.reportingInProgress ? <Spinner
                                                                             as="span"
@@ -2560,7 +2342,7 @@ const OrderIndex = forwardRef((props, ref) => {
                                                                                     URL.revokeObjectURL(a.href);
                                                                                 });
                                                                             }
-                                                                        }}><i class="bi bi-filetype-xml"></i> XML
+                                                                        }}><i className="bi bi-filetype-xml"></i> XML
                                                                         </Button>
                                                                     </span> : ""}
                                                                 </td>}
@@ -2580,8 +2362,8 @@ const OrderIndex = forwardRef((props, ref) => {
                                                                 </td>}
                                                                 {(col.fieldName === "payment_methods") && <td style={{ width: "auto", whiteSpace: "nowrap" }}>
                                                                     {order.payment_methods &&
-                                                                        order.payment_methods.map((name) => (
-                                                                            <span className="badge bg-info">{t(name)}</span>
+                                                                        order.payment_methods.map((name, idx) => (
+                                                                            <span key={idx} className="badge bg-info">{t(name)}</span>
                                                                         ))}
                                                                 </td>}
                                                                 {(col.fieldName === "cash_discount") && <td style={{ width: "auto", whiteSpace: "nowrap" }}>
@@ -2619,7 +2401,7 @@ const OrderIndex = forwardRef((props, ref) => {
                                                                 {(col.fieldName === "created_by") && <td style={{ width: "auto", whiteSpace: "nowrap" }}>
                                                                     {order.created_by_name}
                                                                 </td>}
-                                                            </>)
+                                                            </React.Fragment>)
                                                         })}
                                                     </tr>
                                                 ))}

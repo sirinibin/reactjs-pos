@@ -1,5 +1,6 @@
 import React, { useState, forwardRef, useImperativeHandle } from "react";
 import { Modal } from 'react-bootstrap';
+import { formatInStoreTimezone } from '../utils/dateUtils.js';
 
 
 const UserView = forwardRef((props, ref) => {
@@ -58,36 +59,6 @@ const UserView = forwardRef((props, ref) => {
     const formatBattery = (battery) => {
         return battery !== 'N/A' ? `${(parseFloat(battery) * 100).toFixed(0)}%` : 'Unknown';
     };
-
-    const countryTimezoneMap = {
-        'SA': 'Asia/Riyadh', 'AE': 'Asia/Dubai', 'KW': 'Asia/Kuwait',
-        'QA': 'Asia/Qatar', 'BH': 'Asia/Bahrain', 'OM': 'Asia/Muscat',
-        'IN': 'Asia/Kolkata', 'PK': 'Asia/Karachi', 'BD': 'Asia/Dhaka',
-        'LK': 'Asia/Colombo', 'NP': 'Asia/Kathmandu', 'MY': 'Asia/Kuala_Lumpur',
-        'SG': 'Asia/Singapore', 'PH': 'Asia/Manila', 'ID': 'Asia/Jakarta',
-        'EG': 'Africa/Cairo', 'JO': 'Asia/Amman', 'LB': 'Asia/Beirut',
-        'IQ': 'Asia/Baghdad', 'IR': 'Asia/Tehran', 'TR': 'Europe/Istanbul',
-        'GB': 'Europe/London', 'DE': 'Europe/Berlin', 'FR': 'Europe/Paris',
-        'US': 'America/New_York', 'CA': 'America/Toronto', 'AU': 'Australia/Sydney',
-    };
-
-    function formatInStoreTimezone(dateStr) {
-        if (!dateStr) return '';
-        const tz = countryTimezoneMap[localStorage.getItem('store_country_code')] || 'UTC';
-        const tzLabel = tz.replace(/_/g, ' ');
-        try {
-            const d = new Date(dateStr);
-            const formatted = d.toLocaleString('en-US', {
-                timeZone: tz,
-                year: 'numeric', month: 'short', day: '2-digit',
-                hour: '2-digit', minute: '2-digit', second: '2-digit',
-                hour12: true,
-            });
-            return `${formatted} (${tzLabel})`;
-        } catch {
-            return dateStr;
-        }
-    }
 
     const infoCard = (label, value, icon) => (
         <div style={{ backgroundColor: '#ffffff', padding: '24px', borderRadius: '8px', border: '1px solid #e2e8f0', display: 'flex', flexDirection: 'column', gap: '6px' }}>

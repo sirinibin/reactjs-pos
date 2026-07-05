@@ -41,6 +41,9 @@ import ProductHistory from "../utils/product_history.js";
 
 import CustomerWithdrawalUpdateForm from "../customer_withdrawal/create.js";
 import QuotationSalesUpdateForm from "../quotation/create.js";
+import { ObjectToSearchQueryParams } from '../utils/queryUtils.js';
+import { fetchStore } from '../utils/storeUtils.js';
+import { useEnterKeyNavigation } from '../utils/useEnterKeyNavigation.js';
 
 const QuotationSalesReturnCreate = forwardRef((props, ref) => {
 
@@ -139,47 +142,15 @@ const QuotationSalesReturnCreate = forwardRef((props, ref) => {
 
     let [store, setStore] = useState({});
 
-    function getStore(id) {
-        console.log("inside get Store");
-        const requestOptions = {
-            method: 'GET',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': localStorage.getItem('access_token'),
-            },
-        };
-
-        fetch('/v1/store/' + id, requestOptions)
-            .then(async response => {
-                const isJson = response.headers.get('content-type')?.includes('application/json');
-                const data = isJson && await response.json();
-
-                // check for error response
-                if (!response.ok) {
-                    const error = (data && data.errors);
-                    return Promise.reject(error);
-                }
-
-                console.log("Response:");
-                console.log(data);
-                store = data.result;
-                setStore(store);
-            })
-            .catch(error => {
-
-            });
+    async function getStore(id) {
+        try {
+            const data = await fetchStore(id);
+            setStore({ ...data });
+        } catch (error) { }
     }
 
 
 
-
-    function ObjectToSearchQueryParams(object) {
-        return Object.keys(object)
-            .map(function (key) {
-                return `search[${key}]=` + encodeURIComponent(object[key]);
-            })
-            .join("&");
-    }
 
 
     let [selectedCustomers, setSelectedCustomers] = useState([]);
@@ -358,31 +329,7 @@ const QuotationSalesReturnCreate = forwardRef((props, ref) => {
     }
 
 
-    useEffect(() => {
-        const listener = event => {
-            if (event.code === "Enter" || event.code === "NumpadEnter") {
-                console.log("Enter key was pressed. Run your function.");
-                // event.preventDefault();
-
-                var form = event.target.form;
-                if (form && event.target) {
-                    var index = Array.prototype.indexOf.call(form, event.target);
-                    if (form && form.elements[index + 1]) {
-                        if ((event.target.getAttribute("class") || "").includes("barcode")) {
-                            form.elements[index].focus();
-                        } else {
-                            form.elements[index + 1].focus();
-                        }
-                        event.preventDefault();
-                    }
-                }
-            }
-        };
-        document.addEventListener("keydown", listener);
-        return () => {
-            document.removeEventListener("keydown", listener);
-        };
-    }, []);
+    useEnterKeyNavigation();
 
     let [quotation, setQuotation] = useState({});
 
@@ -711,9 +658,61 @@ const QuotationSalesReturnCreate = forwardRef((props, ref) => {
             salesReturnHistory: "F9",
             purchaseHistory: "F6",
             purchaseReturnHistory: "F8",
-            deliveryNoteHistory: "F3",
+            deliveryNoteHistory: "F10",
             quotationHistory: "F2",
-            quotationSalesHistory: "F10",
+            quotationSalesHistory: "F3",
+            quotationSalesReturnHistory: "Ctrl + Shift + 8",
+            images: "Ctrl + Shift + 9",
+        },
+        "MBDI-SIMULATION": {
+            linkedProducts: "Ctrl + Shift + 7",
+            productHistory: "Ctrl + Shift + 6",
+            salesHistory: "F4",
+            salesReturnHistory: "F9",
+            purchaseHistory: "F6",
+            purchaseReturnHistory: "F8",
+            deliveryNoteHistory: "F10",
+            quotationHistory: "F2",
+            quotationSalesHistory: "F3",
+            quotationSalesReturnHistory: "Ctrl + Shift + 8",
+            images: "Ctrl + Shift + 9",
+        },
+        YNB: {
+            linkedProducts: "Ctrl + Shift + 7",
+            productHistory: "Ctrl + Shift + 6",
+            salesHistory: "F4",
+            salesReturnHistory: "F9",
+            purchaseHistory: "F6",
+            purchaseReturnHistory: "F8",
+            deliveryNoteHistory: "F10",
+            quotationHistory: "F2",
+            quotationSalesHistory: "F3",
+            quotationSalesReturnHistory: "Ctrl + Shift + 8",
+            images: "Ctrl + Shift + 9",
+        },
+        MDNA: {
+            linkedProducts: "Ctrl + Shift + 7",
+            productHistory: "Ctrl + Shift + 6",
+            salesHistory: "F4",
+            salesReturnHistory: "F9",
+            purchaseHistory: "F6",
+            purchaseReturnHistory: "F8",
+            deliveryNoteHistory: "F10",
+            quotationHistory: "F2",
+            quotationSalesHistory: "F3",
+            quotationSalesReturnHistory: "Ctrl + Shift + 8",
+            images: "Ctrl + Shift + 9",
+        },
+        "MDNA-SIMULATION": {
+            linkedProducts: "Ctrl + Shift + 7",
+            productHistory: "Ctrl + Shift + 6",
+            salesHistory: "F4",
+            salesReturnHistory: "F9",
+            purchaseHistory: "F6",
+            purchaseReturnHistory: "F8",
+            deliveryNoteHistory: "F10",
+            quotationHistory: "F2",
+            quotationSalesHistory: "F3",
             quotationSalesReturnHistory: "Ctrl + Shift + 8",
             images: "Ctrl + Shift + 9",
         },
@@ -759,9 +758,9 @@ const QuotationSalesReturnCreate = forwardRef((props, ref) => {
                 openProductImages(product.product_id);
             }
             return;
-        } else if (store?.code === "MBDI") {
+        } else if (store?.code === "MBDI" || store?.code === "MBDI-SIMULATION" || store?.code === "YNB" || store?.code === "MDNA" || store?.code === "MDNA-SIMULATION") {
             if (event.key === "F10") {
-                openQuotationSalesHistory(product);
+                openDeliveryNoteHistory(product);
             } else if (isCmdOrCtrl && event.shiftKey && event.key.toLowerCase() === '6') {
                 openProductHistory(product);
             } else if (event.key === "F4") {
@@ -773,7 +772,7 @@ const QuotationSalesReturnCreate = forwardRef((props, ref) => {
             } else if (event.key === "F8") {
                 openPurchaseReturnHistory(product);
             } else if (event.key === "F3") {
-                openDeliveryNoteHistory(product);
+                openQuotationSalesHistory(product);
             } else if (event.key === "F2") {
                 openQuotationHistory(product, "quotation");
             } else if (isCmdOrCtrl && event.shiftKey && event.key.toLowerCase() === '7') {
@@ -3087,6 +3086,18 @@ const QuotationSalesReturnCreate = forwardRef((props, ref) => {
                                                                         }
 
                                                                         selectedProducts[index].unit_price = parseFloat(e.target.value);
+                                                                        if (selectedProducts[index].purchase_unit_price > 0 && parseFloat(e.target.value) > 0) {
+                                                                            if (selectedProducts[index].purchase_unit_price > parseFloat(e.target.value)) {
+                                                                                errors["unit_price_" + index] = "Unit price should not be less than Purchase Unit Price(without VAT)";
+                                                                                errors["purchase_unit_price_" + index] = "Purchase Unit Price should not be greater than Unit Price(without VAT)";
+                                                                                errors["unit_price_with_vat_" + index] = "Unit price(with VAT) is less than Purchase Unit Price";
+                                                                            } else {
+                                                                                delete errors["unit_price_" + index];
+                                                                                delete errors["purchase_unit_price_" + index];
+                                                                                delete errors["unit_price_with_vat_" + index];
+                                                                            }
+                                                                            setErrors({ ...errors });
+                                                                        }
                                                                         setSelectedProducts([...selectedProducts]);
 
                                                                         timerRef.current = setTimeout(() => {
@@ -3920,7 +3931,7 @@ const QuotationSalesReturnCreate = forwardRef((props, ref) => {
                                             if (col.key === 'select') return <th key="select">Select All <br /><input type="checkbox" className="form-check-input" checked={isAllSelected} onChange={handleSelectAll} /></th>;
                                             if (col.key === 'si_no') return <th key="si_no">SI No.</th>;
                                             if (col.key === 'part_number') return <th key="part_number">Part No.</th>;
-                                            if (col.key === 'name') return <th key="name" style={{ minWidth: "250px" }}>Name</th>;
+                                            if (col.key === 'name') return <th key="name" style={{ minWidth: window.innerWidth > 1920 ? "375px" : "250px" }}>Name</th>;
                                             if (col.key === 'info') return <th key="info">Info</th>;
                                             if (col.key === 'purchase_unit_price') return <th key="purchase_unit_price">Purchase Unit Price(without VAT)</th>;
                                             if (col.key === 'stock') return <th key="stock">Stock</th>;
@@ -4479,6 +4490,18 @@ const QuotationSalesReturnCreate = forwardRef((props, ref) => {
                                                                         }
 
                                                                         selectedProducts[index].unit_price = parseFloat(e.target.value);
+                                                                        if (selectedProducts[index].purchase_unit_price > 0 && parseFloat(e.target.value) > 0) {
+                                                                            if (selectedProducts[index].purchase_unit_price > parseFloat(e.target.value)) {
+                                                                                errors["unit_price_" + index] = "Unit price should not be less than Purchase Unit Price(without VAT)";
+                                                                                errors["purchase_unit_price_" + index] = "Purchase Unit Price should not be greater than Unit Price(without VAT)";
+                                                                                errors["unit_price_with_vat_" + index] = "Unit price(with VAT) is less than Purchase Unit Price";
+                                                                            } else {
+                                                                                delete errors["unit_price_" + index];
+                                                                                delete errors["purchase_unit_price_" + index];
+                                                                                delete errors["unit_price_with_vat_" + index];
+                                                                            }
+                                                                            setErrors({ ...errors });
+                                                                        }
                                                                         setSelectedProducts([...selectedProducts]);
 
                                                                         timerRef.current = setTimeout(() => {
@@ -5738,7 +5761,6 @@ const QuotationSalesReturnCreate = forwardRef((props, ref) => {
                                             />
                                         </td>
                                     </tr>
-
                                     <tr>
                                         <th colSpan="8" className="text-end">
                                             Net Total(with VAT) Before Rounding
@@ -5868,11 +5890,11 @@ const QuotationSalesReturnCreate = forwardRef((props, ref) => {
                         <div className="col-md-12" style={{ maxWidth: "90%" }}>
                             <label className="form-label">Payments given</label>
 
-                            <div class="table-responsive">
+                            <div className="table-responsive">
                                 <Button variant="secondary" style={{ alignContent: "right" }} disabled={quotation.payment_status === "not_paid"} onClick={addNewPayment}>
                                     Create new payment
                                 </Button>
-                                <table class="table table-striped table-sm table-bordered" style={{ width: "100%" }}>
+                                <table className="table table-striped table-sm table-bordered" style={{ width: "100%" }}>
                                     <thead>
                                         <th>
                                             Date
@@ -6012,14 +6034,14 @@ const QuotationSalesReturnCreate = forwardRef((props, ref) => {
                                                         )}
                                                     </td>
                                                     <td style={{ width: "80px", textAlign: 'center' }}>
-                                                        <button type="button" disabled={quotation.payment_status === "not_paid"} onClick={() => removePayment(key)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#dc2626', padding: '2px 6px', borderRadius: '4px' }} onMouseEnter={e => e.currentTarget.style.backgroundColor = '#fef2f6'} onMouseLeave={e => e.currentTarget.style.backgroundColor = 'transparent'}>
-                                                            <i className="bi bi-trash" style={{ fontSize: '14px' }}></i>
+                                                        <button type="button" disabled={quotation.payment_status === "not_paid"} onClick={() => removePayment(key)} className="btn btn-danger btn-sm">
+                                                            <i className="bi bi-trash"></i>
                                                         </button>
                                                     </td>
                                                 </tr>
                                             ))}
                                         <tr>
-                                            <td class="text-end">
+                                            <td className="text-end">
                                                 <b>Total</b>
                                             </td>
                                             <td><b style={{ marginLeft: "14px" }}>{trimTo2Decimals(totalPaymentAmount)}</b>

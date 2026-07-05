@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef, forwardRef, useImperativeHandle, useCallback, useMemo } from "react";
 import OrderPreview from "./preview.js";
-import { Modal, Button, Alert } from "react-bootstrap";
+import { Modal, Button } from "react-bootstrap";
 //import ProductHistory from "./../product/product_history.js";
 import ProductHistory from "../utils/product_history.js";
 import SalesHistory from "../utils/product_sales_history.js";
@@ -58,6 +58,11 @@ import CustomerPending from "./../utils/customer_pending.js";
 import { useTranslation } from 'react-i18next';
 import eventEmitter from '../utils/eventEmitter';
 import { SalesType1Header, SalesType1Body } from './SalesType1Form';
+import { ObjectToSearchQueryParams } from '../utils/queryUtils.js';
+import { fetchStore } from '../utils/storeUtils.js';
+import SuccessModal from '../utils/SuccessModal.js';
+import { useEnterKeyNavigation } from '../utils/useEnterKeyNavigation.js';
+import TableSettingsModal from '../utils/TableSettingsModal.js';
 
 function _dnFormatTimeAgo(isoString) {
     if (!isoString) return '';
@@ -117,6 +122,7 @@ const OrderCreate = forwardRef((props, ref) => {
 
             selectedProducts = [];
             setSelectedProducts([]);
+            formData.products = [];
 
             selectedCustomers = [];
             setSelectedCustomers([]);
@@ -223,6 +229,7 @@ const OrderCreate = forwardRef((props, ref) => {
 
         selectedProducts = [];
         setSelectedProducts([]);
+        formData.products = [];
 
         selectedCustomers = [];
         setSelectedCustomers([]);
@@ -306,6 +313,16 @@ const OrderCreate = forwardRef((props, ref) => {
 
     let [isUpdateForm, setIsUpdateForm] = useState(false);
     const [isZatcaLocked, setIsZatcaLocked] = useState(false);
+    const prevIsUpdateFormRef = useRef(false);
+    useEffect(() => {
+        if (prevIsUpdateFormRef.current === true && isUpdateForm === false) {
+            // eslint-disable-next-line react-hooks/exhaustive-deps
+            selectedProducts = [];
+            setSelectedProducts([]);
+            formData.products = [];
+        }
+        prevIsUpdateFormRef.current = isUpdateForm;
+    }, [isUpdateForm]); // eslint-disable-line react-hooks/exhaustive-deps
 
     function ResetForm() {
         cashDiscount = "";
@@ -339,39 +356,10 @@ const OrderCreate = forwardRef((props, ref) => {
     let [store, setStore] = useState({});
 
     async function getStore(id) {
-        console.log("inside get Store");
-        const requestOptions = {
-            method: 'GET',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': localStorage.getItem('access_token'),
-            },
-        };
-
-        await fetch('/v1/store/' + id, requestOptions)
-            .then(async response => {
-                const isJson = response.headers.get('content-type')?.includes('application/json');
-                const data = isJson && await response.json();
-
-                // check for error response
-                if (!response.ok) {
-                    const error = (data && data.errors);
-                    return Promise.reject(error);
-                }
-
-                console.log("Response:");
-                console.log(data);
-                store = data.result;
-                setStore(store);
-                formData.vat_percent = parseFloat(store.vat_percent);
-                if (store?.zatca?.phase !== "2") {
-                    formData.enable_report_to_zatca = false;
-                }
-                setFormData({ ...formData });
-            })
-            .catch(error => {
-
-            });
+        try {
+            const data = await fetchStore(id);
+            setStore({ ...data });
+        } catch (error) { }
     }
 
 
@@ -1054,36 +1042,7 @@ const OrderCreate = forwardRef((props, ref) => {
             });
     }
 
-    useEffect(() => {
-        const listener = event => {
-            if (event.target.tagName === "TEXTAREA") return;
-            if (event.code === "Enter" || event.code === "NumpadEnter") {
-                //console.log("Enter key was pressed. Run your function-order.123");
-                // event.preventDefault();
-
-
-
-                var form = event.target.form;
-                if (form && event.target) {
-                    var index = Array.prototype.indexOf.call(form, event.target);
-                    // console.log("form.elements:", form.elements);
-                    if (form && form.elements[index + 1]) {
-                        //
-                        if ((event.target.getAttribute("class") || "").includes("barcode")) {
-                            form.elements[index].focus();
-                        } else {
-                            form.elements[index + 1].focus();
-                        }
-                        event.preventDefault();
-                    }
-                }
-            }
-        };
-        document.addEventListener("keydown", listener);
-        return () => {
-            document.removeEventListener("keydown", listener);
-        };
-    }, []);
+    useEnterKeyNavigation();
 
 
     //const history = useHistory();
@@ -1092,11 +1051,6 @@ const OrderCreate = forwardRef((props, ref) => {
     let [errors, setErrors] = useState({
         "payment_amount": [],
     });
-    useEffect(() => {
-        if (Object.keys(errors).length === 0) return;
-        const timer = setTimeout(() => setErrors({ "payment_amount": [] }), 5000);
-        return () => clearTimeout(timer);
-    }, [errors]);
     const [isProcessing, setProcessing] = useState(false);
     const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -1169,14 +1123,6 @@ const OrderCreate = forwardRef((props, ref) => {
         }
     });
 
-
-    function ObjectToSearchQueryParams(object) {
-        return Object.keys(object)
-            .map(function (key) {
-                return `search[${key}]=` + encodeURIComponent(object[key]);
-            })
-            .join("&");
-    }
 
 
     const customCustomerFilter = useCallback((option, query) => {
@@ -1350,10 +1296,13 @@ const OrderCreate = forwardRef((props, ref) => {
             .replace(/\s+/g, " ").trim();
 
         return qWords.every((word) => {
-            // Also strip special chars from the query word for compact comparison
-            // so "cn-a40057" (partial hyphen) matches searchableCompact "cna40057"
+            if (searchable.includes(word)) return true;
+            // Compact fallback strips special chars so "cna40057" matches "cn-a-40057".
+            // Skip it when the word STARTS with a special char (e.g. "-4477"): the user
+            // wants a literal hyphen match, not a substring match inside a longer number.
             const wordCompact = word.replace(/[^\p{L}\p{N}]/gu, "");
-            return searchable.includes(word) || searchableCompact.includes(wordCompact);
+            if (!wordCompact || /^[^\p{L}\p{N}]/u.test(word)) return false;
+            return searchableCompact.includes(wordCompact);
         });
     }, []);
 
@@ -1428,8 +1377,11 @@ const OrderCreate = forwardRef((props, ref) => {
             return;
         }
 
+        // Strip leading hyphens from each word: MongoDB $text search treats "-word" as NOT.
+        const apiSearchTerm = searchTerm.split(/\s+/).map(w => w.replace(/^-+/, "")).filter(Boolean).join(" ");
+
         var params = {
-            search_text: searchTerm,
+            search_text: apiSearchTerm || searchTerm,
         };
 
         if (localStorage.getItem("store_id")) {
@@ -1482,8 +1434,6 @@ const OrderCreate = forwardRef((props, ref) => {
                 return 1;
             }
 
-            const searchPhrase = searchTerm.toLowerCase().replace(/\s+/g, " ").trim();
-
             const getSearchable = (item) => {
                 let partNoLabel = item.prefix_part_number ? item.prefix_part_number + "-" + item.part_number : "";
                 const fields = [
@@ -1503,6 +1453,9 @@ const OrderCreate = forwardRef((props, ref) => {
             const aSearchable = getSearchable(a);
             const bSearchable = getSearchable(b);
 
+            // Strip special chars (e.g. inch " symbol) so indexOf matches getSearchable output
+            const searchPhrase = searchTerm.toLowerCase().replace(/[^\p{L}\p{N}\s]/gu, " ").replace(/\s+/g, " ").trim();
+
             // Find index of the phrase in each string
             const aIndex = aSearchable.indexOf(searchPhrase);
             const bIndex = bSearchable.indexOf(searchPhrase);
@@ -1520,10 +1473,8 @@ const OrderCreate = forwardRef((props, ref) => {
                 return 1; // b contains phrase, a does not
             }
 
-
-
-            const words = searchTerm.toLowerCase().split(" ").filter(Boolean);
-
+            // Normalize search words (strip special chars) so regex word-boundary matching works
+            const words = searchTerm.toLowerCase().replace(/[^\p{L}\p{N}\s]/gu, " ").split(/\s+/).filter(Boolean);
 
             // Calculate percentage of occurrence
             const aPercent = percentOccurrence(words, a);
@@ -3146,9 +3097,61 @@ const OrderCreate = forwardRef((props, ref) => {
             salesReturnHistory: "F9",
             purchaseHistory: "F6",
             purchaseReturnHistory: "F8",
-            deliveryNoteHistory: "F3",
+            deliveryNoteHistory: "F10",
             quotationHistory: "F2",
-            quotationSalesHistory: "F10",
+            quotationSalesHistory: "F3",
+            quotationSalesReturnHistory: "Ctrl + Shift + 8",
+            images: "Ctrl + Shift + 9",
+        },
+        "MBDI-SIMULATION": {
+            linkedProducts: "Ctrl + Shift + 7",
+            productHistory: "Ctrl + Shift + 6",
+            salesHistory: "F4",
+            salesReturnHistory: "F9",
+            purchaseHistory: "F6",
+            purchaseReturnHistory: "F8",
+            deliveryNoteHistory: "F10",
+            quotationHistory: "F2",
+            quotationSalesHistory: "F3",
+            quotationSalesReturnHistory: "Ctrl + Shift + 8",
+            images: "Ctrl + Shift + 9",
+        },
+        YNB: {
+            linkedProducts: "Ctrl + Shift + 7",
+            productHistory: "Ctrl + Shift + 6",
+            salesHistory: "F4",
+            salesReturnHistory: "F9",
+            purchaseHistory: "F6",
+            purchaseReturnHistory: "F8",
+            deliveryNoteHistory: "F10",
+            quotationHistory: "F2",
+            quotationSalesHistory: "F3",
+            quotationSalesReturnHistory: "Ctrl + Shift + 8",
+            images: "Ctrl + Shift + 9",
+        },
+        MDNA: {
+            linkedProducts: "Ctrl + Shift + 7",
+            productHistory: "Ctrl + Shift + 6",
+            salesHistory: "F4",
+            salesReturnHistory: "F9",
+            purchaseHistory: "F6",
+            purchaseReturnHistory: "F8",
+            deliveryNoteHistory: "F10",
+            quotationHistory: "F2",
+            quotationSalesHistory: "F3",
+            quotationSalesReturnHistory: "Ctrl + Shift + 8",
+            images: "Ctrl + Shift + 9",
+        },
+        "MDNA-SIMULATION": {
+            linkedProducts: "Ctrl + Shift + 7",
+            productHistory: "Ctrl + Shift + 6",
+            salesHistory: "F4",
+            salesReturnHistory: "F9",
+            purchaseHistory: "F6",
+            purchaseReturnHistory: "F8",
+            deliveryNoteHistory: "F10",
+            quotationHistory: "F2",
+            quotationSalesHistory: "F3",
             quotationSalesReturnHistory: "Ctrl + Shift + 8",
             images: "Ctrl + Shift + 9",
         },
@@ -3194,9 +3197,9 @@ const OrderCreate = forwardRef((props, ref) => {
                 openProductImages(product.product_id);
             }
             return;
-        } else if (store?.code === "MBDI") {
+        } else if (store?.code === "MBDI" || store?.code === "MBDI-SIMULATION" || store?.code === "YNB" || store?.code === "MDNA" || store?.code === "MDNA-SIMULATION") {
             if (event.key === "F10") {
-                openQuotationSalesHistory(product);
+                openDeliveryNoteHistory(product);
             } else if (isCmdOrCtrl && event.shiftKey && event.key.toLowerCase() === '6') {
                 openProductHistory(product);
             } else if (event.key === "F4") {
@@ -3208,7 +3211,7 @@ const OrderCreate = forwardRef((props, ref) => {
             } else if (event.key === "F8") {
                 openPurchaseReturnHistory(product);
             } else if (event.key === "F3") {
-                openDeliveryNoteHistory(product);
+                openQuotationSalesHistory(product);
             } else if (event.key === "F2") {
                 openQuotationHistory(product, "quotation");
             } else if (isCmdOrCtrl && event.shiftKey && event.key.toLowerCase() === '7') {
@@ -3831,6 +3834,10 @@ const OrderCreate = forwardRef((props, ref) => {
     }
 
     async function handlePrintClose() {
+        selectedProducts = [];
+        setSelectedProducts([]);
+        formData.products = [];
+        setFormData({ ...formData });
         openCreateForm();
     }
 
@@ -4860,106 +4867,17 @@ const OrderCreate = forwardRef((props, ref) => {
                 <PurchaseCreate ref={PurchaseUpdateFormRef} onUpdated={handleReferenceUpdated} />
             </>}
 
-            <Modal show={showSuccess} onHide={() => setShowSuccess(false)} centered>
-                <Modal.Header closeButton>
-                    <Modal.Title>{t('Success')}</Modal.Title>
-                </Modal.Header>
-                <Modal.Body>
-                    <Alert variant="success">
-                        {successMessage}
-                    </Alert>
-                </Modal.Body>
-                <Modal.Footer>
-                    <Button variant="secondary" onClick={() => setShowSuccess(false)}>
-                        {t('Close')}
-                    </Button>
-                </Modal.Footer>
-            </Modal>
+            <SuccessModal show={showSuccess} message={successMessage} onClose={() => setShowSuccess(false)} />
 
-            <Modal
+            <TableSettingsModal
                 show={showProductSearchSettings}
                 onHide={() => setShowProductSearchSettings(false)}
-                centered
-                size="lg"
-            >
-                <Modal.Header closeButton>
-                    <Modal.Title>
-                        <i
-                            className="bi bi-gear-fill"
-                            style={{ fontSize: "1.2rem", marginRight: "4px" }}
-                            title="Table Settings"
-
-                        />
-                        {t("Product Search Settings")}
-                    </Modal.Title>
-                </Modal.Header>
-                <Modal.Body>
-                    {/* Column Settings */}
-                    {showProductSearchSettings && (
-                        <>
-                            <h6 className="mb-2">{t("Customize Columns")}</h6>
-                            <DragDropContext onDragEnd={onDragEnd}>
-                                <Droppable droppableId="columns">
-                                    {(provided) => (
-                                        <ul
-                                            className="list-group"
-                                            {...provided.droppableProps}
-                                            ref={provided.innerRef}
-                                        >
-                                            {searchProductsColumns.map((col, index) => {
-                                                return (
-                                                    <>
-                                                        <Draggable
-                                                            key={col.key}
-                                                            draggableId={col.key}
-                                                            index={index}
-                                                        >
-                                                            {(provided) => (
-                                                                <li
-                                                                    className="list-group-item d-flex justify-content-between align-items-center"
-                                                                    ref={provided.innerRef}
-                                                                    {...provided.draggableProps}
-                                                                    {...provided.dragHandleProps}                                                        >
-                                                                    <div>
-                                                                        <input
-                                                                            style={{ width: "20px", height: "20px" }}
-                                                                            type="checkbox"
-                                                                            className="form-check-input me-2"
-                                                                            checked={col.visible}
-                                                                            onChange={() => {
-                                                                                handleToggleColumn(index);
-                                                                            }}
-                                                                        />
-                                                                        {t(col.label)}
-                                                                    </div>
-                                                                    <span style={{ cursor: "grab" }}>☰</span>
-                                                                </li>
-                                                            )}
-                                                        </Draggable>
-                                                    </>)
-                                            })}
-                                            {provided.placeholder}
-                                        </ul>
-                                    )}
-                                </Droppable>
-                            </DragDropContext>
-                        </>
-                    )}
-                </Modal.Body>
-                <Modal.Footer>
-                    <Button variant="secondary" onClick={() => setShowProductSearchSettings(false)}>
-                        {t('Close')}
-                    </Button>
-                    <Button
-                        variant="primary"
-                        onClick={() => {
-                            RestoreDefaultSettings();
-                        }}
-                    >
-                        {t('Restore to Default')}
-                    </Button>
-                </Modal.Footer>
-            </Modal>
+                title="Product Search Settings"
+                columns={searchProductsColumns}
+                onToggleColumn={handleToggleColumn}
+                onDragEnd={onDragEnd}
+                onRestoreDefaults={RestoreDefaultSettings}
+            />
 
             {/* ⚙️ Selected Products Table Settings Modal */}
             <Modal
@@ -6631,14 +6549,16 @@ const OrderCreate = forwardRef((props, ref) => {
                                                                             {selectedProducts[index].unit ? selectedProducts[index].unit[0]?.toUpperCase() : 'P'}
                                                                         </span>
                                                                     </div>
-                                                                    {(errors[`quantity_${index}`] || warnings[`quantity_${index}`]) && (
-                                                                        <OverlayTrigger placement="top" overlay={<Tooltip>{errors[`quantity_${index}`] || warnings[`quantity_${index}`]}</Tooltip>}>
-                                                                            <i
-                                                                                className={`bi bi-exclamation-circle-fill ${errors[`quantity_${index}`] ? 'text-danger' : 'text-warning'}`}
-                                                                                style={{ fontSize: '12px', flexShrink: 0, cursor: 'help' }}
-                                                                            ></i>
-                                                                        </OverlayTrigger>
-                                                                    )}
+                                                                    <div style={{ width: '20px', flexShrink: 0 }}>
+                                                                        {(errors[`quantity_${index}`] || warnings[`quantity_${index}`]) && (
+                                                                            <OverlayTrigger placement="top" overlay={<Tooltip>{errors[`quantity_${index}`] || warnings[`quantity_${index}`]}</Tooltip>}>
+                                                                                <i
+                                                                                    className={`bi bi-exclamation-circle-fill ${errors[`quantity_${index}`] ? 'text-danger' : 'text-warning'}`}
+                                                                                    style={{ fontSize: '12px', flexShrink: 0, cursor: 'help' }}
+                                                                                ></i>
+                                                                            </OverlayTrigger>
+                                                                        )}
+                                                                    </div>
                                                                 </div>
                                                             </td>);
 
@@ -6718,6 +6638,18 @@ const OrderCreate = forwardRef((props, ref) => {
                                                                                 }
 
                                                                                 selectedProducts[index].unit_price = parseFloat(e.target.value);
+                                                                                if (selectedProducts[index].purchase_unit_price > 0 && parseFloat(e.target.value) > 0) {
+                                                                                    if (selectedProducts[index].purchase_unit_price > parseFloat(e.target.value)) {
+                                                                                        errors["unit_price_" + index] = t("Unit price should not be less than Purchase Unit Price(without VAT)");
+                                                                                        errors["purchase_unit_price_" + index] = t("Purchase Unit Price should not be greater than Unit Price(without VAT)");
+                                                                                        errors["unit_price_with_vat_" + index] = t("Unit price(with VAT) is less than Purchase Unit Price");
+                                                                                    } else {
+                                                                                        delete errors["unit_price_" + index];
+                                                                                        delete errors["purchase_unit_price_" + index];
+                                                                                        delete errors["unit_price_with_vat_" + index];
+                                                                                    }
+                                                                                    setErrors({ ...errors });
+                                                                                }
                                                                                 setSelectedProducts([...selectedProducts]);
 
                                                                                 timerRef.current = setTimeout(() => {
@@ -7460,7 +7392,6 @@ const OrderCreate = forwardRef((props, ref) => {
                                                         })}
                                                     </tr>);
                                             }).reverse()}
-
                                         </tbody>
                                     </table>
                                 </div>
@@ -8870,9 +8801,11 @@ const OrderCreate = forwardRef((props, ref) => {
                                                                                 {selectedProducts[index].unit ? selectedProducts[index].unit[0]?.toUpperCase() : 'P'}
                                                                             </span>
                                                                         </div>
-                                                                        {(errors[`quantity_${index}`] || warnings[`quantity_${index}`]) && (
-                                                                            <OverlayTrigger placement="top" overlay={<Tooltip>{errors[`quantity_${index}`] || warnings[`quantity_${index}`]}</Tooltip>}><i className={`bi bi-exclamation-circle-fill ${errors[`quantity_${index}`] ? 'text-danger' : 'text-warning'} ms-2`} style={{ fontSize: '1rem', cursor: 'help' }}></i></OverlayTrigger>
-                                                                        )}
+                                                                        <div style={{ width: '20px', flexShrink: 0 }}>
+                                                                            {(errors[`quantity_${index}`] || warnings[`quantity_${index}`]) && (
+                                                                                <OverlayTrigger placement="top" overlay={<Tooltip>{errors[`quantity_${index}`] || warnings[`quantity_${index}`]}</Tooltip>}><i className={`bi bi-exclamation-circle-fill ${errors[`quantity_${index}`] ? 'text-danger' : 'text-warning'} ms-2`} style={{ fontSize: '1rem', cursor: 'help' }}></i></OverlayTrigger>
+                                                                            )}
+                                                                        </div>
                                                                     </div>
                                                                 </td>);
 
@@ -8954,6 +8887,18 @@ const OrderCreate = forwardRef((props, ref) => {
                                                                                     }
 
                                                                                     selectedProducts[index].unit_price = parseFloat(e.target.value);
+                                                                                    if (selectedProducts[index].purchase_unit_price > 0 && parseFloat(e.target.value) > 0) {
+                                                                                        if (selectedProducts[index].purchase_unit_price > parseFloat(e.target.value)) {
+                                                                                            errors["unit_price_" + index] = t("Unit price should not be less than Purchase Unit Price(without VAT)");
+                                                                                            errors["purchase_unit_price_" + index] = t("Purchase Unit Price should not be greater than Unit Price(without VAT)");
+                                                                                            errors["unit_price_with_vat_" + index] = t("Unit price(with VAT) is less than Purchase Unit Price");
+                                                                                        } else {
+                                                                                            delete errors["unit_price_" + index];
+                                                                                            delete errors["purchase_unit_price_" + index];
+                                                                                            delete errors["unit_price_with_vat_" + index];
+                                                                                        }
+                                                                                        setErrors({ ...errors });
+                                                                                    }
                                                                                     setSelectedProducts([...selectedProducts]);
 
                                                                                     timerRef.current = setTimeout(() => {
@@ -9613,7 +9558,6 @@ const OrderCreate = forwardRef((props, ref) => {
                                                             })}
                                                         </tr>);
                                                 }).reverse()}
-
                                             </tbody>
                                         </table>
                                     </div> {/* Close table-container */}

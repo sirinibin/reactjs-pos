@@ -5,6 +5,7 @@ import { Spinner } from "react-bootstrap";
 import Resizer from "react-image-file-resizer";
 import countryList from 'react-select-country-list';
 import { Typeahead } from "react-bootstrap-typeahead";
+import { useEnterKeyNavigation } from '../utils/useEnterKeyNavigation.js';
 //import { DebounceInput } from 'react-debounce-input';
 
 const StoreCreate = forwardRef((props, ref) => {
@@ -233,31 +234,7 @@ const StoreCreate = forwardRef((props, ref) => {
         },
     };
 
-    useEffect(() => {
-        const listener = event => {
-            if (event.code === "Enter" || event.code === "NumpadEnter") {
-                console.log("Enter key was pressed. Run your function.");
-                // event.preventDefault();
-
-                var form = event.target.form;
-                if (form && event.target) {
-                    var index = Array.prototype.indexOf.call(form, event.target);
-                    if (form && form.elements[index + 1]) {
-                        if ((event.target.getAttribute("class") || "").includes("barcode")) {
-                            form.elements[index].focus();
-                        } else {
-                            form.elements[index + 1].focus();
-                        }
-                        event.preventDefault();
-                    }
-                }
-            }
-        };
-        document.addEventListener("keydown", listener);
-        return () => {
-            document.removeEventListener("keydown", listener);
-        };
-    }, []);
+    useEnterKeyNavigation();
 
 
     let [errors, setErrors] = useState({});
@@ -392,72 +369,24 @@ const StoreCreate = forwardRef((props, ref) => {
             });
     }
 
-    function getStore(id) {
-        console.log("inside get Order");
-        const requestOptions = {
-            method: 'GET',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': localStorage.getItem('access_token'),
-            },
-        };
-
-        fetch('/v1/store/' + id, requestOptions)
-            .then(async response => {
-                const isJson = response.headers.get('content-type')?.includes('application/json');
-                const data = isJson && await response.json();
-
-                // check for error response
-                if (!response.ok) {
-                    const error = (data && data.errors);
-                    return Promise.reject(error);
-                }
-
-                setErrors({});
-
-                console.log("Response:");
-                console.log(data);
-                let storeData = data.result;
-
-                deepFillEmptyStrings(storeData.settings.invoice, invoiceSettings);
-
-                if (storeData.settings.stats_show_profit_loss_statement === null || storeData.settings.stats_show_profit_loss_statement === undefined) {
-                    storeData.settings.stats_show_profit_loss_statement = true;
-                }
-
-                storeData.logo = "";
-
-                selectedCountries = [];
-                if (data.result.country_code && data.result.country_name) {
-                    selectedCountries.push({
-                        value: data.result.country_code,
-                        label: data.result.country_name,
-                    });
-                }
-                setSelectedCountries(selectedCountries);
-
-                //let storeIds = data.result.use_products_from_store_id;
-                //let storeNames = data.result.use_products_from_store_names;
-
-                /*
-                selectedStores = [];
-                if (storeIds && storeNames) {
-                    for (var i = 0; i < storeIds.length; i++) {
-                        selectedStores.push({
-                            id: storeIds[i],
-                            name: storeNames[i],
-                        });
-                    }
-                }
-                setSelectedStores(selectedStores);
-                */
-
-                setFormData({ ...storeData });
-            })
-            .catch(error => {
-                setProcessing(false);
-                setErrors(error);
-            });
+    async function getStore(id) {
+        try {
+            const defaults = formData;
+            const requestOptions = {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': localStorage.getItem('access_token'),
+                },
+            };
+            const response = await fetch(`/v1/store/${id}`, requestOptions);
+            const isJson = response.headers.get('content-type')?.includes('application/json');
+            const data = isJson && await response.json();
+            if (!response.ok) return;
+            formData = data.result;
+            deepFillEmptyStrings(formData, defaults);
+            setFormData({ ...formData });
+        } catch (error) { }
     }
 
 
@@ -807,55 +736,6 @@ const StoreCreate = forwardRef((props, ref) => {
         });
     }
 
-    //   let [selectedStores, setSelectedStores] = useState([]);
-    //    let [storeOptions, setStoreOptions] = useState([]);
-
-    /*
-    function ObjectToSearchQueryParams(object) {
-        return Object.keys(object)
-            .map(function (key) {
-                return `search[${key}]=${object[key]}`;
-            })
-            .join("&");
-    }*/
-    /*
-    async function suggestStores(searchTerm) {
-        console.log("Inside handle suggest stores");
-
-        console.log("searchTerm:" + searchTerm);
-        if (!searchTerm) {
-            return;
-        }
-
-        var params = {
-            name: searchTerm,
-        };
-        var queryString = ObjectToSearchQueryParams(params);
-        if (queryString !== "") {
-            queryString = "&" + queryString;
-        }
-
-        const requestOptions = {
-            method: "GET",
-            headers: {
-                "Content-Type": "application/json",
-                Authorization: localStorage.getItem("access_token"),
-            },
-        };
-
-        let Select = "select=id,name";
-        let result = await fetch(
-            "/v1/store?" + Select + queryString,
-            requestOptions
-        );
-        let data = await result.json();
-
-        if (formData.id) {
-            data.result = data.result.filter(store => store.id !== formData.id);
-        }
-
-        setStoreOptions(data.result);
-    }*/
 
     //country
     const countryOptions = useMemo(() => countryList().getData(), [])
@@ -1169,7 +1049,7 @@ const StoreCreate = forwardRef((props, ref) => {
                                     }}
                                     className="form-control"
                                 >
-                                    <option value="1" SELECTED>Phase 1</option>
+                                    <option value="1">Phase 1</option>
                                     <option value="2">Phase 2</option>
 
                                 </select>
@@ -1204,7 +1084,7 @@ const StoreCreate = forwardRef((props, ref) => {
                                     className="form-control"
                                     disabled
                                 >
-                                    <option value="NonProduction" SELECTED>NonProduction</option>
+                                    <option value="NonProduction">NonProduction</option>
                                     <option value="Simulation" >Simulation</option>
                                     <option value="Production" >Production</option>
                                 </select>
@@ -1757,9 +1637,14 @@ const StoreCreate = forwardRef((props, ref) => {
                         <div className="col-md-2">
                             <label className="form-label">Logo*</label>
 
+                            {formData.logo && !formData.logo_content && (
+                                <div className="mb-2">
+                                    <img src={formData.logo} alt="Current logo" style={{ maxHeight: '60px', maxWidth: '100%', objectFit: 'contain' }} />
+                                </div>
+                            )}
+
                             <div className="input-group mb-3">
                                 <input
-                                    value={formData.logo ? formData.logo : ""}
                                     type='file'
                                     onChange={(e) => {
                                         errors["logo_content"] = "";

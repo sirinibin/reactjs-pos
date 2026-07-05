@@ -54,6 +54,7 @@ const QuotationPreviewContent = forwardRef((props, ref) => {
     return (<><span ref={ref}>
         {props.model.pages && props.model.pages.map((page, pageIndex) => (
             <div
+                key={pageIndex}
                 className="container"
                 id="printableArea"
                 style={{
@@ -113,16 +114,16 @@ const QuotationPreviewContent = forwardRef((props, ref) => {
 
                 <div className="row table-active" style={{ fontSize: "3.5mm", border: "solid 0px" }}>
                     <div className="col-md-5" style={{ border: "solid 0px", width: "82%" }}>
-                        <div class="container" style={{ border: "solid 0px", paddingLeft: "0px", fontSize: "2.2mm" }}>
-                            <div class="row">
-                                <div class="col-7 text-start fw-bold" dir="ltr">Quotation No. | رقم الفاتورة:</div>
-                                <div class="col-6 fw-bold" style={{ marginLeft: "-72px" }} dir="ltr">
+                        <div className="container" style={{ border: "solid 0px", paddingLeft: "0px", fontSize: "2.2mm" }}>
+                            <div className="row">
+                                <div className="col-7 text-start fw-bold" dir="ltr">Quotation No. | رقم الفاتورة:</div>
+                                <div className="col-6 fw-bold" style={{ marginLeft: "-72px" }} dir="ltr">
                                     {props.model.code ? props.model.code : ""}
                                 </div>
                             </div>
-                            <div class="row">
-                                <div class="col-7 text-start fw-bold" dir="ltr">Quotation Date | تاريخ الفاتورة:</div>
-                                <div class="col-6 fw-bold" style={{ marginLeft: "-72px" }} dir="ltr">
+                            <div className="row">
+                                <div className="col-7 text-start fw-bold" dir="ltr">Quotation Date | تاريخ الفاتورة:</div>
+                                <div className="col-6 fw-bold" style={{ marginLeft: "-72px" }} dir="ltr">
                                     <span dir="ltr"> {props.model.date ? format(
                                         new Date(props.model.date),
                                         "yyyy-MM-dd h:mma"
@@ -130,18 +131,18 @@ const QuotationPreviewContent = forwardRef((props, ref) => {
                                     </span>
                                 </div>
                             </div>
-                            <div class="row">
-                                <div class="col-7 text-start fw-bold" dir="ltr">Customer Name | اسم العميل:</div>
-                                <div class="col-6 fw-bold" dir="ltr" style={{ marginLeft: "-72px" }}>
+                            <div className="row">
+                                <div className="col-7 text-start fw-bold" dir="ltr">Customer Name | اسم العميل:</div>
+                                <div className="col-6 fw-bold" dir="ltr" style={{ marginLeft: "-72px" }}>
                                     {props.model.customer ? props.model.customer.name : ""}
                                     {!props.model.customer && props.model.customerName ? props.model.customerName : ""}
                                     {!props.model.customerName && !props.model.customer ? "N/A" : ""}
                                     {props.model.customer?.name_in_arabic ? " | " + props.model.customer.name_in_arabic : ""}
                                 </div>
                             </div>
-                            <div class="row">
-                                <div class="col-7 text-start fw-bold" >Customer VAT | ضريبة القيمة المضافة للعملاء:</div>
-                                <div class="col-6 fw-bold" dir="ltr" style={{ marginLeft: "-72px" }}>
+                            <div className="row">
+                                <div className="col-7 text-start fw-bold" >Customer VAT | ضريبة القيمة المضافة للعملاء:</div>
+                                <div className="col-6 fw-bold" dir="ltr" style={{ marginLeft: "-72px" }}>
                                     <span dir="ltr">
                                         {props.model.customer?.vat_no ? props.model.customer.vat_no : ""}
                                         {!props.model.customer && props.model.vat_no ? props.model.vat_no : ""}
@@ -159,9 +160,9 @@ const QuotationPreviewContent = forwardRef((props, ref) => {
                                     </span>
                                 </div>
                             </div>
-                            <div class="row">
-                                <div class="col-7 text-start fw-bold" dir="ltr" >Customer Address | عنوان العميل:</div>
-                                <div class="col-6 fw-bold" dir="ltr" style={{ marginLeft: "-72px" }}>
+                            <div className="row">
+                                <div className="col-7 text-start fw-bold" dir="ltr" >Customer Address | عنوان العميل:</div>
+                                <div className="col-6 fw-bold" dir="ltr" style={{ marginLeft: "-72px" }}>
 
                                     <span dir="ltr">
                                         {props.model.address ? props.model.address : ""}
@@ -426,7 +427,6 @@ const QuotationPreviewContent = forwardRef((props, ref) => {
 
                                         </th>
                                     </tr>
-
                                     <tr>
                                         <th colSpan="8" className="text-end" style={{ padding: "2px" }}>
                                             Net Total (with VAT)  الإجمالي الصافي (مع ضريبة القيمة المضافة):
@@ -492,8 +492,6 @@ const QuotationPreviewContent = forwardRef((props, ref) => {
                                             <span dir="ltr"> Within {props.model.delivery_days} days from the date of payment | خلال {props.model.delivery_days} أيام من تاريخ الدفع</span>
                                         </th>
                                     </tr>
-
-
                                     {props.model.pages.length === (pageIndex + 1) && props.model.store?.bank_account && props.model.store?.bank_account?.bank_name ? <tr >
                                         <td colSpan="9" style={{ padding: "0px" }}>
 

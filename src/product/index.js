@@ -9,8 +9,8 @@ import { format } from "date-fns";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 //import { Button, Spinner, Badge, Tooltip, OverlayTrigger } from "react-bootstrap";
-import { Button, Spinner, Modal, Alert } from "react-bootstrap";
-import ReactPaginate from "react-paginate";
+import { Button, Spinner, Modal } from "react-bootstrap";
+import PaginationControls from '../utils/PaginationControls.js';
 import SalesHistory from "../utils/product_sales_history.js";
 import SalesReturnHistory from "./../utils/product_sales_return_history.js";
 
@@ -29,9 +29,13 @@ import { trimTo2Decimals } from "../utils/numberUtils";
 import { highlightWords } from "../utils/search.js";
 import ImageViewerModal from './../utils/ImageViewerModal';
 import Products from "../utils/products.js";
-import { DragDropContext, Droppable, Draggable } from "react-beautiful-dnd";
 import { OverlayTrigger, Tooltip } from "react-bootstrap";
 import ProductHistory from "../utils/product_history.js";
+import { ObjectToSearchQueryParams } from '../utils/queryUtils.js';
+import { fetchStore } from '../utils/storeUtils.js';
+import SuccessModal from '../utils/SuccessModal.js';
+import { useTableSettings } from '../utils/useTableSettings.js';
+import TableSettingsModal from '../utils/TableSettingsModal.js';
 
 const columnStyle = {
     width: '20%',
@@ -116,46 +120,16 @@ function ProductIndex(props) {
     let [store, setStore] = useState({});
 
     async function getStore(id) {
-        console.log("inside get Store");
-        const requestOptions = {
-            method: 'GET',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': localStorage.getItem('access_token'),
-            },
-        };
-
-        await fetch('/v1/store/' + id, requestOptions)
-            .then(async response => {
-                const isJson = response.headers.get('content-type')?.includes('application/json');
-                const data = isJson && await response.json();
-
-                // check for error response
-                if (!response.ok) {
-                    const error = (data && data.errors);
-                    return Promise.reject(error);
-                }
-
-                store = data.result;
-                setStore(store);
-            })
-            .catch(error => {
-
-            });
+        try {
+            const data = await fetchStore(id);
+            setStore({ ...data });
+        } catch (error) { }
     }
 
     //Search params
     const searchParams = useRef({});
     let [sortField, setSortField] = useState("created_at");
     let [sortProduct, setSortProduct] = useState("-");
-
-    function ObjectToSearchQueryParams(object) {
-        return Object.keys(object)
-            .map(function (key) {
-                return `search[${key}]=` + encodeURIComponent(object[key]);
-            })
-            .join("&");
-    }
 
     async function suggestCategories(searchTerm) {
         console.log("Inside handle suggest Categories");
@@ -617,7 +591,7 @@ function ProductIndex(props) {
     function getProductPrice(product) {
         let store_id = localStorage.getItem("store_id");
         let vat_percent = 0.15;
-       
+
 
         if (!store_id || !product.stores) {
             return {
@@ -708,8 +682,9 @@ function ProductIndex(props) {
             return;
         }
 
+        const apiSearchTerm = searchTerm.split(/\s+/).map(w => w.replace(/^-+/, "")).filter(Boolean).join(" ");
         var params = {
-            search_text: searchTerm,
+            search_text: apiSearchTerm || searchTerm,
         };
 
         if (localStorage.getItem("store_id")) {
@@ -765,7 +740,7 @@ function ProductIndex(props) {
             }
 
             //
-            const searchPhrase = searchTerm.toLowerCase().replace(/\s+/g, " ").trim();
+            const searchPhrase = searchTerm.toLowerCase().replace(/[^\p{L}\p{N}\s]/gu, " ").replace(/\s+/g, " ").trim();
 
             //const searchPhrase = searchTerm.toLowerCase().trim();
 
@@ -807,7 +782,7 @@ function ProductIndex(props) {
                 return 1; // b contains phrase, a does not
             }
 
-            const words = searchTerm.toLowerCase().split(" ").filter(Boolean);
+            const words = searchTerm.toLowerCase().replace(/[^\p{L}\p{N}\s]/gu, " ").split(/\s+/).filter(Boolean);
             const aPercent = percentOccurrence(words, a);
             const bPercent = percentOccurrence(words, b);
 
@@ -1201,9 +1176,61 @@ function ProductIndex(props) {
             salesReturnHistory: "F9",
             purchaseHistory: "F6",
             purchaseReturnHistory: "F8",
-            deliveryNoteHistory: "F3",
+            deliveryNoteHistory: "F10",
             quotationHistory: "F2",
-            quotationSalesHistory: "F10",
+            quotationSalesHistory: "F3",
+            quotationSalesReturnHistory: "Ctrl + Shift + 8",
+            images: "Ctrl + Shift + 9",
+        },
+        "MBDI-SIMULATION": {
+            linkedProducts: "Ctrl + Shift + 7",
+            productHistory: "Ctrl + Shift + 6",
+            salesHistory: "F4",
+            salesReturnHistory: "F9",
+            purchaseHistory: "F6",
+            purchaseReturnHistory: "F8",
+            deliveryNoteHistory: "F10",
+            quotationHistory: "F2",
+            quotationSalesHistory: "F3",
+            quotationSalesReturnHistory: "Ctrl + Shift + 8",
+            images: "Ctrl + Shift + 9",
+        },
+        YNB: {
+            linkedProducts: "Ctrl + Shift + 7",
+            productHistory: "Ctrl + Shift + 6",
+            salesHistory: "F4",
+            salesReturnHistory: "F9",
+            purchaseHistory: "F6",
+            purchaseReturnHistory: "F8",
+            deliveryNoteHistory: "F10",
+            quotationHistory: "F2",
+            quotationSalesHistory: "F3",
+            quotationSalesReturnHistory: "Ctrl + Shift + 8",
+            images: "Ctrl + Shift + 9",
+        },
+        MDNA: {
+            linkedProducts: "Ctrl + Shift + 7",
+            productHistory: "Ctrl + Shift + 6",
+            salesHistory: "F4",
+            salesReturnHistory: "F9",
+            purchaseHistory: "F6",
+            purchaseReturnHistory: "F8",
+            deliveryNoteHistory: "F10",
+            quotationHistory: "F2",
+            quotationSalesHistory: "F3",
+            quotationSalesReturnHistory: "Ctrl + Shift + 8",
+            images: "Ctrl + Shift + 9",
+        },
+        "MDNA-SIMULATION": {
+            linkedProducts: "Ctrl + Shift + 7",
+            productHistory: "Ctrl + Shift + 6",
+            salesHistory: "F4",
+            salesReturnHistory: "F9",
+            purchaseHistory: "F6",
+            purchaseReturnHistory: "F8",
+            deliveryNoteHistory: "F10",
+            quotationHistory: "F2",
+            quotationSalesHistory: "F3",
             quotationSalesReturnHistory: "Ctrl + Shift + 8",
             images: "Ctrl + Shift + 9",
         },
@@ -1249,9 +1276,9 @@ function ProductIndex(props) {
                 openProductImages(product.product_id);
             }
             return;
-        } else if (store?.code === "MBDI") {
+        } else if (store?.code === "MBDI" || store?.code === "MBDI-SIMULATION" || store?.code === "YNB" || store?.code === "MDNA" || store?.code === "MDNA-SIMULATION") {
             if (event.key === "F10") {
-                openQuotationSalesHistory(product);
+                openDeliveryNoteHistory(product);
             } else if (isCmdOrCtrl && event.shiftKey && event.key.toLowerCase() === '6') {
                 openProductHistory(product);
             } else if (event.key === "F4") {
@@ -1263,7 +1290,7 @@ function ProductIndex(props) {
             } else if (event.key === "F8") {
                 openPurchaseReturnHistory(product);
             } else if (event.key === "F3") {
-                openDeliveryNoteHistory(product);
+                openQuotationSalesHistory(product);
             } else if (event.key === "F2") {
                 openQuotationHistory(product, "quotation");
             } else if (isCmdOrCtrl && event.shiftKey && event.key.toLowerCase() === '7') {
@@ -1424,78 +1451,14 @@ function ProductIndex(props) {
     ], []);
 
 
-    const [columns, setColumns] = useState(defaultColumns);
-    const [showSettings, setShowSettings] = useState(false);
-    const columnsInitialized = useRef(false);
-
-    // Load settings from localStorage
-    useEffect(() => {
-        let saved = "";
-        if (enableSelection === true) {
-            saved = localStorage.getItem("select_product_table_settings");
-        } else {
-            saved = localStorage.getItem("product_table_settings");
-        }
-
-        if (saved) {
-            const savedCols = JSON.parse(saved);
-            // Use saved order as base (preserves drag-and-drop reordering),
-            // keep only columns that still exist in defaults,
-            // append any new default columns not yet in saved.
-            const merged = savedCols
-                .map(savedCol => {
-                    const defaultCol = defaultColumns.find(col => col.fieldName === savedCol.fieldName);
-                    return defaultCol ? { ...defaultCol, visible: savedCol.visible } : null;
-                })
-                .filter(Boolean);
-            defaultColumns.forEach(defaultCol => {
-                if (!savedCols.find(s => s.fieldName === defaultCol.fieldName)) {
-                    merged.push(defaultCol);
-                }
-            });
-            setColumns(merged);
-        } else {
-            setColumns(defaultColumns);
-        }
-
-        columnsInitialized.current = true;
-    }, [defaultColumns, enableSelection]);
+    const { columns, setColumns, showSettings, setShowSettings, handleToggleColumn, onDragEnd, restoreDefaults } = useTableSettings({ storageKey: "product_table_settings", selectStorageKey: "select_product_table_settings", defaultColumns, enableSelection });
 
     function RestoreDefaultSettings() {
-        if (enableSelection === true) {
-            localStorage.setItem("select_product_table_settings", JSON.stringify(defaultColumns));
-        } else {
-            localStorage.setItem("product_table_settings", JSON.stringify(defaultColumns));
-        }
-        setColumns(defaultColumns);
-
+        restoreDefaults();
         setShowSuccess(true);
-        setSuccessMessage("Successfully restored to default settings!")
+        setSuccessMessage("Successfully restored to default settings!");
     }
 
-    // Save column settings to localStorage (skip the initial render to avoid overwriting saved settings)
-    useEffect(() => {
-        if (!columnsInitialized.current) return;
-        if (enableSelection === true) {
-            localStorage.setItem("select_product_table_settings", JSON.stringify(columns));
-        } else {
-            localStorage.setItem("product_table_settings", JSON.stringify(columns));
-        }
-    }, [columns, enableSelection]);
-
-    const handleToggleColumn = (index) => {
-        const updated = [...columns];
-        updated[index].visible = !updated[index].visible;
-        setColumns(updated);
-    };
-
-    const onDragEnd = (result) => {
-        if (!result.destination) return;
-        const reordered = Array.from(columns);
-        const [moved] = reordered.splice(result.source.index, 1);
-        reordered.splice(result.destination.index, 0, moved);
-        setColumns(reordered);
-    };
 
     const [showSuccess, setShowSuccess] = useState(false);
     const [successMessage, setSuccessMessage] = useState(false);
@@ -1766,206 +1729,30 @@ function ProductIndex(props) {
     return (
         <>
 
-            <Modal
+            <TableSettingsModal
                 show={showProductSearchSettings}
                 onHide={() => setShowProductSearchSettings(false)}
-                centered
-                size="lg"
-            >
-                <Modal.Header closeButton>
-                    <Modal.Title>
-                        <i
-                            className="bi bi-gear-fill"
-                            style={{ fontSize: "1.2rem", marginRight: "4px" }}
-                            title="Table Settings"
-
-                        />
-                        Product Search Settings
-                    </Modal.Title>
-                </Modal.Header>
-                <Modal.Body>
-                    {/* Column Settings */}
-                    {showProductSearchSettings && (
-                        <>
-                            <h6 className="mb-2">Customize Columns</h6>
-                            <DragDropContext onDragEnd={onDragEndSearch}>
-                                <Droppable droppableId="columns">
-                                    {(provided) => (
-                                        <ul
-                                            className="list-group"
-                                            {...provided.droppableProps}
-                                            ref={provided.innerRef}
-                                        >
-                                            {searchProductsColumns.map((col, index) => {
-                                                return (
-                                                    <>
-                                                        <Draggable
-                                                            key={col.key}
-                                                            draggableId={col.key}
-                                                            index={index}
-                                                        >
-                                                            {(provided) => (
-                                                                <li
-                                                                    className="list-group-item d-flex justify-content-between align-items-center"
-                                                                    ref={provided.innerRef}
-                                                                    {...provided.draggableProps}
-                                                                    {...provided.dragHandleProps}                                                        >
-                                                                    <div>
-                                                                        <input
-                                                                            style={{ width: "20px", height: "20px" }}
-                                                                            type="checkbox"
-                                                                            className="form-check-input me-2"
-                                                                            checked={col.visible}
-                                                                            onChange={() => {
-                                                                                handleSearchToggleColumn(index);
-                                                                            }}
-                                                                        />
-                                                                        {col.label}
-                                                                    </div>
-                                                                    <span style={{ cursor: "grab" }}>☰</span>
-                                                                </li>
-                                                            )}
-                                                        </Draggable>
-                                                    </>)
-                                            })}
-                                            {provided.placeholder}
-                                        </ul>
-                                    )}
-                                </Droppable>
-                            </DragDropContext>
-                        </>
-                    )}
-                </Modal.Body>
-                <Modal.Footer>
-                    <Button variant="secondary" onClick={() => setShowProductSearchSettings(false)}>
-                        Close
-                    </Button>
-                    <Button
-                        variant="primary"
-                        onClick={() => {
-                            RestoreSearchDefaultSettings();
-                            // Save to localStorage here if needed
-                            //setShowSettings(false);
-                        }}
-                    >
-                        Restore to Default
-                    </Button>
-                </Modal.Footer>
-            </Modal>
+                title="Product Search Settings"
+                columns={searchProductsColumns}
+                onToggleColumn={handleSearchToggleColumn}
+                onDragEnd={onDragEndSearch}
+                onRestoreDefaults={RestoreSearchDefaultSettings}
+            />
 
             {/* ⚙️ Settings Modal */}
-            <Modal
+            <TableSettingsModal
                 show={showSettings}
                 onHide={() => setShowSettings(false)}
-                centered
-                size="lg"
-            >
-                <Modal.Header closeButton>
-                    <Modal.Title>
-                        <i
-                            className="bi bi-gear-fill"
-                            style={{ fontSize: "1.2rem", marginRight: "4px" }}
-                            title="Table Settings"
-                        />
-                        Products Settings
-                    </Modal.Title>
-                </Modal.Header>
-                <Modal.Body>
-                    {/* Column Settings */}
-                    {showSettings && (
-                        <>
-                            <h6 className="mb-2">Customize Columns</h6>
-                            <DragDropContext onDragEnd={onDragEnd}>
-                                <Droppable droppableId="columns">
-                                    {(provided) => (
-                                        <ul
-                                            className="list-group"
-                                            {...provided.droppableProps}
-                                            ref={provided.innerRef}
-                                        >
-                                            {columns.map((col, index) => {
-                                                return (
-                                                    <>
-                                                        {((col.key === "select" && enableSelection) || col.key !== "select") && (col.key !== "main_store_stock" || store?.settings?.enable_warehouse_module) && <Draggable
-                                                            key={col.key}
-                                                            draggableId={col.key}
-                                                            index={index}
-                                                        >
-                                                            {(provided) => (
-                                                                <li
-                                                                    className="list-group-item d-flex justify-content-between align-items-center"
-                                                                    ref={provided.innerRef}
-                                                                    {...provided.draggableProps}
-                                                                    {...provided.dragHandleProps}                                                        >
-                                                                    <div>
-                                                                        <input
-                                                                            style={{ width: "20px", height: "20px" }}
-                                                                            type="checkbox"
-                                                                            className="form-check-input me-2"
-                                                                            checked={col.visible}
-                                                                            onChange={() => {
-                                                                                handleToggleColumn(index);
-                                                                            }}
-                                                                        />
-                                                                        {col.label}
-                                                                    </div>
-                                                                    <span style={{ cursor: "grab" }}>☰</span>
-                                                                </li>
-                                                            )}
-                                                        </Draggable>}
-                                                    </>)
-                                            })}
-                                            {provided.placeholder}
-                                        </ul>
-                                    )}
-                                </Droppable>
-                            </DragDropContext>
-                        </>
-                    )}
-                </Modal.Body>
-                <Modal.Footer>
-                    <Button variant="secondary" onClick={() => setShowSettings(false)}>
-                        Close
-                    </Button>
-                    <Button
-                        variant="outline-secondary"
-                        onClick={() => setColumns(cols => cols.map(c => ({ ...c, visible: false })))}
-                    >
-                        Uncheck All
-                    </Button>
-                    <Button
-                        variant="outline-secondary"
-                        onClick={() => setColumns(cols => cols.map(c => ({ ...c, visible: true })))}
-                    >
-                        Check All
-                    </Button>
-                    <Button
-                        variant="primary"
-                        onClick={() => {
-                            RestoreDefaultSettings();
-                            // Save to localStorage here if needed
-                            //setShowSettings(false);
-                        }}
-                    >
-                        Restore to Default
-                    </Button>
-                </Modal.Footer>
-            </Modal>
-            <Modal show={showSuccess} onHide={() => setShowSuccess(false)} centered>
-                <Modal.Header closeButton>
-                    <Modal.Title>Success</Modal.Title>
-                </Modal.Header>
-                <Modal.Body>
-                    <Alert variant="success">
-                        {successMessage}
-                    </Alert>
-                </Modal.Body>
-                <Modal.Footer>
-                    <Button variant="secondary" onClick={() => setShowSuccess(false)}>
-                        Close
-                    </Button>
-                </Modal.Footer>
-            </Modal>
+                title="Products Settings"
+                columns={columns}
+                onToggleColumn={handleToggleColumn}
+                onDragEnd={onDragEnd}
+                onRestoreDefaults={RestoreDefaultSettings}
+                enableSelection={enableSelection}
+                onUncheckAll={() => setColumns(cols => cols.map(c => ({ ...c, visible: false })))}
+                onCheckAll={() => setColumns(cols => cols.map(c => ({ ...c, visible: true })))}
+            />
+            <SuccessModal show={showSuccess} message={successMessage} onClose={() => setShowSuccess(false)} />
 
             <Products ref={ProductsRef} showToastMessage={props.showToastMessage} />
             <ImageViewerModal ref={imageViewerRef} images={productImages} />
@@ -2439,7 +2226,7 @@ function ProductIndex(props) {
                                                                 pointerEvents: "auto" // <-- allow click here
                                                             }}>
                                                                 {searchProductsColumns.filter(c => c.visible).map((col) => {
-                                                                    return (<>
+                                                                    return (<React.Fragment key={col.key}>
                                                                         {col.key === "select" && <div style={{ width: getColumnWidth(col), border: "solid 0px", }}></div>}
                                                                         {col.key === "part_number" && <div style={{ width: getColumnWidth(col), border: "solid 0px", }}>Part Number</div>}
                                                                         {col.key === "name" && <div style={{ width: getColumnWidth(col), border: "solid 0px", }}>Name</div>}
@@ -2450,7 +2237,7 @@ function ProductIndex(props) {
                                                                         {col.key === "purchase_price" && <div style={{ width: getColumnWidth(col), border: "solid 0px", }}>P.Unit Price</div>}
                                                                         {col.key === "country" && <div style={{ width: getColumnWidth(col), border: "solid 0px", }}>Country</div>}
                                                                         {col.key === "rack" && <div style={{ width: getColumnWidth(col), border: "solid 0px", }}>Rack</div>}
-                                                                    </>)
+                                                                    </React.Fragment>)
                                                                 })}
                                                                 {/* Settings icon on right */}
                                                                 <div
@@ -2480,7 +2267,7 @@ function ProductIndex(props) {
                                                                 <MenuItem option={option} position={index} key={index} style={{ padding: "0px" }}>
                                                                     <div style={{ display: 'flex', padding: '4px 8px' }}>
                                                                         {searchProductsColumns.filter(c => c.visible).map((col) => {
-                                                                            return (<>
+                                                                            return (<React.Fragment key={col.key}>
                                                                                 {col.key === "select" &&
                                                                                     <div
                                                                                         className="form-check"
@@ -2672,7 +2459,7 @@ function ProductIndex(props) {
                                                                                     }
                                                                                     return <div style={{ ...columnStyle, width: getColumnWidth(col) }}>{highlightWords(option.rack, searchWords, isActive)}</div>;
                                                                                 })()}
-                                                                            </>)
+                                                                            </React.Fragment>)
                                                                         })}
                                                                     </div>
                                                                 </MenuItem>
@@ -2686,36 +2473,18 @@ function ProductIndex(props) {
                                 </div>
 
                                 <div style={{ display: "flex", alignItems: "center", gap: "8px", flexWrap: "wrap", marginBottom: "8px" }}>
-                                    <div className="w-100" style={{ overflowX: "auto" }}>
-                                        {totalPages ? <ReactPaginate
-                                            breakLabel="..."
-                                            nextLabel="next >"
-                                            onPageChange={(event) => { changePage(event.selected + 1); }}
-                                            pageRangeDisplayed={3}
-                                            marginPagesDisplayed={1}
-                                            pageCount={totalPages}
-                                            previousLabel="< prev"
-                                            renderOnZeroPageCount={null}
-                                            className="pagination flex-wrap mb-0"
-                                            pageClassName="page-item"
-                                            pageLinkClassName="page-link"
-                                            activeClassName="active"
-                                            previousClassName="page-item"
-                                            nextClassName="page-item"
-                                            previousLinkClassName="page-link"
-                                            nextLinkClassName="page-link"
-                                            forcePage={page - 1}
-                                        /> : ""}
-                                    </div>
-
-
-
-                                    {totalItems > 0 && (
-                                        <span className="text-muted small">
-                                            showing {offset + 1}-{offset + currentPageItemsCount} of {totalItems}
-                                            &nbsp;|&nbsp;page {page} of {totalPages}
-                                        </span>
-                                    )}
+                                    <PaginationControls
+                                        showSizePicker={false}
+                                        totalPages={totalPages}
+                                        page={page}
+                                        totalItems={totalItems}
+                                        offset={offset}
+                                        currentPageItemsCount={currentPageItemsCount}
+                                        pageSize={pageSize}
+                                        onPageChange={changePage}
+                                        onPageSizeChange={changePageSize}
+                                        pageSizes={[5, 10, 20, 40, 50, 100, 200, 300, 500, 1000, 1500]}
+                                    />
 
                                     {totalItems > 0 && enableSelection && (
                                         <Button className="btn btn-success btn-sm" onClick={handleSendSelected}>
@@ -2750,7 +2519,7 @@ function ProductIndex(props) {
                                         <thead>
                                             <tr className="text-center">
                                                 {columns.filter(c => c.visible && (c.key !== "main_store_stock" || store?.settings?.enable_warehouse_module)).map((col) => {
-                                                    return (<>
+                                                    return (<React.Fragment key={col.key}>
                                                         {col.key === "deleted" && <th key={col.key}>{col.label}</th>}
                                                         {col.key === "actions" && <th key={col.key}>{col.label}</th>}
                                                         {col.key === "select" && enableSelection && <th key={col.key}>
@@ -2803,7 +2572,7 @@ function ProductIndex(props) {
                                                                 </OverlayTrigger>
                                                             )}
                                                         </th>}
-                                                    </>);
+                                                    </React.Fragment>);
                                                 })}
                                                 {/*<th>Deleted</th>
                                                 <th style={{}}>Actions</th>
@@ -2866,7 +2635,7 @@ function ProductIndex(props) {
                                                         ) : null}
                                                     </b>
                                                 </th>
-                                             
+
 
                                                 <th>
                                                     <b
@@ -3584,7 +3353,7 @@ function ProductIndex(props) {
                                         <thead>
                                             <tr className="text-center">
                                                 {columns.filter(c => c.visible && (c.key !== "main_store_stock" || store?.settings?.enable_warehouse_module)).map((col) => {
-                                                    return (<>
+                                                    return (<React.Fragment key={col.key}>
                                                         {(col.key === "deleted") && <th>
                                                             <select
                                                                 onChange={(e) => {
@@ -4049,7 +3818,7 @@ function ProductIndex(props) {
                                                                 </span>
                                                             ) : null}
                                                         </th>}
-                                                    </>);
+                                                    </React.Fragment>);
                                                 })}
 
                                                 {/*<th>
@@ -4182,7 +3951,7 @@ function ProductIndex(props) {
                                                         className="form-control"
                                                     />
                                                 </th>
-                                            
+
                                                 <th>
                                                     <input
                                                         type="text"
@@ -4737,7 +4506,7 @@ function ProductIndex(props) {
                                                 productList.map((product) => (
                                                     <tr key={product.id}>
                                                         {columns.filter(c => c.visible && (c.key !== "main_store_stock" || store?.settings?.enable_warehouse_module)).map((col) => {
-                                                            return (<>
+                                                            return (<React.Fragment key={col.key}>
                                                                 {(col.key === "deleted") && <td>{product.deleted ? "YES" : "NO"}</td>}
                                                                 {(col.key === "select" && enableSelection) && <td style={{ width: "auto", whiteSpace: "nowrap" }}>
                                                                     <input
@@ -4775,7 +4544,7 @@ function ProductIndex(props) {
                                                                             e.stopPropagation();
                                                                             openProductImages(product.id)
                                                                         }}>
-                                                                            <i class="bi bi-images"></i>
+                                                                            <i className="bi bi-images"></i>
                                                                         </Button>
 
                                                                         <Dropdown drop="down" style={{ marginLeft: "130px", marginTop: "-27px" }} >
@@ -5118,7 +4887,7 @@ function ProductIndex(props) {
                                                                         "MMM dd yyyy h:mma"
                                                                     )}
                                                                 </td>}
-                                                            </>);
+                                                            </React.Fragment>);
                                                         })}
 
                                                         {/*<td>{product.deleted ? "YES" : "NO"}</td>

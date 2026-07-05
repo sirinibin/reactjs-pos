@@ -24,6 +24,9 @@ import InfoDialog from './../utils/InfoDialog';
 import { highlightWords } from "../utils/search.js";
 import Amount from "../utils/amount.js";
 import Draggable from "react-draggable";
+import { ObjectToSearchQueryParams } from '../utils/queryUtils.js';
+import { fetchStore } from '../utils/storeUtils.js';
+import { useEnterKeyNavigation } from '../utils/useEnterKeyNavigation.js';
 
 const columnStyle = {
     width: '20%',
@@ -68,66 +71,15 @@ const CustomerWithdrawalCreate = forwardRef((props, ref) => {
 
     }));
 
-    let [store, setStore] = useState({});
 
     async function getStore(id) {
-        console.log("inside get Store");
-        const requestOptions = {
-            method: 'GET',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': localStorage.getItem('access_token'),
-            },
-        };
-
-        await fetch('/v1/store/' + id, requestOptions)
-            .then(async response => {
-                const isJson = response.headers.get('content-type')?.includes('application/json');
-                const data = isJson && await response.json();
-
-                // check for error response
-                if (!response.ok) {
-                    const error = (data && data.errors);
-                    return Promise.reject(error);
-                }
-
-                console.log("Response:");
-                console.log(data);
-                store = data.result;
-                setStore(store);
-            })
-            .catch(error => {
-
-            });
+        try {
+            await fetchStore(id);
+        } catch (error) { }
     }
 
 
-    useEffect(() => {
-        const listener = event => {
-            if (event.code === "Enter" || event.code === "NumpadEnter") {
-                console.log("Enter key was pressed. Run your function-customerwithdrawal.");
-                // event.preventDefault();
-
-                var form = event.target.form;
-                if (form && event.target) {
-                    var index = Array.prototype.indexOf.call(form, event.target);
-                    if (form && form.elements[index + 1]) {
-                        if ((event.target.getAttribute("class") || "").includes("description")) {
-                            form.elements[index].focus();
-                            form.elements[index].value += '\r\n';
-                        } else {
-                            form.elements[index + 1].focus();
-                        }
-                        event.preventDefault();
-                    }
-                }
-            }
-        };
-        document.addEventListener("keydown", listener);
-        return () => {
-            document.removeEventListener("keydown", listener);
-        };
-    }, []);
+    useEnterKeyNavigation({ stayClass: "description", onStay: (el) => { el.value += "\r\n"; } });
 
 
 
@@ -221,14 +173,6 @@ const CustomerWithdrawalCreate = forwardRef((props, ref) => {
         }
     });
 
-
-    function ObjectToSearchQueryParams(object) {
-        return Object.keys(object)
-            .map(function (key) {
-                return `search[${key}]=${object[key]}`;
-            })
-            .join("&");
-    }
 
     //Customer Auto Suggestion
     const [customerOptions, setCustomerOptions] = useState([]);
@@ -370,7 +314,7 @@ const CustomerWithdrawalCreate = forwardRef((props, ref) => {
         if (data.result) {
             const filtered = data.result.filter((opt) => customFilter(opt, searchTerm));
             const sorted = filtered.sort((a, b) => {
-                const searchPhrase = searchTerm.toLowerCase().replace(/\s+/g, " ").trim();
+                const searchPhrase = searchTerm.toLowerCase().replace(/[^\p{L}\p{N}\s]/gu, " ").replace(/\s+/g, " ").trim();
 
                 const getSearchable = (item) => {
                     const fields = [
@@ -406,7 +350,7 @@ const CustomerWithdrawalCreate = forwardRef((props, ref) => {
                     return 1; // b contains phrase, a does not
                 }
 
-                const words = searchTerm.toLowerCase().split(" ").filter(Boolean);
+                const words = searchTerm.toLowerCase().replace(/[^\p{L}\p{N}\s]/gu, " ").split(/\s+/).filter(Boolean);
 
 
                 // Calculate percentage of occurrence
@@ -511,7 +455,7 @@ const CustomerWithdrawalCreate = forwardRef((props, ref) => {
         if (data.result) {
             const filtered = data.result.filter((opt) => customVendorFilter(opt, searchTerm));
             const sorted = filtered.sort((a, b) => {
-                const searchPhrase = searchTerm.toLowerCase().replace(/\s+/g, " ").trim();
+                const searchPhrase = searchTerm.toLowerCase().replace(/[^\p{L}\p{N}\s]/gu, " ").replace(/\s+/g, " ").trim();
 
                 const getSearchable = (item) => {
                     const fields = [
@@ -547,7 +491,7 @@ const CustomerWithdrawalCreate = forwardRef((props, ref) => {
                     return 1; // b contains phrase, a does not
                 }
 
-                const words = searchTerm.toLowerCase().split(" ").filter(Boolean);
+                const words = searchTerm.toLowerCase().replace(/[^\p{L}\p{N}\s]/gu, " ").split(/\s+/).filter(Boolean);
 
 
                 // Calculate percentage of occurrence
@@ -1456,7 +1400,7 @@ const CustomerWithdrawalCreate = forwardRef((props, ref) => {
                                                                 }}
                                                                 style={INPUT}
                                                             >
-                                                                <option value="customer" SELECTED>Customer</option>
+                                                                <option value="customer">Customer</option>
                                                                 <option value="vendor">Vendor</option>
                                                             </select>
                                                             {errors.type && <ErrMsg>{errors.type}</ErrMsg>}

@@ -46,6 +46,7 @@ const CustomerWithdrawalPreviewContent = forwardRef((props, ref) => {
     return (<><span ref={ref}>
         {props.model.pages && props.model.pages.map((page, pageIndex) => (
             <div
+                key={pageIndex}
                 className="container"
                 id="printableArea"
                 style={{

@@ -1,6 +1,7 @@
-import React, { useState, useEffect, forwardRef, useImperativeHandle } from "react";
+import React, { useState, forwardRef, useImperativeHandle } from "react";
 import { Modal, Spinner } from "react-bootstrap";
 import { DEFAULT_MENU } from "../sidebar_menu_config";
+import { useEnterKeyNavigation } from '../utils/useEnterKeyNavigation.js';
 
 const CustomerPackageCreate = forwardRef((props, ref) => {
     useImperativeHandle(ref, () => ({
@@ -17,22 +18,7 @@ const CustomerPackageCreate = forwardRef((props, ref) => {
     const [isProcessing, setProcessing] = useState(false);
     const [show, setShow] = useState(false);
 
-    useEffect(() => {
-        const listener = (e) => {
-            if (e.code === "Enter" || e.code === "NumpadEnter") {
-                const form = e.target.form;
-                if (form) {
-                    const index = Array.prototype.indexOf.call(form, e.target);
-                    if (form.elements[index + 1]) {
-                        form.elements[index + 1].focus();
-                        e.preventDefault();
-                    }
-                }
-            }
-        };
-        document.addEventListener("keydown", listener);
-        return () => document.removeEventListener("keydown", listener);
-    }, []);
+    useEnterKeyNavigation();
 
     function fetchPackage(id) {
         fetch("/v1/customer-package/" + id, {

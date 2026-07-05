@@ -4,11 +4,12 @@ import { format } from "date-fns";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import { Button, Spinner } from "react-bootstrap";
-import ReactPaginate from "react-paginate";
 import PostingIndex from "./../posting/index.js";
 import Amount from "../utils/amount.js";
 import OverflowTooltip from "../utils/OverflowTooltip.js";
 import { confirm } from 'react-bootstrap-confirmation';
+import { ObjectToSearchQueryParams } from '../utils/queryUtils.js';
+import PaginationControls from '../utils/PaginationControls.js';
 
 function AccountIndex(props) {
     //list
@@ -62,14 +63,6 @@ function AccountIndex(props) {
 
     let [debitBalanceTotal, setDebitBalanceTotal] = useState(0.00);
     let [creditBalanceTotal, setCreditBalanceTotal] = useState(0.00);
-
-    function ObjectToSearchQueryParams(object) {
-        return Object.keys(object)
-            .map(function (key) {
-                return `search[${key}]=` + object[key];
-            })
-            .join("&");
-    }
 
     function searchByFieldValue(field, value) {
         searchParams[field] = value;
@@ -444,59 +437,17 @@ function AccountIndex(props) {
                                         )}
                                         <span className="visually-hidden">Loading...</span>
                                     </Button>
-                                    {totalItems > 0 && (
-                                        <>
-                                            <label className="form-label mb-0">Size:&nbsp;</label>
-                                            <select
-                                                value={pageSize}
-                                                onChange={(e) => {
-                                                    changePageSize(e.target.value);
-                                                }}
-                                                className="form-control"
-                                                style={{ width: "55px" }}
-                                            >
-                                                <option value="5">5</option>
-                                                <option value="10">10</option>
-                                                <option value="20">20</option>
-                                                <option value="40">40</option>
-                                                <option value="50">50</option>
-                                                <option value="100">100</option>
-                                                <option value="200">200</option>
-                                                <option value="300">300</option>
-                                                <option value="500">500</option>
-                                                <option value="1000">1000</option>
-                                                <option value="1500">1500</option>
-                                            </select>
-                                        </>
-                                    )}
-                                    <div className="w-100" style={{ overflowX: "auto" }}>
-                                        {totalPages ? <ReactPaginate
-                                            breakLabel="..."
-                                            nextLabel="next >"
-                                            onPageChange={(event) => {
-                                                changePage(event.selected + 1);
-                                            }}
-                                            pageRangeDisplayed={3}
-                                            marginPagesDisplayed={1}
-                                            pageCount={totalPages}
-                                            previousLabel="< prev"
-                                            renderOnZeroPageCount={null}
-                                            className="pagination flex-wrap mb-0"
-                                            pageClassName="page-item"
-                                            pageLinkClassName="page-link"
-                                            activeClassName="active"
-                                            previousClassName="page-item"
-                                            nextClassName="page-item"
-                                            previousLinkClassName="page-link"
-                                            nextLinkClassName="page-link"
-                                            forcePage={page - 1}
-                                        /> : ""}
-                                    </div>
-                                    {totalItems > 0 && (
-                                        <span className="text-muted small">
-                                            showing {offset + 1}-{offset + currentPageItemsCount} of {totalItems} &nbsp;|&nbsp; page {page} of {totalPages}
-                                        </span>
-                                    )}
+                                    <PaginationControls
+                                        totalPages={totalPages}
+                                        page={page}
+                                        totalItems={totalItems}
+                                        offset={offset}
+                                        currentPageItemsCount={currentPageItemsCount}
+                                        pageSize={pageSize}
+                                        onPageChange={changePage}
+                                        onPageSizeChange={changePageSize}
+                                        pageSizes={[5, 10, 20, 40, 50, 100, 200, 300, 500, 1000, 1500]}
+                                    />
                                 </div>
                                 <div className="table-responsive" style={{ position: "relative", overflowX: "auto", overflowY: "auto", minHeight: "200px" }}
                                     ref={(el) => {

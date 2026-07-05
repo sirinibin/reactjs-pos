@@ -50,6 +50,7 @@ const PreviewContentWithSellerInfo = forwardRef((props, ref) => {
         <span ref={ref}>
             {props.model.pages && props.model.pages.map((page, pageIndex) => (
                 <div
+                    key={pageIndex}
                     className="container"
                     id="printableArea"
                     style={{
@@ -691,14 +692,12 @@ const PreviewContentWithSellerInfo = forwardRef((props, ref) => {
                                         props.selectQRCode();
                                     }}
                                 >
-                                    {props.model.store?.zatca?.phase === "1" && props.model.QRImageData ? <img src={props.model.QRImageData} style={{ width: props.fontSizes[props.modelName + "_qrCode"]["width"]?.size, height: props.fontSizes[props.modelName + "_qrCode"]["height"]?.size, border: "solid 0px" }} alt="Invoice QR Code" /> : ""}
-                                    {/*props.model.store?.zatca?.phase === "2" && props.model.zatca?.qr_code && props.model.zatca?.reporting_passed ? <QRCodeCanvas value={props.model.zatca?.qr_code} style={{ width: props.fontSizes[props.modelName + "_qrCode"]["width"]?.size, height: props.fontSizes[props.modelName + "_qrCode"]["height"]?.size }} size={props.fontSizes[props.modelName + "_qrCode"]["width"]?.value} /> : ""*/}
-                                    {props.model.store?.zatca?.phase === "2" && props.model.zatca?.qr_code && props.model.zatca?.reporting_passed ? <QRCodeSVG
+                                    {props.model.zatca?.qr_code ? <QRCodeSVG
                                         value={props.model.zatca?.qr_code}
                                         fgColor="#000000"
                                         bgColor="#ffffff"
                                         level="H"
-                                        size={520} /* high internal resolution */
+                                        size={520}
                                         className="qr-print"
                                         preserveAspectRatio="xMidYMid meet"
                                         shapeRendering="crispEdges"
@@ -711,7 +710,7 @@ const PreviewContentWithSellerInfo = forwardRef((props, ref) => {
                                             background: "#fff"
                                         }}
                                     /> : ""}
-                                    {props.model.store?.zatca?.phase === "2" && !props.model.zatca?.qr_code ? <img src={props.model.QRImageData} style={{ width: props.fontSizes[props.modelName + "_qrCode"]["width"]?.size, height: props.fontSizes[props.modelName + "_qrCode"]["height"]?.size, border: "solid 0px" }} alt="Invoice QR Code" /> : ""}
+                                    {!props.model.zatca?.qr_code && props.model.QRImageData ? <img src={props.model.QRImageData} style={{ width: props.fontSizes[props.modelName + "_qrCode"]["width"]?.size, height: props.fontSizes[props.modelName + "_qrCode"]["height"]?.size, border: "solid 0px" }} alt="Invoice QR Code" /> : ""}
                                 </div>}
                         </div>
 
@@ -881,7 +880,7 @@ const PreviewContentWithSellerInfo = forwardRef((props, ref) => {
                                                 </>}
                                             </tr>
                                             {page.products && page.products.map((product, index) => (
-                                                <tr style={{ borderBottom: tableBorderThickness }} key={product.item_code} className="text-center"  >
+                                                <tr style={{ borderBottom: tableBorderThickness }} key={product.item_code ?? index} className="text-center"  >
                                                     <td style={{ padding: "7px", borderRight: tableBorderThickness }}>{product.part_number ? index + 1 + (pageIndex * props.model.pageSize) : ""}</td>
                                                     <td style={{ borderRight: tableBorderThickness }} >{product.prefix_part_number ? product.prefix_part_number + " - " : ""} {product.part_number ? product.part_number : ""}</td>
                                                     <th dir="ltr" style={{
@@ -989,7 +988,7 @@ const PreviewContentWithSellerInfo = forwardRef((props, ref) => {
                                                     >
                                                         {props.model.store?.zatca?.phase === "1" && props.model.QRImageData ? <img src={props.model.QRImageData} style={{ width: props.fontSizes[props.modelName + "_qrCode"]["width"]?.size, height: props.fontSizes[props.modelName + "_qrCode"]["height"]?.size, border: "solid 0px" }} alt="Invoice QR Code" /> : ""}
                                                         {/*props.model.store?.zatca?.phase === "2" && props.model.zatca?.qr_code && props.model.zatca?.reporting_passed ? <QRCodeCanvas value={props.model.zatca?.qr_code} style={{ width: props.fontSizes[props.modelName + "_qrCode"]["width"]?.size, height: props.fontSizes[props.modelName + "_qrCode"]["height"]?.size }} size={props.fontSizes[props.modelName + "_qrCode"]["width"]?.value} /> : ""*/}
-                                                        {props.model.store?.zatca?.phase === "2" && props.model.zatca?.qr_code && props.model.zatca?.reporting_passed ? <QRCodeSVG
+                                                        {props.model.store?.zatca?.phase === "2" && props.model.zatca?.qr_code ? <QRCodeSVG
                                                             value={props.model.zatca?.qr_code}
                                                             fgColor="#000000"
                                                             bgColor="#ffffff"
@@ -1007,7 +1006,7 @@ const PreviewContentWithSellerInfo = forwardRef((props, ref) => {
                                                                 background: "#fff"
                                                             }}
                                                         /> : ""}
-                                                        {props.model.store?.zatca?.phase === "2" && !props.model.zatca?.qr_code ? <img src={props.model.QRImageData} style={{ width: props.fontSizes[props.modelName + "_qrCode"]["width"]?.size, height: props.fontSizes[props.modelName + "_qrCode"]["height"]?.size, border: "solid 0px" }} alt="Invoice QR Code" /> : ""}
+                                                        {props.model.store?.zatca?.phase === "2" && !props.model.zatca?.qr_code && props.model.QRImageData ? <img src={props.model.QRImageData} style={{ width: props.fontSizes[props.modelName + "_qrCode"]["width"]?.size, height: props.fontSizes[props.modelName + "_qrCode"]["height"]?.size, border: "solid 0px" }} alt="Invoice QR Code" /> : ""}
                                                     </div>
                                                 </th>}
                                                 <th className="text-end print-label" style={{ padding: "2px", borderRight: tableBorderThickness }}>
@@ -1157,8 +1156,6 @@ const PreviewContentWithSellerInfo = forwardRef((props, ref) => {
                                                         <span dir="ltr"> Within {props.model.delivery_days} days from the date of payment | خلال {props.model.delivery_days} أيام من تاريخ الدفع</span>
                                                     </th>
                                                 </tr>
-
-
                                                 {props.model.pages.length === (pageIndex + 1) && props.model.store?.bank_account && props.model.store?.bank_account?.bank_name ? <tr >
                                                     <th colSpan="9" style={{ padding: "0px" }} onClick={(e) => e.stopPropagation()}>
 
@@ -1171,8 +1168,6 @@ const PreviewContentWithSellerInfo = forwardRef((props, ref) => {
                                                                 onClick={() => {
                                                                     props.selectText("bankAccountHeader");
                                                                 }}>
-
-
                                                             </thead>
                                                             <tbody style={{ fontSize: props.fontSizes[props.modelName + "_bankAccountBody"]?.size }}
                                                                 onClick={() => {

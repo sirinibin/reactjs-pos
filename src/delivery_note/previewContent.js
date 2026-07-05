@@ -36,6 +36,7 @@ const DeliveryNotePreviewContent = forwardRef((props, ref) => {
     return (<>
         {props.model.pages && props.model.pages.map((page, pageIndex) => (
             <div
+                key={pageIndex}
                 className="container"
                 id="printableArea"
                 style={{
@@ -236,7 +237,6 @@ const DeliveryNotePreviewContent = forwardRef((props, ref) => {
                                     </tr>
                                 </thead>
                                 <tbody>
-
                                     {page.products && page.products.map((product, index) => (
                                         <tr key={index} className="text-center" style={{ height: "20px" }}  >
                                             <td>{index + 1 + (pageIndex * props.model.pageSize)}</td>

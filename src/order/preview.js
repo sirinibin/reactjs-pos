@@ -17,6 +17,8 @@ import { PDFDocument } from 'pdf-lib';
 //import jsPDF from "jspdf";
 //import html2canvas from "html2canvas";
 import { useTranslation } from 'react-i18next';
+import { ObjectToSearchQueryParams } from '../utils/queryUtils.js';
+import { fetchStore } from '../utils/storeUtils.js';
 
 
 const Preview = forwardRef((props, ref) => {
@@ -99,6 +101,20 @@ const Preview = forwardRef((props, ref) => {
                         setFontSizes({ ...fontSizes });
                         saveToLocalStorage("fontSizes", fontSizes);
                     }
+                }
+
+                if (!model.zatca?.qr_code && model.store?.vat_no) {
+                    try {
+                        const qrInvoice = new Invoice({
+                            sellerName: model.store.name || '',
+                            vatRegistrationNumber: model.store.vat_no || '',
+                            invoiceTimestamp: model.date || model.created_at || new Date().toISOString(),
+                            invoiceTotal: (model.net_total || 0).toFixed(2),
+                            invoiceVatTotal: (model.vat_price || 0).toFixed(2),
+                        });
+                        model.QRImageData = await qrInvoice.render();
+                        setModel({ ...model });
+                    } catch (e) { }
                 }
 
                 if (model.customer_id) {
@@ -199,14 +215,6 @@ const Preview = forwardRef((props, ref) => {
     }));
 
 
-
-    function ObjectToSearchQueryParams(object) {
-        return Object.keys(object)
-            .map(function (key) {
-                return `search[${key}]=${object[key]}`;
-            })
-            .join("&");
-    }
     let [whatsAppShare, setWhatsAppShare] = useState(false);
     let [phone, setPhone] = useState("");
 
@@ -769,59 +777,13 @@ const Preview = forwardRef((props, ref) => {
     }
 
     async function getStore(id) {
-        console.log("inside get Store");
-        const requestOptions = {
-            method: 'GET',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': localStorage.getItem('access_token'),
-            },
-        };
-
-        await fetch('/v1/store/' + id, requestOptions)
-            .then(async response => {
-                const isJson = response.headers.get('content-type')?.includes('application/json');
-                const data = isJson && await response.json();
-
-                // check for error response
-                if (!response.ok) {
-                    const error = (data && data.errors);
-                    return Promise.reject(error);
-                }
-
-                console.log("Response:");
-                console.log(data);
-                let storeData = data.result;
+        try {
+            const storeData = await fetchStore(id);
+            if (storeData) {
                 model.store = storeData;
-
-                const invoice = new Invoice({
-                    sellerName: model.store_name,
-                    vatRegistrationNumber: model.store.vat_no,
-                    invoiceTimestamp: model.date,
-                    invoiceTotal: model.net_total,
-                    invoiceVatTotal: model.vat_price,
-                    // uuid: model.uuid,
-                    invoiceHash: model.hash ? model.hash : "",
-                });
-
-                model.QRImageData = await invoice.render();
-                console.log("model.QRImageData:", model.QRImageData);
-
-
-                if (!model.from_warehouse_id) {
-                    model.from_warehouse = model.store;
-                }
-
-                if (!model.to_warehouse_id) {
-                    model.to_warehouse = model.store;
-                }
-
-
                 setModel({ ...model });
-            })
-            .catch(error => {
-
-            });
+            }
+        } catch (error) { }
     }
 
 

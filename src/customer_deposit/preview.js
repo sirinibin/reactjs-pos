@@ -5,16 +5,10 @@ import html2pdf from 'html2pdf.js';
 import WhatsAppModal from './../utils/WhatsAppModal';
 import MBDIInvoiceBackground from './../INVOICE.jpg';
 import LGKInvoiceBackground from './../LGK_WHATSAPP.png';
+import { ObjectToSearchQueryParams } from '../utils/queryUtils.js';
+import { fetchStore } from '../utils/storeUtils.js';
 
 const CustomerDepositPreview = forwardRef((props, ref) => {
-
-    function ObjectToSearchQueryParams(object) {
-        return Object.keys(object)
-            .map(function (key) {
-                return `search[${key}]=${object[key]}`;
-            })
-            .join("&");
-    }
 
     let [InvoiceBackground, setInvoiceBackground] = useState("");
     let [whatsAppShare, setWhatsAppShare] = useState(false);
@@ -104,35 +98,13 @@ const CustomerDepositPreview = forwardRef((props, ref) => {
 
 
     async function getStore(id) {
-        console.log("inside get Store");
-        const requestOptions = {
-            method: 'GET',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': localStorage.getItem('access_token'),
-            },
-        };
-
-        await fetch('/v1/store/' + id, requestOptions)
-            .then(async response => {
-                const isJson = response.headers.get('content-type')?.includes('application/json');
-                const data = isJson && await response.json();
-
-                // check for error response
-                if (!response.ok) {
-                    const error = (data && data.errors);
-                    return Promise.reject(error);
-                }
-
-                console.log("Response:");
-                console.log(data);
-                let storeData = data.result;
+        try {
+            const storeData = await fetchStore(id);
+            if (storeData) {
                 model.store = storeData;
                 setModel({ ...model });
-            })
-            .catch(error => {
-
-            });
+            }
+        } catch (error) { }
     }
 
 

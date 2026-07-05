@@ -388,7 +388,7 @@ export function SalesType1Body({
                                         </div>
 
                                         {/* 2×3 grid: Date | Phone+WA | VAT  /  Barcode | Address | Remarks */}
-                                        <div style={{ display: 'grid', gridTemplateColumns: '231px 1fr 1fr', gap: '8px 45px', alignItems: 'start', maxWidth: '80%' }}>
+                                        <div style={{ display: 'grid', gridTemplateColumns: '231px 1fr 1fr', gap: '8px 65px', alignItems: 'start', maxWidth: '80%', marginTop: '10px' }}>
 
                                             {/* R1C1: Date */}
                                             <div>
@@ -560,7 +560,7 @@ export function SalesType1Body({
 
                                 </div>
                             </div>
-                            <div className="col-md-10" >
+                            <div className="col-md-9" >
                                 <label className="form-label">{t('Product Search') + "*"}</label>
                                 <Typeahead
                                     id="product_id"
@@ -568,7 +568,7 @@ export function SalesType1Body({
                                     size="lg"
                                     ref={productSearchRef}
                                     labelKey="search_label"
-                                    inputProps={{ className: 'productSearch' }}
+                                    inputProps={{ className: '' }}
                                     emptyLabel=""
                                     clearButton={false}
                                     open={openProductSearchResult}
@@ -644,7 +644,7 @@ export function SalesType1Body({
                                                         pointerEvents: "auto" // <-- allow click here
                                                     }}>
                                                         {searchProductsColumns.filter(c => c.visible).map((col) => {
-                                                            return (<>
+                                                            return (<React.Fragment key={col.key}>
                                                                 {col.key === "select" && <div style={{ width: getColumnWidth(col), border: "solid 0px", }}></div>}
                                                                 {col.key === "part_number" && <div style={{ width: getColumnWidth(col), border: "solid 0px", }}>{t("Part Number")}</div>}
                                                                 {col.key === "name" && <div style={{ width: getColumnWidth(col), border: "solid 0px", }}>{t("Name")}</div>}
@@ -655,7 +655,7 @@ export function SalesType1Body({
                                                                 {col.key === "purchase_price" && <div style={{ width: getColumnWidth(col), border: "solid 0px", }}>{t("P.Unit Price")}</div>}
                                                                 {col.key === "country" && <div style={{ width: getColumnWidth(col), border: "solid 0px", }}>{t("Country")}</div>}
                                                                 {col.key === "rack" && <div style={{ width: getColumnWidth(col), border: "solid 0px", }}>{t("Rack")}</div>}
-                                                            </>)
+                                                            </React.Fragment>)
                                                         })}
                                                         {/* Settings icon on right */}
                                                         <div
@@ -687,7 +687,7 @@ export function SalesType1Body({
                                                         <MenuItem option={option} position={index} key={index} style={{ padding: "0px" }}>
                                                             <div style={{ display: 'flex', padding: '4px 8px' }}>
                                                                 {searchProductsColumns.filter(c => c.visible).map((col) => {
-                                                                    return (<>
+                                                                    return (<React.Fragment key={col.key}>
                                                                         {col.key === "select" &&
                                                                             <div
                                                                                 className="form-check"
@@ -853,7 +853,7 @@ export function SalesType1Body({
                                                                             }
                                                                             return <div style={{ ...columnStyle, width: getColumnWidth(col) }}>{highlightWords(option.rack, searchWords, isActive)}</div>;
                                                                         })()}
-                                                                    </>)
+                                                                    </React.Fragment>)
                                                                 })}
                                                             </div>
                                                         </MenuItem>
@@ -864,43 +864,44 @@ export function SalesType1Body({
                                     }}
                                 />
 
-                                {store?.settings?.enable_services && store?.settings?.enable_products ? (
-                                    <Dropdown>
-                                        <Dropdown.Toggle bsPrefix="btn btn-outline-secondary btn-primary btn-sm" type="button">
-                                            <i className="bi bi-plus-lg"></i> {t('New')}
-                                        </Dropdown.Toggle>
-                                        <Dropdown.Menu>
-                                            <Dropdown.Item onClick={openProductCreateForm}>{t('Product')}</Dropdown.Item>
-                                            <Dropdown.Item onClick={openServiceCreateForm}>{t('Service')}</Dropdown.Item>
-                                        </Dropdown.Menu>
-                                    </Dropdown>
-                                ) : (
-                                    <Button hide={true.toString()} onClick={openProductCreateForm} className="btn btn-outline-secondary btn-primary btn-sm" type="button" id="button-addon1"> <i className="bi bi-plus-lg"></i> {t('New')}</Button>
-                                )}
                                 {errors.product_id ? (
                                     <div style={{ color: "red" }}>
-
                                         {t(errors.product_id)}
                                     </div>
                                 ) : ""}
                             </div>
 
-                            <div className="col-md-1">
-                                {store?.settings?.enable_services && store?.settings?.enable_products ? (
-                                    <Dropdown style={{ marginTop: "30px" }}>
-                                        <Dropdown.Toggle bsPrefix="btn btn-primary" type="button">
+                            <div className="col-md-2">
+                                <div style={{ marginTop: "30px", display: "flex", gap: "4px" }}>
+                                    {store?.settings?.enable_services && store?.settings?.enable_products ? (
+                                        <Dropdown>
+                                            <Dropdown.Toggle bsPrefix="btn btn-outline-secondary btn-primary" type="button">
+                                                <i className="bi bi-plus-lg"></i> {t('New')}
+                                            </Dropdown.Toggle>
+                                            <Dropdown.Menu>
+                                                <Dropdown.Item onClick={openProductCreateForm}>{t('Product')}</Dropdown.Item>
+                                                <Dropdown.Item onClick={openServiceCreateForm}>{t('Service')}</Dropdown.Item>
+                                            </Dropdown.Menu>
+                                        </Dropdown>
+                                    ) : (
+                                        <Button hide={true.toString()} onClick={openProductCreateForm} className="btn btn-outline-secondary btn-primary" type="button"><i className="bi bi-plus-lg"></i> {t('New')}</Button>
+                                    )}
+                                    {store?.settings?.enable_services && store?.settings?.enable_products ? (
+                                        <Dropdown>
+                                            <Dropdown.Toggle bsPrefix="btn btn-primary" type="button">
+                                                <i className="bi bi-list"></i>
+                                            </Dropdown.Toggle>
+                                            <Dropdown.Menu>
+                                                <Dropdown.Item onClick={openProducts}>{t('Products')}</Dropdown.Item>
+                                                <Dropdown.Item onClick={openServices}>{t('Services')}</Dropdown.Item>
+                                            </Dropdown.Menu>
+                                        </Dropdown>
+                                    ) : (
+                                        <Button className="btn btn-primary" onClick={openProducts}>
                                             <i className="bi bi-list"></i>
-                                        </Dropdown.Toggle>
-                                        <Dropdown.Menu>
-                                            <Dropdown.Item onClick={openProducts}>{t('Products')}</Dropdown.Item>
-                                            <Dropdown.Item onClick={openServices}>{t('Services')}</Dropdown.Item>
-                                        </Dropdown.Menu>
-                                    </Dropdown>
-                                ) : (
-                                    <Button className="btn btn-primary" style={{ marginTop: "30px" }} onClick={openProducts}>
-                                        <i className="bi bi-list"></i>
-                                    </Button>
-                                )}
+                                        </Button>
+                                    )}
+                                </div>
                             </div>
 
                             <div className="col-md-1">
@@ -956,17 +957,15 @@ export function SalesType1Body({
                                 </div>
                             </div>
 
-                            <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: "0" }}>
-                                <button
-                                    type="button"
-                                    className="btn btn-sm btn-outline-secondary"
+                            <div style={{ position: "relative" }}>
+                                <span
                                     onClick={() => setShowSelectedProductsSettings(!showSelectedProductsSettings)}
                                     title={t("Table Settings")}
+                                    style={{ position: "absolute", top: "-9px", right: "24px", zIndex: 10, cursor: "pointer", fontSize: "0.75rem", color: "#6b7280", userSelect: "none", background: "#fff", paddingLeft: "4px", paddingRight: "4px" }}
                                 >
-                                    <i className="bi bi-gear-fill" style={{ fontSize: "1rem" }} />
-                                </button>
-                            </div>
-                            <div className="table-responsive" style={{ overflowX: "auto", maxHeight: "400px", overflowY: "scroll" }}>
+                                    <i className="bi bi-gear-fill" />
+                                </span>
+                            <div className="table-responsive" style={{ overflowX: "auto", maxHeight: "520px", overflowY: "scroll" }}>
 
 
                                 <table className="table table-striped table-sm table-bordered">
@@ -976,7 +975,7 @@ export function SalesType1Body({
                                                 if (col.key === 'delete') return <th key={col.key}></th>;
                                                 if (col.key === 'si_no') return <th key={col.key}>{t('SI No.')}</th>;
                                                 if (col.key === 'part_number') return <th key={col.key}>{t('Part No.')}</th>;
-                                                if (col.key === 'name') return <th key={col.key} style={{ minWidth: "250px" }}>{t('Name')}</th>;
+                                                if (col.key === 'name') return <th key={col.key} style={{ minWidth: window.innerWidth > 1920 ? "375px" : "250px" }}>{t('Name')}</th>;
                                                 if (col.key === 'info') return <th key={col.key}>{t('Info')}</th>;
                                                 if (col.key === 'purchase_unit_price') return <th key={col.key}>{t('Purchase Unit Price(without VAT)')}</th>;
                                                 if (col.key === 'stock') return <th key={col.key}>{t('Stock')}</th>;
@@ -1468,14 +1467,16 @@ export function SalesType1Body({
                                                                         {selectedProducts[index].unit ? selectedProducts[index].unit[0]?.toUpperCase() : 'P'}
                                                                     </span>
                                                                 </div>
-                                                                {(errors[`quantity_${index}`] || warnings[`quantity_${index}`]) && (
-                                                                    <OverlayTrigger placement="top" overlay={<Tooltip>{errors[`quantity_${index}`] || warnings[`quantity_${index}`] || ''}</Tooltip>}>
-                                                                        <i
-                                                                            className={`bi bi-exclamation-circle-fill ${errors[`quantity_${index}`] ? 'text-danger' : 'text-warning'} ms-2`}
-                                                                            style={{ fontSize: '1rem', cursor: 'pointer', whiteSpace: 'nowrap' }}
-                                                                        ></i>
-                                                                    </OverlayTrigger>
-                                                                )}
+                                                                <div style={{ width: '20px', flexShrink: 0 }}>
+                                                                    {(errors[`quantity_${index}`] || warnings[`quantity_${index}`]) && (
+                                                                        <OverlayTrigger placement="top" overlay={<Tooltip>{errors[`quantity_${index}`] || warnings[`quantity_${index}`] || ''}</Tooltip>}>
+                                                                            <i
+                                                                                className={`bi bi-exclamation-circle-fill ${errors[`quantity_${index}`] ? 'text-danger' : 'text-warning'} ms-2`}
+                                                                                style={{ fontSize: '1rem', cursor: 'pointer', whiteSpace: 'nowrap' }}
+                                                                            ></i>
+                                                                        </OverlayTrigger>
+                                                                    )}
+                                                                </div>
                                                             </div>
                                                         </td>);
 
@@ -2336,11 +2337,18 @@ export function SalesType1Body({
                                                     })}
                                                 </tr>);
                                         }).reverse()}
-
                                     </tbody>
                                 </table>
                             </div>
-                            <div style={{ position: "relative" }}>
+                            </div>
+                            <div style={{ position: "relative", marginTop: "-8px" }}>
+                                <span
+                                    onClick={() => setShowBillSummarySettings(v => !v)}
+                                    title={t("Customize Bill Summary")}
+                                    style={{ position: "absolute", top: "-9px", right: "24px", zIndex: 10, cursor: "pointer", fontSize: "0.75rem", color: "#6b7280", userSelect: "none", background: "#fff", paddingLeft: "4px", paddingRight: "4px" }}
+                                >
+                                    <i className="bi bi-gear-fill" />
+                                </span>
                                 {/* Settings centered overlay panel */}
                                 {showBillSummarySettings && (
                                     <div style={{ position: "fixed", top: "50%", left: "50%", transform: "translate(-50%, -50%)", zIndex: 1060, background: "#fff", border: "1px solid #dee2e6", borderRadius: "8px", padding: "16px", width: "320px", boxShadow: "0 8px 32px rgba(0,0,0,0.22)" }}>
@@ -2380,24 +2388,6 @@ export function SalesType1Body({
                                 )}
                                 <div className="table-responsive">
                                     <table className="table table-striped table-sm table-bordered">
-                                        <thead>
-                                            <tr>
-                                                <th colSpan="9" style={{ padding: "3px 8px", background: "#f8f9fa", fontWeight: "normal" }}>
-                                                    <div className="d-flex justify-content-between align-items-center">
-                                                        <small className="text-muted">{t("Bill Summary")}</small>
-                                                        <button
-                                                            type="button"
-                                                            className="btn btn-sm btn-outline-secondary p-0"
-                                                            style={{ width: "20px", height: "20px", lineHeight: 1 }}
-                                                            title={t("Customize Bill Summary")}
-                                                            onClick={() => setShowBillSummarySettings(v => !v)}
-                                                        >
-                                                            <i className="bi bi-gear" style={{ fontSize: "11px" }}></i>
-                                                        </button>
-                                                    </div>
-                                                </th>
-                                            </tr>
-                                        </thead>
                                         <tbody>
                                             {billSummaryOrder.filter(key => billSummaryVisible[key]).map(key => {
                                                 switch (key) {
@@ -2694,31 +2684,21 @@ export function SalesType1Body({
                             <div className="col-md-12" style={{ maxWidth: "90%" }}>
                                 <label className="form-label">{t("Payments Received")}</label>
 
-                                <div class="table-responsive">
+                                <div className="table-responsive">
                                     <Button variant="secondary" style={{ alignContent: "right", marginBottom: "10px" }} onClick={addNewPayment}>
                                         {t("Create New Payment")}
                                     </Button>
-                                    <table class="table table-striped table-sm table-bordered" style={{ width: "100%" }}>
+                                    <table className="table table-striped table-sm table-bordered" style={{ width: "100%" }}>
                                         {formData.payments_input && formData.payments_input?.length > 0 &&
                                             <thead>
-                                                <th>
-                                                    {t("Date")}
-                                                </th>
-                                                <th>
-                                                    {t("Amount")}
-                                                </th>
-                                                <th>
-                                                    {t("Payment Method")}
-                                                </th>
-                                                <th>
-                                                    {t("Description")}
-                                                </th>
-                                                <th>
-                                                    {t("Reference")}
-                                                </th>
-                                                <th>
-                                                    {t("Action")}
-                                                </th>
+                                                <tr>
+                                                    <th>{t("Date")}</th>
+                                                    <th>{t("Amount")}</th>
+                                                    <th>{t("Payment Method")}</th>
+                                                    <th>{t("Description")}</th>
+                                                    <th>{t("Reference")}</th>
+                                                    <th>{t("Action")}</th>
+                                                </tr>
                                             </thead>}
                                         <tbody>
                                             {formData.payments_input &&
@@ -2835,14 +2815,14 @@ export function SalesType1Body({
                                                             )}
                                                         </td>
                                                         <td style={{ width: "80px", textAlign: 'center' }}>
-                                                            <button type="button" onClick={() => removePayment(key)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#dc2626', padding: '2px 6px', borderRadius: '4px' }} onMouseEnter={e => e.currentTarget.style.backgroundColor = '#fef2f2'} onMouseLeave={e => e.currentTarget.style.backgroundColor = 'transparent'}>
-                                                                <i className="bi bi-trash" style={{ fontSize: '14px' }}></i>
+                                                            <button type="button" onClick={() => removePayment(key)} className="btn btn-danger btn-sm">
+                                                                <i className="bi bi-trash"></i>
                                                             </button>
                                                         </td>
                                                     </tr>
                                                 ))}
                                             <tr>
-                                                <td class="text-end">
+                                                <td className="text-end">
                                                     <b>{t("Total")}</b>
                                                 </td>
                                                 <td><b style={{ marginLeft: "14px" }}>{trimTo2Decimals(totalPaymentAmount)}</b>

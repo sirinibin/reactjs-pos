@@ -472,7 +472,6 @@ const BalanceSheetPrintPreviewContent = forwardRef((props, ref) => {
                                         </th>*/}
 
                                         </tr>
-
                                         {pageIndex === 0 && props.model && (props.model.debitBalanceBoughtDown > 0 || props.model.creditBalanceBoughtDown > 0) && !props.model.ignoreOpeningBalance &&
                                             <tr style={{ borderBottom: tableBorderThickness }} className="text-center"  >
                                                 <td style={{ borderRight: tableBorderThickness, padding: "3px" }}>
@@ -505,7 +504,6 @@ const BalanceSheetPrintPreviewContent = forwardRef((props, ref) => {
                                                 <td style={{ padding: "3px" }}></td>
                                                 <td></td>
                                             </tr>}
-
                                         {page.posts && page.posts.filter(post => post.date).map((post, index) => (
                                             <tr style={{ borderBottom: tableBorderThickness, }} key={index}   >
                                                 <td style={{ width: "auto", padding: "3px", whiteSpace: "nowrap", borderRight: tableBorderThickness, }} >{post.no}</td>
@@ -561,8 +559,6 @@ const BalanceSheetPrintPreviewContent = forwardRef((props, ref) => {
                                             <td colSpan={2}></td>
 
                                         </tr> : ""}
-
-
                                         {props.model.pages.length === (pageIndex + 1) && props.model ?
                                             <tr style={{ borderBottom: tableBorderThickness }}>
                                                 <th className="text-end" colSpan={3} style={{ borderRight: tableBorderThickness, padding: "3px" }}>
@@ -578,7 +574,6 @@ const BalanceSheetPrintPreviewContent = forwardRef((props, ref) => {
                                                 </b></th>
                                                 <th colSpan={3}></th>
                                             </tr> : ""}
-
                                         {props.model.pages.length === (pageIndex + 1) && props.model && !props.model.store?.settings?.hide_total_amount_row_in_balance_sheet && <tr style={{ borderBottom: tableBorderThickness }}>
                                             <td className="text-end" colSpan={3} style={{ borderRight: tableBorderThickness, padding: "3px" }}>
                                                 <b>Total Amount</b>
@@ -592,9 +587,6 @@ const BalanceSheetPrintPreviewContent = forwardRef((props, ref) => {
                                             <td colSpan={2}></td>
 
                                         </tr>}
-
-
-
                                         {props.model.pages.length === (pageIndex + 1) ? <tr style={{ borderBottom: tableBorderThickness }}>
                                             <th colSpan="2" className="text-end" style={{ padding: "2px", borderRight: tableBorderThickness }}>
                                                 Balance In Words التوازن في الكلمات:

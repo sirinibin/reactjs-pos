@@ -15,6 +15,7 @@ import Button from 'react-bootstrap/Button';
 import { trimTo2Decimals } from "../utils/numberUtils";
 import Amount from "../utils/amount.js";
 import PostingIndex from "./../posting/index.js";
+import { ObjectToSearchQueryParams } from './queryUtils.js';
 //import { set } from "date-fns";
 
 const CustomerPending = forwardRef((props, ref) => {
@@ -82,14 +83,6 @@ const CustomerPending = forwardRef((props, ref) => {
         },
     }));
 
-
-    function ObjectToSearchQueryParams(object) {
-        return Object.keys(object)
-            .map(function (key) {
-                return `search[${key}]=${object[key]}`;
-            })
-            .join("&");
-    }
 
     const [show, SetShow] = useState(false);
 

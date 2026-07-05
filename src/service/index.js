@@ -1,13 +1,15 @@
 import React, { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import ServiceCreate from "./create.js";
 import ServiceView from "./view.js";
-import { Button, Spinner, Modal } from "react-bootstrap";
+import { Button, Spinner } from "react-bootstrap";
 import ReactPaginate from "react-paginate";
 import { confirm } from 'react-bootstrap-confirmation';
 import OverflowTooltip from "../utils/OverflowTooltip.js";
 import { Typeahead, Menu, MenuItem } from "react-bootstrap-typeahead";
 import { highlightWords } from "../utils/search.js";
-import { DragDropContext, Droppable, Draggable } from "react-beautiful-dnd";
+import { ObjectToSearchQueryParams } from '../utils/queryUtils.js';
+import { useTableSettings } from '../utils/useTableSettings.js';
+import TableSettingsModal from '../utils/TableSettingsModal.js';
 
 const columnStyle = {
     overflow: "hidden",
@@ -59,53 +61,23 @@ function ServiceIndex(props) {
         { key: "delivery_mode", label: "Delivery",     fieldName: "delivery_mode",         width: 15, visible: true  },
     ], []);
 
-    const [searchServiceColumns, setSearchServiceColumns] = useState(defaultSearchServiceColumns);
-    const [showSearchSettings, setShowSearchSettings]     = useState(false);
+    const {
+        columns: searchServiceColumns,
+        showSettings: showSearchSettings,
+        setShowSettings: setShowSearchSettings,
+        handleToggleColumn: toggleSearchColumn,
+        onDragEnd: onDragEndSearch,
+        restoreDefaults: restoreSearchDefaults,
+    } = useTableSettings({ storageKey: "service_search_settings", defaultColumns: defaultSearchServiceColumns });
 
     const visibleCols  = searchServiceColumns.filter(c => c.visible);
     const totalColWidth = visibleCols.reduce((s, c) => s + c.width, 0);
     const getColWidth   = (col) => `${(col.width / totalColWidth) * 100}%`;
 
-    // Load saved column config
-    useEffect(() => {
-        const saved = localStorage.getItem("service_search_settings");
-        if (saved) {
-            try { setSearchServiceColumns(JSON.parse(saved)); } catch (_) {}
-        }
-    }, []);
-
-    function toggleSearchColumn(idx) {
-        const updated = [...searchServiceColumns];
-        updated[idx].visible = !updated[idx].visible;
-        setSearchServiceColumns(updated);
-        localStorage.setItem("service_search_settings", JSON.stringify(updated));
-    }
-
-    function onDragEndSearch(result) {
-        if (!result.destination) return;
-        const reordered = Array.from(searchServiceColumns);
-        const [moved] = reordered.splice(result.source.index, 1);
-        reordered.splice(result.destination.index, 0, moved);
-        setSearchServiceColumns(reordered);
-        localStorage.setItem("service_search_settings", JSON.stringify(reordered));
-    }
-
-    function restoreSearchDefaults() {
-        const cloned = defaultSearchServiceColumns.map(c => ({ ...c }));
-        setSearchServiceColumns(cloned);
-        localStorage.setItem("service_search_settings", JSON.stringify(cloned));
-    }
-
     // ── Category filter typeahead ──
     const [categoryOptions,    setCategoryOptions]    = useState([]);
     const [selectedCategories, setSelectedCategories] = useState([]);
     const categorySearchRef = useRef();
-
-    function ObjectToSearchQueryParams(object) {
-        return Object.keys(object)
-            .map(key => `search[${key}]=` + encodeURIComponent(object[key]))
-            .join("&");
-    }
 
     useEffect(() => { list(); }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -260,54 +232,15 @@ function ServiceIndex(props) {
     return (
         <>
             {/* Search column settings modal */}
-            <Modal show={showSearchSettings} onHide={() => setShowSearchSettings(false)} centered size="lg">
-                <Modal.Header closeButton>
-                    <Modal.Title>
-                        <i className="bi bi-gear-fill" style={{ fontSize: "1.2rem", marginRight: "4px" }} />
-                        Service Search Settings
-                    </Modal.Title>
-                </Modal.Header>
-                <Modal.Body>
-                    <h6 className="mb-2">Customize Columns</h6>
-                    <DragDropContext onDragEnd={onDragEndSearch}>
-                        <Droppable droppableId="svc-search-cols">
-                            {(provided) => (
-                                <ul className="list-group" {...provided.droppableProps} ref={provided.innerRef}>
-                                    {searchServiceColumns.map((col, idx) => (
-                                        <Draggable key={col.key} draggableId={col.key} index={idx}>
-                                            {(prov) => (
-                                                <li
-                                                    className="list-group-item d-flex justify-content-between align-items-center"
-                                                    ref={prov.innerRef}
-                                                    {...prov.draggableProps}
-                                                    {...prov.dragHandleProps}
-                                                >
-                                                    <div>
-                                                        <input
-                                                            style={{ width: "20px", height: "20px" }}
-                                                            type="checkbox"
-                                                            className="form-check-input me-2"
-                                                            checked={col.visible}
-                                                            onChange={() => toggleSearchColumn(idx)}
-                                                        />
-                                                        {col.label}
-                                                    </div>
-                                                    <span style={{ cursor: "grab" }}>☰</span>
-                                                </li>
-                                            )}
-                                        </Draggable>
-                                    ))}
-                                    {provided.placeholder}
-                                </ul>
-                            )}
-                        </Droppable>
-                    </DragDropContext>
-                </Modal.Body>
-                <Modal.Footer>
-                    <Button variant="secondary" onClick={() => setShowSearchSettings(false)}>Close</Button>
-                    <Button variant="primary" onClick={restoreSearchDefaults}>Restore to Default</Button>
-                </Modal.Footer>
-            </Modal>
+            <TableSettingsModal
+                show={showSearchSettings}
+                onHide={() => setShowSearchSettings(false)}
+                title="Service Search Settings"
+                columns={searchServiceColumns}
+                onToggleColumn={toggleSearchColumn}
+                onDragEnd={onDragEndSearch}
+                onRestoreDefaults={restoreSearchDefaults}
+            />
 
             <ServiceCreate ref={createFormRef} showToastMessage={props.showToastMessage} refreshList={list} />
             <ServiceView ref={viewRef} showToastMessage={props.showToastMessage} />

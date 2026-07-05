@@ -4,6 +4,9 @@ import { Modal } from "react-bootstrap";
 import { Spinner } from "react-bootstrap";
 import { Typeahead } from "react-bootstrap-typeahead";
 import { useTranslation } from 'react-i18next';
+import { ObjectToSearchQueryParams } from '../utils/queryUtils.js';
+import { fetchStore } from '../utils/storeUtils.js';
+import { useEnterKeyNavigation } from '../utils/useEnterKeyNavigation.js';
 
 
 const ProductCategoryCreate = forwardRef((props, ref) => {
@@ -26,65 +29,15 @@ const ProductCategoryCreate = forwardRef((props, ref) => {
 
     }));
 
-    let [store, setStore] = useState({});
 
     async function getStore(id) {
-        console.log("inside get Store");
-        const requestOptions = {
-            method: 'GET',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': localStorage.getItem('access_token'),
-            },
-        };
-
-        await fetch('/v1/store/' + id, requestOptions)
-            .then(async response => {
-                const isJson = response.headers.get('content-type')?.includes('application/json');
-                const data = isJson && await response.json();
-
-                // check for error response
-                if (!response.ok) {
-                    const error = (data && data.errors);
-                    return Promise.reject(error);
-                }
-
-                console.log("Response:");
-                console.log(data);
-                store = data.result;
-                setStore(store);
-            })
-            .catch(error => {
-
-            });
+        try {
+            await fetchStore(id);
+        } catch (error) { }
     }
 
 
-    useEffect(() => {
-        const listener = event => {
-            if (event.code === "Enter" || event.code === "NumpadEnter") {
-                console.log("Enter key was pressed. Run your function-product category.");
-                // event.preventDefault();
-
-                var form = event.target.form;
-                if (form && event.target) {
-                    var index = Array.prototype.indexOf.call(form, event.target);
-                    if (form && form.elements[index + 1]) {
-                        if ((event.target.getAttribute("class") || "").includes("barcode")) {
-                            form.elements[index].focus();
-                        } else {
-                            form.elements[index + 1].focus();
-                        }
-                        event.preventDefault();
-                    }
-                }
-            }
-        };
-        document.addEventListener("keydown", listener);
-        return () => {
-            document.removeEventListener("keydown", listener);
-        };
-    }, []);
+    useEnterKeyNavigation();
 
     let [errors, setErrors] = useState({});
     const [isProcessing, setProcessing] = useState(false);
@@ -170,14 +123,6 @@ const ProductCategoryCreate = forwardRef((props, ref) => {
                 setProcessing(false);
                 setErrors(error);
             });
-    }
-
-    function ObjectToSearchQueryParams(object) {
-        return Object.keys(object)
-            .map(function (key) {
-                return `search[${key}]=${object[key]}`;
-            })
-            .join("&");
     }
 
     function handleCreate(event) {

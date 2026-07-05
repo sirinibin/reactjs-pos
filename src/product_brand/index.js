@@ -6,9 +6,10 @@ import { format } from "date-fns";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import { Button, Spinner } from "react-bootstrap";
-import ReactPaginate from "react-paginate";
 import OverflowTooltip from "../utils/OverflowTooltip.js";
 import { confirm } from 'react-bootstrap-confirmation';
+import { ObjectToSearchQueryParams } from '../utils/queryUtils.js';
+import PaginationControls from '../utils/PaginationControls.js';
 
 function ProductBrandIndex(props) {
 
@@ -51,14 +52,6 @@ function ProductBrandIndex(props) {
     const [searchParams, setSearchParams] = useState({});
     let [sortField, setSortField] = useState("created_at");
     let [sortProductBrand, setSortProductBrand] = useState("-");
-
-    function ObjectToSearchQueryParams(object) {
-        return Object.keys(object)
-            .map(function (key) {
-                return `search[${key}]=${object[key]}`;
-            })
-            .join("&");
-    }
 
 
 
@@ -423,53 +416,18 @@ function ProductBrandIndex(props) {
                                         )}
                                     </div>
                                 </div>
-
-                                <br />
-                                <div className="row">
-                                    <div className="col" style={{ bproductbrand: "solid 0px" }}>
-                                        <div className="w-100" style={{ overflowX: "auto" }}>
-                                            {totalPages ? <ReactPaginate
-                                                breakLabel="..."
-                                                nextLabel="next >"
-                                                onPageChange={(event) => {
-                                                    changePage(event.selected + 1);
-                                                }}
-                                                pageRangeDisplayed={3}
-                                                marginPagesDisplayed={1}
-                                                pageCount={totalPages}
-                                                previousLabel="< prev"
-                                                renderOnZeroPageCount={null}
-                                                className="pagination  flex-wrap"
-                                                pageClassName="page-item"
-                                                pageLinkClassName="page-link"
-                                                activeClassName="active"
-                                                previousClassName="page-item"
-                                                nextClassName="page-item"
-                                                previousLinkClassName="page-link"
-                                                nextLinkClassName="page-link"
-                                                forcePage={page - 1}
-                                            /> : ""}
-                                        </div>
-                                    </div>
-                                </div>
-                                <div className="row">
-                                    {totalItems > 0 && (
-                                        <>
-                                            <div className="col text-start">
-                                                <p className="text-start">
-                                                    showing {offset + 1}-{offset + currentPageItemsCount} of{" "}
-                                                    {totalItems}
-                                                </p>
-                                            </div>
-
-                                            <div className="col text-end">
-                                                <p className="text-end">
-                                                    page {page} of {totalPages}
-                                                </p>
-                                            </div>
-                                        </>
-                                    )}
-                                </div>
+                                <PaginationControls
+                                    showSizePicker={false}
+                                    totalPages={totalPages}
+                                    page={page}
+                                    totalItems={totalItems}
+                                    offset={offset}
+                                    currentPageItemsCount={currentPageItemsCount}
+                                    pageSize={pageSize}
+                                    onPageChange={changePage}
+                                    onPageSizeChange={changePageSize}
+                                    pageSizes={[5, 10, 20, 40, 50, 100]}
+                                />
                                 <div className="table-responsive" style={{ overflowX: "auto", overflowY: "auto", maxHeight: "500px" }}>
                                     <table className="table table-striped table-sm table-bordered">
                                         <thead>
@@ -767,29 +725,18 @@ function ProductBrandIndex(props) {
                                     </table>
                                 </div>
 
-                                <div className="w-100" style={{ overflowX: "auto" }}>
-                                    {totalPages ? <ReactPaginate
-                                        breakLabel="..."
-                                        nextLabel="next >"
-                                        onPageChange={(event) => {
-                                            changePage(event.selected + 1);
-                                        }}
-                                        pageRangeDisplayed={3}
-                                        marginPagesDisplayed={1}
-                                        pageCount={totalPages}
-                                        previousLabel="< prev"
-                                        renderOnZeroPageCount={null}
-                                        className="pagination  flex-wrap"
-                                        pageClassName="page-item"
-                                        pageLinkClassName="page-link"
-                                        activeClassName="active"
-                                        previousClassName="page-item"
-                                        nextClassName="page-item"
-                                        previousLinkClassName="page-link"
-                                        nextLinkClassName="page-link"
-                                        forcePage={page - 1}
-                                    /> : ""}
-                                </div>
+                                <PaginationControls
+                                    showSizePicker={false}
+                                    totalPages={totalPages}
+                                    page={page}
+                                    totalItems={totalItems}
+                                    offset={offset}
+                                    currentPageItemsCount={currentPageItemsCount}
+                                    pageSize={pageSize}
+                                    onPageChange={changePage}
+                                    onPageSizeChange={changePageSize}
+                                    pageSizes={[5, 10, 20, 40, 50, 100]}
+                                />
                             </div>
                         </div>
                     </div>

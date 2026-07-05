@@ -5,7 +5,6 @@ import { format } from "date-fns";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import { Button, Spinner, Modal } from "react-bootstrap";
-import ReactPaginate from "react-paginate";
 import BalanceSheetPrintPreview from './printPreview.js';
 import Amount from "../utils/amount.js";
 import OverflowTooltip from "../utils/OverflowTooltip.js";
@@ -22,6 +21,9 @@ import DividentCreate from "../divident/create.js";
 import QuotationCreate from "../quotation/create.js";
 import { WebSocketContext } from "./../utils/WebSocketContext.js";
 import eventEmitter from "./../utils/eventEmitter";
+import { ObjectToSearchQueryParams } from '../utils/queryUtils.js';
+import { fetchStore } from '../utils/storeUtils.js';
+import PaginationControls from '../utils/PaginationControls.js';
 
 
 
@@ -61,34 +63,10 @@ const PostingIndex = forwardRef((props, ref) => {
     let [store, setStore] = useState({});
 
     async function getStore(id) {
-        console.log("inside get Store");
-        const requestOptions = {
-            method: 'GET',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': localStorage.getItem('access_token'),
-            },
-        };
-
-        await fetch('/v1/store/' + id, requestOptions)
-            .then(async response => {
-                const isJson = response.headers.get('content-type')?.includes('application/json');
-                const data = isJson && await response.json();
-
-                // check for error response
-                if (!response.ok) {
-                    const error = (data && data.errors);
-                    return Promise.reject(error);
-                }
-
-                console.log("Response:");
-                console.log(data);
-                store = data.result;
-                setStore(store);
-            })
-            .catch(error => {
-
-            });
+        try {
+            const data = await fetchStore(id);
+            setStore({ ...data });
+        } catch (error) { }
     }
 
     //Date filter
@@ -147,14 +125,6 @@ const PostingIndex = forwardRef((props, ref) => {
     let [searchParams, setSearchParams] = useState({});
     let [sortField, setSortField] = useState("posts.date");
     let [sortPosting, setSortPosting] = useState("-");
-
-    function ObjectToSearchQueryParams(object) {
-        return Object.keys(object)
-            .map(function (key) {
-                return `search[${key}]=` + object[key];
-            })
-            .join("&");
-    }
 
     function searchByFieldValue(field, value) {
         searchParams[field] = value;
@@ -1017,52 +987,18 @@ const PostingIndex = forwardRef((props, ref) => {
                                             </div>
                                         </div>
 
-                                        <br />
-                                        <div className="row">
-                                            <div className="col" style={{ bexpense: "solid 0px" }}>
-                                                {totalPages ? <ReactPaginate
-                                                    breakLabel="..."
-                                                    nextLabel="next >"
-                                                    onPageChange={(event) => {
-                                                        changePage(event.selected + 1);
-                                                    }}
-                                                    pageRangeDisplayed={3}
-                                                    marginPagesDisplayed={1}
-                                                    pageCount={totalPages}
-                                                    previousLabel="< prev"
-                                                    renderOnZeroPageCount={null}
-                                                    className="pagination  flex-wrap"
-                                                    pageClassName="page-item"
-                                                    pageLinkClassName="page-link"
-                                                    activeClassName="active"
-                                                    previousClassName="page-item"
-                                                    nextClassName="page-item"
-                                                    previousLinkClassName="page-link"
-                                                    nextLinkClassName="page-link"
-                                                    forcePage={page - 1}
-                                                /> : ""}
-                                            </div>
-                                        </div>
-                                        <div className="row">
-                                            {totalItems > 0 && (
-                                                <>
-                                                    <div className="col text-start">
-                                                        <p className="text-start">
-                                                            showing {offset + 1}-{offset + currentPageItemsCount} of{" "}
-                                                            {totalItems}
-                                                        </p>
-                                                    </div>
-
-
-
-                                                    <div className="col text-end">
-                                                        <p className="text-end">
-                                                            page {page} of {totalPages}
-                                                        </p>
-                                                    </div>
-                                                </>
-                                            )}
-                                        </div>
+                                        <PaginationControls
+                                            showSizePicker={false}
+                                            totalPages={totalPages}
+                                            page={page}
+                                            totalItems={totalItems}
+                                            offset={offset}
+                                            currentPageItemsCount={currentPageItemsCount}
+                                            pageSize={pageSize}
+                                            onPageChange={changePage}
+                                            onPageSizeChange={changePageSize}
+                                            pageSizes={[5, 20, 40, 50, 100, 200, 300, 500, 1000, 1500]}
+                                        />
                                         <div className="row">
                                             <div className="col text-start">
                                                 <p className="text-start">
@@ -1560,7 +1496,6 @@ const PostingIndex = forwardRef((props, ref) => {
                                                         <td style={{ textAlign: "right", color: "red" }}><b>{creditBalanceBoughtDown > 0 ? "By Opening Balance  " : ""} {creditBalanceBoughtDown > 0 ? <Amount amount={creditBalanceBoughtDown} /> : ""} </b></td>
                                                         <td colSpan={2}></td>
                                                     </tr> : ""}
-
                                                     {postingList &&
                                                         postingList?.map((posting, index1) => (
                                                             posting.posts?.map((post, index2) => (
@@ -1643,9 +1578,7 @@ const PostingIndex = forwardRef((props, ref) => {
                                                                     {localStorage.getItem("user_role") === "Admin" && <td style={{ width: "auto", whiteSpace: "nowrap" }} >{toTitleCaseFromUnderscore(posting.reference_model)}</td>}
                                                                 </tr>
                                                             ))
-
                                                         ))}
-
                                                     {/*postingList &&
                                                         postingList.map((posting) => (
                                                             <tr key={posting.id}>
@@ -1732,7 +1665,6 @@ const PostingIndex = forwardRef((props, ref) => {
 
                                                     {/*  </tr>
                                                         ))}*/}
-
                                                     {selectedAccount ? <tr>
                                                         <td ></td>
                                                         {localStorage.getItem("user_role") === "Admin" && <td></td>}
@@ -1761,27 +1693,18 @@ const PostingIndex = forwardRef((props, ref) => {
                                             </table>
                                         </div>
 
-                                        {totalPages ? <ReactPaginate
-                                            breakLabel="..."
-                                            nextLabel="next >"
-                                            onPageChange={(event) => {
-                                                changePage(event.selected + 1);
-                                            }}
-                                            pageRangeDisplayed={3}
-                                            marginPagesDisplayed={1}
-                                            pageCount={totalPages}
-                                            previousLabel="< prev"
-                                            renderOnZeroPageCount={null}
-                                            className="pagination  flex-wrap"
-                                            pageClassName="page-item"
-                                            pageLinkClassName="page-link"
-                                            activeClassName="active"
-                                            previousClassName="page-item"
-                                            nextClassName="page-item"
-                                            previousLinkClassName="page-link"
-                                            nextLinkClassName="page-link"
-                                            forcePage={page - 1}
-                                        /> : ""}
+                                        <PaginationControls
+                                            showSizePicker={false}
+                                            totalPages={totalPages}
+                                            page={page}
+                                            totalItems={totalItems}
+                                            offset={offset}
+                                            currentPageItemsCount={currentPageItemsCount}
+                                            pageSize={pageSize}
+                                            onPageChange={changePage}
+                                            onPageSizeChange={changePageSize}
+                                            pageSizes={[5, 20, 40, 50, 100, 200, 300, 500, 1000, 1500]}
+                                        />
                                     </div>
                                 </div>
                             </div>

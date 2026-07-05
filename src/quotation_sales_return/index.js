@@ -6,9 +6,7 @@ import { Typeahead } from "react-bootstrap-typeahead";
 import { format } from "date-fns";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
-import { Button, Spinner, Modal, Alert } from "react-bootstrap";
-import ReactPaginate from "react-paginate";
-import { DragDropContext, Droppable, Draggable } from "react-beautiful-dnd";
+import { Button, Spinner, Modal } from "react-bootstrap";
 import QuotationSalesReturnPaymentCreate from "./../quotation_sales_return_payment/create.js";
 import QuotationSalesReturnPaymentDetailsView from "./../quotation_sales_return_payment/view.js";
 import QuotationSalesReturnPaymentIndex from "./../quotation_sales_return_payment/index.js";
@@ -23,6 +21,12 @@ import Quotations from "./../utils/quotations.js";
 import OrderPreview from "./../order/preview.js"
 import ReportPreview from "./../order/report.js";
 import OrderPrint from "./../order/print.js"
+import { ObjectToSearchQueryParams } from '../utils/queryUtils.js';
+import { fetchStore } from '../utils/storeUtils.js';
+import SuccessModal from '../utils/SuccessModal.js';
+import { useTableSettings } from '../utils/useTableSettings.js';
+import PaginationControls from '../utils/PaginationControls.js';
+import TableSettingsModal from '../utils/TableSettingsModal.js';
 
 
 const ExcelFile = ReactExport.ExcelFile;
@@ -137,36 +141,11 @@ function QuotationSalesReturnIndex(props) {
 
     let [store, setStore] = useState({});
 
-    function getStore(id) {
-        console.log("inside get Store");
-        const requestOptions = {
-            method: 'GET',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': localStorage.getItem('access_token'),
-            },
-        };
-
-        fetch('/v1/store/' + id, requestOptions)
-            .then(async response => {
-                const isJson = response.headers.get('content-type')?.includes('application/json');
-                const data = isJson && await response.json();
-
-                // check for error response
-                if (!response.ok) {
-                    const error = (data && data.errors);
-                    return Promise.reject(error);
-                }
-
-                console.log("Response:");
-                console.log(data);
-
-                store = data.result;
-                setStore({ ...store });
-            })
-            .catch(error => {
-                // setErrors(error);
-            });
+    async function getStore(id) {
+        try {
+            const data = await fetchStore(id);
+            setStore({ ...data });
+        } catch (error) { }
     }
 
 
@@ -639,14 +618,6 @@ function QuotationSalesReturnIndex(props) {
     const [searchParams, setSearchParams] = useState({});
     let [sortField, setSortField] = useState("created_at");
     let [sortQuotationSalesReturn, setSortQuotationSalesReturn] = useState("-");
-
-    function ObjectToSearchQueryParams(object) {
-        return Object.keys(object)
-            .map(function (key) {
-                return `search[${key}]=${object[key]}`;
-            })
-            .join("&");
-    }
 
     const customCustomerFilter = useCallback((option, query) => {
         const normalize = (str) => str?.toLowerCase().replace(/\s+/g, " ").trim() || "";
@@ -1269,111 +1240,14 @@ function QuotationSalesReturnIndex(props) {
     ], []);
 
 
-    const [columns, setColumns] = useState(defaultColumns);
-    const [showSettings, setShowSettings] = useState(false);
-    // Load settings from localStorage
-    useEffect(() => {
-        let saved = "";
-        if (enableSelection === true) {
-            saved = localStorage.getItem("select_quotation_sales_return_table_settings");
-        } else if (pendingView === true) {
-            saved = localStorage.getItem("pending_quotation_sales_return_table_settings");
-        } else {
-            saved = localStorage.getItem("quotation_sales_return_table_settings");
-        }
-        if (saved) setColumns(JSON.parse(saved));
-
-        let missingOrUpdated = false;
-        for (let i = 0; i < defaultColumns.length; i++) {
-            if (!saved)
-                break;
-
-            const savedCol = JSON.parse(saved)?.find(col => col.fieldName === defaultColumns[i].fieldName);
-
-            missingOrUpdated = !savedCol || savedCol.label !== defaultColumns[i].label || savedCol.key !== defaultColumns[i].key;
-
-            if (missingOrUpdated) {
-                break
-            }
-        }
-
-        /*
-        for (let i = 0; i < saved.length; i++) {
-            const savedCol = defaultColumns.find(col => col.fieldName === saved[i].fieldName);
-     
-            missingOrUpdated = !savedCol || savedCol.label !== saved[i].label || savedCol.key !== saved[i].key;
-     
-            if (missingOrUpdated) {
-                break
-            }
-        }*/
-
-        if (missingOrUpdated) {
-            if (enableSelection === true) {
-                localStorage.setItem("select_quotation_sales_return_table_settings", JSON.stringify(defaultColumns));
-            } else if (pendingView === true) {
-                localStorage.setItem("pending_quotation_sales_return_table_settings", JSON.stringify(defaultColumns));
-            } else {
-                localStorage.setItem("quotation_sales_return_table_settings", JSON.stringify(defaultColumns));
-            }
-            setColumns(defaultColumns);
-        }
-
-        //2nd
-
-    }, [defaultColumns, enableSelection, pendingView]);
+    const { columns, showSettings, setShowSettings, handleToggleColumn, onDragEnd, restoreDefaults } = useTableSettings({ storageKey: "quotation_sales_return_table_settings", selectStorageKey: "select_quotation_sales_return_table_settings", pendingStorageKey: "pending_quotation_sales_return_table_settings", defaultColumns, enableSelection, pendingView });
 
     function RestoreDefaultSettings() {
-        if (enableSelection === true) {
-            localStorage.setItem("select_quotation_sales_return_table_settings", JSON.stringify(defaultColumns));
-        } else if (pendingView === true) {
-            localStorage.setItem("pending_quotation_sales_return_table_settings", JSON.stringify(defaultColumns));
-        } else {
-            localStorage.setItem("quotation_sales_return_table_settings", JSON.stringify(defaultColumns));
-        }
-        setColumns(defaultColumns);
-
+        restoreDefaults();
         setShowSuccess(true);
-        setSuccessMessage("Successfully restored to default settings!")
+        setSuccessMessage("Successfully restored to default settings!");
     }
 
-    // Save column settings to localStorage
-    /*
-    useEffect(() => {
-        localStorage.setItem("quotation_sales_return_table_settings", JSON.stringify(columns));
-    }, [columns]);
-    */
-
-    const handleToggleColumn = (index) => {
-        const updated = [...columns];
-        updated[index].visible = !updated[index].visible;
-        setColumns(updated);
-        if (enableSelection === true) {
-            localStorage.setItem("select_quotation_sales_return_table_settings", JSON.stringify(updated));
-        } else if (pendingView === true) {
-            localStorage.setItem("pending_quotation_sales_return_table_settings", JSON.stringify(updated));
-        } else {
-            localStorage.setItem("quotation_sales_return_table_settings", JSON.stringify(updated));
-        }
-
-
-    };
-
-    const onDragEnd = (result) => {
-        if (!result.destination) return;
-        const reordered = Array.from(columns);
-        const [moved] = reordered.splice(result.source.index, 1);
-        reordered.splice(result.destination.index, 0, moved);
-        setColumns(reordered);
-
-        if (enableSelection === true) {
-            localStorage.setItem("select_quotation_sales_return_table_settings", JSON.stringify(reordered));
-        } else if (pendingView === true) {
-            localStorage.setItem("pending_quotation_sales_return_table_settings", JSON.stringify(reordered));
-        } else {
-            localStorage.setItem("quotation_sales_return_table_settings", JSON.stringify(reordered));
-        }
-    };
 
     let [showCustomerCreate, setShowCustomerCreate] = useState(false);
 
@@ -1399,108 +1273,18 @@ function QuotationSalesReturnIndex(props) {
         <>
             {showCustomerCreate && <CustomerCreate ref={CustomerUpdateFormRef} />}
             {/* ⚙️ Settings Modal */}
-            <Modal
+            <TableSettingsModal
                 show={showSettings}
                 onHide={() => setShowSettings(false)}
-                centered
-                size="lg"
-            >
-                <Modal.Header closeButton>
-                    <Modal.Title>
-                        <i
-                            className="bi bi-gear-fill"
-                            style={{ fontSize: "1.2rem", marginRight: "4px" }}
-                            title="Table Settings"
+                title="Qtn. Sales Return Settings"
+                columns={columns}
+                onToggleColumn={handleToggleColumn}
+                onDragEnd={onDragEnd}
+                onRestoreDefaults={RestoreDefaultSettings}
+                enableSelection={enableSelection}
+            />
 
-                        />
-                        Qtn. Sales Return Settings
-                    </Modal.Title>
-                </Modal.Header>
-                <Modal.Body>
-                    {/* Column Settings */}
-                    {showSettings && (
-                        <>
-                            <h6 className="mb-2">Customize Columns</h6>
-                            <DragDropContext onDragEnd={onDragEnd}>
-                                <Droppable droppableId="columns">
-                                    {(provided) => (
-                                        <ul
-                                            className="list-group"
-                                            {...provided.droppableProps}
-                                            ref={provided.innerRef}
-                                        >
-                                            {columns.map((col, index) => {
-                                                return (
-                                                    <>
-                                                        {((col.key === "select" && enableSelection) || col.key !== "select") && <Draggable
-                                                            key={col.key}
-                                                            draggableId={col.key}
-                                                            index={index}
-                                                        >
-                                                            {(provided) => (
-                                                                <li
-                                                                    className="list-group-item d-flex justify-content-between align-items-center"
-                                                                    ref={provided.innerRef}
-                                                                    {...provided.draggableProps}
-                                                                    {...provided.dragHandleProps}                                                        >
-                                                                    <div>
-                                                                        <input
-                                                                            style={{ width: "20px", height: "20px" }}
-                                                                            type="checkbox"
-                                                                            className="form-check-input me-2"
-                                                                            checked={col.visible}
-                                                                            onChange={() => {
-                                                                                handleToggleColumn(index);
-                                                                            }}
-                                                                        />
-                                                                        {col.label}
-                                                                    </div>
-                                                                    <span style={{ cursor: "grab" }}>☰</span>
-                                                                </li>
-                                                            )}
-                                                        </Draggable>}
-                                                    </>)
-                                            })}
-                                            {provided.placeholder}
-                                        </ul>
-                                    )}
-                                </Droppable>
-                            </DragDropContext>
-                        </>
-                    )}
-                </Modal.Body>
-                <Modal.Footer>
-                    <Button variant="secondary" onClick={() => setShowSettings(false)}>
-                        Close
-                    </Button>
-                    <Button
-                        variant="primary"
-                        onClick={() => {
-                            RestoreDefaultSettings();
-                            // Save to localStorage here if needed
-                            //setShowSettings(false);
-                        }}
-                    >
-                        Restore to Default
-                    </Button>
-                </Modal.Footer>
-            </Modal>
-
-            <Modal show={showSuccess} onHide={() => setShowSuccess(false)} centered>
-                <Modal.Header closeButton>
-                    <Modal.Title>Success</Modal.Title>
-                </Modal.Header>
-                <Modal.Body>
-                    <Alert variant="success">
-                        {successMessage}
-                    </Alert>
-                </Modal.Body>
-                <Modal.Footer>
-                    <Button variant="secondary" onClick={() => setShowSuccess(false)}>
-                        Close
-                    </Button>
-                </Modal.Footer>
-            </Modal>
+            <SuccessModal show={showSuccess} message={successMessage} onClose={() => setShowSuccess(false)} />
 
             {showOrderPrint && <OrderPrint ref={PrintRef} />}
             <Modal show={showPrintTypeSelection} onHide={() => {
@@ -1634,7 +1418,7 @@ function QuotationSalesReturnIndex(props) {
 
 
                         <Button
-                            hide={true}
+                            hide="true"
                             variant="primary"
                             className="btn btn-primary mb-1"
                             onClick={openQuotationSales}
@@ -1675,53 +1459,17 @@ function QuotationSalesReturnIndex(props) {
                                         <span className="visually-hidden">Loading...</span>
                                     </Button>
 
-                                    {totalItems > 0 && (
-                                        <>
-                                            <label className="form-label mb-0">Size:&nbsp;</label>
-                                            <select
-                                                value={pageSize}
-                                                onChange={(e) => { changePageSize(e.target.value); }}
-                                                className="form-control"
-                                                style={{ border: "solid 1px", borderColor: "silver", width: "55px" }}
-                                            >
-                                                <option value="5">5</option>
-                                                <option value="10">10</option>
-                                                <option value="20">20</option>
-                                                <option value="40">40</option>
-                                                <option value="50">50</option>
-                                                <option value="100">100</option>
-                                            </select>
-                                        </>
-                                    )}
-
-                                    <div className="w-100" style={{ overflowX: "auto" }}>
-                                        {totalPages ? <ReactPaginate
-                                            breakLabel="..."
-                                            nextLabel="next >"
-                                            onPageChange={(event) => { changePage(event.selected + 1); }}
-                                            pageRangeDisplayed={3}
-                                            marginPagesDisplayed={1}
-                                            pageCount={totalPages}
-                                            previousLabel="< prev"
-                                            renderOnZeroPageCount={null}
-                                            className="pagination flex-wrap mb-0"
-                                            pageClassName="page-item"
-                                            pageLinkClassName="page-link"
-                                            activeClassName="active"
-                                            previousClassName="page-item"
-                                            nextClassName="page-item"
-                                            previousLinkClassName="page-link"
-                                            nextLinkClassName="page-link"
-                                            forcePage={page - 1}
-                                        /> : ""}
-                                    </div>
-
-                                    {totalItems > 0 && (
-                                        <span className="text-muted small">
-                                            showing {offset + 1}-{offset + currentPageItemsCount} of {totalItems}
-                                            &nbsp;|&nbsp;page {page} of {totalPages}
-                                        </span>
-                                    )}
+                                    <PaginationControls
+                                        totalPages={totalPages}
+                                        page={page}
+                                        totalItems={totalItems}
+                                        offset={offset}
+                                        currentPageItemsCount={currentPageItemsCount}
+                                        pageSize={pageSize}
+                                        onPageChange={changePage}
+                                        onPageSizeChange={changePageSize}
+                                        pageSizes={[5, 10, 20, 40, 50, 100]}
+                                    />
 
                                     <button
                                         className="btn btn-sm btn-outline-secondary ms-auto"
@@ -1751,7 +1499,7 @@ function QuotationSalesReturnIndex(props) {
                                         <thead>
                                             <tr className="text-center">
                                                 {columns.filter(c => c.visible).map((col) => {
-                                                    return (<>
+                                                    return (<React.Fragment key={col.key}>
                                                         {col.key === "actions" && <th key={col.key}>{col.label}</th>}
                                                         {col.key === "select" && enableSelection && <th key={col.key}>{col.label}</th>}
                                                         {col.key !== "actions" && col.key !== "select" && <th>
@@ -1773,7 +1521,7 @@ function QuotationSalesReturnIndex(props) {
                                                                 ) : null}
                                                             </b>
                                                         </th>}
-                                                    </>);
+                                                    </React.Fragment>);
                                                 })}
                                                 {/*<th>Actions</th>
                                                 {enableSelection && <th>Select</th>}
@@ -2055,7 +1803,7 @@ function QuotationSalesReturnIndex(props) {
                                         <thead>
                                             <tr className="text-center">
                                                 {columns.filter(c => c.visible).map((col) => {
-                                                    return (<>
+                                                    return (<React.Fragment key={col.key}>
                                                         {(col.key === "actions" || col.key === "actions_end") && <th></th>}
                                                         {(col.key === "select") && enableSelection && <th></th>}
                                                         {col.key !== "actions" &&
@@ -2321,7 +2069,7 @@ function QuotationSalesReturnIndex(props) {
                                                                 ) : null}
                                                             </div>
                                                         </th>}
-                                                    </>);
+                                                    </React.Fragment>);
                                                 })}
 
                                                 {/* <th></th>
@@ -2668,7 +2416,7 @@ function QuotationSalesReturnIndex(props) {
                                                 quotationsalesreturnList.map((quotationSalesReturn, index) => (
                                                     <tr key={index}>
                                                         {columns.filter(c => c.visible).map((col) => {
-                                                            return (<>
+                                                            return (<React.Fragment key={col.key}>
                                                                 {(col.key === "actions" || col.key === "actions_end") && <td style={{ width: "auto", whiteSpace: "nowrap" }}>
                                                                     <Button className="btn btn-light btn-sm" onClick={() => {
                                                                         openUpdateForm(quotationSalesReturn.id);
@@ -2748,8 +2496,8 @@ function QuotationSalesReturnIndex(props) {
                                                                 </td>}
                                                                 {(col.fieldName === "payment_methods") && <td style={{ width: "auto", whiteSpace: "nowrap" }}>
                                                                     {quotationSalesReturn.payment_methods &&
-                                                                        quotationSalesReturn.payment_methods.map((name) => (
-                                                                            <span className="badge bg-info">{name}</span>
+                                                                        quotationSalesReturn.payment_methods.map((name, idx) => (
+                                                                            <span key={idx} className="badge bg-info">{name}</span>
                                                                         ))}
                                                                 </td>}
                                                                 {(col.fieldName === "cash_discount") && <td style={{ width: "auto", whiteSpace: "nowrap" }}>
@@ -2767,7 +2515,7 @@ function QuotationSalesReturnIndex(props) {
                                                                 {(col.fieldName === "created_by") && <td style={{ width: "auto", whiteSpace: "nowrap" }}>
                                                                     {quotationSalesReturn.created_by_name}
                                                                 </td>}
-                                                            </>)
+                                                            </React.Fragment>)
                                                         })}
 
                                                         {/*<td style={{ width: "auto", whiteSpace: "nowrap" }} >
@@ -2849,8 +2597,8 @@ function QuotationSalesReturnIndex(props) {
                                                         <td>
 
                                                             {quotationsalesreturn.payment_methods &&
-                                                                quotationsalesreturn.payment_methods.map((name) => (
-                                                                    <span className="badge bg-info">{name}</span>
+                                                                quotationsalesreturn.payment_methods.map((name, idx) => (
+                                                                    <span key={idx} className="badge bg-info">{name}</span>
                                                                 ))}
 
                                                         </td>

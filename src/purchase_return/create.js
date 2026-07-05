@@ -41,6 +41,9 @@ import VendorDepositCreate from "../customer_deposit/create.js";
 import PurchaseUpdateForm from "../purchase/create.js";
 import { useTranslation } from 'react-i18next';
 import { getDateLocale } from "../i18n/dateLocales";
+import { ObjectToSearchQueryParams } from '../utils/queryUtils.js';
+import { fetchStore } from '../utils/storeUtils.js';
+import { useEnterKeyNavigation } from '../utils/useEnterKeyNavigation.js';
 
 const PurchaseReturnedCreate = forwardRef((props, ref) => {
     const { t, i18n } = useTranslation('common');
@@ -152,76 +155,16 @@ const PurchaseReturnedCreate = forwardRef((props, ref) => {
     let [store, setStore] = useState({});
 
 
-    function getStore(id) {
-        console.log("inside get Store");
-        const requestOptions = {
-            method: 'GET',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': localStorage.getItem('access_token'),
-            },
-        };
-
-        fetch('/v1/store/' + id, requestOptions)
-            .then(async response => {
-                const isJson = response.headers.get('content-type')?.includes('application/json');
-                const data = isJson && await response.json();
-
-                // check for error response
-                if (!response.ok) {
-                    const error = (data && data.errors);
-                    return Promise.reject(error);
-                }
-
-                console.log("Response:");
-                console.log(data);
-                let storeData = data.result;
-                if (storeData?.settings?.default_quotation_validity_days) {
-                    formData.validity_days = storeData?.settings?.default_quotation_validity_days;
-                }
-
-                if (storeData?.settings?.default_quotation_delivery_days) {
-                    formData.delivery_days = storeData?.settings?.default_quotation_delivery_days;
-                }
-
-                setFormData(formData);
-
-                store = data.result;
-                setStore(store);
-
-            })
-            .catch(error => {
-
-            });
+    async function getStore(id) {
+        try {
+            const data = await fetchStore(id);
+            setStore({ ...data });
+        } catch (error) { }
     }
 
 
 
-    useEffect(() => {
-        const listener = event => {
-            if (event.code === "Enter" || event.code === "NumpadEnter") {
-                console.log("Enter key was pressed. Run your function-purchase return.");
-                // event.preventDefault();
-
-                var form = event.target.form;
-                if (form && event.target) {
-                    var index = Array.prototype.indexOf.call(form, event.target);
-                    if (form && form.elements[index + 1]) {
-                        if ((event.target.getAttribute("class") || "").includes("barcode")) {
-                            form.elements[index].focus();
-                        } else {
-                            form.elements[index + 1].focus();
-                        }
-                        event.preventDefault();
-                    }
-                }
-            }
-        };
-        document.addEventListener("keydown", listener);
-        return () => {
-            document.removeEventListener("keydown", listener);
-        };
-    }, []);
+    useEnterKeyNavigation();
 
 
     //const history = useHistory();
@@ -441,14 +384,6 @@ const PurchaseReturnedCreate = forwardRef((props, ref) => {
             });
     }
 
-
-    function ObjectToSearchQueryParams(object) {
-        return Object.keys(object)
-            .map(function (key) {
-                return `search[${key}]=` + encodeURIComponent(object[key]);
-            })
-            .join("&");
-    }
 
 
     const renderTooltip = (props) => (
@@ -1755,9 +1690,61 @@ async function reCalculate(productIndex) {
             salesReturnHistory: "F9",
             purchaseHistory: "F6",
             purchaseReturnHistory: "F8",
-            deliveryNoteHistory: "F3",
+            deliveryNoteHistory: "F10",
             quotationHistory: "F2",
-            quotationSalesHistory: "F10",
+            quotationSalesHistory: "F3",
+            quotationSalesReturnHistory: "Ctrl + Shift + 8",
+            images: "Ctrl + Shift + 9",
+        },
+        "MBDI-SIMULATION": {
+            linkedProducts: "Ctrl + Shift + 7",
+            productHistory: "Ctrl + Shift + 6",
+            salesHistory: "F4",
+            salesReturnHistory: "F9",
+            purchaseHistory: "F6",
+            purchaseReturnHistory: "F8",
+            deliveryNoteHistory: "F10",
+            quotationHistory: "F2",
+            quotationSalesHistory: "F3",
+            quotationSalesReturnHistory: "Ctrl + Shift + 8",
+            images: "Ctrl + Shift + 9",
+        },
+        YNB: {
+            linkedProducts: "Ctrl + Shift + 7",
+            productHistory: "Ctrl + Shift + 6",
+            salesHistory: "F4",
+            salesReturnHistory: "F9",
+            purchaseHistory: "F6",
+            purchaseReturnHistory: "F8",
+            deliveryNoteHistory: "F10",
+            quotationHistory: "F2",
+            quotationSalesHistory: "F3",
+            quotationSalesReturnHistory: "Ctrl + Shift + 8",
+            images: "Ctrl + Shift + 9",
+        },
+        MDNA: {
+            linkedProducts: "Ctrl + Shift + 7",
+            productHistory: "Ctrl + Shift + 6",
+            salesHistory: "F4",
+            salesReturnHistory: "F9",
+            purchaseHistory: "F6",
+            purchaseReturnHistory: "F8",
+            deliveryNoteHistory: "F10",
+            quotationHistory: "F2",
+            quotationSalesHistory: "F3",
+            quotationSalesReturnHistory: "Ctrl + Shift + 8",
+            images: "Ctrl + Shift + 9",
+        },
+        "MDNA-SIMULATION": {
+            linkedProducts: "Ctrl + Shift + 7",
+            productHistory: "Ctrl + Shift + 6",
+            salesHistory: "F4",
+            salesReturnHistory: "F9",
+            purchaseHistory: "F6",
+            purchaseReturnHistory: "F8",
+            deliveryNoteHistory: "F10",
+            quotationHistory: "F2",
+            quotationSalesHistory: "F3",
             quotationSalesReturnHistory: "Ctrl + Shift + 8",
             images: "Ctrl + Shift + 9",
         },
@@ -1804,9 +1791,9 @@ async function reCalculate(productIndex) {
                 openProductImages(product.product_id);
             }
             return;
-        } else if (store?.code === "MBDI") {
+        } else if (store?.code === "MBDI" || store?.code === "MBDI-SIMULATION" || store?.code === "YNB" || store?.code === "MDNA" || store?.code === "MDNA-SIMULATION") {
             if (event.key === "F10") {
-                openQuotationSalesHistory(product);
+                openDeliveryNoteHistory(product);
             } else if (isCmdOrCtrl && event.shiftKey && event.key.toLowerCase() === '6') {
                 openProductHistory(product);
             } else if (event.key === "F4") {
@@ -1818,7 +1805,7 @@ async function reCalculate(productIndex) {
             } else if (event.key === "F8") {
                 openPurchaseReturnHistory(product);
             } else if (event.key === "F3") {
-                openDeliveryNoteHistory(product);
+                openQuotationSalesHistory(product);
             } else if (event.key === "F2") {
                 openQuotationHistory(product, "quotation");
             } else if (isCmdOrCtrl && event.shiftKey && event.key.toLowerCase() === '7') {
@@ -4039,7 +4026,7 @@ async function reCalculate(productIndex) {
                                             if (col.key === 'select') return <th key="select" style={{}}>{t('Select All')} <br /><input style={{}} type="checkbox" checked={isAllSelected} onChange={handleSelectAll} /></th>;
                                             if (col.key === 'si_no') return <th key="si_no">{t('SI No.')}</th>;
                                             if (col.key === 'part_number') return <th key="part_number">{t('Part No.')}</th>;
-                                            if (col.key === 'name') return <th key="name" style={{ minWidth: "300px" }}>{t('Name')}</th>;
+                                            if (col.key === 'name') return <th key="name" style={{ minWidth: window.innerWidth > 1920 ? "450px" : "300px" }}>{t('Name')}</th>;
                                             if (col.key === 'info') return <th key="info">{t('Info')}</th>;
                                             if (col.key === 'stock') return <th key="stock">{t('Stock')}</th>;
                                             if (col.key === 'qty') return <th key="qty">{t('Qty')}</th>;
@@ -5982,11 +5969,11 @@ async function reCalculate(productIndex) {
                         <div className="col-md-12" style={{ maxWidth: "90%" }}>
                             <label className="form-label">{t('Payments received')}</label>
 
-                            <div class="table-responsive">
+                            <div className="table-responsive">
                                 <Button variant="secondary" disabled={purchase?.payment_status === "not_paid"} style={{ alignContent: "right" }} onClick={addNewPayment}>
                                     {t('Create new payment')}
                                 </Button>
-                                <table class="table table-striped table-sm table-bordered" style={{ width: "100%" }}>
+                                <table className="table table-striped table-sm table-bordered" style={{ width: "100%" }}>
                                     <thead>
                                         <th>
                                             {t('Date')}
@@ -6128,14 +6115,14 @@ async function reCalculate(productIndex) {
                                                         )}
                                                     </td>
                                                     <td style={{ width: "80px", textAlign: 'center' }}>
-                                                        <button type="button" onClick={() => removePayment(key)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#dc2626', padding: '2px 6px', borderRadius: '4px' }} onMouseEnter={e => e.currentTarget.style.backgroundColor = '#fef2f2'} onMouseLeave={e => e.currentTarget.style.backgroundColor = 'transparent'}>
-                                                            <i className="bi bi-trash" style={{ fontSize: '14px' }}></i>
+                                                        <button type="button" onClick={() => removePayment(key)} className="btn btn-danger btn-sm">
+                                                            <i className="bi bi-trash"></i>
                                                         </button>
                                                     </td>
                                                 </tr>
                                             ))}
                                         <tr>
-                                            <td class="text-end">
+                                            <td className="text-end">
                                                 <b>{t('Total')}</b>
                                             </td>
                                             <td><b style={{ marginLeft: "14px" }}>{totalPaymentAmount?.toFixed(2)}</b>

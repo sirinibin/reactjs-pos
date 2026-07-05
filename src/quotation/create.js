@@ -19,7 +19,7 @@ import { Typeahead, Menu, MenuItem } from "react-bootstrap-typeahead";
 import NumberFormat from "react-number-format";
 import DatePicker from "react-datepicker";
 import { format } from "date-fns";
-import { Spinner, Alert } from "react-bootstrap";
+import { Spinner } from "react-bootstrap";
 import ProductView from "./../product/view.js";
 import { DebounceInput } from "react-debounce-input";
 import ResizableTableCell from './../utils/ResizableTableCell';
@@ -52,6 +52,11 @@ import { DragDropContext, Droppable, Draggable } from "react-beautiful-dnd";
 import CustomerDepositCreate from "../customer_deposit/create.js";
 import QuotationSalesReturnUpdateForm from "../quotation_sales_return/create.js";
 import CustomerPending from "./../utils/customer_pending.js";
+import { ObjectToSearchQueryParams } from '../utils/queryUtils.js';
+import { fetchStore } from '../utils/storeUtils.js';
+import SuccessModal from '../utils/SuccessModal.js';
+import { useEnterKeyNavigation } from '../utils/useEnterKeyNavigation.js';
+import TableSettingsModal from '../utils/TableSettingsModal.js';
 
 const columnStyle = {
   width: '20%',
@@ -175,75 +180,15 @@ const QuotationCreate = forwardRef((props, ref) => {
 
   let [store, setStore] = useState({});
 
-  function getStore(id) {
-    console.log("inside get Store");
-    const requestOptions = {
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': localStorage.getItem('access_token'),
-      },
-    };
-
-    fetch('/v1/store/' + id, requestOptions)
-      .then(async response => {
-        const isJson = response.headers.get('content-type')?.includes('application/json');
-        const data = isJson && await response.json();
-
-        // check for error response
-        if (!response.ok) {
-          const error = (data && data.errors);
-          return Promise.reject(error);
-        }
-
-        console.log("Response:");
-        console.log(data);
-        let storeData = data.result;
-        if (storeData?.settings?.default_quotation_validity_days) {
-          formData.validity_days = storeData?.settings?.default_quotation_validity_days;
-        }
-
-        if (storeData?.settings?.default_quotation_delivery_days) {
-          formData.delivery_days = storeData?.settings?.default_quotation_delivery_days;
-        }
-
-        setFormData(formData);
-
-        store = data.result;
-        setStore(store);
-
-      })
-      .catch(error => {
-
-      });
+  async function getStore(id) {
+      try {
+          const data = await fetchStore(id);
+          setStore({ ...data });
+      } catch (error) { }
   }
 
 
-  useEffect(() => {
-    const listener = (event) => {
-      if (event.code === "Enter" || event.code === "NumpadEnter") {
-        console.log("Enter key was pressed. Run your function-order.123");
-        // event.preventDefault();
-
-        var form = event.target.form;
-        if (form && event.target) {
-          var index = Array.prototype.indexOf.call(form, event.target);
-          if (form && form.elements[index + 1]) {
-            if ((event.target.getAttribute("class") || "").includes("barcode")) {
-              form.elements[index].focus();
-            } else {
-              form.elements[index + 1].focus();
-            }
-            event.preventDefault();
-          }
-        }
-      }
-    };
-    document.addEventListener("keydown", listener);
-    return () => {
-      document.removeEventListener("keydown", listener);
-    };
-  }, []);
+  useEnterKeyNavigation();
 
 
   //const history = useHistory();
@@ -513,14 +458,6 @@ const QuotationCreate = forwardRef((props, ref) => {
       });
   }
 
-  function ObjectToSearchQueryParams(object) {
-    return Object.keys(object)
-      .map(function (key) {
-        return `search[${key}]=` + encodeURIComponent(object[key]);
-      })
-      .join("&");
-  }
-
 
   const customCustomerFilter = useCallback((option, query) => {
     const normalize = (str) => str?.toLowerCase().replace(/\s+/g, " ").trim() || "";
@@ -547,8 +484,10 @@ const QuotationCreate = forwardRef((props, ref) => {
       .replace(/\s+/g, " ").trim();
 
     return qWords.every((word) => {
+      if (searchable.includes(word)) return true;
       const wordCompact = word.replace(/[^\p{L}\p{N}]/gu, "");
-      return searchable.includes(word) || searchableCompact.includes(wordCompact);
+      if (!wordCompact || /^[^\p{L}\p{N}]/u.test(word)) return false;
+      return searchableCompact.includes(wordCompact);
     });
   }, []);
 
@@ -606,7 +545,7 @@ const QuotationCreate = forwardRef((props, ref) => {
     const filtered = data.result.filter((opt) => customCustomerFilter(opt, searchTerm));
 
     const sorted = filtered.sort((a, b) => {
-      const searchPhrase = searchTerm.toLowerCase().replace(/\s+/g, " ").trim();
+      const searchPhrase = searchTerm.toLowerCase().replace(/[^\p{L}\p{N}\s]/gu, " ").replace(/\s+/g, " ").trim();
 
       const getSearchable = (item) => {
         const fields = [
@@ -642,7 +581,7 @@ const QuotationCreate = forwardRef((props, ref) => {
         return 1; // b contains phrase, a does not
       }
 
-      const words = searchTerm.toLowerCase().split(" ").filter(Boolean);
+      const words = searchTerm.toLowerCase().replace(/[^\p{L}\p{N}\s]/gu, " ").split(/\s+/).filter(Boolean);
 
 
       // Calculate percentage of occurrence
@@ -761,8 +700,9 @@ const QuotationCreate = forwardRef((props, ref) => {
       return;
     }
 
+    const apiSearchTerm = searchTerm.split(/\s+/).map(w => w.replace(/^-+/, "")).filter(Boolean).join(" ");
     var params = {
-      search_text: searchTerm,
+      search_text: apiSearchTerm || searchTerm,
     };
 
     if (localStorage.getItem("store_id")) {
@@ -817,7 +757,7 @@ const QuotationCreate = forwardRef((props, ref) => {
       }
 
       // Both have no country_name, proceed to search term relevance
-      const searchPhrase = searchTerm.toLowerCase().replace(/\s+/g, " ").trim();
+      const searchPhrase = searchTerm.toLowerCase().replace(/[^\p{L}\p{N}\s]/gu, " ").replace(/\s+/g, " ").trim();
 
       const getSearchable = (item) => {
         let partNoLabel = item.prefix_part_number ? item.prefix_part_number + "-" + item.part_number : "";
@@ -855,7 +795,7 @@ const QuotationCreate = forwardRef((props, ref) => {
         return 1; // b contains phrase, a does not
       }
 
-      const words = searchTerm.toLowerCase().split(" ").filter(Boolean);
+      const words = searchTerm.toLowerCase().replace(/[^\p{L}\p{N}\s]/gu, " ").split(/\s+/).filter(Boolean);
       const aPercent = percentOccurrence(words, a);
       const bPercent = percentOccurrence(words, b);
 
@@ -2077,9 +2017,61 @@ const QuotationCreate = forwardRef((props, ref) => {
       salesReturnHistory: "F9",
       purchaseHistory: "F6",
       purchaseReturnHistory: "F8",
-      deliveryNoteHistory: "F3",
+      deliveryNoteHistory: "F10",
       quotationHistory: "F2",
-      quotationSalesHistory: "F10",
+      quotationSalesHistory: "F3",
+      quotationSalesReturnHistory: "Ctrl + Shift + 8",
+      images: "Ctrl + Shift + 9",
+    },
+    "MBDI-SIMULATION": {
+      linkedProducts: "Ctrl + Shift + 7",
+      productHistory: "Ctrl + Shift + 6",
+      salesHistory: "F4",
+      salesReturnHistory: "F9",
+      purchaseHistory: "F6",
+      purchaseReturnHistory: "F8",
+      deliveryNoteHistory: "F10",
+      quotationHistory: "F2",
+      quotationSalesHistory: "F3",
+      quotationSalesReturnHistory: "Ctrl + Shift + 8",
+      images: "Ctrl + Shift + 9",
+    },
+    YNB: {
+      linkedProducts: "Ctrl + Shift + 7",
+      productHistory: "Ctrl + Shift + 6",
+      salesHistory: "F4",
+      salesReturnHistory: "F9",
+      purchaseHistory: "F6",
+      purchaseReturnHistory: "F8",
+      deliveryNoteHistory: "F10",
+      quotationHistory: "F2",
+      quotationSalesHistory: "F3",
+      quotationSalesReturnHistory: "Ctrl + Shift + 8",
+      images: "Ctrl + Shift + 9",
+    },
+    MDNA: {
+      linkedProducts: "Ctrl + Shift + 7",
+      productHistory: "Ctrl + Shift + 6",
+      salesHistory: "F4",
+      salesReturnHistory: "F9",
+      purchaseHistory: "F6",
+      purchaseReturnHistory: "F8",
+      deliveryNoteHistory: "F10",
+      quotationHistory: "F2",
+      quotationSalesHistory: "F3",
+      quotationSalesReturnHistory: "Ctrl + Shift + 8",
+      images: "Ctrl + Shift + 9",
+    },
+    "MDNA-SIMULATION": {
+      linkedProducts: "Ctrl + Shift + 7",
+      productHistory: "Ctrl + Shift + 6",
+      salesHistory: "F4",
+      salesReturnHistory: "F9",
+      purchaseHistory: "F6",
+      purchaseReturnHistory: "F8",
+      deliveryNoteHistory: "F10",
+      quotationHistory: "F2",
+      quotationSalesHistory: "F3",
       quotationSalesReturnHistory: "Ctrl + Shift + 8",
       images: "Ctrl + Shift + 9",
     },
@@ -2125,9 +2117,9 @@ const QuotationCreate = forwardRef((props, ref) => {
         openProductImages(product.product_id);
       }
       return;
-    } else if (store?.code === "MBDI") {
+    } else if (store?.code === "MBDI" || store?.code === "MBDI-SIMULATION" || store?.code === "YNB" || store?.code === "MDNA" || store?.code === "MDNA-SIMULATION") {
       if (event.key === "F10") {
-        openQuotationSalesHistory(product);
+        openDeliveryNoteHistory(product);
       } else if (isCmdOrCtrl && event.shiftKey && event.key.toLowerCase() === '6') {
         openProductHistory(product);
       } else if (event.key === "F4") {
@@ -2139,7 +2131,7 @@ const QuotationCreate = forwardRef((props, ref) => {
       } else if (event.key === "F8") {
         openPurchaseReturnHistory(product);
       } else if (event.key === "F3") {
-        openDeliveryNoteHistory(product);
+        openQuotationSalesHistory(product);
       } else if (event.key === "F2") {
         openQuotationHistory(product, "quotation");
       } else if (isCmdOrCtrl && event.shiftKey && event.key.toLowerCase() === '7') {
@@ -2519,7 +2511,7 @@ const QuotationCreate = forwardRef((props, ref) => {
     }
 
 
-    
+
 
     if (product.product_stores && (stock + oldQty) < selectedProducts[i].quantity) {
         if (formData.id) {
@@ -2558,7 +2550,7 @@ async function checkWarning(i) {
         oldQty = oldProducts[j].quantity;
         // alert(oldQty)
 
-       
+
 
 
       }
@@ -2956,108 +2948,17 @@ async function checkWarning(i) {
         <CustomerDepositCreate ref={CustomerDepositUpdateFormRef} onUpdated={handleReferenceUpdated} />
         <QuotationSalesReturnUpdateForm ref={QuotationSalesReturnUpdateFormRef} onUpdated={handleReferenceUpdated} />
       </>}
-      <Modal show={showSuccess} onHide={() => setShowSuccess(false)} centered>
-        <Modal.Header closeButton>
-          <Modal.Title>Success</Modal.Title>
-        </Modal.Header>
-        <Modal.Body>
-          <Alert variant="success">
-            {successMessage}
-          </Alert>
-        </Modal.Body>
-        <Modal.Footer>
-          <Button variant="secondary" onClick={() => setShowSuccess(false)}>
-            Close
-          </Button>
-        </Modal.Footer>
-      </Modal>
+      <SuccessModal show={showSuccess} message={successMessage} onClose={() => setShowSuccess(false)} />
 
-      <Modal
-        show={showProductSearchSettings}
-        onHide={() => setShowProductSearchSettings(false)}
-        centered
-        size="lg"
-      >
-        <Modal.Header closeButton>
-          <Modal.Title>
-            <i
-              className="bi bi-gear-fill"
-              style={{ fontSize: "1.2rem", marginRight: "4px" }}
-              title="Table Settings"
-
-            />
-            Product Search Settings
-          </Modal.Title>
-        </Modal.Header>
-        <Modal.Body>
-          {/* Column Settings */}
-          {showProductSearchSettings && (
-            <>
-              <h6 className="mb-2">Customize Columns</h6>
-              <DragDropContext onDragEnd={onDragEnd}>
-                <Droppable droppableId="columns">
-                  {(provided) => (
-                    <ul
-                      className="list-group"
-                      {...provided.droppableProps}
-                      ref={provided.innerRef}
-                    >
-                      {searchProductsColumns.map((col, index) => {
-                        return (
-                          <>
-                            <Draggable
-                              key={col.key}
-                              draggableId={col.key}
-                              index={index}
-                            >
-                              {(provided) => (
-                                <li
-                                  className="list-group-item d-flex justify-content-between align-items-center"
-                                  ref={provided.innerRef}
-                                  {...provided.draggableProps}
-                                  {...provided.dragHandleProps}                                                        >
-                                  <div>
-                                    <input
-                                      style={{ width: "20px", height: "20px" }}
-                                      type="checkbox"
-                                      className="form-check-input me-2"
-                                      checked={col.visible}
-                                      onChange={() => {
-                                        handleToggleColumn(index);
-                                      }}
-                                    />
-                                    {col.label}
-                                  </div>
-                                  <span style={{ cursor: "grab" }}>☰</span>
-                                </li>
-                              )}
-                            </Draggable>
-                          </>)
-                      })}
-                      {provided.placeholder}
-                    </ul>
-                  )}
-                </Droppable>
-              </DragDropContext>
-            </>
-          )}
-        </Modal.Body>
-        <Modal.Footer>
-          <Button variant="secondary" onClick={() => setShowProductSearchSettings(false)}>
-            Close
-          </Button>
-          <Button
-            variant="primary"
-            onClick={() => {
-              RestoreDefaultSettings();
-              // Save to localStorage here if needed
-              //setShowSettings(false);
-            }}
-          >
-            Restore to Default
-          </Button>
-        </Modal.Footer>
-      </Modal>
+      <TableSettingsModal
+          show={showProductSearchSettings}
+          onHide={() => setShowProductSearchSettings(false)}
+          title="Product Search Settings"
+          columns={searchProductsColumns}
+          onToggleColumn={handleToggleColumn}
+          onDragEnd={onDragEnd}
+          onRestoreDefaults={RestoreDefaultSettings}
+      />
       <ProductHistory ref={ProductHistoryRef} showToastMessage={props.showToastMessage} />
       <ImageViewerModal ref={imageViewerRef} images={productImages} />
       <InfoDialog
@@ -3212,7 +3113,7 @@ async function checkWarning(i) {
                       }}
                       className="form-control"
                     >
-                      <option value="quotation" SELECTED>Quotation</option>
+                      <option value="quotation">Quotation</option>
                       <option value="invoice">Invoice</option>
 
                     </select>
@@ -3365,7 +3266,7 @@ async function checkWarning(i) {
                     </div>
 
                     {/* 2×3 CSS Grid: Date | Phone+WA | VAT  /  Barcode | Address | Remarks */}
-                    <div style={{ display: 'grid', gridTemplateColumns: '231px 1fr 1fr', gap: '8px 45px', alignItems: 'start', maxWidth: '80%' }}>
+                    <div style={{ display: 'grid', gridTemplateColumns: '231px 1fr 1fr', gap: '8px 65px', alignItems: 'start', maxWidth: '80%', marginTop: '10px' }}>
 
                       {/* R1C1: Date */}
                       <div>
@@ -3509,7 +3410,7 @@ async function checkWarning(i) {
                 </div>
               </div>
 
-              <div className="col-md-10">
+              <div className="col-md-9">
                 <label className="form-label">Product*</label>
                 <Typeahead
                   id="product_id"
@@ -3813,28 +3714,6 @@ async function checkWarning(i) {
                     );
                   }}
                 />
-                {store?.settings?.enable_services && store?.settings?.enable_products ? (
-                  <Dropdown>
-                    <Dropdown.Toggle bsPrefix="btn btn-outline-secondary btn-primary btn-sm" type="button">
-                      <i className="bi bi-plus-lg"></i> New
-                    </Dropdown.Toggle>
-                    <Dropdown.Menu>
-                      <Dropdown.Item onClick={() => ProductCreateFormRef.current.open()}>Product</Dropdown.Item>
-                      <Dropdown.Item onClick={() => ServiceCreateFormRef.current.open()}>Service</Dropdown.Item>
-                    </Dropdown.Menu>
-                  </Dropdown>
-                ) : (
-                  <Button
-                    hide={true.toString()}
-                    onClick={openProductCreateForm}
-                    className="btn btn-outline-secondary btn-primary btn-sm"
-                    type="button"
-                    id="button-addon1"
-                  >
-                    {" "}
-                    <i className="bi bi-plus-lg"></i> New
-                  </Button>
-                )}
                 {errors.product_id ? (
                   <div style={{ color: "red" }}>
                     <i className="bi bi-x-lg"> </i>
@@ -3843,31 +3722,43 @@ async function checkWarning(i) {
                 ) : null}
               </div>
 
-              <div className="col-md-1">
-                {store?.settings?.enable_services && store?.settings?.enable_products ? (
-                  <Dropdown style={{ marginTop: "30px" }}>
-                    <Dropdown.Toggle bsPrefix="btn btn-primary" type="button">
+              <div className="col-md-2">
+                <div style={{ marginTop: "30px", display: "flex", gap: "4px" }}>
+                  {store?.settings?.enable_services && store?.settings?.enable_products ? (
+                    <Dropdown>
+                      <Dropdown.Toggle bsPrefix="btn btn-outline-secondary btn-primary" type="button">
+                        <i className="bi bi-plus-lg"></i> New
+                      </Dropdown.Toggle>
+                      <Dropdown.Menu>
+                        <Dropdown.Item onClick={() => ProductCreateFormRef.current.open()}>Product</Dropdown.Item>
+                        <Dropdown.Item onClick={() => ServiceCreateFormRef.current.open()}>Service</Dropdown.Item>
+                      </Dropdown.Menu>
+                    </Dropdown>
+                  ) : (
+                    <Button hide={true.toString()} onClick={openProductCreateForm} className="btn btn-outline-secondary btn-primary" type="button">
+                      <i className="bi bi-plus-lg"></i> New
+                    </Button>
+                  )}
+                  {store?.settings?.enable_services && store?.settings?.enable_products ? (
+                    <Dropdown>
+                      <Dropdown.Toggle bsPrefix="btn btn-primary" type="button">
+                        <i className="bi bi-list"></i>
+                      </Dropdown.Toggle>
+                      <Dropdown.Menu>
+                        <Dropdown.Item onClick={openProducts}>Products</Dropdown.Item>
+                        <Dropdown.Item onClick={openServices}>Services</Dropdown.Item>
+                      </Dropdown.Menu>
+                    </Dropdown>
+                  ) : (
+                    <Button className="btn btn-primary" onClick={openProducts}>
                       <i className="bi bi-list"></i>
-                    </Dropdown.Toggle>
-                    <Dropdown.Menu>
-                      <Dropdown.Item onClick={openProducts}>Products</Dropdown.Item>
-                      <Dropdown.Item onClick={openServices}>Services</Dropdown.Item>
-                    </Dropdown.Menu>
-                  </Dropdown>
-                ) : (
-                  <Button className="btn btn-primary" style={{ marginTop: "30px" }} onClick={openProducts}>
-                    <i className="bi bi-list"></i>
-                  </Button>
-                )}
+                    </Button>
+                  )}
+                </div>
               </div>
             </>}
 
 
-            <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: "0" }}>
-              <Button variant="light" size="sm" title="Table Settings" onClick={() => setShowQuotationSPSettings(true)}>
-                <i className="bi bi-gear"></i>
-              </Button>
-            </div>
             {formType === 'type2' ? (
             <>
             <section style={{ backgroundColor: '#ffffff', borderRadius: '8px', border: '1px solid #e2e8f0', marginBottom: '8px' }}>
@@ -4602,21 +4493,23 @@ async function checkWarning(i) {
                                   {selectedProducts[index].unit ? selectedProducts[index].unit[0]?.toUpperCase() : 'P'}
                                 </span>
                               </div>
-                              {(errors[`quantity_${index}`] || warnings[`quantity_${index}`]) && (
-                                <i
-                                  className={`bi bi-exclamation-circle-fill ${errors[`quantity_${index}`] ? 'text-danger' : 'text-warning'} ms-2`}
-                                  data-bs-toggle="tooltip"
-                                  data-bs-placement="top"
-                                  data-error={errors[`quantity_${index}`] || ''}
-                                  data-warning={warnings[`quantity_${index}`] || ''}
-                                  title={errors[`quantity_${index}`] || warnings[`quantity_${index}`] || ''}
-                                  style={{
-                                    fontSize: '1rem',
-                                    cursor: 'pointer',
-                                    whiteSpace: 'nowrap',
-                                  }}
-                                ></i>
-                              )}
+                              <div style={{ width: '20px', flexShrink: 0 }}>
+                                {(errors[`quantity_${index}`] || warnings[`quantity_${index}`]) && (
+                                  <i
+                                    className={`bi bi-exclamation-circle-fill ${errors[`quantity_${index}`] ? 'text-danger' : 'text-warning'} ms-2`}
+                                    data-bs-toggle="tooltip"
+                                    data-bs-placement="top"
+                                    data-error={errors[`quantity_${index}`] || ''}
+                                    data-warning={warnings[`quantity_${index}`] || ''}
+                                    title={errors[`quantity_${index}`] || warnings[`quantity_${index}`] || ''}
+                                    style={{
+                                      fontSize: '1rem',
+                                      cursor: 'pointer',
+                                      whiteSpace: 'nowrap',
+                                    }}
+                                  ></i>
+                                )}
+                              </div>
                             </div>
                           </td>);
                           if (col.key === 'unit_price') return (<td key="unit_price" style={{ verticalAlign: 'middle', padding: '0.25rem' }}>
@@ -4696,6 +4589,18 @@ async function checkWarning(i) {
                                     }
 
                                     selectedProducts[index].unit_price = parseFloat(e.target.value);
+                                    if (selectedProducts[index].purchase_unit_price > 0 && parseFloat(e.target.value) > 0) {
+                                      if (selectedProducts[index].purchase_unit_price > parseFloat(e.target.value)) {
+                                        errors["unit_price_" + index] = "Unit price should not be less than Purchase Unit Price(without VAT)";
+                                        errors["purchase_unit_price_" + index] = "Purchase Unit Price should not be greater than Unit Price(without VAT)";
+                                        errors["unit_price_with_vat_" + index] = "Unit price(with VAT) is less than Purchase Unit Price";
+                                      } else {
+                                        delete errors["unit_price_" + index];
+                                        delete errors["purchase_unit_price_" + index];
+                                        delete errors["unit_price_with_vat_" + index];
+                                      }
+                                      setErrors({ ...errors });
+                                    }
                                     setSelectedProducts([...selectedProducts]);
 
                                     timerRef.current = setTimeout(() => {
@@ -5523,7 +5428,15 @@ async function checkWarning(i) {
             </div>
             </>
             ) : (
-            <div className="table-responsive" style={{ overflowX: "auto", maxHeight: "400px", overflowY: "auto" }}>
+            <div style={{ position: "relative" }}>
+                <span
+                    onClick={() => setShowQuotationSPSettings(true)}
+                    title="Table Settings"
+                    style={{ position: "absolute", top: "-9px", right: "24px", zIndex: 10, cursor: "pointer", fontSize: "0.75rem", color: "#6b7280", userSelect: "none", background: "#fff", paddingLeft: "4px", paddingRight: "4px" }}
+                >
+                    <i className="bi bi-gear-fill" />
+                </span>
+            <div className="table-responsive" style={{ overflowX: "auto", maxHeight: "520px", overflowY: "auto" }}>
               {enableProductSelection && <button
                 style={{ marginBottom: "3px" }}
                 className="btn btn-success mt-2"
@@ -5540,7 +5453,7 @@ async function checkWarning(i) {
                       if (col.key === 'select') return enableProductSelection ? <th key="select"><input type="checkbox" checked={isAllSelected} onChange={handleSelectAll} /> Select All</th> : null;
                       if (col.key === 'si_no') return <th key="si_no">SI No.</th>;
                       if (col.key === 'part_number') return <th key="part_number">Part No.</th>;
-                      if (col.key === 'name') return <th key="name" style={{ minWidth: "250px" }}>Name</th>;
+                      if (col.key === 'name') return <th key="name" style={{ minWidth: window.innerWidth > 1920 ? "375px" : "250px" }}>Name</th>;
                       if (col.key === 'info') return <th key="info">Info</th>;
                       if (col.key === 'purchase_unit_price') return <th key="purchase_unit_price">Purchase Unit Price(without VAT)</th>;
                       if (col.key === 'stock') return <th key="stock">Stock</th>;
@@ -6059,21 +5972,23 @@ async function checkWarning(i) {
                                   {selectedProducts[index].unit ? selectedProducts[index].unit[0]?.toUpperCase() : 'P'}
                                 </span>
                               </div>
-                              {(errors[`quantity_${index}`] || warnings[`quantity_${index}`]) && (
-                                <i
-                                  className={`bi bi-exclamation-circle-fill ${errors[`quantity_${index}`] ? 'text-danger' : 'text-warning'} ms-2`}
-                                  data-bs-toggle="tooltip"
-                                  data-bs-placement="top"
-                                  data-error={errors[`quantity_${index}`] || ''}
-                                  data-warning={warnings[`quantity_${index}`] || ''}
-                                  title={errors[`quantity_${index}`] || warnings[`quantity_${index}`] || ''}
-                                  style={{
-                                    fontSize: '1rem',
-                                    cursor: 'pointer',
-                                    whiteSpace: 'nowrap',
-                                  }}
-                                ></i>
-                              )}
+                              <div style={{ width: '20px', flexShrink: 0 }}>
+                                {(errors[`quantity_${index}`] || warnings[`quantity_${index}`]) && (
+                                  <i
+                                    className={`bi bi-exclamation-circle-fill ${errors[`quantity_${index}`] ? 'text-danger' : 'text-warning'} ms-2`}
+                                    data-bs-toggle="tooltip"
+                                    data-bs-placement="top"
+                                    data-error={errors[`quantity_${index}`] || ''}
+                                    data-warning={warnings[`quantity_${index}`] || ''}
+                                    title={errors[`quantity_${index}`] || warnings[`quantity_${index}`] || ''}
+                                    style={{
+                                      fontSize: '1rem',
+                                      cursor: 'pointer',
+                                      whiteSpace: 'nowrap',
+                                    }}
+                                  ></i>
+                                )}
+                              </div>
                             </div>
                           </td>);
                           if (col.key === 'unit_price') return (<td key="unit_price" style={{ verticalAlign: 'middle', padding: '0.25rem' }}>
@@ -6153,6 +6068,18 @@ async function checkWarning(i) {
                                     }
 
                                     selectedProducts[index].unit_price = parseFloat(e.target.value);
+                                    if (selectedProducts[index].purchase_unit_price > 0 && parseFloat(e.target.value) > 0) {
+                                      if (selectedProducts[index].purchase_unit_price > parseFloat(e.target.value)) {
+                                        errors["unit_price_" + index] = "Unit price should not be less than Purchase Unit Price(without VAT)";
+                                        errors["purchase_unit_price_" + index] = "Purchase Unit Price should not be greater than Unit Price(without VAT)";
+                                        errors["unit_price_with_vat_" + index] = "Unit price(with VAT) is less than Purchase Unit Price";
+                                      } else {
+                                        delete errors["unit_price_" + index];
+                                        delete errors["purchase_unit_price_" + index];
+                                        delete errors["unit_price_with_vat_" + index];
+                                      }
+                                      setErrors({ ...errors });
+                                    }
                                     setSelectedProducts([...selectedProducts]);
 
                                     timerRef.current = setTimeout(() => {
@@ -6969,8 +6896,9 @@ async function checkWarning(i) {
                 </tbody>
               </table>
             </div>
+            </div>
             )}
-            <div className="table-responsive">
+            <div className="table-responsive" style={{ marginTop: "-8px" }}>
               <table className="table table-striped table-sm table-bordered">
                 <tbody>
                   <tr>
@@ -7632,11 +7560,11 @@ async function checkWarning(i) {
               <div className="col-md-12" style={{ maxWidth: "90%" }}>
                 <label className="form-label">Payments Received</label>
 
-                <div class="table-responsive">
+                <div className="table-responsive">
                   <Button variant="secondary" style={{ alignContent: "right", marginBottom: "10px" }} onClick={addNewPayment}>
                     Create new payment
                   </Button>
-                  <table class="table table-striped table-sm table-bordered" style={{ width: "100%" }}>
+                  <table className="table table-striped table-sm table-bordered" style={{ width: "100%" }}>
                     {formData.payments_input && formData.payments_input.length > 0 &&
                       <thead>
                         <th>
@@ -7773,14 +7701,14 @@ async function checkWarning(i) {
                               )}
                             </td>
                             <td style={{ width: "80px", textAlign: 'center' }}>
-                              <button type="button" onClick={() => removePayment(key)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#dc2626', padding: '2px 6px', borderRadius: '4px' }} onMouseEnter={e => e.currentTarget.style.backgroundColor = '#fef2f2'} onMouseLeave={e => e.currentTarget.style.backgroundColor = 'transparent'}>
-                                <i className="bi bi-trash" style={{ fontSize: '14px' }}></i>
+                              <button type="button" onClick={() => removePayment(key)} className="btn btn-danger btn-sm">
+                                <i className="bi bi-trash"></i>
                               </button>
                             </td>
                           </tr>
                         ))}
                       <tr>
-                        <td class="text-end">
+                        <td className="text-end">
                           <b>Total</b>
                         </td>
                         <td><b style={{ marginLeft: "14px" }}>{trimTo2Decimals(totalPaymentAmount)}</b>

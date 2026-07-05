@@ -11,6 +11,7 @@ import eventEmitter from "../utils/eventEmitter.js";
 import "./../utils/stickyHeader.css";
 import { Button, Modal } from "react-bootstrap";
 import { DragDropContext, Droppable, Draggable } from "react-beautiful-dnd";
+import { ObjectToSearchQueryParams } from '../utils/queryUtils.js';
 
 const StatsIndex = forwardRef((props, ref) => {
     //deploy to master
@@ -75,14 +76,6 @@ const StatsIndex = forwardRef((props, ref) => {
             .catch(error => {
 
             });
-    }
-
-    function ObjectToSearchQueryParams(object) {
-        return Object.keys(object)
-            .map(function (key) {
-                return `search[${key}]=${object[key]}`;
-            })
-            .join("&");
     }
 
 

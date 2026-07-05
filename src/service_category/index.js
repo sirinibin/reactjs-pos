@@ -4,6 +4,7 @@ import { format } from "date-fns";
 import { Button, Spinner } from "react-bootstrap";
 import ReactPaginate from "react-paginate";
 import { confirm } from 'react-bootstrap-confirmation';
+import { ObjectToSearchQueryParams } from '../utils/queryUtils.js';
 
 function ServiceCategoryIndex(props) {
     const [list, setList] = useState([]);
@@ -18,10 +19,6 @@ function ServiceCategoryIndex(props) {
     let sortField = "created_at";
     let sortDir = "-";
     const createFormRef = useRef();
-
-    function ObjectToSearchQueryParams(object) {
-        return Object.keys(object).map(key => `search[${key}]=${object[key]}`).join("&");
-    }
 
     useEffect(() => {
         fetchList();

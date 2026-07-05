@@ -6,8 +6,10 @@ import OrderPrintContent3 from './printContent3.js';
 import OrderPrintContent4 from './printContent4.js';
 
 import { useReactToPrint } from 'react-to-print';
-import { Invoice } from '@axenda/zatca';
+import {} from '@axenda/zatca';
 import { useTranslation } from 'react-i18next';
+import { ObjectToSearchQueryParams } from '../utils/queryUtils.js';
+import { fetchStore } from '../utils/storeUtils.js';
 //import { format } from "date-fns";
 
 const OrderPrint = forwardRef((props, ref) => {
@@ -278,38 +280,38 @@ const OrderPrint = forwardRef((props, ref) => {
             if (model.store?.zatca?.phase === "1") {
                 if (model.payment_status !== "not_paid") {
                     //model.invoiceTitle = "TAX INVOICE | الفاتورة الضريبية";
-                    model.invoiceTitle = model.store.settings.invoice.phase1.sales_titles.paid;
+                    model.invoiceTitle = model.store?.settings?.invoice.phase1.sales_titles.paid;
                     if (IsCashOnly) {
                         // model.invoiceTitle = "CASH TAX INVOICE | فاتورة ضريبية نقدية";
-                        model.invoiceTitle = model.store.settings.invoice.phase1.sales_titles.cash;
+                        model.invoiceTitle = model.store?.settings?.invoice.phase1.sales_titles.cash;
                     }
                 } else if (model.payment_status === "not_paid") {
                     // model.invoiceTitle = "CREDIT TAX INVOICE | فاتورة ضريبة الائتمان";
-                    model.invoiceTitle = model.store.settings.invoice.phase1.sales_titles.credit;
+                    model.invoiceTitle = model.store?.settings?.invoice.phase1.sales_titles.credit;
                 }
             } else if (model.store?.zatca?.phase === "2") {
                 if (isSimplified) {
                     if (model.payment_status === "not_paid") {
                         // model.invoiceTitle = "SIMPLIFIED CREDIT TAX INVOICE | فاتورة ضريبة الائتمان المبسطة";
-                        model.invoiceTitle = model.store.settings.invoice.phase2.sales_titles.credit;
+                        model.invoiceTitle = model.store?.settings?.invoice.phase2.sales_titles.credit;
                     } else {
                         //  model.invoiceTitle = "SIMPLIFIED TAX INVOICE | فاتورة ضريبية مبسطة";
-                        model.invoiceTitle = model.store.settings.invoice.phase2.sales_titles.paid;
+                        model.invoiceTitle = model.store?.settings?.invoice.phase2.sales_titles.paid;
                         if (IsCashOnly) {
                             // model.invoiceTitle = "SIMPLIFIED CASH TAX INVOICE | فاتورة ضريبية نقدية مبسطة";
-                            model.invoiceTitle = model.store.settings.invoice.phase2.sales_titles.cash;
+                            model.invoiceTitle = model.store?.settings?.invoice.phase2.sales_titles.cash;
                         }
                     }
                 } else {
                     if (model.payment_status === "not_paid") {
                         // model.invoiceTitle = "STANDARD CREDIT TAX INVOICE | فاتورة ضريبة الائتمان القياسية";
-                        model.invoiceTitle = model.store.settings?.invoice?.phase2_b2b?.sales_titles?.credit;
+                        model.invoiceTitle = model.store?.settings?.invoice?.phase2_b2b?.sales_titles?.credit;
                     } else {
                         //model.invoiceTitle = "STANDARD TAX INVOICE | فاتورة ضريبية قياسية";
-                        model.invoiceTitle = model.store.settings?.invoice?.phase2_b2b?.sales_titles?.paid;
+                        model.invoiceTitle = model.store?.settings?.invoice?.phase2_b2b?.sales_titles?.paid;
                         if (IsCashOnly) {
                             // model.invoiceTitle = "STANDARD CASH TAX INVOICE | فاتورة ضريبية نقدية قياسية";
-                            model.invoiceTitle = model.store.settings?.invoice?.phase2_b2b?.sales_titles?.cash;
+                            model.invoiceTitle = model.store?.settings?.invoice?.phase2_b2b?.sales_titles?.cash;
                         }
                     }
                 }
@@ -317,33 +319,33 @@ const OrderPrint = forwardRef((props, ref) => {
         } else if (model.modelName === "sales_return" || model.modelName === "whatsapp_sales_return") {
             if (model.store?.zatca?.phase === "1") {
                 //model.invoiceTitle = "SALES RETURN TAX INVOICE | فاتورة ضريبة المبيعات المرتجعة";
-                model.invoiceTitle = model.store.settings?.invoice?.phase1?.sales_return_titles?.paid;
+                model.invoiceTitle = model.store?.settings?.invoice?.phase1?.sales_return_titles?.paid;
                 if (IsCashOnly) {
                     //model.invoiceTitle = "SALES RETURN CASH TAX INVOICE | إقرار مبيعات فاتورة ضريبية نقدية";
-                    model.invoiceTitle = model.store.settings?.invoice?.phase1?.sales_return_titles?.cash;
+                    model.invoiceTitle = model.store?.settings?.invoice?.phase1?.sales_return_titles?.cash;
                 }
             } else if (model.store?.zatca?.phase === "2") {
                 if (isSimplified) {
                     // model.invoiceTitle = "SIMPLIFIED CREDIT NOTE RETURN TAX INVOICE | إقرار ضريبي مبسط لإقرار إقرار ائتماني";
-                    model.invoiceTitle = model.store.settings?.invoice?.phase2?.sales_return_titles?.paid;
+                    model.invoiceTitle = model.store?.settings?.invoice?.phase2?.sales_return_titles?.paid;
                     if (IsCashOnly) {
                         // model.invoiceTitle = "SIMPLIFIED CREDIT NOTE CASH RETURN TAX INVOICE | مذكرة ائتمان مبسطة، إقرار نقدي، فاتورة ضريبية";
-                        model.invoiceTitle = model.store.settings?.invoice?.phase2?.sales_return_titles?.cash;
+                        model.invoiceTitle = model.store?.settings?.invoice?.phase2?.sales_return_titles?.cash;
                     }
 
                     if (model.payment_status === "not_paid") {
-                        model.invoiceTitle = model.store.settings?.invoice?.phase2?.sales_return_titles?.credit;
+                        model.invoiceTitle = model.store?.settings?.invoice?.phase2?.sales_return_titles?.credit;
                     }
                 } else {
                     // model.invoiceTitle = "STANDARD CREDIT NOTE RETURN TAX INVOICE | إقرار ضريبي قياسي لإرجاع فاتورة الائتمان";
-                    model.invoiceTitle = model.store.settings?.invoice?.phase2_b2b?.sales_return_titles?.paid;
+                    model.invoiceTitle = model.store?.settings?.invoice?.phase2_b2b?.sales_return_titles?.paid;
                     if (IsCashOnly) {
                         // model.invoiceTitle = "STANDARD CREDIT NOTE CASH RETURN TAX INVOICE | سند ائتمان قياسي، إقرار نقدي، فاتورة ضريبية";
-                        model.invoiceTitle = model.store.settings?.invoice?.phase2_b2b?.sales_return_titles?.cash;
+                        model.invoiceTitle = model.store?.settings?.invoice?.phase2_b2b?.sales_return_titles?.cash;
                     }
 
                     if (model.payment_status === "not_paid") {
-                        model.invoiceTitle = model.store.settings?.invoice?.phase2_b2b?.sales_return_titles?.credit;
+                        model.invoiceTitle = model.store?.settings?.invoice?.phase2_b2b?.sales_return_titles?.credit;
                     }
                 }
             }
@@ -351,36 +353,36 @@ const OrderPrint = forwardRef((props, ref) => {
             if (model.payment_status === "not_paid") {
                 // model.invoiceTitle = "CREDIT PURCHASE TAX INVOICE | فاتورة ضريبة الشراء بالائتمان";
                 if (model.store?.zatca?.phase === "1") {
-                    model.invoiceTitle = model.store.settings?.invoice?.phase1?.purchase_titles?.credit;
+                    model.invoiceTitle = model.store?.settings?.invoice?.phase1?.purchase_titles?.credit;
                 } else if (model.store?.zatca?.phase === "2") {
                     if (isSimplified) {
-                        model.invoiceTitle = model.store.settings?.invoice?.phase2?.purchase_titles?.credit;
+                        model.invoiceTitle = model.store?.settings?.invoice?.phase2?.purchase_titles?.credit;
                     } else {
-                        model.invoiceTitle = model.store.settings?.invoice?.phase2_b2b?.purchase_titles?.credit;
+                        model.invoiceTitle = model.store?.settings?.invoice?.phase2_b2b?.purchase_titles?.credit;
                     }
                 }
 
             } else {
                 // model.invoiceTitle = "PURCHASE TAX INVOICE | فاتورة ضريبة الشراء";
                 if (model.store?.zatca?.phase === "1") {
-                    model.invoiceTitle = model.store.settings?.invoice?.phase1?.purchase_titles?.paid;
+                    model.invoiceTitle = model.store?.settings?.invoice?.phase1?.purchase_titles?.paid;
                 } else if (model.store?.zatca?.phase === "2") {
                     if (isSimplified) {
-                        model.invoiceTitle = model.store.settings?.invoice?.phase2?.purchase_titles?.paid;
+                        model.invoiceTitle = model.store?.settings?.invoice?.phase2?.purchase_titles?.paid;
                     } else {
-                        model.invoiceTitle = model.store.settings?.invoice?.phase2_b2b?.purchase_titles?.paid;
+                        model.invoiceTitle = model.store?.settings?.invoice?.phase2_b2b?.purchase_titles?.paid;
                     }
                 }
 
                 if (IsCashOnly) {
                     // model.invoiceTitle = "CASH PURCHASE TAX INVOICE | فاتورة ضريبة الشراء النقدي";
                     if (model.store?.zatca?.phase === "1") {
-                        model.invoiceTitle = model.store.settings?.invoice?.phase1?.purchase_titles?.cash;
+                        model.invoiceTitle = model.store?.settings?.invoice?.phase1?.purchase_titles?.cash;
                     } else if (model.store?.zatca?.phase === "2") {
                         if (isSimplified) {
-                            model.invoiceTitle = model.store.settings?.invoice?.phase2?.purchase_titles?.cash;
+                            model.invoiceTitle = model.store?.settings?.invoice?.phase2?.purchase_titles?.cash;
                         } else {
-                            model.invoiceTitle = model.store.settings?.invoice?.phase2_b2b?.purchase_titles?.cash;
+                            model.invoiceTitle = model.store?.settings?.invoice?.phase2_b2b?.purchase_titles?.cash;
                         }
                     }
                 }
@@ -389,54 +391,54 @@ const OrderPrint = forwardRef((props, ref) => {
             if (model.payment_status === "not_paid") {
                 //model.invoiceTitle = "CREDIT PURCHASE RETURN TAX INVOICE | فاتورة ضريبة إرجاع الشراء بالائتمان";
                 if (model.store?.zatca?.phase === "1") {
-                    model.invoiceTitle = model.store.settings?.invoice?.phase1?.purchase_return_titles?.credit;
+                    model.invoiceTitle = model.store?.settings?.invoice?.phase1?.purchase_return_titles?.credit;
                 } else if (model.store?.zatca?.phase === "2") {
                     if (isSimplified) {
-                        model.invoiceTitle = model.store.settings?.invoice?.phase2?.purchase_return_titles?.credit;
+                        model.invoiceTitle = model.store?.settings?.invoice?.phase2?.purchase_return_titles?.credit;
                     } else {
-                        model.invoiceTitle = model.store.settings?.invoice?.phase2_b2b?.purchase_return_titles?.credit;
+                        model.invoiceTitle = model.store?.settings?.invoice?.phase2_b2b?.purchase_return_titles?.credit;
                     }
                 }
 
             } else {
                 //  model.invoiceTitle = "PURCHASE RETURN TAX INVOICE | فاتورة ضريبة إرجاع المشتريات";
                 if (model.store?.zatca?.phase === "1") {
-                    model.invoiceTitle = model.store.settings?.invoice?.phase1?.purchase_return_titles?.paid;
+                    model.invoiceTitle = model.store?.settings?.invoice?.phase1?.purchase_return_titles?.paid;
                 } else if (model.store?.zatca?.phase === "2") {
                     if (isSimplified) {
-                        model.invoiceTitle = model.store.settings?.invoice?.phase2?.purchase_return_titles?.paid;
+                        model.invoiceTitle = model.store?.settings?.invoice?.phase2?.purchase_return_titles?.paid;
                     } else {
-                        model.invoiceTitle = model.store.settings?.invoice?.phase2_b2b?.purchase_return_titles?.paid;
+                        model.invoiceTitle = model.store?.settings?.invoice?.phase2_b2b?.purchase_return_titles?.paid;
                     }
                 }
 
                 if (IsCashOnly) {
                     // model.invoiceTitle = "CASH PURCHASE RETURN TAX INVOICE | فاتورة ضريبة إرجاع الشراء النقدي";
                     if (model.store?.zatca?.phase === "1") {
-                        model.invoiceTitle = model.store.settings?.invoice?.phase1?.purchase_return_titles?.cash;
+                        model.invoiceTitle = model.store?.settings?.invoice?.phase1?.purchase_return_titles?.cash;
                     } else if (model.store?.zatca?.phase === "2") {
                         if (isSimplified) {
-                            model.invoiceTitle = model.store.settings?.invoice?.phase2?.purchase_return_titles?.cash;
+                            model.invoiceTitle = model.store?.settings?.invoice?.phase2?.purchase_return_titles?.cash;
                         } else {
-                            model.invoiceTitle = model.store.settings?.invoice?.phase2_b2b?.purchase_return_titles?.cash;
+                            model.invoiceTitle = model.store?.settings?.invoice?.phase2_b2b?.purchase_return_titles?.cash;
                         }
                     }
                 }
             }
         } else if (model.modelName === "quotation" || model.modelName === "whatsapp_quotation") {
             //  model.invoiceTitle = "QUOTATION / اقتباس";
-            model.invoiceTitle = model.store.settings?.invoice?.quotation_title;
+            model.invoiceTitle = model.store?.settings?.invoice?.quotation_title;
 
             if (model.type === "invoice" && model.payment_status === "not_paid") {
                 //  model.invoiceTitle = "CREDIT INVOICE | فاتورة ائتمانية";
-                model.invoiceTitle = model.store.settings?.invoice?.quotation_sales_titles.credit;
+                model.invoiceTitle = model.store?.settings?.invoice?.quotation_sales_titles.credit;
                 /*if (model.store.code === "LGK-SIMULATION" || model.store.code === "LGK") {
                    // model.invoiceTitle = "CREDIT SALES ORDER | أمر مبيعات الائتمان";
 
                 }*/
             } else if (model.type === "invoice") {
                 //model.invoiceTitle = "INVOICE | فاتورة";
-                model.invoiceTitle = model.store.settings?.invoice?.quotation_sales_titles.paid;
+                model.invoiceTitle = model.store?.settings?.invoice?.quotation_sales_titles.paid;
                 /*if (model.store.code === "LGK-SIMULATION" || model.store.code === "LGK") {
                     model.invoiceTitle = "SALES ORDER | أمر المبيعات";
                 }*/
@@ -445,14 +447,14 @@ const OrderPrint = forwardRef((props, ref) => {
         } else if (model.modelName === "quotation_sales_return" || model.modelName === "whatsapp_quotation_sales_return") {
             if (model.payment_status === "not_paid") {
                 // model.invoiceTitle = "CREDIT RETURN INVOICE | فاتورة إرجاع الائتمان";
-                model.invoiceTitle = model.store.settings?.invoice?.quotation_sales_return_titles.credit;
+                model.invoiceTitle = model.store?.settings?.invoice?.quotation_sales_return_titles.credit;
             } else {
                 // model.invoiceTitle = "RETURN INVOICE | فاتورة الإرجاع";
-                model.invoiceTitle = model.store.settings?.invoice?.quotation_sales_return_titles.paid;
+                model.invoiceTitle = model.store?.settings?.invoice?.quotation_sales_return_titles.paid;
             }
         } else if (model.modelName === "delivery_note" || model.modelName === "whatsapp_delivery_note") {
             // model.invoiceTitle = "DELIVERY NOTE / مذكرة تسليم";
-            model.invoiceTitle = model.store.settings?.invoice?.delivery_note_title;
+            model.invoiceTitle = model.store?.settings?.invoice?.delivery_note_title;
         }
 
         setModel({ ...model });
@@ -669,89 +671,13 @@ const OrderPrint = forwardRef((props, ref) => {
     }
 
     async function getStore(id) {
-        console.log("inside get Store");
-        const requestOptions = {
-            method: 'GET',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': localStorage.getItem('access_token'),
-            },
-        };
-
-        await fetch('/v1/store/' + id, requestOptions)
-            .then(async response => {
-                const isJson = response.headers.get('content-type')?.includes('application/json');
-                const data = isJson && await response.json();
-
-                // check for error response
-                if (!response.ok) {
-                    const error = (data && data.errors);
-                    return Promise.reject(error);
-                }
-
-                console.log("Response:");
-                console.log(data);
-                let storeData = data.result;
-                model.store = storeData;
-
-                //var d = new Date(model.date);
-                //console.log("d:", d);
-
-
-                /*let d2 = format(
-                    new Date(d),
-                    "yyyy-MM-dd h:m:mma"
-                );*/
-                // alert(d);
-                //alert(model.date)
-                // console.log("d2:", d2);
-                // alert(d2)
-                //alert(toLocalIsoNoOffset(model.date))
-                const invoice = new Invoice({
-                    sellerName: model.store_name,
-                    vatRegistrationNumber: model.store.vat_no,
-                    invoiceTimestamp: toLocalIsoNoOffset(model.date),
-                    invoiceTotal: model.net_total.toString(),
-                    invoiceVatTotal: model.vat_price.toString(),
-                    //uuid: model.uuid,
-                    // hash: model.hash ? model.hash : "",
-                });
-
-                model.QRImageData = await invoice.render();
-                console.log("model.QRImageData:", model.QRImageData);
-
-                setModel({ ...model });
-            })
-            .catch(error => {
-
-            });
+        try {
+            await fetchStore(id);
+        } catch (error) { }
     }
 
 
-    function ObjectToSearchQueryParams(object) {
-        return Object.keys(object)
-            .map(function (key) {
-                return `search[${key}]=${object[key]}`;
-            })
-            .join("&");
-    }
 
-
-    function toLocalIsoNoOffset(dateInput) {
-        const d = dateInput ? new Date(dateInput) : new Date();
-        if (isNaN(d.getTime())) return "";
-
-        const pad = (n, l = 2) => String(n).padStart(l, "0");
-
-        const yyyy = d.getFullYear();
-        const MM = pad(d.getMonth() + 1);
-        const dd = pad(d.getDate());
-        const hh = pad(d.getHours());
-        const mm = pad(d.getMinutes());
-        const ss = pad(d.getSeconds());
-
-        return `${yyyy}-${MM}-${dd}T${hh}:${mm}:${ss}`;
-    }
 
 
     function getCustomer(id) {

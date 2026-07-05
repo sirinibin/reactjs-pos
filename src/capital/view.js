@@ -1,6 +1,8 @@
 import React, { useState, forwardRef, useImperativeHandle } from "react";
 import { Modal } from 'react-bootstrap';
 import AttachmentsViewer from '../utils/AttachmentsViewer.js';
+import { ObjectToSearchQueryParams } from '../utils/queryUtils.js';
+import { formatInStoreTimezone, formatPaymentMethod } from '../utils/dateUtils.js';
 
 
 
@@ -18,6 +20,7 @@ const CapitalView = forwardRef((props, ref) => {
     }));
 
 
+    const store = props.store || {};
     let [model, setModel] = useState({});
 
 
@@ -26,14 +29,6 @@ const CapitalView = forwardRef((props, ref) => {
     function handleClose() {
         SetShow(false);
     };
-
-    function ObjectToSearchQueryParams(object) {
-        return Object.keys(object)
-            .map(function (key) {
-                return `search[${key}]=` + object[key];
-            })
-            .join("&");
-    }
 
     function getCapital(id) {
         console.log("inside get Capital");
@@ -75,40 +70,8 @@ const CapitalView = forwardRef((props, ref) => {
             });
     }
 
-    const countryTimezoneMap = {
-        'SA': 'Asia/Riyadh', 'AE': 'Asia/Dubai', 'KW': 'Asia/Kuwait',
-        'QA': 'Asia/Qatar', 'BH': 'Asia/Bahrain', 'OM': 'Asia/Muscat',
-        'IN': 'Asia/Kolkata', 'PK': 'Asia/Karachi', 'BD': 'Asia/Dhaka',
-        'LK': 'Asia/Colombo', 'NP': 'Asia/Kathmandu', 'MY': 'Asia/Kuala_Lumpur',
-        'SG': 'Asia/Singapore', 'PH': 'Asia/Manila', 'ID': 'Asia/Jakarta',
-        'EG': 'Africa/Cairo', 'JO': 'Asia/Amman', 'LB': 'Asia/Beirut',
-        'IQ': 'Asia/Baghdad', 'IR': 'Asia/Tehran', 'TR': 'Europe/Istanbul',
-        'GB': 'Europe/London', 'DE': 'Europe/Berlin', 'FR': 'Europe/Paris',
-        'US': 'America/New_York', 'CA': 'America/Toronto', 'AU': 'Australia/Sydney',
-    };
 
-    function formatPaymentMethod(method) {
-        if (!method) return "—";
-        return method.split('_').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
-    }
 
-    function formatInStoreTimezone(dateStr) {
-        if (!dateStr) return '';
-        const tz = countryTimezoneMap[localStorage.getItem('store_country_code')] || 'UTC';
-        const tzLabel = tz.replace('_', ' ');
-        try {
-            const d = new Date(dateStr);
-            const formatted = d.toLocaleString('en-US', {
-                timeZone: tz,
-                year: 'numeric', month: 'short', day: '2-digit',
-                hour: '2-digit', minute: '2-digit', second: '2-digit',
-                hour12: true,
-            });
-            return `${formatted} (${tzLabel})`;
-        } catch {
-            return dateStr;
-        }
-    }
 
     return (<>
         <Modal show={show} size="xl" onHide={handleClose} animation={false} scrollable={true}>
@@ -142,7 +105,7 @@ const CapitalView = forwardRef((props, ref) => {
                         </div>
                         {model.date && (
                             <p style={{ margin: 0, fontSize: '14px', lineHeight: '20px', color: '#434655', fontWeight: 400 }}>
-                                Capital recorded on {formatInStoreTimezone(model.date)}
+                                Capital recorded on {formatInStoreTimezone(model.date, store?.country_code)}
                             </p>
                         )}
                     </div>
@@ -204,7 +167,7 @@ const CapitalView = forwardRef((props, ref) => {
                             <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '4px' }}>
                                 <i className="bi bi-calendar3" style={{ fontSize: '20px', color: '#505f76' }}></i>
                                 <span style={{ fontSize: '15px', fontWeight: 600, lineHeight: '22px', color: '#191c1e', fontFamily: "'Hanken Grotesk', sans-serif" }}>
-                                    {model.date ? formatInStoreTimezone(model.date) : '—'}
+                                    {model.date ? formatInStoreTimezone(model.date, store?.country_code) : '—'}
                                 </span>
                             </div>
                         </div>
@@ -252,7 +215,7 @@ const CapitalView = forwardRef((props, ref) => {
                                     {/* Date */}
                                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px 0' }}>
                                         <span style={{ fontSize: '14px', color: '#434655', fontWeight: 500 }}>Date</span>
-                                        <span style={{ fontSize: '14px', fontWeight: 500, color: '#191c1e' }}>{model.date ? formatInStoreTimezone(model.date) : '—'}</span>
+                                        <span style={{ fontSize: '14px', fontWeight: 500, color: '#191c1e' }}>{model.date ? formatInStoreTimezone(model.date, store?.country_code) : '—'}</span>
                                     </div>
                                 </div>
                             </section>
@@ -285,7 +248,7 @@ const CapitalView = forwardRef((props, ref) => {
                                     {model.created_at && (
                                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', paddingBottom: '8px', borderBottom: '1px solid #c3c6d7', gap: '8px' }}>
                                             <span style={{ fontSize: '14px', color: '#434655', flexShrink: 0 }}>Created At</span>
-                                            <span style={{ fontSize: '13px', fontWeight: 500, color: '#191c1e', textAlign: 'right' }}>{formatInStoreTimezone(model.created_at)}</span>
+                                            <span style={{ fontSize: '13px', fontWeight: 500, color: '#191c1e', textAlign: 'right' }}>{formatInStoreTimezone(model.created_at, store?.country_code)}</span>
                                         </div>
                                     )}
                                     {/* Updated By */}
@@ -299,7 +262,7 @@ const CapitalView = forwardRef((props, ref) => {
                                     {model.updated_at && (
                                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '8px' }}>
                                             <span style={{ fontSize: '14px', color: '#434655', flexShrink: 0 }}>Last Updated</span>
-                                            <span style={{ fontSize: '13px', fontWeight: 500, color: '#191c1e', textAlign: 'right' }}>{formatInStoreTimezone(model.updated_at)}</span>
+                                            <span style={{ fontSize: '13px', fontWeight: 500, color: '#191c1e', textAlign: 'right' }}>{formatInStoreTimezone(model.updated_at, store?.country_code)}</span>
                                         </div>
                                     )}
                                 </div>

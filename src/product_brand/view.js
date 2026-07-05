@@ -1,5 +1,6 @@
 import React, { useState, forwardRef, useImperativeHandle } from "react";
 import { Modal } from 'react-bootstrap';
+import { ObjectToSearchQueryParams } from '../utils/queryUtils.js';
 
 const ProductBrandView = forwardRef((props, ref) => {
 
@@ -16,10 +17,6 @@ const ProductBrandView = forwardRef((props, ref) => {
     const [show, SetShow] = useState(false);
 
     function handleClose() { SetShow(false); }
-
-    function ObjectToSearchQueryParams(object) {
-        return Object.keys(object).map(k => `search[${k}]=${object[k]}`).join("&");
-    }
 
     function getProductBrand(id) {
         const requestOptions = {

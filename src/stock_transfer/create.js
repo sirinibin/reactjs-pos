@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef, forwardRef, useImperativeHandle, useCallback, useMemo } from "react";
 import StockTransferPreview from "./../order/preview.js";
-import { Modal, Button, Alert } from "react-bootstrap";
+import { Modal, Button } from "react-bootstrap";
 
 import ProductCreate from "../product/create.js";
 import UserCreate from "../user/create.js";
@@ -41,6 +41,11 @@ import { highlightWords } from "../utils/search.js";
 import StockTransferPrint from './../order/print.js';
 import { DragDropContext, Droppable, Draggable } from "react-beautiful-dnd";
 import { DebounceInput } from 'react-debounce-input';
+import { ObjectToSearchQueryParams } from '../utils/queryUtils.js';
+import { fetchStore } from '../utils/storeUtils.js';
+import SuccessModal from '../utils/SuccessModal.js';
+import { useEnterKeyNavigation } from '../utils/useEnterKeyNavigation.js';
+import TableSettingsModal from '../utils/TableSettingsModal.js';
 
 
 const columnStyle = {
@@ -233,36 +238,10 @@ const StockTransferCreate = forwardRef((props, ref) => {
     let [store, setStore] = useState({});
 
     async function getStore(id) {
-        console.log("inside get Store");
-        const requestOptions = {
-            method: 'GET',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': localStorage.getItem('access_token'),
-            },
-        };
-
-        await fetch('/v1/store/' + id, requestOptions)
-            .then(async response => {
-                const isJson = response.headers.get('content-type')?.includes('application/json');
-                const data = isJson && await response.json();
-
-                // check for error response
-                if (!response.ok) {
-                    const error = (data && data.errors);
-                    return Promise.reject(error);
-                }
-
-                console.log("Response:");
-                console.log(data);
-                store = data.result;
-                setStore(store);
-                formData.vat_percent = parseFloat(store.vat_percent);
-                setFormData({ ...formData });
-            })
-            .catch(error => {
-
-            });
+        try {
+            const data = await fetchStore(id);
+            setStore({ ...data });
+        } catch (error) { }
     }
 
 
@@ -898,35 +877,7 @@ const StockTransferCreate = forwardRef((props, ref) => {
             });
     }
 
-    useEffect(() => {
-        const listener = event => {
-            if (event.code === "Enter" || event.code === "NumpadEnter") {
-                console.log("Enter key was pressed. Run your function-stocktransfer.123");
-                // event.preventDefault();
-
-
-
-                var form = event.target.form;
-                if (form && event.target) {
-                    var index = Array.prototype.indexOf.call(form, event.target);
-                    console.log("form.elements:", form.elements);
-                    if (form && form.elements[index + 1]) {
-                        //
-                        if ((event.target.getAttribute("class") || "").includes("barcode")) {
-                            form.elements[index].focus();
-                        } else {
-                            form.elements[index + 1].focus();
-                        }
-                        event.preventDefault();
-                    }
-                }
-            }
-        };
-        document.addEventListener("keydown", listener);
-        return () => {
-            document.removeEventListener("keydown", listener);
-        };
-    }, []);
+    useEnterKeyNavigation();
 
 
     //const history = useHistory();
@@ -974,14 +925,6 @@ const StockTransferCreate = forwardRef((props, ref) => {
         }
     });
 
-
-    function ObjectToSearchQueryParams(object) {
-        return Object.keys(object)
-            .map(function (key) {
-                return `search[${key}]=` + encodeURIComponent(object[key]);
-            })
-            .join("&");
-    }
 
     let [openProductSearchResult, setOpenProductSearchResult] = useState(false);
 
@@ -1056,8 +999,9 @@ const StockTransferCreate = forwardRef((props, ref) => {
             return;
         }
 
+        const apiSearchTerm = searchTerm.split(/\s+/).map(w => w.replace(/^-+/, "")).filter(Boolean).join(" ");
         var params = {
-            search_text: searchTerm,
+            search_text: apiSearchTerm || searchTerm,
         };
 
         if (localStorage.getItem("store_id")) {
@@ -1110,7 +1054,7 @@ const StockTransferCreate = forwardRef((props, ref) => {
                 return 1;
             }
 
-            const words = searchTerm.toLowerCase().split(" ").filter(Boolean);
+            const words = searchTerm.toLowerCase().replace(/[^\p{L}\p{N}\s]/gu, " ").split(/\s+/).filter(Boolean);
             const aPercent = percentOccurrence(words, a);
             const bPercent = percentOccurrence(words, b);
 
@@ -1794,7 +1738,7 @@ const StockTransferCreate = forwardRef((props, ref) => {
                 (parseFloat(selectedProducts[i].unit_price - productUnitDiscount) *
                     parseFloat(selectedProducts[i].quantity));
         }
-     
+
         // formData.total = Math.round(formData.total * 100) / 100;
         setFormData.total(formData.total);
     }
@@ -1809,7 +1753,7 @@ const StockTransferCreate = forwardRef((props, ref) => {
         if (formData.total > 0) {
             console.log("formData.vat_percent:", formData.vat_percent);
             //(35.8 / 100) * 10000;
-     
+
             vatPrice = (parseFloat(formData.vat_percent) / 100) * (parseFloat(formData.total) + parseFloat(formData.shipping_handling_fees) - parseFloat(formData.discount));
             console.log("vatPrice:", vatPrice);
         }
@@ -1835,20 +1779,20 @@ const StockTransferCreate = forwardRef((props, ref) => {
         formData.net_total = RoundFloat(formData.net_total, 2);
         // formData.net_total = Math.round(formData.net_total * 100) / 100;
         setFormData.net_total(formData.net_total);
-     
+
         if (!formData.id) {
             let method = "";
             if (formData.payments_input && formData.payments_input[0]) {
                 method = formData.payments_input[0].method;
             }
-     
+
             formData.payments_input = [{
                 "date_str": formData.date_str,
                 "amount": 0.00,
                 "method": method,
                 "deleted": false,
             }];
-     
+
             if (formData.net_total > 0) {
                 formData.payments_input[0].amount = parseFloat(trimTo2Decimals(formData.net_total));
                 if (formData.cash_discount) {
@@ -1857,7 +1801,7 @@ const StockTransferCreate = forwardRef((props, ref) => {
                 formData.payments_input[0].amount = parseFloat(trimTo2Decimals(formData.payments_input[0].amount));
             }
         }
-     
+
         /*
         if (formData.payments_input[0].amount === 0) {
             formData.payments_input[0].amount = "";
@@ -1874,17 +1818,17 @@ const StockTransferCreate = forwardRef((props, ref) => {
         if (selectedProducts[productIndex].unit_discount
             && parseFloat(selectedProducts[productIndex].unit_discount) >= 0
             && unitPrice > 0) {
-     
+
             let unitDiscountPercent = parseFloat(parseFloat(selectedProducts[productIndex].unit_discount / unitPrice) * 100);
             //selectedProducts[productIndex].unit_discount_percent = parseFloat(trimTo2Decimals(unitDiscountPercent));
             selectedProducts[productIndex].unit_discount_percent = unitDiscountPercent;
             setSelectedProducts([...selectedProducts]);
         }
     }
-     
+
     function findProductUnitDiscount(productIndex) {
         let unitPrice = parseFloat(selectedProducts[productIndex].unit_price);
-     
+
         if (selectedProducts[productIndex].unit_discount_percent
             && selectedProducts[productIndex].unit_discount_percent >= 0
             && unitPrice > 0) {
@@ -2215,9 +2159,61 @@ const StockTransferCreate = forwardRef((props, ref) => {
             stocktransferReturnHistory: "F9",
             purchaseHistory: "F6",
             purchaseReturnHistory: "F8",
-            deliveryNoteHistory: "F3",
+            deliveryNoteHistory: "Ctrl + Shift + 7",
             quotationHistory: "F2",
-            quotationSalesHistory: "Ctrl + Shift + 7",
+            quotationSalesHistory: "F3",
+            quotationSalesReturnHistory: "Ctrl + Shift + 8",
+            images: "Ctrl + Shift + 9",
+        },
+        "MBDI-SIMULATION": {
+            linkedProducts: "F10",
+            productHistory: "Ctrl + Shift + 6",
+            salesHistory: "F4",
+            stocktransferReturnHistory: "F9",
+            purchaseHistory: "F6",
+            purchaseReturnHistory: "F8",
+            deliveryNoteHistory: "Ctrl + Shift + 7",
+            quotationHistory: "F2",
+            quotationSalesHistory: "F3",
+            quotationSalesReturnHistory: "Ctrl + Shift + 8",
+            images: "Ctrl + Shift + 9",
+        },
+        YNB: {
+            linkedProducts: "F10",
+            productHistory: "Ctrl + Shift + 6",
+            salesHistory: "F4",
+            stocktransferReturnHistory: "F9",
+            purchaseHistory: "F6",
+            purchaseReturnHistory: "F8",
+            deliveryNoteHistory: "Ctrl + Shift + 7",
+            quotationHistory: "F2",
+            quotationSalesHistory: "F3",
+            quotationSalesReturnHistory: "Ctrl + Shift + 8",
+            images: "Ctrl + Shift + 9",
+        },
+        MDNA: {
+            linkedProducts: "F10",
+            productHistory: "Ctrl + Shift + 6",
+            salesHistory: "F4",
+            stocktransferReturnHistory: "F9",
+            purchaseHistory: "F6",
+            purchaseReturnHistory: "F8",
+            deliveryNoteHistory: "Ctrl + Shift + 7",
+            quotationHistory: "F2",
+            quotationSalesHistory: "F3",
+            quotationSalesReturnHistory: "Ctrl + Shift + 8",
+            images: "Ctrl + Shift + 9",
+        },
+        "MDNA-SIMULATION": {
+            linkedProducts: "F10",
+            productHistory: "Ctrl + Shift + 6",
+            salesHistory: "F4",
+            stocktransferReturnHistory: "F9",
+            purchaseHistory: "F6",
+            purchaseReturnHistory: "F8",
+            deliveryNoteHistory: "Ctrl + Shift + 7",
+            quotationHistory: "F2",
+            quotationSalesHistory: "F3",
             quotationSalesReturnHistory: "Ctrl + Shift + 8",
             images: "Ctrl + Shift + 9",
         },
@@ -2263,7 +2259,7 @@ const StockTransferCreate = forwardRef((props, ref) => {
                 openProductImages(product.product_id);
             }
             return;
-        } else if (store?.code === "MBDI") {
+        } else if (store?.code === "MBDI" || store?.code === "MBDI-SIMULATION" || store?.code === "YNB" || store?.code === "MDNA" || store?.code === "MDNA-SIMULATION") {
             if (event.key === "F10") {
                 openLinkedProducts(product);
             } else if (isCmdOrCtrl && event.shiftKey && event.key.toLowerCase() === '6') {
@@ -2277,11 +2273,11 @@ const StockTransferCreate = forwardRef((props, ref) => {
             } else if (event.key === "F8") {
                 openPurchaseReturnHistory(product);
             } else if (event.key === "F3") {
-                openDeliveryNoteHistory(product);
+                openQuotationSalesHistory(product);
             } else if (event.key === "F2") {
                 openQuotationHistory(product);
             } else if (isCmdOrCtrl && event.shiftKey && event.key.toLowerCase() === '7') {
-                openQuotationSalesHistory(product);
+                openDeliveryNoteHistory(product);
             } else if (isCmdOrCtrl && event.shiftKey && event.key.toLowerCase() === '8') {
                 openQuotationSalesReturnHistory(product);
             } else if (isCmdOrCtrl && event.shiftKey && event.key.toLowerCase() === '9') {
@@ -2605,8 +2601,8 @@ const StockTransferCreate = forwardRef((props, ref) => {
       const openPreview = useCallback((stocktransfer) => {
             setShowStockTransferPreview(true);
             setShowPrintTypeSelection(false);
-    
-    
+
+
             if (timerRef.current) clearTimeout(timerRef.current);
             timerRef.current = setTimeout(() => {
                 PreviewRef.current?.open(stocktransfer, undefined, "stock_transfer");
@@ -2876,108 +2872,17 @@ const StockTransferCreate = forwardRef((props, ref) => {
 
     return (
         <>
-            <Modal show={showSuccess} onHide={() => setShowSuccess(false)} centered>
-                <Modal.Header closeButton>
-                    <Modal.Title>Success</Modal.Title>
-                </Modal.Header>
-                <Modal.Body>
-                    <Alert variant="success">
-                        {successMessage}
-                    </Alert>
-                </Modal.Body>
-                <Modal.Footer>
-                    <Button variant="secondary" onClick={() => setShowSuccess(false)}>
-                        Close
-                    </Button>
-                </Modal.Footer>
-            </Modal>
+            <SuccessModal show={showSuccess} message={successMessage} onClose={() => setShowSuccess(false)} />
 
-            <Modal
+            <TableSettingsModal
                 show={showProductSearchSettings}
                 onHide={() => setShowProductSearchSettings(false)}
-                centered
-                size="lg"
-            >
-                <Modal.Header closeButton>
-                    <Modal.Title>
-                        <i
-                            className="bi bi-gear-fill"
-                            style={{ fontSize: "1.2rem", marginRight: "4px" }}
-                            title="Table Settings"
-
-                        />
-                        Product Search Settings
-                    </Modal.Title>
-                </Modal.Header>
-                <Modal.Body>
-                    {/* Column Settings */}
-                    {showProductSearchSettings && (
-                        <>
-                            <h6 className="mb-2">Customize Columns</h6>
-                            <DragDropContext onDragEnd={onDragEnd}>
-                                <Droppable droppableId="columns">
-                                    {(provided) => (
-                                        <ul
-                                            className="list-group"
-                                            {...provided.droppableProps}
-                                            ref={provided.innerRef}
-                                        >
-                                            {searchProductsColumns.map((col, index) => {
-                                                return (
-                                                    <>
-                                                        <Draggable
-                                                            key={col.key}
-                                                            draggableId={col.key}
-                                                            index={index}
-                                                        >
-                                                            {(provided) => (
-                                                                <li
-                                                                    className="list-group-item d-flex justify-content-between align-items-center"
-                                                                    ref={provided.innerRef}
-                                                                    {...provided.draggableProps}
-                                                                    {...provided.dragHandleProps}                                                        >
-                                                                    <div>
-                                                                        <input
-                                                                            style={{ width: "20px", height: "20px" }}
-                                                                            type="checkbox"
-                                                                            className="form-check-input me-2"
-                                                                            checked={col.visible}
-                                                                            onChange={() => {
-                                                                                handleToggleColumn(index);
-                                                                            }}
-                                                                        />
-                                                                        {col.label}
-                                                                    </div>
-                                                                    <span style={{ cursor: "grab" }}>☰</span>
-                                                                </li>
-                                                            )}
-                                                        </Draggable>
-                                                    </>)
-                                            })}
-                                            {provided.placeholder}
-                                        </ul>
-                                    )}
-                                </Droppable>
-                            </DragDropContext>
-                        </>
-                    )}
-                </Modal.Body>
-                <Modal.Footer>
-                    <Button variant="secondary" onClick={() => setShowProductSearchSettings(false)}>
-                        Close
-                    </Button>
-                    <Button
-                        variant="primary"
-                        onClick={() => {
-                            RestoreDefaultSettings();
-                            // Save to localStorage here if needed
-                            //setShowSettings(false);
-                        }}
-                    >
-                        Restore to Default
-                    </Button>
-                </Modal.Footer>
-            </Modal>
+                title="Product Search Settings"
+                columns={searchProductsColumns}
+                onToggleColumn={handleToggleColumn}
+                onDragEnd={onDragEnd}
+                onRestoreDefaults={RestoreDefaultSettings}
+            />
 
             <ProductHistory ref={ProductHistoryRef} showToastMessage={props.showToastMessage} />
             {showStockTransferPrintPreview && <StockTransferPrint ref={PrintRef} onPrintClose={handlePrintClose} />}
@@ -3667,7 +3572,7 @@ const StockTransferCreate = forwardRef((props, ref) => {
 
                         <div className="col-md-1">
                             <Button className="btn btn-primary" style={{ marginTop: "30px" }} onClick={openProducts}>
-                                <i class="bi bi-list"></i>
+                                <i className="bi bi-list"></i>
                             </Button>
                         </div>
 
@@ -4236,6 +4141,16 @@ const StockTransferCreate = forwardRef((props, ref) => {
                                                                         }
 
                                                                         selectedProducts[index].unit_price = parseFloat(e.target.value);
+                                                                        if (selectedProducts[index].purchase_unit_price > 0 && parseFloat(e.target.value) > 0) {
+                                                                            if (selectedProducts[index].purchase_unit_price > parseFloat(e.target.value)) {
+                                                                                errors["unit_price_" + index] = "Unit price should not be less than Purchase Unit Price(without VAT)";
+                                                                                errors["purchase_unit_price_" + index] = "Purchase Unit Price should not be greater than Unit Price(without VAT)";
+                                                                            } else {
+                                                                                delete errors["unit_price_" + index];
+                                                                                delete errors["purchase_unit_price_" + index];
+                                                                            }
+                                                                            setErrors({ ...errors });
+                                                                        }
                                                                         setSelectedProducts([...selectedProducts]);
 
                                                                         timerRef.current = setTimeout(() => {
@@ -4386,10 +4301,10 @@ const StockTransferCreate = forwardRef((props, ref) => {
                                                     // eslint-disable-next-line no-lone-blocks
                                                     {/*<td>
                                                 <div className="input-group mb-3">
-                                                    <input type="number" 
+                                                    <input type="number"
                                                     id={`${"stocktransfer_unit_discount_percent" + index}`}
-                                                     disabled={false} name={`${"stocktransfer_unit_discount_percent" + index}`} 
-                                                     onWheel={(e) => e.target.blur()} className="form-control text-end" 
+                                                     disabled={false} name={`${"stocktransfer_unit_discount_percent" + index}`}
+                                                     onWheel={(e) => e.target.blur()} className="form-control text-end"
                                                      value={selectedProducts[index].unit_discount_percent} onChange={(e) => {
                                                         if (timerRef.current) clearTimeout(timerRef.current);
 
@@ -4737,7 +4652,6 @@ const StockTransferCreate = forwardRef((props, ref) => {
                                             />
                                         </td>
                                     </tr>
-
                                     <tr>
                                         <th colSpan="8" className="text-end">
                                             Total Taxable Amount(without VAT)

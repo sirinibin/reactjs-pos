@@ -33,6 +33,9 @@ import ProductHistory from "../utils/product_history.js";
 
 import DatePicker from "react-datepicker";
 import { format } from "date-fns";
+import { ObjectToSearchQueryParams } from '../utils/queryUtils.js';
+import { fetchStore } from '../utils/storeUtils.js';
+import { useEnterKeyNavigation } from '../utils/useEnterKeyNavigation.js';
 
 const columnStyle = {
   width: '20%',
@@ -103,76 +106,15 @@ const ProductCreate = forwardRef((props, ref) => {
   let [store, setStore] = useState({});
 
   async function getStore(id) {
-    console.log("inside get Store");
-    const requestOptions = {
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': localStorage.getItem('access_token'),
-      },
-    };
-
-    await fetch('/v1/store/' + id, requestOptions)
-      .then(async response => {
-        const isJson = response.headers.get('content-type')?.includes('application/json');
-        const data = isJson && await response.json();
-
-        // check for error response
-        if (!response.ok) {
-          const error = (data && data.errors);
-          return Promise.reject(error);
-        }
-
-        console.log("Response:");
-        console.log(data);
-        store = data.result;
-        setStore(store);
-        //stores = data.result;
-        //setStores(data.result);
-        productStores = {};
-        productStores[store.id] = {
-          store_id: store.id,
-          store_name: store.name,
-          purchase_unit_price: 0.00,
-          retail_unit_price: 0.00,
-          wholesale_unit_price: 0.00,
-          stock: 0.00,
-          with_vat: store?.settings?.default_unit_price_is_with_vat,
-        };
-
-        setProductStores({ ...productStores });
-      })
-      .catch(error => {
-
-      });
+      try {
+          const data = await fetchStore(id);
+          store = data;
+          setStore({ ...data });
+      } catch (error) { }
   }
 
 
-  useEffect(() => {
-    const listener = (event) => {
-      if (event.code === "Enter" || event.code === "NumpadEnter") {
-        console.log("Enter key was pressed. Run your function-product.");
-        // event.preventDefault();
-
-        var form = event.target.form;
-        if (form && event.target) {
-          var index = Array.prototype.indexOf.call(form, event.target);
-          if (form && form.elements[index + 1]) {
-            if ((event.target.getAttribute("class") || "").includes("barcode")) {
-              form.elements[index].focus();
-            } else {
-              form.elements[index + 1].focus();
-            }
-            event.preventDefault();
-          }
-        }
-      }
-    };
-    document.addEventListener("keydown", listener);
-    return () => {
-      document.removeEventListener("keydown", listener);
-    };
-  }, []);
+  useEnterKeyNavigation();
 
 
 
@@ -381,7 +323,7 @@ const ProductCreate = forwardRef((props, ref) => {
               productStores[i].retail_unit_price = data.result.product_stores[key].retail_unit_price;
               productStores[i].stock = data.result.product_stores[key].stock;
               productStores[i].damaged_stock = data.result.product_stores[key].damaged_stock;
-           
+
               i++;
             }
           }*/
@@ -502,14 +444,6 @@ const ProductCreate = forwardRef((props, ref) => {
     }
   });
 
-  function ObjectToSearchQueryParams(object) {
-    return Object.keys(object)
-      .map(function (key) {
-        return `search[${key}]=${object[key]}`;
-      })
-      .join("&");
-  }
-
   function handleCreate(event) {
     event.preventDefault();
     console.log("Inside handle Create");
@@ -580,7 +514,7 @@ const ProductCreate = forwardRef((props, ref) => {
       "purchase_unit_price": productStores[selectedStoreIndex].purchase_unit_price ? productStores[selectedStoreIndex].purchase_unit_price : 0,
       "stock": productStores[selectedStoreIndex].stock ? productStores[selectedStoreIndex].stock : 0,
       "damaged_stock": productStores[selectedStoreIndex].damaged_stock ? productStores[selectedStoreIndex].damaged_stock : 0,
-     
+
     };*/
     //console.log("saving to store id:" + productStores[selectedStoreIndex].store_id);
 
@@ -818,8 +752,9 @@ const ProductCreate = forwardRef((props, ref) => {
       return;
     }
 
+    const apiSearchTerm = searchTerm.split(/\s+/).map(w => w.replace(/^-+/, "")).filter(Boolean).join(" ");
     var params = {
-      search_text: searchTerm,
+      search_text: apiSearchTerm || searchTerm,
     };
 
     if (localStorage.getItem("store_id")) {
@@ -1060,7 +995,7 @@ const ProductCreate = forwardRef((props, ref) => {
         totalWithVAT += formData.set.products[i].retail_unit_price_with_vat * formData.set.products[i].quantity;
       }
 
-      //purchase 
+      //purchase
       if (formData.set.products[i].purchase_unit_price && formData.set.products[i].quantity) {
         purchaseTotal += formData.set.products[i].purchase_unit_price * formData.set.products[i].quantity;
       }
@@ -1235,9 +1170,61 @@ const ProductCreate = forwardRef((props, ref) => {
       salesReturnHistory: "F9",
       purchaseHistory: "F6",
       purchaseReturnHistory: "F8",
-      deliveryNoteHistory: "F3",
+      deliveryNoteHistory: "F10",
       quotationHistory: "F2",
-      quotationSalesHistory: "F10",
+      quotationSalesHistory: "F3",
+      quotationSalesReturnHistory: "Ctrl + Shift + 8",
+      images: "Ctrl + Shift + 9",
+    },
+    "MBDI-SIMULATION": {
+      linkedProducts: "Ctrl + Shift + 7",
+      productHistory: "Ctrl + Shift + 6",
+      salesHistory: "F4",
+      salesReturnHistory: "F9",
+      purchaseHistory: "F6",
+      purchaseReturnHistory: "F8",
+      deliveryNoteHistory: "F10",
+      quotationHistory: "F2",
+      quotationSalesHistory: "F3",
+      quotationSalesReturnHistory: "Ctrl + Shift + 8",
+      images: "Ctrl + Shift + 9",
+    },
+    YNB: {
+      linkedProducts: "Ctrl + Shift + 7",
+      productHistory: "Ctrl + Shift + 6",
+      salesHistory: "F4",
+      salesReturnHistory: "F9",
+      purchaseHistory: "F6",
+      purchaseReturnHistory: "F8",
+      deliveryNoteHistory: "F10",
+      quotationHistory: "F2",
+      quotationSalesHistory: "F3",
+      quotationSalesReturnHistory: "Ctrl + Shift + 8",
+      images: "Ctrl + Shift + 9",
+    },
+    MDNA: {
+      linkedProducts: "Ctrl + Shift + 7",
+      productHistory: "Ctrl + Shift + 6",
+      salesHistory: "F4",
+      salesReturnHistory: "F9",
+      purchaseHistory: "F6",
+      purchaseReturnHistory: "F8",
+      deliveryNoteHistory: "F10",
+      quotationHistory: "F2",
+      quotationSalesHistory: "F3",
+      quotationSalesReturnHistory: "Ctrl + Shift + 8",
+      images: "Ctrl + Shift + 9",
+    },
+    "MDNA-SIMULATION": {
+      linkedProducts: "Ctrl + Shift + 7",
+      productHistory: "Ctrl + Shift + 6",
+      salesHistory: "F4",
+      salesReturnHistory: "F9",
+      purchaseHistory: "F6",
+      purchaseReturnHistory: "F8",
+      deliveryNoteHistory: "F10",
+      quotationHistory: "F2",
+      quotationSalesHistory: "F3",
       quotationSalesReturnHistory: "Ctrl + Shift + 8",
       images: "Ctrl + Shift + 9",
     },
@@ -1283,9 +1270,9 @@ const ProductCreate = forwardRef((props, ref) => {
         openProductImages(product.product_id);
       }
       return;
-    } else if (store?.code === "MBDI") {
+    } else if (store?.code === "MBDI" || store?.code === "MBDI-SIMULATION" || store?.code === "YNB" || store?.code === "MDNA" || store?.code === "MDNA-SIMULATION") {
       if (event.key === "F10") {
-        openQuotationSalesHistory(product);
+        openDeliveryNoteHistory(product);
       } else if (isCmdOrCtrl && event.shiftKey && event.key.toLowerCase() === '6') {
         openProductHistory(product);
       } else if (event.key === "F4") {
@@ -1297,7 +1284,7 @@ const ProductCreate = forwardRef((props, ref) => {
       } else if (event.key === "F8") {
         openPurchaseReturnHistory(product);
       } else if (event.key === "F3") {
-        openDeliveryNoteHistory(product);
+        openQuotationSalesHistory(product);
       } else if (event.key === "F2") {
         openQuotationHistory(product);
       } else if (isCmdOrCtrl && event.shiftKey && event.key.toLowerCase() === '7') {

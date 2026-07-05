@@ -60,6 +60,7 @@ const SalesReturnPreviewContent = forwardRef((props, ref) => {
     return (<>
         {props.model.pages && props.model.pages.map((page, pageIndex) => (
             <div
+                key={pageIndex}
                 className="container"
                 id="printableArea"
                 style={{
@@ -126,28 +127,28 @@ const SalesReturnPreviewContent = forwardRef((props, ref) => {
                 <div className="row table-active" style={{ fontSize: "3.5mm", border: "solid 0px" }}>
                     <div className="col-md-5" style={{ border: "solid 0px", width: `${props.model.store?.settings?.zatca_qr_on_left_bottom ? "90%" : "79%"}` }}>
 
-                        <div class="container fw-bold" style={{ border: "solid 0px", paddingLeft: "0px", fontSize: "2.2mm" }}>
-                            {props.model.store?.zatca?.phase === "2" && <div class="row" style={{ border: "solid 0px" }}>
-                                <div class="col-7 text-start" style={{ border: "solid 0px" }} dir="ltr">Invoice Count Value | عد الفاتورة (ICV):</div>
-                                <div class="col-5" style={{ border: "solid 0px", marginLeft: `${props.model.store?.settings?.zatca_qr_on_left_bottom ? "-120px" : "-72px"}` }} dir="ltr">
+                        <div className="container fw-bold" style={{ border: "solid 0px", paddingLeft: "0px", fontSize: "2.2mm" }}>
+                            {props.model.store?.zatca?.phase === "2" && <div className="row" style={{ border: "solid 0px" }}>
+                                <div className="col-7 text-start" style={{ border: "solid 0px" }} dir="ltr">Invoice Count Value | عد الفاتورة (ICV):</div>
+                                <div className="col-5" style={{ border: "solid 0px", marginLeft: `${props.model.store?.settings?.zatca_qr_on_left_bottom ? "-120px" : "-72px"}` }} dir="ltr">
                                     {props.model.invoice_count_value ? props.model.invoice_count_value : ""}
                                 </div>
                             </div>}
-                            {props.model.store?.zatca?.phase === "2" && <div class="row">
-                                <div class="col-7 text-start" dir="ltr">UUID:</div>
-                                <div class="col-6 " style={{ marginLeft: `${props.model.store?.settings?.zatca_qr_on_left_bottom ? "-120px" : "-72px"}` }} dir="ltr">
+                            {props.model.store?.zatca?.phase === "2" && <div className="row">
+                                <div className="col-7 text-start" dir="ltr">UUID:</div>
+                                <div className="col-6 " style={{ marginLeft: `${props.model.store?.settings?.zatca_qr_on_left_bottom ? "-120px" : "-72px"}` }} dir="ltr">
                                     {props.model.uuid ? props.model.uuid : ""}
                                 </div>
                             </div>}
-                            <div class="row">
-                                <div class="col-7 text-start" dir="ltr">Invoice No. | رقم الفاتورة:</div>
-                                <div class="col-6" style={{ marginLeft: `${props.model.store?.settings?.zatca_qr_on_left_bottom ? "-120px" : "-72px"}` }} dir="ltr">
+                            <div className="row">
+                                <div className="col-7 text-start" dir="ltr">Invoice No. | رقم الفاتورة:</div>
+                                <div className="col-6" style={{ marginLeft: `${props.model.store?.settings?.zatca_qr_on_left_bottom ? "-120px" : "-72px"}` }} dir="ltr">
                                     {props.model.code ? props.model.code : ""}
                                 </div>
                             </div>
-                            <div class="row">
-                                <div class="col-7 text-start fw-bold" dir="ltr">Invoice Date | تاريخ الفاتورة:</div>
-                                <div class="col-6 " style={{ marginLeft: `${props.model.store?.settings?.zatca_qr_on_left_bottom ? "-120px" : "-72px"}` }} dir="ltr">
+                            <div className="row">
+                                <div className="col-7 text-start fw-bold" dir="ltr">Invoice Date | تاريخ الفاتورة:</div>
+                                <div className="col-6 " style={{ marginLeft: `${props.model.store?.settings?.zatca_qr_on_left_bottom ? "-120px" : "-72px"}` }} dir="ltr">
                                     <span dir="ltr"> {props.model.date ? format(
                                         new Date(props.model.date),
                                         "yyyy-MM-dd h:mma"
@@ -155,15 +156,15 @@ const SalesReturnPreviewContent = forwardRef((props, ref) => {
                                     </span>
                                 </div>
                             </div>
-                            <div class="row fw-bold">
-                                <div class="col-7 text-start" dir="ltr">Original Invoice No. | رقم الفاتورة الأصلية:</div>
-                                <div class="col-6 " dir="ltr" style={{ marginLeft: `${props.model.store?.settings?.zatca_qr_on_left_bottom ? "-120px" : "-72px"}` }}>
+                            <div className="row fw-bold">
+                                <div className="col-7 text-start" dir="ltr">Original Invoice No. | رقم الفاتورة الأصلية:</div>
+                                <div className="col-6 " dir="ltr" style={{ marginLeft: `${props.model.store?.settings?.zatca_qr_on_left_bottom ? "-120px" : "-72px"}` }}>
                                     {props.model.order_code ? props.model.order_code : ""}
                                 </div>
                             </div>
-                            <div class="row fw-bold">
-                                <div class="col-7 text-start" dir="ltr" >Original Invoice Date | تاريخ الفاتورة الأصلية:</div>
-                                <div class="col-6 " dir="ltr" style={{ marginLeft: `${props.model.store?.settings?.zatca_qr_on_left_bottom ? "-120px" : "-72px"}` }}>
+                            <div className="row fw-bold">
+                                <div className="col-7 text-start" dir="ltr" >Original Invoice Date | تاريخ الفاتورة الأصلية:</div>
+                                <div className="col-6 " dir="ltr" style={{ marginLeft: `${props.model.store?.settings?.zatca_qr_on_left_bottom ? "-120px" : "-72px"}` }}>
                                     <span dir="ltr"> {props.model.order?.date ? format(
                                         new Date(props.model.order?.date),
                                         "yyyy-MM-dd h:mma"
@@ -171,18 +172,18 @@ const SalesReturnPreviewContent = forwardRef((props, ref) => {
                                     </span>
                                 </div>
                             </div>
-                            <div class="row fw-bold">
-                                <div class="col-7 text-start fw-bold" dir="ltr">Customer Name | اسم العميل:</div>
-                                <div class="col-6 " dir="ltr" style={{ marginLeft: `${props.model.store?.settings?.zatca_qr_on_left_bottom ? "-120px" : "-72px"}` }}>
+                            <div className="row fw-bold">
+                                <div className="col-7 text-start fw-bold" dir="ltr">Customer Name | اسم العميل:</div>
+                                <div className="col-6 " dir="ltr" style={{ marginLeft: `${props.model.store?.settings?.zatca_qr_on_left_bottom ? "-120px" : "-72px"}` }}>
                                     {props.model.customer ? props.model.customer.name : ""}
                                     {!props.model.customer && props.model.customerName ? props.model.customerName : ""}
                                     {!props.model.customerName && !props.model.customer ? "N/A" : ""}
                                     {props.model.customer?.name_in_arabic ? " | " + props.model.customer.name_in_arabic : ""}
                                 </div>
                             </div>
-                            <div class="row fw-bold">
-                                <div class="col-7 text-start" >Customer VAT | ضريبة القيمة المضافة للعملاء:</div>
-                                <div class="col-6 " dir="ltr" style={{ marginLeft: `${props.model.store?.settings?.zatca_qr_on_left_bottom ? "-120px" : "-72px"}` }}>
+                            <div className="row fw-bold">
+                                <div className="col-7 text-start" >Customer VAT | ضريبة القيمة المضافة للعملاء:</div>
+                                <div className="col-6 " dir="ltr" style={{ marginLeft: `${props.model.store?.settings?.zatca_qr_on_left_bottom ? "-120px" : "-72px"}` }}>
                                     <span dir="ltr">
                                         {props.model.customer?.vat_no ? props.model.customer.vat_no : ""}
                                         {!props.model.customer && props.model.vat_no ? props.model.vat_no : ""}
@@ -200,9 +201,9 @@ const SalesReturnPreviewContent = forwardRef((props, ref) => {
                                     </span>
                                 </div>
                             </div>
-                            <div class="row fw-bold">
-                                <div class="col-7 text-start" dir="ltr" >Customer Address | عنوان العميل:</div>
-                                <div class="col-6 " dir="ltr" style={{ marginLeft: `${props.model.store?.settings?.zatca_qr_on_left_bottom ? "-120px" : "-72px"}` }}>
+                            <div className="row fw-bold">
+                                <div className="col-7 text-start" dir="ltr" >Customer Address | عنوان العميل:</div>
+                                <div className="col-6 " dir="ltr" style={{ marginLeft: `${props.model.store?.settings?.zatca_qr_on_left_bottom ? "-120px" : "-72px"}` }}>
 
                                     <span dir="ltr">
                                         {props.model.address && !props.model.customer ? props.model.address : ""}
@@ -462,7 +463,6 @@ const SalesReturnPreviewContent = forwardRef((props, ref) => {
 
                                         </th>
                                     </tr>
-
                                     <tr>
                                         <th colSpan={props.model.store?.settings?.zatca_qr_on_left_bottom ? 6 : 8} className="text-end" style={{ padding: "2px" }}>
                                             Net Total (with VAT)  الإجمالي الصافي (مع ضريبة القيمة المضافة):

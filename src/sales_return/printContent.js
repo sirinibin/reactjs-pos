@@ -121,7 +121,6 @@ const SalesReturnPrintContent = forwardRef((props, ref) => {
                                     </h4>
                                 </td>
                             </tr>
-
                         ))}
                     </tbody>
                 </table>
@@ -180,7 +179,6 @@ const SalesReturnPrintContent = forwardRef((props, ref) => {
                                 </h4>
                             </td>
                         </tr>
-
                     </tbody>
                 </table> : ""}
 

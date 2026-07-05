@@ -11,7 +11,7 @@ import { Spinner } from "react-bootstrap";
 import ProductView from "../product/view.js";
 import { DebounceInput } from 'react-debounce-input';
 import DatePicker from "react-datepicker";
-import { Dropdown, Alert } from 'react-bootstrap';
+import { Dropdown } from 'react-bootstrap';
 
 import SalesReturnHistory from "./../utils/product_sales_return_history.js";
 import PurchaseHistory from "./../utils/product_purchase_history.js";
@@ -31,6 +31,10 @@ import { highlightWords } from "../utils/search.js";
 import ProductHistory from "../utils/product_history.js";
 import SalesHistory from "../utils/product_sales_history.js";
 import { DragDropContext, Droppable, Draggable } from "react-beautiful-dnd";
+import { ObjectToSearchQueryParams } from '../utils/queryUtils.js';
+import { fetchStore } from '../utils/storeUtils.js';
+import SuccessModal from '../utils/SuccessModal.js';
+import TableSettingsModal from '../utils/TableSettingsModal.js';
 
 const columnStyle = {
   width: '20%',
@@ -236,34 +240,11 @@ const DeliveryNoteCreate = forwardRef((props, ref) => {
   let [store, setStore] = useState({});
 
   async function getStore(id) {
-    console.log("inside get Store");
-    const requestOptions = {
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': localStorage.getItem('access_token'),
-      },
-    };
-
-    await fetch('/v1/store/' + id, requestOptions)
-      .then(async response => {
-        const isJson = response.headers.get('content-type')?.includes('application/json');
-        const data = isJson && await response.json();
-
-        // check for error response
-        if (!response.ok) {
-          const error = (data && data.errors);
-          return Promise.reject(error);
-        }
-
-        console.log("Response:");
-        console.log(data);
-        store = data.result || {};
-        setStore(store);
-      })
-      .catch(error => {
-
-      });
+      try {
+          const data = await fetchStore(id);
+          store = data;
+          setStore({ ...data });
+      } catch (error) { }
   }
 
   useEffect(() => {
@@ -462,14 +443,6 @@ const DeliveryNoteCreate = forwardRef((props, ref) => {
       });
   }
 
-  function ObjectToSearchQueryParams(object) {
-    return Object.keys(object)
-      .map(function (key) {
-        return `search[${key}]=` + encodeURIComponent(object[key]);
-      })
-      .join("&");
-  }
-
 
 
   const customCustomerFilter = useCallback((option, query) => {
@@ -497,8 +470,10 @@ const DeliveryNoteCreate = forwardRef((props, ref) => {
       .replace(/\s+/g, " ").trim();
 
     return qWords.every((word) => {
+      if (searchable.includes(word)) return true;
       const wordCompact = word.replace(/[^\p{L}\p{N}]/gu, "");
-      return searchable.includes(word) || searchableCompact.includes(wordCompact);
+      if (!wordCompact || /^[^\p{L}\p{N}]/u.test(word)) return false;
+      return searchableCompact.includes(wordCompact);
     });
   }, []);
 
@@ -629,9 +604,61 @@ const DeliveryNoteCreate = forwardRef((props, ref) => {
       salesReturnHistory: "F9",
       purchaseHistory: "F6",
       purchaseReturnHistory: "F8",
-      deliveryNoteHistory: "F3",
+      deliveryNoteHistory: "Ctrl + Shift + 7",
       quotationHistory: "F2",
-      quotationSalesHistory: "Ctrl + Shift + 7",
+      quotationSalesHistory: "F3",
+      quotationSalesReturnHistory: "Ctrl + Shift + 8",
+      images: "Ctrl + Shift + 9",
+    },
+    "MBDI-SIMULATION": {
+      linkedProducts: "F10",
+      productHistory: "Ctrl + Shift + 6",
+      salesHistory: "F4",
+      salesReturnHistory: "F9",
+      purchaseHistory: "F6",
+      purchaseReturnHistory: "F8",
+      deliveryNoteHistory: "Ctrl + Shift + 7",
+      quotationHistory: "F2",
+      quotationSalesHistory: "F3",
+      quotationSalesReturnHistory: "Ctrl + Shift + 8",
+      images: "Ctrl + Shift + 9",
+    },
+    YNB: {
+      linkedProducts: "F10",
+      productHistory: "Ctrl + Shift + 6",
+      salesHistory: "F4",
+      salesReturnHistory: "F9",
+      purchaseHistory: "F6",
+      purchaseReturnHistory: "F8",
+      deliveryNoteHistory: "Ctrl + Shift + 7",
+      quotationHistory: "F2",
+      quotationSalesHistory: "F3",
+      quotationSalesReturnHistory: "Ctrl + Shift + 8",
+      images: "Ctrl + Shift + 9",
+    },
+    MDNA: {
+      linkedProducts: "F10",
+      productHistory: "Ctrl + Shift + 6",
+      salesHistory: "F4",
+      salesReturnHistory: "F9",
+      purchaseHistory: "F6",
+      purchaseReturnHistory: "F8",
+      deliveryNoteHistory: "Ctrl + Shift + 7",
+      quotationHistory: "F2",
+      quotationSalesHistory: "F3",
+      quotationSalesReturnHistory: "Ctrl + Shift + 8",
+      images: "Ctrl + Shift + 9",
+    },
+    "MDNA-SIMULATION": {
+      linkedProducts: "F10",
+      productHistory: "Ctrl + Shift + 6",
+      salesHistory: "F4",
+      salesReturnHistory: "F9",
+      purchaseHistory: "F6",
+      purchaseReturnHistory: "F8",
+      deliveryNoteHistory: "Ctrl + Shift + 7",
+      quotationHistory: "F2",
+      quotationSalesHistory: "F3",
       quotationSalesReturnHistory: "Ctrl + Shift + 8",
       images: "Ctrl + Shift + 9",
     },
@@ -678,7 +705,7 @@ const DeliveryNoteCreate = forwardRef((props, ref) => {
         openProductImages(product.product_id);
       }
       return;
-    } else if (store?.code === "MBDI") {
+    } else if (store?.code === "MBDI" || store?.code === "MBDI-SIMULATION" || store?.code === "YNB" || store?.code === "MDNA" || store?.code === "MDNA-SIMULATION") {
       if (event.key === "F10") {
         openLinkedProducts(product);
       } else if (isCmdOrCtrl && event.shiftKey && event.key.toLowerCase() === '6') {
@@ -692,11 +719,11 @@ const DeliveryNoteCreate = forwardRef((props, ref) => {
       } else if (event.key === "F8") {
         openPurchaseReturnHistory(product);
       } else if (event.key === "F3") {
-        openDeliveryNoteHistory(product);
+        openQuotationSalesHistory(product);
       } else if (event.key === "F2") {
         openQuotationHistory(product, "quotation");
       } else if (isCmdOrCtrl && event.shiftKey && event.key.toLowerCase() === '7') {
-        openQuotationSalesHistory(product);
+        openDeliveryNoteHistory(product);
       } else if (isCmdOrCtrl && event.shiftKey && event.key.toLowerCase() === '8') {
         openQuotationSalesReturnHistory(product);
       } else if (isCmdOrCtrl && event.shiftKey && event.key.toLowerCase() === '9') {
@@ -904,8 +931,9 @@ const DeliveryNoteCreate = forwardRef((props, ref) => {
       return;
     }
 
+    const apiSearchTerm = searchTerm.split(/\s+/).map(w => w.replace(/^-+/, "")).filter(Boolean).join(" ");
     var params = {
-      search_text: searchTerm,
+      search_text: apiSearchTerm || searchTerm,
     };
 
     if (localStorage.getItem("store_id")) {
@@ -960,7 +988,7 @@ const DeliveryNoteCreate = forwardRef((props, ref) => {
       }
 
 
-      const searchPhrase = searchTerm.toLowerCase().replace(/\s+/g, " ").trim();
+      const searchPhrase = searchTerm.toLowerCase().replace(/[^\p{L}\p{N}\s]/gu, " ").replace(/\s+/g, " ").trim();
 
       const getSearchable = (item) => {
         let partNoLabel = item.prefix_part_number ? item.prefix_part_number + "-" + item.part_number : "";
@@ -998,7 +1026,7 @@ const DeliveryNoteCreate = forwardRef((props, ref) => {
         return 1; // b contains phrase, a does not
       }
 
-      const words = searchTerm.toLowerCase().split(" ").filter(Boolean);
+      const words = searchTerm.toLowerCase().replace(/[^\p{L}\p{N}\s]/gu, " ").split(/\s+/).filter(Boolean);
       const aPercent = percentOccurrence(words, a);
       const bPercent = percentOccurrence(words, b);
 
@@ -1907,108 +1935,17 @@ const DeliveryNoteCreate = forwardRef((props, ref) => {
     <>
 
 
-      <Modal show={showSuccess} onHide={() => setShowSuccess(false)} centered>
-        <Modal.Header closeButton>
-          <Modal.Title>Success</Modal.Title>
-        </Modal.Header>
-        <Modal.Body>
-          <Alert variant="success">
-            {successMessage}
-          </Alert>
-        </Modal.Body>
-        <Modal.Footer>
-          <Button variant="secondary" onClick={() => setShowSuccess(false)}>
-            Close
-          </Button>
-        </Modal.Footer>
-      </Modal>
+      <SuccessModal show={showSuccess} message={successMessage} onClose={() => setShowSuccess(false)} />
 
-      <Modal
-        show={showProductSearchSettings}
-        onHide={() => setShowProductSearchSettings(false)}
-        centered
-        size="lg"
-      >
-        <Modal.Header closeButton>
-          <Modal.Title>
-            <i
-              className="bi bi-gear-fill"
-              style={{ fontSize: "1.2rem", marginRight: "4px" }}
-              title="Table Settings"
-
-            />
-            Product Search Settings
-          </Modal.Title>
-        </Modal.Header>
-        <Modal.Body>
-          {/* Column Settings */}
-          {showProductSearchSettings && (
-            <>
-              <h6 className="mb-2">Customize Columns</h6>
-              <DragDropContext onDragEnd={onDragEnd}>
-                <Droppable droppableId="columns">
-                  {(provided) => (
-                    <ul
-                      className="list-group"
-                      {...provided.droppableProps}
-                      ref={provided.innerRef}
-                    >
-                      {searchProductsColumns.map((col, index) => {
-                        return (
-                          <>
-                            <Draggable
-                              key={col.key}
-                              draggableId={col.key}
-                              index={index}
-                            >
-                              {(provided) => (
-                                <li
-                                  className="list-group-item d-flex justify-content-between align-items-center"
-                                  ref={provided.innerRef}
-                                  {...provided.draggableProps}
-                                  {...provided.dragHandleProps}                                                        >
-                                  <div>
-                                    <input
-                                      style={{ width: "20px", height: "20px" }}
-                                      type="checkbox"
-                                      className="form-check-input me-2"
-                                      checked={col.visible}
-                                      onChange={() => {
-                                        handleToggleColumn(index);
-                                      }}
-                                    />
-                                    {col.label}
-                                  </div>
-                                  <span style={{ cursor: "grab" }}>☰</span>
-                                </li>
-                              )}
-                            </Draggable>
-                          </>)
-                      })}
-                      {provided.placeholder}
-                    </ul>
-                  )}
-                </Droppable>
-              </DragDropContext>
-            </>
-          )}
-        </Modal.Body>
-        <Modal.Footer>
-          <Button variant="secondary" onClick={() => setShowProductSearchSettings(false)}>
-            Close
-          </Button>
-          <Button
-            variant="primary"
-            onClick={() => {
-              RestoreDefaultSettings();
-              // Save to localStorage here if needed
-              //setShowSettings(false);
-            }}
-          >
-            Restore to Default
-          </Button>
-        </Modal.Footer>
-      </Modal>
+      <TableSettingsModal
+          show={showProductSearchSettings}
+          onHide={() => setShowProductSearchSettings(false)}
+          title="Product Search Settings"
+          columns={searchProductsColumns}
+          onToggleColumn={handleToggleColumn}
+          onDragEnd={onDragEnd}
+          onRestoreDefaults={RestoreDefaultSettings}
+      />
       <ProductHistory ref={ProductHistoryRef} showToastMessage={props.showToastMessage} />
       <ImageViewerModal ref={imageViewerRef} images={productImages} />
       <Customers ref={CustomersRef} onSelectCustomer={handleSelectedCustomer} showToastMessage={props.showToastMessage} />

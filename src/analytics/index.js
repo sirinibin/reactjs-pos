@@ -5,6 +5,7 @@ import HourlySales from "./sales/hourlySales";
 import DailySales from "./sales/dailySales";
 import MonthlySales from "./sales/monthlySales";
 import YearlySales from "./sales/yearlySales";
+import { ObjectToSearchQueryParams } from '../utils/queryUtils.js';
 
 
 
@@ -20,14 +21,6 @@ const Analytics = forwardRef((props, ref) => {
     const [searchParams, setSearchParams] = useState({});
     let sortField = "date";
     let sortOrder = "-";
-
-    function ObjectToSearchQueryParams(object) {
-        return Object.keys(object)
-            .map(function (key) {
-                return `search[${key}]=${object[key]}`;
-            })
-            .join("&");
-    }
 
 
     async function getAllRecords(model, fields) {

@@ -6,6 +6,8 @@ import ReportContent from './reportContent.js';
 import html2pdf from 'html2pdf.js';
 import "./print.css";
 import { useTranslation } from 'react-i18next';
+import { ObjectToSearchQueryParams } from '../utils/queryUtils.js';
+import { fetchStore } from '../utils/storeUtils.js';
 //import jsPDF from "jspdf";
 //import html2canvas from "html2canvas";
 
@@ -322,14 +324,6 @@ const ReportPreview = forwardRef((props, ref) => {
 
 
 
-    function ObjectToSearchQueryParams(object) {
-        return Object.keys(object)
-            .map(function (key) {
-                return `search[${key}]=${object[key]}`;
-            })
-            .join("&");
-    }
-
     function changePageSize(size) {
         fontSizes[modelName + "_reportPageSize"] = parseInt(size);
         setFontSizes({ ...fontSizes });
@@ -496,35 +490,9 @@ const ReportPreview = forwardRef((props, ref) => {
     }
 
     async function getStore(id) {
-        console.log("inside get Store");
-        const requestOptions = {
-            method: 'GET',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': localStorage.getItem('access_token'),
-            },
-        };
-
-        await fetch('/v1/store/' + id, requestOptions)
-            .then(async response => {
-                const isJson = response.headers.get('content-type')?.includes('application/json');
-                const data = isJson && await response.json();
-
-                // check for error response
-                if (!response.ok) {
-                    const error = (data && data.errors);
-                    return Promise.reject(error);
-                }
-
-                console.log("Response:");
-                console.log(data);
-                let storeData = data.result;
-                model.store = storeData;
-                setModel({ ...model });
-            })
-            .catch(error => {
-
-            });
+        try {
+            await fetchStore(id);
+} catch (error) { }
     }
 
 

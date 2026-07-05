@@ -124,7 +124,6 @@ const OrderPrintContent = forwardRef((props, ref) => {
                                         </h4>
                                     </td>
                                 </tr>
-
                             ))}
                         </tbody>
                     </table>
@@ -184,7 +183,6 @@ const OrderPrintContent = forwardRef((props, ref) => {
                                     </h4>
                                 </td>
                             </tr>
-
                         </tbody>
                     </table> : ""}
 

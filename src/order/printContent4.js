@@ -191,7 +191,6 @@ const OrderPrintContent4 = forwardRef((props, ref) => {
                                         </h4>
                                     </td>
                                 </tr>
-
                             ))}
                         </tbody>
                     </table>
@@ -212,7 +211,6 @@ const OrderPrintContent4 = forwardRef((props, ref) => {
                                     </h4>
                                 </td>
                             </tr>
-
                             <tr className="text-end" style={{ verticalAlign: "center", border: "solid 0px", }}>
                                 <td style={{ paddingRight: "5px", paddingTop: "13px" }}>
                                     <h4 className="print-value-umluj" style={{ fontSize: "3mm", height: "9px", }}>
@@ -226,7 +224,6 @@ const OrderPrintContent4 = forwardRef((props, ref) => {
                                     </h4>
                                 </td>
                             </tr>
-
                             <tr className="text-end" style={{ verticalAlign: "center", border: "solid 0px", }}>
                                 <td style={{ paddingRight: "5px", paddingTop: "13px" }}>
                                     <h4 className="print-value-umluj" style={{ fontSize: "3mm", height: "9px", }}>
@@ -240,9 +237,6 @@ const OrderPrintContent4 = forwardRef((props, ref) => {
                                     </h4>
                                 </td>
                             </tr>
-
-
-
                             <tr className="text-end" style={{ verticalAlign: "center", border: "solid 0px", }}>
                                 <td style={{ paddingRight: "5px", paddingTop: "13px" }}>
                                     <h4 className="print-value-umluj" style={{ fontSize: "3.2mm", height: "9px", }}>

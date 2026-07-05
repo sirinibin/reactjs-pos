@@ -1,20 +1,24 @@
 import React, { useState, useEffect, useRef, useMemo, useCallback } from "react";
 import VendorCreate from "./create.js";
 import VendorView from "./view.js";
-import { DragDropContext, Droppable, Draggable } from "react-beautiful-dnd";
 import { Typeahead, Menu, MenuItem } from "react-bootstrap-typeahead";
 import { highlightWords } from "../utils/search.js";
 import { format } from "date-fns";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
-import { Button, Spinner, Modal, Alert } from "react-bootstrap";
-import ReactPaginate from "react-paginate";
+import { Button, Spinner } from "react-bootstrap";
 import OverflowTooltip from "../utils/OverflowTooltip.js";
 import PostingIndex from "./../posting/index.js";
 import Amount from "../utils/amount.js";
 import { trimTo2Decimals } from "../utils/numberUtils";
 import { confirm } from 'react-bootstrap-confirmation';
 import StatsSummary from "../utils/StatsSummary.js";
+import { ObjectToSearchQueryParams } from '../utils/queryUtils.js';
+import { fetchStore } from '../utils/storeUtils.js';
+import SuccessModal from '../utils/SuccessModal.js';
+import { useTableSettings } from '../utils/useTableSettings.js';
+import PaginationControls from '../utils/PaginationControls.js';
+import TableSettingsModal from '../utils/TableSettingsModal.js';
 
 function VendorIndex(props) {
 
@@ -58,49 +62,17 @@ function VendorIndex(props) {
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
-    let [store, setStore] = useState({});
 
     async function getStore(id) {
-        console.log("inside get Store");
-        const requestOptions = {
-            method: 'GET',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': localStorage.getItem('access_token'),
-            },
-        };
-
-        await fetch('/v1/store/' + id, requestOptions)
-            .then(async response => {
-                const isJson = response.headers.get('content-type')?.includes('application/json');
-                const data = isJson && await response.json();
-
-                // check for error response
-                if (!response.ok) {
-                    const error = (data && data.errors);
-                    return Promise.reject(error);
-                }
-
-                store = data.result;
-                setStore(store);
-            })
-            .catch(error => {
-
-            });
+        try {
+            await fetchStore(id);
+        } catch (error) { }
     }
 
     //Search params
     const [searchParams, setSearchParams] = useState({});
     let [sortField, setSortField] = useState("created_at");
     let [sortVendor, setSortVendor] = useState("-");
-
-    function ObjectToSearchQueryParams(object) {
-        return Object.keys(object)
-            .map(function (key) {
-                return `search[${key}]=${object[key]}`;
-            })
-            .join("&");
-    }
 
     async function suggestUsers(searchTerm) {
         console.log("Inside handle suggestUsers");
@@ -618,73 +590,14 @@ function VendorIndex(props) {
     ], []);
 
 
-    const [columns, setColumns] = useState(defaultColumns);
-    const [showSettings, setShowSettings] = useState(false);
-    // Load settings from localStorage
-    useEffect(() => {
-        const saved = localStorage.getItem("vendor_table_settings");
-        if (saved) setColumns(JSON.parse(saved));
-
-        let missingOrUpdated = false;
-        for (let i = 0; i < defaultColumns.length; i++) {
-            if (!saved)
-                break;
-
-            const savedCol = JSON.parse(saved)?.find(col => col.fieldName === defaultColumns[i].fieldName);
-
-            missingOrUpdated = !savedCol || savedCol.label !== defaultColumns[i].label || savedCol.key !== defaultColumns[i].key;
-
-            if (missingOrUpdated) {
-                break
-            }
-        }
-
-        /*
-        for (let i = 0; i < saved.length; i++) {
-            const savedCol = defaultColumns.find(col => col.fieldName === saved[i].fieldName);
- 
-            missingOrUpdated = !savedCol || savedCol.label !== saved[i].label || savedCol.key !== saved[i].key;
- 
-            if (missingOrUpdated) {
-                break
-            }
-        }*/
-
-        if (missingOrUpdated) {
-            localStorage.setItem("vendor_table_settings", JSON.stringify(defaultColumns));
-            setColumns(defaultColumns);
-        }
-
-        //2nd
-
-    }, [defaultColumns]);
+    const { columns, showSettings, setShowSettings, handleToggleColumn, onDragEnd, restoreDefaults } = useTableSettings({ storageKey: "vendor_table_settings", defaultColumns });
 
     function RestoreDefaultSettings() {
-        localStorage.setItem("vendor_table_settings", JSON.stringify(defaultColumns));
-        setColumns(defaultColumns);
-
+        restoreDefaults();
         setShowSuccess(true);
-        setSuccessMessage("Successfully restored to default settings!")
+        setSuccessMessage("Successfully restored to default settings!");
     }
 
-    // Save column settings to localStorage
-    useEffect(() => {
-        localStorage.setItem("vendor_table_settings", JSON.stringify(columns));
-    }, [columns]);
-
-    const handleToggleColumn = (index) => {
-        const updated = [...columns];
-        updated[index].visible = !updated[index].visible;
-        setColumns(updated);
-    };
-
-    const onDragEnd = (result) => {
-        if (!result.destination) return;
-        const reordered = Array.from(columns);
-        const [moved] = reordered.splice(result.source.index, 1);
-        reordered.splice(result.destination.index, 0, moved);
-        setColumns(reordered);
-    };
 
     const [showSuccess, setShowSuccess] = useState(false);
     const [successMessage, setSuccessMessage] = useState(false);
@@ -697,104 +610,16 @@ function VendorIndex(props) {
         <>
 
             {/* ⚙️ Settings Modal */}
-            <Modal
+            <TableSettingsModal
                 show={showSettings}
                 onHide={() => setShowSettings(false)}
-                centered
-                size="lg"
-            >
-                <Modal.Header closeButton>
-                    <Modal.Title>
-                        <i
-                            className="bi bi-gear-fill"
-                            style={{ fontSize: "1.2rem", marginRight: "4px" }}
-                            title="Table Settings"
-
-                        />
-                        Vendor Settings
-                    </Modal.Title>
-                </Modal.Header>
-                <Modal.Body>
-                    {/* Column Settings */}
-                    {showSettings && (
-                        <>
-                            <h6 className="mb-2">Customize Columns</h6>
-                            <DragDropContext onDragEnd={onDragEnd}>
-                                <Droppable droppableId="columns">
-                                    {(provided) => (
-                                        <ul
-                                            className="list-group"
-                                            {...provided.droppableProps}
-                                            ref={provided.innerRef}
-                                        >
-                                            {columns.map((col, index) => (
-                                                <Draggable
-                                                    key={col.key}
-                                                    draggableId={col.key}
-                                                    index={index}
-                                                >
-                                                    {(provided) => (
-                                                        <li
-                                                            className="list-group-item d-flex justify-content-between align-items-center"
-                                                            ref={provided.innerRef}
-                                                            {...provided.draggableProps}
-                                                            {...provided.dragHandleProps}                                                        >
-                                                            <div>
-                                                                <input
-                                                                    style={{ width: "20px", height: "20px" }}
-                                                                    type="checkbox"
-                                                                    className="form-check-input me-2"
-                                                                    checked={col.visible}
-                                                                    onChange={() => {
-                                                                        handleToggleColumn(index);
-                                                                    }}
-                                                                />
-                                                                {col.label}
-                                                            </div>
-                                                            <span style={{ cursor: "grab" }}>☰</span>
-                                                        </li>
-                                                    )}
-                                                </Draggable>
-                                            ))}
-                                            {provided.placeholder}
-                                        </ul>
-                                    )}
-                                </Droppable>
-                            </DragDropContext>
-                        </>
-                    )}
-                </Modal.Body>
-                <Modal.Footer>
-                    <Button variant="secondary" onClick={() => setShowSettings(false)}>
-                        Close
-                    </Button>
-                    <Button
-                        variant="primary"
-                        onClick={() => {
-                            RestoreDefaultSettings();
-                            // Save to localStorage here if needed
-                            //setShowSettings(false);
-                        }}
-                    >
-                        Restore to Default
-                    </Button>
-                </Modal.Footer>
-            </Modal>
-            <Modal show={showSuccess} onHide={() => setShowSuccess(false)} centered>
-                <Modal.Header closeButton>
-                    <Modal.Title>Success</Modal.Title>
-                </Modal.Header>
-                <Modal.Body>
-                    <Alert variant="success">
-                        {successMessage}
-                    </Alert>
-                </Modal.Body>
-                <Modal.Footer>
-                    <Button variant="secondary" onClick={() => setShowSuccess(false)}>
-                        Close
-                    </Button>
-                </Modal.Footer>
-            </Modal>
+                title="Vendor Settings"
+                columns={columns}
+                onToggleColumn={handleToggleColumn}
+                onDragEnd={onDragEnd}
+                onRestoreDefaults={RestoreDefaultSettings}
+            />
+            <SuccessModal show={showSuccess} message={successMessage} onClose={() => setShowSuccess(false)} />
 
             <PostingIndex ref={AccountBalanceSheetRef} showToastMessage={props.showToastMessage} />
             <VendorCreate ref={CreateFormRef} refreshList={list} showToastMessage={props.showToastMessage} openDetailsView={openDetailsView} />
@@ -901,54 +726,17 @@ function VendorIndex(props) {
                                         )}
                                         <span className="visually-hidden">Loading...</span>
                                     </Button>
-                                    {totalItems > 0 && (
-                                        <>
-                                            <label className="form-label mb-0">Size:&nbsp;</label>
-                                            <select
-                                                value={pageSize}
-                                                onChange={(e) => {
-                                                    changePageSize(e.target.value);
-                                                }}
-                                                className="form-control"
-                                                style={{ width: "55px" }}
-                                            >
-                                                <option value="5">5</option>
-                                                <option value="10">10</option>
-                                                <option value="20">20</option>
-                                                <option value="40">40</option>
-                                                <option value="50">50</option>
-                                                <option value="100">100</option>
-                                            </select>
-                                        </>
-                                    )}
-                                    <div className="w-100" style={{ overflowX: "auto" }}>
-                                        {totalPages ? <ReactPaginate
-                                            breakLabel="..."
-                                            nextLabel="next >"
-                                            onPageChange={(event) => {
-                                                changePage(event.selected + 1);
-                                            }}
-                                            pageRangeDisplayed={3}
-                                            marginPagesDisplayed={1}
-                                            pageCount={totalPages}
-                                            previousLabel="< prev"
-                                            renderOnZeroPageCount={null}
-                                            className="pagination flex-wrap mb-0"
-                                            pageClassName="page-item"
-                                            pageLinkClassName="page-link"
-                                            activeClassName="active"
-                                            previousClassName="page-item"
-                                            nextClassName="page-item"
-                                            previousLinkClassName="page-link"
-                                            nextLinkClassName="page-link"
-                                            forcePage={page - 1}
-                                        /> : ""}
-                                    </div>
-                                    {totalItems > 0 && (
-                                        <span className="text-muted small">
-                                            showing {offset + 1}-{offset + currentPageItemsCount} of {totalItems} &nbsp;|&nbsp; page {page} of {totalPages}
-                                        </span>
-                                    )}
+                                    <PaginationControls
+                                        totalPages={totalPages}
+                                        page={page}
+                                        totalItems={totalItems}
+                                        offset={offset}
+                                        currentPageItemsCount={currentPageItemsCount}
+                                        pageSize={pageSize}
+                                        onPageChange={changePage}
+                                        onPageSizeChange={changePageSize}
+                                        pageSizes={[5, 10, 20, 40, 50, 100]}
+                                    />
                                     <button
                                         className="btn btn-sm btn-outline-secondary"
                                         onClick={() => {
@@ -1006,7 +794,7 @@ function VendorIndex(props) {
                                         <thead>
                                             <tr className="text-center">
                                                 {columns.filter(c => c.visible).map((col) => {
-                                                    return (<>
+                                                    return (<React.Fragment key={col.key}>
                                                         {col.key === "select" && enableSelection && <th key={col.key}>{col.label}</th>}
                                                         {(col.key === "deleted" || col.key === "actions") && <th key={col.key}>{col.label}</th>}
                                                         {col.key !== "actions" && col.key !== "deleted" && col.key !== "select" && <th>
@@ -1028,7 +816,7 @@ function VendorIndex(props) {
                                                                 ) : null}
                                                             </b>
                                                         </th>}
-                                                    </>);
+                                                    </React.Fragment>);
                                                 })}
 
                                                 {/*<th>Deleted</th>
@@ -1442,7 +1230,7 @@ function VendorIndex(props) {
                                         <thead>
                                             <tr className="text-center">
                                                 {columns.filter(c => c.visible).map((col) => {
-                                                    return (<>
+                                                    return (<React.Fragment key={col.key}>
                                                         {(col.key === "deleted") && <th>
                                                             <select
                                                                 onChange={(e) => {
@@ -1655,7 +1443,7 @@ function VendorIndex(props) {
                                                                 </span>
                                                             ) : null}
                                                         </th>}
-                                                    </>);
+                                                    </React.Fragment>);
                                                 })}
 
                                                 {/*<th>
@@ -2000,7 +1788,7 @@ function VendorIndex(props) {
                                                 vendorList.map((vendor) => (
                                                     <tr key={vendor.id}>
                                                         {columns.filter(c => c.visible).map((col) => {
-                                                            return (<>
+                                                            return (<React.Fragment key={col.key}>
                                                                 {(col.key === "select" && enableSelection) && <td style={{ width: "auto", whiteSpace: "nowrap" }}>
                                                                     <Button className="btn btn-success btn-sm" onClick={() => { handleSelected(vendor); }}>
                                                                         Select
@@ -2082,7 +1870,7 @@ function VendorIndex(props) {
                                                                         "MMM dd yyyy h:mma"
                                                                     )}
                                                                 </td>}
-                                                            </>);
+                                                            </React.Fragment>);
                                                         })}
 
                                                         {/*<td>{vendor.deleted ? "YES" : "NO"}</td>

@@ -6,15 +6,18 @@ import { Typeahead } from "react-bootstrap-typeahead";
 import { format } from "date-fns";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
-import { Button, Spinner, Modal } from "react-bootstrap";
-import { DragDropContext, Droppable, Draggable } from "react-beautiful-dnd";
-import ReactPaginate from "react-paginate";
+import { Button, Spinner } from "react-bootstrap";
 //import NumberFormat from "react-number-format";
 import OverflowTooltip from "../utils/OverflowTooltip.js";
 import CustomerDepositPreview from './../customer_deposit/preview.js';
 import { trimTo2Decimals } from "../utils/numberUtils";
 import Amount from "../utils/amount.js";
 import StatsSummary from "../utils/StatsSummary.js";
+import { ObjectToSearchQueryParams } from '../utils/queryUtils.js';
+import { fetchStore } from '../utils/storeUtils.js';
+import { useTableSettings } from '../utils/useTableSettings.js';
+import PaginationControls from '../utils/PaginationControls.js';
+import TableSettingsModal from '../utils/TableSettingsModal.js';
 
 function CustomerWithdrawalIndex(props) {
 
@@ -74,37 +77,11 @@ function CustomerWithdrawalIndex(props) {
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
-    let [store, setStore] = useState({});
 
     async function getStore(id) {
-        console.log("inside get Store");
-        const requestOptions = {
-            method: 'GET',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': localStorage.getItem('access_token'),
-            },
-        };
-
-        await fetch('/v1/store/' + id, requestOptions)
-            .then(async response => {
-                const isJson = response.headers.get('content-type')?.includes('application/json');
-                const data = isJson && await response.json();
-
-                // check for error response
-                if (!response.ok) {
-                    const error = (data && data.errors);
-                    return Promise.reject(error);
-                }
-
-                console.log("Response:");
-                console.log(data);
-                store = data.result;
-                setStore(store);
-            })
-            .catch(error => {
-
-            });
+        try {
+            await fetchStore(id);
+        } catch (error) { }
     }
 
 
@@ -112,14 +89,6 @@ function CustomerWithdrawalIndex(props) {
     const [searchParams, setSearchParams] = useState({});
     let [sortField, setSortField] = useState("created_at");
     let [sortCustomerWithdrawal, setSortCustomerWithdrawal] = useState("-");
-
-    function ObjectToSearchQueryParams(object) {
-        return Object.keys(object)
-            .map(function (key) {
-                return `search[${key}]=` + object[key];
-            })
-            .join("&");
-    }
 
     async function suggestUsers(searchTerm) {
         console.log("Inside handle suggest Users");
@@ -594,104 +563,22 @@ function CustomerWithdrawalIndex(props) {
         { key: "actions_end", label: "Actions", fieldName: "actions_end", visible: true },
     ], []);
 
-    const [columns, setColumns] = useState(defaultColumns);
-    const [showSettings, setShowSettings] = useState(false);
+    const { columns, showSettings, setShowSettings, handleToggleColumn, onDragEnd, restoreDefaults } = useTableSettings({ storageKey: "customer_withdrawal_table_settings", defaultColumns });
 
-    useEffect(() => {
-        const saved = localStorage.getItem("customer_withdrawal_table_settings");
-        if (saved) {
-            setColumns(JSON.parse(saved));
-        }
-        let missingOrUpdated = false;
-        for (let i = 0; i < defaultColumns.length; i++) {
-            if (!saved) break;
-            const savedCol = JSON.parse(saved)?.find(col => col.fieldName === defaultColumns[i].fieldName);
-            missingOrUpdated = !savedCol || savedCol.label !== defaultColumns[i].label || savedCol.key !== defaultColumns[i].key;
-            if (missingOrUpdated) break;
-        }
-        if (missingOrUpdated) {
-            localStorage.setItem("customer_withdrawal_table_settings", JSON.stringify(defaultColumns));
-            setColumns(defaultColumns);
-        }
-    }, [defaultColumns]);
-
-    function RestoreDefaultSettings() {
-        localStorage.setItem("customer_withdrawal_table_settings", JSON.stringify(defaultColumns));
-        setColumns(defaultColumns);
-    }
-
-    const handleToggleColumn = (index) => {
-        const updated = [...columns];
-        updated[index].visible = !updated[index].visible;
-        setColumns(updated);
-        localStorage.setItem("customer_withdrawal_table_settings", JSON.stringify(updated));
-    };
-
-    const onDragEnd = (result) => {
-        if (!result.destination) return;
-        const reordered = Array.from(columns);
-        const [moved] = reordered.splice(result.source.index, 1);
-        reordered.splice(result.destination.index, 0, moved);
-        setColumns(reordered);
-        localStorage.setItem("customer_withdrawal_table_settings", JSON.stringify(reordered));
-    };
 
 
     return (
         <>
             {/* ⚙️ Settings Modal */}
-            <Modal show={showSettings} onHide={() => setShowSettings(false)} centered size="lg">
-                <Modal.Header closeButton>
-                    <Modal.Title>
-                        <i className="bi bi-gear-fill" style={{ fontSize: "1.2rem", marginRight: "4px" }} />
-                        Customer Withdrawal Settings
-                    </Modal.Title>
-                </Modal.Header>
-                <Modal.Body>
-                    {showSettings && (
-                        <>
-                            <h6 className="mb-2">Customize Columns</h6>
-                            <DragDropContext onDragEnd={onDragEnd}>
-                                <Droppable droppableId="columns">
-                                    {(provided) => (
-                                        <ul className="list-group" {...provided.droppableProps} ref={provided.innerRef}>
-                                            {columns.map((col, index) => (
-                                                <Draggable key={col.key} draggableId={col.key} index={index}>
-                                                    {(provided) => (
-                                                        <li
-                                                            className="list-group-item d-flex justify-content-between align-items-center"
-                                                            ref={provided.innerRef}
-                                                            {...provided.draggableProps}
-                                                            {...provided.dragHandleProps}
-                                                        >
-                                                            <div>
-                                                                <input
-                                                                    style={{ width: "20px", height: "20px" }}
-                                                                    type="checkbox"
-                                                                    className="form-check-input me-2"
-                                                                    checked={col.visible}
-                                                                    onChange={() => handleToggleColumn(index)}
-                                                                />
-                                                                {col.label}
-                                                            </div>
-                                                            <span style={{ cursor: "grab" }}>☰</span>
-                                                        </li>
-                                                    )}
-                                                </Draggable>
-                                            ))}
-                                            {provided.placeholder}
-                                        </ul>
-                                    )}
-                                </Droppable>
-                            </DragDropContext>
-                        </>
-                    )}
-                </Modal.Body>
-                <Modal.Footer>
-                    <Button variant="secondary" onClick={() => setShowSettings(false)}>Close</Button>
-                    <Button variant="primary" onClick={RestoreDefaultSettings}>Restore to Default</Button>
-                </Modal.Footer>
-            </Modal>
+            <TableSettingsModal
+                show={showSettings}
+                onHide={() => setShowSettings(false)}
+                title="Customer Withdrawal Settings"
+                columns={columns}
+                onToggleColumn={handleToggleColumn}
+                onDragEnd={onDragEnd}
+                onRestoreDefaults={restoreDefaults}
+            />
 
             <CustomerDepositPreview ref={PreviewRef} />
             <CustomerWithdrawalCreate ref={CreateFormRef} refreshList={list} openDetailsView={openDetailsView} showToastMessage={props.showToastMessage} />
@@ -816,59 +703,17 @@ function CustomerWithdrawalIndex(props) {
                                         )}
                                         <span className="visually-hidden">Loading...</span>
                                     </Button>
-                                    {totalItems > 0 && (
-                                        <>
-                                            <label className="form-label mb-0">Size:&nbsp;</label>
-                                            <select
-                                                value={pageSize}
-                                                onChange={(e) => {
-                                                    changePageSize(e.target.value);
-                                                }}
-                                                className="form-control"
-                                                style={{ width: "55px" }}
-                                            >
-                                                <option value="5">5</option>
-                                                <option value="10">10</option>
-                                                <option value="20">20</option>
-                                                <option value="40">40</option>
-                                                <option value="50">50</option>
-                                                <option value="100">100</option>
-                                                <option value="200">200</option>
-                                                <option value="300">300</option>
-                                                <option value="500">500</option>
-                                                <option value="1000">1000</option>
-                                                <option value="1500">1500</option>
-                                            </select>
-                                        </>
-                                    )}
-                                    <div className="w-100" style={{ overflowX: "auto" }}>
-                                        {totalPages ? <ReactPaginate
-                                            breakLabel="..."
-                                            nextLabel="next >"
-                                            onPageChange={(event) => {
-                                                changePage(event.selected + 1);
-                                            }}
-                                            pageRangeDisplayed={3}
-                                            marginPagesDisplayed={1}
-                                            pageCount={totalPages}
-                                            previousLabel="< prev"
-                                            renderOnZeroPageCount={null}
-                                            className="pagination flex-wrap mb-0"
-                                            pageClassName="page-item"
-                                            pageLinkClassName="page-link"
-                                            activeClassName="active"
-                                            previousClassName="page-item"
-                                            nextClassName="page-item"
-                                            previousLinkClassName="page-link"
-                                            nextLinkClassName="page-link"
-                                            forcePage={page - 1}
-                                        /> : ""}
-                                    </div>
-                                    {totalItems > 0 && (
-                                        <span className="text-muted small">
-                                            showing {offset + 1}-{offset + currentPageItemsCount} of {totalItems} &nbsp;|&nbsp; page {page} of {totalPages}
-                                        </span>
-                                    )}
+                                    <PaginationControls
+                                        totalPages={totalPages}
+                                        page={page}
+                                        totalItems={totalItems}
+                                        offset={offset}
+                                        currentPageItemsCount={currentPageItemsCount}
+                                        pageSize={pageSize}
+                                        onPageChange={changePage}
+                                        onPageSizeChange={changePageSize}
+                                        pageSizes={[5, 10, 20, 40, 50, 100, 200, 300, 500, 1000, 1500]}
+                                    />
                                     <button
                                         className="btn btn-sm btn-outline-secondary ms-auto"
                                         onClick={() => setShowSettings(!showSettings)}

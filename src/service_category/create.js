@@ -1,6 +1,7 @@
 import React, { useState, useEffect, forwardRef, useImperativeHandle, useRef } from "react";
 import { Modal, Spinner } from "react-bootstrap";
 import { Typeahead } from "react-bootstrap-typeahead";
+import { ObjectToSearchQueryParams } from '../utils/queryUtils.js';
 
 const CARD = { background: '#ffffff', border: '1px solid #c3c6d7', borderRadius: '8px', padding: '24px', marginBottom: '20px' };
 const INPUT = { border: '1px solid #c3c6d7', borderRadius: '4px', padding: '7px 12px', fontSize: '13px', fontFamily: '"Inter", sans-serif', width: '100%', outline: 'none', color: '#191c1e', background: '#fff' };
@@ -41,10 +42,6 @@ const ServiceCategoryCreate = forwardRef((props, ref) => {
     });
 
     function handleClose() { SetShow(false); }
-
-    function ObjectToSearchQueryParams(object) {
-        return Object.keys(object).map(key => `search[${key}]=${object[key]}`).join("&");
-    }
 
     function getServiceCategory(id) {
         const headers = { 'Content-Type': 'application/json', 'Authorization': localStorage.getItem('access_token') };

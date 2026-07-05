@@ -6,6 +6,9 @@ import { Typeahead } from "react-bootstrap-typeahead";
 import Resizer from "react-image-file-resizer";
 import DatePicker from "react-datepicker";
 import { format } from "date-fns";
+import { ObjectToSearchQueryParams } from '../utils/queryUtils.js';
+import { fetchStore } from '../utils/storeUtils.js';
+import { useEnterKeyNavigation } from '../utils/useEnterKeyNavigation.js';
 
 const DividentCreate = forwardRef((props, ref) => {
 
@@ -32,65 +35,14 @@ const DividentCreate = forwardRef((props, ref) => {
 
     }));
 
-    let [store, setStore] = useState({});
 
     async function getStore(id) {
-        console.log("inside get Store");
-        const requestOptions = {
-            method: 'GET',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': localStorage.getItem('access_token'),
-            },
-        };
-
-        await fetch('/v1/store/' + id, requestOptions)
-            .then(async response => {
-                const isJson = response.headers.get('content-type')?.includes('application/json');
-                const data = isJson && await response.json();
-
-                // check for error response
-                if (!response.ok) {
-                    const error = (data && data.errors);
-                    return Promise.reject(error);
-                }
-
-                console.log("Response:");
-                console.log(data);
-                store = data.result;
-                setStore(store);
-            })
-            .catch(error => {
-
-            });
+        try {
+            await fetchStore(id);
+        } catch (error) { }
     }
 
-    useEffect(() => {
-        const listener = event => {
-            if (event.code === "Enter" || event.code === "NumpadEnter") {
-                console.log("Enter key was pressed. Run your function-divident.");
-                // event.preventDefault();
-
-                var form = event.target.form;
-                if (form && event.target) {
-                    var index = Array.prototype.indexOf.call(form, event.target);
-                    if (form && form.elements[index + 1]) {
-                        if ((event.target.getAttribute("class") || "").includes("description")) {
-                            form.elements[index].focus();
-                            form.elements[index].value += '\r\n';
-                        } else {
-                            form.elements[index + 1].focus();
-                        }
-                        event.preventDefault();
-                    }
-                }
-            }
-        };
-        document.addEventListener("keydown", listener);
-        return () => {
-            document.removeEventListener("keydown", listener);
-        };
-    }, []);
+    useEnterKeyNavigation({ stayClass: "description", onStay: (el) => { el.value += "\r\n"; } });
 
 
     function resizeFIle(file, w, h, cb) {
@@ -187,14 +139,6 @@ const DividentCreate = forwardRef((props, ref) => {
         }
     });
 
-
-    function ObjectToSearchQueryParams(object) {
-        return Object.keys(object)
-            .map(function (key) {
-                return `search[${key}]=${object[key]}`;
-            })
-            .join("&");
-    }
 
     //WithdrawnByUser Auto Suggestion
     const [withdrawnbyuserOptions, setWithdrawnByUserOptions] = useState([]);
@@ -576,7 +520,7 @@ const DividentCreate = forwardRef((props, ref) => {
                                             }}
                                             style={INPUT}
                                         >
-                                            <option value="" SELECTED>Select</option>
+                                            <option value="">Select</option>
                                             <option value="cash">Cash</option>
                                             <option value="debit_card">Debit Card</option>
                                             <option value="credit_card">Credit Card</option>

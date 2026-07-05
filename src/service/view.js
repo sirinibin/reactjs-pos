@@ -6,29 +6,14 @@ import SalesReturnHistory from "../utils/product_sales_return_history.js";
 import QuotationHistory from "../utils/product_quotation_history.js";
 import Dropdown from "react-bootstrap/Dropdown";
 import ImageGallery from "../utils/ImageGallery.js";
+import { formatInStoreTimezone } from "../utils/dateUtils.js";
 
 const UNIT_LABELS = {
     HUR: "Hour(s)", DAY: "Day(s)", MON: "Month(s)", C62: "Session(s)",
     WEE: "Week(s)", ANN: "Year(s)", MIN: "Minute(s)",
 };
 
-const COUNTRY_TZ = {
-    SA: "Asia/Riyadh", AE: "Asia/Dubai", KW: "Asia/Kuwait", QA: "Asia/Qatar",
-    BH: "Asia/Bahrain", OM: "Asia/Muscat", IN: "Asia/Kolkata", PK: "Asia/Karachi",
-    BD: "Asia/Dhaka", LK: "Asia/Colombo", EG: "Africa/Cairo", JO: "Asia/Amman",
-    TR: "Europe/Istanbul", GB: "Europe/London", US: "America/New_York",
-};
-
-function formatTz(dateStr) {
-    if (!dateStr) return "";
-    const tz = COUNTRY_TZ[localStorage.getItem("store_country_code")] || "UTC";
-    try {
-        return new Date(dateStr).toLocaleString("en-US", {
-            timeZone: tz, year: "numeric", month: "short", day: "2-digit",
-            hour: "2-digit", minute: "2-digit", second: "2-digit", hour12: true,
-        }) + ` (${tz.replace(/_/g, " ")})`;
-    } catch { return dateStr; }
-}
+const formatTz = formatInStoreTimezone;
 
 const ServiceView = forwardRef((props, ref) => {
     const timerRef = useRef(null);

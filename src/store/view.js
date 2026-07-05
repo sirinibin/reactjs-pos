@@ -1,36 +1,8 @@
 import React, { useState, forwardRef, useImperativeHandle } from "react";
 import { resolveImageUrl } from '../utils/imageUtils';
 import { Modal } from 'react-bootstrap';
-
-const countryTimezoneMap = {
-    'SA': 'Asia/Riyadh', 'AE': 'Asia/Dubai', 'KW': 'Asia/Kuwait',
-    'QA': 'Asia/Qatar', 'BH': 'Asia/Bahrain', 'OM': 'Asia/Muscat',
-    'IN': 'Asia/Kolkata', 'PK': 'Asia/Karachi', 'BD': 'Asia/Dhaka',
-    'LK': 'Asia/Colombo', 'NP': 'Asia/Kathmandu', 'MY': 'Asia/Kuala_Lumpur',
-    'SG': 'Asia/Singapore', 'PH': 'Asia/Manila', 'ID': 'Asia/Jakarta',
-    'EG': 'Africa/Cairo', 'JO': 'Asia/Amman', 'LB': 'Asia/Beirut',
-    'IQ': 'Asia/Baghdad', 'IR': 'Asia/Tehran', 'TR': 'Europe/Istanbul',
-    'GB': 'Europe/London', 'DE': 'Europe/Berlin', 'FR': 'Europe/Paris',
-    'US': 'America/New_York', 'CA': 'America/Toronto', 'AU': 'Australia/Sydney',
-};
-
-function formatInStoreTimezone(dateStr) {
-    if (!dateStr) return '';
-    const tz = countryTimezoneMap[localStorage.getItem('store_country_code')] || 'UTC';
-    const tzLabel = tz.replace(/_/g, ' ');
-    try {
-        const d = new Date(dateStr);
-        const formatted = d.toLocaleString('en-US', {
-            timeZone: tz,
-            year: 'numeric', month: 'short', day: '2-digit',
-            hour: '2-digit', minute: '2-digit', second: '2-digit',
-            hour12: true,
-        });
-        return `${formatted} (${tzLabel})`;
-    } catch {
-        return dateStr;
-    }
-}
+import { formatInStoreTimezone } from '../utils/dateUtils.js';
+import { fetchStore } from '../utils/storeUtils.js';
 
 const StoreView = forwardRef((props, ref) => {
 
@@ -56,40 +28,11 @@ const StoreView = forwardRef((props, ref) => {
     };
 
 
-    function getStore(id) {
-        console.log("inside get Store");
-        const requestOptions = {
-            method: 'GET',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': localStorage.getItem('access_token'),
-            },
-        };
-
-        fetch('/v1/store/' + id, requestOptions)
-            .then(async response => {
-                const isJson = response.headers.get('content-type')?.includes('application/json');
-                const data = isJson && await response.json();
-
-                // check for error response
-                if (!response.ok) {
-                    const error = (data && data.errors);
-                    return Promise.reject(error);
-                }
-
-                console.log("Response:");
-                console.log(data);
-
-                model = data.result;
-
-                setModel({ ...model });
-                if (model.country_code) {
-                    localStorage.setItem('store_country_code', model.country_code);
-                }
-            })
-            .catch(error => {
-                // setErrors(error);
-            });
+    async function getStore(id) {
+        try {
+            const data = await fetchStore(id);
+            setModel({ ...data });
+        } catch (error) { }
     }
 
 

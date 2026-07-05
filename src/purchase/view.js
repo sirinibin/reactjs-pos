@@ -6,6 +6,8 @@ import NumberFormat from "react-number-format";
 import PurchasePrint from './print.js';
 import { trimTo2Decimals } from "../utils/numberUtils";
 import { useTranslation } from 'react-i18next';
+import { ObjectToSearchQueryParams } from '../utils/queryUtils.js';
+import { formatInStoreTimezone, formatPaymentMethod } from '../utils/dateUtils.js';
 
 const PurchaseView = forwardRef((props, ref) => {
     const { t } = useTranslation('common');
@@ -23,6 +25,7 @@ const PurchaseView = forwardRef((props, ref) => {
 
     }));
 
+    const store = props.store || {};
     let [model, setModel] = useState({});
 
 
@@ -31,14 +34,6 @@ const PurchaseView = forwardRef((props, ref) => {
     function handleClose() {
         setShow(false);
     };
-
-    function ObjectToSearchQueryParams(object) {
-        return Object.keys(object)
-            .map(function (key) {
-                return `search[${key}]=${object[key]}`;
-            })
-            .join("&");
-    }
 
 
     const [searchParams, setSearchParams] = useState({});
@@ -205,40 +200,8 @@ const PurchaseView = forwardRef((props, ref) => {
         PreviewRef.current.open(model, "whatsapp", "whatsapp_purchase");
     }
 
-    const countryTimezoneMap = {
-        'SA': 'Asia/Riyadh', 'AE': 'Asia/Dubai', 'KW': 'Asia/Kuwait',
-        'QA': 'Asia/Qatar', 'BH': 'Asia/Bahrain', 'OM': 'Asia/Muscat',
-        'IN': 'Asia/Kolkata', 'PK': 'Asia/Karachi', 'BD': 'Asia/Dhaka',
-        'LK': 'Asia/Colombo', 'NP': 'Asia/Kathmandu', 'MY': 'Asia/Kuala_Lumpur',
-        'SG': 'Asia/Singapore', 'PH': 'Asia/Manila', 'ID': 'Asia/Jakarta',
-        'EG': 'Africa/Cairo', 'JO': 'Asia/Amman', 'LB': 'Asia/Beirut',
-        'IQ': 'Asia/Baghdad', 'IR': 'Asia/Tehran', 'TR': 'Europe/Istanbul',
-        'GB': 'Europe/London', 'DE': 'Europe/Berlin', 'FR': 'Europe/Paris',
-        'US': 'America/New_York', 'CA': 'America/Toronto', 'AU': 'Australia/Sydney',
-    };
 
-    function formatPaymentMethod(method) {
-        if (!method) return "—";
-        return method.split('_').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
-    }
 
-    function formatInStoreTimezone(dateStr) {
-        if (!dateStr) return '';
-        const tz = countryTimezoneMap[localStorage.getItem('store_country_code')] || countryTimezoneMap[model?.store_country_code] || 'UTC';
-        const tzLabel = tz.replace('_', ' ');
-        try {
-            const d = new Date(dateStr);
-            const formatted = d.toLocaleString('en-US', {
-                timeZone: tz,
-                year: 'numeric', month: 'short', day: '2-digit',
-                hour: '2-digit', minute: '2-digit', second: '2-digit',
-                hour12: true,
-            });
-            return `${formatted} (${tzLabel})`;
-        } catch {
-            return dateStr;
-        }
-    }
 
     return (<>
         <Preview ref={PreviewRef} />
@@ -280,7 +243,7 @@ const PurchaseView = forwardRef((props, ref) => {
                         </div>
                         {model.date && (
                             <p style={{ margin: 0, fontSize: '14px', lineHeight: '20px', color: '#434655', fontWeight: 400 }}>
-                                {t("Purchase processed on")} {formatInStoreTimezone(model.date)}
+                                {t("Purchase processed on")} {formatInStoreTimezone(model.date, store?.country_code)}
                             </p>
                         )}
                     </div>
@@ -481,7 +444,7 @@ const PurchaseView = forwardRef((props, ref) => {
                                                 </div>
                                                 <div style={{ display: 'flex', flexDirection: 'column' }}>
                                                     <span style={{ fontSize: '12px', fontWeight: 500, color: '#434655', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{t("Created At")}</span>
-                                                    <span style={{ fontSize: '14px', color: '#191c1e' }}>{formatInStoreTimezone(cd.created_at)}</span>
+                                                    <span style={{ fontSize: '14px', color: '#191c1e' }}>{formatInStoreTimezone(cd.created_at, store?.country_code)}</span>
                                                 </div>
                                             </div>
                                         ))}
@@ -512,7 +475,7 @@ const PurchaseView = forwardRef((props, ref) => {
                                                 </div>
                                                 <div style={{ display: 'flex', flexDirection: 'column' }}>
                                                     <span style={{ fontSize: '12px', fontWeight: 500, color: '#434655', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{t("Date")}</span>
-                                                    <span style={{ fontSize: '14px', color: '#191c1e' }}>{formatInStoreTimezone(payment.date || payment.created_at)}</span>
+                                                    <span style={{ fontSize: '14px', color: '#191c1e' }}>{formatInStoreTimezone(payment.date || payment.created_at, store?.country_code)}</span>
                                                 </div>
                                             </div>
                                         ))}
@@ -597,7 +560,7 @@ const PurchaseView = forwardRef((props, ref) => {
                                     {model.date && (
                                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingBottom: '8px', borderBottom: '1px solid #c3c6d7' }}>
                                             <span style={{ fontSize: '14px', color: '#434655' }}>{t("Purchase Date")}</span>
-                                            <span style={{ fontSize: '14px', fontWeight: 500, color: '#191c1e' }}>{formatInStoreTimezone(model.date)}</span>
+                                            <span style={{ fontSize: '14px', fontWeight: 500, color: '#191c1e' }}>{formatInStoreTimezone(model.date, store?.country_code)}</span>
                                         </div>
                                     )}
 
@@ -613,7 +576,7 @@ const PurchaseView = forwardRef((props, ref) => {
                                     {model.created_at && (
                                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '8px', paddingBottom: '8px', borderBottom: '1px solid #c3c6d7' }}>
                                             <span style={{ fontSize: '14px', color: '#434655', flexShrink: 0 }}>{t("Created At")}</span>
-                                            <span style={{ fontSize: '14px', fontWeight: 500, color: '#191c1e', textAlign: 'right' }}>{formatInStoreTimezone(model.created_at)}</span>
+                                            <span style={{ fontSize: '14px', fontWeight: 500, color: '#191c1e', textAlign: 'right' }}>{formatInStoreTimezone(model.created_at, store?.country_code)}</span>
                                         </div>
                                     )}
 
@@ -621,7 +584,7 @@ const PurchaseView = forwardRef((props, ref) => {
                                     {model.updated_at && (
                                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '8px', paddingBottom: '8px', borderBottom: '1px solid #c3c6d7' }}>
                                             <span style={{ fontSize: '14px', color: '#434655', flexShrink: 0 }}>{t("Last Updated")}</span>
-                                            <span style={{ fontSize: '14px', fontWeight: 500, color: '#191c1e', textAlign: 'right' }}>{formatInStoreTimezone(model.updated_at)}</span>
+                                            <span style={{ fontSize: '14px', fontWeight: 500, color: '#191c1e', textAlign: 'right' }}>{formatInStoreTimezone(model.updated_at, store?.country_code)}</span>
                                         </div>
                                     )}
 

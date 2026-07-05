@@ -2,6 +2,8 @@ import React, { useState, forwardRef, useImperativeHandle, useRef } from "react"
 import { Modal } from 'react-bootstrap';
 import CustomerDepositPreview from './../customer_deposit/preview.js';
 import AttachmentsViewer from '../utils/AttachmentsViewer.js';
+import { ObjectToSearchQueryParams } from '../utils/queryUtils.js';
+import { formatInStoreTimezone, formatPaymentMethod } from '../utils/dateUtils.js';
 
 const CustomerWithdrawalView = forwardRef((props, ref) => {
     useImperativeHandle(ref, () => ({
@@ -15,6 +17,7 @@ const CustomerWithdrawalView = forwardRef((props, ref) => {
     }));
 
 
+    const store = props.store || {};
     let [model, setModel] = useState({});
 
 
@@ -23,14 +26,6 @@ const CustomerWithdrawalView = forwardRef((props, ref) => {
     function handleClose() {
         SetShow(false);
     };
-
-    function ObjectToSearchQueryParams(object) {
-        return Object.keys(object)
-            .map(function (key) {
-                return `search[${key}]=` + object[key];
-            })
-            .join("&");
-    }
 
     function getCustomerWithdrawal(id) {
         console.log("inside get CustomerWithdrawal");
@@ -87,40 +82,8 @@ const CustomerWithdrawalView = forwardRef((props, ref) => {
     }
 
 
-    const countryTimezoneMap = {
-        'SA': 'Asia/Riyadh', 'AE': 'Asia/Dubai', 'KW': 'Asia/Kuwait',
-        'QA': 'Asia/Qatar', 'BH': 'Asia/Bahrain', 'OM': 'Asia/Muscat',
-        'IN': 'Asia/Kolkata', 'PK': 'Asia/Karachi', 'BD': 'Asia/Dhaka',
-        'LK': 'Asia/Colombo', 'NP': 'Asia/Kathmandu', 'MY': 'Asia/Kuala_Lumpur',
-        'SG': 'Asia/Singapore', 'PH': 'Asia/Manila', 'ID': 'Asia/Jakarta',
-        'EG': 'Africa/Cairo', 'JO': 'Asia/Amman', 'LB': 'Asia/Beirut',
-        'IQ': 'Asia/Baghdad', 'IR': 'Asia/Tehran', 'TR': 'Europe/Istanbul',
-        'GB': 'Europe/London', 'DE': 'Europe/Berlin', 'FR': 'Europe/Paris',
-        'US': 'America/New_York', 'CA': 'America/Toronto', 'AU': 'Australia/Sydney',
-    };
 
-    function formatPaymentMethod(method) {
-        if (!method) return '—';
-        return method.split('_').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
-    }
 
-    function formatInStoreTimezone(dateStr) {
-        if (!dateStr) return '';
-        const tz = countryTimezoneMap[localStorage.getItem('store_country_code')] || 'UTC';
-        const tzLabel = tz.replace('_', ' ');
-        try {
-            const d = new Date(dateStr);
-            const formatted = d.toLocaleString('en-US', {
-                timeZone: tz,
-                year: 'numeric', month: 'short', day: '2-digit',
-                hour: '2-digit', minute: '2-digit', second: '2-digit',
-                hour12: true,
-            });
-            return `${formatted} (${tzLabel})`;
-        } catch {
-            return dateStr;
-        }
-    }
 
     return (<>
         <CustomerDepositPreview ref={PreviewRef} />
@@ -151,7 +114,7 @@ const CustomerWithdrawalView = forwardRef((props, ref) => {
                         </div>
                         {model.date && (
                             <p style={{ margin: 0, fontSize: '14px', lineHeight: '20px', color: '#434655', fontWeight: 400 }}>
-                                {formatInStoreTimezone(model.date)}
+                                {formatInStoreTimezone(model.date, store?.country_code)}
                             </p>
                         )}
                     </div>
@@ -230,7 +193,7 @@ const CustomerWithdrawalView = forwardRef((props, ref) => {
                             <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '4px' }}>
                                 <i className="bi bi-calendar3" style={{ fontSize: '20px', color: '#505f76' }}></i>
                                 <span style={{ fontSize: '14px', fontWeight: 600, color: '#191c1e', fontFamily: "'Hanken Grotesk', sans-serif" }}>
-                                    {formatInStoreTimezone(model.date)}
+                                    {formatInStoreTimezone(model.date, store?.country_code)}
                                 </span>
                             </div>
                         </div>
@@ -255,7 +218,7 @@ const CustomerWithdrawalView = forwardRef((props, ref) => {
                                         { label: 'Total', value: model.total != null ? Number(model.total).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : null },
                                         { label: 'Discount', value: model.total_discount != null && model.total_discount > 0 ? Number(model.total_discount).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : null },
                                         { label: 'Customer', value: model.customer_name },
-                                        { label: 'Date', value: formatInStoreTimezone(model.date) },
+                                        { label: 'Date', value: formatInStoreTimezone(model.date, store?.country_code) },
                                         { label: 'Bank Reference No.', value: model.bank_reference_no },
                                         { label: 'Description', value: model.description },
                                         { label: 'Remarks', value: model.remarks },
@@ -293,7 +256,7 @@ const CustomerWithdrawalView = forwardRef((props, ref) => {
                                                 </div>
                                                 <div style={{ display: 'flex', flexDirection: 'column' }}>
                                                     <span style={{ fontSize: '12px', fontWeight: 500, color: '#434655', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Date</span>
-                                                    <span style={{ fontSize: '14px', color: '#191c1e' }}>{formatInStoreTimezone(payment.date)}</span>
+                                                    <span style={{ fontSize: '14px', color: '#191c1e' }}>{formatInStoreTimezone(payment.date, store?.country_code)}</span>
                                                 </div>
                                             </div>
                                         ))}
@@ -330,13 +293,13 @@ const CustomerWithdrawalView = forwardRef((props, ref) => {
                                     {model.created_at && (
                                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingBottom: '8px', borderBottom: '1px solid #c3c6d7' }}>
                                             <span style={{ fontSize: '14px', color: '#434655' }}>Created At</span>
-                                            <span style={{ fontSize: '14px', fontWeight: 500, color: '#191c1e', textAlign: 'right' }}>{formatInStoreTimezone(model.created_at)}</span>
+                                            <span style={{ fontSize: '14px', fontWeight: 500, color: '#191c1e', textAlign: 'right' }}>{formatInStoreTimezone(model.created_at, store?.country_code)}</span>
                                         </div>
                                     )}
                                     {model.updated_at && (
                                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '8px', paddingBottom: '8px', borderBottom: '1px solid #c3c6d7' }}>
                                             <span style={{ fontSize: '14px', color: '#434655', flexShrink: 0 }}>Last Updated</span>
-                                            <span style={{ fontSize: '14px', fontWeight: 500, color: '#191c1e', textAlign: 'right' }}>{formatInStoreTimezone(model.updated_at)}</span>
+                                            <span style={{ fontSize: '14px', fontWeight: 500, color: '#191c1e', textAlign: 'right' }}>{formatInStoreTimezone(model.updated_at, store?.country_code)}</span>
                                         </div>
                                     )}
                                     {model.updated_by_name && (

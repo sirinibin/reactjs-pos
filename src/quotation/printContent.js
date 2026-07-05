@@ -113,7 +113,6 @@ const QuotationPrintContent = forwardRef((props, ref) => {
                                     </h4>
                                 </td>
                             </tr>
-
                         ))}
                     </tbody>
                 </table>
@@ -172,7 +171,6 @@ const QuotationPrintContent = forwardRef((props, ref) => {
                                 </h4>
                             </td>
                         </tr>
-
                     </tbody>
                 </table> : ""}
 

@@ -6,6 +6,9 @@ import { Spinner } from "react-bootstrap";
 import countryList from 'react-select-country-list';
 import { Typeahead } from "react-bootstrap-typeahead";
 import ImageGallery from '../utils/ImageGallery.js';
+import { ObjectToSearchQueryParams } from '../utils/queryUtils.js';
+import { fetchStore } from '../utils/storeUtils.js';
+import { useEnterKeyNavigation } from '../utils/useEnterKeyNavigation.js';
 
 const VendorCreate = forwardRef((props, ref) => {
     const timerRef = useRef(null);
@@ -37,31 +40,7 @@ const VendorCreate = forwardRef((props, ref) => {
 
     }));
 
-    useEffect(() => {
-        const listener = event => {
-            if (event.code === "Enter" || event.code === "NumpadEnter") {
-                console.log("Enter key was pressed. Run your function.");
-                // event.preventDefault();
-
-                var form = event.target.form;
-                if (form && event.target) {
-                    var index = Array.prototype.indexOf.call(form, event.target);
-                    if (form && form.elements[index + 1]) {
-                        if ((event.target.getAttribute("class") || "").includes("barcode")) {
-                            form.elements[index].focus();
-                        } else {
-                            form.elements[index + 1].focus();
-                        }
-                        event.preventDefault();
-                    }
-                }
-            }
-        };
-        document.addEventListener("keydown", listener);
-        return () => {
-            document.removeEventListener("keydown", listener);
-        };
-    }, []);
+    useEnterKeyNavigation();
 
 
     let [errors, setErrors] = useState({});
@@ -69,25 +48,12 @@ const VendorCreate = forwardRef((props, ref) => {
 
     let [store, setStore] = useState({});
 
-    function getStore(id) {
-        const requestOptions = {
-            method: 'GET',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': localStorage.getItem('access_token'),
-            },
-        };
-        fetch('/v1/store/' + id, requestOptions)
-            .then(async response => {
-                const isJson = response.headers.get('content-type')?.includes('application/json');
-                const data = isJson && await response.json();
-                if (!response.ok) {
-                    return Promise.reject(data && data.errors);
-                }
-                store = data.result;
-                setStore({ ...store });
-            })
-            .catch(() => { });
+    async function getStore(id) {
+        try {
+            const data = await fetchStore(id);
+            store = data;
+            setStore({ ...data });
+        } catch (error) { }
     }
 
     const translateText = useCallback(async (text, setter) => {
@@ -196,14 +162,6 @@ const VendorCreate = forwardRef((props, ref) => {
             });
     }
 
-
-    function ObjectToSearchQueryParams(object) {
-        return Object.keys(object)
-            .map(function (key) {
-                return `search[${key}]=${object[key]}`;
-            })
-            .join("&");
-    }
 
     function handleCreate(event) {
         event.preventDefault();

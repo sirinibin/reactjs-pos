@@ -6,8 +6,7 @@ import { Typeahead } from "react-bootstrap-typeahead";
 import { format } from "date-fns";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
-import { Button, Spinner, Modal, Alert } from "react-bootstrap";
-import ReactPaginate from "react-paginate";
+import { Button, Spinner, Modal } from "react-bootstrap";
 import OverflowTooltip from "../utils/OverflowTooltip.js";
 import { trimTo2Decimals } from "../utils/numberUtils";
 import Amount from "../utils/amount.js";
@@ -15,34 +14,20 @@ import StatsSummary from "../utils/StatsSummary.js";
 import { WebSocketContext } from "./../utils/WebSocketContext.js";
 import eventEmitter from "./../utils/eventEmitter";
 import ReportPreview from "./../order/report.js";
-import { formatDistanceToNowStrict } from "date-fns";
-import { enUS } from "date-fns/locale";
 import OrderCreate from "./../order/create.js";
+import { TimeAgo } from '../utils/dateUtils.js';
 import OrderPreview from "./../order/preview.js"
 import OrderPrint from "./../order/print.js"
-import { DragDropContext, Droppable, Draggable } from "react-beautiful-dnd";
 import QuotationSalesReturnCreate from "./../quotation_sales_return/create.js";
 import QuotationSalesReturnIndex from "./../quotation_sales_return/index.js";
 import CustomerCreate from "./../customer/create.js";
+import { ObjectToSearchQueryParams } from '../utils/queryUtils.js';
+import { fetchStore } from '../utils/storeUtils.js';
+import SuccessModal from '../utils/SuccessModal.js';
+import { useTableSettings } from '../utils/useTableSettings.js';
+import PaginationControls from '../utils/PaginationControls.js';
+import TableSettingsModal from '../utils/TableSettingsModal.js';
 
-const shortLocale = {
-  ...enUS,
-  formatDistance: (token, count) => {
-    const format = {
-      xSeconds: `${count}s`,
-      xMinutes: `${count}m`,
-      xHours: `${count}h`,
-      xDays: `${count}d`,
-      xMonths: `${count}mo`,
-      xYears: `${count}y`,
-    };
-    return format[token] || "";
-  },
-};
-
-const TimeAgo = ({ date }) => {
-  return <span>{formatDistanceToNowStrict(new Date(date), { locale: shortLocale })} ago</span>;
-};
 
 
 function QuotationIndex(props) {
@@ -179,48 +164,17 @@ function QuotationIndex(props) {
 
   let [store, setStore] = useState({});
   async function getStore(id) {
-    console.log("inside get Store");
-    const requestOptions = {
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': localStorage.getItem('access_token'),
-      },
-    };
-
-    await fetch('/v1/store/' + id, requestOptions)
-      .then(async response => {
-        const isJson = response.headers.get('content-type')?.includes('application/json');
-        const data = isJson && await response.json();
-
-        // check for error response
-        if (!response.ok) {
-          const error = (data && data.errors);
-          return Promise.reject(error);
-        }
-
-        console.log("Response:");
-        console.log(data);
-        store = data.result;
-        setStore(store);
-      })
-      .catch(error => {
-
-      });
+      try {
+          const data = await fetchStore(id);
+          store = data;
+          setStore({ ...data });
+      } catch (error) { }
   }
 
   //Search params
   const [searchParams, setSearchParams] = useState({});
   let [sortField, setSortField] = useState("created_at");
   let [sortOrder, setSortOrder] = useState("-");
-
-  function ObjectToSearchQueryParams(object) {
-    return Object.keys(object)
-      .map(function (key) {
-        return `search[${key}]=${object[key]}`;
-      })
-      .join("&");
-  }
 
 
   const customCustomerFilter = useCallback((option, query) => {
@@ -815,118 +769,14 @@ function QuotationIndex(props) {
   ], []);
 
 
-  const [columns, setColumns] = useState(defaultColumns);
-  const [showSettings, setShowSettings] = useState(false);
-  // Load settings from localStorage
-  useEffect(() => {
-    let saved = "";
-    if (enableSelection === true) {
-      saved = localStorage.getItem("select_quotation_table_settings");
-    } else if (pendingView === true) {
-      saved = localStorage.getItem("pending_quotation_table_settings");
-    } else {
-      saved = localStorage.getItem("quotation_table_settings");
-    }
-
-    if (saved) setColumns(JSON.parse(saved));
-
-    let missingOrUpdated = false;
-    for (let i = 0; i < defaultColumns.length; i++) {
-      if (!saved)
-        break;
-
-      const savedCol = JSON.parse(saved)?.find(col => col.fieldName === defaultColumns[i].fieldName);
-
-      missingOrUpdated = !savedCol || savedCol.label !== defaultColumns[i].label || savedCol.key !== defaultColumns[i].key;
-
-      if (missingOrUpdated) {
-        break
-      }
-    }
-
-
-    if (missingOrUpdated) {
-      if (enableSelection === true) {
-        localStorage.setItem("select_quotation_table_settings", JSON.stringify(defaultColumns));
-      } else if (pendingView === true) {
-        localStorage.setItem("pending_quotation_table_settings", JSON.stringify(defaultColumns));
-      } else {
-        if (!localStorage.getItem("quotation_table_settings")) {
-          localStorage.setItem("quotation_table_settings", JSON.stringify(defaultColumns));
-        }
-      }
-
-      // alert("Setting default columns")
-
-      setColumns(defaultColumns);
-    }
-
-    //2nd
-
-  }, [defaultColumns, enableSelection, pendingView]);
+  const { columns, showSettings, setShowSettings, handleToggleColumn, onDragEnd, restoreDefaults } = useTableSettings({ storageKey: "quotation_table_settings", selectStorageKey: "select_quotation_table_settings", pendingStorageKey: "pending_quotation_table_settings", defaultColumns, enableSelection, pendingView });
 
   function RestoreDefaultSettings() {
-    const clonedDefaults = defaultColumns.map(col => ({ ...col }));
-
-    if (enableSelection === true) {
-      localStorage.setItem("select_quotation_table_settings", JSON.stringify(clonedDefaults));
-    } else if (pendingView === true) {
-      localStorage.setItem("pending_quotation_table_settings", JSON.stringify(clonedDefaults));
-    } else {
-      localStorage.setItem("quotation_table_settings", JSON.stringify(clonedDefaults));
-    }
-
-    setColumns(clonedDefaults);
-
-    setShowSuccess(true);
-    setSuccessMessage("Successfully restored to default settings!")
+      restoreDefaults();
+      setShowSuccess(true);
+      setSuccessMessage("Successfully restored to default settings!");
   }
 
-
-  // Save column settings to localStorage
-  // useEffect(() => {
-  /*
-  if (enableSelection === true) {
-    localStorage.setItem("select_quotation_table_settings", JSON.stringify(columns));
-  } else if (pendingView === true) {
-    localStorage.setItem("pending_quotation_table_settings", JSON.stringify(columns));
-  } else {
-    localStorage.setItem("quotation_table_settings", JSON.stringify(columns));
-  }*/
-
-  //}, [columns, enableSelection, pendingView]);
-
-  const handleToggleColumn = (index) => {
-    const updated = [...columns];
-    updated[index].visible = !updated[index].visible;
-    setColumns(updated);
-
-    if (enableSelection === true) {
-      localStorage.setItem("select_quotation_table_settings", JSON.stringify(updated));
-    } else if (pendingView === true) {
-      localStorage.setItem("pending_quotation_table_settings", JSON.stringify(updated));
-    } else {
-      localStorage.setItem("quotation_table_settings", JSON.stringify(updated));
-    }
-
-  };
-
-  const onDragEnd = (result) => {
-    if (!result.destination) return;
-    const reordered = Array.from(columns);
-    const [moved] = reordered.splice(result.source.index, 1);
-    reordered.splice(result.destination.index, 0, moved);
-    setColumns(reordered);
-
-    if (enableSelection === true) {
-      localStorage.setItem("select_quotation_table_settings", JSON.stringify(reordered));
-    } else if (pendingView === true) {
-      localStorage.setItem("pending_quotation_table_settings", JSON.stringify(reordered));
-    } else {
-      localStorage.setItem("quotation_table_settings", JSON.stringify(reordered));
-    }
-
-  };
 
 
   //Quotation Sales Return
@@ -1001,108 +851,18 @@ function QuotationIndex(props) {
       {showQuotationSalesReturnCreate && <QuotationSalesReturnCreate ref={QuotationSalesReturnCreateRef} showToastMessage={props.showToastMessage} refreshList={list} refreshSalesList={list} />}
 
       {/* ⚙️ Settings Modal */}
-      <Modal
-        show={showSettings}
-        onHide={() => setShowSettings(false)}
-        centered
-        size="lg"
-      >
-        <Modal.Header closeButton>
-          <Modal.Title>
-            <i
-              className="bi bi-gear-fill"
-              style={{ fontSize: "1.2rem", marginRight: "4px" }}
-              title="Table Settings"
+      <TableSettingsModal
+          show={showSettings}
+          onHide={() => setShowSettings(false)}
+          title="Quotation Settings"
+          columns={columns}
+          onToggleColumn={handleToggleColumn}
+          onDragEnd={onDragEnd}
+          onRestoreDefaults={RestoreDefaultSettings}
+          enableSelection={enableSelection}
+      />
 
-            />
-            Quotation Settings
-          </Modal.Title>
-        </Modal.Header>
-        <Modal.Body>
-          {/* Column Settings */}
-          {showSettings && (
-            <>
-              <h6 className="mb-2">Customize Columns</h6>
-              <DragDropContext onDragEnd={onDragEnd}>
-                <Droppable droppableId="columns">
-                  {(provided) => (
-                    <ul
-                      className="list-group"
-                      {...provided.droppableProps}
-                      ref={provided.innerRef}
-                    >
-                      {columns.map((col, index) => {
-                        return (
-                          <>
-                            {((col.key === "select" && enableSelection) || col.key !== "select") && <Draggable
-                              key={col.key}
-                              draggableId={col.key}
-                              index={index}
-                            >
-                              {(provided) => (
-                                <li
-                                  className="list-group-item d-flex justify-content-between align-items-center"
-                                  ref={provided.innerRef}
-                                  {...provided.draggableProps}
-                                  {...provided.dragHandleProps}                                                        >
-                                  <div>
-                                    <input
-                                      style={{ width: "20px", height: "20px" }}
-                                      type="checkbox"
-                                      className="form-check-input me-2"
-                                      checked={col.visible}
-                                      onChange={() => {
-                                        handleToggleColumn(index);
-                                      }}
-                                    />
-                                    {col.label}
-                                  </div>
-                                  <span style={{ cursor: "grab" }}>☰</span>
-                                </li>
-                              )}
-                            </Draggable>}
-                          </>)
-                      })}
-                      {provided.placeholder}
-                    </ul>
-                  )}
-                </Droppable>
-              </DragDropContext>
-            </>
-          )}
-        </Modal.Body>
-        <Modal.Footer>
-          <Button variant="secondary" onClick={() => setShowSettings(false)}>
-            Close
-          </Button>
-          <Button
-            variant="primary"
-            onClick={() => {
-              RestoreDefaultSettings();
-              // Save to localStorage here if needed
-              //setShowSettings(false);
-            }}
-          >
-            Restore to Default
-          </Button>
-        </Modal.Footer>
-      </Modal>
-
-      <Modal show={showSuccess} onHide={() => setShowSuccess(false)} centered>
-        <Modal.Header closeButton>
-          <Modal.Title>Success</Modal.Title>
-        </Modal.Header>
-        <Modal.Body>
-          <Alert variant="success">
-            {successMessage}
-          </Alert>
-        </Modal.Body>
-        <Modal.Footer>
-          <Button variant="secondary" onClick={() => setShowSuccess(false)}>
-            Close
-          </Button>
-        </Modal.Footer>
-      </Modal>
+      <SuccessModal show={showSuccess} message={successMessage} onClose={() => setShowSuccess(false)} />
 
       {showOrderPrint && <OrderPrint ref={PrintRef} />}
       {showOrderPreview && <OrderPreview ref={PreviewRef} />}
@@ -1221,13 +981,13 @@ function QuotationIndex(props) {
               <div className="card-header p-2 d-flex align-items-center justify-content-between flex-wrap gap-2">
                 <h1 className="h3 mb-0">Quotations</h1>
                 <div className="d-flex gap-2 flex-wrap">
-                  <Button size="sm" variant="primary" onClick={() => openReportPreview("quotation_invoice_report")}>
+                  <Button variant="primary" className="btn btn-primary mb-1" onClick={() => openReportPreview("quotation_invoice_report")}>
                     <i className="bi bi-printer"></i> Print Sales Report
                   </Button>
-                  <Button size="sm" variant="primary" onClick={() => openReportPreview("quotation_report")}>
+                  <Button variant="primary" className="btn btn-primary mb-1" onClick={() => openReportPreview("quotation_report")}>
                     <i className="bi bi-printer"></i> Print Quotation Report
                   </Button>
-                  <Button size="sm" variant="primary" onClick={openCreateForm}>
+                  <Button variant="primary" className="btn btn-primary mb-1" onClick={openCreateForm}>
                     <i className="bi bi-plus-lg"></i> Create
                   </Button>
                 </div>
@@ -1257,53 +1017,17 @@ function QuotationIndex(props) {
                     <span className="visually-hidden">Loading...</span>
                   </Button>
 
-                  {totalItems > 0 && (
-                    <>
-                      <label className="form-label mb-0">Size:&nbsp;</label>
-                      <select
-                        value={pageSize}
-                        onChange={(e) => { changePageSize(e.target.value); }}
-                        className="form-control"
-                        style={{ border: "solid 1px", borderColor: "silver", width: "55px" }}
-                      >
-                        <option value="5">5</option>
-                        <option value="10">10</option>
-                        <option value="20">20</option>
-                        <option value="40">40</option>
-                        <option value="50">50</option>
-                        <option value="100">100</option>
-                      </select>
-                    </>
-                  )}
-
-                  <div className="w-100" style={{ overflowX: "auto" }}>
-                    {totalPages ? <ReactPaginate
-                      breakLabel="..."
-                      nextLabel="next >"
-                      onPageChange={(event) => { changePage(event.selected + 1); }}
-                      pageRangeDisplayed={3}
-                      marginPagesDisplayed={1}
-                      pageCount={totalPages}
-                      previousLabel="< prev"
-                      renderOnZeroPageCount={null}
-                      className="pagination flex-wrap mb-0"
-                      pageClassName="page-item"
-                      pageLinkClassName="page-link"
-                      activeClassName="active"
-                      previousClassName="page-item"
-                      nextClassName="page-item"
-                      previousLinkClassName="page-link"
-                      nextLinkClassName="page-link"
-                      forcePage={page - 1}
-                    /> : ""}
-                  </div>
-
-                  {totalItems > 0 && (
-                    <span className="text-muted small">
-                      showing {offset + 1}-{offset + currentPageItemsCount} of {totalItems}
-                      &nbsp;|&nbsp;page {page} of {totalPages}
-                    </span>
-                  )}
+                  <PaginationControls
+                      totalPages={totalPages}
+                      page={page}
+                      totalItems={totalItems}
+                      offset={offset}
+                      currentPageItemsCount={currentPageItemsCount}
+                      pageSize={pageSize}
+                      onPageChange={changePage}
+                      onPageSizeChange={changePageSize}
+                      pageSizes={[5, 10, 20, 40, 50, 100]}
+                  />
 
                   <button
                     className="btn btn-sm btn-outline-secondary ms-auto"
@@ -1333,9 +1057,9 @@ function QuotationIndex(props) {
                     <thead>
                       <tr className="text-center">
                         {columns.filter(c => c.visible).map((col) => {
-                          return (<>
-                            {col.key === "actions" && <th key={col.key}>{col.label}</th>}
-                            {col.key === "select" && enableSelection && <th key={col.key}>{col.label}</th>}
+                          return (<React.Fragment key={col.key}>
+                            {col.key === "actions" && <th>{col.label}</th>}
+                            {col.key === "select" && enableSelection && <th>{col.label}</th>}
                             {col.key === "zatca.reporting_passed" && store.zatca?.phase === "2" && store.zatca?.connected && <th>
                               <b
                                 style={{
@@ -1395,12 +1119,12 @@ function QuotationIndex(props) {
                                 ) : null}
                               </b>
                             </th>}
-                          </>);
+                          </React.Fragment>);
                         })}
                       </tr>
                       <tr className="text-center sub-header">
                         {columns.filter(c => c.visible).map((col) => {
-                          return (<>
+                          return (<React.Fragment key={col.key}>
                             {(col.key === "actions" || col.key === "actions_end") && <th></th>}
                             {col.key === "select" && enableSelection && <th></th>}
                             {col.key === "invoiced" && <th>
@@ -1608,7 +1332,7 @@ function QuotationIndex(props) {
                                   searchByFieldValue("reported_to_zatca", e.target.value);
                                 }}
                               >
-                                <option value="" SELECTED>ALL</option>
+                                <option value="">ALL</option>
                                 <option value="1">REPORTED</option>
                                 <option value="0">NOT REPORTED</option>
                               </select>
@@ -1724,7 +1448,7 @@ function QuotationIndex(props) {
                                 ) : null}
                               </div>
                             </th>}
-                          </>);
+                          </React.Fragment>);
                         })}
 
                         {/*<th>Actions</th>
@@ -2231,7 +1955,7 @@ function QuotationIndex(props) {
                               searchByFieldValue("reported_to_zatca", e.target.value);
                             }}
                           >
-                            <option value="" SELECTED>ALL</option>
+                            <option value="">ALL</option>
                             <option value="1">REPORTED</option>
                             <option value="0">NOT REPORTED</option>
                           </select>
@@ -2467,7 +2191,7 @@ function QuotationIndex(props) {
                         quotationList.map((quotation) => (
                           <tr key={quotation.code}>
                             {columns.filter(c => c.visible).map((col) => {
-                              return (<>
+                              return (<React.Fragment key={col.key}>
                                 {(col.key === "actions" || col.key === "actions_end") && <td style={{ width: "auto", whiteSpace: "nowrap" }}>
                                   <Button className="btn btn-light btn-sm" onClick={() => {
                                     openUpdateForm(quotation.id);
@@ -2572,8 +2296,8 @@ function QuotationIndex(props) {
                                 </td>}
                                 {(col.fieldName === "payment_methods") && <td style={{ width: "auto", whiteSpace: "nowrap" }}>
                                   {quotation.payment_methods &&
-                                    quotation.payment_methods.map((name) => (
-                                      <span className="badge bg-info">{name}</span>
+                                    quotation.payment_methods.map((name, idx) => (
+                                      <span key={idx} className="badge bg-info">{name}</span>
                                     ))}
                                 </td>}
                                 {(col.fieldName === "status") && <td style={{ width: "auto", whiteSpace: "nowrap" }}>
@@ -2614,7 +2338,7 @@ function QuotationIndex(props) {
                                 {(col.fieldName === "created_by") && <td style={{ width: "auto", whiteSpace: "nowrap" }}>
                                   {quotation.created_by_name}
                                 </td>}
-                              </>)
+                              </React.Fragment>)
                             })}
 
                             {/*<td style={{ width: "auto", whiteSpace: "nowrap" }} >

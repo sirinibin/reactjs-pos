@@ -6,6 +6,9 @@ import countryList from 'react-select-country-list';
 import { Typeahead } from "react-bootstrap-typeahead";
 import Quotations from "./../utils/quotations.js";
 import ImageGallery from '../utils/ImageGallery.js';
+import { ObjectToSearchQueryParams } from '../utils/queryUtils.js';
+import { fetchStore } from '../utils/storeUtils.js';
+import { useEnterKeyNavigation } from '../utils/useEnterKeyNavigation.js';
 
 const CustomerCreate = forwardRef((props, ref) => {
 
@@ -34,36 +37,11 @@ const CustomerCreate = forwardRef((props, ref) => {
 
     let [store, setStore] = useState({});
 
-    function getStore(id) {
-        console.log("inside get Store");
-        const requestOptions = {
-            method: 'GET',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': localStorage.getItem('access_token'),
-            },
-        };
-
-        fetch('/v1/store/' + id, requestOptions)
-            .then(async response => {
-                const isJson = response.headers.get('content-type')?.includes('application/json');
-                const data = isJson && await response.json();
-
-                // check for error response
-                if (!response.ok) {
-                    const error = (data && data.errors);
-                    return Promise.reject(error);
-                }
-
-                console.log("Response:");
-                console.log(data);
-
-                store = data.result;
-                setStore({ ...store });
-            })
-            .catch(error => {
-                // setErrors(error);
-            });
+    async function getStore(id) {
+        try {
+            const data = await fetchStore(id);
+            setStore({ ...data });
+        } catch (error) { }
     }
 
     const translateText = useCallback(async (text, setter) => {
@@ -89,31 +67,7 @@ const CustomerCreate = forwardRef((props, ref) => {
         }
     }, [store]);
 
-    useEffect(() => {
-        const listener = event => {
-            if (event.code === "Enter" || event.code === "NumpadEnter") {
-                console.log("Enter key was pressed. Run your function-customer.");
-                // event.preventDefault();
-
-                var form = event.target.form;
-                if (form && event.target) {
-                    var index = Array.prototype.indexOf.call(form, event.target);
-                    if (form && form.elements[index + 1]) {
-                        if ((event.target.getAttribute("class") || "").includes("barcode")) {
-                            form.elements[index].focus();
-                        } else {
-                            form.elements[index + 1].focus();
-                        }
-                        event.preventDefault();
-                    }
-                }
-            }
-        };
-        document.addEventListener("keydown", listener);
-        return () => {
-            document.removeEventListener("keydown", listener);
-        };
-    }, []);
+    useEnterKeyNavigation();
 
 
     let [errors, setErrors] = useState({});
@@ -137,14 +91,6 @@ const CustomerCreate = forwardRef((props, ref) => {
             window.location = "/";
         }
     });
-
-    function ObjectToSearchQueryParams(object) {
-        return Object.keys(object)
-            .map(function (key) {
-                return `search[${key}]=${object[key]}`;
-            })
-            .join("&");
-    }
 
     async function getCustomer(id) {
         console.log("inside get Order");
