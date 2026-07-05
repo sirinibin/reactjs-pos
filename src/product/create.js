@@ -66,6 +66,10 @@ const ProductCreate = forwardRef((props, ref) => {
       selectedCountries = [];
       setSelectedCountries(selectedCountries);
 
+      productStores = {};
+      productStores[localStorage.getItem('store_id')] = {};
+      setProductStores({ ...productStores });
+
       formData = {
         images_content: [],
         unit: "",
