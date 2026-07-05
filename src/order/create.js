@@ -111,6 +111,12 @@ const OrderCreate = forwardRef((props, ref) => {
                 isUpdateForm = true;
             } else {
                 isUpdateForm = false;
+                setTimeout(() => {
+                    selectedProducts = [];
+                    setSelectedProducts([]);
+                    formData.products = [];
+                    ResetForm();
+                }, 50);
             }
             setIsUpdateForm(isUpdateForm)
             setIsZatcaLocked(false);
@@ -120,9 +126,11 @@ const OrderCreate = forwardRef((props, ref) => {
             warnings = {};
             setWarnings({ ...warnings });
 
+
             selectedProducts = [];
             setSelectedProducts([]);
             formData.products = [];
+
 
             selectedCustomers = [];
             setSelectedCustomers([]);
@@ -196,6 +204,7 @@ const OrderCreate = forwardRef((props, ref) => {
 
             ResetForm();
 
+            pendingOrderIdRef.current = id || null;
             if (id) {
                 getOrder(id);
             }
@@ -218,6 +227,13 @@ const OrderCreate = forwardRef((props, ref) => {
             isUpdateForm = true;
         } else {
             isUpdateForm = false;
+
+            setTimeout(() => {
+                selectedProducts = [];
+                setSelectedProducts([]);
+                formData.products = [];
+                ResetForm();
+            }, 50);
         }
         setIsUpdateForm(isUpdateForm)
         setIsZatcaLocked(false);
@@ -226,6 +242,7 @@ const OrderCreate = forwardRef((props, ref) => {
         setErrors({ ...errors });
         warnings = {};
         setWarnings({ ...warnings });
+
 
         selectedProducts = [];
         setSelectedProducts([]);
@@ -301,6 +318,7 @@ const OrderCreate = forwardRef((props, ref) => {
 
         ResetForm();
 
+        pendingOrderIdRef.current = id || null;
         if (id) {
             getOrder(id);
         }
@@ -314,6 +332,7 @@ const OrderCreate = forwardRef((props, ref) => {
     let [isUpdateForm, setIsUpdateForm] = useState(false);
     const [isZatcaLocked, setIsZatcaLocked] = useState(false);
     const prevIsUpdateFormRef = useRef(false);
+    const pendingOrderIdRef = useRef(null);
     useEffect(() => {
         if (prevIsUpdateFormRef.current === true && isUpdateForm === false) {
             // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -465,6 +484,8 @@ const OrderCreate = forwardRef((props, ref) => {
                 } else {
                     formData.discountValue = formData.discount;
                 }
+
+                if (pendingOrderIdRef.current !== id) return;
 
                 selectedProducts = formData.products;
                 setSelectedProducts([...selectedProducts]);
@@ -718,6 +739,8 @@ const OrderCreate = forwardRef((props, ref) => {
                     formData.discountValue = formData.discount;
                 }
 
+                if (pendingOrderIdRef.current === null) return;
+
                 selectedProducts = formData.products;
                 setSelectedProducts([...selectedProducts]);
 
@@ -872,6 +895,8 @@ const OrderCreate = forwardRef((props, ref) => {
                     formData.discountValue = formData.discount;
                 }
 
+                if (pendingOrderIdRef.current === null) return;
+
                 selectedProducts = formData.products;
                 setSelectedProducts([...selectedProducts]);
 
@@ -1012,6 +1037,8 @@ const OrderCreate = forwardRef((props, ref) => {
                     formData.discountValue = formData.discount;
                 }
 
+                if (pendingOrderIdRef.current === null) return;
+
                 selectedProducts = formData.products;
                 setSelectedProducts([...selectedProducts]);
 
@@ -1112,6 +1139,8 @@ const OrderCreate = forwardRef((props, ref) => {
     const [show, setShow] = useState(false);
 
     function handleClose() {
+        selectedProducts = [];
+        setSelectedProducts([]);
         setShow(false);
     }
 

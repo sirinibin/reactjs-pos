@@ -89,6 +89,13 @@ const PurchaseCreate = forwardRef((props, ref) => {
             setErrors({ ...errors });
             selectedProducts = [];
             setSelectedProducts([]);
+            if (!id) {
+                setTimeout(() => {
+                    selectedProducts = [];
+                    setSelectedProducts([]);
+                    formData.products = [];
+                }, 50);
+            }
 
             selectedVendors = [];
             setSelectedVendors([]);
@@ -158,6 +165,7 @@ const PurchaseCreate = forwardRef((props, ref) => {
 
             setFormData({ ...formData });
 
+            pendingPurchaseIdRef.current = id || null;
             if (id) {
                 getPurchase(id);
             }
@@ -220,6 +228,8 @@ const PurchaseCreate = forwardRef((props, ref) => {
     const [show, setShow] = useState(false);
 
     function handleClose() {
+        selectedProducts = [];
+        setSelectedProducts([]);
         setShow(false);
     }
 
@@ -363,6 +373,8 @@ const PurchaseCreate = forwardRef((props, ref) => {
                  selectedProducts.forEach((product, index) => {
                      CalCulateLineTotals(index);
                  });*/
+
+                if (pendingPurchaseIdRef.current !== id) return;
 
                 selectedProducts = purchase.products;
                 setSelectedProducts([...selectedProducts]);
@@ -632,6 +644,7 @@ const PurchaseCreate = forwardRef((props, ref) => {
 
 
     const latestRequestRef = useRef(0);
+    const pendingPurchaseIdRef = useRef(null);
 
     async function suggestProducts(searchTerm) {
         const requestId = Date.now();
@@ -6125,7 +6138,7 @@ const PurchaseCreate = forwardRef((props, ref) => {
                         </div>{/* end sc-post-table */}
                         </div>
                         ) : (
-                        <div style={{ position: "relative" }}>
+                        <div style={{ position: "relative", marginTop: "32px" }}>
                             <span
                                 onClick={() => setShowPurchaseSPSettings(true)}
                                 title="Table Settings"
@@ -6168,7 +6181,7 @@ const PurchaseCreate = forwardRef((props, ref) => {
                         ); })()}
 
                         {formType !== 'type2' && (<>
-                        <div className="table-responsive" style={{ overflowX: "auto", marginTop: "-8px" }}>
+                        <div className="table-responsive" style={{ overflowX: "auto", marginTop: "8px" }}>
                             <table className="table table-striped table-sm table-bordered">
                                 <tbody>
                                     <tr>

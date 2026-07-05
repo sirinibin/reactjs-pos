@@ -914,6 +914,8 @@ const StockTransferCreate = forwardRef((props, ref) => {
     const [show, setShow] = useState(false);
 
     function handleClose() {
+        selectedProducts = [];
+        setSelectedProducts([]);
         setShow(false);
     }
 

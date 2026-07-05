@@ -328,6 +328,8 @@ const DeliveryNoteCreate = forwardRef((props, ref) => {
   const [show, SetShow] = useState(false);
 
   function handleClose() {
+    selectedProducts = [];
+    setSelectedProducts([]);
     SetShow(false);
   }
 

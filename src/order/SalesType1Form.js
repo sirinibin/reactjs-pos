@@ -957,7 +957,7 @@ export function SalesType1Body({
                                 </div>
                             </div>
 
-                            <div style={{ position: "relative" }}>
+                            <div style={{ position: "relative", marginTop: "32px" }}>
                                 <span
                                     onClick={() => setShowSelectedProductsSettings(!showSelectedProductsSettings)}
                                     title={t("Table Settings")}
@@ -2341,7 +2341,7 @@ export function SalesType1Body({
                                 </table>
                             </div>
                             </div>
-                            <div style={{ position: "relative", marginTop: "-8px" }}>
+                            <div style={{ position: "relative", marginTop: "8px" }}>
                                 <span
                                     onClick={() => setShowBillSummarySettings(v => !v)}
                                     title={t("Customize Bill Summary")}

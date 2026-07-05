@@ -672,7 +672,11 @@ const OrderPrint = forwardRef((props, ref) => {
 
     async function getStore(id) {
         try {
-            await fetchStore(id);
+            const storeData = await fetchStore(id, "id,code,name,branch_name,zatca,settings");
+            if (storeData) {
+                model.store = storeData;
+                setModel({ ...model });
+            }
         } catch (error) { }
     }
 

@@ -105,9 +105,17 @@ const QuotationCreate = forwardRef((props, ref) => {
   const [enableProductSelection, setEnableProductSelection] = useState(false);
   useImperativeHandle(ref, () => ({
     open(id, operationType) {
+      selectedProducts = [];
+      setSelectedProducts([]);
+      if (!id) {
+        setTimeout(() => {
+          selectedProducts = [];
+          setSelectedProducts([]);
+          formData.products = [];
+        }, 50);
+      }
+
       if (operationType && operationType === "product_selection") {
-        selectedProducts = [];
-        setSelectedProducts([]);
         setSelectedIds([]);
         setEnableProductSelection(true);
       }
@@ -163,6 +171,7 @@ const QuotationCreate = forwardRef((props, ref) => {
       }
 
       setFormData({ ...formData });
+      pendingQuotationIdRef.current = id || null;
       if (id) {
         getQuotation(id);
       } else {
@@ -224,6 +233,7 @@ const QuotationCreate = forwardRef((props, ref) => {
   let selectedProduct = [];
   let [selectedProducts, setSelectedProducts] = useState([]);
   //const [isProductsLoading, setIsProductsLoading] = useState(false);
+  const pendingQuotationIdRef = useRef(null);
 
   //Delivered By Auto Suggestion
   let [selectedDeliveredByUsers, setSelectedDeliveredByUsers] = useState([]);
@@ -232,6 +242,8 @@ const QuotationCreate = forwardRef((props, ref) => {
   const [show, SetShow] = useState(false);
 
   function handleClose() {
+    selectedProducts = [];
+    setSelectedProducts([]);
     SetShow(false);
   }
 
@@ -413,6 +425,8 @@ const QuotationCreate = forwardRef((props, ref) => {
         /*selectedProducts.forEach((product, index) => {
           CalCulateLineTotals(index);
         });*/
+        if (pendingQuotationIdRef.current !== id) return;
+
         selectedProducts = quotation.products;
         setSelectedProducts([...selectedProducts]);
 
@@ -5428,7 +5442,7 @@ async function checkWarning(i) {
             </div>
             </>
             ) : (
-            <div style={{ position: "relative" }}>
+            <div style={{ position: "relative", marginTop: "32px" }}>
                 <span
                     onClick={() => setShowQuotationSPSettings(true)}
                     title="Table Settings"
@@ -6898,7 +6912,7 @@ async function checkWarning(i) {
             </div>
             </div>
             )}
-            <div className="table-responsive" style={{ marginTop: "-8px" }}>
+            <div className="table-responsive" style={{ marginTop: "8px" }}>
               <table className="table table-striped table-sm table-bordered">
                 <tbody>
                   <tr>

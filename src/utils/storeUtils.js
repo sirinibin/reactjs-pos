@@ -15,7 +15,7 @@ const STORE_SELECT = [
     "marked_for_permanent_deletion", "permanent_deletion_after_days", "deleted",
 ].join(",");
 
-export async function fetchStore(id) {
+export async function fetchStore(id, select = STORE_SELECT) {
     const requestOptions = {
         method: 'GET',
         headers: {
@@ -23,7 +23,7 @@ export async function fetchStore(id) {
             'Authorization': localStorage.getItem('access_token'),
         },
     };
-    const response = await fetch(`/v1/store/${id}?select=${STORE_SELECT}`, requestOptions);
+    const response = await fetch(`/v1/store/${id}?select=${select}`, requestOptions);
     const isJson = response.headers.get('content-type')?.includes('application/json');
     const data = isJson && await response.json();
     if (!response.ok) {

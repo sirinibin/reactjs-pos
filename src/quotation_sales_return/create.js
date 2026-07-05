@@ -110,6 +110,8 @@ const QuotationSalesReturnCreate = forwardRef((props, ref) => {
             ];
 
 
+            selectedProducts = [];
+            setSelectedProducts([]);
             ResetForm();
             if (localStorage.getItem("user_id")) {
                 selectedReceivedByUsers = [{
@@ -600,6 +602,8 @@ const QuotationSalesReturnCreate = forwardRef((props, ref) => {
     const [show, setShow] = useState(false);
 
     function handleClose() {
+        selectedProducts = [];
+        setSelectedProducts([]);
         setShow(false);
     }
 
