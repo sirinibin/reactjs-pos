@@ -670,6 +670,8 @@ const OrderCreate = forwardRef((props, ref) => {
                     setDisablePreviousButton(false);
                 }
 
+                if (pendingOrderIdRef.current === null) return;
+
                 ResetForm();
 
                 formData = data.result;
@@ -738,8 +740,6 @@ const OrderCreate = forwardRef((props, ref) => {
                 } else {
                     formData.discountValue = formData.discount;
                 }
-
-                if (pendingOrderIdRef.current === null) return;
 
                 selectedProducts = formData.products;
                 setSelectedProducts([...selectedProducts]);
@@ -815,6 +815,8 @@ const OrderCreate = forwardRef((props, ref) => {
                     openCreateForm();
                     return;
                 }
+
+                if (pendingOrderIdRef.current === null) return;
 
                 isUpdateForm = true;
                 setIsUpdateForm(true);
@@ -895,8 +897,6 @@ const OrderCreate = forwardRef((props, ref) => {
                     formData.discountValue = formData.discount;
                 }
 
-                if (pendingOrderIdRef.current === null) return;
-
                 selectedProducts = formData.products;
                 setSelectedProducts([...selectedProducts]);
 
@@ -962,6 +962,8 @@ const OrderCreate = forwardRef((props, ref) => {
 
                 console.log("Response:");
                 console.log(data);
+
+                if (pendingOrderIdRef.current === null) return;
 
                 if (data.result) {
                     isUpdateForm = true;
@@ -1036,8 +1038,6 @@ const OrderCreate = forwardRef((props, ref) => {
                 } else {
                     formData.discountValue = formData.discount;
                 }
-
-                if (pendingOrderIdRef.current === null) return;
 
                 selectedProducts = formData.products;
                 setSelectedProducts([...selectedProducts]);
@@ -2698,6 +2698,7 @@ const OrderCreate = forwardRef((props, ref) => {
 
 
             let res = await result.json();
+            if (latestRequestRef.current !== requestId) return;
             if (res.result) {
                 formData.total = res.result.total;
                 formData.total_with_vat = res.result.total_with_vat;
