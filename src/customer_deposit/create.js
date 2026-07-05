@@ -1735,7 +1735,7 @@ const CustomerDepositCreate = forwardRef((props, ref) => {
                                                                     <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', cursor: 'pointer', userSelect: 'none' }} onClick={() => openCustomerPending(selectedCustomers[0])} title="Click to view pendings">
                                                                         <i className="bi bi-wallet2" style={{ color: '#004ac6', fontSize: '13px' }} />
                                                                         <span style={{ fontSize: '13px', color: '#6b7280', fontWeight: 500 }}>Cr.Balance:</span>
-                                                                        <strong style={{ fontSize: '17px', fontWeight: 700, color: (c.credit_balance ?? 0) > 0 ? '#dc2626' : '#16a34a', letterSpacing: '-0.5px', textDecoration: 'underline dotted' }}><Amount amount={trimTo2Decimals(c.credit_balance ?? 0)} /></strong>
+                                                                        <strong style={{ fontSize: '17px', fontWeight: 700, color: (c.credit_balance ?? 0) > 0 ? '#dc2626' : '#16a34a', letterSpacing: '-0.5px' }}><Amount amount={trimTo2Decimals(c.credit_balance ?? 0)} /></strong>
                                                                         <i className="bi bi-box-arrow-up-right" style={{ color: '#004ac6', fontSize: '10px' }} />
                                                                     </span>
                                                                     {(c.credit_limit > 0) && (
@@ -1769,7 +1769,7 @@ const CustomerDepositCreate = forwardRef((props, ref) => {
                                                                     <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', cursor: 'pointer', userSelect: 'none' }} onClick={() => openVendorPending(selectedVendors[0])} title="Click to view pendings">
                                                                         <i className="bi bi-wallet2" style={{ color: '#004ac6', fontSize: '13px' }} />
                                                                         <span style={{ fontSize: '13px', color: '#6b7280', fontWeight: 500 }}>Cr.Balance:</span>
-                                                                        <strong style={{ fontSize: '17px', fontWeight: 700, color: (v.credit_balance ?? 0) > 0 ? '#dc2626' : '#16a34a', letterSpacing: '-0.5px', textDecoration: 'underline dotted' }}><Amount amount={trimTo2Decimals(v.credit_balance ?? 0)} /></strong>
+                                                                        <strong style={{ fontSize: '17px', fontWeight: 700, color: (v.credit_balance ?? 0) > 0 ? '#dc2626' : '#16a34a', letterSpacing: '-0.5px' }}><Amount amount={trimTo2Decimals(v.credit_balance ?? 0)} /></strong>
                                                                         <i className="bi bi-box-arrow-up-right" style={{ color: '#004ac6', fontSize: '10px' }} />
                                                                     </span>
                                                                     {(v.credit_limit > 0) && (

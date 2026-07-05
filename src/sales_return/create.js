@@ -2498,7 +2498,7 @@ const SalesReturnCreate = forwardRef((props, ref) => {
                                             title={t("Click to view pendings")}>
                                             <i className="bi bi-wallet2" style={{ color: '#004ac6', fontSize: '13px' }} />
                                             <span style={{ color: '#6b7280' }}>{t("Cr.Balance")}:</span>
-                                            <strong style={{ fontSize: '17px', fontWeight: 700, color: (c.credit_balance ?? cs?.credit_balance ?? 0) > 0 ? '#dc2626' : '#16a34a', textDecoration: 'underline dotted' }}><Amount amount={trimTo2Decimals(c.credit_balance ?? cs?.credit_balance ?? 0)} /></strong>
+                                            <strong style={{ fontSize: '17px', fontWeight: 700, color: (c.credit_balance ?? cs?.credit_balance ?? 0) > 0 ? '#dc2626' : '#16a34a' }}><Amount amount={trimTo2Decimals(c.credit_balance ?? cs?.credit_balance ?? 0)} /></strong>
                                             <i className="bi bi-box-arrow-up-right" style={{ color: '#004ac6', fontSize: '10px' }} />
                                         </span>
                                         {(c.credit_limit > 0) && <>{sep}<span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', fontSize: '13px', flexShrink: 0 }}>
@@ -5683,7 +5683,7 @@ const SalesReturnCreate = forwardRef((props, ref) => {
                                             title={t("Click to view pendings")}>
                                             <i className="bi bi-wallet2" style={{ color: '#004ac6', fontSize: '13px' }} />
                                             <span style={{ color: '#6b7280' }}>{t("Cr.Balance")}:</span>
-                                            <strong style={{ fontSize: '17px', fontWeight: 700, color: (c.credit_balance ?? cs?.credit_balance ?? 0) > 0 ? '#dc2626' : '#16a34a', textDecoration: 'underline dotted' }}>{trimTo2Decimals(c.credit_balance ?? cs?.credit_balance ?? 0)}</strong>
+                                            <strong style={{ fontSize: '17px', fontWeight: 700, color: (c.credit_balance ?? cs?.credit_balance ?? 0) > 0 ? '#dc2626' : '#16a34a' }}>{trimTo2Decimals(c.credit_balance ?? cs?.credit_balance ?? 0)}</strong>
                                             <i className="bi bi-box-arrow-up-right" style={{ color: '#004ac6', fontSize: '10px' }} />
                                         </span>
                                         {(c.credit_limit > 0) && <>{sep}<span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', fontSize: '13px', flexShrink: 0 }}>

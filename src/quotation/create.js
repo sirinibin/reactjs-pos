@@ -47,6 +47,7 @@ import { highlightWords } from "../utils/search.js";
 //import ProductHistory from "./../product/product_history.js";
 import ProductHistory from "../utils/product_history.js";
 import { DragDropContext, Droppable, Draggable } from "react-beautiful-dnd";
+import ReactDraggable from "react-draggable";
 
 
 import CustomerDepositCreate from "../customer_deposit/create.js";
@@ -234,6 +235,7 @@ const QuotationCreate = forwardRef((props, ref) => {
   let [selectedProducts, setSelectedProducts] = useState([]);
   //const [isProductsLoading, setIsProductsLoading] = useState(false);
   const pendingQuotationIdRef = useRef(null);
+  const quotationDragRef = useRef(null);
 
   //Delivered By Auto Suggestion
   let [selectedDeliveredByUsers, setSelectedDeliveredByUsers] = useState([]);
@@ -3045,6 +3047,32 @@ async function checkWarning(i) {
         animation={false}
         backdrop="static"
         scrollable={true}
+        {...(enableProductSelection ? {
+          backdrop: false,
+          keyboard: false,
+          centered: false,
+          enforceFocus: false,
+          dialogAs: ({ children, ...dialogProps }) => (
+            <ReactDraggable handle=".modal-header" nodeRef={quotationDragRef}>
+              <div
+                ref={quotationDragRef}
+                className="modal-dialog modal-xl"
+                {...dialogProps}
+                style={{
+                  position: "absolute",
+                  top: "10%",
+                  left: "20%",
+                  transform: "translate(-50%, -50%)",
+                  margin: "0",
+                  zIndex: 1055,
+                  width: "65%",
+                }}
+              >
+                <div className="modal-content">{children}</div>
+              </div>
+            </ReactDraggable>
+          ),
+        } : {})}
       >
         <Modal.Header>
           <Modal.Title>
@@ -3055,10 +3083,6 @@ async function checkWarning(i) {
           </Modal.Title>
 
           <div className="col align-self-end text-end">
-            <select value={formType} onChange={(e) => setFormType(e.target.value)} className="form-select form-select-sm" style={{ width: 'auto', fontSize: '11px', padding: '2px 24px 2px 6px', height: '26px', lineHeight: '1.2', display: 'inline-block', marginRight: '8px' }}>
-              <option value="type1">Type 1 (Classic)</option>
-              <option value="type2">Type 2 ✦</option>
-            </select>
             <Button variant="primary" onClick={openPreview}>
               <i className="bi bi-printer"></i> Print Full Quotation
             </Button>
@@ -3405,7 +3429,7 @@ async function checkWarning(i) {
                               <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', cursor: 'pointer', userSelect: 'none' }} onClick={() => openCustomerPending(selectedCustomers[0])} title="Click to view pendings">
                                 <i className="bi bi-wallet2" style={{ color: '#004ac6', fontSize: '13px' }} />
                                 <span style={{ fontSize: '13px', color: '#6b7280', fontWeight: 500 }}>Cr.Balance:</span>
-                                <strong style={{ fontSize: '17px', fontWeight: 700, color: (c.credit_balance ?? cs?.credit_balance ?? 0) > 0 ? '#dc2626' : '#16a34a', letterSpacing: '-0.5px', textDecoration: 'underline dotted' }}><Amount amount={trimTo2Decimals(c.credit_balance ?? cs?.credit_balance ?? 0)} /></strong>
+                                <strong style={{ fontSize: '17px', fontWeight: 700, color: (c.credit_balance ?? cs?.credit_balance ?? 0) > 0 ? '#dc2626' : '#16a34a', letterSpacing: '-0.5px' }}><Amount amount={trimTo2Decimals(c.credit_balance ?? cs?.credit_balance ?? 0)} /></strong>
                                 <i className="bi bi-box-arrow-up-right" style={{ color: '#004ac6', fontSize: '10px' }} />
                               </span>
                               {(c.credit_limit > 0) && (
@@ -3934,7 +3958,7 @@ async function checkWarning(i) {
                         onClick={() => openCustomerPending(selectedCustomers[0])}>
                         <i className="bi bi-wallet2" style={{ color: '#004ac6', fontSize: '13px' }} />
                         <span style={{ color: '#6b7280' }}>Cr.Balance:</span>
-                        <strong style={{ fontSize: '17px', fontWeight: 700, color: (c.credit_balance ?? cs?.credit_balance ?? 0) > 0 ? '#dc2626' : '#16a34a', textDecoration: 'underline dotted' }}><Amount amount={trimTo2Decimals(c.credit_balance ?? cs?.credit_balance ?? 0)} /></strong>
+                        <strong style={{ fontSize: '17px', fontWeight: 700, color: (c.credit_balance ?? cs?.credit_balance ?? 0) > 0 ? '#dc2626' : '#16a34a' }}><Amount amount={trimTo2Decimals(c.credit_balance ?? cs?.credit_balance ?? 0)} /></strong>
                         <i className="bi bi-box-arrow-up-right" style={{ color: '#004ac6', fontSize: '10px' }} />
                       </span>
                       {(c.credit_limit > 0) && <>{sep}<span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', fontSize: '13px', flexShrink: 0 }}>
@@ -7889,42 +7913,39 @@ async function checkWarning(i) {
                     <div style={{ color: "red" }}>{errors.cash_discount}</div>
                   )}
                 </div>
+                <div className="col-md-3">
+                  <label className="form-label">Sales ID</label>
+                  <div className="input-group mb-3">
+                    <input
+                      id="quotation_order_code"
+                      name="quotation_order_code"
+                      value={formData.order_code ? formData.order_code : ""}
+                      type='string'
+                      onChange={(e) => {
+                        delete errors["order_code"];
+                        setErrors({ ...errors });
+                        formData.order_id = "";
+                        formData.order_code = e.target.value;
+                        setFormData({ ...formData });
+                        console.log(formData);
+                      }}
+                      className="form-control"
+                      placeholder="Sales ID"
+                    />
+                    <Button className="btn btn-primary" style={{ marginLeft: "0px" }} onClick={() => {
+                      openSales();
+                    }}>
+                      <i className="bi bi-list"></i>
+                    </Button>
+                  </div>
+                  {errors.order_code && (
+                    <div style={{ color: "red" }}>
+                      {errors.order_code}
+                    </div>
+                  )}
+                </div>
               </div>
             </>}
-
-            <div className="col-md-3">
-              <label className="form-label">Sales ID</label>
-              <div className="input-group mb-3">
-                <input
-                  id="quotation_order_code"
-                  name="quotation_order_code"
-                  value={formData.order_code ? formData.order_code : ""}
-                  type='string'
-                  onChange={(e) => {
-                    delete errors["order_code"];
-                    setErrors({ ...errors });
-                    formData.order_id = "";
-                    formData.order_code = e.target.value;
-                    setFormData({ ...formData });
-                    console.log(formData);
-                  }}
-                  className="form-control"
-
-                  placeholder="Sales ID"
-                />
-                <Button className="btn btn-primary" style={{ marginLeft: "0px" }} onClick={() => {
-                  openSales();
-                }}>
-                  <i className="bi bi-list"></i>
-                </Button>
-              </div>
-              {errors.order_code && (
-                <div style={{ color: "red" }}>
-                  {errors.order_code}
-                </div>
-              )}
-
-            </div>
 
             {formData.type === "quotation" && <>
               <div className="col-md-2">

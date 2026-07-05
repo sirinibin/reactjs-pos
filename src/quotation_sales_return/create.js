@@ -2256,10 +2256,6 @@ const QuotationSalesReturnCreate = forwardRef((props, ref) => {
                         {formData.id ? "Update Qtn. Sales Return #" + formData.code + " for sale #" + formData.quotation_code : "Create Qtn. Sales Return for Qtn Sale #" + formData.quotation_code}
                     </Modal.Title>
                     <div className="col align-self-end text-end">
-                        <select value={formType} onChange={(e) => setFormType(e.target.value)} className="form-select form-select-sm" style={{ width: 'auto', fontSize: '11px', padding: '2px 24px 2px 6px', height: '26px', lineHeight: '1.2' }}>
-                            <option value="type1">Type 1 (Classic)</option>
-                            <option value="type2">Type 2 ✦</option>
-                        </select>
                         &nbsp;&nbsp;
                         <Button variant="primary" onClick={openPreview}>
                             <i className="bi bi-printer"></i> Print Full Invoice
@@ -2411,7 +2407,7 @@ const QuotationSalesReturnCreate = forwardRef((props, ref) => {
                                         title="Click to view pendings">
                                         <i className="bi bi-wallet2" style={{ color: '#004ac6', fontSize: '13px' }} />
                                         <span style={{ color: '#6b7280' }}>Cr.Balance:</span>
-                                        <strong style={{ fontSize: '17px', fontWeight: 700, color: (c.credit_balance ?? cs?.credit_balance ?? 0) > 0 ? '#dc2626' : '#16a34a', textDecoration: 'underline dotted' }}><Amount amount={trimTo2Decimals(c.credit_balance ?? cs?.credit_balance ?? 0)} /></strong>
+                                        <strong style={{ fontSize: '17px', fontWeight: 700, color: (c.credit_balance ?? cs?.credit_balance ?? 0) > 0 ? '#dc2626' : '#16a34a' }}><Amount amount={trimTo2Decimals(c.credit_balance ?? cs?.credit_balance ?? 0)} /></strong>
                                         <i className="bi bi-box-arrow-up-right" style={{ color: '#004ac6', fontSize: '10px' }} />
                                     </span>
                                     {(c.credit_limit > 0) && <>{sep}<span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', fontSize: '13px', flexShrink: 0 }}>

@@ -2379,10 +2379,6 @@ async function reCalculate(productIndex) {
                                 }
                                 {formData.id && !isProcessing ? t('Update') : !isProcessing ? t('Create') : ""}
                             </Button>}
-                        <select value={formType} onChange={(e) => setFormType(e.target.value)} className="form-select form-select-sm" style={{ width: 'auto', fontSize: '11px', padding: '2px 24px 2px 6px', height: '26px', lineHeight: '1.2' }}>
-                            <option value="type1">Type 1 (Classic)</option>
-                            <option value="type2">Type 2 ✦</option>
-                        </select>
                         &nbsp;&nbsp;
                         <button
                             type="button"
@@ -2553,7 +2549,7 @@ async function reCalculate(productIndex) {
                                                     <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', cursor: 'pointer', userSelect: 'none' }} onClick={() => openVendorPending(selectedVendors[0])} title={t('Click to view pendings')}>
                                                         <i className="bi bi-wallet2" style={{ color: '#004ac6', fontSize: '13px' }} />
                                                         <span style={{ fontSize: '13px', color: '#6b7280', fontWeight: 500 }}>{t('Cr.Balance')}:</span>
-                                                        <strong style={{ fontSize: '17px', fontWeight: 700, color: (v.credit_balance ?? 0) > 0 ? '#dc2626' : '#16a34a', letterSpacing: '-0.5px', textDecoration: 'underline dotted' }}><Amount amount={trimTo2Decimals(v.credit_balance ?? 0)} /></strong>
+                                                        <strong style={{ fontSize: '17px', fontWeight: 700, color: (v.credit_balance ?? 0) > 0 ? '#dc2626' : '#16a34a', letterSpacing: '-0.5px' }}><Amount amount={trimTo2Decimals(v.credit_balance ?? 0)} /></strong>
                                                         <i className="bi bi-box-arrow-up-right" style={{ color: '#004ac6', fontSize: '10px' }} />
                                                     </span>
                                                     {(v.credit_limit > 0) && (

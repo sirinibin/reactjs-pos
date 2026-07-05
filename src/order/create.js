@@ -6078,7 +6078,7 @@ const OrderCreate = forwardRef((props, ref) => {
                                                     title={t("Click to view pendings")}>
                                                     <i className="bi bi-wallet2" style={{ color: '#004ac6', fontSize: '11px' }} />
                                                     <span style={{ color: '#6b7280' }}>{t("Cr.Balance")}:</span>
-                                                    <strong style={{ color: (cs?.credit_balance || 0) > 0 ? '#dc2626' : '#16a34a', textDecoration: 'underline dotted' }}><Amount amount={trimTo2Decimals(cs?.credit_balance || 0)} /></strong>
+                                                    <strong style={{ color: (cs?.credit_balance || 0) > 0 ? '#dc2626' : '#16a34a' }}><Amount amount={trimTo2Decimals(cs?.credit_balance || 0)} /></strong>
                                                     <i className="bi bi-box-arrow-up-right" style={{ color: '#004ac6', fontSize: '9px' }} />
                                                 </span>
                                                 {(c.credit_limit > 0) && <>{sep}<span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', fontSize: '11px', flexShrink: 0 }}>
