@@ -497,7 +497,8 @@ const CustomerDepositPreviewContent = forwardRef((props, ref) => {
                                     >
                                         <tr style={{ borderBottom: tableBorderThickness }}>
                                             <th colSpan="1" className="text-end print-label" style={{ padding: "2px", width: "30%", borderLeft: tableBorderThickness, borderRight: tableBorderThickness }}>
-                                                In Words بكلمات:
+                                                <div>In Words</div>
+                                                <div style={{ color: '#555', marginTop: '2px' }}>بكلمات</div>
                                             </th>
                                             <th
                                                 className="print-table-value"
@@ -507,16 +508,17 @@ const CustomerDepositPreviewContent = forwardRef((props, ref) => {
                                             >
                                                 <ul
                                                     className="list-unstyled"
-                                                    style={{ marginBottom: "0px" }}
+                                                    style={{ marginBottom: "0px", paddingLeft: "8px" }}
                                                 >
-                                                    <li>{props.model?.net_total ? n2words(props.model.net_total, { lang: 'ar' }) + " ريال سعودي  " : ""}</li>
-                                                    <li>{props.model?.net_total ? n2words(props.model.net_total, { lang: 'en' }) + " saudi riyals" : ""}</li>
+                                                    <li>{props.model?.net_total ? (() => { const w = n2words(props.model.net_total, { lang: 'en' }) + " saudi riyals"; return w.charAt(0).toUpperCase() + w.slice(1); })() : ""}</li>
+                                                    <li style={{ textAlign: 'left' }}>{props.model?.net_total ? n2words(props.model.net_total, { lang: 'ar' }) + " ريال سعودي" : ""}</li>
                                                 </ul>
                                             </th>
                                         </tr>
                                         <tr style={{ borderBottom: tableBorderThickness }}>
                                             <th colSpan="1" className="text-end print-label" style={{ padding: "2px", width: "30%", borderLeft: tableBorderThickness, borderRight: tableBorderThickness }}>
-                                                Remarks ملاحظات:
+                                                <div>Remarks</div>
+                                                <div style={{ color: '#555', marginTop: '2px' }}>ملاحظات</div>
                                             </th>
                                             <th
                                                 className="text-end print-table-value"
@@ -541,11 +543,13 @@ const CustomerDepositPreviewContent = forwardRef((props, ref) => {
                                     >
                                         <tr style={{ borderBottom: tableBorderThickness }}>
                                             <th className="text-end print-label" style={{ width: "20%", height: "30px", padding: "2px", borderLeft: tableBorderThickness, borderRight: tableBorderThickness }}>
-                                                Received From تم الاستلام من:
+                                                <div>Received From</div>
+                                                <div style={{ color: '#555', marginTop: '2px' }}>تم الاستلام من</div>
                                             </th>
                                             <th style={{ width: "30%", padding: "2px", borderRight: tableBorderThickness }}> {props.model.customer?.name ? props.model.customer.name : null}</th>
                                             <th className="text-end print-label" style={{ width: "20%", padding: "2px", borderRight: tableBorderThickness }}>
-                                                Received By تم الاستلام بواسطة:
+                                                <div>Received By</div>
+                                                <div style={{ color: '#555', marginTop: '2px' }}>تم الاستلام بواسطة</div>
                                             </th>
                                             <th style={{ width: "30%", padding: "2px", borderRight: tableBorderThickness }}>
                                                 {props.model.store?.name ? props.model.store.name : null}
