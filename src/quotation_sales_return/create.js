@@ -1921,26 +1921,25 @@ const QuotationSalesReturnCreate = forwardRef((props, ref) => {
         }
 
         if (product.product_stores) {
-            stock = product.product_stores[localStorage.getItem("store_id")].stock;
-            selectedProducts[i].warehouse_stocks = product.product_stores[localStorage.getItem("store_id")]?.warehouse_stocks ? product.product_stores[localStorage.getItem("store_id")]?.warehouse_stocks : null;
+            const storeId = localStorage.getItem("store_id");
+            stock = product.product_stores[storeId].stock;
+            const warehouseStocks = product.product_stores[storeId]?.warehouse_stocks || null;
 
-            if (!selectedProducts[i].warehouse_stocks) {
-                selectedProducts[i].warehouse_stocks = {};
-                selectedProducts[i].warehouse_stocks["main_store"] = stock;
+            setSelectedProducts(prev => {
+                const updated = prev.map(p => ({ ...p }));
+                updated[i].warehouse_stocks = warehouseStocks;
 
-                for (var j = 0; j < warehouseList.length; j++) {
-                    selectedProducts[i].warehouse_stocks[warehouseList[j].code] = 0;
+                if (!updated[i].warehouse_stocks) {
+                    updated[i].warehouse_stocks = { main_store: stock };
+                    for (var j = 0; j < warehouseList.length; j++) {
+                        updated[i].warehouse_stocks[warehouseList[j].code] = 0;
+                    }
                 }
-            }
 
-            let selectedWarehouseCode = selectedProducts[i].warehouse_code ? selectedProducts[i].warehouse_code : "main_store";
-            if (!selectedWarehouseCode) {
-                selectedWarehouseCode = "main_store";
-            }
-
-
-            selectedProducts[i].stock = selectedProducts[i].warehouse_stocks[selectedWarehouseCode] ? selectedProducts[i].warehouse_stocks[selectedWarehouseCode] : 0;
-            setSelectedProducts([...selectedProducts]);
+                const selectedWarehouseCode = updated[i].warehouse_code || "main_store";
+                updated[i].stock = updated[i].warehouse_stocks[selectedWarehouseCode] || 0;
+                return updated;
+            });
         }
 
         /*
