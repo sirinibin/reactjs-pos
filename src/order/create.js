@@ -223,9 +223,18 @@ const OrderCreate = forwardRef((props, ref) => {
     }));
 
     async function open(id) {
+        // Immediately invalidate any in-flight reCalculate so it can't set products
+        latestRequestRef.current = Date.now();
+
         if (id) {
             isUpdateForm = true;
         } else {
+            // Increment form version — cancels any pending checkWarnings/checkErrors async callbacks
+            formVersionRef.current++;
+            // Also cancel timers that haven't fired yet
+            if (warningValidationTimer.current) clearTimeout(warningValidationTimer.current);
+            if (priceValidationTimer.current) clearTimeout(priceValidationTimer.current);
+
             isUpdateForm = false;
 
             setTimeout(() => {
@@ -1395,6 +1404,7 @@ const OrderCreate = forwardRef((props, ref) => {
 
 
     const latestRequestRef = useRef(0);
+    const formVersionRef = useRef(0);
 
     const suggestProducts = useCallback(async (searchTerm) => {
         const requestId = Date.now();
@@ -2040,7 +2050,9 @@ const OrderCreate = forwardRef((props, ref) => {
 
     async function checkWarnings(index) {
         if (warningValidationTimer.current) clearTimeout(warningValidationTimer.current);
+        const capturedFormVersion = formVersionRef.current;
         warningValidationTimer.current = setTimeout(async () => {
+            if (formVersionRef.current !== capturedFormVersion) return;
             if (index) {
                 checkWarning(index);
             } else {
@@ -2074,6 +2086,8 @@ const OrderCreate = forwardRef((props, ref) => {
                         return [];
                     })
                 );
+
+                if (formVersionRef.current !== capturedFormVersion) return;
 
                 const productMap = {};
                 for (const batch of batchResults) {
@@ -3855,6 +3869,17 @@ const OrderCreate = forwardRef((props, ref) => {
     async function openCreateForm() {
         disablePreviousButton = false;
         setDisablePreviousButton(false);
+
+        if (timerRef.current) clearTimeout(timerRef.current);
+        timerRef.current = setTimeout(() => {
+            selectedProducts = [];
+            setSelectedProducts([]);
+            formData.products = [];
+            ResetForm();
+        }, 50);
+
+
+
         if (!isSubmitting) {
             open();
         }

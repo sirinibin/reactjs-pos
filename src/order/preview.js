@@ -1199,7 +1199,12 @@ const Preview = forwardRef((props, ref) => {
             } else {
                 // Web browser: use html2pdf() and print via hidden iframe
                 const element = printAreaRef.current;
-                if (!element) return;
+                if (!element) {
+                    isProcessingRef.current = false;
+                    setIsProcessing(false);
+                    handleClose();
+                    return;
+                }
 
                 const output = await html2pdf().from(element).set({
                     margin: 0,
@@ -1222,6 +1227,7 @@ const Preview = forwardRef((props, ref) => {
             alert('Print failed: ' + (e?.message || JSON.stringify(e)));
         }
 
+        isProcessingRef.current = false;
         setIsProcessing(false);
         handleClose();
     }, [getFileName, handleClose, model, modelName]);
@@ -1316,6 +1322,7 @@ const Preview = forwardRef((props, ref) => {
     const [defaultNumber, setDefaultNumber] = useState("");
     const [defaultMessage, setDefaultMessage] = useState("");
     let [isProcessing, setIsProcessing] = useState(false);
+    const isProcessingRef = useRef(false);
 
     // True when store has Use WhatsApp API enabled AND has an Evolution API instance connected.
     // Only requires the flag — connection state is handled inside WhatsAppAPIModal.
@@ -1989,28 +1996,28 @@ const Preview = forwardRef((props, ref) => {
     useEffect(() => {
         const handleEnterKey = (event) => {
             const tag = event.target.tagName.toLowerCase();
-            const isInput = tag === 'input' || tag === 'textarea' || event.target.isContentEditable;
+            const isInput = tag === 'input' || tag === 'textarea' || tag === 'select' || event.target.isContentEditable;
 
             if (!show) {
                 return;
             }
 
             if (event.key === 'Enter' && !isInput) {
-                //handlePrint()
+                event.preventDefault();
+                event.stopPropagation();
+
+                if (isProcessing || isProcessingRef.current) return;
+                isProcessingRef.current = true;
 
                 if (whatsAppShare) {
                     model.printing = false;
                     setModel({ ...model });
                     openWhatsAppShare();
-                    //handleClose();
                 } else {
                     model.printing = true;
                     setModel({ ...model });
                     handlePrint();
-                    // handleClose();
                 }
-                // openPrintTypeSelection();
-                // Call your function here
             }
         };
 
@@ -2018,7 +2025,7 @@ const Preview = forwardRef((props, ref) => {
         return () => {
             document.removeEventListener('keydown', handleEnterKey);
         };
-    }, [handlePrint, openWhatsAppShare, whatsAppShare, show, model]); // no dependencies
+    }, [handlePrint, openWhatsAppShare, whatsAppShare, show, model, isProcessing]);
 
 
     return (<>

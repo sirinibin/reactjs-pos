@@ -652,6 +652,7 @@ const OrderPrint = forwardRef((props, ref) => {
 
 
     const [isPrinting, setIsPrinting] = useState(false);
+    const isPrintingRef = useRef(false);
 
     let [qrContent, setQrContent] = useState("");
 
@@ -813,6 +814,7 @@ const OrderPrint = forwardRef((props, ref) => {
             document.head.appendChild(style);
         },
         onAfterPrint: () => {
+            isPrintingRef.current = false;
             setIsPrinting(false);
             handleClose();
         },
@@ -875,6 +877,7 @@ const OrderPrint = forwardRef((props, ref) => {
 
         topWin.print();
 
+        isPrintingRef.current = false;
         setIsPrinting(false);
         handleClose();
     }, [handleClose]);
@@ -1113,13 +1116,19 @@ const OrderPrint = forwardRef((props, ref) => {
     useEffect(() => {
         const handleEnterKey = (event) => {
             const tag = event.target.tagName.toLowerCase();
-            const isInput = tag === 'input' || tag === 'textarea' || event.target.isContentEditable;
+            const isInput = tag === 'input' || tag === 'textarea' || tag === 'select' || event.target.isContentEditable;
 
             if (!show) {
                 return;
             }
 
             if (event.key === 'Enter' && !isInput) {
+                event.preventDefault();
+                event.stopPropagation();
+
+                if (isPrinting || isPrintingRef.current) return;
+                isPrintingRef.current = true;
+
                 handlePrint();
             }
         };
@@ -1128,7 +1137,7 @@ const OrderPrint = forwardRef((props, ref) => {
         return () => {
             document.removeEventListener('keydown', handleEnterKey);
         };
-    }, [handlePrint, show]); // no dependencies
+    }, [handlePrint, show, isPrinting]);
 
     return (<>
         <Modal show={show} scrollable={true} size="xl" fullscreen={model.store?.code === "PH2" || model.store?.code === "LGK-SIMULATION" || model.store?.code === "LGK"} onHide={handleClose} animation={false} style={{ overflowY: "auto", height: "auto" }}>
