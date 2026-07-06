@@ -740,8 +740,8 @@ const QuotationCreate = forwardRef((props, ref) => {
     }
 
     const apiSearchTerm = searchTerm
-      .replace(/([a-zA-Z؀-ۿ])(\d)/g, "$1 $2")
-      .replace(/(\d)([a-zA-Z؀-ۿ])/g, "$1 $2")
+      .replace(/([a-zA-Z؀-ۿ]{2,})(\d{2,})/g, "$1 $2")
+      .replace(/(\d{2,})([a-zA-Z؀-ۿ]{2,})/g, "$1 $2")
       .split(/\s+/)
       .map(w => w.replace(/^-+/, ""))
       .filter(Boolean)

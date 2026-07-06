@@ -1005,8 +1005,8 @@ const StockTransferCreate = forwardRef((props, ref) => {
         }
 
         const apiSearchTerm = searchTerm
-            .replace(/([a-zA-Z؀-ۿ])(\d)/g, "$1 $2")
-            .replace(/(\d)([a-zA-Z؀-ۿ])/g, "$1 $2")
+            .replace(/([a-zA-Z؀-ۿ]{2,})(\d{2,})/g, "$1 $2")
+            .replace(/(\d{2,})([a-zA-Z؀-ۿ]{2,})/g, "$1 $2")
             .split(/\s+/)
             .map(w => w.replace(/^-+/, ""))
             .filter(Boolean)
@@ -1034,7 +1034,7 @@ const StockTransferCreate = forwardRef((props, ref) => {
 
         let Select = `select=id,rack,allow_duplicates,additional_keywords,search_label,set.name,item_code,prefix_part_number,country_name,brand_name,part_number,name,unit,name_in_arabic,product_stores.${localStorage.getItem('store_id')}.purchase_unit_price,product_stores.${localStorage.getItem('store_id')}.purchase_unit_price_with_vat,product_stores.${localStorage.getItem('store_id')}.retail_unit_price,product_stores.${localStorage.getItem('store_id')}.retail_unit_price_with_vat,product_stores.${localStorage.getItem('store_id')}.stock,product_stores.${localStorage.getItem('store_id')}.warehouse_stocks`;
 
-        const result = await fetch("/v1/product?" + Select + queryString + "&limit=100&sort=country_name", requestOptions);
+        const result = await fetch("/v1/product?" + Select + queryString + "&limit=100&sort=-country_name", requestOptions);
         const data = await result.json();
 
         // Only update if this is the latest request

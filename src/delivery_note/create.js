@@ -869,25 +869,34 @@ const DeliveryNoteCreate = forwardRef((props, ref) => {
     const q = normalize(query);
     const qWords = q.split(" ");
 
-    let partNoLabel = "";
-    if (option.prefix_part_number) {
-      partNoLabel = option.prefix_part_number + " - " + option.part_number;
-    }
+    const prefixPart = option.prefix_part_number || "";
+    const partNo = option.part_number || "";
+    const partNoLabel = prefixPart && partNo ? prefixPart + "-" + partNo : (prefixPart || partNo);
 
     const fields = [
       partNoLabel,
-      option.prefix_part_number,
-      option.part_number,
-      option.name,
-      option.name_in_arabic,
-      option.country_name,
-      option.brand_name,
+      prefixPart,
+      partNo,
+      option.name           || "",
+      option.name_in_arabic || "",
+      option.country_name   || "",
+      option.brand_name     || "",
+      option.search_label   || "",
+      option.item_code      || "",
       ...(Array.isArray(option.additional_keywords) ? option.additional_keywords : []),
     ];
 
     const searchable = normalize(fields.join(" "));
+    const searchableCompact = fields.join(" ").toLowerCase()
+      .replace(/[^\p{L}\p{N}\s]/gu, "")
+      .replace(/\s+/g, " ").trim();
 
-    if (qWords.every((word) => searchable.includes(word))) return true;
+    if (qWords.every((word) => {
+      if (searchable.includes(word)) return true;
+      const wordCompact = word.replace(/[^\p{L}\p{N}]/gu, "");
+      if (!wordCompact || /^[^\p{L}\p{N}]/u.test(word)) return false;
+      return searchableCompact.includes(wordCompact);
+    })) return true;
     const qNoSpace = q.replace(/\s+/g, "");
     const searchableNoSpace = searchable.replace(/\s+/g, "");
     return qNoSpace.length >= 2 && searchableNoSpace.includes(qNoSpace);
@@ -937,8 +946,8 @@ const DeliveryNoteCreate = forwardRef((props, ref) => {
     }
 
     const apiSearchTerm = searchTerm
-      .replace(/([a-zA-Z؀-ۿ])(\d)/g, "$1 $2")
-      .replace(/(\d)([a-zA-Z؀-ۿ])/g, "$1 $2")
+      .replace(/([a-zA-Z؀-ۿ]{2,})(\d{2,})/g, "$1 $2")
+      .replace(/(\d{2,})([a-zA-Z؀-ۿ]{2,})/g, "$1 $2")
       .split(/\s+/)
       .map(w => w.replace(/^-+/, ""))
       .filter(Boolean)

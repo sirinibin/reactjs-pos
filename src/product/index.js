@@ -686,11 +686,11 @@ function ProductIndex(props) {
             return;
         }
 
-        // Insert spaces at letter↔digit boundaries so "toy116" → "toy 116",
-        // then split on whitespace and strip leading dashes from each token.
+        // Insert spaces at letter↔digit boundaries only when both sides are 2+ chars
+        // so "toy116" → "toy 116" but short part numbers like "5M" stay intact.
         const apiSearchTerm = searchTerm
-            .replace(/([a-zA-Z؀-ۿ])(\d)/g, "$1 $2")
-            .replace(/(\d)([a-zA-Z؀-ۿ])/g, "$1 $2")
+            .replace(/([a-zA-Z؀-ۿ]{2,})(\d{2,})/g, "$1 $2")
+            .replace(/(\d{2,})([a-zA-Z؀-ۿ]{2,})/g, "$1 $2")
             .split(/\s+/)
             .map(w => w.replace(/^-+/, ""))
             .filter(Boolean)
