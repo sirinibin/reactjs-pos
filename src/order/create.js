@@ -6095,8 +6095,6 @@ const OrderCreate = forwardRef((props, ref) => {
                                     {/* Right 40% — selected customer details */}
                                     {selectedCustomers.length > 0 && formData.customer_id ? (() => {
                                         const c = selectedCustomers[0];
-                                        const storeId = localStorage.getItem("store_id");
-                                        const cs = c?.stores?.[storeId];
                                         const sep = <span style={{ width: '1px', height: '12px', background: '#c3c6d7', flexShrink: 0 }} />;
                                         return (
                                             <div className="sc-header-right" style={{ padding: '4px 14px', background: 'rgba(0,74,198,0.03)', borderLeft: '1px solid #e2e8f0', display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: '6px', overflow: 'hidden', minHeight: '40px' }}>
