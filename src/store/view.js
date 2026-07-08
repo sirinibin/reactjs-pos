@@ -84,7 +84,7 @@ const StoreView = forwardRef((props, ref) => {
                                 Create
                             </button>
                         )}
-                        {props.openUpdateForm && (
+                        {props.openUpdateForm && localStorage.getItem('user_role') === 'Admin' && (
                             <button onClick={() => { handleClose(); props.openUpdateForm(model.id); }} style={{ display: 'flex', alignItems: 'center', gap: '4px', backgroundColor: '#004ac6', color: '#ffffff', border: 'none', padding: '8px 24px', borderRadius: '4px', fontSize: '13px', fontWeight: 600, lineHeight: '16px', cursor: 'pointer', boxShadow: '0 1px 2px rgba(0,0,0,0.1)' }}>
                                 <i className="bi bi-pencil" style={{ fontSize: '18px' }}></i>
                                 Edit
