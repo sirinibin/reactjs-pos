@@ -6,6 +6,7 @@ export const DEFAULT_MENU = [
     { id: "sales",            label: "Sales",                     path: "/dashboard/sales",                   icon: "bi-receipt" },
     { id: "sales_return",     label: "Sales Returns",             path: "/dashboard/salesreturn",             icon: "bi-receipt-cutoff" },
     { id: "purchases",        label: "Purchases",                 path: "/dashboard/purchases",               icon: "bi-cart4",         productsOnly: true },
+    { id: "purchase_orders",  label: "Purchase Orders",           path: "/dashboard/purchase-orders",         icon: "bi-file-earmark-text", productsOnly: true },
     { id: "purchase_return",  label: "Purchase Returns",          path: "/dashboard/purchasereturn",          icon: "bi-cart-x",        productsOnly: true },
     { id: "delivery_notes",   label: "Delivery Notes",            path: "/dashboard/delivery-notes",          icon: "bi-truck" },
     { id: "quotations",       label: "Quotations",                path: "/dashboard/quotations",              icon: "bi-clipboard2-check" },

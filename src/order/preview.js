@@ -90,7 +90,7 @@ const Preview = forwardRef((props, ref) => {
                         /* fontSizes[modelName + "_storeHeader"] = {
                              "visible": false,
                          }*/
-                        if (fontSizes[modelName + "_marginTop"].value === 0) {
+                        if (fontSizes[modelName + "_marginTop"]?.value === 0) {
                             fontSizes[modelName + "_marginTop"] = {
                                 "value": 153,
                                 "unit": "px",
@@ -262,7 +262,7 @@ const Preview = forwardRef((props, ref) => {
             } else {
                 isSimplified = true;
             }
-        } else if (model.modelName === "purchase" || model.modelName === "whatsapp_purchase" || model.modelName === "purchase_return" || model.modelName === "whatsapp_purchase_return") {
+        } else if (model.modelName === "purchase" || model.modelName === "whatsapp_purchase" || model.modelName === "purchase_return" || model.modelName === "whatsapp_purchase_return" || model.modelName === "purchase_order" || model.modelName === "whatsapp_purchase_order") {
             if (model.vendor?.vat_no) {
                 isSimplified = false;
             } else {
@@ -419,6 +419,8 @@ const Preview = forwardRef((props, ref) => {
                     }
                 }
             }
+        } else if (model.modelName === "purchase_order" || model.modelName === "whatsapp_purchase_order") {
+            model.invoiceTitle = model.store?.settings?.invoice?.purchase_order_title || "PURCHASE ORDER | أمر الشراء";
         } else if (model.modelName === "quotation" || model.modelName === "whatsapp_quotation") {
             //  model.invoiceTitle = "QUOTATION / اقتباس";
             model.invoiceTitle = model.store.settings?.invoice?.quotation_title;
@@ -575,6 +577,8 @@ const Preview = forwardRef((props, ref) => {
             apiPath = "delivery-note"
         } else if (modelName && (modelName === "stock_transfer" || modelName === "whatsapp_stock_transfer")) {
             apiPath = "stock-transfer";
+        } else if (modelName && (modelName === "purchase_order" || modelName === "whatsapp_purchase_order")) {
+            apiPath = "purchase-order";
         }
 
         await fetch('/v1/' + apiPath + '/' + id + "?" + queryParams, requestOptions)
@@ -971,6 +975,8 @@ const Preview = forwardRef((props, ref) => {
             filename += "Delivery_Note";
         } else if (modelName === "stock_transfer" || modelName === "whatsapp_stock_transfer") {
             filename += "Stock_Transfer";
+        } else if (modelName === "purchase_order" || modelName === "whatsapp_purchase_order") {
+            filename += "Purchase_Order";
         }
 
         if (model.code) {
@@ -1846,6 +1852,8 @@ const Preview = forwardRef((props, ref) => {
             "whatsapp_balance_sheet",
             "stock_transfer",
             "whatsapp_stock_transfer",
+            "purchase_order",
+            "whatsapp_purchase_order",
         ];
         for (let key1 in modelNames) {
             for (let key2 in defaultFontSizes) {
@@ -1910,8 +1918,10 @@ const Preview = forwardRef((props, ref) => {
     const incrementSize = (element) => {
         if (element) {
             if (!fontSizes[element]) {
-                fontSizes[element] = defaultFontSizes[element];
+                const baseKey = element.startsWith(modelName + "_") ? element.slice(modelName.length + 1) : element;
+                fontSizes[element] = defaultFontSizes[baseKey] ?? defaultFontSizes[element];
             }
+            if (!fontSizes[element]) return;
 
             fontSizes[element].value += fontSizes[element].step;
             fontSizes[element]["value"] = parseFloat(Math.min(fontSizes[element]?.value).toFixed(2));
@@ -1924,8 +1934,10 @@ const Preview = forwardRef((props, ref) => {
     const decrementSize = (element) => {
         if (element) {
             if (!fontSizes[element]) {
-                fontSizes[element] = defaultFontSizes[element];
+                const baseKey = element.startsWith(modelName + "_") ? element.slice(modelName.length + 1) : element;
+                fontSizes[element] = defaultFontSizes[baseKey] ?? defaultFontSizes[element];
             }
+            if (!fontSizes[element]) return;
 
             fontSizes[element].value -= fontSizes[element].step;
             fontSizes[element].value = parseFloat(Math.min(fontSizes[element].value).toFixed(2));

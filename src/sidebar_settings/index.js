@@ -60,9 +60,7 @@ export default function SidebarSettings() {
     function handleSave() {
         saveSidebarConfig(items);
         setSaved(true);
-        setTimeout(() => {
-            window.location.reload();
-        }, 800);
+        window.dispatchEvent(new StorageEvent('storage', { key: 'sidebar_config' }));
     }
 
     function handleReset() {
@@ -70,7 +68,7 @@ export default function SidebarSettings() {
         saveSidebarConfig(defaults);
         setItems(defaults);
         setSaved(false);
-        setTimeout(() => window.location.reload(), 400);
+        window.dispatchEvent(new StorageEvent('storage', { key: 'sidebar_config' }));
     }
 
     const landingId     = items.find(i => i.visible)?.id;

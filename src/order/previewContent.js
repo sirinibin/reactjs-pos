@@ -214,11 +214,15 @@ const PreviewContent = forwardRef((props, ref) => {
                                 </>}
                                 {((props.modelName !== "quotation" && props.modelName !== "stock_transfer" && props.modelName !== "whatsapp_stock_transfer") || props.model.type === "invoice") && <>
                                     <div className="row" dir="ltr" style={{ borderBottom: detailsBorderThickness }} >
-                                        <div className="col-md-4 print-label" dir="ltr" style={{ borderRight: detailsBorderThickness, borderColor: detailsBorderColor, width: detailsLabelsColumnWidthPercent, padding: "3px" }} >Invoice No. | رقم الفاتورة:</div>
+                                        <div className="col-md-4 print-label" dir="ltr" style={{ borderRight: detailsBorderThickness, borderColor: detailsBorderColor, width: detailsLabelsColumnWidthPercent, padding: "3px" }} >
+                                            {(props.modelName === "purchase_order" || props.modelName === "whatsapp_purchase_order") ? "Purchase Order No. | رقم أمر الشراء:" : "Invoice No. | رقم الفاتورة:"}
+                                        </div>
                                         <div className="col-md-8 print-value" dir="ltr" style={{ borderColor: detailsBorderColor, width: detailsValuesColumnWidthPercent, padding: "3px" }} >{props.model.code ? props.model.code : ""}</div>
                                     </div>
                                     <div className="row" dir="ltr" style={{ borderBottom: detailsBorderThickness }} >
-                                        <div className="col-md-4 print-label" dir="ltr" style={{ borderRight: detailsBorderThickness, borderColor: detailsBorderColor, width: detailsLabelsColumnWidthPercent, padding: "3px" }} ><b>Invoice Date | تاريخ الفاتورة:</b></div>
+                                        <div className="col-md-4 print-label" dir="ltr" style={{ borderRight: detailsBorderThickness, borderColor: detailsBorderColor, width: detailsLabelsColumnWidthPercent, padding: "3px" }} ><b>
+                                            {(props.modelName === "purchase_order" || props.modelName === "whatsapp_purchase_order") ? "Purchase Order Date | تاريخ أمر الشراء:" : "Invoice Date | تاريخ الفاتورة:"}
+                                        </b></div>
                                         <div className="col-md-8 print-value" dir="ltr" style={{ borderColor: detailsBorderColor, width: detailsValuesColumnWidthPercent, padding: "3px" }} >{props.model.date ? format(
                                             new Date(props.model.date),
                                             "yyyy-MM-dd h:mma"
@@ -408,7 +412,7 @@ const PreviewContent = forwardRef((props, ref) => {
                                         </div>
                                     </div>
                                 </> : ""}
-                                {props.modelName === "purchase" || props.modelName === "whatsapp_purchase" || props.modelName === "purchase_return" || props.modelName === "whatsapp_purchase_return" ? <>
+                                {props.modelName === "purchase" || props.modelName === "whatsapp_purchase" || props.modelName === "purchase_return" || props.modelName === "whatsapp_purchase_return" || props.modelName === "purchase_order" || props.modelName === "whatsapp_purchase_order" ? <>
                                     <div className="row" dir="ltr" style={{ borderBottom: detailsBorderThickness }} >
                                         <div className="col-md-4 print-label" dir="ltr" style={{ borderRight: detailsBorderThickness, width: detailsLabelsColumnWidthPercent, padding: "3px" }} ><b>Vendor Name | اسم العميل:</b></div>
                                         <div className="col-md-8 print-value" dir="ltr" style={{ width: detailsValuesColumnWidthPercent, padding: "3px" }} >
@@ -475,7 +479,7 @@ const PreviewContent = forwardRef((props, ref) => {
                                     </div>
                                 </> : ""}
                             </div>
-                            {!props.model.store?.settings?.zatca_qr_on_left_bottom && props.modelName !== "delivery_note" && props.modelName !== "whatsapp_delivery_note" && props.modelName !== "quotation" && props.modelName !== "quotation_sales_return" && props.modelName !== "whatsapp_quotation" && props.modelName !== "whatsapp_stock_transfer" && props.modelName !== "stock_transfer" && props.modelName !== "whatsapp_quotation_sales_return" && <div
+                            {!props.model.store?.settings?.zatca_qr_on_left_bottom && props.modelName !== "delivery_note" && props.modelName !== "whatsapp_delivery_note" && props.modelName !== "quotation" && props.modelName !== "quotation_sales_return" && props.modelName !== "whatsapp_quotation" && props.modelName !== "whatsapp_stock_transfer" && props.modelName !== "stock_transfer" && props.modelName !== "whatsapp_quotation_sales_return" && props.modelName !== "purchase_order" && props.modelName !== "whatsapp_purchase_order" && <div
                                 className="col-md-2"
                                 style={{ border: "solid 0px", width: "26%" }}
                                 onClick={(e) => {
@@ -502,7 +506,7 @@ const PreviewContent = forwardRef((props, ref) => {
                                         background: "#fff"
                                     }}
                                 /> : ""}
-                                {!props.model.zatca?.qr_code && props.model.QRImageData ? <img src={props.model.QRImageData} style={{ width: props.fontSizes[props.modelName + "_qrCode"]["width"]?.size, height: props.fontSizes[props.modelName + "_qrCode"]["height"]?.size, border: "solid 0px" }} alt="Invoice QR Code" /> : ""}
+                                {!props.model.zatca?.qr_code && props.model.QRImageData ? <img src={props.model.QRImageData} style={{ width: props.fontSizes[props.modelName + "_qrCode"]?.["width"]?.size, height: props.fontSizes[props.modelName + "_qrCode"]?.["height"]?.size, border: "solid 0px" }} alt="Invoice QR Code" /> : ""}
                             </div>}
                         </div>
 
@@ -723,7 +727,7 @@ const PreviewContent = forwardRef((props, ref) => {
                                                     {(props.modelName !== "delivery_note" || props.model.store?.settings?.add_price_details_in_delivery_note) && <>
                                                         <td className="text-end" style={{ borderRight: tableBorderThickness, paddingRight: "3px" }} >
                                                             {product.unit_price ? <Amount amount={trimTo2Decimals(product.unit_price)} /> : ""}
-                                                            {product.purchase_unit_price && (props.modelName === "purchase" || props.modelName === "whatsapp_purchase") ? <Amount amount={trimTo2Decimals(product.purchase_unit_price)} /> : ""}
+                                                            {product.purchase_unit_price && (props.modelName === "purchase" || props.modelName === "whatsapp_purchase" || props.modelName === "purchase_order" || props.modelName === "whatsapp_purchase_order") ? <Amount amount={trimTo2Decimals(product.purchase_unit_price)} /> : ""}
                                                             {product.purchasereturn_unit_price && (props.modelName === "purchase_return" || props.modelName === "whatsapp_purchase_return") ? <Amount amount={trimTo2Decimals(product.purchasereturn_unit_price)} /> : ""}
                                                         </td>
                                                         <td style={{ borderRight: tableBorderThickness, paddingRight: "3px" }} className="text-end">
@@ -732,18 +736,18 @@ const PreviewContent = forwardRef((props, ref) => {
                                                         </td>
                                                         <td style={{ borderRight: tableBorderThickness, paddingRight: "3px" }} className="text-end">
                                                             {product.unit_price ? <Amount amount={trimTo2Decimals((product.unit_price - product.unit_discount) * product.quantity)} /> : ""}
-                                                            {product.purchase_unit_price && (props.modelName === "purchase" || props.modelName === "whatsapp_purchase") ? <Amount amount={trimTo2Decimals((product.purchase_unit_price - product.unit_discount) * product.quantity)} /> : ""}
+                                                            {product.purchase_unit_price && (props.modelName === "purchase" || props.modelName === "whatsapp_purchase" || props.modelName === "purchase_order" || props.modelName === "whatsapp_purchase_order") ? <Amount amount={trimTo2Decimals((product.purchase_unit_price - product.unit_discount) * product.quantity)} /> : ""}
                                                             {product.purchasereturn_unit_price && (props.modelName === "purchase_return" || props.modelName === "whatsapp_purchase_return") ? <Amount amount={trimTo2Decimals((product.purchasereturn_unit_price - product.unit_discount) * product.quantity)} /> : ""}
                                                         </td>
                                                         {!props.model.hideVAT && <>
                                                             <td style={{ borderRight: tableBorderThickness, paddingRight: "3px" }} className="text-end">
                                                                 {product.unit_price ? <Amount amount={trimTo2Decimals((product.unit_price - product.unit_discount) * product.quantity) * (props.model.vat_percent / 100)} /> : ""}
-                                                                {product.purchase_unit_price && (props.modelName === "purchase" || props.modelName === "whatsapp_purchase") ? <Amount amount={trimTo2Decimals((product.purchase_unit_price - product.unit_discount) * product.quantity) * (props.model.vat_percent / 100)} /> : ""}
+                                                                {product.purchase_unit_price && (props.modelName === "purchase" || props.modelName === "whatsapp_purchase" || props.modelName === "purchase_order" || props.modelName === "whatsapp_purchase_order") ? <Amount amount={trimTo2Decimals((product.purchase_unit_price - product.unit_discount) * product.quantity) * (props.model.vat_percent / 100)} /> : ""}
                                                                 {product.purchasereturn_unit_price && (props.modelName === "purchase_return" || props.modelName === "whatsapp_purchase_return") ? <Amount amount={trimTo2Decimals((product.purchasereturn_unit_price - product.unit_discount) * product.quantity) * (props.model.vat_percent / 100)} /> : ""}
                                                             </td>
                                                             <td style={{ paddingRight: "3px" }} className="text-end">
                                                                 {product.unit_price ? <Amount amount={trimTo2Decimals(((product.unit_price - product.unit_discount) * product.quantity) + (((product.unit_price - product.unit_discount) * product.quantity) * (props.model.vat_percent / 100)))} /> : ""}
-                                                                {product.purchase_unit_price && (props.modelName === "purchase" || props.modelName === "whatsapp_purchase") ? <Amount amount={trimTo2Decimals(((product.purchase_unit_price - product.unit_discount) * product.quantity) + (((product.purchase_unit_price - product.unit_discount) * product.quantity) * (props.model.vat_percent / 100)))} /> : ""}
+                                                                {product.purchase_unit_price && (props.modelName === "purchase" || props.modelName === "whatsapp_purchase" || props.modelName === "purchase_order" || props.modelName === "whatsapp_purchase_order") ? <Amount amount={trimTo2Decimals(((product.purchase_unit_price - product.unit_discount) * product.quantity) + (((product.purchase_unit_price - product.unit_discount) * product.quantity) * (props.model.vat_percent / 100)))} /> : ""}
                                                                 {product.purchasereturn_unit_price && (props.modelName === "purchase_return" || props.modelName === "whatsapp_purchase_return") ? <Amount amount={trimTo2Decimals(((product.purchasereturn_unit_price - product.unit_discount) * product.quantity) + (((product.purchasereturn_unit_price - product.unit_discount) * product.quantity) * (props.model.vat_percent / 100)))} /> : ""}
                                                             </td>
                                                         </>}
@@ -771,7 +775,7 @@ const PreviewContent = forwardRef((props, ref) => {
                                             props.selectText("tableFooter");
                                         }} className="clickable-text">
                                             <tr style={{ borderBottom: tableBorderThickness }}>
-                                                {props.model.store?.settings?.zatca_qr_on_left_bottom && props.modelName !== "quotation" && props.modelName !== "stock_transfer" && props.modelName !== "whatsapp_stock_transfer" && props.modelName !== "whatsapp_quotation" && props.modelName !== "quotation_sales_return" && props.modelName !== "whatsapp_quotation_sales_return" && props.modelName !== "delivery_note" && <th rowSpan={8} style={{ width: "20%", padding: "3px", borderRight: tableBorderThickness }}>
+                                                {props.model.store?.settings?.zatca_qr_on_left_bottom && props.modelName !== "quotation" && props.modelName !== "stock_transfer" && props.modelName !== "whatsapp_stock_transfer" && props.modelName !== "whatsapp_quotation" && props.modelName !== "quotation_sales_return" && props.modelName !== "whatsapp_quotation_sales_return" && props.modelName !== "delivery_note" && props.modelName !== "purchase_order" && props.modelName !== "whatsapp_purchase_order" && <th rowSpan={8} style={{ width: "20%", padding: "3px", borderRight: tableBorderThickness }}>
                                                     <div
                                                         className="col-md-1 text-center"
                                                         style={{
@@ -811,7 +815,7 @@ const PreviewContent = forwardRef((props, ref) => {
                                                                 }}
                                                             /> : ""}
 
-                                                            {!props.model.zatca?.qr_code && props.model.QRImageData ? <img src={props.model.QRImageData} style={{ width: props.fontSizes[props.modelName + "_qrCode"]["width"]?.size, height: props.fontSizes[props.modelName + "_qrCode"]["height"]?.size, border: "solid 0px" }} alt="Invoice QR Code" /> : ""}
+                                                            {!props.model.zatca?.qr_code && props.model.QRImageData ? <img src={props.model.QRImageData} style={{ width: props.fontSizes[props.modelName + "_qrCode"]?.["width"]?.size, height: props.fontSizes[props.modelName + "_qrCode"]?.["height"]?.size, border: "solid 0px" }} alt="Invoice QR Code" /> : ""}
                                                         </div>
                                                     </div>
                                                 </th>}

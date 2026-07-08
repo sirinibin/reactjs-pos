@@ -58,6 +58,11 @@ const StoreCreate = forwardRef((props, ref) => {
                     start_from_count: 1,
                     padding_count: 3
                 },
+                purchase_order_serial_number: {
+                    prefix: "PO",
+                    start_from_count: 1,
+                    padding_count: 4
+                },
                 quotation_serial_number: {
                     prefix: "QTN",
                     start_from_count: 1,
@@ -164,6 +169,7 @@ const StoreCreate = forwardRef((props, ref) => {
         quotation_title: "QUOTATION | اقتباس",
         delivery_note_title: "DELIVERY NOTE | مذكرة التسليم",
         stock_transfer_title: "STOCK TRANSFER | نقل الأسهم",
+        purchase_order_title: "PURCHASE ORDER | أمر الشراء",
         payable_title: "PAYMENT RECEIPT (PAYABLE / REFUND) | إيصال الدفع (مستحق الدفع / مسترد)",
         receivable_title: "PAYMENT RECEIPT (RECEIVABLE) | إيصال الدفع (مستحق القبض)",
         phase1: {
@@ -292,6 +298,11 @@ const StoreCreate = forwardRef((props, ref) => {
             prefix: "PR-INV",
             start_from_count: 1,
             padding_count: 3
+        },
+        purchase_order_serial_number: {
+            prefix: "PO",
+            start_from_count: 1,
+            padding_count: 4
         },
         quotation_serial_number: {
             prefix: "QTN",
@@ -2953,6 +2964,28 @@ const StoreCreate = forwardRef((props, ref) => {
                                 )}
                             </div>
                             <div className="col-md-4">
+                                <label className="form-label">Purchase Order*</label>
+                                <div className="input-group mb-3">
+                                    <input
+                                        value={formData.settings?.invoice?.purchase_order_title}
+                                        type='string'
+                                        onChange={(e) => {
+                                            errors["settings_invoice_purchase_order_title"] = "";
+                                            formData.settings.invoice.purchase_order_title = e.target.value;
+                                            setFormData({ ...formData });
+                                        }}
+                                        className="form-control"
+                                        id="settings.invoice.purchase_order_title"
+                                        placeholder="Purchase Order title"
+                                    />
+                                </div>
+                                {errors.settings?.invoice?.purchase_order_title && (
+                                    <div className="pw-err">
+                                        {errors.settings.invoice.purchase_order_title}
+                                    </div>
+                                )}
+                            </div>
+                            <div className="col-md-4">
                                 <label className="form-label">Payable*</label>
                                 <div className="input-group mb-3">
                                     <input
@@ -3581,6 +3614,85 @@ const StoreCreate = forwardRef((props, ref) => {
                                 <div className="pw-err">
                                     <i className="bi bi-x-lg"> </i>
                                     {errors.purchase_return_serial_number_start_from_count}
+                                </div>
+                            )}
+                        </div>
+
+
+                        <h5><b>Purchase Order ID's:</b> {formData.purchase_order_serial_number?.prefix?.toUpperCase()}-{String(formData.purchase_order_serial_number?.start_from_count).padStart(formData.purchase_order_serial_number?.padding_count, '0')}, {formData.purchase_order_serial_number?.prefix?.toUpperCase()}-{String((formData.purchase_order_serial_number?.start_from_count + 1)).padStart(formData.purchase_order_serial_number?.padding_count, '0')}...</h5>
+                        <div className="col-md-2">
+                            <label className="form-label">Prefix*</label>
+                            <div className="input-group mb-3">
+                                <input
+                                    value={formData.purchase_order_serial_number?.prefix}
+                                    type='string'
+                                    onChange={(e) => {
+                                        errors["purchase_order_serial_number.prefix"] = "";
+                                        formData.purchase_order_serial_number.prefix = e.target.value;
+                                        setFormData({ ...formData });
+                                    }}
+                                    className="form-control"
+                                    id="formData.purchase_order_serial_number.prefix"
+                                    placeholder="PO"
+                                />
+                            </div>
+                            {errors.purchase_order_serial_number_prefix && (
+                                <div className="pw-err">
+                                    <i className="bi bi-x-lg"> </i>
+                                    {errors.purchase_order_serial_number_prefix}
+                                </div>
+                            )}
+                        </div>
+
+                        <div className="col-md-2">
+                            <label className="form-label">Padding count*</label>
+                            <div className="input-group mb-3">
+                                <input
+                                    value={formData.purchase_order_serial_number?.padding_count}
+                                    type='number'
+                                    onChange={(e) => {
+                                        errors["purchase_order_serial_number.padding_count"] = "";
+                                        formData.purchase_order_serial_number.padding_count = parseInt(e.target.value);
+                                        setFormData({ ...formData });
+                                    }}
+                                    className="form-control"
+                                    id="formData.purchase_order_serial_number.padding_count"
+                                    placeholder="4 will make counter value: 0001"
+                                />
+                            </div>
+                            {errors.purchase_order_serial_number_padding_count && (
+                                <div className="pw-err">
+                                    <i className="bi bi-x-lg"> </i>
+                                    {errors.purchase_order_serial_number_padding_count}
+                                </div>
+                            )}
+                        </div>
+
+                        <div className="col-md-2">
+                            <label className="form-label">Counting start from*</label>
+                            <div className="input-group mb-3">
+                                <input
+                                    value={formData.purchase_order_serial_number?.start_from_count}
+                                    type='number'
+                                    onChange={(e) => {
+                                        if (!e.target.value) {
+                                            formData.purchase_order_serial_number.start_from_count = e.target.value;
+                                            setFormData({ ...formData });
+                                            return;
+                                        }
+                                        errors["purchase_order_serial_number.start_from_count"] = "";
+                                        formData.purchase_order_serial_number.start_from_count = parseInt(e.target.value);
+                                        setFormData({ ...formData });
+                                    }}
+                                    className="form-control"
+                                    id="formData.purchase_order_serial_number.start_from_count"
+                                    placeholder="eg: Start counting from 1000"
+                                />
+                            </div>
+                            {errors.purchase_order_serial_number_start_from_count && (
+                                <div className="pw-err">
+                                    <i className="bi bi-x-lg"> </i>
+                                    {errors.purchase_order_serial_number_start_from_count}
                                 </div>
                             )}
                         </div>
@@ -4670,6 +4782,10 @@ const StoreCreate = forwardRef((props, ref) => {
                                 <label className="pw-check" htmlFor="enable_warehouse_module">
                                     <input type="checkbox" id="enable_warehouse_module" checked={!!formData.settings.enable_warehouse_module} value={formData.settings.enable_warehouse_module} onChange={() => { errors["enable_warehouse_module"] = ""; formData.settings.enable_warehouse_module = !formData.settings.enable_warehouse_module; setFormData({ ...formData }); }} />
                                     <span>Enable Warehouse Module</span>
+                                </label>
+                                <label className="pw-check" htmlFor="enable_purchase_order_module">
+                                    <input type="checkbox" id="enable_purchase_order_module" checked={!!formData.settings.enable_purchase_order_module} value={formData.settings.enable_purchase_order_module} onChange={() => { errors["enable_purchase_order_module"] = ""; formData.settings.enable_purchase_order_module = !formData.settings.enable_purchase_order_module; setFormData({ ...formData }); }} />
+                                    <span>Enable Purchase Order Module</span>
                                 </label>
                                 <label className="pw-check" htmlFor="enable_sales_page_selection">
                                     <input type="checkbox" id="enable_sales_page_selection" checked={!!formData.settings.enable_sales_page_selection} value={formData.settings.enable_sales_page_selection} onChange={() => { formData.settings.enable_sales_page_selection = !formData.settings.enable_sales_page_selection; setFormData({ ...formData }); }} />

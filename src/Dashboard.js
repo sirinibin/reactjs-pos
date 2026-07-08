@@ -22,6 +22,7 @@ import PurchaseReturnPaymentIndex from './purchase_return_payment/index.js';
 
 import SalesReturnIndex from './sales_return/index.js';
 import PurchaseIndex from './purchase/index.js';
+import PurchaseOrderIndex from './purchase_order/index.js';
 import PurchaseReturnIndex from './purchase_return/index.js';
 import VendorIndex from './vendor/index.js';
 import StoreIndex from './store/index.js';
@@ -402,6 +403,18 @@ function Dashboard() {
                         <Topbar parentCallback={handleToggle} />
                         <main className="content">
                             <PurchaseIndex showToastMessage={showToastMessage} />
+                        </main>
+                        <Footer />
+                    </div>
+                </div>
+            </Route>
+            <Route path="/dashboard/purchase-orders">
+                <div className="wrapper">
+                    <Sidebar isSidebarOpen={isSidebarOpen} parentCallback={handleToggle} />
+                    <div className="main">
+                        <Topbar parentCallback={handleToggle} />
+                        <main className="content">
+                            <PurchaseOrderIndex showToastMessage={showToastMessage} />
                         </main>
                         <Footer />
                     </div>

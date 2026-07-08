@@ -74,6 +74,10 @@ function App() {
             <Dashboard />
           </Route>
 
+          <Route path="/dashboard/purchase-orders">
+            <Dashboard />
+          </Route>
+
           <Route path="/dashboard/purchase-cash-discounts">
             <Dashboard />
           </Route>

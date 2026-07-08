@@ -63,6 +63,7 @@ import { fetchStore } from '../utils/storeUtils.js';
 import SuccessModal from '../utils/SuccessModal.js';
 import { useEnterKeyNavigation } from '../utils/useEnterKeyNavigation.js';
 import TableSettingsModal from '../utils/TableSettingsModal.js';
+import PurchaseOrderPicker from '../purchase_order/PurchaseOrderPicker.js';
 
 function _dnFormatTimeAgo(isoString) {
     if (!isoString) return '';
@@ -91,6 +92,16 @@ function _getDnDismissedMap() {
 function _saveDnDismissedMap(map) {
     localStorage.setItem('dn_dismissed', JSON.stringify(map));
 }
+
+const DEFAULT_CUSTOMER_COLS = [
+    { key: 'code',           label: 'Code',          width: 10, visible: true },
+    { key: 'name',           label: 'Name',          width: 47, visible: true },
+    { key: 'phone',          label: 'Phone',         width: 10, visible: true },
+    { key: 'vat_no',         label: 'VAT No.',       width: 13, visible: true },
+    { key: 'credit_balance', label: 'Credit Balance',width: 10, visible: true },
+    { key: 'credit_limit',   label: 'Credit Limit',  width: 10, visible: true },
+];
+const ORDER_CUSTOMER_COLS_KEY = 'order_customer_search_columns';
 
 const columnStyle = {
     width: '20%',
@@ -2321,6 +2332,39 @@ const OrderCreate = forwardRef((props, ref) => {
         return true;
     }
 
+    function handleImportFromPO(po) {
+        if (!po || !po.products || po.products.length === 0) return;
+        po.products.forEach(p => {
+            const already = selectedProducts.findIndex(s => s.product_id === p.product_id);
+            if (already >= 0) {
+                selectedProducts[already].quantity = parseFloat(selectedProducts[already].quantity || 0) + parseFloat(p.quantity || 1);
+            } else {
+                selectedProducts.push({
+                    product_id: p.product_id,
+                    code: p.item_code || "",
+                    part_number: p.part_number || "",
+                    name: p.name || "",
+                    name_in_arabic: p.name_in_arabic || "",
+                    quantity: parseFloat(p.quantity) || 1,
+                    unit: p.unit || "",
+                    unit_price: 0,
+                    unit_price_with_vat: 0,
+                    purchase_unit_price: parseFloat(p.purchase_unit_price) || 0,
+                    purchase_unit_price_with_vat: parseFloat(p.purchase_unit_price_with_vat) || 0,
+                    unit_discount: 0,
+                    unit_discount_with_vat: 0,
+                    unit_discount_percent: 0,
+                    unit_discount_percent_with_vat: 0,
+                    product_stores: {},
+                    is_service: false,
+                });
+            }
+        });
+        setSelectedProducts([...selectedProducts]);
+        if (timerRef.current) clearTimeout(timerRef.current);
+        timerRef.current = setTimeout(() => reCalculate(), 100);
+    }
+
     function addProduct(product) {
         if (!product.id && product.product_id) {
             product.id = product.product_id
@@ -2850,6 +2894,7 @@ const OrderCreate = forwardRef((props, ref) => {
     }
 
     const ProductCreateFormRef = useRef();
+    const PurchaseOrderPickerRef = useRef();
     function openProductCreateForm() {
         const hasServices = store?.settings?.enable_services;
         const hasProducts = store?.settings?.enable_products;
@@ -4038,30 +4083,55 @@ const OrderCreate = forwardRef((props, ref) => {
                                         }, 350);
                                     }}
                                     renderMenu={(results, menuProps, state) => {
+                                        const searchWords = state.text.toLowerCase().split(' ').filter(Boolean);
+                                        const visCols = customerSearchColumns.filter(c => c.visible);
+                                        const totW = visCols.reduce((s, c) => s + c.width, 0);
+                                        const cw = (col) => `${(col.width / totW) * 100}%`;
+                                        const resizeHandle = (colKey) => (
+                                            <div onMouseDown={e => startCustomerColResize(e, colKey)}
+                                                style={{ position: 'absolute', right: 0, top: '10%', bottom: '10%', width: '5px', cursor: 'col-resize', zIndex: 2 }} />
+                                        );
                                         return (
-                                            <Menu {...menuProps} style={{ ...menuProps.style, width: '95vw', maxWidth: '95vw', minWidth: '300px', zIndex: 9999 }}>
-                                                <MenuItem disabled style={{ background: '#f8f9fa' }}>
-                                                    <div style={{ display: 'flex', fontWeight: 'bold', padding: '4px 8px', borderBottom: '1px solid #ddd' }}>
-                                                        <div style={{ width: '10%' }}>{t("ID")}</div>
-                                                        <div style={{ width: '47%' }}>{t("Name")}</div>
-                                                        <div style={{ width: '10%' }}>{t("Phone")}</div>
-                                                        <div style={{ width: '13%' }}>{t("VAT NO.")}</div>
-                                                        <div style={{ width: '10%' }}>{t("Credit Balance")}</div>
-                                                        <div style={{ width: '10%' }}>{t("Credit Limit")}</div>
+                                            <Menu {...menuProps} style={{ ...(menuProps.style || {}), width: '95vw', maxWidth: '95vw', minWidth: '300px', zIndex: 9999 }}>
+                                                <MenuItem disabled style={{ position: 'sticky', top: 0, padding: 0, margin: 0 }}>
+                                                    <div style={{ display: 'flex', fontWeight: 700, color: '#374151', padding: '4px 8px', background: '#f8f9fa', borderBottom: '1px solid #e2e8f0', pointerEvents: 'auto', fontSize: '12px', position: 'relative' }}>
+                                                        {visCols.map(col => (
+                                                            <div key={col.key} style={{ width: cw(col), overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', position: 'relative' }}>
+                                                                {col.key === 'code' && t('Code')}
+                                                                {col.key === 'name' && t('Name')}
+                                                                {col.key === 'phone' && t('Phone')}
+                                                                {col.key === 'vat_no' && t('VAT No.')}
+                                                                {col.key === 'credit_balance' && t('Credit Balance')}
+                                                                {col.key === 'credit_limit' && t('Credit Limit')}
+                                                                {resizeHandle(col.key)}
+                                                            </div>
+                                                        ))}
+                                                        <div style={{ position: 'absolute', right: '8px', top: '50%', transform: 'translateY(-50%)', cursor: 'pointer' }}
+                                                            onClick={e => { e.stopPropagation(); setShowCustomerSearchSettings(true); }}>
+                                                            <i className="bi bi-gear-fill" style={{ fontSize: '13px', color: '#6b7280' }} />
+                                                        </div>
                                                     </div>
                                                 </MenuItem>
-                                                {results.map((option, index) => (
-                                                    <MenuItem option={option} position={index} key={index}>
-                                                        <div style={{ display: 'flex', padding: '4px 8px' }}>
-                                                            <div style={{ ...columnStyle, width: '10%' }}>{option.code}</div>
-                                                            <div style={{ ...columnStyle, width: '47%' }}>{option.name} {option.name_in_arabic ? `(${option.name_in_arabic})` : ""}</div>
-                                                            <div style={{ ...columnStyle, width: '10%' }}>{option.phone}</div>
-                                                            <div style={{ ...columnStyle, width: '13%' }}>{option.vat_no}</div>
-                                                            <div style={{ ...columnStyle, width: '10%' }}><Amount amount={trimTo2Decimals(option.credit_balance)} /></div>
-                                                            <div style={{ ...columnStyle, width: '10%' }}><Amount amount={trimTo2Decimals(option.credit_limit)} /></div>
-                                                        </div>
-                                                    </MenuItem>
-                                                ))}
+                                                {results.map((option, idx) => {
+                                                    const isActive = state.activeIndex === idx || results.length === 1;
+                                                    const rowBg = isActive ? '#e8f0fe' : 'transparent';
+                                                    return (
+                                                        <MenuItem option={option} position={idx} key={idx} style={{ padding: 0 }}>
+                                                            <div style={{ display: 'flex', padding: '5px 8px', alignItems: 'center', background: rowBg, fontSize: '13px' }}>
+                                                                {visCols.map(col => (
+                                                                    <div key={col.key} style={{ width: cw(col), overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                                                                        {col.key === 'code' && <span style={{ fontFamily: 'monospace', color: isActive ? '#004ac6' : '#374151', fontWeight: isActive ? 600 : 400 }}>{highlightWords(option.code, searchWords, isActive)}</span>}
+                                                                        {col.key === 'name' && <span style={{ color: isActive ? '#191c1e' : '#374151', fontWeight: isActive ? 600 : 400 }}>{highlightWords(option.name + (option.name_in_arabic ? ' - ' + option.name_in_arabic : ''), searchWords, isActive)}</span>}
+                                                                        {col.key === 'phone' && <span style={{ color: '#6b7280' }}>{option.phone || '–'}</span>}
+                                                                        {col.key === 'vat_no' && <span style={{ color: '#6b7280' }}>{option.vat_no || '–'}</span>}
+                                                                        {col.key === 'credit_balance' && <span style={{ color: option.credit_balance > 0 ? '#dc2626' : option.credit_balance < 0 ? '#2563eb' : '#6b7280', fontWeight: 600 }}>{option.credit_balance != null ? option.credit_balance : '–'}</span>}
+                                                                        {col.key === 'credit_limit' && <span style={{ color: '#6b7280' }}>{option.credit_limit || '–'}</span>}
+                                                                    </div>
+                                                                ))}
+                                                            </div>
+                                                        </MenuItem>
+                                                    );
+                                                })}
                                             </Menu>
                                         );
                                     }}
@@ -4451,6 +4521,21 @@ const OrderCreate = forwardRef((props, ref) => {
     }, [defaultCustomerDetailsFields]);
 
     const [showProductSearchSettings, setShowProductSearchSettings] = useState(false);
+
+    const [showCustomerSearchSettings, setShowCustomerSearchSettings] = useState(false);
+    const [customerSearchColumns, setCustomerSearchColumns] = useState(() => {
+        try {
+            const saved = localStorage.getItem(ORDER_CUSTOMER_COLS_KEY);
+            if (saved) {
+                const parsed = JSON.parse(saved);
+                const keyMap = {};
+                parsed.forEach(c => { keyMap[c.key] = c; });
+                return DEFAULT_CUSTOMER_COLS.map(d => keyMap[d.key] ? { ...d, ...keyMap[d.key] } : d);
+            }
+        } catch {}
+        return DEFAULT_CUSTOMER_COLS.map(c => ({ ...c }));
+    });
+
     // Initial column config
 
     const defaultSearchProductsColumns = useMemo(() => [
@@ -4496,6 +4581,38 @@ const OrderCreate = forwardRef((props, ref) => {
         }
         return `${(col.width / totalWidth) * 100}%`;
     };
+
+    const startPsColResize = useCallback((e, colKey) => {
+        e.preventDefault(); e.stopPropagation();
+        const startX = e.clientX;
+        let currentCols = null;
+        setSearchProductsColumns(prev => { currentCols = prev; return prev; });
+        setTimeout(() => {
+            const cols = currentCols;
+            if (!cols) return;
+            const col = cols.find(c => c.key === colKey);
+            if (!col) return;
+            const startWidth = col.width;
+            const totalW = cols.filter(c => c.visible).reduce((s, c) => s + c.width, 0);
+            const pxPerUnit = (window.innerWidth * 0.95) / totalW;
+            function onMouseMove(ev) {
+                const newWidth = Math.max(1, startWidth + (ev.clientX - startX) / pxPerUnit);
+                setSearchProductsColumns(prev => {
+                    const updated = prev.map(c => c.key === colKey ? { ...c, width: parseFloat(newWidth.toFixed(1)) } : c);
+                    localStorage.setItem("sales_product_search_settings", JSON.stringify(updated));
+                    return updated;
+                });
+            }
+            function onMouseUp() {
+                document.removeEventListener('mousemove', onMouseMove);
+                document.removeEventListener('mouseup', onMouseUp);
+                document.body.style.cursor = '';
+            }
+            document.addEventListener('mousemove', onMouseMove);
+            document.addEventListener('mouseup', onMouseUp);
+            document.body.style.cursor = 'col-resize';
+        }, 0);
+    }, []);
 
     const handleToggleColumn = (index) => {
         const updated = [...searchProductsColumns];
@@ -4577,6 +4694,55 @@ const OrderCreate = forwardRef((props, ref) => {
         document.addEventListener('mousemove', onMouseMove);
         document.addEventListener('mouseup', onMouseUp);
     }, [scColWidths, SC_COL_DEFAULTS]);
+
+    function handleToggleCustomerCol(index) {
+        const updated = customerSearchColumns.map((c, i) => i === index ? { ...c, visible: !c.visible } : c);
+        setCustomerSearchColumns(updated);
+        localStorage.setItem(ORDER_CUSTOMER_COLS_KEY, JSON.stringify(updated));
+    }
+    function handleCustomerColDragEnd(result) {
+        if (!result.destination) return;
+        const reordered = Array.from(customerSearchColumns);
+        const [moved] = reordered.splice(result.source.index, 1);
+        reordered.splice(result.destination.index, 0, moved);
+        setCustomerSearchColumns(reordered);
+        localStorage.setItem(ORDER_CUSTOMER_COLS_KEY, JSON.stringify(reordered));
+    }
+    function restoreCustomerColDefaults() {
+        const cloned = DEFAULT_CUSTOMER_COLS.map(c => ({ ...c }));
+        setCustomerSearchColumns(cloned);
+        localStorage.setItem(ORDER_CUSTOMER_COLS_KEY, JSON.stringify(cloned));
+    }
+    const startCustomerColResize = useCallback((e, colKey) => {
+        e.preventDefault(); e.stopPropagation();
+        const startX = e.clientX;
+        let currentCols = null;
+        setCustomerSearchColumns(prev => { currentCols = prev; return prev; });
+        setTimeout(() => {
+            const cols = currentCols || DEFAULT_CUSTOMER_COLS;
+            const col = cols.find(c => c.key === colKey);
+            if (!col) return;
+            const startWidth = col.width;
+            const totalW = cols.filter(c => c.visible).reduce((s, c) => s + c.width, 0);
+            const pxPerUnit = (window.innerWidth * 0.95) / totalW;
+            function onMouseMove(ev) {
+                const newWidth = Math.max(3, startWidth + (ev.clientX - startX) / pxPerUnit);
+                setCustomerSearchColumns(prev => {
+                    const updated = prev.map(c => c.key === colKey ? { ...c, width: parseFloat(newWidth.toFixed(1)) } : c);
+                    localStorage.setItem(ORDER_CUSTOMER_COLS_KEY, JSON.stringify(updated));
+                    return updated;
+                });
+            }
+            function onMouseUp() {
+                document.removeEventListener('mousemove', onMouseMove);
+                document.removeEventListener('mouseup', onMouseUp);
+                document.body.style.cursor = '';
+            }
+            document.addEventListener('mousemove', onMouseMove);
+            document.addEventListener('mouseup', onMouseUp);
+            document.body.style.cursor = 'col-resize';
+        }, 0);
+    }, []);
 
     const handleToggleSelectedProductsColumn = (index) => {
         const updated = [...selectedProductsColumns];
@@ -4945,6 +5111,16 @@ const OrderCreate = forwardRef((props, ref) => {
                 onRestoreDefaults={RestoreDefaultSettings}
             />
 
+            <TableSettingsModal
+                show={showCustomerSearchSettings}
+                onHide={() => setShowCustomerSearchSettings(false)}
+                title={t('Customer Search Settings')}
+                columns={customerSearchColumns}
+                onToggleColumn={handleToggleCustomerCol}
+                onDragEnd={handleCustomerColDragEnd}
+                onRestoreDefaults={restoreCustomerColDefaults}
+            />
+
             {/* ⚙️ Selected Products Table Settings Modal */}
             <Modal
                 show={showSelectedProductsSettings}
@@ -5180,6 +5356,7 @@ const OrderCreate = forwardRef((props, ref) => {
             <ProductView ref={ProductDetailsViewRef} />
             <CustomerCreate ref={CustomerCreateFormRef} showToastMessage={props.showToastMessage} />
             <ProductCreate ref={ProductCreateFormRef} showToastMessage={props.showToastMessage} refreshList={refreshEditedProduct} />
+            <PurchaseOrderPicker ref={PurchaseOrderPickerRef} />
             <ServiceCreate ref={ServiceCreateFormRef} showToastMessage={props.showToastMessage} />
             <ServiceView ref={ServiceDetailsViewRef} showToastMessage={props.showToastMessage} />
             <UserCreate ref={UserCreateFormRef} showToastMessage={props.showToastMessage} />
@@ -5570,71 +5747,51 @@ const OrderCreate = forwardRef((props, ref) => {
                                                                     }, 350);
                                                                 }}
                                                                 renderMenu={(results, menuProps, state) => {
-                                                                    const searchWords = state.text.toLowerCase().split(" ").filter(Boolean);
-
+                                                                    const searchWords = state.text.toLowerCase().split(' ').filter(Boolean);
+                                                                    const visCols = customerSearchColumns.filter(c => c.visible);
+                                                                    const totW = visCols.reduce((s, c) => s + c.width, 0);
+                                                                    const cw = (col) => `${(col.width / totW) * 100}%`;
+                                                                    const resizeHandle = (colKey) => (
+                                                                        <div onMouseDown={e => startCustomerColResize(e, colKey)}
+                                                                            style={{ position: 'absolute', right: 0, top: '10%', bottom: '10%', width: '5px', cursor: 'col-resize', zIndex: 2 }} />
+                                                                    );
                                                                     return (
                                                                         <Menu {...menuProps} style={{ ...(menuProps.style || {}), width: '95vw', maxWidth: '95vw', minWidth: '300px', zIndex: 9999 }}>
-                                                                            {/* Header */}
-                                                                            <MenuItem disabled>
-                                                                                <div style={{ display: 'flex', fontWeight: 'bold', padding: '4px 8px', borderBottom: '1px solid #ddd' }}>
-                                                                                    <div style={{ width: '10%' }}>{t("ID")}</div>
-                                                                                    <div style={{ width: '47%' }}>{t("Name")}</div>
-                                                                                    <div style={{ width: '10%' }}>{t("Phone")}</div>
-                                                                                    <div style={{ width: '13%' }}>{t("VAT NO.")}</div>
-                                                                                    <div style={{ width: '10%' }}>{t("Credit Balance")}</div>
-                                                                                    <div style={{ width: '10%' }}>{t("Credit Limit")}</div>
+                                                                            <MenuItem disabled style={{ position: 'sticky', top: 0, padding: 0, margin: 0 }}>
+                                                                                <div style={{ display: 'flex', fontWeight: 700, color: '#374151', padding: '4px 8px', background: '#f8f9fa', borderBottom: '1px solid #e2e8f0', pointerEvents: 'auto', fontSize: '12px', position: 'relative' }}>
+                                                                                    {visCols.map(col => (
+                                                                                        <div key={col.key} style={{ width: cw(col), overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', position: 'relative' }}>
+                                                                                            {col.key === 'code' && t('Code')}
+                                                                                            {col.key === 'name' && t('Name')}
+                                                                                            {col.key === 'phone' && t('Phone')}
+                                                                                            {col.key === 'vat_no' && t('VAT No.')}
+                                                                                            {col.key === 'credit_balance' && t('Credit Balance')}
+                                                                                            {col.key === 'credit_limit' && t('Credit Limit')}
+                                                                                            {resizeHandle(col.key)}
+                                                                                        </div>
+                                                                                    ))}
+                                                                                    <div style={{ position: 'absolute', right: '8px', top: '50%', transform: 'translateY(-50%)', cursor: 'pointer' }}
+                                                                                        onClick={e => { e.stopPropagation(); setShowCustomerSearchSettings(true); }}>
+                                                                                        <i className="bi bi-gear-fill" style={{ fontSize: '13px', color: '#6b7280' }} />
+                                                                                    </div>
                                                                                 </div>
                                                                             </MenuItem>
-
-                                                                            {/* Rows */}
-                                                                            {results.map((option, index) => {
-                                                                                const onlyOneResult = results.length === 1;
-                                                                                const isActive = state.activeIndex === index || onlyOneResult;
+                                                                            {results.map((option, idx) => {
+                                                                                const isActive = state.activeIndex === idx || results.length === 1;
+                                                                                const rowBg = isActive ? '#e8f0fe' : 'transparent';
                                                                                 return (
-                                                                                    <MenuItem option={option} position={index} key={index}>
-                                                                                        <div style={{ display: 'flex', padding: '4px 8px' }}>
-                                                                                            <div style={{ ...columnStyle, width: '10%' }}>
-                                                                                                {highlightWords(
-                                                                                                    option.code,
-                                                                                                    searchWords,
-                                                                                                    isActive
-                                                                                                )}
-                                                                                            </div>
-                                                                                            <div style={{ ...columnStyle, width: '47%' }}>
-                                                                                                {highlightWords(
-                                                                                                    option.name_in_arabic
-                                                                                                        ? `${option.name} - ${option.name_in_arabic}`
-                                                                                                        : option.name,
-                                                                                                    searchWords,
-                                                                                                    isActive
-                                                                                                )}
-                                                                                            </div>
-                                                                                            <div style={{ ...columnStyle, width: '10%' }}>
-                                                                                                {highlightWords(option.phone, searchWords, isActive)}
-                                                                                            </div>
-                                                                                            <div style={{ ...columnStyle, width: '13%' }}>
-                                                                                                {highlightWords(option.vat_no, searchWords, isActive)}
-                                                                                            </div>
-                                                                                            <div style={{ ...columnStyle, width: '10%' }}>
-                                                                                                <div
-                                                                                                    tabIndex={-1}
-                                                                                                    className={isActive ? "btn btn-outline-light btn-sm" : "btn btn-outline-primary btn-sm"}
-                                                                                                    onMouseDown={e => e.preventDefault()} // <-- This prevents menu from closing
-                                                                                                    onClick={(e) => {
-                                                                                                        e.preventDefault();
-                                                                                                        e.stopPropagation();
-
-                                                                                                        // openBalanceSheetDialogue(customer.account);
-                                                                                                        openCustomerPending(option);
-                                                                                                    }}>
-                                                                                                    <Amount amount={trimTo2Decimals(option.credit_balance)} />
+                                                                                    <MenuItem option={option} position={idx} key={idx} style={{ padding: 0 }}>
+                                                                                        <div style={{ display: 'flex', padding: '5px 8px', alignItems: 'center', background: rowBg, fontSize: '13px' }}>
+                                                                                            {visCols.map(col => (
+                                                                                                <div key={col.key} style={{ width: cw(col), overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                                                                                                    {col.key === 'code' && <span style={{ fontFamily: 'monospace', color: isActive ? '#004ac6' : '#374151', fontWeight: isActive ? 600 : 400 }}>{highlightWords(option.code, searchWords, isActive)}</span>}
+                                                                                                    {col.key === 'name' && <span style={{ color: isActive ? '#191c1e' : '#374151', fontWeight: isActive ? 600 : 400 }}>{highlightWords(option.name + (option.name_in_arabic ? ' - ' + option.name_in_arabic : ''), searchWords, isActive)}</span>}
+                                                                                                    {col.key === 'phone' && <span style={{ color: '#6b7280' }}>{option.phone || '–'}</span>}
+                                                                                                    {col.key === 'vat_no' && <span style={{ color: '#6b7280' }}>{option.vat_no || '–'}</span>}
+                                                                                                    {col.key === 'credit_balance' && <span style={{ color: option.credit_balance > 0 ? '#dc2626' : option.credit_balance < 0 ? '#2563eb' : '#6b7280', fontWeight: 600 }}>{option.credit_balance != null ? option.credit_balance : '–'}</span>}
+                                                                                                    {col.key === 'credit_limit' && <span style={{ color: '#6b7280' }}>{option.credit_limit || '–'}</span>}
                                                                                                 </div>
-                                                                                            </div>
-                                                                                            <div style={{ ...columnStyle, width: '10%' }}>
-                                                                                                {option.credit_limit && (
-                                                                                                    <Amount amount={trimTo2Decimals(option.credit_limit)} />
-                                                                                                )}
-                                                                                            </div>
+                                                                                            ))}
                                                                                         </div>
                                                                                     </MenuItem>
                                                                                 );
@@ -5696,6 +5853,7 @@ const OrderCreate = forwardRef((props, ref) => {
                                             {/* Product row */}
                                             <div className="sc-sub-row sc-product-row" style={{ alignItems: 'flex-end' }}>
                                                 <div className="sc-product-search-group">
+                                                    {store?.settings?.enable_purchase_order_module && <button type="button" onClick={() => PurchaseOrderPickerRef.current?.open(handleImportFromPO)} style={{ background: '#f0f4ff', color: '#004ac6', border: '1px solid #c5d5f5', borderRadius: '4px', padding: '5px 10px', fontSize: '11px', fontWeight: 600, cursor: 'pointer', flexShrink: 0, display: 'flex', alignItems: 'center', gap: '3px' }}><i className="bi bi-file-earmark-arrow-down" />From P.O.</button>}
                                                     <div className="sc-search-input" style={{ flex: '1 1 0', minWidth: 0 }}>
                                                         <div style={{ flex: 1, minWidth: 0 }}>
                                                             <Typeahead
@@ -5780,18 +5938,19 @@ const OrderCreate = forwardRef((props, ref) => {
                                                                                     pointerEvents: "auto" // <-- allow click here
                                                                                 }}>
                                                                                     {searchProductsColumns.filter(c => c.visible).map((col) => {
-                                                                                        return (<>
-                                                                                            {col.key === "select" && <div style={{ width: getColumnWidth(col), border: "solid 0px", }}></div>}
-                                                                                            {col.key === "part_number" && <div style={{ width: getColumnWidth(col), border: "solid 0px", }}>{t("Part Number")}</div>}
-                                                                                            {col.key === "name" && <div style={{ width: getColumnWidth(col), border: "solid 0px", }}>{t("Name")}</div>}
-                                                                                            {col.key === "unit_price" && <div style={{ width: getColumnWidth(col), border: "solid 0px", }}>{t("S.Unit Price")}</div>}
-                                                                                            {col.key === "stock" && <div style={{ width: getColumnWidth(col), border: "solid 0px", }}>{t("Stock")}</div>}
-                                                                                            {col.key === "photos" && <div style={{ width: getColumnWidth(col), border: "solid 0px", }}>{t("Photos")}</div>}
-                                                                                            {col.key === "brand" && <div style={{ width: getColumnWidth(col), border: "solid 0px", }}>{t("Brand")}</div>}
-                                                                                            {col.key === "purchase_price" && <div style={{ width: getColumnWidth(col), border: "solid 0px", }}>{t("P.Unit Price")}</div>}
-                                                                                            {col.key === "country" && <div style={{ width: getColumnWidth(col), border: "solid 0px", }}>{t("Country")}</div>}
-                                                                                            {col.key === "rack" && <div style={{ width: getColumnWidth(col), border: "solid 0px", }}>{t("Rack")}</div>}
-                                                                                        </>)
+                                                                                        const rh = <div onMouseDown={e => startPsColResize(e, col.key)} style={{ position: 'absolute', right: 0, top: 0, bottom: 0, width: '5px', cursor: 'col-resize', zIndex: 2 }} />;
+                                                                                        return (<React.Fragment key={col.key}>
+                                                                                            {col.key === "select" && <div style={{ width: getColumnWidth(col), border: "solid 0px", position: 'relative' }}>{rh}</div>}
+                                                                                            {col.key === "part_number" && <div style={{ width: getColumnWidth(col), border: "solid 0px", position: 'relative' }}>{t("Part Number")}{rh}</div>}
+                                                                                            {col.key === "name" && <div style={{ width: getColumnWidth(col), border: "solid 0px", position: 'relative' }}>{t("Name")}{rh}</div>}
+                                                                                            {col.key === "unit_price" && <div style={{ width: getColumnWidth(col), border: "solid 0px", position: 'relative' }}>{t("S.Unit Price")}{rh}</div>}
+                                                                                            {col.key === "stock" && <div style={{ width: getColumnWidth(col), border: "solid 0px", position: 'relative' }}>{t("Stock")}{rh}</div>}
+                                                                                            {col.key === "photos" && <div style={{ width: getColumnWidth(col), border: "solid 0px", position: 'relative' }}>{t("Photos")}{rh}</div>}
+                                                                                            {col.key === "brand" && <div style={{ width: getColumnWidth(col), border: "solid 0px", position: 'relative' }}>{t("Brand")}{rh}</div>}
+                                                                                            {col.key === "purchase_price" && <div style={{ width: getColumnWidth(col), border: "solid 0px", position: 'relative' }}>{t("P.Unit Price")}{rh}</div>}
+                                                                                            {col.key === "country" && <div style={{ width: getColumnWidth(col), border: "solid 0px", position: 'relative' }}>{t("Country")}{rh}</div>}
+                                                                                            {col.key === "rack" && <div style={{ width: getColumnWidth(col), border: "solid 0px", position: 'relative' }}>{t("Rack")}{rh}</div>}
+                                                                                        </React.Fragment>)
                                                                                     })}
                                                                                     {/* Settings icon on right */}
                                                                                     <div
@@ -8004,6 +8163,7 @@ const OrderCreate = forwardRef((props, ref) => {
                         renderNetTotalBeforeRoundingTooltip={renderNetTotalBeforeRoundingTooltip}
                         renderNetTotalTooltip={renderNetTotalTooltip}
                         fetchAndSetCustomer={fetchAndSetCustomer}
+                        startPsColResize={startPsColResize}
                     />}
 
                     {
@@ -8112,18 +8272,19 @@ const OrderCreate = forwardRef((props, ref) => {
                                                                         pointerEvents: "auto"
                                                                     }}>
                                                                         {searchProductsColumns.filter(c => c.visible).map((col) => {
+                                                                            const rh = <div onMouseDown={e => startPsColResize(e, col.key)} style={{ position: 'absolute', right: 0, top: 0, bottom: 0, width: '5px', cursor: 'col-resize', zIndex: 2 }} />;
                                                                             return (
                                                                                 <React.Fragment key={col.key}>
-                                                                                    {col.key === "select" && <div style={{ width: getColumnWidth(col) }}></div>}
-                                                                                    {col.key === "part_number" && <div style={{ width: getColumnWidth(col) }}>{t("Part Number")}</div>}
-                                                                                    {col.key === "name" && <div style={{ width: getColumnWidth(col) }}>{t("Name")}</div>}
-                                                                                    {col.key === "unit_price" && <div style={{ width: getColumnWidth(col) }}>{t("S.Unit Price")}</div>}
-                                                                                    {col.key === "stock" && <div style={{ width: getColumnWidth(col) }}>{t("Stock")}</div>}
-                                                                                    {col.key === "photos" && <div style={{ width: getColumnWidth(col) }}>{t("Photos")}</div>}
-                                                                                    {col.key === "brand" && <div style={{ width: getColumnWidth(col) }}>{t("Brand")}</div>}
-                                                                                    {col.key === "purchase_price" && <div style={{ width: getColumnWidth(col) }}>{t("P.Unit Price")}</div>}
-                                                                                    {col.key === "country" && <div style={{ width: getColumnWidth(col) }}>{t("Country")}</div>}
-                                                                                    {col.key === "rack" && <div style={{ width: getColumnWidth(col) }}>{t("Rack")}</div>}
+                                                                                    {col.key === "select" && <div style={{ width: getColumnWidth(col), position: 'relative' }}>{rh}</div>}
+                                                                                    {col.key === "part_number" && <div style={{ width: getColumnWidth(col), position: 'relative' }}>{t("Part Number")}{rh}</div>}
+                                                                                    {col.key === "name" && <div style={{ width: getColumnWidth(col), position: 'relative' }}>{t("Name")}{rh}</div>}
+                                                                                    {col.key === "unit_price" && <div style={{ width: getColumnWidth(col), position: 'relative' }}>{t("S.Unit Price")}{rh}</div>}
+                                                                                    {col.key === "stock" && <div style={{ width: getColumnWidth(col), position: 'relative' }}>{t("Stock")}{rh}</div>}
+                                                                                    {col.key === "photos" && <div style={{ width: getColumnWidth(col), position: 'relative' }}>{t("Photos")}{rh}</div>}
+                                                                                    {col.key === "brand" && <div style={{ width: getColumnWidth(col), position: 'relative' }}>{t("Brand")}{rh}</div>}
+                                                                                    {col.key === "purchase_price" && <div style={{ width: getColumnWidth(col), position: 'relative' }}>{t("P.Unit Price")}{rh}</div>}
+                                                                                    {col.key === "country" && <div style={{ width: getColumnWidth(col), position: 'relative' }}>{t("Country")}{rh}</div>}
+                                                                                    {col.key === "rack" && <div style={{ width: getColumnWidth(col), position: 'relative' }}>{t("Rack")}{rh}</div>}
                                                                                 </React.Fragment>
                                                                             )
                                                                         })}
@@ -8298,6 +8459,7 @@ const OrderCreate = forwardRef((props, ref) => {
                                         </div>
 
                                         <div className="flex gap-xs align-items-center shrink-0">
+                                            {store?.settings?.enable_purchase_order_module && <button type="button" onClick={() => PurchaseOrderPickerRef.current?.open(handleImportFromPO)} style={{ background: '#f0f4ff', color: '#004ac6', border: '1px solid #c5d5f5', borderRadius: '4px', padding: '5px 10px', fontSize: '13px', fontWeight: 600, cursor: 'pointer', flexShrink: 0, display: 'flex', alignItems: 'center', gap: '3px', height: '34px' }}><i className="bi bi-file-earmark-arrow-down" />From P.O.</button>}
                                             {store?.settings?.enable_services && store?.settings?.enable_products ? (
                                                 <Dropdown>
                                                     <Dropdown.Toggle bsPrefix="btn px-3 bg-primary hover:opacity-90 text-on-primary rounded font-label-md border-0 cursor-pointer" style={{ height: '34px', display: 'inline-flex', alignItems: 'center', gap: '4px' }}>

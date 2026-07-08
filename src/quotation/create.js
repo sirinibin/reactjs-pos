@@ -58,6 +58,27 @@ import { fetchStore } from '../utils/storeUtils.js';
 import SuccessModal from '../utils/SuccessModal.js';
 import { useEnterKeyNavigation } from '../utils/useEnterKeyNavigation.js';
 import TableSettingsModal from '../utils/TableSettingsModal.js';
+import PurchaseOrderPicker from '../purchase_order/PurchaseOrderPicker.js';
+
+function getProductLabel(settings) {
+    if (settings?.enable_products && settings?.enable_services) return 'Products / Services';
+    if (settings?.enable_services && !settings?.enable_products) return 'Services';
+    return 'Products';
+}
+function getProductSearchPlaceholder(settings) {
+    if (settings?.enable_services && !settings?.enable_products) return 'Name | Name in Arabic | Category';
+    return 'Part No. | Name | Name in Arabic | Brand | Country';
+}
+
+const DEFAULT_QUOTATION_CUSTOMER_COLS = [
+    { key: 'code',           label: 'Code',          width: 10, visible: true },
+    { key: 'name',           label: 'Name',          width: 50, visible: true },
+    { key: 'phone',          label: 'Phone',         width: 10, visible: true },
+    { key: 'vat_no',         label: 'VAT No.',       width: 13, visible: true },
+    { key: 'credit_balance', label: 'Credit Balance',width: 10, visible: true },
+    { key: 'credit_limit',   label: 'Credit Limit',  width: 7,  visible: true },
+];
+const QUOTATION_CUSTOMER_COLS_KEY = 'quotation_customer_search_columns';
 
 const columnStyle = {
   width: '20%',
@@ -1222,6 +1243,37 @@ const QuotationCreate = forwardRef((props, ref) => {
     return false;
   }
 
+  function handleImportFromPO(po) {
+    if (!po || !po.products || po.products.length === 0) return;
+    po.products.forEach(p => {
+      const already = selectedProducts.findIndex(s => s.product_id === p.product_id);
+      if (already >= 0) {
+        selectedProducts[already].quantity = parseFloat(selectedProducts[already].quantity || 0) + parseFloat(p.quantity || 1);
+      } else {
+        selectedProducts.push({
+          product_id: p.product_id,
+          code: p.item_code || "",
+          part_number: p.part_number || "",
+          name: p.name || "",
+          name_in_arabic: p.name_in_arabic || "",
+          quantity: parseFloat(p.quantity) || 1,
+          unit: p.unit || "",
+          unit_price: 0,
+          unit_price_with_vat: 0,
+          purchase_unit_price: parseFloat(p.purchase_unit_price) || 0,
+          purchase_unit_price_with_vat: parseFloat(p.purchase_unit_price_with_vat) || 0,
+          unit_discount: 0,
+          unit_discount_with_vat: 0,
+          unit_discount_percent: 0,
+          product_stores: {},
+        });
+      }
+    });
+    setSelectedProducts([...selectedProducts]);
+    if (timerRef.current) clearTimeout(timerRef.current);
+    timerRef.current = setTimeout(() => reCalculate(), 100);
+  }
+
   function addProduct(product) {
     if (!product.id && product.product_id) {
       product.id = product.product_id
@@ -1643,6 +1695,7 @@ const QuotationCreate = forwardRef((props, ref) => {
   }
 
   const ProductCreateFormRef = useRef();
+  const PurchaseOrderPickerRef = useRef();
   function openProductCreateForm() {
     const hasServices = store?.settings?.enable_services;
     const hasProducts = store?.settings?.enable_products;
@@ -2662,6 +2715,21 @@ async function checkWarning(i) {
 
   //Search settings
   const [showProductSearchSettings, setShowProductSearchSettings] = useState(false);
+  // eslint-disable-next-line no-unused-vars
+  const [showCustomerSearchSettings, setShowCustomerSearchSettings] = useState(false);
+  // eslint-disable-next-line no-unused-vars
+  const [customerSearchColumns, setCustomerSearchColumns] = useState(() => {
+      try {
+          const saved = localStorage.getItem(QUOTATION_CUSTOMER_COLS_KEY);
+          if (saved) {
+              const parsed = JSON.parse(saved);
+              const keyMap = {};
+              parsed.forEach(c => { keyMap[c.key] = c; });
+              return DEFAULT_QUOTATION_CUSTOMER_COLS.map(d => keyMap[d.key] ? { ...d, ...keyMap[d.key] } : d);
+          }
+      } catch {}
+      return DEFAULT_QUOTATION_CUSTOMER_COLS.map(c => ({ ...c }));
+  });
   const defaultSearchProductsColumns = useMemo(() => [
     { key: "select", label: "Select", fieldName: "select", width: 3, visible: true },
     { key: "part_number", label: "Part Number", fieldName: "part_number", width: 12, visible: true },
@@ -2706,6 +2774,39 @@ async function checkWarning(i) {
       return `${(col.width / totalWidth) * 100}%`;
   };
 
+  // eslint-disable-next-line no-unused-vars
+  const startPsColResize = useCallback((e, colKey) => {
+      e.preventDefault(); e.stopPropagation();
+      const startX = e.clientX;
+      let currentCols = null;
+      setSearchProductsColumns(prev => { currentCols = prev; return prev; });
+      setTimeout(() => {
+          const cols = currentCols;
+          if (!cols) return;
+          const col = cols.find(c => c.key === colKey);
+          if (!col) return;
+          const startWidth = col.width;
+          const totalW = cols.filter(c => c.visible).reduce((s, c) => s + c.width, 0);
+          const pxPerUnit = (window.innerWidth * 0.95) / totalW;
+          function onMouseMove(ev) {
+              const newWidth = Math.max(1, startWidth + (ev.clientX - startX) / pxPerUnit);
+              setSearchProductsColumns(prev => {
+                  const updated = prev.map(c => c.key === colKey ? { ...c, width: parseFloat(newWidth.toFixed(1)) } : c);
+                  localStorage.setItem("quotation_product_search_settings", JSON.stringify(updated));
+                  return updated;
+              });
+          }
+          function onMouseUp() {
+              document.removeEventListener('mousemove', onMouseMove);
+              document.removeEventListener('mouseup', onMouseUp);
+              document.body.style.cursor = '';
+          }
+          document.addEventListener('mousemove', onMouseMove);
+          document.addEventListener('mouseup', onMouseUp);
+          document.body.style.cursor = 'col-resize';
+      }, 0);
+  }, []);
+
   const handleToggleColumn = (index) => {
     const updated = [...searchProductsColumns];
     updated[index].visible = !updated[index].visible;
@@ -2723,6 +2824,55 @@ async function checkWarning(i) {
   };
 
 
+
+  function handleToggleCustomerCol(index) {
+      const updated = customerSearchColumns.map((c, i) => i === index ? { ...c, visible: !c.visible } : c);
+      setCustomerSearchColumns(updated);
+      localStorage.setItem(QUOTATION_CUSTOMER_COLS_KEY, JSON.stringify(updated));
+  }
+  function handleCustomerColDragEnd(result) {
+      if (!result.destination) return;
+      const reordered = Array.from(customerSearchColumns);
+      const [moved] = reordered.splice(result.source.index, 1);
+      reordered.splice(result.destination.index, 0, moved);
+      setCustomerSearchColumns(reordered);
+      localStorage.setItem(QUOTATION_CUSTOMER_COLS_KEY, JSON.stringify(reordered));
+  }
+  function restoreCustomerColDefaults() {
+      const cloned = DEFAULT_QUOTATION_CUSTOMER_COLS.map(c => ({ ...c }));
+      setCustomerSearchColumns(cloned);
+      localStorage.setItem(QUOTATION_CUSTOMER_COLS_KEY, JSON.stringify(cloned));
+  }
+  const startCustomerColResize = useCallback((e, colKey) => {
+      e.preventDefault(); e.stopPropagation();
+      const startX = e.clientX;
+      let currentCols = null;
+      setCustomerSearchColumns(prev => { currentCols = prev; return prev; });
+      setTimeout(() => {
+          const cols = currentCols || DEFAULT_QUOTATION_CUSTOMER_COLS;
+          const col = cols.find(c => c.key === colKey);
+          if (!col) return;
+          const startWidth = col.width;
+          const totalW = cols.filter(c => c.visible).reduce((s, c) => s + c.width, 0);
+          const pxPerUnit = (window.innerWidth * 0.95) / totalW;
+          function onMouseMove(ev) {
+              const newWidth = Math.max(3, startWidth + (ev.clientX - startX) / pxPerUnit);
+              setCustomerSearchColumns(prev => {
+                  const updated = prev.map(c => c.key === colKey ? { ...c, width: parseFloat(newWidth.toFixed(1)) } : c);
+                  localStorage.setItem(QUOTATION_CUSTOMER_COLS_KEY, JSON.stringify(updated));
+                  return updated;
+              });
+          }
+          function onMouseUp() {
+              document.removeEventListener('mousemove', onMouseMove);
+              document.removeEventListener('mouseup', onMouseUp);
+              document.body.style.cursor = '';
+          }
+          document.addEventListener('mousemove', onMouseMove);
+          document.addEventListener('mouseup', onMouseUp);
+          document.body.style.cursor = 'col-resize';
+      }, 0);
+  }, []);
 
   function RestoreDefaultSettings() {
     const clonedDefaults = defaultSearchProductsColumns.map(col => ({ ...col }));
@@ -3004,6 +3154,15 @@ async function checkWarning(i) {
           onDragEnd={onDragEnd}
           onRestoreDefaults={RestoreDefaultSettings}
       />
+      <TableSettingsModal
+          show={showCustomerSearchSettings}
+          onHide={() => setShowCustomerSearchSettings(false)}
+          title="Customer Search Settings"
+          columns={customerSearchColumns}
+          onToggleColumn={handleToggleCustomerCol}
+          onDragEnd={handleCustomerColDragEnd}
+          onRestoreDefaults={restoreCustomerColDefaults}
+      />
       <ProductHistory ref={ProductHistoryRef} showToastMessage={props.showToastMessage} />
       <ImageViewerModal ref={imageViewerRef} images={productImages} />
       <InfoDialog
@@ -3053,6 +3212,7 @@ async function checkWarning(i) {
         showToastMessage={props.showToastMessage}
         openDetailsView={openProductDetails}
       />
+      <PurchaseOrderPicker ref={PurchaseOrderPickerRef} />
       <ServiceCreate ref={ServiceCreateFormRef} showToastMessage={props.showToastMessage} />
       <ServiceView ref={ServiceDetailsViewRef} showToastMessage={props.showToastMessage} />
 
@@ -3250,45 +3410,62 @@ async function checkWarning(i) {
                             }}
 
                             renderMenu={(results, menuProps, state) => {
-                              const searchWords = state.text.toLowerCase().split(" ").filter(Boolean);
-
-                              return (
-                                <Menu {...menuProps} style={{ ...(menuProps.style || {}), width: '95vw', maxWidth: '95vw', minWidth: '300px', zIndex: 9999 }}>
-                                  {/* Header */}
-                                  <MenuItem disabled style={{ padding: 0, margin: 0 }}>
-                                    <div style={{ display: 'flex', fontWeight: 'bold', padding: '4px 8px', borderBottom: '1px solid #ddd' }}>
-                                      <div style={{ width: '10%' }}>ID</div>
-                                      <div style={{ width: '50%' }}>Name</div>
-                                      <div style={{ width: '10%' }}>Phone</div>
-                                      <div style={{ width: '13%' }}>VAT NO.</div>
-                                      <div style={{ width: '10%' }}>Credit Balance</div>
-                                      <div style={{ width: '7%' }}>Credit Limit</div>
-                                    </div>
-                                  </MenuItem>
-
-                                  {/* Rows */}
-                                  {results.map((option, index) => {
-                                    const onlyOneResult = results.length === 1;
-                                    const isActive = state.activeIndex === index || onlyOneResult;
-                                    return (
-                                      <MenuItem option={option} position={index} key={index} style={{ padding: "0px" }}>
-                                        <div style={{ display: 'flex', padding: '4px 8px' }}>
-                                          <div style={{ ...columnStyle, width: '10%' }}>{highlightWords(option.code, searchWords, isActive)}</div>
-                                          <div style={{ ...columnStyle, width: '50%' }}>{highlightWords(option.name_in_arabic ? `${option.name} - ${option.name_in_arabic}` : option.name, searchWords, isActive)}</div>
-                                          <div style={{ ...columnStyle, width: '10%' }}>{highlightWords(option.phone, searchWords, isActive)}</div>
-                                          <div style={{ ...columnStyle, width: '13%' }}>{highlightWords(option.vat_no, searchWords, isActive)}</div>
-                                          <div style={{ ...columnStyle, width: '10%' }}>
-                                            <div tabIndex={-1} className={isActive ? "btn btn-outline-light btn-sm" : "btn btn-outline-primary btn-sm"} onMouseDown={e => e.preventDefault()} onClick={(e) => { e.preventDefault(); e.stopPropagation(); openCustomerPending(option); }}>
-                                              <Amount amount={trimTo2Decimals(option.credit_balance)} />
+                                const searchWords = state.text.toLowerCase().split(' ').filter(Boolean);
+                                const visCols = customerSearchColumns.filter(c => c.visible);
+                                const totW = visCols.reduce((s, c) => s + c.width, 0);
+                                const cw = (col) => `${(col.width / totW) * 100}%`;
+                                const resizeHandle = (colKey) => (
+                                    <div onMouseDown={e => startCustomerColResize(e, colKey)}
+                                        style={{ position: 'absolute', right: 0, top: '10%', bottom: '10%', width: '5px', cursor: 'col-resize', zIndex: 2 }} />
+                                );
+                                return (
+                                    <Menu {...menuProps} style={{ ...(menuProps.style || {}), width: '95vw', maxWidth: '95vw', minWidth: '300px', zIndex: 9999 }}>
+                                        <MenuItem disabled style={{ position: 'sticky', top: 0, padding: 0, margin: 0 }}>
+                                            <div style={{ display: 'flex', fontWeight: 700, color: '#374151', padding: '4px 8px', background: '#f8f9fa', borderBottom: '1px solid #e2e8f0', pointerEvents: 'auto', fontSize: '12px', position: 'relative' }}>
+                                                {visCols.map(col => (
+                                                    <div key={col.key} style={{ width: cw(col), overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', position: 'relative' }}>
+                                                        {col.key === 'code' && 'Code'}
+                                                        {col.key === 'name' && 'Name'}
+                                                        {col.key === 'phone' && 'Phone'}
+                                                        {col.key === 'vat_no' && 'VAT No.'}
+                                                        {col.key === 'credit_balance' && 'Credit Balance'}
+                                                        {col.key === 'credit_limit' && 'Credit Limit'}
+                                                        {resizeHandle(col.key)}
+                                                    </div>
+                                                ))}
+                                                <div style={{ position: 'absolute', right: '8px', top: '50%', transform: 'translateY(-50%)', cursor: 'pointer' }}
+                                                    onClick={e => { e.stopPropagation(); setShowCustomerSearchSettings(true); }}>
+                                                    <i className="bi bi-gear-fill" style={{ fontSize: '13px', color: '#6b7280' }} />
+                                                </div>
                                             </div>
-                                          </div>
-                                          <div style={{ ...columnStyle, width: '7%' }}>{option.credit_limit && (<Amount amount={trimTo2Decimals(option.credit_limit)} />)}</div>
-                                        </div>
-                                      </MenuItem>
-                                    );
-                                  })}
-                                </Menu>
-                              );
+                                        </MenuItem>
+                                        {results.map((option, idx) => {
+                                            const isActive = state.activeIndex === idx || results.length === 1;
+                                            const rowBg = isActive ? '#e8f0fe' : 'transparent';
+                                            return (
+                                                <MenuItem option={option} position={idx} key={idx} style={{ padding: 0 }}>
+                                                    <div style={{ display: 'flex', padding: '5px 8px', alignItems: 'center', background: rowBg, fontSize: '13px' }}>
+                                                        {visCols.map(col => (
+                                                            <div key={col.key} style={{ width: cw(col), overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                                                                {col.key === 'code' && <span style={{ fontFamily: 'monospace', color: isActive ? '#004ac6' : '#374151', fontWeight: isActive ? 600 : 400 }}>{highlightWords(option.code, searchWords, isActive)}</span>}
+                                                                {col.key === 'name' && <span style={{ color: isActive ? '#191c1e' : '#374151', fontWeight: isActive ? 600 : 400 }}>{highlightWords(option.name + (option.name_in_arabic ? ' - ' + option.name_in_arabic : ''), searchWords, isActive)}</span>}
+                                                                {col.key === 'phone' && <span style={{ color: '#6b7280' }}>{highlightWords(option.phone || '–', searchWords, isActive)}</span>}
+                                                                {col.key === 'vat_no' && <span style={{ color: '#6b7280' }}>{highlightWords(option.vat_no || '–', searchWords, isActive)}</span>}
+                                                                {col.key === 'credit_balance' && (
+                                                                    <button type="button" onClick={e => { e.stopPropagation(); openCustomerPending(option); }}
+                                                                        style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer', color: option.credit_balance > 0 ? '#dc2626' : option.credit_balance < 0 ? '#2563eb' : '#6b7280', fontWeight: 600, fontSize: '13px' }}>
+                                                                        {option.credit_balance != null ? option.credit_balance : '–'}
+                                                                    </button>
+                                                                )}
+                                                                {col.key === 'credit_limit' && <span style={{ color: '#6b7280' }}>{option.credit_limit || '–'}</span>}
+                                                            </div>
+                                                        ))}
+                                                    </div>
+                                                </MenuItem>
+                                            );
+                                        })}
+                                    </Menu>
+                                );
                             }}
                           />
                         </div>
@@ -3459,7 +3636,7 @@ async function checkWarning(i) {
               </div>
 
               <div className="col-md-9">
-                <label className="form-label">Product*</label>
+                <label className="form-label">{getProductLabel(store?.settings)}* {store?.settings?.enable_purchase_order_module && <button type="button" onClick={() => PurchaseOrderPickerRef.current?.open(handleImportFromPO)} style={{ marginLeft: '8px', background: '#f0f4ff', color: '#004ac6', border: '1px solid #c5d5f5', borderRadius: '4px', padding: '2px 8px', fontSize: '11px', fontWeight: 600, cursor: 'pointer', verticalAlign: 'middle' }}><i className="bi bi-file-earmark-arrow-down" style={{ marginRight: '3px' }} />From P.O.</button>}</label>
                 <Typeahead
                   id="product_id"
                   ref={productSearchRef}
@@ -3501,7 +3678,7 @@ async function checkWarning(i) {
                   }}
                   options={productOptions}
                   selected={selectedProduct}
-                  placeholder="Part No. | Name | Name in Arabic | Brand | Country"
+                  placeholder={getProductSearchPlaceholder(store?.settings)}
                   highlightOnlyResult={true}
                   onInputChange={(searchTerm, e) => {
                     const requestId = Date.now();
@@ -3545,18 +3722,19 @@ async function checkWarning(i) {
                             pointerEvents: "auto" // <-- allow click here
                           }}>
                             {searchProductsColumns.filter(c => c.visible).map((col) => {
-                              return (<>
-                                {col.key === "select" && <div style={{ width: getColumnWidth(col), border: "solid 0px", }}></div>}
-                                {col.key === "part_number" && <div style={{ width: getColumnWidth(col), border: "solid 0px", }}>Part Number</div>}
-                                {col.key === "name" && <div style={{ width: getColumnWidth(col), border: "solid 0px", }}>Name</div>}
-                                {col.key === "unit_price" && <div style={{ width: getColumnWidth(col), border: "solid 0px", }}>S.Unit Price</div>}
-                                {col.key === "stock" && <div style={{ width: getColumnWidth(col), border: "solid 0px", }}>Stock</div>}
-                                {col.key === "photos" && <div style={{ width: getColumnWidth(col), border: "solid 0px", }}>Photos</div>}
-                                {col.key === "brand" && <div style={{ width: getColumnWidth(col), border: "solid 0px", }}>Brand</div>}
-                                {col.key === "purchase_price" && <div style={{ width: getColumnWidth(col), border: "solid 0px", }}>P.Unit Price</div>}
-                                {col.key === "country" && <div style={{ width: getColumnWidth(col), border: "solid 0px", }}>Country</div>}
-                                {col.key === "rack" && <div style={{ width: getColumnWidth(col), border: "solid 0px", }}>Rack</div>}
-                              </>)
+                              const rh = <div onMouseDown={e => startPsColResize(e, col.key)} style={{ position: 'absolute', right: 0, top: 0, bottom: 0, width: '5px', cursor: 'col-resize', zIndex: 2 }} />;
+                              return (<React.Fragment key={col.key}>
+                                {col.key === "select" && <div style={{ width: getColumnWidth(col), border: "solid 0px", position: 'relative' }}>{rh}</div>}
+                                {col.key === "part_number" && <div style={{ width: getColumnWidth(col), border: "solid 0px", position: 'relative' }}>Part Number{rh}</div>}
+                                {col.key === "name" && <div style={{ width: getColumnWidth(col), border: "solid 0px", position: 'relative' }}>Name{rh}</div>}
+                                {col.key === "unit_price" && <div style={{ width: getColumnWidth(col), border: "solid 0px", position: 'relative' }}>S.Unit Price{rh}</div>}
+                                {col.key === "stock" && <div style={{ width: getColumnWidth(col), border: "solid 0px", position: 'relative' }}>Stock{rh}</div>}
+                                {col.key === "photos" && <div style={{ width: getColumnWidth(col), border: "solid 0px", position: 'relative' }}>Photos{rh}</div>}
+                                {col.key === "brand" && <div style={{ width: getColumnWidth(col), border: "solid 0px", position: 'relative' }}>Brand{rh}</div>}
+                                {col.key === "purchase_price" && <div style={{ width: getColumnWidth(col), border: "solid 0px", position: 'relative' }}>P.Unit Price{rh}</div>}
+                                {col.key === "country" && <div style={{ width: getColumnWidth(col), border: "solid 0px", position: 'relative' }}>Country{rh}</div>}
+                                {col.key === "rack" && <div style={{ width: getColumnWidth(col), border: "solid 0px", position: 'relative' }}>Rack{rh}</div>}
+                              </React.Fragment>)
                             })}
                             {/* Settings icon on right */}
                             <div
