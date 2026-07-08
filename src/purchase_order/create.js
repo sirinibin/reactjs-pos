@@ -1661,6 +1661,10 @@ const PurchaseOrderCreate = forwardRef((props, ref) => {
                                             }}
                                         />
                                     </div>
+                                    <button type="button" title={t('New Product')} onClick={openProductCreateForm}
+                                        style={{ background: '#fff', border: '1px solid #c3c6d7', borderRadius: '4px', padding: '7px 12px', fontSize: '13px', cursor: 'pointer', color: '#434655', flexShrink: 0 }}>
+                                        <i className="bi bi-plus-lg" />
+                                    </button>
                                     <button type="button" title={t('Browse Products')} onClick={openProductsModal}
                                         style={{ background: '#004ac6', color: '#fff', border: 'none', borderRadius: '4px', padding: '9px 14px', fontSize: '13px', cursor: 'pointer', flexShrink: 0 }}>
                                         <i className="bi bi-list" />

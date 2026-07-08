@@ -2332,29 +2332,55 @@ const OrderCreate = forwardRef((props, ref) => {
         return true;
     }
 
-    function handleImportFromPO(po) {
+    async function handleImportFromPO(po) {
         if (!po || !po.products || po.products.length === 0) return;
+        const storeId = localStorage.getItem("store_id");
+        const authHeader = { "Content-Type": "application/json", Authorization: localStorage.getItem("access_token") };
+        const productMap = {};
+        await Promise.all(po.products.map(async p => {
+            if (!p.product_id) return;
+            try {
+                const r = await fetch(
+                    `/v1/product/${p.product_id}?search[store_id]=${storeId}&select=id,product_stores.${storeId}.retail_unit_price,product_stores.${storeId}.retail_unit_price_with_vat,product_stores.${storeId}.stock`,
+                    { method: "GET", headers: authHeader }
+                );
+                const d = await r.json();
+                if (r.ok && d.result) productMap[p.product_id] = d.result.product_stores?.[storeId] ?? {};
+            } catch (_) {}
+        }));
         po.products.forEach(p => {
+            const ps = productMap[p.product_id] ?? {};
+            const unitPrice = parseFloat(ps.retail_unit_price) || 0;
+            const unitPriceVat = parseFloat(ps.retail_unit_price_with_vat) || 0;
+            const stock = ps.stock ?? 0;
+            const qty = parseFloat(p.quantity) || 1;
             const already = selectedProducts.findIndex(s => s.product_id === p.product_id);
             if (already >= 0) {
-                selectedProducts[already].quantity = parseFloat(selectedProducts[already].quantity || 0) + parseFloat(p.quantity || 1);
+                const newQty = parseFloat(selectedProducts[already].quantity || 0) + qty;
+                selectedProducts[already].quantity = newQty;
+                selectedProducts[already].line_total = parseFloat(trimTo2Decimals((selectedProducts[already].unit_price - selectedProducts[already].unit_discount) * newQty));
+                selectedProducts[already].line_total_with_vat = parseFloat(trimTo2Decimals((selectedProducts[already].unit_price_with_vat - selectedProducts[already].unit_discount_with_vat) * newQty));
             } else {
                 selectedProducts.push({
                     product_id: p.product_id,
                     code: p.item_code || "",
+                    prefix_part_number: p.prefix_part_number || "",
                     part_number: p.part_number || "",
                     name: p.name || "",
                     name_in_arabic: p.name_in_arabic || "",
-                    quantity: parseFloat(p.quantity) || 1,
+                    quantity: qty,
                     unit: p.unit || "",
-                    unit_price: 0,
-                    unit_price_with_vat: 0,
+                    unit_price: unitPrice,
+                    unit_price_with_vat: unitPriceVat,
                     purchase_unit_price: parseFloat(p.purchase_unit_price) || 0,
                     purchase_unit_price_with_vat: parseFloat(p.purchase_unit_price_with_vat) || 0,
                     unit_discount: 0,
                     unit_discount_with_vat: 0,
                     unit_discount_percent: 0,
                     unit_discount_percent_with_vat: 0,
+                    line_total: parseFloat(trimTo2Decimals(unitPrice * qty)),
+                    line_total_with_vat: parseFloat(trimTo2Decimals(unitPriceVat * qty)),
+                    stock,
                     product_stores: {},
                     is_service: false,
                 });
@@ -5604,7 +5630,7 @@ const OrderCreate = forwardRef((props, ref) => {
                         </button>
                     </div>
                 </header>}
-                <Modal.Body className={formType === "type2" ? "type2-active" : ""} style={formType === "type2" ? { padding: 0, position: "relative" } : { overflowY: "auto" }}>
+                <Modal.Body className={formType === "type2" ? "type2-active" : ""} style={formType === "type2" ? { padding: 0, position: "relative" } : formType === "type3" ? { padding: 0, overflowY: "auto" } : { overflowY: "auto" }}>
                     {isProcessing && (
                         <div style={{
                             position: "absolute",
@@ -5655,7 +5681,7 @@ const OrderCreate = forwardRef((props, ref) => {
                     {formType === "type3" && (
                         <form className="needs-validation" onSubmit={e => { e.preventDefault(); handleCreate(e); }}>
                             {/* Compact two-column header */}
-                            <section style={{ backgroundColor: '#ffffff', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
+                            <section style={{ backgroundColor: '#ffffff' }}>
                                 <div className="sc-header-flex" style={{ borderBottom: '1px solid #c3c6d7' }}>
                                     {/* Left 60% */}
                                     <div className="sc-header-left" style={{ padding: '4px 10px', display: 'flex', gap: '6px', alignItems: 'stretch', backgroundColor: '#f2f4f6', borderRight: '1px solid #c3c6d7' }}>
@@ -5853,7 +5879,6 @@ const OrderCreate = forwardRef((props, ref) => {
                                             {/* Product row */}
                                             <div className="sc-sub-row sc-product-row" style={{ alignItems: 'flex-end' }}>
                                                 <div className="sc-product-search-group">
-                                                    {store?.settings?.enable_purchase_order_module && <button type="button" onClick={() => PurchaseOrderPickerRef.current?.open(handleImportFromPO)} style={{ background: '#f0f4ff', color: '#004ac6', border: '1px solid #c5d5f5', borderRadius: '4px', padding: '5px 10px', fontSize: '11px', fontWeight: 600, cursor: 'pointer', flexShrink: 0, display: 'flex', alignItems: 'center', gap: '3px' }}><i className="bi bi-file-earmark-arrow-down" />From P.O.</button>}
                                                     <div className="sc-search-input" style={{ flex: '1 1 0', minWidth: 0 }}>
                                                         <div style={{ flex: 1, minWidth: 0 }}>
                                                             <Typeahead
@@ -6203,6 +6228,11 @@ const OrderCreate = forwardRef((props, ref) => {
                                                             <Dropdown.Item onClick={() => openDeliveryNotes()}>
                                                                 <i className="bi bi-file-earmark-text" /> {t('From Delivery Notes')}
                                                             </Dropdown.Item>
+                                                            {store?.settings?.enable_purchase_order_module && (
+                                                                <Dropdown.Item onClick={() => PurchaseOrderPickerRef.current?.open(handleImportFromPO)}>
+                                                                    <i className="bi bi-file-earmark-arrow-down" /> {t('From Purchase Order')}
+                                                                </Dropdown.Item>
+                                                            )}
                                                         </Dropdown.Menu>
                                                     </Dropdown>
                                                 </div>
@@ -6284,9 +6314,8 @@ const OrderCreate = forwardRef((props, ref) => {
                                         );
                                     })() : <div className="sc-header-right" />}
                                 </div>
-
-
-
+                            </section>
+                            <div className="container-fluid p-0">
                                 <div style={{ overflowX: 'auto', maxHeight: '55vh', overflowY: 'auto', marginTop: '6px' }}>
                                     <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: '600px', tableLayout: 'fixed' }}>
                                         <colgroup>
@@ -7618,7 +7647,7 @@ const OrderCreate = forwardRef((props, ref) => {
                                         </tbody>
                                     </table>
                                 </div>
-                            </section>
+                            </div>
                             <div className="sc-post-table">
                                 {/* LEFT: Payment + Commission */}
                                 <div className="sc-post-table-left">
