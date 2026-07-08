@@ -6,7 +6,7 @@ export const DEFAULT_MENU = [
     { id: "sales",            label: "Sales",                     path: "/dashboard/sales",                   icon: "bi-receipt" },
     { id: "sales_return",     label: "Sales Returns",             path: "/dashboard/salesreturn",             icon: "bi-receipt-cutoff" },
     { id: "purchases",        label: "Purchases",                 path: "/dashboard/purchases",               icon: "bi-cart4",         productsOnly: true },
-    { id: "purchase_orders",  label: "Purchase Orders",           path: "/dashboard/purchase-orders",         icon: "bi-file-earmark-text", productsOnly: true },
+    { id: "purchase_orders",  label: "Purchase Orders",           path: "/dashboard/purchase-orders",         icon: "bi-file-earmark-text", requiresPurchaseOrderModule: true },
     { id: "purchase_return",  label: "Purchase Returns",          path: "/dashboard/purchasereturn",          icon: "bi-cart-x",        productsOnly: true },
     { id: "delivery_notes",   label: "Delivery Notes",            path: "/dashboard/delivery-notes",          icon: "bi-truck" },
     { id: "quotations",       label: "Quotations",                path: "/dashboard/quotations",              icon: "bi-clipboard2-check" },
@@ -49,7 +49,18 @@ export function loadSidebarConfig() {
                 .map(s => DEFAULT_MENU.find(m => m.id === s.id) ? { ...DEFAULT_MENU.find(m => m.id === s.id), visible: s.visible } : null)
                 .filter(Boolean);
             const savedIds = new Set(saved.map(s => s.id));
-            DEFAULT_MENU.filter(m => !savedIds.has(m.id)).forEach(m => mapped.push({ ...m, visible: true }));
+            // Insert new items at their DEFAULT_MENU position rather than appending at the end
+            DEFAULT_MENU.filter(m => !savedIds.has(m.id)).forEach(newItem => {
+                const defaultIdx = DEFAULT_MENU.findIndex(m => m.id === newItem.id);
+                // Find the insertion point: after the rightmost already-mapped item that precedes this one in DEFAULT_MENU
+                let insertAt = mapped.length;
+                for (let i = mapped.length - 1; i >= 0; i--) {
+                    const existingIdx = DEFAULT_MENU.findIndex(m => m.id === mapped[i].id);
+                    if (existingIdx < defaultIdx) { insertAt = i + 1; break; }
+                    if (i === 0) insertAt = 0;
+                }
+                mapped.splice(insertAt, 0, { ...newItem, visible: true });
+            });
             return mapped;
         }
     } catch {}

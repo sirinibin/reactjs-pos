@@ -8459,7 +8459,6 @@ const OrderCreate = forwardRef((props, ref) => {
                                         </div>
 
                                         <div className="flex gap-xs align-items-center shrink-0">
-                                            {store?.settings?.enable_purchase_order_module && <button type="button" onClick={() => PurchaseOrderPickerRef.current?.open(handleImportFromPO)} style={{ background: '#f0f4ff', color: '#004ac6', border: '1px solid #c5d5f5', borderRadius: '4px', padding: '5px 10px', fontSize: '13px', fontWeight: 600, cursor: 'pointer', flexShrink: 0, display: 'flex', alignItems: 'center', gap: '3px', height: '34px' }}><i className="bi bi-file-earmark-arrow-down" />From P.O.</button>}
                                             {store?.settings?.enable_services && store?.settings?.enable_products ? (
                                                 <Dropdown>
                                                     <Dropdown.Toggle bsPrefix="btn px-3 bg-primary hover:opacity-90 text-on-primary rounded font-label-md border-0 cursor-pointer" style={{ height: '34px', display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
@@ -8489,6 +8488,11 @@ const OrderCreate = forwardRef((props, ref) => {
                                                         <Dropdown.Item onClick={openDeliveryNotes}>
                                                             <i className="bi bi-file-earmark-text mr-1"></i> {t('From Delivery Notes')}
                                                         </Dropdown.Item>
+                                                        {store?.settings?.enable_purchase_order_module && (
+                                                            <Dropdown.Item onClick={() => PurchaseOrderPickerRef.current?.open(handleImportFromPO)}>
+                                                                <i className="bi bi-file-earmark-arrow-down mr-1"></i> {t('From Purchase Order')}
+                                                            </Dropdown.Item>
+                                                        )}
                                                     </Dropdown.Menu>
                                                 </Dropdown>
                                             </div>
