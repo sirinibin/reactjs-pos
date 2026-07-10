@@ -4799,6 +4799,10 @@ const StoreCreate = forwardRef((props, ref) => {
                                     <input type="checkbox" id="enable_auto_translation_to_arabic" checked={!!formData.settings.enable_auto_translation_to_arabic} value={formData.settings.enable_auto_translation_to_arabic} onChange={() => { errors["enable_auto_translation_to_arabic"] = ""; formData.settings.enable_auto_translation_to_arabic = !formData.settings.enable_auto_translation_to_arabic; setFormData({ ...formData }); }} />
                                     <span>Enable Auto Translation to Arabic</span>
                                 </label>
+                                <label className="pw-check" htmlFor="enable_arabic_names_list">
+                                    <input type="checkbox" id="enable_arabic_names_list" checked={!!formData.settings.enable_arabic_names_list} value={formData.settings.enable_arabic_names_list} onChange={() => { formData.settings.enable_arabic_names_list = !formData.settings.enable_arabic_names_list; setFormData({ ...formData }); }} />
+                                    <span>Enable Arabic Names List (Product Form)</span>
+                                </label>
                                 <label className="pw-check" htmlFor="allow_products_duplicates_by_default">
                                     <input type="checkbox" id="allow_products_duplicates_by_default" checked={!!formData.settings.allow_products_duplicates_by_default} value={formData.settings.allow_products_duplicates_by_default} onChange={() => { formData.settings.allow_products_duplicates_by_default = !formData.settings.allow_products_duplicates_by_default; setFormData({ ...formData }); }} />
                                     <span>Mark Allow Products Duplicates by Default</span>

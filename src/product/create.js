@@ -13,6 +13,8 @@ import { Typeahead, Menu, MenuItem } from "react-bootstrap-typeahead";
 import StoreCreate from "../store/create.js";
 import ProductCategoryCreate from "../product_category/create.js";
 import ProductBrandCreate from "../product_brand/create.js";
+import ArabicNameCreate from "../arabic_name/create.js";
+import ArabicNameIndex from "../arabic_name/index.js";
 import countryList from 'react-select-country-list';
 import ImageGallery from '../utils/ImageGallery.js';
 import { trimTo2Decimals, trimTo8Decimals, trimTo4Decimals } from "../utils/numberUtils";
@@ -63,6 +65,8 @@ const ProductCreate = forwardRef((props, ref) => {
       setSelectedCategories(selectedCategories);
       selectedBrands = [];
       setSelectedBrands(selectedBrands);
+      selectedArabicNames = [];
+      setSelectedArabicNames(selectedArabicNames);
       selectedCountries = [];
       setSelectedCountries(selectedCountries);
 
@@ -130,6 +134,8 @@ const ProductCreate = forwardRef((props, ref) => {
   let [selectedBrands, setSelectedBrands] = useState([]);
   let [categoryOptions, setCategoryOptions] = useState([]);
   let [brandOptions, setBrandOptions] = useState([]);
+  let [arabicNameOptions, setArabicNameOptions] = useState([]);
+  let [selectedArabicNames, setSelectedArabicNames] = useState([]);
 
   let [errors, setErrors] = useState({});
   const [isProcessing, setProcessing] = useState(false);
@@ -289,6 +295,12 @@ const ProductCreate = forwardRef((props, ref) => {
         }
         setSelectedCountries(selectedCountries);
 
+        selectedArabicNames = [];
+        if (data.result.name_in_arabic) {
+          selectedArabicNames.push({ name_in_arabic: data.result.name_in_arabic });
+        }
+        setSelectedArabicNames(selectedArabicNames);
+
         setSelectedLinkedProducts([]);
         if (data.result.linked_products) {
           setSelectedLinkedProducts(data.result.linked_products);
@@ -440,6 +452,29 @@ const ProductCreate = forwardRef((props, ref) => {
     setBrandOptions(data.result);
   }
 
+  async function suggestArabicNames(searchTerm) {
+    var params = { name: searchTerm };
+    if (localStorage.getItem("store_id")) {
+      params.store_id = localStorage.getItem("store_id");
+    }
+    var queryString = ObjectToSearchQueryParams(params);
+    if (queryString !== "") queryString = "&" + queryString;
+
+    const requestOptions = {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: localStorage.getItem("access_token"),
+      },
+    };
+
+    let result = await fetch(
+      "/v1/arabic-name?select=id,name_in_english,name_in_arabic" + queryString,
+      requestOptions
+    );
+    let data = await result.json();
+    setArabicNameOptions(data.result || []);
+  }
 
   useEffect(() => {
     let at = localStorage.getItem("access_token");
@@ -680,6 +715,8 @@ const ProductCreate = forwardRef((props, ref) => {
     ProductCategoryCreateFormRef.current.open();
   }
   const ProductBrandCreateFormRef = useRef();
+  const ArabicNameCreateRef = useRef();
+  const ArabicNameListRef = useRef();
   function openProductBrandCreateForm() {
     ProductBrandCreateFormRef.current.open();
   }
@@ -1651,6 +1688,17 @@ const ProductCreate = forwardRef((props, ref) => {
         ref={ProductBrandCreateFormRef}
         showToastMessage={props.showToastMessage}
       />
+      <ArabicNameCreate
+        ref={ArabicNameCreateRef}
+        onSelect={(result) => {
+          formData.name_in_arabic = result.name_in_arabic;
+          setFormData({ ...formData });
+          selectedArabicNames = [result];
+          setSelectedArabicNames([result]);
+        }}
+        showToastMessage={props.showToastMessage}
+      />
+      <ArabicNameIndex ref={ArabicNameListRef} showToastMessage={props.showToastMessage} />
 
       {flash && (
         <div style={{
@@ -1782,11 +1830,64 @@ const ProductCreate = forwardRef((props, ref) => {
                       </div>
                       <div className="col-md-6">
                         <Label>Name in Arabic</Label>
-                        <input id="product_name_arabic" name="product_name_arabic" type="text"
-                          value={formData.name_in_arabic || ''}
-                          onChange={(e) => { errors['name_in_arabic'] = ''; setErrors({ ...errors }); formData.name_in_arabic = e.target.value; setFormData({ ...formData }); }}
-                          style={{ ...INPUT, direction: 'rtl' }} placeholder="الاسم بالعربية"
-                        />
+                        {store?.settings?.enable_arabic_names_list ? (
+                          <div style={{ display: 'flex', gap: '4px', alignItems: 'center' }}>
+                            <div style={{ flex: 1, minWidth: 0 }}>
+                              <Typeahead
+                                id="name_in_arabic"
+                                labelKey="name_in_arabic"
+                                filterBy={() => true}
+                                positionFixed={true}
+                                options={arabicNameOptions}
+                                selected={selectedArabicNames}
+                                placeholder="الاسم بالعربية"
+                                inputProps={{ style: { direction: 'ltr', fontFamily: '"Amiri","Noto Naskh Arabic",Arial,sans-serif', fontSize: '14px' } }}
+                                onInputChange={(searchTerm) => {
+                                  errors['name_in_arabic'] = '';
+                                  setErrors({ ...errors });
+                                  formData.name_in_arabic = searchTerm;
+                                  setFormData({ ...formData });
+                                  if (searchTerm) suggestArabicNames(searchTerm);
+                                  else setArabicNameOptions([]);
+                                }}
+                                onChange={(selectedItems) => {
+                                  errors['name_in_arabic'] = '';
+                                  setErrors({ ...errors });
+                                  if (selectedItems.length === 0) {
+                                    formData.name_in_arabic = '';
+                                    setFormData({ ...formData });
+                                    setSelectedArabicNames([]);
+                                    return;
+                                  }
+                                  formData.name_in_arabic = selectedItems[0].name_in_arabic;
+                                  setFormData({ ...formData });
+                                  selectedArabicNames = selectedItems;
+                                  setSelectedArabicNames(selectedArabicNames);
+                                }}
+                                renderMenuItemChildren={(option) => (
+                                  <div>
+                                    <span style={{ fontSize: '12px', opacity: 0.75 }}>{option.name_in_english}</span>
+                                    <span style={{ marginLeft: '8px', direction: 'rtl', fontFamily: '"Amiri","Noto Naskh Arabic",Arial,sans-serif', fontSize: '14px' }}>{option.name_in_arabic}</span>
+                                  </div>
+                                )}
+                              />
+                            </div>
+                            <Button className="btn btn-primary btn-sm" title="Add new Arabic name"
+                              onClick={() => ArabicNameCreateRef.current?.open()}>
+                              <i className="bi bi-plus-lg"></i>
+                            </Button>
+                          <Button className="btn btn-primary btn-sm" title="Browse Arabic names"
+                              onClick={() => ArabicNameListRef.current?.open()}>
+                              <i className="bi bi-list"></i>
+                            </Button>
+                          </div>
+                        ) : (
+                          <input id="product_name_arabic" name="product_name_arabic" type="text"
+                            value={formData.name_in_arabic || ''}
+                            onChange={(e) => { errors['name_in_arabic'] = ''; setErrors({ ...errors }); formData.name_in_arabic = e.target.value; setFormData({ ...formData }); }}
+                            style={{ ...INPUT, direction: 'ltr' }} placeholder="الاسم بالعربية"
+                          />
+                        )}
                         {errors.name_in_arabic && <ErrMsg>{errors.name_in_arabic}</ErrMsg>}
                       </div>
                     </div>
