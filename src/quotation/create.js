@@ -3341,7 +3341,14 @@ async function checkWarning(i) {
                   <div style={{ minWidth: 0, display: 'flex', flexDirection: 'column', gap: '8px' }}>
                     {/* Customer search row */}
                     <div>
-                      <label className="form-label mb-1">Customer</label>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '4px', marginBottom: '4px' }}>
+                        <label className="form-label mb-0">Customer</label>
+                        {formData.customer_id && (
+                          <Button className="btn btn-default btn-sm" onClick={() => openCustomerUpdateForm(formData.customer_id)}>
+                            <i className="bi bi-pencil"></i>
+                          </Button>
+                        )}
+                      </div>
                       <div style={{ display: 'flex', gap: '4px', alignItems: 'center' }}>
                         <div style={{ flex: 1, minWidth: 0 }}>
                           <Typeahead
@@ -3421,7 +3428,7 @@ async function checkWarning(i) {
                                 return (
                                     <Menu {...menuProps} style={{ ...(menuProps.style || {}), width: '95vw', maxWidth: '95vw', minWidth: '300px', zIndex: 9999 }}>
                                         <MenuItem disabled style={{ position: 'sticky', top: 0, padding: 0, margin: 0 }}>
-                                            <div style={{ display: 'flex', fontWeight: 700, color: '#374151', padding: '4px 8px', background: '#f8f9fa', borderBottom: '1px solid #e2e8f0', pointerEvents: 'auto', fontSize: '12px', position: 'relative' }}>
+                                            <div style={{ display: 'flex', fontWeight: 700, color: '#374151', padding: '4px 8px', background: '#f8f9fa', borderBottom: '1px solid #e2e8f0', pointerEvents: 'auto', position: 'relative' }}>
                                                 {visCols.map(col => (
                                                     <div key={col.key} style={{ width: cw(col), overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', position: 'relative' }}>
                                                         {col.key === 'code' && 'Code'}
@@ -3444,20 +3451,20 @@ async function checkWarning(i) {
                                             const rowBg = isActive ? '#e8f0fe' : 'transparent';
                                             return (
                                                 <MenuItem option={option} position={idx} key={idx} style={{ padding: 0 }}>
-                                                    <div style={{ display: 'flex', padding: '5px 8px', alignItems: 'center', background: rowBg, fontSize: '13px' }}>
+                                                    <div style={{ display: 'flex', padding: '5px 8px', alignItems: 'center', background: rowBg }}>
                                                         {visCols.map(col => (
                                                             <div key={col.key} style={{ width: cw(col), overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                                                                {col.key === 'code' && <span style={{ fontFamily: 'monospace', color: isActive ? '#004ac6' : '#374151', fontWeight: isActive ? 600 : 400 }}>{highlightWords(option.code, searchWords, isActive)}</span>}
+                                                                {col.key === 'code' && <span style={{ color: isActive ? '#191c1e' : '#374151', fontWeight: isActive ? 600 : 400 }}>{highlightWords(option.code, searchWords, isActive)}</span>}
                                                                 {col.key === 'name' && <span style={{ color: isActive ? '#191c1e' : '#374151', fontWeight: isActive ? 600 : 400 }}>{highlightWords(option.name + (option.name_in_arabic ? ' - ' + option.name_in_arabic : ''), searchWords, isActive)}</span>}
-                                                                {col.key === 'phone' && <span style={{ color: '#6b7280' }}>{highlightWords(option.phone || '–', searchWords, isActive)}</span>}
-                                                                {col.key === 'vat_no' && <span style={{ color: '#6b7280' }}>{highlightWords(option.vat_no || '–', searchWords, isActive)}</span>}
+                                                                {col.key === 'phone' && <span style={{ color: isActive ? '#191c1e' : '#374151', fontWeight: isActive ? 600 : 400 }}>{highlightWords(option.phone || '–', searchWords, isActive)}</span>}
+                                                                {col.key === 'vat_no' && <span style={{ color: isActive ? '#191c1e' : '#374151', fontWeight: isActive ? 600 : 400 }}>{highlightWords(option.vat_no || '–', searchWords, isActive)}</span>}
                                                                 {col.key === 'credit_balance' && (
                                                                     <button type="button" onClick={e => { e.stopPropagation(); openCustomerPending(option); }}
-                                                                        style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer', color: option.credit_balance > 0 ? '#dc2626' : option.credit_balance < 0 ? '#2563eb' : '#6b7280', fontWeight: 600, fontSize: '13px' }}>
+                                                                        style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer', color: option.credit_balance > 0 ? '#dc2626' : option.credit_balance < 0 ? '#2563eb' : (isActive ? '#191c1e' : '#374151'), fontWeight: isActive ? 600 : 400 }}>
                                                                         {option.credit_balance != null ? option.credit_balance : '–'}
                                                                     </button>
                                                                 )}
-                                                                {col.key === 'credit_limit' && <span style={{ color: '#6b7280' }}>{option.credit_limit || '–'}</span>}
+                                                                {col.key === 'credit_limit' && <span style={{ color: isActive ? '#191c1e' : '#374151', fontWeight: isActive ? 600 : 400 }}>{option.credit_limit || '–'}</span>}
                                                             </div>
                                                         ))}
                                                     </div>
@@ -3469,14 +3476,6 @@ async function checkWarning(i) {
                             }}
                           />
                         </div>
-                        {formData.customer_id && (
-                          <Button className="btn btn-default btn-sm" onClick={() => openCustomerUpdateForm(formData.customer_id)}>
-                            <i className="bi bi-pencil"></i>
-                          </Button>
-                        )}
-                        <Button className="btn btn-primary btn-sm" onClick={openCustomers}>
-                          <i className="bi bi-list"></i>
-                        </Button>
                         <Button
                           hide={true.toString()}
                           onClick={openCustomerCreateForm}
@@ -3484,6 +3483,9 @@ async function checkWarning(i) {
                           type="button"
                         >
                           <i className="bi bi-plus-lg"></i> New
+                        </Button>
+                        <Button className="btn btn-primary btn-sm" onClick={openCustomers}>
+                          <i className="bi bi-list"></i>
                         </Button>
                       </div>
                       {errors.customer_id && <div style={{ color: "red", fontSize: '12px', marginTop: '2px' }}>{errors.customer_id}</div>}
@@ -3635,8 +3637,11 @@ async function checkWarning(i) {
                 </div>
               </div>
 
-              <div className="col-md-9">
-                <label className="form-label">{getProductLabel(store?.settings)}* {store?.settings?.enable_purchase_order_module && <button type="button" onClick={() => PurchaseOrderPickerRef.current?.open(handleImportFromPO)} style={{ marginLeft: '8px', background: '#f0f4ff', color: '#004ac6', border: '1px solid #c5d5f5', borderRadius: '4px', padding: '2px 8px', fontSize: '11px', fontWeight: 600, cursor: 'pointer', verticalAlign: 'middle' }}><i className="bi bi-file-earmark-arrow-down" style={{ marginRight: '3px' }} />From P.O.</button>}</label>
+              <div className="col-12">
+                <label className="form-label">{getProductLabel(store?.settings)}*</label>
+                <div style={{ display: 'flex', gap: '4px', alignItems: 'center' }}>
+                <div style={{ display: 'flex', gap: '4px', alignItems: 'center', flex: '0 0 calc(100% - 360px)', minWidth: 0 }}>
+                <div style={{ flex: 1, minWidth: 0 }}>
                 <Typeahead
                   id="product_id"
                   ref={productSearchRef}
@@ -3940,47 +3945,47 @@ async function checkWarning(i) {
                     );
                   }}
                 />
+                </div>
+                {/* List first, New second, From P.O. */}
+                {store?.settings?.enable_services && store?.settings?.enable_products ? (
+                  <Dropdown>
+                    <Dropdown.Toggle bsPrefix="btn btn-primary btn-sm" type="button">
+                      <i className="bi bi-list"></i>
+                    </Dropdown.Toggle>
+                    <Dropdown.Menu>
+                      <Dropdown.Item onClick={openProducts}>Products</Dropdown.Item>
+                      <Dropdown.Item onClick={openServices}>Services</Dropdown.Item>
+                    </Dropdown.Menu>
+                  </Dropdown>
+                ) : (
+                  <Button className="btn btn-primary btn-sm" onClick={openProducts}>
+                    <i className="bi bi-list"></i>
+                  </Button>
+                )}
+                {store?.settings?.enable_services && store?.settings?.enable_products ? (
+                  <Dropdown>
+                    <Dropdown.Toggle bsPrefix="btn btn-outline-secondary btn-primary btn-sm" type="button">
+                      <i className="bi bi-plus-lg"></i> New
+                    </Dropdown.Toggle>
+                    <Dropdown.Menu>
+                      <Dropdown.Item onClick={() => ProductCreateFormRef.current.open()}>Product</Dropdown.Item>
+                      <Dropdown.Item onClick={() => ServiceCreateFormRef.current.open()}>Service</Dropdown.Item>
+                    </Dropdown.Menu>
+                  </Dropdown>
+                ) : (
+                  <Button hide={true.toString()} onClick={openProductCreateForm} className="btn btn-outline-secondary btn-primary btn-sm" type="button">
+                    <i className="bi bi-plus-lg"></i> New
+                  </Button>
+                )}
+                </div>
+                {store?.settings?.enable_purchase_order_module && <button type="button" onClick={() => PurchaseOrderPickerRef.current?.open(handleImportFromPO)} style={{ background: '#f0f4ff', color: '#004ac6', border: '1px solid #c5d5f5', borderRadius: '4px', padding: '4px 8px', fontSize: '11px', fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '3px' }}><i className="bi bi-file-earmark-arrow-down" />From P.O.</button>}
+                </div>
                 {errors.product_id ? (
                   <div style={{ color: "red" }}>
                     <i className="bi bi-x-lg"> </i>
                     {errors.product_id}
                   </div>
                 ) : null}
-              </div>
-
-              <div className="col-md-2">
-                <div style={{ marginTop: "30px", display: "flex", gap: "4px" }}>
-                  {store?.settings?.enable_services && store?.settings?.enable_products ? (
-                    <Dropdown>
-                      <Dropdown.Toggle bsPrefix="btn btn-outline-secondary btn-primary" type="button">
-                        <i className="bi bi-plus-lg"></i> New
-                      </Dropdown.Toggle>
-                      <Dropdown.Menu>
-                        <Dropdown.Item onClick={() => ProductCreateFormRef.current.open()}>Product</Dropdown.Item>
-                        <Dropdown.Item onClick={() => ServiceCreateFormRef.current.open()}>Service</Dropdown.Item>
-                      </Dropdown.Menu>
-                    </Dropdown>
-                  ) : (
-                    <Button hide={true.toString()} onClick={openProductCreateForm} className="btn btn-outline-secondary btn-primary" type="button">
-                      <i className="bi bi-plus-lg"></i> New
-                    </Button>
-                  )}
-                  {store?.settings?.enable_services && store?.settings?.enable_products ? (
-                    <Dropdown>
-                      <Dropdown.Toggle bsPrefix="btn btn-primary" type="button">
-                        <i className="bi bi-list"></i>
-                      </Dropdown.Toggle>
-                      <Dropdown.Menu>
-                        <Dropdown.Item onClick={openProducts}>Products</Dropdown.Item>
-                        <Dropdown.Item onClick={openServices}>Services</Dropdown.Item>
-                      </Dropdown.Menu>
-                    </Dropdown>
-                  ) : (
-                    <Button className="btn btn-primary" onClick={openProducts}>
-                      <i className="bi bi-list"></i>
-                    </Button>
-                  )}
-                </div>
               </div>
             </>}
 

@@ -2406,7 +2406,7 @@ const DeliveryNoteCreate = forwardRef((props, ref) => {
                   return (
                     <Menu {...menuProps} style={{ ...(menuProps.style || {}), width: '95vw', maxWidth: '95vw', minWidth: '300px', zIndex: 9999 }}>
                       <MenuItem disabled style={{ position: 'sticky', top: 0, padding: 0, margin: 0 }}>
-                        <div style={{ display: 'flex', fontWeight: 700, color: '#374151', padding: '4px 8px', background: '#f8f9fa', borderBottom: '1px solid #e2e8f0', pointerEvents: 'auto', fontSize: '12px', position: 'relative' }}>
+                        <div style={{ display: 'flex', fontWeight: 700, color: '#374151', padding: '4px 8px', background: '#f8f9fa', borderBottom: '1px solid #e2e8f0', pointerEvents: 'auto', position: 'relative' }}>
                           {visCols.map(col => (
                             <div key={col.key} style={{ width: cw(col), overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', position: 'relative' }}>
                               {col.key === 'code' && 'Code'}
@@ -2429,15 +2429,15 @@ const DeliveryNoteCreate = forwardRef((props, ref) => {
                         const rowBg = isActive ? '#e8f0fe' : 'transparent';
                         return (
                           <MenuItem option={option} position={idx} key={idx} style={{ padding: 0 }}>
-                            <div style={{ display: 'flex', padding: '5px 8px', alignItems: 'center', background: rowBg, fontSize: '13px' }}>
+                            <div style={{ display: 'flex', padding: '5px 8px', alignItems: 'center', background: rowBg }}>
                               {visCols.map(col => (
                                 <div key={col.key} style={{ width: cw(col), overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                                  {col.key === 'code' && <span style={{ fontFamily: 'monospace', color: isActive ? '#004ac6' : '#374151', fontWeight: isActive ? 600 : 400 }}>{highlightWords(option.code, searchWords, isActive)}</span>}
+                                  {col.key === 'code' && <span style={{ color: isActive ? '#191c1e' : '#374151', fontWeight: isActive ? 600 : 400 }}>{highlightWords(option.code, searchWords, isActive)}</span>}
                                   {col.key === 'name' && <span style={{ color: isActive ? '#191c1e' : '#374151', fontWeight: isActive ? 600 : 400 }}>{highlightWords(option.name + (option.name_in_arabic ? ' - ' + option.name_in_arabic : ''), searchWords, isActive)}</span>}
-                                  {col.key === 'phone' && <span style={{ color: '#6b7280' }}>{highlightWords(option.phone || '–', searchWords, isActive)}</span>}
-                                  {col.key === 'vat_no' && <span style={{ color: '#6b7280' }}>{highlightWords(option.vat_no || '–', searchWords, isActive)}</span>}
-                                  {col.key === 'credit_balance' && <span style={{ color: option.credit_balance > 0 ? '#dc2626' : option.credit_balance < 0 ? '#2563eb' : '#6b7280', fontWeight: 600 }}>{option.credit_balance != null ? option.credit_balance : '–'}</span>}
-                                  {col.key === 'credit_limit' && <span style={{ color: '#6b7280' }}>{option.credit_limit || '–'}</span>}
+                                  {col.key === 'phone' && <span style={{ color: isActive ? '#191c1e' : '#374151', fontWeight: isActive ? 600 : 400 }}>{highlightWords(option.phone || '–', searchWords, isActive)}</span>}
+                                  {col.key === 'vat_no' && <span style={{ color: isActive ? '#191c1e' : '#374151', fontWeight: isActive ? 600 : 400 }}>{highlightWords(option.vat_no || '–', searchWords, isActive)}</span>}
+                                  {col.key === 'credit_balance' && <span style={{ color: option.credit_balance > 0 ? '#dc2626' : option.credit_balance < 0 ? '#2563eb' : (isActive ? '#191c1e' : '#374151'), fontWeight: isActive ? 600 : 400 }}>{option.credit_balance != null ? option.credit_balance : '–'}</span>}
+                                  {col.key === 'credit_limit' && <span style={{ color: isActive ? '#191c1e' : '#374151', fontWeight: isActive ? 600 : 400 }}>{option.credit_limit || '–'}</span>}
                                 </div>
                               ))}
                             </div>
@@ -2497,7 +2497,6 @@ const DeliveryNoteCreate = forwardRef((props, ref) => {
               )}
                   {/* Product search sub-row */}
                   <div className="dn-sub-row" style={{ alignItems: 'flex-end' }}>
-                {store?.settings?.enable_purchase_order_module && <button type="button" onClick={() => PurchaseOrderPickerRef.current?.open(handleImportFromPO)} style={{ background: '#f0f4ff', color: '#004ac6', border: '1px solid #c5d5f5', borderRadius: '4px', padding: '5px 10px', fontSize: '11px', fontWeight: 600, cursor: 'pointer', flexShrink: 0, display: 'flex', alignItems: 'center', gap: '3px', alignSelf: 'flex-end' }}><i className="bi bi-file-earmark-arrow-down" />From P.O.</button>}
                 {/* Product search */}
                 <div className="dn-search-input">
                   <Typeahead
@@ -2662,6 +2661,7 @@ const DeliveryNoteCreate = forwardRef((props, ref) => {
                   style={{ background: '#004ac6', color: '#fff', border: '1px solid transparent', borderRadius: '4px', padding: '7px 12px', fontSize: '13px', fontWeight: 600, fontFamily: '"Inter", sans-serif', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', lineHeight: '1', flexShrink: 0 }}>
                   <i className="bi bi-list"></i>
                 </Button>
+                {store?.settings?.enable_purchase_order_module && <button type="button" onClick={() => PurchaseOrderPickerRef.current?.open(handleImportFromPO)} style={{ background: '#f0f4ff', color: '#004ac6', border: '1px solid #c5d5f5', borderRadius: '4px', padding: '5px 10px', fontSize: '11px', fontWeight: 600, cursor: 'pointer', flexShrink: 0, display: 'flex', alignItems: 'center', gap: '3px', alignSelf: 'flex-end' }}><i className="bi bi-file-earmark-arrow-down" />From P.O.</button>}
                 <div className="dn-barcode-input" style={{ flex: '0 1 160px', minWidth: '100px' }}>
                   <DebounceInput minLength={3} debounceTimeout={500} placeholder="Scan Barcode" style={INPUT} value={formData.barcode} onChange={event => getProductByBarCode(event.target.value)} />
                 </div>

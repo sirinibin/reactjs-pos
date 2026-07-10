@@ -3443,7 +3443,14 @@ const PurchaseCreate = forwardRef((props, ref) => {
                                 <div>
                                     {/* Vendor search row */}
                                     <div style={{ marginBottom: '12px' }}>
-                                        <label className="form-label">{t('Vendor')}</label>
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: '4px', marginBottom: '4px' }}>
+                                            <label className="form-label mb-0">{t('Vendor')}</label>
+                                            {selectedVendors.length > 0 && formData.vendor_id && (
+                                                <Button className="btn btn-outline-secondary btn-primary btn-sm" type="button" onClick={() => openVendorUpdateForm(formData.vendor_id)}>
+                                                    <i className="bi bi-pencil"></i>
+                                                </Button>
+                                            )}
+                                        </div>
                                         <div style={{ display: 'flex', gap: '4px', alignItems: 'flex-start' }}>
                                             <div style={{ flex: 1, minWidth: 0 }}>
                                                 <Typeahead
@@ -3515,7 +3522,7 @@ const PurchaseCreate = forwardRef((props, ref) => {
                                                         return (
                                                             <Menu {...menuProps} style={{ ...(menuProps.style || {}), width: '95vw', maxWidth: '95vw', minWidth: '300px', zIndex: 9999 }}>
                                                                 <MenuItem disabled style={{ position: 'sticky', top: 0, padding: 0, margin: 0 }}>
-                                                                    <div style={{ display: 'flex', fontWeight: 700, color: '#374151', padding: '4px 8px', background: '#f8f9fa', borderBottom: '1px solid #e2e8f0', pointerEvents: 'auto', fontSize: '12px', position: 'relative' }}>
+                                                                    <div style={{ display: 'flex', fontWeight: 700, color: '#374151', padding: '4px 8px', background: '#f8f9fa', borderBottom: '1px solid #e2e8f0', pointerEvents: 'auto', position: 'relative' }}>
                                                                         {visCols.map(col => (
                                                                             <div key={col.key} style={{ width: cw(col), overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', position: 'relative' }}>
                                                                                 {col.key === 'code' && t('Code')}
@@ -3538,15 +3545,15 @@ const PurchaseCreate = forwardRef((props, ref) => {
                                                                     const rowBg = isActive ? '#e8f0fe' : 'transparent';
                                                                     return (
                                                                         <MenuItem option={option} position={idx} key={idx} style={{ padding: 0 }}>
-                                                                            <div style={{ display: 'flex', padding: '5px 8px', alignItems: 'center', background: rowBg, fontSize: '13px' }}>
+                                                                            <div style={{ display: 'flex', padding: '5px 8px', alignItems: 'center', background: rowBg }}>
                                                                                 {visCols.map(col => (
                                                                                     <div key={col.key} style={{ width: cw(col), overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                                                                                        {col.key === 'code' && <span style={{ fontFamily: 'monospace', color: isActive ? '#004ac6' : '#374151', fontWeight: isActive ? 600 : 400 }}>{highlightWords(option.code, searchWords, isActive)}</span>}
+                                                                                        {col.key === 'code' && <span style={{ color: isActive ? '#191c1e' : '#374151', fontWeight: isActive ? 600 : 400 }}>{highlightWords(option.code, searchWords, isActive)}</span>}
                                                                                         {col.key === 'name' && <span style={{ color: isActive ? '#191c1e' : '#374151', fontWeight: isActive ? 600 : 400 }}>{highlightWords(option.name + (option.name_in_arabic ? ' - ' + option.name_in_arabic : ''), searchWords, isActive)}</span>}
-                                                                                        {col.key === 'phone' && <span style={{ color: '#6b7280' }}>{highlightWords(option.phone || '–', searchWords, isActive)}</span>}
-                                                                                        {col.key === 'vat_no' && <span style={{ color: '#6b7280' }}>{highlightWords(option.vat_no || '–', searchWords, isActive)}</span>}
-                                                                                        {col.key === 'credit_balance' && <span style={{ color: option.credit_balance > 0 ? '#dc2626' : option.credit_balance < 0 ? '#2563eb' : '#6b7280', fontWeight: 600 }}>{option.credit_balance != null ? option.credit_balance : '–'}</span>}
-                                                                                        {col.key === 'credit_limit' && <span style={{ color: '#6b7280' }}>{option.credit_limit || '–'}</span>}
+                                                                                        {col.key === 'phone' && <span style={{ color: isActive ? '#191c1e' : '#374151', fontWeight: isActive ? 600 : 400 }}>{highlightWords(option.phone || '–', searchWords, isActive)}</span>}
+                                                                                        {col.key === 'vat_no' && <span style={{ color: isActive ? '#191c1e' : '#374151', fontWeight: isActive ? 600 : 400 }}>{highlightWords(option.vat_no || '–', searchWords, isActive)}</span>}
+                                                                                        {col.key === 'credit_balance' && <span style={{ color: option.credit_balance > 0 ? '#dc2626' : option.credit_balance < 0 ? '#2563eb' : (isActive ? '#191c1e' : '#374151'), fontWeight: isActive ? 600 : 400 }}>{option.credit_balance != null ? option.credit_balance : '–'}</span>}
+                                                                                        {col.key === 'credit_limit' && <span style={{ color: isActive ? '#191c1e' : '#374151', fontWeight: isActive ? 600 : 400 }}>{option.credit_limit || '–'}</span>}
                                                                                     </div>
                                                                                 ))}
                                                                             </div>
@@ -3560,7 +3567,6 @@ const PurchaseCreate = forwardRef((props, ref) => {
                                             </div>
                                             <Button hide={true.toString()} onClick={openVendorCreateForm} className="btn btn-outline-secondary btn-primary btn-sm" type="button" id="button-addon1"><i className="bi bi-plus-lg"></i> {t('New')}</Button>
                                             <Button onClick={openVendors} className="btn btn-outline-secondary btn-primary btn-sm" type="button"><i className="bi bi-list"></i></Button>
-                                            {selectedVendors.length > 0 && formData.vendor_id && <Button className="btn btn-outline-secondary btn-primary btn-sm" type="button" onClick={() => openVendorUpdateForm(formData.vendor_id)}><i className="bi bi-pencil"></i></Button>}
                                         </div>
                                         {errors.vendor_id && <div style={{ color: 'red' }}>{errors.vendor_id}</div>}
                                     </div>
@@ -3728,8 +3734,11 @@ const PurchaseCreate = forwardRef((props, ref) => {
                             </div>
                         </div>
 
-                        <div className="col-md-9">
+                        <div className="col-12">
                             <label className="form-label">{getProductLabel(store?.settings)}*</label>
+                            <div style={{ display: 'flex', gap: '4px', alignItems: 'center' }}>
+                            <div style={{ display: 'flex', gap: '4px', alignItems: 'center', flex: '0 0 calc(100% - 366px)', minWidth: 0 }}>
+                            <div style={{ flex: 1, minWidth: 0 }}>
                             <Typeahead
                                 id="product_id"
                                 filterBy={() => true}
@@ -4031,23 +4040,21 @@ const PurchaseCreate = forwardRef((props, ref) => {
                                     );
                                 }}
                             />
+                            </div>
+                            {/* List first, New second, From P.O. */}
+                            <Button className="btn btn-primary btn-sm" onClick={openProducts}>
+                                <i className="bi bi-list"></i>
+                            </Button>
+                            <Button hide={true.toString()} onClick={openProductCreateForm} className="btn btn-outline-secondary btn-primary btn-sm" type="button"><i className="bi bi-plus-lg"></i> {t('New')}</Button>
+                            </div>
+                            {store?.settings?.enable_purchase_order_module && <button type="button" onClick={() => PurchaseOrderPickerRef.current?.open(handleImportFromPO, selectedVendors[0] || null)} style={{ background: '#f0f4ff', color: '#004ac6', border: '1px solid #c5d5f5', borderRadius: '4px', padding: '4px 8px', fontSize: '11px', fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '3px' }}><i className="bi bi-file-earmark-arrow-down" />{t('From P.O.')}</button>}
+                            </div>
                             {errors.product_id ? (
                                 <div style={{ color: "red" }}>
                                     <i className="bi bi-x-lg"> </i>
                                     {errors.product_id}
                                 </div>
                             ) : ""}
-
-
-                        </div>
-                        <div className="col-md-2">
-                            <div style={{ marginTop: "30px", display: "flex", gap: "4px" }}>
-                                <Button hide={true.toString()} onClick={openProductCreateForm} className="btn btn-outline-secondary btn-primary btn-sm" type="button"> <i className="bi bi-plus-lg"></i> {t('New')}</Button>
-                                <Button className="btn btn-primary" onClick={openProducts}>
-                                    <i className="bi bi-list"></i>
-                                </Button>
-                                {store?.settings?.enable_purchase_order_module && <button type="button" onClick={() => PurchaseOrderPickerRef.current?.open(handleImportFromPO, selectedVendors[0] || null)} style={{ background: '#f0f4ff', color: '#004ac6', border: '1px solid #c5d5f5', borderRadius: '4px', padding: '4px 8px', fontSize: '11px', fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '3px' }}><i className="bi bi-file-earmark-arrow-down" />{t('From P.O.')}</button>}
-                            </div>
                         </div>
 
 </>)}
@@ -5527,7 +5534,7 @@ const PurchaseCreate = forwardRef((props, ref) => {
                                       return (
                                         <Menu {...menuProps} style={{ ...(menuProps.style || {}), width: '95vw', maxWidth: '95vw', minWidth: '300px', zIndex: 9999 }}>
                                           <MenuItem disabled style={{ position: 'sticky', top: 0, padding: 0, margin: 0 }}>
-                                            <div style={{ display: 'flex', fontWeight: 700, color: '#374151', padding: '4px 8px', background: '#f8f9fa', borderBottom: '1px solid #e2e8f0', pointerEvents: 'auto', fontSize: '12px', position: 'relative' }}>
+                                            <div style={{ display: 'flex', fontWeight: 700, color: '#374151', padding: '4px 8px', background: '#f8f9fa', borderBottom: '1px solid #e2e8f0', pointerEvents: 'auto', position: 'relative' }}>
                                               {visCols.map(col => (
                                                 <div key={col.key} style={{ width: cw(col), overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', position: 'relative' }}>
                                                   {col.key === 'code' && t('Code')}
@@ -5550,15 +5557,15 @@ const PurchaseCreate = forwardRef((props, ref) => {
                                             const rowBg = isActive ? '#e8f0fe' : 'transparent';
                                             return (
                                               <MenuItem option={option} position={idx} key={idx} style={{ padding: 0 }}>
-                                                <div style={{ display: 'flex', padding: '5px 8px', alignItems: 'center', background: rowBg, fontSize: '13px' }}>
+                                                <div style={{ display: 'flex', padding: '5px 8px', alignItems: 'center', background: rowBg }}>
                                                   {visCols.map(col => (
                                                     <div key={col.key} style={{ width: cw(col), overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                                                      {col.key === 'code' && <span style={{ fontFamily: 'monospace', color: isActive ? '#004ac6' : '#374151', fontWeight: isActive ? 600 : 400 }}>{highlightWords(option.code, searchWords, isActive)}</span>}
+                                                      {col.key === 'code' && <span style={{ color: isActive ? '#191c1e' : '#374151', fontWeight: isActive ? 600 : 400 }}>{highlightWords(option.code, searchWords, isActive)}</span>}
                                                       {col.key === 'name' && <span style={{ color: isActive ? '#191c1e' : '#374151', fontWeight: isActive ? 600 : 400 }}>{highlightWords(option.name + (option.name_in_arabic ? ' - ' + option.name_in_arabic : ''), searchWords, isActive)}</span>}
-                                                      {col.key === 'phone' && <span style={{ color: '#6b7280' }}>{highlightWords(option.phone || '–', searchWords, isActive)}</span>}
-                                                      {col.key === 'vat_no' && <span style={{ color: '#6b7280' }}>{highlightWords(option.vat_no || '–', searchWords, isActive)}</span>}
-                                                      {col.key === 'credit_balance' && <span style={{ color: option.credit_balance > 0 ? '#dc2626' : option.credit_balance < 0 ? '#2563eb' : '#6b7280', fontWeight: 600 }}>{option.credit_balance != null ? option.credit_balance : '–'}</span>}
-                                                      {col.key === 'credit_limit' && <span style={{ color: '#6b7280' }}>{option.credit_limit || '–'}</span>}
+                                                      {col.key === 'phone' && <span style={{ color: isActive ? '#191c1e' : '#374151', fontWeight: isActive ? 600 : 400 }}>{highlightWords(option.phone || '–', searchWords, isActive)}</span>}
+                                                      {col.key === 'vat_no' && <span style={{ color: isActive ? '#191c1e' : '#374151', fontWeight: isActive ? 600 : 400 }}>{highlightWords(option.vat_no || '–', searchWords, isActive)}</span>}
+                                                      {col.key === 'credit_balance' && <span style={{ color: option.credit_balance > 0 ? '#dc2626' : option.credit_balance < 0 ? '#2563eb' : (isActive ? '#191c1e' : '#374151'), fontWeight: isActive ? 600 : 400 }}>{option.credit_balance != null ? option.credit_balance : '–'}</span>}
+                                                      {col.key === 'credit_limit' && <span style={{ color: isActive ? '#191c1e' : '#374151', fontWeight: isActive ? 600 : 400 }}>{option.credit_limit || '–'}</span>}
                                                     </div>
                                                   ))}
                                                 </div>

@@ -4120,7 +4120,7 @@ const OrderCreate = forwardRef((props, ref) => {
                                         return (
                                             <Menu {...menuProps} style={{ ...(menuProps.style || {}), width: '95vw', maxWidth: '95vw', minWidth: '300px', zIndex: 9999 }}>
                                                 <MenuItem disabled style={{ position: 'sticky', top: 0, padding: 0, margin: 0 }}>
-                                                    <div style={{ display: 'flex', fontWeight: 700, color: '#374151', padding: '4px 8px', background: '#f8f9fa', borderBottom: '1px solid #e2e8f0', pointerEvents: 'auto', fontSize: '12px', position: 'relative' }}>
+                                                    <div style={{ display: 'flex', fontWeight: 700, color: '#374151', padding: '4px 8px', background: '#f8f9fa', borderBottom: '1px solid #e2e8f0', pointerEvents: 'auto', position: 'relative' }}>
                                                         {visCols.map(col => (
                                                             <div key={col.key} style={{ width: cw(col), overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', position: 'relative' }}>
                                                                 {col.key === 'code' && t('Code')}
@@ -4143,7 +4143,7 @@ const OrderCreate = forwardRef((props, ref) => {
                                                     const rowBg = isActive ? '#e8f0fe' : 'transparent';
                                                     return (
                                                         <MenuItem option={option} position={idx} key={idx} style={{ padding: 0 }}>
-                                                            <div style={{ display: 'flex', padding: '5px 8px', alignItems: 'center', background: rowBg, fontSize: '13px' }}>
+                                                            <div style={{ display: 'flex', padding: '5px 8px', alignItems: 'center', background: rowBg }}>
                                                                 {visCols.map(col => (
                                                                     <div key={col.key} style={{ width: cw(col), overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                                                                         {col.key === 'code' && <span style={{ fontFamily: 'monospace', color: isActive ? '#004ac6' : '#374151', fontWeight: isActive ? 600 : 400 }}>{highlightWords(option.code, searchWords, isActive)}</span>}
@@ -5784,7 +5784,7 @@ const OrderCreate = forwardRef((props, ref) => {
                                                                     return (
                                                                         <Menu {...menuProps} style={{ ...(menuProps.style || {}), width: '95vw', maxWidth: '95vw', minWidth: '300px', zIndex: 9999 }}>
                                                                             <MenuItem disabled style={{ position: 'sticky', top: 0, padding: 0, margin: 0 }}>
-                                                                                <div style={{ display: 'flex', fontWeight: 700, color: '#374151', padding: '4px 8px', background: '#f8f9fa', borderBottom: '1px solid #e2e8f0', pointerEvents: 'auto', fontSize: '12px', position: 'relative' }}>
+                                                                                <div style={{ display: 'flex', fontWeight: 700, color: '#374151', padding: '4px 8px', background: '#f8f9fa', borderBottom: '1px solid #e2e8f0', pointerEvents: 'auto', position: 'relative' }}>
                                                                                     {visCols.map(col => (
                                                                                         <div key={col.key} style={{ width: cw(col), overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', position: 'relative' }}>
                                                                                             {col.key === 'code' && t('Code')}
@@ -5807,7 +5807,7 @@ const OrderCreate = forwardRef((props, ref) => {
                                                                                 const rowBg = isActive ? '#e8f0fe' : 'transparent';
                                                                                 return (
                                                                                     <MenuItem option={option} position={idx} key={idx} style={{ padding: 0 }}>
-                                                                                        <div style={{ display: 'flex', padding: '5px 8px', alignItems: 'center', background: rowBg, fontSize: '13px' }}>
+                                                                                        <div style={{ display: 'flex', padding: '5px 8px', alignItems: 'center', background: rowBg }}>
                                                                                             {visCols.map(col => (
                                                                                                 <div key={col.key} style={{ width: cw(col), overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                                                                                                     {col.key === 'code' && <span style={{ fontFamily: 'monospace', color: isActive ? '#004ac6' : '#374151', fontWeight: isActive ? 600 : 400 }}>{highlightWords(option.code, searchWords, isActive)}</span>}

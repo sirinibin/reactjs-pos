@@ -1405,7 +1405,10 @@ const StockTransferCreate = forwardRef((props, ref) => {
 
 
                 formatLoadedStockTransfer(data);
-                //  reCalculate();
+                selectedProducts = [];
+                setSelectedProducts([]);
+                formData.products = [];
+                setFormData({ ...formData });
 
                 //openDetailsView(data.result.id);
             })
@@ -2651,10 +2654,7 @@ const StockTransferCreate = forwardRef((props, ref) => {
     async function openCreateForm() {
         disablePreviousButton = false;
         setDisablePreviousButton(false);
-        if (!isSubmitting) {
-            open();
-        }
-        // CreateFormRef.current.open();
+        open();
     }
 
     async function openPreviousForm() {
@@ -2670,6 +2670,9 @@ const StockTransferCreate = forwardRef((props, ref) => {
     }
 
     async function handlePrintClose() {
+        selectedProducts = [];
+        setSelectedProducts([]);
+        formData.products = [];
         openCreateForm();
     }
 
@@ -2700,6 +2703,38 @@ const StockTransferCreate = forwardRef((props, ref) => {
     const totalWidth = visibleColumns.reduce((sum, col) => sum + col.width, 0);
 
     const getColumnWidth = (col) => `${(col.width / totalWidth) * 100}%`;
+
+    const startPsColResize = useCallback((e, colKey) => {
+        e.preventDefault(); e.stopPropagation();
+        const startX = e.clientX;
+        let currentCols = null;
+        setSearchProductsColumns(prev => { currentCols = prev; return prev; });
+        setTimeout(() => {
+            const cols = currentCols;
+            if (!cols) return;
+            const col = cols.find(c => c.key === colKey);
+            if (!col) return;
+            const startWidth = col.width;
+            const totalW = cols.filter(c => c.visible).reduce((s, c) => s + c.width, 0);
+            const pxPerUnit = (window.innerWidth * 0.95) / totalW;
+            function onMouseMove(ev) {
+                const newWidth = Math.max(1, startWidth + (ev.clientX - startX) / pxPerUnit);
+                setSearchProductsColumns(prev => {
+                    const updated = prev.map(c => c.key === colKey ? { ...c, width: parseFloat(newWidth.toFixed(1)) } : c);
+                    localStorage.setItem("stocktransfer_product_search_settings", JSON.stringify(updated));
+                    return updated;
+                });
+            }
+            function onMouseUp() {
+                document.removeEventListener('mousemove', onMouseMove);
+                document.removeEventListener('mouseup', onMouseUp);
+                document.body.style.cursor = '';
+            }
+            document.addEventListener('mousemove', onMouseMove);
+            document.addEventListener('mouseup', onMouseUp);
+            document.body.style.cursor = 'col-resize';
+        }, 0);
+    }, []);
 
     const handleToggleColumn = (index) => {
         const updated = [...searchProductsColumns];
@@ -3365,18 +3400,19 @@ const StockTransferCreate = forwardRef((props, ref) => {
                                                     pointerEvents: "auto" // <-- allow click here
                                                 }}>
                                                     {searchProductsColumns.filter(c => c.visible).map((col) => {
-                                                        return (<>
-                                                            {col.key === "select" && <div style={{ width: getColumnWidth(col), border: "solid 0px", }}></div>}
-                                                            {col.key === "part_number" && <div style={{ width: getColumnWidth(col), border: "solid 0px", }}>Part Number</div>}
-                                                            {col.key === "name" && <div style={{ width: getColumnWidth(col), border: "solid 0px", }}>Name</div>}
-                                                            {col.key === "unit_price" && <div style={{ width: getColumnWidth(col), border: "solid 0px", }}>S.Unit Price</div>}
-                                                            {col.key === "stock" && <div style={{ width: getColumnWidth(col), border: "solid 0px", }}>Stock</div>}
-                                                            {col.key === "photos" && <div style={{ width: getColumnWidth(col), border: "solid 0px", }}>Photos</div>}
-                                                            {col.key === "brand" && <div style={{ width: getColumnWidth(col), border: "solid 0px", }}>Brand</div>}
-                                                            {col.key === "purchase_price" && <div style={{ width: getColumnWidth(col), border: "solid 0px", }}>P.Unit Price</div>}
-                                                            {col.key === "country" && <div style={{ width: getColumnWidth(col), border: "solid 0px", }}>Country</div>}
-                                                            {col.key === "rack" && <div style={{ width: getColumnWidth(col), border: "solid 0px", }}>Rack</div>}
-                                                        </>)
+                                                        const rh = <div onMouseDown={e => startPsColResize(e, col.key)} style={{ position: 'absolute', right: 0, top: 0, bottom: 0, width: '5px', cursor: 'col-resize', zIndex: 2 }} />;
+                                                        return (<React.Fragment key={col.key}>
+                                                            {col.key === "select" && <div style={{ width: getColumnWidth(col), border: "solid 0px", position: 'relative' }}>{rh}</div>}
+                                                            {col.key === "part_number" && <div style={{ width: getColumnWidth(col), border: "solid 0px", position: 'relative' }}>Part Number{rh}</div>}
+                                                            {col.key === "name" && <div style={{ width: getColumnWidth(col), border: "solid 0px", position: 'relative' }}>Name{rh}</div>}
+                                                            {col.key === "unit_price" && <div style={{ width: getColumnWidth(col), border: "solid 0px", position: 'relative' }}>S.Unit Price{rh}</div>}
+                                                            {col.key === "stock" && <div style={{ width: getColumnWidth(col), border: "solid 0px", position: 'relative' }}>Stock{rh}</div>}
+                                                            {col.key === "photos" && <div style={{ width: getColumnWidth(col), border: "solid 0px", position: 'relative' }}>Photos{rh}</div>}
+                                                            {col.key === "brand" && <div style={{ width: getColumnWidth(col), border: "solid 0px", position: 'relative' }}>Brand{rh}</div>}
+                                                            {col.key === "purchase_price" && <div style={{ width: getColumnWidth(col), border: "solid 0px", position: 'relative' }}>P.Unit Price{rh}</div>}
+                                                            {col.key === "country" && <div style={{ width: getColumnWidth(col), border: "solid 0px", position: 'relative' }}>Country{rh}</div>}
+                                                            {col.key === "rack" && <div style={{ width: getColumnWidth(col), border: "solid 0px", position: 'relative' }}>Rack{rh}</div>}
+                                                        </React.Fragment>)
                                                     })}
                                                     {/* Settings icon on right */}
                                                     <div
@@ -3408,7 +3444,7 @@ const StockTransferCreate = forwardRef((props, ref) => {
                                                     <MenuItem option={option} position={index} key={index} style={{ padding: "0px" }}>
                                                         <div style={{ display: 'flex', padding: '4px 8px' }}>
                                                             {searchProductsColumns.filter(c => c.visible).map((col) => {
-                                                                return (<>
+                                                                return (<React.Fragment key={col.key}>
                                                                     {col.key === "select" &&
                                                                         <div
                                                                             className="form-check"
@@ -3571,7 +3607,7 @@ const StockTransferCreate = forwardRef((props, ref) => {
                                                                         }
                                                                         return <div style={{ ...columnStyle, width: getColumnWidth(col) }}>{highlightWords(option.rack, searchWords, isActive)}</div>;
                                                                     })()}
-                                                                </>)
+                                                                </React.Fragment>)
                                                             })}
                                                         </div>
                                                     </MenuItem>
