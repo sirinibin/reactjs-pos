@@ -3476,6 +3476,9 @@ async function checkWarning(i) {
                             }}
                           />
                         </div>
+                        <Button className="btn btn-primary btn-sm" onClick={openCustomers}>
+                          <i className="bi bi-list"></i>
+                        </Button>
                         <Button
                           hide={true.toString()}
                           onClick={openCustomerCreateForm}
@@ -3483,9 +3486,6 @@ async function checkWarning(i) {
                           type="button"
                         >
                           <i className="bi bi-plus-lg"></i> New
-                        </Button>
-                        <Button className="btn btn-primary btn-sm" onClick={openCustomers}>
-                          <i className="bi bi-list"></i>
                         </Button>
                       </div>
                       {errors.customer_id && <div style={{ color: "red", fontSize: '12px', marginTop: '2px' }}>{errors.customer_id}</div>}

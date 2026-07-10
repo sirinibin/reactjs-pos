@@ -3565,8 +3565,8 @@ const PurchaseCreate = forwardRef((props, ref) => {
                                                     }}
                                                 />
                                             </div>
-                                            <Button hide={true.toString()} onClick={openVendorCreateForm} className="btn btn-outline-secondary btn-primary btn-sm" type="button" id="button-addon1"><i className="bi bi-plus-lg"></i> {t('New')}</Button>
                                             <Button onClick={openVendors} className="btn btn-outline-secondary btn-primary btn-sm" type="button"><i className="bi bi-list"></i></Button>
+                                            <Button hide={true.toString()} onClick={openVendorCreateForm} className="btn btn-outline-secondary btn-primary btn-sm" type="button" id="button-addon1"><i className="bi bi-plus-lg"></i> {t('New')}</Button>
                                         </div>
                                         {errors.vendor_id && <div style={{ color: 'red' }}>{errors.vendor_id}</div>}
                                     </div>

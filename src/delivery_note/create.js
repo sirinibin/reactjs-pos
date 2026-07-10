@@ -2450,6 +2450,10 @@ const DeliveryNoteCreate = forwardRef((props, ref) => {
               />
               </div>{/* end flex-1 typeahead */}
                   </div>{/* end 33% search block */}
+                <Button className="btn" onClick={openCustomers}
+                  style={{ background: '#004ac6', color: '#fff', border: '1px solid transparent', borderRadius: '4px', padding: '7px 12px', fontSize: '13px', fontWeight: 600, fontFamily: '"Inter", sans-serif', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', lineHeight: '1', flexShrink: 0 }}>
+                  <i className="bi bi-list"></i>
+                </Button>
                 <Button hide={true.toString()} onClick={openCustomerCreateForm} className="btn" type="button"
                   style={{ background: '#004ac6', color: '#fff', border: '1px solid transparent', borderRadius: '4px', padding: '7px 12px', fontSize: '13px', fontWeight: 600, fontFamily: '"Inter", sans-serif', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', lineHeight: '1', flexShrink: 0 }}>
                   <i className="bi bi-plus-lg"></i>
@@ -2460,10 +2464,6 @@ const DeliveryNoteCreate = forwardRef((props, ref) => {
                     <i className="bi bi-pencil"></i>
                   </Button>
                 )}
-                <Button className="btn" onClick={openCustomers}
-                  style={{ background: '#004ac6', color: '#fff', border: '1px solid transparent', borderRadius: '4px', padding: '7px 12px', fontSize: '13px', fontWeight: 600, fontFamily: '"Inter", sans-serif', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', lineHeight: '1', flexShrink: 0 }}>
-                  <i className="bi bi-list"></i>
-                </Button>
                 {/* Date inline after buttons */}
                 <div className="dn-date-input">
                   <DatePicker
@@ -2653,13 +2653,13 @@ const DeliveryNoteCreate = forwardRef((props, ref) => {
                     }}
                   />
                 </div>
-                <Button hide={true.toString()} onClick={openProductCreateForm} className="btn" type="button"
-                  style={{ background: '#004ac6', color: '#fff', border: '1px solid transparent', borderRadius: '4px', padding: '7px 12px', fontSize: '13px', fontWeight: 600, fontFamily: '"Inter", sans-serif', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', lineHeight: '1', flexShrink: 0 }}>
-                  <i className="bi bi-plus-lg"></i>
-                </Button>
                 <Button className="btn" onClick={openProducts}
                   style={{ background: '#004ac6', color: '#fff', border: '1px solid transparent', borderRadius: '4px', padding: '7px 12px', fontSize: '13px', fontWeight: 600, fontFamily: '"Inter", sans-serif', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', lineHeight: '1', flexShrink: 0 }}>
                   <i className="bi bi-list"></i>
+                </Button>
+                <Button hide={true.toString()} onClick={openProductCreateForm} className="btn" type="button"
+                  style={{ background: '#004ac6', color: '#fff', border: '1px solid transparent', borderRadius: '4px', padding: '7px 12px', fontSize: '13px', fontWeight: 600, fontFamily: '"Inter", sans-serif', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', lineHeight: '1', flexShrink: 0 }}>
+                  <i className="bi bi-plus-lg"></i>
                 </Button>
                 {store?.settings?.enable_purchase_order_module && <button type="button" onClick={() => PurchaseOrderPickerRef.current?.open(handleImportFromPO)} style={{ background: '#f0f4ff', color: '#004ac6', border: '1px solid #c5d5f5', borderRadius: '4px', padding: '5px 10px', fontSize: '11px', fontWeight: 600, cursor: 'pointer', flexShrink: 0, display: 'flex', alignItems: 'center', gap: '3px', alignSelf: 'flex-end' }}><i className="bi bi-file-earmark-arrow-down" />From P.O.</button>}
                 <div className="dn-barcode-input" style={{ flex: '0 1 160px', minWidth: '100px' }}>
