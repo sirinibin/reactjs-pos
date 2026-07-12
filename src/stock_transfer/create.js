@@ -1519,22 +1519,76 @@ const StockTransferCreate = forwardRef((props, ref) => {
 
     const priceValidationTimer = useRef(null);
     const warningValidationTimer = useRef(null);
+    async function fetchAllProductStocks() {
+        const storeId = localStorage.getItem("store_id");
+        const ids = selectedProducts.map(p => p.product_id).filter(Boolean);
+        if (!ids.length) return;
+        const select = `id,product_stores.${storeId}.stock,product_stores.${storeId}.warehouse_stocks`;
+        const requestOptions = { method: "GET", headers: { "Content-Type": "application/json", Authorization: localStorage.getItem("access_token") } };
+        try {
+            const response = await fetch(`/v1/product?store_id=${storeId}&search[ids]=${ids.join(",")}&select=${select}`, requestOptions);
+            const isJson = response.headers.get("content-type")?.includes("application/json");
+            const data = isJson ? await response.json() : null;
+            if (!response.ok || !data?.result) return;
+
+            const productMap = {};
+            data.result.forEach(p => { productMap[p.id] = p; });
+
+            const fromWarehouseCode = formData.from_warehouse_code || "main_store";
+            const snapshotProducts = selectedProducts;
+
+            setSelectedProducts(prev => {
+                let changed = false;
+                const updated = prev.map((sp, i) => {
+                    const p = productMap[sp.product_id];
+                    if (!p) return sp;
+                    const storeData = p.product_stores?.[storeId];
+                    if (!storeData) return sp;
+                    const warehouseStocks = storeData.warehouse_stocks ?? { "main_store": storeData.stock ?? 0 };
+                    const stock = storeData.stock || 0;
+                    if (sp.stock === stock && sp.warehouse_stocks === warehouseStocks) return sp;
+                    changed = true;
+                    return { ...sp, stock, warehouse_stocks: warehouseStocks };
+                });
+                return changed ? updated : prev;
+            });
+
+            const newWarnings = { ...warnings };
+            snapshotProducts.forEach((sp, i) => {
+                const p = productMap[sp.product_id];
+                if (!p) return;
+                const storeData = p.product_stores?.[storeId];
+                if (!storeData) return;
+                const warehouseStocks = storeData.warehouse_stocks ?? { "main_store": storeData.stock ?? 0 };
+                const stockInWH = warehouseStocks[fromWarehouseCode] ?? storeData.stock ?? 0;
+                if (!formData.id && stockInWH < sp.quantity) {
+                    newWarnings["quantity_" + i] = "Warning: Available stock in " + fromWarehouseCode + " is " + stockInWH;
+                } else {
+                    delete newWarnings["quantity_" + i];
+                }
+            });
+            setWarnings(newWarnings);
+        } catch (e) {
+            console.error("Failed to batch fetch product stocks:", e);
+        }
+    }
+
     async function checkWarnings(index) {
         if (warningValidationTimer.current) clearTimeout(warningValidationTimer.current);
         warningValidationTimer.current = setTimeout(async () => {
             if (index) {
                 checkWarning(index);
             } else {
-                for (let i = 0; i < selectedProducts.length; i++) {
-                    checkWarning(i);
-                }
+                fetchAllProductStocks();
             }
         }, 3000);
     }
 
 
     async function checkWarning(i) {
-        let product = await getProduct(selectedProducts[i].product_id, `id,product_stores.${localStorage.getItem("store_id")}.stock,product_stores.${localStorage.getItem("store_id")}.warehouse_stocks,store_id`);
+        const productId = selectedProducts[i]?.product_id;
+        if (!productId) return;
+        let product = await getProduct(productId, `id,product_stores.${localStorage.getItem("store_id")}.stock,product_stores.${localStorage.getItem("store_id")}.warehouse_stocks,store_id`);
         let stock = 0;
 
         if (!product) {
@@ -1544,18 +1598,22 @@ const StockTransferCreate = forwardRef((props, ref) => {
 
         if (product.product_stores && (product.product_stores[localStorage.getItem("store_id")]?.stock || product.product_stores[localStorage.getItem("store_id")]?.stock === 0)) {
             stock = product.product_stores[localStorage.getItem("store_id")].stock;
+            const warehouseStocks = product.product_stores[localStorage.getItem("store_id")]?.warehouse_stocks ?? { "main_store": stock };
             selectedProducts[i].stock = stock;
             //   alert("stock:" + selectedProducts[i].stock);
-            selectedProducts[i].warehouse_stocks = product.product_stores[localStorage.getItem("store_id")]?.warehouse_stocks ? product.product_stores[localStorage.getItem("store_id")]?.warehouse_stocks : { "main_store": stock };
+            selectedProducts[i].warehouse_stocks = warehouseStocks;
             //alert(selectedProducts[i].warehouse_stocks)
-            setSelectedProducts([...selectedProducts]);
+            setSelectedProducts(prev => {
+                const idx = prev.findIndex(p => p.product_id === productId);
+                if (idx === -1) return prev;
+                const updated = [...prev];
+                updated[idx] = { ...updated[idx], stock, warehouse_stocks: warehouseStocks };
+                return updated;
+            });
         }
 
         let fromWarehouseCode = formData.from_warehouse_code ? formData.from_warehouse_code : "main_store";
         let toWarehouseCode = formData.to_warehouse_code ? formData.to_warehouse_code : "main_store";
-
-
-        selectedProducts[i].stock = selectedProducts[i].warehouse_stocks && selectedProducts[i].warehouse_stocks[fromWarehouseCode] ? selectedProducts[i].warehouse_stocks[fromWarehouseCode] : 0;
 
         if (!selectedProducts[i].warehouse_stocks) {
             // alert("Setting zero1")
@@ -1876,16 +1934,19 @@ const StockTransferCreate = forwardRef((props, ref) => {
     // const timerRef2 = useRef({});
 
     function CalCulateLineTotals(index, skipTotal, skipTotalWithVAT) {
-
-        if (!skipTotal) {
-            selectedProducts[index].line_total = parseFloat(trimTo2Decimals((selectedProducts[index]?.unit_price) * selectedProducts[index]?.quantity));
-        }
-
-        if (!skipTotalWithVAT) {
-            selectedProducts[index].line_total_with_vat = parseFloat(trimTo2Decimals((selectedProducts[index]?.unit_price_with_vat) * selectedProducts[index]?.quantity));
-        }
-
-        setSelectedProducts([...selectedProducts]);
+        setSelectedProducts(prev => {
+            if (index >= prev.length) return prev;
+            const updated = [...prev];
+            const sp = { ...updated[index] };
+            if (!skipTotal) {
+                sp.line_total = parseFloat(trimTo2Decimals((sp.unit_price) * sp.quantity));
+            }
+            if (!skipTotalWithVAT) {
+                sp.line_total_with_vat = parseFloat(trimTo2Decimals((sp.unit_price_with_vat) * sp.quantity));
+            }
+            updated[index] = sp;
+            return updated;
+        });
 
         /*
         selectedProducts.forEach((product, i) => {
@@ -2028,7 +2089,7 @@ const StockTransferCreate = forwardRef((props, ref) => {
                         }
                     }
                 }
-                setSelectedProducts([...selectedProducts]);
+                setSelectedProducts(prev => [...prev]);
 
                 setFormData({ ...formData });
             }
@@ -2588,44 +2649,20 @@ const StockTransferCreate = forwardRef((props, ref) => {
     let [showStockTransferPreview, setShowStockTransferPreview] = useState(false);
     let [showPrintTypeSelection, setShowPrintTypeSelection] = useState(false);
 
-    const openPreview = useCallback(() => {
+    const openPreview = useCallback((stocktransfer) => {
         setShowStockTransferPreview(true);
         setShowPrintTypeSelection(false);
-        // alert("inside open preview")
 
         if (timerRef.current) clearTimeout(timerRef.current);
 
         timerRef.current = setTimeout(() => {
-            //if (model.id === stocktransferID) {
-            //  alert("opening preview1," + formData.id)
-
-            if (!isSubmitting && formData?.id && formData.code && formData.date) {
-                // alert("opening preview2")
-                PreviewRef.current?.open(formData, undefined, "stock_transfer");
-            }
-            //  handleClose();
-            //}
-
+            PreviewRef.current?.open(stocktransfer, undefined, "stock_transfer");
         }, 100);
 
-    }, [isSubmitting, formData]);
-
-
-    /*
-      const openPreview = useCallback((stocktransfer) => {
-            setShowStockTransferPreview(true);
-            setShowPrintTypeSelection(false);
-
-
-            if (timerRef.current) clearTimeout(timerRef.current);
-            timerRef.current = setTimeout(() => {
-                PreviewRef.current?.open(stocktransfer, undefined, "stock_transfer");
-            }, 100);
-        }, []);*/
+    }, []);
 
     const openPrintTypeSelection = useCallback((formData) => {
         if (store.settings?.enable_invoice_print_type_selection) {
-            // showPrintTypeSelection = true;
             setShowStockTransferPreview(true);
             setShowPrintTypeSelection(true);
             if (timerRef.current) clearTimeout(timerRef.current);
@@ -2634,17 +2671,12 @@ const StockTransferCreate = forwardRef((props, ref) => {
             }, 100);
 
         } else {
-            //openPreview();
-
             if (timerRef.current) clearTimeout(timerRef.current);
             timerRef.current = setTimeout(() => {
-                if (!isSubmitting) {
-                    //  alert("opening preview")
-                    openPreview(formData);
-                }
+                openPreview(formData);
             }, 200);
         }
-    }, [openPreview, store, isSubmitting]);
+    }, [openPreview, store]);
 
     const printButtonRef = useRef();
     const printA4ButtonRef = useRef();
@@ -2961,7 +2993,7 @@ const StockTransferCreate = forwardRef((props, ref) => {
                     </Button>
 
                     <Button variant="primary" ref={printA4ButtonRef} onClick={() => {
-                        openPreview();
+                        openPreview(formData);
                     }}
                         onKeyDown={(e) => {
                             if (timerRef.current) clearTimeout(timerRef.current);
@@ -3076,7 +3108,7 @@ const StockTransferCreate = forwardRef((props, ref) => {
                         </Button>
                         &nbsp;&nbsp;
 
-                        <Button variant="primary" disabled={!isUpdateForm} onClick={openPreview}>
+                        <Button variant="primary" disabled={!isUpdateForm} onClick={() => openPreview(formData)}>
                             <i className="bi bi-printer"></i> Print A4 Invoice
                         </Button>
                         &nbsp;&nbsp;

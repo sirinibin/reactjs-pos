@@ -1131,24 +1131,6 @@ const PurchaseCreate = forwardRef((props, ref) => {
 
     async function handleImportFromPO(po) {
         if (!po || !po.products || po.products.length === 0) return;
-        const storeId = localStorage.getItem("store_id");
-        const authHeader = { "Content-Type": "application/json", Authorization: localStorage.getItem("access_token") };
-
-        // Batch-fetch current stock for all imported products
-        const stockMap = {};
-        await Promise.all(po.products.map(async p => {
-            if (!p.product_id) return;
-            try {
-                const r = await fetch(
-                    `/v1/product/${p.product_id}?search[store_id]=${storeId}&select=id,product_stores.${storeId}.stock`,
-                    { method: "GET", headers: authHeader }
-                );
-                const d = await r.json();
-                if (r.ok && d.result) {
-                    stockMap[p.product_id] = d.result.product_stores?.[storeId]?.stock ?? 0;
-                }
-            } catch (_) {}
-        }));
 
         po.products.forEach(p => {
             const already = selectedProducts.findIndex(s => s.product_id === p.product_id);
@@ -1183,7 +1165,7 @@ const PurchaseCreate = forwardRef((props, ref) => {
                     unit_discount_percent_with_vat: unitDiscountPctVat,
                     line_total:                    parseFloat(trimTo2Decimals((purchaseUnitPrice - unitDiscount) * qty)),
                     line_total_with_vat:           parseFloat(trimTo2Decimals((purchaseUnitPriceVat - unitDiscountVat) * qty)),
-                    stock:                         stockMap[p.product_id] ?? 0,
+                    stock:                         0,
                     product_stores:                {},
                 });
             }
@@ -1191,6 +1173,7 @@ const PurchaseCreate = forwardRef((props, ref) => {
         setSelectedProducts([...selectedProducts]);
         if (timerRef.current) clearTimeout(timerRef.current);
         timerRef.current = setTimeout(() => reCalculate(), 100);
+        fetchAllProductStocks([...selectedProducts]);
     }
 
     /*
@@ -1359,16 +1342,19 @@ const PurchaseCreate = forwardRef((props, ref) => {
     }
 
     function CalCulateLineTotals(index, skipTotal, skipTotalWithVAT) {
-
-        if (!skipTotal) {
-            selectedProducts[index].line_total = parseFloat(trimTo2Decimals((selectedProducts[index]?.purchase_unit_price - selectedProducts[index]?.unit_discount) * selectedProducts[index]?.quantity));
-        }
-
-        if (!skipTotalWithVAT) {
-            selectedProducts[index].line_total_with_vat = parseFloat(trimTo2Decimals((selectedProducts[index]?.purchase_unit_price_with_vat - selectedProducts[index]?.unit_discount_with_vat) * selectedProducts[index]?.quantity));
-        }
-
-        setSelectedProducts([...selectedProducts]);
+        setSelectedProducts(prev => {
+            if (index >= prev.length) return prev;
+            const updated = [...prev];
+            const sp = { ...updated[index] };
+            if (!skipTotal) {
+                sp.line_total = parseFloat(trimTo2Decimals((sp.purchase_unit_price - sp.unit_discount) * sp.quantity));
+            }
+            if (!skipTotalWithVAT) {
+                sp.line_total_with_vat = parseFloat(trimTo2Decimals((sp.purchase_unit_price_with_vat - sp.unit_discount_with_vat) * sp.quantity));
+            }
+            updated[index] = sp;
+            return updated;
+        });
     }
 
 
@@ -1854,12 +1840,7 @@ const PurchaseCreate = forwardRef((props, ref) => {
                         }
                     }
                 }
-                setSelectedProducts([...selectedProducts]);
-                /*
-                    selectedProducts[index].unit_discount_percent
-                    selectedProducts = formData.products;
-                    setSelectedProducts([...selectedProducts]);
-                */
+                setSelectedProducts(prev => [...prev]);
                 setFormData({ ...formData });
             }
 
@@ -2557,69 +2538,67 @@ const PurchaseCreate = forwardRef((props, ref) => {
     const priceValidationTimer = useRef(null);
     const warningValidationTimer = useRef(null);
 
+    async function fetchAllProductStocks(productsSnapshot) {
+        const storeId = localStorage.getItem("store_id");
+        const snap = productsSnapshot || selectedProducts;
+        const productIds = [...new Set(snap.map(p => p.product_id).filter(Boolean))];
+        if (productIds.length === 0) return;
+
+        const requestOptions = {
+            method: "GET",
+            headers: { "Content-Type": "application/json", Authorization: localStorage.getItem("access_token") },
+        };
+        const CHUNK = 100;
+        const chunks = [];
+        for (let i = 0; i < productIds.length; i += CHUNK) chunks.push(productIds.slice(i, i + CHUNK));
+
+        const select = `id,product_stores.${storeId}.stock,product_stores.${storeId}.warehouse_stocks`;
+        const batchResults = await Promise.all(
+            chunks.map(async (chunk) => {
+                const queryParams = ObjectToSearchQueryParams({ ids: chunk.join(","), store_id: storeId });
+                try {
+                    const res = await fetch(`/v1/product?${queryParams}&limit=${chunk.length}&select=${select}`, requestOptions);
+                    const isJson = res.headers.get("content-type")?.includes("application/json");
+                    const data = isJson ? await res.json() : null;
+                    if (res.ok && data?.result) return data.result;
+                } catch (e) {}
+                return [];
+            })
+        );
+
+        const productMap = {};
+        for (const batch of batchResults) for (const p of batch) { productMap[p.id] = p; }
+
+        setSelectedProducts(prev => {
+            let changed = false;
+            const updated = prev.map((sp) => {
+                const product = productMap[sp.product_id];
+                if (!product || !product.product_stores || !product.product_stores[storeId]) return sp;
+                const storeData = product.product_stores[storeId];
+                let warehouseStocks = storeData.warehouse_stocks || null;
+                if (!warehouseStocks) {
+                    warehouseStocks = { main_store: storeData.stock };
+                    for (let j = 0; j < warehouseList.length; j++) {
+                        warehouseStocks[warehouseList[j].code] = 0;
+                    }
+                }
+                const stock = storeData.stock || 0;
+                if (sp.stock === stock && sp.warehouse_stocks === warehouseStocks) return sp;
+                changed = true;
+                return { ...sp, stock, warehouse_stocks: warehouseStocks };
+            });
+            return changed ? updated : prev;
+        });
+        setWarnings({ ...warnings });
+    }
+
     async function checkWarnings(index) {
         if (warningValidationTimer.current) clearTimeout(warningValidationTimer.current);
         warningValidationTimer.current = setTimeout(async () => {
             if (index) {
                 checkWarning(index);
             } else {
-                const storeId = localStorage.getItem("store_id");
-                const productIds = [...new Set(selectedProducts.map(p => p.product_id).filter(Boolean))];
-                if (productIds.length === 0) return;
-
-                const requestOptions = {
-                    method: "GET",
-                    headers: {
-                        "Content-Type": "application/json",
-                        Authorization: localStorage.getItem("access_token"),
-                    },
-                };
-
-                const CHUNK = 100;
-                const chunks = [];
-                for (let i = 0; i < productIds.length; i += CHUNK) {
-                    chunks.push(productIds.slice(i, i + CHUNK));
-                }
-
-                const batchResults = await Promise.all(
-                    chunks.map(async (chunk) => {
-                        const queryParams = ObjectToSearchQueryParams({ ids: chunk.join(","), store_id: storeId });
-                        try {
-                            const res = await fetch(`/v1/product?${queryParams}&limit=${chunk.length}`, requestOptions);
-                            const isJson = res.headers.get("content-type")?.includes("application/json");
-                            const data = isJson ? await res.json() : null;
-                            if (res.ok && data?.result) return data.result;
-                        } catch (e) {}
-                        return [];
-                    })
-                );
-
-                const productMap = {};
-                for (const batch of batchResults) {
-                    for (const p of batch) { productMap[p.id] = p; }
-                }
-
-                for (let i = 0; i < selectedProducts.length; i++) {
-                    const product = productMap[selectedProducts[i].product_id];
-                    if (!product || !product.product_stores || !product.product_stores[storeId]) continue;
-
-                    const storeData = product.product_stores[storeId];
-                    const stock = storeData.stock;
-                    selectedProducts[i].warehouse_stocks = storeData.warehouse_stocks || null;
-
-                    if (!selectedProducts[i].warehouse_stocks) {
-                        selectedProducts[i].warehouse_stocks = { main_store: stock };
-                        for (let j = 0; j < warehouseList.length; j++) {
-                            selectedProducts[i].warehouse_stocks[warehouseList[j].code] = 0;
-                        }
-                    }
-
-                    const warehouseCode = selectedProducts[i].warehouse_code || "main_store";
-                    selectedProducts[i].stock = selectedProducts[i].warehouse_stocks[warehouseCode] || 0;
-                }
-
-                setSelectedProducts([...selectedProducts]);
-                setWarnings({ ...warnings });
+                fetchAllProductStocks();
             }
         }, 3000);
     }
@@ -2627,11 +2606,13 @@ const PurchaseCreate = forwardRef((props, ref) => {
 
 
     async function checkWarning(i, selectedProduct, skipUpdate) {
+        const productId = selectedProducts[i]?.product_id;
+        if (!productId) return;
         let product = null;
         // if (selectedProduct) {
         // product = selectedProduct;
         //} else {
-        product = await getProduct(selectedProducts[i].product_id, `id,product_stores.${localStorage.getItem("store_id")}.stock,product_stores.${localStorage.getItem("store_id")}.warehouse_stocks,store_id`);
+        product = await getProduct(productId, `id,product_stores.${localStorage.getItem("store_id")}.stock,product_stores.${localStorage.getItem("store_id")}.warehouse_stocks,store_id`);
         //}
 
 
@@ -2654,14 +2635,18 @@ const PurchaseCreate = forwardRef((props, ref) => {
                 }
             }
 
-            let selectedWarehouseCode = selectedProducts[i].warehouse_code ? selectedProducts[i].warehouse_code : "main_store";
-            if (!selectedWarehouseCode) {
-                selectedWarehouseCode = "main_store";
+            selectedProducts[i].stock = stock;
+            if (!skipUpdate) {
+                const stockVal = selectedProducts[i].stock;
+                const warehouseStocksVal = selectedProducts[i].warehouse_stocks;
+                setSelectedProducts(prev => {
+                    const idx = prev.findIndex(p => p.product_id === productId);
+                    if (idx === -1) return prev;
+                    const updated = [...prev];
+                    updated[idx] = { ...updated[idx], stock: stockVal, warehouse_stocks: warehouseStocksVal };
+                    return updated;
+                });
             }
-
-
-            selectedProducts[i].stock = selectedProducts[i].warehouse_stocks[selectedWarehouseCode] ? selectedProducts[i].warehouse_stocks[selectedWarehouseCode] : 0;
-            if (!skipUpdate) setSelectedProducts([...selectedProducts]);
         }
 
         /*

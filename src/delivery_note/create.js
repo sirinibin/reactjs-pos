@@ -175,15 +175,69 @@ const DeliveryNoteCreate = forwardRef((props, ref) => {
 
   const priceValidationTimer = useRef(null);
   const warningValidationTimer = useRef(null);
+  async function fetchAllProductStocks(productsSnapshot) {
+    const storeId = localStorage.getItem("store_id");
+    const snap = productsSnapshot || selectedProducts;
+    const productIds = [...new Set(snap.map(p => p.product_id).filter(Boolean))];
+    if (productIds.length === 0) return;
+
+    const requestOptions = { method: "GET", headers: { "Content-Type": "application/json", Authorization: localStorage.getItem("access_token") } };
+    const CHUNK = 100;
+    const chunks = [];
+    for (let i = 0; i < productIds.length; i += CHUNK) chunks.push(productIds.slice(i, i + CHUNK));
+
+    const batchResults = await Promise.all(
+      chunks.map(async (chunk) => {
+        const queryParams = ObjectToSearchQueryParams({ ids: chunk.join(","), store_id: storeId });
+        try {
+          const res = await fetch(`/v1/product?${queryParams}&limit=${chunk.length}&select=id,product_stores.${storeId}.stock,product_stores.${storeId}.warehouse_stocks`, requestOptions);
+          const isJson = res.headers.get("content-type")?.includes("application/json");
+          const data = isJson ? await res.json() : null;
+          if (res.ok && data?.result) return data.result;
+        } catch (e) {}
+        return [];
+      })
+    );
+
+    const productMap = {};
+    for (const batch of batchResults) for (const p of batch) { productMap[p.id] = p; }
+
+    setSelectedProducts(prev => {
+      let changed = false;
+      const updated = prev.map((sp) => {
+        const p = productMap[sp.product_id];
+        if (!p?.product_stores?.[storeId]) return sp;
+        const storeData = p.product_stores[storeId];
+        const stock = storeData.stock || 0;
+        const warehouseStocks = storeData.warehouse_stocks || { main_store: stock };
+        if (sp.stock === stock && sp.warehouse_stocks === warehouseStocks) return sp;
+        changed = true;
+        return { ...sp, stock, warehouse_stocks: warehouseStocks };
+      });
+      return changed ? updated : prev;
+    });
+
+    const newWarnings = { ...warnings };
+    snap.forEach((sp, i) => {
+      const p = productMap[sp.product_id];
+      if (!p?.product_stores?.[storeId]?.stock) return;
+      const stock = p.product_stores[storeId].stock;
+      if (sp.quantity > stock) {
+        newWarnings["quantity_" + i] = "Warning: Available stock is " + stock;
+      } else {
+        delete newWarnings["quantity_" + i];
+      }
+    });
+    setWarnings(newWarnings);
+  }
+
   async function checkWarnings(index) {
     if (warningValidationTimer.current) clearTimeout(warningValidationTimer.current);
     warningValidationTimer.current = setTimeout(async () => {
       if (index) {
         checkWarning(index);
       } else {
-        for (let i = 0; i < selectedProducts.length; i++) {
-          checkWarning(i);
-        }
+        fetchAllProductStocks();
       }
     }, 3000);
   }
@@ -191,7 +245,9 @@ const DeliveryNoteCreate = forwardRef((props, ref) => {
   let [oldProducts, setOldProducts] = useState([]);
 
   async function checkWarning(i) {
-    let product = await getProduct(selectedProducts[i].product_id);
+    const productId = selectedProducts[i]?.product_id;
+    if (!productId) return;
+    let product = await getProduct(productId);
     let stock = 0;
 
     if (!product) {
@@ -201,7 +257,13 @@ const DeliveryNoteCreate = forwardRef((props, ref) => {
     if (product.product_stores && product.product_stores[localStorage.getItem("store_id")]?.stock) {
       stock = product.product_stores[localStorage.getItem("store_id")].stock;
       selectedProducts[i].stock = stock;
-      setSelectedProducts([...selectedProducts]);
+      setSelectedProducts(prev => {
+        const idx = prev.findIndex(p => p.product_id === productId);
+        if (idx === -1) return prev;
+        const updated = [...prev];
+        updated[idx] = { ...updated[idx], stock };
+        return updated;
+      });
     }
 
     let oldQty = 0;
@@ -1276,6 +1338,7 @@ const DeliveryNoteCreate = forwardRef((props, ref) => {
     });
     setSelectedProducts([...selectedProducts]);
     reCalculate();
+    fetchAllProductStocks([...selectedProducts]);
   }
 
   function addProduct(product) {
@@ -1384,13 +1447,15 @@ const DeliveryNoteCreate = forwardRef((props, ref) => {
   let [totalPrice, setTotalPrice] = useState(0.0);
 
   function CalCulateLineTotals(index) {
-    selectedProducts[index].line_total = parseFloat(trimTo2Decimals(
-      (selectedProducts[index]?.unit_price - (selectedProducts[index]?.unit_discount || 0)) * selectedProducts[index]?.quantity
-    ));
-    selectedProducts[index].line_total_with_vat = parseFloat(trimTo2Decimals(
-      ((selectedProducts[index]?.unit_price_with_vat || 0) - (selectedProducts[index]?.unit_discount_with_vat || 0)) * selectedProducts[index]?.quantity
-    ));
-    setSelectedProducts([...selectedProducts]);
+    setSelectedProducts(prev => {
+      if (index >= prev.length) return prev;
+      const updated = [...prev];
+      const sp = { ...updated[index] };
+      sp.line_total = parseFloat(trimTo2Decimals((sp.unit_price - (sp.unit_discount || 0)) * sp.quantity));
+      sp.line_total_with_vat = parseFloat(trimTo2Decimals(((sp.unit_price_with_vat || 0) - (sp.unit_discount_with_vat || 0)) * sp.quantity));
+      updated[index] = sp;
+      return updated;
+    });
   }
 
   let [discountPercent, setDiscountPercent] = useState(0.00);

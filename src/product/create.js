@@ -1865,9 +1865,14 @@ const ProductCreate = forwardRef((props, ref) => {
                                   setSelectedArabicNames(selectedArabicNames);
                                 }}
                                 renderMenuItemChildren={(option) => (
-                                  <div>
-                                    <span style={{ fontSize: '12px', opacity: 0.75 }}>{option.name_in_english}</span>
-                                    <span style={{ marginLeft: '8px', direction: 'rtl', fontFamily: '"Amiri","Noto Naskh Arabic",Arial,sans-serif', fontSize: '14px' }}>{option.name_in_arabic}</span>
+                                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px', overflow: 'hidden', whiteSpace: 'nowrap' }}>
+                                    <span style={{ overflow: 'hidden', textOverflow: 'ellipsis' }}>{option.name_in_english}</span>
+                                    {option.name_in_arabic && (
+                                      <>
+                                        <span style={{ color: '#adb5bd', flexShrink: 0 }}>—</span>
+                                        <span style={{ fontFamily: '"Amiri","Noto Naskh Arabic",Arial,sans-serif', direction: 'rtl', overflow: 'hidden', textOverflow: 'ellipsis' }}>{option.name_in_arabic}</span>
+                                      </>
+                                    )}
                                   </div>
                                 )}
                               />

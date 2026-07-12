@@ -1,4 +1,4 @@
-import React, { useState, forwardRef, useImperativeHandle, useRef } from "react";
+import React, { useState, forwardRef, useImperativeHandle, useRef, useEffect } from "react";
 import { Modal } from 'react-bootstrap';
 import CustomerDepositPreview from './preview.js';
 import AttachmentsViewer from '../utils/AttachmentsViewer.js';
@@ -72,9 +72,24 @@ const CustomerDepositView = forwardRef((props, ref) => {
 
 
     const PreviewRef = useRef();
+    const modelRef = useRef(model);
+    useEffect(() => { modelRef.current = model; }, [model]);
+
     function openPreview() {
-        PreviewRef.current.open(model, undefined, "customer_deposit");
+        PreviewRef.current.open(modelRef.current, undefined, "customer_deposit");
     }
+
+    useEffect(() => {
+        if (!show) return;
+        const handleKeyDown = (e) => {
+            if (e.key === "Enter") {
+                e.preventDefault();
+                PreviewRef.current?.open(modelRef.current, undefined, "customer_deposit");
+            }
+        };
+        document.addEventListener("keydown", handleKeyDown);
+        return () => document.removeEventListener("keydown", handleKeyDown);
+    }, [show]);
 
     function sendWhatsAppMessage() {
         PreviewRef.current.open(model, "whatsapp", "whatsapp_customer_deposit");

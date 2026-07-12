@@ -757,15 +757,18 @@ const PurchaseOrderCreate = forwardRef((props, ref) => {
     }
 
     function CalCulateLineTotals(index) {
-        const p = selectedProducts[index];
-        if (!p) return;
         const vatPercent = formData.vat_percent || 0;
-        p.purchase_unit_price_with_vat = parseFloat(trimTo2Decimals(p.purchase_unit_price * (1 + vatPercent / 100)));
-        p.unit_discount_with_vat = parseFloat(trimTo2Decimals(p.unit_discount * (1 + vatPercent / 100)));
-        p.unit_discount_percent = p.purchase_unit_price > 0 ? parseFloat(trimTo2Decimals((p.unit_discount / p.purchase_unit_price) * 100)) : 0;
-        selectedProducts[index] = p;
-        setSelectedProducts([...selectedProducts]);
-        formData.products = selectedProducts;
+        setSelectedProducts(prev => {
+            if (index >= prev.length) return prev;
+            const updated = [...prev];
+            const sp = { ...updated[index] };
+            sp.purchase_unit_price_with_vat = parseFloat(trimTo2Decimals(sp.purchase_unit_price * (1 + vatPercent / 100)));
+            sp.unit_discount_with_vat = parseFloat(trimTo2Decimals(sp.unit_discount * (1 + vatPercent / 100)));
+            sp.unit_discount_percent = sp.purchase_unit_price > 0 ? parseFloat(trimTo2Decimals((sp.unit_discount / sp.purchase_unit_price) * 100)) : 0;
+            updated[index] = sp;
+            formData.products = updated;
+            return updated;
+        });
         reCalculate();
     }
 
