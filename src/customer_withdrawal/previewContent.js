@@ -259,7 +259,7 @@ const CustomerWithdrawalPreviewContent = forwardRef((props, ref) => {
                                                     height: "20px"
                                                 }}
                                             >
-                                                <li>وصف</li>
+                                                <li>المبلغ</li>
                                                 <li>Amount</li>
                                             </ul>
                                         </th>
