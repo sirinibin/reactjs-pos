@@ -5153,10 +5153,10 @@ async function checkWarning(i) {
                                         }
 
                                       }
-                                    } else if (e.key === "ArrowLeft") {
-                                      timerRef.current = setTimeout(() => {
-                                        inputRefs.current[index][`${"quotation_unit_discount_" + index}`].select();
-                                      }, 100);
+                                    } else if (e.key === "ArrowLeft" || e.keyCode === 37) {
+                                      e.preventDefault();
+                                      const target = inputRefs.current[index]?.[`${"quotation_unit_discount_" + index}`];
+                                      if (target) { target.focus(); target.select(); }
                                     }
                                   }}
                                   onChange={(e) => {
@@ -6632,10 +6632,10 @@ async function checkWarning(i) {
                                         }
 
                                       }
-                                    } else if (e.key === "ArrowLeft") {
-                                      timerRef.current = setTimeout(() => {
-                                        inputRefs.current[index][`${"quotation_unit_discount_" + index}`].select();
-                                      }, 100);
+                                    } else if (e.key === "ArrowLeft" || e.keyCode === 37) {
+                                      e.preventDefault();
+                                      const target = inputRefs.current[index]?.[`${"quotation_unit_discount_" + index}`];
+                                      if (target) { target.focus(); target.select(); }
                                     }
                                   }}
                                   onChange={(e) => {

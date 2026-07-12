@@ -7184,10 +7184,10 @@ const OrderCreate = forwardRef((props, ref) => {
                                                                                         }
 
                                                                                     }
-                                                                                } else if (e.key === "ArrowLeft") {
-                                                                                    timerRef.current = setTimeout(() => {
-                                                                                        inputRefs.current[index][`${"sales_unit_discount_" + index}`]?.select();
-                                                                                    }, 100);
+                                                                                } else if (e.key === "ArrowLeft" || e.keyCode === 37) {
+                                                                                    e.preventDefault();
+                                                                                    const target = inputRefs.current[index]?.[`${"sales_unit_discount_" + index}`];
+                                                                                    if (target) { target.focus(); target.select(); }
                                                                                 }
                                                                             }}
                                                                             onChange={(e) => {
@@ -9440,10 +9440,10 @@ const OrderCreate = forwardRef((props, ref) => {
                                                                                             }
 
                                                                                         }
-                                                                                    } else if (e.key === "ArrowLeft") {
-                                                                                        timerRef.current = setTimeout(() => {
-                                                                                            inputRefs.current[index][`${"sales_unit_discount_" + index}`]?.select();
-                                                                                        }, 100);
+                                                                                    } else if (e.key === "ArrowLeft" || e.keyCode === 37) {
+                                                                                        e.preventDefault();
+                                                                                        const target = inputRefs.current[index]?.[`${"sales_unit_discount_" + index}`];
+                                                                                        if (target) { target.focus(); target.select(); }
                                                                                     }
                                                                                 }}
                                                                                 onChange={(e) => {

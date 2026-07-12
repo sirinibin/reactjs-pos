@@ -1910,11 +1910,10 @@ export function SalesType1Body({
                                                                                     }
 
                                                                                 }
-                                                                            } else if (e.key === "ArrowLeft") {
+                                                                            } else if (e.key === "ArrowLeft" || e.keyCode === 37) {
                                                                                 e.preventDefault();
-                                                                                timerRef.current = setTimeout(() => {
-                                                                                    inputRefs.current[index][`${"sales_unit_discount_" + index}`]?.focus();
-                                                                                }, 100);
+                                                                                const target = inputRefs.current[index]?.[`${"sales_unit_discount_" + index}`];
+                                                                                if (target) { target.focus(); target.select(); }
                                                                             }
                                                                         }}
                                                                         onChange={(e) => {
