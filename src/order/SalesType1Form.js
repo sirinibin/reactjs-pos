@@ -1911,8 +1911,9 @@ export function SalesType1Body({
 
                                                                                 }
                                                                             } else if (e.key === "ArrowLeft") {
+                                                                                e.preventDefault();
                                                                                 timerRef.current = setTimeout(() => {
-                                                                                    inputRefs.current[index][`${"sales_unit_discount_" + index}`]?.select();
+                                                                                    inputRefs.current[index][`${"sales_unit_discount_" + index}`]?.focus();
                                                                                 }, 100);
                                                                             }
                                                                         }}
