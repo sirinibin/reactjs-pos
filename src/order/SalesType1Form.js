@@ -1913,6 +1913,7 @@ export function SalesType1Body({
                                                                             } else if (e.key === "ArrowLeft" || e.keyCode === 37) {
                                                                                 e.preventDefault();
                                                                                 const target = inputRefs.current[index]?.[`${"sales_unit_discount_" + index}`];
+                                                                                console.log("[DEBUG ArrowLeft unit_discount_with_vat]", { key: e.key, keyCode: e.keyCode, index, targetExists: !!target, target });
                                                                                 if (target) { target.focus(); target.select(); }
                                                                             }
                                                                         }}
