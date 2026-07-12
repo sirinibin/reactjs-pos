@@ -5155,7 +5155,10 @@ async function checkWarning(i) {
                                       }
                                     } else if (e.key === "ArrowLeft" || e.keyCode === 37) {
                                       e.preventDefault();
-                                      const target = inputRefs.current[index]?.[`${"quotation_unit_discount_" + index}`];
+                                      const refMap = { purchase_unit_price: 'quotation_product_purchase_unit_price_', qty: 'quotation_product_quantity_', unit_price: 'quotation_product_unit_price_', unit_price_with_vat: 'quotation_product_unit_price_with_vat_', unit_discount: 'quotation_unit_discount_' };
+                                      const ci = quotationSPColumns.findIndex(c => c.key === 'unit_discount_with_vat');
+                                      let target = null;
+                                      for (let i = ci - 1; i >= 0 && !target; i--) { const col = quotationSPColumns[i]; if (col.visible && refMap[col.key]) target = inputRefs.current[index]?.[refMap[col.key] + index] || null; }
                                       if (target) { target.focus(); target.select(); }
                                     }
                                   }}
@@ -6634,7 +6637,10 @@ async function checkWarning(i) {
                                       }
                                     } else if (e.key === "ArrowLeft" || e.keyCode === 37) {
                                       e.preventDefault();
-                                      const target = inputRefs.current[index]?.[`${"quotation_unit_discount_" + index}`];
+                                      const refMap = { purchase_unit_price: 'quotation_product_purchase_unit_price_', qty: 'quotation_product_quantity_', unit_price: 'quotation_product_unit_price_', unit_price_with_vat: 'quotation_product_unit_price_with_vat_', unit_discount: 'quotation_unit_discount_' };
+                                      const ci = quotationSPColumns.findIndex(c => c.key === 'unit_discount_with_vat');
+                                      let target = null;
+                                      for (let i = ci - 1; i >= 0 && !target; i--) { const col = quotationSPColumns[i]; if (col.visible && refMap[col.key]) target = inputRefs.current[index]?.[refMap[col.key] + index] || null; }
                                       if (target) { target.focus(); target.select(); }
                                     }
                                   }}

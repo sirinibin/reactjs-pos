@@ -1912,8 +1912,10 @@ export function SalesType1Body({
                                                                                 }
                                                                             } else if (e.key === "ArrowLeft" || e.keyCode === 37) {
                                                                                 e.preventDefault();
-                                                                                const target = inputRefs.current[index]?.[`${"sales_unit_discount_" + index}`];
-                                                                                console.log("[DEBUG ArrowLeft unit_discount_with_vat]", { key: e.key, keyCode: e.keyCode, index, targetExists: !!target, target });
+                                                                                const refMap = { purchase_unit_price: 'sales_product_purchase_unit_price_', qty: 'sales_product_quantity_', unit_price: 'sales_product_unit_price_', unit_price_with_vat: 'sales_product_unit_price_with_vat_', unit_discount: 'sales_unit_discount_' };
+                                                                                const ci = selectedProductsColumns.findIndex(c => c.key === 'unit_discount_with_vat');
+                                                                                let target = null;
+                                                                                for (let i = ci - 1; i >= 0 && !target; i--) { const col = selectedProductsColumns[i]; if (col.visible && refMap[col.key]) target = inputRefs.current[index]?.[refMap[col.key] + index] || null; }
                                                                                 if (target) { target.focus(); target.select(); }
                                                                             }
                                                                         }}
