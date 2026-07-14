@@ -58,6 +58,7 @@ import CustomerPending from "./../utils/customer_pending.js";
 import { useTranslation } from 'react-i18next';
 import eventEmitter from '../utils/eventEmitter';
 import { SalesType1Header, SalesType1Body } from './SalesType1Form';
+import { SalesVanStoreHeader, SalesVanStoreBody } from './SalesVanStoreForm';
 import { ObjectToSearchQueryParams } from '../utils/queryUtils.js';
 import { fetchStore } from '../utils/storeUtils.js';
 import SuccessModal from '../utils/SuccessModal.js';
@@ -1721,7 +1722,7 @@ const OrderCreate = forwardRef((props, ref) => {
                 }
             }
 
-            if (store?.settings?.block_sale_when_purchase_price_is_higher) {
+            if (formType !== "type4" && store?.settings?.block_sale_when_purchase_price_is_higher) {
                 if (selectedProducts[i].purchase_unit_price > selectedProducts[i].unit_price) {
                     errors["purchase_unit_price_" + i] = t("Purchase unit price is greater than Unit Price(without VAT)");
                     errors["unit_price_" + i] = t("Unit price is less  than Purchase Unit Price(without VAT)");
@@ -1840,7 +1841,14 @@ const OrderCreate = forwardRef((props, ref) => {
         formData.discount_percent = parseFloat(formData.discount_percent);
         formData.vat_percent = parseFloat(formData.vat_percent);
         formData.net_total = parseFloat(formData.net_total);
-        formData.balance_amount = parseFloat(balanceAmount);
+        // Always recalculate balance from live payment inputs at submit time so stale state can't cause incorrect credit-limit errors
+        {
+            let freshPaymentTotal = 0;
+            for (const p of formData.payments_input || []) {
+                if (p.amount && !p.deleted) freshPaymentTotal += parseFloat(p.amount) || 0;
+            }
+            formData.balance_amount = parseFloat(trimTo2Decimals((formData.net_total - (cashDiscount || 0)) - freshPaymentTotal));
+        }
 
         if (localStorage.getItem('store_id')) {
             formData.store_id = localStorage.getItem('store_id');
@@ -1933,13 +1941,25 @@ const OrderCreate = forwardRef((props, ref) => {
                 if (data.result?.id) {
                     isUpdateForm = true;
                     setIsUpdateForm(true);
+                    // Allow Prev/Next navigation after creation
+                    pendingOrderIdRef.current = data.result.id;
                 }
                 formData = data.result;
                 //formData.date = data.result?.date;
                 //formData.code = data.result?.code;
                 // alert(formData.code + "|" + formData.date);
                 setFormData({ ...formData });
-                openPrintTypeSelection();
+                // VAN form: generate A4 PDF and open browser print dialog directly (no preview modal)
+                if (formType === "type4") {
+                    setShowOrderPreview(true);
+                    setShowPrintTypeSelection(false);
+                    if (timerRef.current) clearTimeout(timerRef.current);
+                    timerRef.current = setTimeout(() => {
+                        PreviewRef.current?.open(formData, undefined, "sales", { autoPrint: true });
+                    }, 150);
+                } else {
+                    openPrintTypeSelection();
+                }
 
                 if (props.onUpdated) {
                     props.onUpdated();
@@ -2043,7 +2063,7 @@ const OrderCreate = forwardRef((props, ref) => {
 
 
 
-        if (selectedProducts[i].purchase_unit_price > 0 && selectedProducts[i].unit_price > 0) {
+        if (formType !== "type4" && selectedProducts[i].purchase_unit_price > 0 && selectedProducts[i].unit_price > 0) {
 
             if (selectedProducts[i].purchase_unit_price > selectedProducts[i].unit_price) {
                 errors["purchase_unit_price_" + i] = t("Purchase Unit Price should not be greater than Unit Price(without VAT)")
@@ -2438,6 +2458,7 @@ const OrderCreate = forwardRef((props, ref) => {
                 unit_discount_percent: 0,
                 unit_discount_percent_vat: 0,
                 stock: product.product_stores[localStorage.getItem("store_id")]?.stock ? product.product_stores[localStorage.getItem("store_id")]?.stock : 0,
+                warehouse_stocks: product.product_stores[localStorage.getItem("store_id")]?.warehouse_stocks || {},
 
             });
         }
@@ -3973,6 +3994,8 @@ const OrderCreate = forwardRef((props, ref) => {
     }
 
     async function openLastForm() {
+        // Ensure getLastOrder doesn't bail on the null guard (set non-null sentinel)
+        if (!pendingOrderIdRef.current) pendingOrderIdRef.current = "__last__";
         getLastOrder();
     }
 
@@ -5452,6 +5475,7 @@ const OrderCreate = forwardRef((props, ref) => {
                             </button>
                             {store.settings?.enable_sales_page_selection === true && (
                                 <select value={formType} onChange={(e) => setFormType(e.target.value)} className="form-select form-select-sm" style={{ width: 'auto', fontSize: '11px', padding: '2px 24px 2px 6px', height: '30px' }}>
+                                    <option value="type4">VAN Store (Type 4)</option>
                                     <option value="type3">{t("Type 3")} (Compact)</option>
                                     <option value="type2">{t("Type 2")} (New)</option>
                                     <option value="type1">{t("Type 1")} (Classic)</option>
@@ -5497,6 +5521,26 @@ const OrderCreate = forwardRef((props, ref) => {
                         </div>
                     </Modal.Header>
                 )}
+                {/* ==================== 🚚 VAN STORE HEADER (type4) ==================== */}
+                {formType === "type4" && <SalesVanStoreHeader
+                    formData={formData} setFormData={setFormData}
+                    isUpdateForm={isUpdateForm}
+                    store={store}
+                    formType={formType} setFormType={setFormType}
+                    disablePreviousButton={disablePreviousButton}
+                    isSubmitting={isSubmitting}
+                    dnNotifications={dnNotifications}
+                    openPreviousForm={openPreviousForm}
+                    openLastForm={openLastForm}
+                    openNextForm={openNextForm}
+                    openCreateForm={openCreateForm}
+                    openPrint={openPrint}
+                    openPreview={openPreview}
+                    handleCreate={handleCreate}
+                    handleClose={handleClose}
+                    openSalesFromDnInForm={openSalesFromDnInForm}
+                    dismissDnNotification={dismissDnNotification}
+                />}
                 {/* ==================== 💻 STITCH COMPACT HEADER (56px) ==================== */}
                 {formType === "type2" && <header className="bg-surface-container-lowest border-b border-outline-variant flex justify-between items-center px-md py-xs h-[56px] sticky top-0 z-50">
                     <div className="flex items-center gap-sm">
@@ -5636,7 +5680,7 @@ const OrderCreate = forwardRef((props, ref) => {
                         </button>
                     </div>
                 </header>}
-                <Modal.Body className={formType === "type2" ? "type2-active" : ""} style={formType === "type2" ? { padding: 0, position: "relative" } : formType === "type3" ? { padding: 0, overflowY: "auto" } : { overflowY: "auto" }}>
+                <Modal.Body className={formType === "type2" ? "type2-active" : formType === "type4" ? "type4-active" : ""} style={formType === "type2" || formType === "type4" ? { padding: 0, position: "relative", display: "flex", flexDirection: "column" } : formType === "type3" ? { padding: 0, overflowY: "auto" } : { overflowY: "auto" }}>
                     {isProcessing && (
                         <div style={{
                             position: "absolute",
@@ -8202,6 +8246,64 @@ const OrderCreate = forwardRef((props, ref) => {
                         renderNetTotalTooltip={renderNetTotalTooltip}
                         fetchAndSetCustomer={fetchAndSetCustomer}
                         startPsColResize={startPsColResize}
+                    />}
+
+                    {formType === "type4" && <SalesVanStoreBody
+                        formData={formData} setFormData={setFormData}
+                        errors={errors} setErrors={setErrors}
+                        warnings={warnings}
+                        selectedProducts={selectedProducts} setSelectedProducts={setSelectedProducts}
+                        selectedCustomers={selectedCustomers} setSelectedCustomers={setSelectedCustomers}
+                        isZatcaReported={isZatcaReported}
+                        store={store}
+                        warehouseList={warehouseList}
+                        openCustomerSearchResult={openCustomerSearchResult} setOpenCustomerSearchResult={setOpenCustomerSearchResult}
+                        openProductSearchResult={openProductSearchResult} setOpenProductSearchResult={setOpenProductSearchResult}
+                        customerOptions={customerOptions} setCustomerOptions={setCustomerOptions}
+                        productOptions={productOptions} setProductOptions={setProductOptions}
+                        handleCreate={handleCreate}
+                        suggestCustomers={suggestCustomers}
+                        suggestProducts={suggestProducts}
+                        getProductByBarCode={getProductByBarCode}
+                        addProduct={addProduct}
+                        removeProduct={removeProduct}
+                        openCustomerCreateForm={openCustomerCreateForm}
+                        openCustomerUpdateForm={openCustomerUpdateForm}
+                        openCustomers={openCustomers}
+                        openProducts={openProducts}
+                        openProductCreateForm={openProductCreateForm}
+                        addNewPayment={addNewPayment}
+                        removePayment={removePayment}
+                        validatePaymentAmounts={validatePaymentAmounts}
+                        shipping={shipping} setShipping={setShipping}
+                        discount={discount} setDiscount={setDiscount}
+                        discountWithVAT={discountWithVAT} setDiscountWithVAT={setDiscountWithVAT}
+                        discountPercent={discountPercent} setDiscountPercent={setDiscountPercent}
+                        discountPercentWithVAT={discountPercentWithVAT} setDiscountPercentWithVAT={setDiscountPercentWithVAT}
+                        roundingAmount={roundingAmount} setRoundingAmount={setRoundingAmount}
+                        cashDiscount={cashDiscount} setCashDiscount={setCashDiscount}
+                        commission={commission} setCommission={setCommission}
+                        totalPaymentAmount={totalPaymentAmount}
+                        balanceAmount={balanceAmount}
+                        paymentStatus={paymentStatus}
+                        isSubmitting={isSubmitting}
+                        isUpdateForm={isUpdateForm}
+                        handleClose={handleClose}
+                        timerRef={timerRef}
+                        customerSearchRef={customerSearchRef}
+                        productSearchRef={productSearchRef}
+                        inputRefs={inputRefs}
+                        discountRef={discountRef}
+                        discountWithVATRef={discountWithVATRef}
+                        CalCulateLineTotals={CalCulateLineTotals}
+                        reCalculate={reCalculate}
+                        reCalculateRef={reCalculateRef}
+                        checkErrors={checkErrors}
+                        checkWarnings={checkWarnings}
+                        isProductAdded={isProductAdded}
+                        sendWhatsAppMessage={sendWhatsAppMessage}
+                        dateLocale={dateLocale}
+                        openReferenceUpdateForm={openReferenceUpdateForm}
                     />}
 
                     {

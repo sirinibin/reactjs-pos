@@ -26,7 +26,14 @@ const Preview = forwardRef((props, ref) => {
     let [InvoiceBackground, setInvoiceBackground] = useState("");
 
     useImperativeHandle(ref, () => ({
-        async open(modelObj, whatsapp, modelNameStr) {
+        async open(modelObj, whatsapp, modelNameStr, opts = {}) {
+            if (opts?.autoPrint) {
+                autoPrintRef.current = true;
+                setSilentMode(true);
+            } else {
+                autoPrintRef.current = false;
+                setSilentMode(false);
+            }
             modelName = modelNameStr;
             setModelName(modelName);
 
@@ -949,10 +956,15 @@ const Preview = forwardRef((props, ref) => {
 
     const handleClose = useCallback(() => {
         setShow(false);
+        setSilentMode(false);
+        autoPrintRef.current = false;
         if (props.onPrintClose) {
             props.onPrintClose();
         }
     }, [props]);
+
+    const autoPrintRef = useRef(false);
+    const [silentMode, setSilentMode] = useState(false);
 
     const printAreaRef = useRef();
 
@@ -1237,6 +1249,17 @@ const Preview = forwardRef((props, ref) => {
         setIsProcessing(false);
         handleClose();
     }, [getFileName, handleClose, model, modelName]);
+
+    // Auto-print when opened with { autoPrint: true } — fires after DOM renders
+    useEffect(() => {
+        if (show && autoPrintRef.current) {
+            const t = setTimeout(() => {
+                autoPrintRef.current = false;
+                handlePrint();
+            }, 400);
+            return () => clearTimeout(t);
+        }
+    }, [show, handlePrint]);
 
     /*
     const handlePrint = async () => {
@@ -2061,7 +2084,10 @@ const Preview = forwardRef((props, ref) => {
             defaultCaption=""
         />
 
-        <Modal show={show} scrollable={true} size="xl" fullscreen onHide={handleClose} animation={false}>
+        <Modal show={show} scrollable={true} size="xl" fullscreen onHide={handleClose} animation={false}
+            backdrop={silentMode ? false : true}
+            style={silentMode ? { visibility: 'hidden', pointerEvents: 'none' } : undefined}
+        >
             {downloadFlash && (
                 <div
                     className={`alert alert-${downloadFlash.variant} alert-dismissible mb-0 rounded-0`}

@@ -5731,6 +5731,7 @@ const StoreCreate = forwardRef((props, ref) => {
                                         <option value="type1">Type 1 (Default)</option>
                                         <option value="type2">Type 2</option>
                                         <option value="type3">Type 3</option>
+                                        <option value="type4">VAN Store (Type 4)</option>
                                     </select>
                                     <div style={{ color: '#6c757d', fontSize: '12px', marginTop: '4px' }}>Layout style for the sales order creation and update form</div>
                                 </div>
