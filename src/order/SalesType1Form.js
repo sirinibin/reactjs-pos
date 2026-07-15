@@ -2493,12 +2493,12 @@ export function SalesType1Body({
                                                                     if (timerRef.current) clearTimeout(timerRef.current);
                                                                     delete errors["shipping_handling_fees"];
                                                                     setErrors({ ...errors });
-                                                                    if (parseFloat(e.target.value) === 0) { shipping = 0; setShipping(shipping); delete errors["shipping_handling_fees"]; setErrors({ ...errors }); timerRef.current = setTimeout(() => { reCalculate(); }, 100); return; }
-                                                                    if (parseFloat(e.target.value) < 0) { shipping = 0.00; setShipping(shipping); setErrors({ ...errors }); timerRef.current = setTimeout(() => { reCalculate(); }, 100); return; }
-                                                                    if (!e.target.value) { shipping = ""; setShipping(shipping); setErrors({ ...errors }); timerRef.current = setTimeout(() => { reCalculate(); }, 100); return; }
+                                                                    if (parseFloat(e.target.value) === 0) { shipping = 0; setShipping(shipping); delete errors["shipping_handling_fees"]; setErrors({ ...errors }); timerRef.current = setTimeout(() => { reCalculateRef.current(); }, 100); return; }
+                                                                    if (parseFloat(e.target.value) < 0) { shipping = 0.00; setShipping(shipping); setErrors({ ...errors }); timerRef.current = setTimeout(() => { reCalculateRef.current(); }, 100); return; }
+                                                                    if (!e.target.value) { shipping = ""; setShipping(shipping); setErrors({ ...errors }); timerRef.current = setTimeout(() => { reCalculateRef.current(); }, 100); return; }
                                                                     if (/^\d*\.?\d{0,2}$/.test(parseFloat(e.target.value)) === false) { errors["shipping_handling_fees"] = t("Max. decimal points allowed is 2"); setErrors({ ...errors }); }
                                                                     shipping = parseFloat(e.target.value); setShipping(shipping);
-                                                                    timerRef.current = setTimeout(() => { reCalculate(); }, 100);
+                                                                    timerRef.current = setTimeout(() => { reCalculateRef.current(); }, 100);
                                                                 }} />
                                                                 {errors.shipping_handling_fees && <div style={{ color: "red" }}>{errors.shipping_handling_fees}</div>}
                                                             </td>
@@ -2526,13 +2526,13 @@ export function SalesType1Body({
                                                                     onFocus={() => { if (timerRef.current) clearTimeout(timerRef.current); timerRef.current = setTimeout(() => { discountRef.current?.select(); }, 20); }}
                                                                     onChange={(e) => {
                                                                         if (timerRef.current) clearTimeout(timerRef.current);
-                                                                        if (parseFloat(e.target.value) === 0) { discount = 0; setDiscount(discount); discountWithVAT = 0; setDiscountWithVAT(discountWithVAT); discountPercent = 0; setDiscountPercent(discountPercent); discountPercentWithVAT = 0; setDiscountPercent(discountPercentWithVAT); delete errors["discount"]; setErrors({ ...errors }); timerRef.current = setTimeout(() => { reCalculate(); }, 100); return; }
-                                                                        if (parseFloat(e.target.value) < 0) { discount = 0; setDiscount(discount); discountWithVAT = 0; setDiscountWithVAT(discountWithVAT); discountPercent = 0; setDiscountPercent(discountPercent); discountPercentWithVAT = 0; setDiscountPercent(discountPercentWithVAT); setErrors({ ...errors }); timerRef.current = setTimeout(() => { reCalculate(); }, 100); return; }
-                                                                        if (!e.target.value) { discount = ""; setDiscount(discount); discountWithVAT = ""; setDiscountWithVAT(discountWithVAT); discountPercent = ""; setDiscountPercent(discountPercent); discountPercentWithVAT = ""; setDiscountPercent(discountPercentWithVAT); setErrors({ ...errors }); timerRef.current = setTimeout(() => { reCalculate(); }, 100); return; }
+                                                                        if (parseFloat(e.target.value) === 0) { discount = 0; setDiscount(discount); discountWithVAT = 0; setDiscountWithVAT(discountWithVAT); discountPercent = 0; setDiscountPercent(discountPercent); discountPercentWithVAT = 0; setDiscountPercent(discountPercentWithVAT); delete errors["discount"]; setErrors({ ...errors }); timerRef.current = setTimeout(() => { reCalculateRef.current(); }, 100); return; }
+                                                                        if (parseFloat(e.target.value) < 0) { discount = 0; setDiscount(discount); discountWithVAT = 0; setDiscountWithVAT(discountWithVAT); discountPercent = 0; setDiscountPercent(discountPercent); discountPercentWithVAT = 0; setDiscountPercent(discountPercentWithVAT); setErrors({ ...errors }); timerRef.current = setTimeout(() => { reCalculateRef.current(); }, 100); return; }
+                                                                        if (!e.target.value) { discount = ""; setDiscount(discount); discountWithVAT = ""; setDiscountWithVAT(discountWithVAT); discountPercent = ""; setDiscountPercent(discountPercent); discountPercentWithVAT = ""; setDiscountPercent(discountPercentWithVAT); setErrors({ ...errors }); timerRef.current = setTimeout(() => { reCalculateRef.current(); }, 100); return; }
                                                                         delete errors["discount"]; delete errors["discount_percent"]; setErrors({ ...errors });
                                                                         if (/^\d*\.?\d{0,2}$/.test(parseFloat(e.target.value)) === false) { errors["discount"] = t("Max. decimal points allowed is 2"); setErrors({ ...errors }); }
                                                                         discount = parseFloat(e.target.value); setDiscount(discount);
-                                                                        timerRef.current = setTimeout(() => { discountWithVAT = parseFloat(trimTo2Decimals(discount * (1 + (formData.vat_percent / 100)))); setDiscountWithVAT(discountWithVAT); reCalculate(); }, 100);
+                                                                        timerRef.current = setTimeout(() => { discountWithVAT = parseFloat(trimTo2Decimals(discount * (1 + (formData.vat_percent / 100)))); setDiscountWithVAT(discountWithVAT); reCalculateRef.current(); }, 100);
                                                                     }} />
                                                                 {errors.discount && <div style={{ color: "red" }}>{errors.discount}</div>}
                                                             </td>
@@ -2560,13 +2560,14 @@ export function SalesType1Body({
                                                                     onFocus={() => { if (timerRef.current) clearTimeout(timerRef.current); timerRef.current = setTimeout(() => { discountWithVATRef.current?.select(); }, 20); }}
                                                                     onChange={(e) => {
                                                                         if (timerRef.current) clearTimeout(timerRef.current);
-                                                                        if (parseFloat(e.target.value) === 0) { discount = 0; discountWithVAT = 0; discountPercent = 0; setDiscount(discount); setDiscountWithVAT(discount); setDiscountPercent(discount); delete errors["discount_with_vat"]; setErrors({ ...errors }); timerRef.current = setTimeout(() => { reCalculate(); }, 100); return; }
-                                                                        if (parseFloat(e.target.value) < 0) { discount = 0.00; discountWithVAT = 0.00; discountPercent = 0.00; setDiscount(discount); setDiscountWithVAT(discount); setDiscountPercent(discountPercent); setErrors({ ...errors }); timerRef.current = setTimeout(() => { reCalculate(); }, 100); return; }
-                                                                        if (!e.target.value) { discount = ""; discountWithVAT = ""; discountPercent = ""; setDiscount(discount); setDiscountWithVAT(discount); setDiscountPercent(discountPercent); setErrors({ ...errors }); timerRef.current = setTimeout(() => { reCalculate(); }, 100); return; }
+                                                                        if (parseFloat(e.target.value) === 0) { discount = 0; discountWithVAT = 0; discountPercent = 0; setDiscount(discount); setDiscountWithVAT(discount); setDiscountPercent(discount); delete errors["discount_with_vat"]; setErrors({ ...errors }); timerRef.current = setTimeout(() => { reCalculateRef.current(); }, 100); return; }
+                                                                        if (parseFloat(e.target.value) < 0) { discount = 0.00; discountWithVAT = 0.00; discountPercent = 0.00; setDiscount(discount); setDiscountWithVAT(discount); setDiscountPercent(discountPercent); setErrors({ ...errors }); timerRef.current = setTimeout(() => { reCalculateRef.current(); }, 100); return; }
+                                                                        if (!e.target.value) { discount = ""; discountWithVAT = ""; discountPercent = ""; setDiscount(discount); setDiscountWithVAT(discount); setDiscountPercent(discountPercent); setErrors({ ...errors }); timerRef.current = setTimeout(() => { reCalculateRef.current(); }, 100); return; }
                                                                         delete errors["discount_with_vat"]; delete errors["discount_percent_with_vat"]; setErrors({ ...errors });
                                                                         if (/^\d*\.?\d{0,2}$/.test(parseFloat(e.target.value)) === false) { errors["discount_with_vat"] = t("Max. decimal points allowed is 2"); setErrors({ ...errors }); }
                                                                         discountWithVAT = parseFloat(e.target.value); setDiscountWithVAT(discountWithVAT);
-                                                                        timerRef.current = setTimeout(() => { discount = parseFloat(trimTo2Decimals(discountWithVAT / (1 + (formData.vat_percent / 100)))); setDiscount(discount); reCalculate(); }, 100);
+                                                                        discount = parseFloat(trimTo2Decimals(discountWithVAT / (1 + (formData.vat_percent / 100)))); setDiscount(discount);
+                                                                        timerRef.current = setTimeout(() => { reCalculateRef.current(); }, 100);
                                                                     }} />
                                                                 {errors.discount_with_vat && <div style={{ color: "red" }}>{errors.discount_with_vat}</div>}
                                                             </td>
@@ -2628,7 +2629,7 @@ export function SalesType1Body({
                                                                     setErrors({ ...errors });
                                                                     formData.auto_rounding_amount = !formData.auto_rounding_amount;
                                                                     setFormData({ ...formData });
-                                                                    timerRef.current = setTimeout(() => { reCalculate(); }, 100);
+                                                                    timerRef.current = setTimeout(() => { reCalculateRef.current(); }, 100);
                                                                 }} />{" " + t("Auto Calculate") + "]"}
                                                             </th>
                                                             <td className="text-end">
@@ -2636,15 +2637,15 @@ export function SalesType1Body({
                                                                     onChange={(e) => {
                                                                         if (timerRef.current) clearTimeout(timerRef.current);
                                                                         delete errors["rounding_amount"]; setErrors({ ...errors });
-                                                                        if (!e.target.value) { roundingAmount = ""; setRoundingAmount(roundingAmount); timerRef.current = setTimeout(() => { reCalculate(); }, 100); return; }
+                                                                        if (!e.target.value) { roundingAmount = ""; setRoundingAmount(roundingAmount); timerRef.current = setTimeout(() => { reCalculateRef.current(); }, 100); return; }
                                                                         if (e.target.value) { if (/^-?\d*\.?\d{0,2}$/.test(parseFloat(e.target.value)) === false) { roundingAmount = parseFloat(e.target.value); errors["rounding_amount"] = t("Max. decimal points allowed is 2"); setErrors({ ...errors }); return; } }
                                                                         roundingAmount = parseFloat(e.target.value); setRoundingAmount(roundingAmount);
                                                                         delete errors["rounding_amount"]; setErrors({ ...errors });
-                                                                        timerRef.current = setTimeout(() => { reCalculate(); }, 100);
+                                                                        timerRef.current = setTimeout(() => { reCalculateRef.current(); }, 100);
                                                                     }}
                                                                     onKeyDown={(e) => {
                                                                         if (timerRef.current) clearTimeout(timerRef.current);
-                                                                        if (e.key === "Backspace") { delete errors["rounding_amount"]; setErrors({ ...errors }); roundingAmount = ""; setRoundingAmount(""); timerRef.current = setTimeout(() => { reCalculate(); }, 100); }
+                                                                        if (e.key === "Backspace") { delete errors["rounding_amount"]; setErrors({ ...errors }); roundingAmount = ""; setRoundingAmount(""); timerRef.current = setTimeout(() => { reCalculateRef.current(); }, 100); }
                                                                     }}
                                                                 />
                                                                 {errors.rounding_amount && <div style={{ color: "red" }}>{errors.rounding_amount}</div>}

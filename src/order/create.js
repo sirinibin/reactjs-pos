@@ -7958,12 +7958,12 @@ const OrderCreate = forwardRef((props, ref) => {
                                                                 <input type="number" id="sales_shipping_fees" name="sales_shipping_fees" onWheel={(e) => e.target.blur()} disabled={isZatcaReported} style={{ width: "110px" }} className="form-control form-control-sm text-end" value={shipping} onChange={(e) => {
                                                                     if (timerRef.current) clearTimeout(timerRef.current);
                                                                     delete errors["shipping_handling_fees"]; setErrors({ ...errors });
-                                                                    if (parseFloat(e.target.value) === 0) { shipping = 0; setShipping(shipping); delete errors["shipping_handling_fees"]; setErrors({ ...errors }); timerRef.current = setTimeout(() => { reCalculate(); }, 100); return; }
-                                                                    if (parseFloat(e.target.value) < 0) { shipping = 0.00; setShipping(shipping); setErrors({ ...errors }); timerRef.current = setTimeout(() => { reCalculate(); }, 100); return; }
-                                                                    if (!e.target.value) { shipping = ""; setShipping(shipping); setErrors({ ...errors }); timerRef.current = setTimeout(() => { reCalculate(); }, 100); return; }
+                                                                    if (parseFloat(e.target.value) === 0) { shipping = 0; setShipping(shipping); delete errors["shipping_handling_fees"]; setErrors({ ...errors }); timerRef.current = setTimeout(() => { reCalculateRef.current(); }, 100); return; }
+                                                                    if (parseFloat(e.target.value) < 0) { shipping = 0.00; setShipping(shipping); setErrors({ ...errors }); timerRef.current = setTimeout(() => { reCalculateRef.current(); }, 100); return; }
+                                                                    if (!e.target.value) { shipping = ""; setShipping(shipping); setErrors({ ...errors }); timerRef.current = setTimeout(() => { reCalculateRef.current(); }, 100); return; }
                                                                     if (/^\d*\.?\d{0,2}$/.test(parseFloat(e.target.value)) === false) { errors["shipping_handling_fees"] = t("Max. decimal points allowed is 2"); setErrors({ ...errors }); }
                                                                     shipping = parseFloat(e.target.value); setShipping(shipping);
-                                                                    timerRef.current = setTimeout(() => { reCalculate(); }, 100);
+                                                                    timerRef.current = setTimeout(() => { reCalculateRef.current(); }, 100);
                                                                 }} />
                                                                 {errors.shipping_handling_fees && <div style={{ position: 'absolute', top: '100%', right: 0, zIndex: 10, whiteSpace: 'nowrap', background: '#fff', border: '1px solid #fca5a5', borderRadius: '3px', padding: '1px 6px', boxShadow: '0 2px 6px rgba(0,0,0,0.1)', color: '#dc2626', fontSize: '11px' }}>{errors.shipping_handling_fees}</div>}
                                                             </div>
@@ -7974,12 +7974,12 @@ const OrderCreate = forwardRef((props, ref) => {
                                                             <span style={{ color: '#434655', position: 'relative' }}>
                                                                 {t("Discount (ex. VAT)")} <input type="number" id="discount_percent" name="discount_percent" onWheel={(e) => e.target.blur()} disabled={true} style={{ width: "50px", display: 'inline-block' }} className="form-control form-control-sm d-inline-block text-center" value={discountPercent} onChange={(e) => {
                                                                     if (timerRef.current) clearTimeout(timerRef.current);
-                                                                    if (parseFloat(e.target.value) === 0) { discount = 0; setDiscount(discount); discountPercentWithVAT = 0; setDiscountPercentWithVAT(discountPercentWithVAT); discountPercent = 0; setDiscountPercent(discountPercent); errors["discount_percent"] = ""; setErrors({ ...errors }); timerRef.current = setTimeout(() => { reCalculate(); }, 100); return; }
-                                                                    if (parseFloat(e.target.value) < 0) { discountWithVAT = 0; setDiscountWithVAT(discountWithVAT); discountPercentWithVAT = 0; setDiscountPercentWithVAT(discountPercentWithVAT); discount = 0; setDiscount(discount); discountPercent = 0; setDiscountPercent(discountPercent); setErrors({ ...errors }); timerRef.current = setTimeout(() => { reCalculate(); }, 100); return; }
-                                                                    if (!e.target.value) { discountWithVAT = ""; setDiscountWithVAT(discountWithVAT); discountPercentWithVAT = ""; setDiscountPercentWithVAT(discountPercentWithVAT); discount = ""; setDiscount(discount); discountPercent = ""; setDiscountPercent(discountPercent); setErrors({ ...errors }); timerRef.current = setTimeout(() => { reCalculate(); }, 100); return; }
+                                                                    if (parseFloat(e.target.value) === 0) { discount = 0; setDiscount(discount); discountPercentWithVAT = 0; setDiscountPercentWithVAT(discountPercentWithVAT); discountPercent = 0; setDiscountPercent(discountPercent); errors["discount_percent"] = ""; setErrors({ ...errors }); timerRef.current = setTimeout(() => { reCalculateRef.current(); }, 100); return; }
+                                                                    if (parseFloat(e.target.value) < 0) { discountWithVAT = 0; setDiscountWithVAT(discountWithVAT); discountPercentWithVAT = 0; setDiscountPercentWithVAT(discountPercentWithVAT); discount = 0; setDiscount(discount); discountPercent = 0; setDiscountPercent(discountPercent); setErrors({ ...errors }); timerRef.current = setTimeout(() => { reCalculateRef.current(); }, 100); return; }
+                                                                    if (!e.target.value) { discountWithVAT = ""; setDiscountWithVAT(discountWithVAT); discountPercentWithVAT = ""; setDiscountPercentWithVAT(discountPercentWithVAT); discount = ""; setDiscount(discount); discountPercent = ""; setDiscountPercent(discountPercent); setErrors({ ...errors }); timerRef.current = setTimeout(() => { reCalculateRef.current(); }, 100); return; }
                                                                     delete errors["discount_percent"]; delete errors["discount"]; setErrors({ ...errors });
                                                                     discountPercent = parseFloat(e.target.value); setDiscountPercent(discountPercent);
-                                                                    timerRef.current = setTimeout(() => { reCalculate(); }, 100);
+                                                                    timerRef.current = setTimeout(() => { reCalculateRef.current(); }, 100);
                                                                 }} />{"% "}
                                                                 <OverlayTrigger placement="left" trigger="click" show={openSummaryTooltip === 'disc_ex_vat'} overlay={renderDiscountWithoutVATTooltip()}><span style={{ textDecoration: 'underline dotted', cursor: 'pointer', color: '#888' }} onClick={(e) => { e.stopPropagation(); setOpenSummaryTooltip(p => p === 'disc_ex_vat' ? null : 'disc_ex_vat'); }}>ℹ️</span></OverlayTrigger>
                                                                 {errors.discount_percent && <div style={{ position: 'absolute', top: '100%', left: 0, zIndex: 10, whiteSpace: 'nowrap', background: '#fff', border: '1px solid #fca5a5', borderRadius: '3px', padding: '1px 6px', boxShadow: '0 2px 6px rgba(0,0,0,0.1)', color: '#dc2626', fontSize: '11px' }}>{errors.discount_percent}</div>}
@@ -7989,13 +7989,13 @@ const OrderCreate = forwardRef((props, ref) => {
                                                                     onFocus={() => { if (timerRef.current) clearTimeout(timerRef.current); timerRef.current = setTimeout(() => { discountRef.current?.select(); }, 20); }}
                                                                     onChange={(e) => {
                                                                         if (timerRef.current) clearTimeout(timerRef.current);
-                                                                        if (parseFloat(e.target.value) === 0) { discount = 0; setDiscount(discount); discountWithVAT = 0; setDiscountWithVAT(discountWithVAT); discountPercent = 0; setDiscountPercent(discountPercent); discountPercentWithVAT = 0; setDiscountPercent(discountPercentWithVAT); delete errors["discount"]; setErrors({ ...errors }); timerRef.current = setTimeout(() => { reCalculate(); }, 100); return; }
-                                                                        if (parseFloat(e.target.value) < 0) { discount = 0; setDiscount(discount); discountWithVAT = 0; setDiscountWithVAT(discountWithVAT); discountPercent = 0; setDiscountPercent(discountPercent); discountPercentWithVAT = 0; setDiscountPercent(discountPercentWithVAT); setErrors({ ...errors }); timerRef.current = setTimeout(() => { reCalculate(); }, 100); return; }
-                                                                        if (!e.target.value) { discount = ""; setDiscount(discount); discountWithVAT = ""; setDiscountWithVAT(discountWithVAT); discountPercent = ""; setDiscountPercent(discountPercent); discountPercentWithVAT = ""; setDiscountPercent(discountPercentWithVAT); setErrors({ ...errors }); timerRef.current = setTimeout(() => { reCalculate(); }, 100); return; }
+                                                                        if (parseFloat(e.target.value) === 0) { discount = 0; setDiscount(discount); discountWithVAT = 0; setDiscountWithVAT(discountWithVAT); discountPercent = 0; setDiscountPercent(discountPercent); discountPercentWithVAT = 0; setDiscountPercent(discountPercentWithVAT); delete errors["discount"]; setErrors({ ...errors }); timerRef.current = setTimeout(() => { reCalculateRef.current(); }, 100); return; }
+                                                                        if (parseFloat(e.target.value) < 0) { discount = 0; setDiscount(discount); discountWithVAT = 0; setDiscountWithVAT(discountWithVAT); discountPercent = 0; setDiscountPercent(discountPercent); discountPercentWithVAT = 0; setDiscountPercent(discountPercentWithVAT); setErrors({ ...errors }); timerRef.current = setTimeout(() => { reCalculateRef.current(); }, 100); return; }
+                                                                        if (!e.target.value) { discount = ""; setDiscount(discount); discountWithVAT = ""; setDiscountWithVAT(discountWithVAT); discountPercent = ""; setDiscountPercent(discountPercent); discountPercentWithVAT = ""; setDiscountPercent(discountPercentWithVAT); setErrors({ ...errors }); timerRef.current = setTimeout(() => { reCalculateRef.current(); }, 100); return; }
                                                                         delete errors["discount"]; delete errors["discount_percent"]; setErrors({ ...errors });
                                                                         if (/^\d*\.?\d{0,2}$/.test(parseFloat(e.target.value)) === false) { errors["discount"] = t("Max. decimal points allowed is 2"); setErrors({ ...errors }); }
                                                                         discount = parseFloat(e.target.value); setDiscount(discount);
-                                                                        timerRef.current = setTimeout(() => { discountWithVAT = parseFloat(trimTo2Decimals(discount * (1 + (formData.vat_percent / 100)))); setDiscountWithVAT(discountWithVAT); reCalculate(); }, 100);
+                                                                        timerRef.current = setTimeout(() => { discountWithVAT = parseFloat(trimTo2Decimals(discount * (1 + (formData.vat_percent / 100)))); setDiscountWithVAT(discountWithVAT); reCalculateRef.current(); }, 100);
                                                                     }} />
                                                                 {errors.discount && <div style={{ position: 'absolute', top: '100%', right: 0, zIndex: 10, whiteSpace: 'nowrap', background: '#fff', border: '1px solid #fca5a5', borderRadius: '3px', padding: '1px 6px', boxShadow: '0 2px 6px rgba(0,0,0,0.1)', color: '#dc2626', fontSize: '11px' }}>{errors.discount}</div>}
                                                             </div>
@@ -8006,12 +8006,12 @@ const OrderCreate = forwardRef((props, ref) => {
                                                             <span style={{ color: '#434655', position: 'relative' }}>
                                                                 {t("Discount (inc. VAT)")} <input type="number" id="discount_percent_with_vat" name="discount_percent_with_vat" onWheel={(e) => e.target.blur()} disabled={true} style={{ width: "50px", display: 'inline-block' }} className="form-control form-control-sm d-inline-block text-center" value={discountPercentWithVAT} onChange={(e) => {
                                                                     if (timerRef.current) clearTimeout(timerRef.current);
-                                                                    if (parseFloat(e.target.value) === 0) { discountWithVAT = 0; setDiscountWithVAT(discountWithVAT); discountPercentWithVAT = 0; setDiscountPercentWithVAT(discountPercentWithVAT); discount = 0; setDiscount(discount); discountPercent = 0; setDiscountPercent(discountPercent); delete errors["discount_percent_with_vat"]; setErrors({ ...errors }); timerRef.current = setTimeout(() => { reCalculate(); }, 100); return; }
-                                                                    if (parseFloat(e.target.value) < 0) { discountWithVAT = 0; setDiscountWithVAT(discountWithVAT); discountPercentWithVAT = 0; setDiscountPercentWithVAT(discountPercentWithVAT); discount = 0; setDiscount(discount); discountPercent = 0; setDiscountPercent(discountPercent); errors["discount_percent_with_vat"] = t("Discount percent should be greater than or equal to zero"); setErrors({ ...errors }); timerRef.current = setTimeout(() => { reCalculate(); }, 100); return; }
-                                                                    if (!e.target.value) { discountWithVAT = ""; setDiscountWithVAT(discountWithVAT); discountPercentWithVAT = ""; setDiscountPercentWithVAT(discountPercentWithVAT); discount = ""; setDiscount(discount); discountPercent = ""; setDiscountPercent(discountPercent); setErrors({ ...errors }); timerRef.current = setTimeout(() => { reCalculate(); }, 100); return; }
+                                                                    if (parseFloat(e.target.value) === 0) { discountWithVAT = 0; setDiscountWithVAT(discountWithVAT); discountPercentWithVAT = 0; setDiscountPercentWithVAT(discountPercentWithVAT); discount = 0; setDiscount(discount); discountPercent = 0; setDiscountPercent(discountPercent); delete errors["discount_percent_with_vat"]; setErrors({ ...errors }); timerRef.current = setTimeout(() => { reCalculateRef.current(); }, 100); return; }
+                                                                    if (parseFloat(e.target.value) < 0) { discountWithVAT = 0; setDiscountWithVAT(discountWithVAT); discountPercentWithVAT = 0; setDiscountPercentWithVAT(discountPercentWithVAT); discount = 0; setDiscount(discount); discountPercent = 0; setDiscountPercent(discountPercent); errors["discount_percent_with_vat"] = t("Discount percent should be greater than or equal to zero"); setErrors({ ...errors }); timerRef.current = setTimeout(() => { reCalculateRef.current(); }, 100); return; }
+                                                                    if (!e.target.value) { discountWithVAT = ""; setDiscountWithVAT(discountWithVAT); discountPercentWithVAT = ""; setDiscountPercentWithVAT(discountPercentWithVAT); discount = ""; setDiscount(discount); discountPercent = ""; setDiscountPercent(discountPercent); setErrors({ ...errors }); timerRef.current = setTimeout(() => { reCalculateRef.current(); }, 100); return; }
                                                                     delete errors["discount_percent_with_vat"]; delete errors["discount_with_vat"]; setErrors({ ...errors });
                                                                     discountPercentWithVAT = parseFloat(e.target.value); setDiscountPercentWithVAT(discountPercentWithVAT);
-                                                                    timerRef.current = setTimeout(() => { reCalculate(); }, 100);
+                                                                    timerRef.current = setTimeout(() => { reCalculateRef.current(); }, 100);
                                                                 }} />{"% "}
                                                                 <OverlayTrigger placement="left" trigger="click" show={openSummaryTooltip === 'disc_inc_vat'} overlay={renderDiscountWithVATTooltip()}><span style={{ textDecoration: 'underline dotted', cursor: 'pointer', color: '#888' }} onClick={(e) => { e.stopPropagation(); setOpenSummaryTooltip(p => p === 'disc_inc_vat' ? null : 'disc_inc_vat'); }}>ℹ️</span></OverlayTrigger>
                                                                 {errors.discount_percent_with_vat && <div style={{ position: 'absolute', top: '100%', left: 0, zIndex: 10, whiteSpace: 'nowrap', background: '#fff', border: '1px solid #fca5a5', borderRadius: '3px', padding: '1px 6px', boxShadow: '0 2px 6px rgba(0,0,0,0.1)', color: '#dc2626', fontSize: '11px' }}>{errors.discount_percent_with_vat}</div>}
@@ -8021,13 +8021,14 @@ const OrderCreate = forwardRef((props, ref) => {
                                                                     onFocus={() => { if (timerRef.current) clearTimeout(timerRef.current); timerRef.current = setTimeout(() => { discountWithVATRef.current?.select(); }, 20); }}
                                                                     onChange={(e) => {
                                                                         if (timerRef.current) clearTimeout(timerRef.current);
-                                                                        if (parseFloat(e.target.value) === 0) { discount = 0; discountWithVAT = 0; discountPercent = 0; setDiscount(discount); setDiscountWithVAT(discount); setDiscountPercent(discount); delete errors["discount_with_vat"]; setErrors({ ...errors }); timerRef.current = setTimeout(() => { reCalculate(); }, 100); return; }
-                                                                        if (parseFloat(e.target.value) < 0) { discount = 0.00; discountWithVAT = 0.00; discountPercent = 0.00; setDiscount(discount); setDiscountWithVAT(discount); setDiscountPercent(discountPercent); setErrors({ ...errors }); timerRef.current = setTimeout(() => { reCalculate(); }, 100); return; }
-                                                                        if (!e.target.value) { discount = ""; discountWithVAT = ""; discountPercent = ""; setDiscount(discount); setDiscountWithVAT(discount); setDiscountPercent(discountPercent); setErrors({ ...errors }); timerRef.current = setTimeout(() => { reCalculate(); }, 100); return; }
+                                                                        if (parseFloat(e.target.value) === 0) { discount = 0; discountWithVAT = 0; discountPercent = 0; setDiscount(discount); setDiscountWithVAT(discount); setDiscountPercent(discount); delete errors["discount_with_vat"]; setErrors({ ...errors }); timerRef.current = setTimeout(() => { reCalculateRef.current(); }, 100); return; }
+                                                                        if (parseFloat(e.target.value) < 0) { discount = 0.00; discountWithVAT = 0.00; discountPercent = 0.00; setDiscount(discount); setDiscountWithVAT(discount); setDiscountPercent(discountPercent); setErrors({ ...errors }); timerRef.current = setTimeout(() => { reCalculateRef.current(); }, 100); return; }
+                                                                        if (!e.target.value) { discount = ""; discountWithVAT = ""; discountPercent = ""; setDiscount(discount); setDiscountWithVAT(discount); setDiscountPercent(discountPercent); setErrors({ ...errors }); timerRef.current = setTimeout(() => { reCalculateRef.current(); }, 100); return; }
                                                                         delete errors["discount_with_vat"]; delete errors["discount_percent_with_vat"]; setErrors({ ...errors });
                                                                         if (/^\d*\.?\d{0,2}$/.test(parseFloat(e.target.value)) === false) { errors["discount_with_vat"] = t("Max. decimal points allowed is 2"); setErrors({ ...errors }); }
                                                                         discountWithVAT = parseFloat(e.target.value); setDiscountWithVAT(discountWithVAT);
-                                                                        timerRef.current = setTimeout(() => { discount = parseFloat(trimTo2Decimals(discountWithVAT / (1 + (formData.vat_percent / 100)))); setDiscount(discount); reCalculate(); }, 100);
+                                                                        discount = parseFloat(trimTo2Decimals(discountWithVAT / (1 + (formData.vat_percent / 100)))); setDiscount(discount);
+                                                                        timerRef.current = setTimeout(() => { reCalculateRef.current(); }, 100);
                                                                     }} />
                                                                 {errors.discount_with_vat && <div style={{ position: 'absolute', top: '100%', right: 0, zIndex: 10, whiteSpace: 'nowrap', background: '#fff', border: '1px solid #fca5a5', borderRadius: '3px', padding: '1px 6px', boxShadow: '0 2px 6px rgba(0,0,0,0.1)', color: '#dc2626', fontSize: '11px' }}>{errors.discount_with_vat}</div>}
                                                             </div>
@@ -8073,7 +8074,7 @@ const OrderCreate = forwardRef((props, ref) => {
                                                                         setErrors({ ...errors });
                                                                         formData.auto_rounding_amount = !formData.auto_rounding_amount;
                                                                         setFormData({ ...formData });
-                                                                        timerRef.current = setTimeout(() => { reCalculate(); }, 100);
+                                                                        timerRef.current = setTimeout(() => { reCalculateRef.current(); }, 100);
                                                                     }} />
                                                                     Auto
                                                                 </label>
@@ -8083,15 +8084,15 @@ const OrderCreate = forwardRef((props, ref) => {
                                                                     onChange={(e) => {
                                                                         if (timerRef.current) clearTimeout(timerRef.current);
                                                                         delete errors["rounding_amount"]; setErrors({ ...errors });
-                                                                        if (!e.target.value) { roundingAmount = ""; setRoundingAmount(roundingAmount); timerRef.current = setTimeout(() => { reCalculate(); }, 100); return; }
+                                                                        if (!e.target.value) { roundingAmount = ""; setRoundingAmount(roundingAmount); timerRef.current = setTimeout(() => { reCalculateRef.current(); }, 100); return; }
                                                                         if (e.target.value) { if (/^-?\d*\.?\d{0,2}$/.test(parseFloat(e.target.value)) === false) { roundingAmount = parseFloat(e.target.value); errors["rounding_amount"] = t("Max. decimal points allowed is 2"); setErrors({ ...errors }); return; } }
                                                                         roundingAmount = parseFloat(e.target.value); setRoundingAmount(roundingAmount);
                                                                         delete errors["rounding_amount"]; setErrors({ ...errors });
-                                                                        timerRef.current = setTimeout(() => { reCalculate(); }, 100);
+                                                                        timerRef.current = setTimeout(() => { reCalculateRef.current(); }, 100);
                                                                     }}
                                                                     onKeyDown={(e) => {
                                                                         if (timerRef.current) clearTimeout(timerRef.current);
-                                                                        if (e.key === "Backspace") { delete errors["rounding_amount"]; setErrors({ ...errors }); roundingAmount = ""; setRoundingAmount(""); timerRef.current = setTimeout(() => { reCalculate(); }, 100); }
+                                                                        if (e.key === "Backspace") { delete errors["rounding_amount"]; setErrors({ ...errors }); roundingAmount = ""; setRoundingAmount(""); timerRef.current = setTimeout(() => { reCalculateRef.current(); }, 100); }
                                                                     }} />
                                                                 {errors.rounding_amount && <div style={{ position: 'absolute', top: '100%', right: 0, zIndex: 10, whiteSpace: 'nowrap', background: '#fff', border: '1px solid #fca5a5', borderRadius: '3px', padding: '1px 6px', boxShadow: '0 2px 6px rgba(0,0,0,0.1)', color: '#dc2626', fontSize: '11px' }}>{errors.rounding_amount}</div>}
                                                             </div>
@@ -10026,21 +10027,21 @@ const OrderCreate = forwardRef((props, ref) => {
                                                                             setShipping(shipping);
                                                                             delete errors["shipping_handling_fees"];
                                                                             setErrors({ ...errors });
-                                                                            timerRef.current = setTimeout(() => { reCalculate(); }, 300);
+                                                                            timerRef.current = setTimeout(() => { reCalculateRef.current(); }, 300);
                                                                             return;
                                                                         }
                                                                         if (parseFloat(e.target.value) < 0) {
                                                                             shipping = 0;
                                                                             setShipping(shipping);
                                                                             setErrors({ ...errors });
-                                                                            timerRef.current = setTimeout(() => { reCalculate(); }, 300);
+                                                                            timerRef.current = setTimeout(() => { reCalculateRef.current(); }, 300);
                                                                             return;
                                                                         }
                                                                         if (!e.target.value) {
                                                                             shipping = "";
                                                                             setShipping(shipping);
                                                                             setErrors({ ...errors });
-                                                                            timerRef.current = setTimeout(() => { reCalculate(); }, 300);
+                                                                            timerRef.current = setTimeout(() => { reCalculateRef.current(); }, 300);
                                                                             return;
                                                                         }
                                                                         if (/^\d*\.?\d{0,2}$/.test(parseFloat(e.target.value)) === false) {
@@ -10049,7 +10050,7 @@ const OrderCreate = forwardRef((props, ref) => {
                                                                         }
                                                                         shipping = parseFloat(e.target.value);
                                                                         setShipping(shipping);
-                                                                        timerRef.current = setTimeout(() => { reCalculate(); }, 300);
+                                                                        timerRef.current = setTimeout(() => { reCalculateRef.current(); }, 300);
                                                                     }}
                                                                 />
                                                                 {errors.shipping_handling_fees && (
@@ -10085,7 +10086,7 @@ const OrderCreate = forwardRef((props, ref) => {
                                                                             discountPercent = 0; setDiscountPercent(discountPercent);
                                                                             discountPercentWithVAT = 0; setDiscountPercent(discountPercentWithVAT);
                                                                             delete errors["discount"]; setErrors({ ...errors });
-                                                                            timerRef.current = setTimeout(() => { reCalculate(); }, 100);
+                                                                            timerRef.current = setTimeout(() => { reCalculateRef.current(); }, 100);
                                                                             return;
                                                                         }
                                                                         if (parseFloat(e.target.value) < 0) {
@@ -10094,7 +10095,7 @@ const OrderCreate = forwardRef((props, ref) => {
                                                                             discountPercent = 0; setDiscountPercent(discountPercent);
                                                                             discountPercentWithVAT = 0; setDiscountPercent(discountPercentWithVAT);
                                                                             setErrors({ ...errors });
-                                                                            timerRef.current = setTimeout(() => { reCalculate(); }, 100);
+                                                                            timerRef.current = setTimeout(() => { reCalculateRef.current(); }, 100);
                                                                             return;
                                                                         }
                                                                         if (!e.target.value) {
@@ -10103,7 +10104,7 @@ const OrderCreate = forwardRef((props, ref) => {
                                                                             discountPercent = ""; setDiscountPercent(discountPercent);
                                                                             discountPercentWithVAT = ""; setDiscountPercent(discountPercentWithVAT);
                                                                             setErrors({ ...errors });
-                                                                            timerRef.current = setTimeout(() => { reCalculate(); }, 100);
+                                                                            timerRef.current = setTimeout(() => { reCalculateRef.current(); }, 100);
                                                                             return;
                                                                         }
                                                                         delete errors["discount"]; delete errors["discount_percent"]; setErrors({ ...errors });
@@ -10114,7 +10115,7 @@ const OrderCreate = forwardRef((props, ref) => {
                                                                         timerRef.current = setTimeout(() => {
                                                                             discountWithVAT = parseFloat(trimTo2Decimals(discount * (1 + (formData.vat_percent / 100))));
                                                                             setDiscountWithVAT(discountWithVAT);
-                                                                            reCalculate();
+                                                                            reCalculateRef.current();
                                                                         }, 100);
                                                                     }}
                                                                 />
@@ -10147,21 +10148,21 @@ const OrderCreate = forwardRef((props, ref) => {
                                                                             discount = 0; discountWithVAT = 0; discountPercent = 0;
                                                                             setDiscount(discount); setDiscountWithVAT(discount); setDiscountPercent(discount);
                                                                             delete errors["discount_with_vat"]; setErrors({ ...errors });
-                                                                            timerRef.current = setTimeout(() => { reCalculate(); }, 100);
+                                                                            timerRef.current = setTimeout(() => { reCalculateRef.current(); }, 100);
                                                                             return;
                                                                         }
                                                                         if (parseFloat(e.target.value) < 0) {
                                                                             discount = 0.00; discountWithVAT = 0.00; discountPercent = 0.00;
                                                                             setDiscount(discount); setDiscountWithVAT(discount); setDiscountPercent(discountPercent);
                                                                             setErrors({ ...errors });
-                                                                            timerRef.current = setTimeout(() => { reCalculate(); }, 100);
+                                                                            timerRef.current = setTimeout(() => { reCalculateRef.current(); }, 100);
                                                                             return;
                                                                         }
                                                                         if (!e.target.value) {
                                                                             discount = ""; discountWithVAT = ""; discountPercent = "";
                                                                             setDiscount(discount); setDiscountWithVAT(discount); setDiscountPercent(discountPercent);
                                                                             setErrors({ ...errors });
-                                                                            timerRef.current = setTimeout(() => { reCalculate(); }, 100);
+                                                                            timerRef.current = setTimeout(() => { reCalculateRef.current(); }, 100);
                                                                             return;
                                                                         }
                                                                         delete errors["discount_with_vat"]; delete errors["discount_percent_with_vat"]; setErrors({ ...errors });
@@ -10169,11 +10170,8 @@ const OrderCreate = forwardRef((props, ref) => {
                                                                             errors["discount_with_vat"] = t("Max. decimal points allowed is 2"); setErrors({ ...errors });
                                                                         }
                                                                         discountWithVAT = parseFloat(e.target.value); setDiscountWithVAT(discountWithVAT);
-                                                                        timerRef.current = setTimeout(() => {
-                                                                            discount = parseFloat(trimTo2Decimals(discountWithVAT / (1 + (formData.vat_percent / 100))));
-                                                                            setDiscount(discount);
-                                                                            reCalculate();
-                                                                        }, 100);
+                                                                        discount = parseFloat(trimTo2Decimals(discountWithVAT / (1 + (formData.vat_percent / 100)))); setDiscount(discount);
+                                                                        timerRef.current = setTimeout(() => { reCalculateRef.current(); }, 100);
                                                                     }}
                                                                 />
                                                                 {errors.discount_with_vat && (
@@ -10216,7 +10214,7 @@ const OrderCreate = forwardRef((props, ref) => {
                                                                             setErrors({ ...errors });
                                                                             formData.auto_rounding_amount = !formData.auto_rounding_amount;
                                                                             setFormData({ ...formData });
-                                                                            timerRef.current = setTimeout(() => { reCalculate(); }, 100);
+                                                                            timerRef.current = setTimeout(() => { reCalculateRef.current(); }, 100);
                                                                         }}
                                                                     />
                                                                     <span className="text-[10px] text-primary-fixed block leading-none">{t("Auto")}</span>
@@ -10236,7 +10234,7 @@ const OrderCreate = forwardRef((props, ref) => {
                                                                         delete errors["rounding_amount"]; setErrors({ ...errors });
                                                                         if (!e.target.value) {
                                                                             roundingAmount = ""; setRoundingAmount(roundingAmount);
-                                                                            timerRef.current = setTimeout(() => { reCalculate(); }, 100);
+                                                                            timerRef.current = setTimeout(() => { reCalculateRef.current(); }, 100);
                                                                             return;
                                                                         }
                                                                         if (/^-?\d*\.?\d{0,2}$/.test(parseFloat(e.target.value)) === false) {
@@ -10245,14 +10243,14 @@ const OrderCreate = forwardRef((props, ref) => {
                                                                             return;
                                                                         }
                                                                         roundingAmount = parseFloat(e.target.value); setRoundingAmount(roundingAmount);
-                                                                        timerRef.current = setTimeout(() => { reCalculate(); }, 100);
+                                                                        timerRef.current = setTimeout(() => { reCalculateRef.current(); }, 100);
                                                                     }}
                                                                     onKeyDown={(e) => {
                                                                         if (timerRef.current) clearTimeout(timerRef.current);
                                                                         if (e.key === "Backspace") {
                                                                             delete errors["rounding_amount"]; setErrors({ ...errors });
                                                                             roundingAmount = ""; setRoundingAmount("");
-                                                                            timerRef.current = setTimeout(() => { reCalculate(); }, 100);
+                                                                            timerRef.current = setTimeout(() => { reCalculateRef.current(); }, 100);
                                                                         }
                                                                     }}
                                                                 />
