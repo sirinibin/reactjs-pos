@@ -356,7 +356,10 @@ export function SalesVanStoreBody({
                                     }
                                 }}
                                 onInputChange={term => {
-                                    if (term) { formData.customerName = term; formData.customer_name = term; setFormData({ ...formData }); }
+                                    formData.customerName = term;
+                                    formData.customer_name = term;
+                                    if (!term) { formData.customer_id = ""; setSelectedCustomers([]); }
+                                    setFormData({ ...formData });
                                     if (timerRef.current) clearTimeout(timerRef.current);
                                     timerRef.current = setTimeout(() => suggestCustomers(term), 350);
                                 }}

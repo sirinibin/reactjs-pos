@@ -2448,9 +2448,8 @@ const DeliveryNoteCreate = forwardRef((props, ref) => {
                   }
                 }}
                 onInputChange={(searchTerm, e) => {
-                  if (searchTerm) {
-                    formData.customer_name = searchTerm;
-                  }
+                  formData.customer_name = searchTerm;
+                  if (!searchTerm) { formData.customer_id = ""; setSelectedCustomers([]); }
                   setFormData({ ...formData });
 
                   if (timerRef.current) clearTimeout(timerRef.current);

@@ -4126,11 +4126,13 @@ const OrderCreate = forwardRef((props, ref) => {
                                         }
                                     }}
                                     onInputChange={(searchTerm, e) => {
-                                        if (searchTerm) {
-                                            formData.customerName = searchTerm;
-                                            formData.customer_name = searchTerm;
-                                            setFormData({ ...formData });
+                                        formData.customerName = searchTerm;
+                                        formData.customer_name = searchTerm;
+                                        if (!searchTerm) {
+                                            formData.customer_id = "";
+                                            setSelectedCustomers([]);
                                         }
+                                        setFormData({ ...formData });
 
                                         if (timerRef.current) clearTimeout(timerRef.current);
                                         timerRef.current = setTimeout(() => {
@@ -5811,11 +5813,13 @@ const OrderCreate = forwardRef((props, ref) => {
                                                                     }
                                                                 }}
                                                                 onInputChange={(searchTerm, e) => {
-                                                                    if (searchTerm) {
-                                                                        formData.customerName = searchTerm;
-                                                                        formData.customer_name = searchTerm;
-                                                                        setFormData({ ...formData });
+                                                                    formData.customerName = searchTerm;
+                                                                    formData.customer_name = searchTerm;
+                                                                    if (!searchTerm) {
+                                                                        formData.customer_id = "";
+                                                                        setSelectedCustomers([]);
                                                                     }
+                                                                    setFormData({ ...formData });
 
                                                                     if (timerRef.current) clearTimeout(timerRef.current);
                                                                     timerRef.current = setTimeout(() => {

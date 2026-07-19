@@ -3485,9 +3485,8 @@ const PurchaseCreate = forwardRef((props, ref) => {
                                                         }
                                                     }}
                                                     onInputChange={(searchTerm, e) => {
-                                                        if (searchTerm) {
-                                                            formData.vendor_name = searchTerm;
-                                                        }
+                                                        formData.vendor_name = searchTerm;
+                                                        if (!searchTerm) { formData.vendor_id = ""; setSelectedVendors([]); }
                                                         setFormData({ ...formData });
                                                         if (timerRef.current) clearTimeout(timerRef.current);
                                                         timerRef.current = setTimeout(() => {
@@ -5502,7 +5501,8 @@ const PurchaseCreate = forwardRef((props, ref) => {
                                       }
                                     }}
                                     onInputChange={(searchTerm, e) => {
-                                      if (searchTerm) { formData.vendor_name = searchTerm; }
+                                      formData.vendor_name = searchTerm;
+                                      if (!searchTerm) { formData.vendor_id = ""; setSelectedVendors([]); }
                                       setFormData({ ...formData });
                                       if (timerRef.current) clearTimeout(timerRef.current);
                                       timerRef.current = setTimeout(() => { suggestVendors(searchTerm); }, 350);

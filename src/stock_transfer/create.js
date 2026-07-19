@@ -1526,7 +1526,7 @@ const StockTransferCreate = forwardRef((props, ref) => {
         const select = `id,product_stores.${storeId}.stock,product_stores.${storeId}.warehouse_stocks`;
         const requestOptions = { method: "GET", headers: { "Content-Type": "application/json", Authorization: localStorage.getItem("access_token") } };
         try {
-            const response = await fetch(`/v1/product?store_id=${storeId}&search[ids]=${ids.join(",")}&select=${select}`, requestOptions);
+            const response = await fetch(`/v1/product?search[store_id]=${storeId}&search[ids]=${ids.join(",")}&limit=${ids.length}&select=${select}`, requestOptions);
             const isJson = response.headers.get("content-type")?.includes("application/json");
             const data = isJson ? await response.json() : null;
             if (!response.ok || !data?.result) return;
@@ -1751,6 +1751,7 @@ const StockTransferCreate = forwardRef((props, ref) => {
                 unit_discount_percent: 0,
                 unit_discount_percent_vat: 0,
                 stock: product.product_stores[localStorage.getItem("store_id")]?.stock ? product.product_stores[localStorage.getItem("store_id")]?.stock : 0,
+                warehouse_stocks: product.product_stores[localStorage.getItem("store_id")]?.warehouse_stocks || {},
 
             });
         }
