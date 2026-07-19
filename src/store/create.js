@@ -4815,6 +4815,10 @@ const StoreCreate = forwardRef((props, ref) => {
                                     <input type="checkbox" id="enable_services" checked={!!formData.settings.enable_services} value={formData.settings.enable_services} onChange={() => { formData.settings.enable_services = !formData.settings.enable_services; setFormData({ ...formData }); }} />
                                     <span>Enable Services</span>
                                 </label>
+                                <label className="pw-check" htmlFor="enable_customer_po_no">
+                                    <input type="checkbox" id="enable_customer_po_no" checked={!!formData.settings.enable_customer_po_no} value={formData.settings.enable_customer_po_no} onChange={() => { formData.settings.enable_customer_po_no = !formData.settings.enable_customer_po_no; setFormData({ ...formData }); }} />
+                                    <span>Enable Customer P.O No. Field</span>
+                                </label>
                             </div>
                         </div>
 

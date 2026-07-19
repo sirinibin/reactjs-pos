@@ -4019,6 +4019,7 @@ const OrderCreate = forwardRef((props, ref) => {
         { key: "vat_no", label: "VAT NO.", visible: true },
         { key: "address", label: "Address", visible: true },
         { key: "remarks", label: "Remarks", visible: true },
+        { key: "customer_po_no", label: "Customer P.O No.", visible: true },
         { key: "cash_discount", label: "Cash discount", visible: true },
         { key: "commission", label: "Commission", visible: true },
         { key: "commission_payment_method", label: "Commission Payment Method", visible: true },
@@ -4398,6 +4399,25 @@ const OrderCreate = forwardRef((props, ref) => {
                         {errors.remarks && (
                             <div style={{ color: "red" }} className="small mt-1">{t(errors.remarks)}</div>
                         )}
+                    </div>
+                );
+            case "customer_po_no":
+                if (!store?.settings?.enable_customer_po_no) return null;
+                return (
+                    <div key={field.key}>
+                        <label className="block font-label-md text-on-surface-variant mb-1">{t('Customer P.O No.')}</label>
+                        <input
+                            type="text"
+                            id="customer_po_no"
+                            name="customer_po_no"
+                            value={formData.customer_po_no || ''}
+                            onChange={(e) => {
+                                formData.customer_po_no = e.target.value;
+                                setFormData({ ...formData });
+                            }}
+                            className="form-control bg-surface-bright border border-outline-variant rounded px-sm py-1.5 h-[34px] w-full text-body-md"
+                            placeholder={t('Customer P.O No.')}
+                        />
                     </div>
                 );
             case "cash_discount":
@@ -6333,6 +6353,19 @@ const OrderCreate = forwardRef((props, ref) => {
                                                 placeholder={t('Address')}
                                                 style={{ resize: 'none', flex: 1, fontSize: '13px', minHeight: '0' }}
                                             />
+                                            {store?.settings?.enable_customer_po_no && (
+                                                <input
+                                                    type="text"
+                                                    id="customer_po_no"
+                                                    name="customer_po_no"
+                                                    value={formData.customer_po_no || ''}
+                                                    onChange={(e) => { formData.customer_po_no = e.target.value; setFormData({ ...formData }); }}
+                                                    onKeyDown={(e) => { if (e.key === 'Enter') { e.stopPropagation(); e.nativeEvent.stopImmediatePropagation(); } }}
+                                                    className="form-control"
+                                                    placeholder={t('Customer P.O No.')}
+                                                    style={{ resize: 'none', flex: 1, fontSize: '13px', minHeight: '0', height: '32px' }}
+                                                />
+                                            )}
                                         </div>
                                     </div>
                                     {/* Right 40% — selected customer details */}

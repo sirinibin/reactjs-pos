@@ -609,6 +609,25 @@ export function SalesType1Body({
                                                 {errors.remarks && <div style={{ color: "red" }}>{t(errors.remarks)}</div>}
                                             </div>
 
+                                            {/* Customer P.O No. */}
+                                            {store?.settings?.enable_customer_po_no && (
+                                                <div>
+                                                    <label className="form-label" style={{ fontSize: '12px', marginBottom: '2px' }}>{t('Customer P.O No.')}</label>
+                                                    <input
+                                                        type="text"
+                                                        id="customer_po_no"
+                                                        name="customer_po_no"
+                                                        value={formData.customer_po_no || ''}
+                                                        onChange={(e) => {
+                                                            formData.customer_po_no = e.target.value;
+                                                            setFormData({ ...formData });
+                                                        }}
+                                                        className="form-control"
+                                                        placeholder={t('Customer P.O No.')}
+                                                    />
+                                                </div>
+                                            )}
+
                                         </div>
                                     </div>{/* end LEFT */}
 

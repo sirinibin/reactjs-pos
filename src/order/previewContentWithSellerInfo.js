@@ -612,6 +612,14 @@ const PreviewContentWithSellerInfo = forwardRef((props, ref) => {
                                     </div>
                                   
                                 </div>  */}
+                                    {props.model.store?.settings?.enable_customer_po_no && props.model?.customer_po_no && (
+                                        <div className="row" dir="ltr" style={{ borderBottom: detailsBorderThickness }}>
+                                            <div className="col-md-4 print-label" dir="ltr" style={{ borderRight: detailsBorderThickness, borderColor: detailsBorderColor, width: detailsLabelsColumnWidthPercent, padding: "3px" }}><b>Customer P.O No. | رقم أمر الشراء:</b></div>
+                                            <div className="col-md-8 print-value" dir="ltr" style={{ borderColor: detailsBorderColor, width: detailsValuesColumnWidthPercent, padding: "3px" }}>
+                                                {props.model.customer_po_no}
+                                            </div>
+                                        </div>
+                                    )}
                                 </> : ""}
                                 {props.modelName === "purchase" || props.modelName === "whatsapp_purchase" || props.modelName === "purchase_return" || props.modelName === "whatsapp_purchase_return" ? <>
                                     <div className="row" dir="ltr" style={{ borderBottom: detailsBorderThickness }} >
