@@ -5,6 +5,7 @@ import n2words from 'n2words'
 import { trimTo2Decimals } from "../utils/numberUtils";
 import '@emran-alhaddad/saudi-riyal-font/index.css';
 import Amount from "../utils/amount.js";
+import { QRCodeSVG } from "qrcode.react";
 
 const CustomerWithdrawalPreviewContent = forwardRef((props, ref) => {
 
@@ -104,6 +105,13 @@ const CustomerWithdrawalPreviewContent = forwardRef((props, ref) => {
                     </div>
                 </div>
 
+                {!props.model.printing && props.model.code && props.model.store?.zatca?.phase === "2" && props.model.zatca?.reporting_passed && (
+                    <div className="no-print" style={{ textAlign: "right", fontSize: "0.85rem", marginBottom: "2px", marginRight: "2px" }}>
+                        <a href={`/zatca/${props.model.store_id}/payables/xml/${props.model.code}.xml`} target="_blank" rel="noreferrer">
+                            Zatca Signed XML
+                        </a>
+                    </div>
+                )}
                 <div className="row table-active" style={{ fontSize: "3.5mm", border: "solid 0px" }}>
                     <div className="col-md-5" style={{ border: "solid 0px", width: "82%" }}>
                         <div className="container" style={{ border: "solid 0px", paddingLeft: "0px", fontSize: "2.2mm" }}>
@@ -279,8 +287,41 @@ const CustomerWithdrawalPreviewContent = forwardRef((props, ref) => {
                                 </tbody>
 
                                 <tfoot style={{ fontSize: "2.2mm" }} className="fw-bold">
+                                    {props.model.store?.settings?.display_vat_in_receivables_and_payables && props.model.store?.vat_percent > 0 && (() => {
+                                        const vatPct = props.model.store.vat_percent;
+                                        const vatAmt = parseFloat(trimTo2Decimals(props.model.net_total * vatPct / (100 + vatPct)));
+                                        const exVat = parseFloat(trimTo2Decimals(props.model.net_total - vatAmt));
+                                        return (<>
+                                            <tr>
+                                                <th colSpan="4" className="text-end" style={{ padding: "2px" }}>
+                                                    Amount Excl. VAT المبلغ بدون ضريبة:
+                                                </th>
+                                                <th className="text-end" colSpan="1" style={{ padding: "2px" }}>
+                                                    <Amount amount={trimTo2Decimals(exVat)} />
+                                                </th>
+                                            </tr>
+                                            <tr>
+                                                <th colSpan="4" className="text-end" style={{ padding: "2px" }}>
+                                                    VAT ({vatPct}%) ضريبة القيمة المضافة:
+                                                </th>
+                                                <th className="text-end" colSpan="1" style={{ padding: "2px" }}>
+                                                    <Amount amount={trimTo2Decimals(vatAmt)} />
+                                                </th>
+                                            </tr>
+                                        </>);
+                                    })()}
                                     <tr>
-                                        <th colSpan="4" className="text-end" style={{ padding: "2px" }}>
+                                        {props.model.store?.zatca?.phase === "2" && props.model.zatca?.qr_code && props.model.zatca?.reporting_passed && (
+                                            <th rowSpan="3" style={{ padding: "4px", verticalAlign: "middle", textAlign: "center", width: (props.fontSizes?.[props.modelName + "_qrCode"]?.["width"]?.value || 138) + 8 + "px" }}
+                                                onClick={() => props.selectQRCode && props.selectQRCode()}>
+                                                <QRCodeSVG
+                                                    value={props.model.zatca.qr_code}
+                                                    size={props.fontSizes?.[props.modelName + "_qrCode"]?.["width"]?.value || 138}
+                                                    style={{ width: props.fontSizes?.[props.modelName + "_qrCode"]?.["width"]?.size || "138px", height: props.fontSizes?.[props.modelName + "_qrCode"]?.["height"]?.size || "138px" }}
+                                                />
+                                            </th>
+                                        )}
+                                        <th colSpan={props.model.store?.zatca?.phase === "2" && props.model.zatca?.qr_code && props.model.zatca?.reporting_passed ? "3" : "4"} className="text-end" style={{ padding: "2px" }}>
                                             Net Total  صافي المجموع:
                                         </th>
                                         <th className="text-end" colSpan="1" style={{ padding: "2px" }}>

@@ -4714,6 +4714,26 @@ const StoreCreate = forwardRef((props, ref) => {
                                     <input type="checkbox" id="zatca_qr_on_left_bottom" checked={!!formData.settings.zatca_qr_on_left_bottom} value={formData.settings.zatca_qr_on_left_bottom} onChange={() => { errors["formData.zatca_qr_on_left_bottom"] = ""; formData.settings.zatca_qr_on_left_bottom = !formData.settings.zatca_qr_on_left_bottom; setFormData({ ...formData }); }} />
                                     <span>ZATCA QR on Left Bottom</span>
                                 </label>
+                                <label className="pw-check" htmlFor="enable_zatca_reporting_for_receivables">
+                                    <input type="checkbox" id="enable_zatca_reporting_for_receivables" checked={!!formData.settings.enable_zatca_reporting_for_receivables} value={formData.settings.enable_zatca_reporting_for_receivables} onChange={() => { formData.settings.enable_zatca_reporting_for_receivables = !formData.settings.enable_zatca_reporting_for_receivables; setFormData({ ...formData }); }} />
+                                    <span>Enable ZATCA Reporting for Receivables (Debit Note)</span>
+                                </label>
+                                <label className="pw-check" htmlFor="enable_zatca_reporting_for_payables">
+                                    <input type="checkbox" id="enable_zatca_reporting_for_payables" checked={!!formData.settings.enable_zatca_reporting_for_payables} value={formData.settings.enable_zatca_reporting_for_payables} onChange={() => { formData.settings.enable_zatca_reporting_for_payables = !formData.settings.enable_zatca_reporting_for_payables; setFormData({ ...formData }); }} />
+                                    <span>Enable ZATCA Reporting for Payables (Credit Note)</span>
+                                </label>
+                                <label className="pw-check" htmlFor="auto_suggest_advance_payment_linking_in_sales">
+                                    <input type="checkbox" id="auto_suggest_advance_payment_linking_in_sales" checked={!!formData.settings.auto_suggest_advance_payment_linking_in_sales} value={formData.settings.auto_suggest_advance_payment_linking_in_sales} onChange={() => { formData.settings.auto_suggest_advance_payment_linking_in_sales = !formData.settings.auto_suggest_advance_payment_linking_in_sales; setFormData({ ...formData }); }} />
+                                    <span>Auto Suggest Advance Payment Linking in Sales Payments</span>
+                                </label>
+                                <label className="pw-check" htmlFor="auto_suggest_advance_payment_linking_in_sales_return">
+                                    <input type="checkbox" id="auto_suggest_advance_payment_linking_in_sales_return" checked={!!formData.settings.auto_suggest_advance_payment_linking_in_sales_return} value={formData.settings.auto_suggest_advance_payment_linking_in_sales_return} onChange={() => { formData.settings.auto_suggest_advance_payment_linking_in_sales_return = !formData.settings.auto_suggest_advance_payment_linking_in_sales_return; setFormData({ ...formData }); }} />
+                                    <span>Auto Suggest Advance Payment Linking in Sales Return Payments</span>
+                                </label>
+                                <label className="pw-check" htmlFor="display_vat_in_receivables_and_payables">
+                                    <input type="checkbox" id="display_vat_in_receivables_and_payables" checked={!!formData.settings.display_vat_in_receivables_and_payables} value={formData.settings.display_vat_in_receivables_and_payables} onChange={() => { formData.settings.display_vat_in_receivables_and_payables = !formData.settings.display_vat_in_receivables_and_payables; setFormData({ ...formData }); }} />
+                                    <span>Display VAT in Receivables &amp; Payables</span>
+                                </label>
                                 <label className="pw-check" htmlFor="enable_invoice_print_type_selection">
                                     <input type="checkbox" id="enable_invoice_print_type_selection" checked={!!formData.settings.enable_invoice_print_type_selection} value={formData.settings.enable_invoice_print_type_selection} onChange={() => { errors["enable_invoice_print_type_selection"] = ""; formData.settings.enable_invoice_print_type_selection = !formData.settings.enable_invoice_print_type_selection; setFormData({ ...formData }); }} />
                                     <span>Enable Invoice Print Type Selection</span>
@@ -5554,6 +5574,83 @@ const StoreCreate = forwardRef((props, ref) => {
                                     {errors.zatca_qr_on_left_bottom}
                                 </div>
                             )}
+                        </div>
+
+                        <div className="col-md-2">
+                            <div className="input-group mb-3">
+                                <input type="checkbox"
+                                    value={formData.settings.enable_zatca_reporting_for_receivables}
+                                    checked={!!formData.settings.enable_zatca_reporting_for_receivables}
+                                    onChange={() => {
+                                        formData.settings.enable_zatca_reporting_for_receivables = !formData.settings.enable_zatca_reporting_for_receivables;
+                                        setFormData({ ...formData });
+                                    }}
+                                    className=""
+                                    id="formData.enable_zatca_reporting_for_receivables"
+                                /> &nbsp;Enable Zatca Reporting for Receivables (Debit Note)
+                            </div>
+                            <label className="form-label"></label>
+                        </div>
+
+                        <div className="col-md-2">
+                            <div className="input-group mb-3">
+                                <input type="checkbox"
+                                    value={formData.settings.enable_zatca_reporting_for_payables}
+                                    checked={!!formData.settings.enable_zatca_reporting_for_payables}
+                                    onChange={() => {
+                                        formData.settings.enable_zatca_reporting_for_payables = !formData.settings.enable_zatca_reporting_for_payables;
+                                        setFormData({ ...formData });
+                                    }}
+                                    className=""
+                                    id="formData.enable_zatca_reporting_for_payables"
+                                /> &nbsp;Enable Zatca Reporting for Payables (Credit Note)
+                            </div>
+                            <label className="form-label"></label>
+                        </div>
+
+                        <div className="col-md-2">
+                            <div className="input-group mb-3">
+                                <input type="checkbox"
+                                    value={formData.settings.auto_suggest_advance_payment_linking_in_sales}
+                                    checked={!!formData.settings.auto_suggest_advance_payment_linking_in_sales}
+                                    onChange={() => {
+                                        formData.settings.auto_suggest_advance_payment_linking_in_sales = !formData.settings.auto_suggest_advance_payment_linking_in_sales;
+                                        setFormData({ ...formData });
+                                    }}
+                                    id="formData.auto_suggest_advance_payment_linking_in_sales"
+                                /> &nbsp;Auto Suggest Advance Payment Linking in Sales Payments
+                            </div>
+                            <label className="form-label"></label>
+                        </div>
+
+                        <div className="col-md-2">
+                            <div className="input-group mb-3">
+                                <input type="checkbox"
+                                    value={formData.settings.auto_suggest_advance_payment_linking_in_sales_return}
+                                    checked={!!formData.settings.auto_suggest_advance_payment_linking_in_sales_return}
+                                    onChange={() => {
+                                        formData.settings.auto_suggest_advance_payment_linking_in_sales_return = !formData.settings.auto_suggest_advance_payment_linking_in_sales_return;
+                                        setFormData({ ...formData });
+                                    }}
+                                    id="formData.auto_suggest_advance_payment_linking_in_sales_return"
+                                /> &nbsp;Auto Suggest Advance Payment Linking in Sales Return Payments
+                            </div>
+                            <label className="form-label"></label>
+                        </div>
+
+                        <div className="col-md-2">
+                            <div className="input-group mb-3">
+                                <input type="checkbox"
+                                    value={formData.settings.display_vat_in_receivables_and_payables}
+                                    checked={!!formData.settings.display_vat_in_receivables_and_payables}
+                                    onChange={() => {
+                                        formData.settings.display_vat_in_receivables_and_payables = !formData.settings.display_vat_in_receivables_and_payables;
+                                        setFormData({ ...formData });
+                                    }}
+                                    id="formData.display_vat_in_receivables_and_payables"
+                                /> &nbsp;Display VAT in Receivables &amp; Payables
+                            </div>
+                            <label className="form-label"></label>
                         </div>
 
                         <div className="col-md-2">

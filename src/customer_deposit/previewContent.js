@@ -5,6 +5,7 @@ import n2words from 'n2words'
 import { trimTo2Decimals } from "../utils/numberUtils";
 import '@emran-alhaddad/saudi-riyal-font/index.css';
 import Amount from "../utils/amount.js";
+import { QRCodeSVG } from "qrcode.react";
 
 const CustomerDepositPreviewContent = forwardRef((props, ref) => {
 
@@ -160,6 +161,13 @@ const CustomerDepositPreviewContent = forwardRef((props, ref) => {
                         </div>
                     </div>
 
+                    {!props.model.printing && props.model.code && props.model.store?.zatca?.phase === "2" && props.model.zatca?.reporting_passed && (
+                        <div className="no-print" style={{ textAlign: "right", fontSize: "0.85rem", marginBottom: "2px", marginRight: "2px" }}>
+                            <a href={`/zatca/${props.model.store_id}/${(props.modelName === "customer_withdrawal" || props.modelName === "whatsapp_customer_withdrawal") ? "payables" : "receivables"}/xml/${props.model.code}.xml`} target="_blank" rel="noreferrer">
+                                Zatca Signed XML
+                            </a>
+                        </div>
+                    )}
                     <div className="row col-md-14" style={{ border: "solid 0px", borderColor: detailsBorderColor, fontSize: props.fontSizes[props.modelName + "_invoiceDetails"]?.size, padding: "0px", marginLeft: "0px", marginRight: "0px" }} onClick={() => {
                         props.selectText("invoiceDetails");
                     }}>
@@ -451,10 +459,19 @@ const CustomerDepositPreviewContent = forwardRef((props, ref) => {
                                             props.selectText("tableFooter");
                                         }}
                                     >
-                                        <tr
-                                            style={{}}>
-                                            <th colSpan="6" className="text-end print-label"
-                                                style={{ padding: "2px", borderLeft: tableBorderThickness, borderRight: tableBorderThickness }}
+                                        <tr style={{}}>
+                                            {props.model.store?.zatca?.phase === "2" && props.model.zatca?.qr_code && props.model.zatca?.reporting_passed && (
+                                                <th rowSpan={props.model.store?.settings?.display_vat_in_receivables_and_payables && props.model.store?.vat_percent > 0 ? "5" : "3"} style={{ padding: "4px", borderLeft: tableBorderThickness, borderRight: tableBorderThickness, verticalAlign: "middle", textAlign: "center", width: (props.fontSizes?.[props.modelName + "_qrCode"]?.["width"]?.value || 138) + 8 + "px" }}
+                                                    onClick={() => props.selectQRCode && props.selectQRCode()}>
+                                                    <QRCodeSVG
+                                                        value={props.model.zatca.qr_code}
+                                                        size={props.fontSizes?.[props.modelName + "_qrCode"]?.["width"]?.value || 138}
+                                                        style={{ width: props.fontSizes?.[props.modelName + "_qrCode"]?.["width"]?.size || "138px", height: props.fontSizes?.[props.modelName + "_qrCode"]?.["height"]?.size || "138px" }}
+                                                    />
+                                                </th>
+                                            )}
+                                            <th colSpan={props.model.store?.zatca?.phase === "2" && props.model.zatca?.qr_code && props.model.zatca?.reporting_passed ? "5" : "6"} className="text-end print-label"
+                                                style={{ padding: "2px", borderLeft: props.model.store?.zatca?.phase === "2" && props.model.zatca?.qr_code && props.model.zatca?.reporting_passed ? "none" : tableBorderThickness, borderRight: tableBorderThickness }}
                                             >
                                                 Total المجموع:
                                             </th>
@@ -462,10 +479,9 @@ const CustomerDepositPreviewContent = forwardRef((props, ref) => {
                                                 <Amount amount={trimTo2Decimals(props.model.total)} />
                                             </th>
                                         </tr>
-                                        <tr
-                                            style={{}}>
-                                            <th colSpan="6" className="text-end print-label"
-                                                style={{ padding: "2px", borderLeft: tableBorderThickness, borderRight: tableBorderThickness }}
+                                        <tr style={{}}>
+                                            <th colSpan={props.model.store?.zatca?.phase === "2" && props.model.zatca?.qr_code && props.model.zatca?.reporting_passed ? "5" : "6"} className="text-end print-label"
+                                                style={{ padding: "2px", borderLeft: props.model.store?.zatca?.phase === "2" && props.model.zatca?.qr_code && props.model.zatca?.reporting_passed ? "none" : tableBorderThickness, borderRight: tableBorderThickness }}
                                             >
                                                 Total Discount إجمالي الخصم:
                                             </th>
@@ -473,10 +489,34 @@ const CustomerDepositPreviewContent = forwardRef((props, ref) => {
                                                 <Amount amount={trimTo2Decimals(props.model.total_discount)} />
                                             </th>
                                         </tr>
-                                        <tr
-                                            style={{}}>
-                                            <th colSpan="6" className="text-end print-label"
-                                                style={{ padding: "2px", borderLeft: tableBorderThickness, borderRight: tableBorderThickness }}
+                                        {props.model.store?.settings?.display_vat_in_receivables_and_payables && props.model.store?.vat_percent > 0 && (() => {
+                                            const vatPct = props.model.store.vat_percent;
+                                            const vatAmt = parseFloat(trimTo2Decimals(props.model.net_total * vatPct / (100 + vatPct)));
+                                            const exVat = parseFloat(trimTo2Decimals(props.model.net_total - vatAmt));
+                                            const colSpan = props.model.store?.zatca?.phase === "2" && props.model.zatca?.qr_code && props.model.zatca?.reporting_passed ? "5" : "6";
+                                            const borderLeft = props.model.store?.zatca?.phase === "2" && props.model.zatca?.qr_code && props.model.zatca?.reporting_passed ? "none" : tableBorderThickness;
+                                            return (<>
+                                                <tr>
+                                                    <th colSpan={colSpan} className="text-end print-label" style={{ padding: "2px", borderLeft, borderRight: tableBorderThickness }}>
+                                                        Amount Excl. VAT المبلغ بدون ضريبة:
+                                                    </th>
+                                                    <th className="text-end" colSpan="1" style={{ padding: "2px", borderRight: tableBorderThickness }}>
+                                                        <Amount amount={trimTo2Decimals(exVat)} />
+                                                    </th>
+                                                </tr>
+                                                <tr>
+                                                    <th colSpan={colSpan} className="text-end print-label" style={{ padding: "2px", borderLeft, borderRight: tableBorderThickness }}>
+                                                        VAT ({vatPct}%) ضريبة القيمة المضافة:
+                                                    </th>
+                                                    <th className="text-end" colSpan="1" style={{ padding: "2px", borderRight: tableBorderThickness }}>
+                                                        <Amount amount={trimTo2Decimals(vatAmt)} />
+                                                    </th>
+                                                </tr>
+                                            </>);
+                                        })()}
+                                        <tr style={{}}>
+                                            <th colSpan={props.model.store?.zatca?.phase === "2" && props.model.zatca?.qr_code && props.model.zatca?.reporting_passed ? "5" : "6"} className="text-end print-label"
+                                                style={{ padding: "2px", borderLeft: props.model.store?.zatca?.phase === "2" && props.model.zatca?.qr_code && props.model.zatca?.reporting_passed ? "none" : tableBorderThickness, borderRight: tableBorderThickness }}
                                             >
                                                 Net Total  صافي المجموع:
                                             </th>

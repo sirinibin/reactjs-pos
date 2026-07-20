@@ -1127,6 +1127,44 @@ const OrderCreate = forwardRef((props, ref) => {
     let [selectedCustomers, setSelectedCustomers] = useState([]);
     //const [isCustomersLoading, setIsCustomersLoading] = useState(false);
 
+    function autoSuggestAdvanceDeposit(customerId) {
+        if (!store?.settings?.auto_suggest_advance_payment_linking_in_sales) return;
+        if (store?.zatca?.phase !== "2" || !store?.zatca?.connected) return;
+        if (!store?.settings?.enable_zatca_reporting_for_receivables) return;
+        if (!customerId) return;
+
+        const storeId = localStorage.getItem("store_id");
+        fetch(`/v1/customer-deposit?search[customer_id]=${customerId}&search[zatca_reporting_passed]=true&search[not_linked_to_order]=true&search[store_id]=${storeId}&limit=10`, {
+            method: 'GET',
+            headers: { 'Content-Type': 'application/json', 'Authorization': localStorage.getItem('access_token') },
+        })
+            .then(async r => {
+                const data = r.ok && await r.json();
+                if (!data?.result?.length) return;
+                if (!formData.payments_input) formData.payments_input = [];
+                const alreadyLinked = new Set(
+                    formData.payments_input.filter(p => p.reference_type === "customer_deposit").map(p => p.reference_id)
+                );
+                let added = false;
+                for (const deposit of data.result) {
+                    if (alreadyLinked.has(deposit.id)) continue;
+                    formData.payments_input.push({
+                        date_str: deposit.date ? new Date(deposit.date).toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' }) : "",
+                        amount: deposit.net_total,
+                        method: deposit.payment_method || (deposit.payment_methods?.[0] ?? ""),
+                        reference_type: "customer_deposit",
+                        reference_code: deposit.code,
+                        reference_id: deposit.id,
+                        receivable_id: deposit.id,
+                        deleted: false,
+                    });
+                    added = true;
+                }
+                if (added) setFormData({ ...formData });
+            })
+            .catch(() => {});
+    }
+
     function fetchAndSetCustomer(customerId, fallbackData) {
         if (!customerId) return;
         const storeId = localStorage.getItem("store_id");
@@ -4095,6 +4133,7 @@ const OrderCreate = forwardRef((props, ref) => {
                                         setFormData({ ...formData });
                                         setSelectedCustomers(selectedItems);
                                         setOpenCustomerSearchResult(false);
+                                        autoSuggestAdvanceDeposit(selectedItems[0].id);
 
                                         if (store?.settings?.block_sales_after_pending_count > 0) {
                                             const storeId = localStorage.getItem("store_id");
@@ -5799,6 +5838,7 @@ const OrderCreate = forwardRef((props, ref) => {
                                                                     setFormData({ ...formData });
                                                                     setSelectedCustomers(selectedItems);
                                                                     setOpenCustomerSearchResult(false);
+                                                                    autoSuggestAdvanceDeposit(selectedItems[0].id);
 
                                                                     // Warn immediately if this customer has too many unpaid sales
                                                                     if (store?.settings?.block_sales_after_pending_count > 0) {

@@ -1,5 +1,6 @@
 import React, { useState, forwardRef, useImperativeHandle, useRef, useEffect } from "react";
 import { Modal } from 'react-bootstrap';
+import { QRCodeCanvas } from 'qrcode.react';
 import CustomerDepositPreview from './preview.js';
 import AttachmentsViewer from '../utils/AttachmentsViewer.js';
 import { ObjectToSearchQueryParams } from '../utils/queryUtils.js';
@@ -290,6 +291,75 @@ const CustomerDepositView = forwardRef((props, ref) => {
 
                         {/* Right Column: Sidebar */}
                         <div className="lg:col-span-4" style={{ display: 'flex', flexDirection: 'column', gap: '32px' }}>
+
+                            {/* ZATCA Info Card */}
+                            {store?.zatca?.phase === "2" && store?.zatca?.connected && store?.settings?.enable_zatca_reporting_for_receivables && (
+                                <section style={{ backgroundColor: '#ffffff', borderRadius: '8px', border: '1px solid #e2e8f0', overflow: 'hidden' }}>
+                                    <div style={{ padding: '12px 24px', borderBottom: '1px solid #c3c6d7', backgroundColor: '#f2f4f6' }}>
+                                        <h3 style={{ margin: 0, fontSize: '18px', fontWeight: 600, lineHeight: '26px', fontFamily: "'Hanken Grotesk', sans-serif", color: '#191c1e' }}>Zatca Info</h3>
+                                    </div>
+                                    <div style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                                        <div className="grid grid-cols-1 sm:grid-cols-2" style={{ gap: '16px' }}>
+                                            <div style={{ display: 'flex', flexDirection: 'column' }}>
+                                                <span style={{ fontSize: '12px', fontWeight: 500, color: '#434655' }}>Zatca Status</span>
+                                                <span style={{ fontSize: '14px', fontWeight: 700, color: model.zatca?.reporting_passed ? '#15803d' : '#ba1a1a' }}>
+                                                    {model.zatca?.reporting_passed ? 'YES' : 'NO (Pending)'}
+                                                </span>
+                                            </div>
+                                            <div style={{ display: 'flex', flexDirection: 'column' }}>
+                                                <span style={{ fontSize: '12px', fontWeight: 500, color: '#434655' }}>Reported At</span>
+                                                <span style={{ fontSize: '14px', color: model.zatca?.reporting_passed_at ? '#191c1e' : '#434655', fontStyle: model.zatca?.reporting_passed_at ? 'normal' : 'italic' }}>
+                                                    {model.zatca?.reporting_passed_at ? formatInStoreTimezone(model.zatca.reporting_passed_at, store?.country_code) : 'Not set'}
+                                                </span>
+                                            </div>
+                                        </div>
+                                        {model.invoice_count_value != null && (
+                                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                                <span style={{ fontSize: '12px', fontWeight: 500, color: '#434655' }}>ICV</span>
+                                                <span style={{ fontSize: '14px', fontWeight: 600, color: '#191c1e' }}>{model.invoice_count_value}</span>
+                                            </div>
+                                        )}
+                                        <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                                            <span style={{ fontSize: '12px', fontWeight: 500, color: '#434655' }}>UUID</span>
+                                            <span style={{ fontSize: '12px', fontFamily: 'monospace', wordBreak: 'break-all', backgroundColor: '#eceef0', padding: '4px 8px', borderRadius: '4px' }}>{model.uuid || '—'}</span>
+                                        </div>
+                                        <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                                            <span style={{ fontSize: '12px', fontWeight: 500, color: '#434655' }}>Reported Invoice Hash</span>
+                                            {model.zatca?.reporting_invoice_hash
+                                                ? <span style={{ fontSize: '12px', fontFamily: 'monospace', wordBreak: 'break-all', backgroundColor: '#eceef0', padding: '4px 8px', borderRadius: '4px' }}>{model.zatca.reporting_invoice_hash}</span>
+                                                : <span style={{ fontSize: '12px', fontStyle: 'italic', color: '#434655' }}>Awaiting reporting signature</span>
+                                            }
+                                        </div>
+                                        {model.zatca?.qr_code && (
+                                            <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                                                <span style={{ fontSize: '12px', fontWeight: 500, color: '#434655' }}>QR Code</span>
+                                                <QRCodeCanvas value={model.zatca.qr_code} size={96} />
+                                            </div>
+                                        )}
+                                        {model.zatca?.signing_time && (
+                                            <div style={{ display: 'flex', flexDirection: 'column' }}>
+                                                <span style={{ fontSize: '12px', fontWeight: 500, color: '#434655' }}>Signing time</span>
+                                                <span style={{ fontSize: '14px', color: '#191c1e' }}>{formatInStoreTimezone(model.zatca.signing_time, store?.country_code)}</span>
+                                            </div>
+                                        )}
+                                        {model.zatca?.reporting_passed && model.code && (
+                                            <a href={`/zatca/${model.store_id}/receivables/xml/${model.code}.xml`} target="_blank" rel="noreferrer" style={{ fontSize: '13px' }}>
+                                                Zatca Signed XML
+                                            </a>
+                                        )}
+                                        {model.zatca?.reporting_failed_count > 0 && (
+                                            <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                                                <span style={{ fontSize: '12px', color: '#ba1a1a' }}>Reporting failed: {model.zatca.reporting_failed_count}</span>
+                                                {model.zatca?.reporting_errors?.length > 0 && (
+                                                    <ol style={{ fontSize: '12px', color: '#ba1a1a', paddingLeft: '16px', margin: 0 }}>
+                                                        {model.zatca.reporting_errors.map((err, i) => <li key={i}>{err}</li>)}
+                                                    </ol>
+                                                )}
+                                            </div>
+                                        )}
+                                    </div>
+                                </section>
+                            )}
 
                             {/* Metadata */}
                             <section style={{ backgroundColor: '#ffffff', borderRadius: '8px', border: '1px solid #e2e8f0', overflow: 'hidden' }}>

@@ -2311,7 +2311,6 @@ const OrderIndex = forwardRef((props, ref) => {
                                                                     }}>
                                                                         {!order.zatca?.reportingInProgress && (order.zatca?.reporting_failed_count > 0 || order.zatca?.compliance_check_failed_count > 0) ? <i className="bi bi-bootstrap-reboot"></i> : ""}
                                                                         {!order.zatca?.reportingInProgress && (!order.zatca?.reporting_failed_count > 0 && !order.zatca?.compliance_check_failed_count) ? <span className="bi-arrow-right-circle">&nbsp; {t("Report")}</span> : ""}
-
                                                                         {order.zatca?.reportingInProgress ? <Spinner
                                                                             as="span"
                                                                             animation="border"

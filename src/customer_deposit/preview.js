@@ -509,12 +509,17 @@ const CustomerDepositPreview = forwardRef((props, ref) => {
     }
 
     const [showSlider, setShowSlider] = useState(false);
+    const [showQrCodeSlider, setShowQrCodeSlider] = useState(false);
     let [selectedText, setSelectedText] = useState("");
 
     const defaultFontSizes = useMemo(() => ({
         "pageSize": 15,
         "reportPageSize": 20,
         "font": "Cairo",
+        "qrCode": {
+            "height": { "value": 138, "unit": "px", "size": "138px", "step": 1 },
+            "width":  { "value": 138, "unit": "px", "size": "138px", "step": 1 },
+        },
         "marginTop": {
             "value": 0,
             "unit": "px",
@@ -675,6 +680,21 @@ const CustomerDepositPreview = forwardRef((props, ref) => {
             setFontSizes({ ...fontSizes });
             saveToLocalStorage("fontSizes", fontSizes);
         }
+    };
+
+    const QrSize = (operation, attribute) => {
+        if (!fontSizes[modelName + "_qrCode"]) {
+            fontSizes[modelName + "_qrCode"] = defaultFontSizes["qrCode"];
+        }
+        if (operation === "increment") {
+            fontSizes[modelName + "_qrCode"][attribute].value += fontSizes[modelName + "_qrCode"][attribute].step;
+        } else {
+            fontSizes[modelName + "_qrCode"][attribute].value -= fontSizes[modelName + "_qrCode"][attribute].step;
+        }
+        fontSizes[modelName + "_qrCode"][attribute]["value"] = parseFloat(fontSizes[modelName + "_qrCode"][attribute]?.value.toFixed(2));
+        fontSizes[modelName + "_qrCode"][attribute]["size"] = fontSizes[modelName + "_qrCode"][attribute]?.value + fontSizes[modelName + "_qrCode"][attribute]?.unit;
+        setFontSizes({ ...fontSizes });
+        saveToLocalStorage("fontSizes", fontSizes);
     };
 
     function formatModelName(str) {
@@ -876,136 +896,118 @@ const CustomerDepositPreview = forwardRef((props, ref) => {
         />
 
         <Modal show={show} scrollable={true} size="xl" fullscreen onHide={handleClose} animation={false}>
-            <Modal.Header className="d-flex flex-wrap align-items-center justify-content-between">
-                <div className="flex-grow-1">
-                    <Modal.Title>{formatModelName(modelName)} Preview</Modal.Title>
+            <Modal.Header style={{ padding: "8px 16px", display: "block" }}>
+
+                {/* Row 1: Title + action buttons */}
+                <div className="d-flex align-items-center justify-content-between" style={{ gap: "8px", flexWrap: "wrap" }}>
+                    <Modal.Title style={{ fontSize: "1rem", fontWeight: 600, whiteSpace: "nowrap" }}>
+                        {formatModelName(modelName)} Preview
+                    </Modal.Title>
+                    <div className="d-flex align-items-center" style={{ gap: "6px" }}>
+                        <Button
+                            size="sm"
+                            className={whatsAppShare ? "btn-success" : "btn-primary"}
+                            onClick={whatsAppShare ? openWhatsAppShare : handlePrint}
+                        >
+                            {isProcessing ? (
+                                <Spinner as="span" animation="border" size="sm" role="status" aria-hidden={true} />
+                            ) : (
+                                <>
+                                    {!whatsAppShare && <><i className="bi bi-printer"></i> Print</>}
+                                    {whatsAppShare && (
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="white" viewBox="0 0 16 16">
+                                            <path d="M13.601 2.326A7.875 7.875 0 0 0 8.036 0C3.596 0 0 3.597 0 8.036c0 1.417.37 2.805 1.07 4.03L0 16l3.993-1.05a7.968 7.968 0 0 0 4.043 1.085h.003c4.44 0 8.036-3.596 8.036-8.036 0-2.147-.836-4.166-2.37-5.673ZM8.036 14.6a6.584 6.584 0 0 1-3.35-.92l-.24-.142-2.37.622.63-2.31-.155-.238a6.587 6.587 0 0 1-1.018-3.513c0-3.637 2.96-6.6 6.6-6.6 1.764 0 3.42.69 4.67 1.94a6.56 6.56 0 0 1 1.93 4.668c0 3.637-2.96 6.6-6.6 6.6Zm3.61-4.885c-.198-.1-1.17-.578-1.352-.644-.18-.066-.312-.1-.444.1-.13.197-.51.644-.626.775-.115.13-.23.15-.428.05-.198-.1-.837-.308-1.594-.983-.59-.525-.99-1.174-1.11-1.372-.116-.198-.012-.305.088-.403.09-.09.198-.23.298-.345.1-.115.132-.197.2-.33.065-.13.032-.247-.017-.345-.05-.1-.444-1.07-.61-1.46-.16-.384-.323-.332-.444-.338l-.378-.007c-.13 0-.344.048-.525.23s-.688.672-.688 1.64c0 .967.704 1.9.802 2.03.1.13 1.386 2.116 3.365 2.963.47.203.837.324 1.122.414.472.15.902.13 1.24.08.378-.057 1.17-.48 1.336-.942.165-.462.165-.858.116-.943-.048-.084-.18-.132-.378-.23Z" />
+                                        </svg>
+                                    )}
+                                </>
+                            )}
+                        </Button>
+                        <button type="button" className="btn-close" onClick={handleClose} aria-label="Close"></button>
+                    </div>
                 </div>
-                {/* Right: Fixed control block */}
-                <div className="d-flex flex-wrap align-items-center" style={{ gap: '10px' }}>
-                    {/* Slider */}
-                    {showSlider && (
-                        <div className="d-flex align-items-center border rounded bg-light p-2">
-                            <button className="btn btn-outline-secondary" onClick={decrement}>−</button>
-                            <span className="mx-2">Font Size: {fontSizes[modelName + "_" + selectedText]?.size}</span>
-                            <button className="btn btn-outline-secondary" onClick={increment}>+</button>
-                            <button className="btn-close ms-2" onClick={() => setShowSlider(false)}></button>
-                        </div>
-                    )}
 
-                    <label htmlFor="font-select">Select Font: </label>
-                    <select id="font-select" value={fontSizes[modelName + "_font"]} onChange={handleFontChange}>
-                        {fonts.map((font) => (
-                            <option key={font.value} value={font.value}>
-                                {font.label}
-                            </option>
-                        ))}
-                    </select>
+                {/* Row 2: Toolbar — wraps gracefully on small screens */}
+                <div className="d-flex align-items-center flex-wrap" style={{ gap: "6px", marginTop: "6px", paddingTop: "6px", borderTop: "1px solid #dee2e6" }}>
 
-                    {/* Show Store Header - Always fixed here */}
-                    <div className="form-check">
+                    {/* Font selector */}
+                    <div className="d-flex align-items-center" style={{ gap: "4px" }}>
+                        <label htmlFor="font-select" className="mb-0 text-nowrap" style={{ fontSize: "0.8rem" }}>Font:</label>
+                        <select id="font-select" value={fontSizes[modelName + "_font"]} onChange={handleFontChange}
+                            className="form-select form-select-sm" style={{ width: "auto", minWidth: "100px" }}>
+                            {fonts.map((font) => (
+                                <option key={font.value} value={font.value}>{font.label}</option>
+                            ))}
+                        </select>
+                    </div>
+
+                    {/* Page size */}
+                    <div className="d-flex align-items-center" style={{ gap: "4px" }}>
+                        <label className="mb-0 text-nowrap" style={{ fontSize: "0.8rem" }}>Page:</label>
+                        <select
+                            value={fontSizes[modelName + "_pageSize"]}
+                            onChange={(e) => changePageSize(e.target.value)}
+                            className="form-select form-select-sm"
+                            style={{ width: "auto" }}
+                        >
+                            {[2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23].map(n => (
+                                <option key={n} value={n}>{n}</option>
+                            ))}
+                        </select>
+                    </div>
+
+                    {/* Store header toggle */}
+                    <div className="d-flex align-items-center" style={{ gap: "4px" }}>
                         <input
                             type="checkbox"
-                            className="form-check-input"
+                            className="form-check-input mt-0"
                             id="storeHeaderCheck"
                             checked={fontSizes[modelName + "_storeHeader"]?.visible}
                             onChange={() => {
                                 fontSizes[modelName + "_storeHeader"].visible = !fontSizes[modelName + "_storeHeader"]?.visible;
-
                                 setFontSizes({ ...fontSizes });
                                 saveToLocalStorage("fontSizes", fontSizes);
                             }}
                         />
-                        <label htmlFor="storeHeaderCheck" className="form-check-label">Show Store Header</label>
+                        <label htmlFor="storeHeaderCheck" className="mb-0 text-nowrap" style={{ fontSize: "0.8rem" }}>Store Header</label>
                     </div>
 
-                    {/* Margin Control */}
-
-                    <div className="d-flex align-items-center border rounded bg-light p-2" style={{ marginRight: "200px" }} >
-                        <button className="btn btn-outline-secondary" onClick={() => decrementSize(modelName + "_marginTop")}>−</button>
-                        <span className="mx-2">Margin Top: {fontSizes[modelName + "_marginTop"]?.size}</span>
-                        <button className="btn btn-outline-secondary" onClick={() => incrementSize(modelName + "_marginTop")}>+</button>
+                    {/* Margin top */}
+                    <div className="d-flex align-items-center border rounded bg-light px-2 py-1" style={{ gap: "4px" }}>
+                        <button className="btn btn-outline-secondary btn-sm px-1 py-0" onClick={() => decrementSize(modelName + "_marginTop")}>−</button>
+                        <span style={{ fontSize: "0.8rem", whiteSpace: "nowrap" }}>Margin: {fontSizes[modelName + "_marginTop"]?.size}</span>
+                        <button className="btn btn-outline-secondary btn-sm px-1 py-0" onClick={() => incrementSize(modelName + "_marginTop")}>+</button>
                     </div>
 
-                    <div className="col ">
-                        <>
-                            <label className="form-label">Page Size:&nbsp;</label>
-                            <select
-                                value={fontSizes[modelName + "_pageSize"]}
-                                onChange={(e) => {
-                                    changePageSize(e.target.value);
-                                }}
-                                className="form-control pull-right"
-                                style={{
-                                    border: "solid 1px",
-                                    borderColor: "silver",
-                                    width: "55px",
-                                }}
-                            >
-                                <option value="2">2</option>
-                                <option value="3">3</option>
-                                <option value="4">4</option>
-                                <option value="5">5</option>
-                                <option value="6">6</option>
-                                <option value="7">7</option>
-                                <option value="8">8</option>
-                                <option value="9">9</option>
-                                <option value="10">10</option>
-                                <option value="11">11</option>
-                                <option value="12">12</option>
-                                <option value="13">13</option>
-                                <option value="14">14</option>
-                                <option value="15">15</option>
-                                <option value="16">16</option>
-                                <option value="17">17</option>
-                                <option value="18">18</option>
-                                <option value="19">19</option>
-                                <option value="20">20</option>
-                                <option value="21">21</option>
-                                <option value="22">22</option>
-                                <option value="23">23</option>
-                            </select>
-                        </>
-                    </div>
+                    {/* Font size slider — appears when a text element is clicked */}
+                    {showSlider && (
+                        <div className="d-flex align-items-center border rounded px-2 py-1" style={{ gap: "4px", background: "#fff3cd" }}>
+                            <button className="btn btn-outline-secondary btn-sm px-1 py-0" onClick={decrement}>−</button>
+                            <span style={{ fontSize: "0.8rem", whiteSpace: "nowrap" }}>Font: {fontSizes[modelName + "_" + selectedText]?.size}</span>
+                            <button className="btn btn-outline-secondary btn-sm px-1 py-0" onClick={increment}>+</button>
+                            <button className="btn-close ms-1" style={{ fontSize: "0.65rem" }} onClick={() => setShowSlider(false)}></button>
+                        </div>
+                    )}
 
+                    {/* QR size slider — appears when QR code is clicked */}
+                    {showQrCodeSlider && (
+                        <div className="d-flex align-items-center border rounded px-2 py-1" style={{ gap: "4px", background: "#e8f4fd" }}>
+                            <span style={{ fontSize: "0.8rem", whiteSpace: "nowrap" }}>QR:</span>
+                            <button className="btn btn-outline-secondary btn-sm px-1 py-0" onClick={() => QrSize("decrement", "width")}>−</button>
+                            <span style={{ fontSize: "0.8rem", whiteSpace: "nowrap" }}>W {fontSizes[modelName + "_qrCode"]?.["width"]?.size}</span>
+                            <button className="btn btn-outline-secondary btn-sm px-1 py-0" onClick={() => QrSize("increment", "width")}>+</button>
+                            <button className="btn btn-outline-secondary btn-sm px-1 py-0 ms-1" onClick={() => QrSize("decrement", "height")}>−</button>
+                            <span style={{ fontSize: "0.8rem", whiteSpace: "nowrap" }}>H {fontSizes[modelName + "_qrCode"]?.["height"]?.size}</span>
+                            <button className="btn btn-outline-secondary btn-sm px-1 py-0" onClick={() => QrSize("increment", "height")}>+</button>
+                            <button className="btn-close ms-1" style={{ fontSize: "0.65rem" }} onClick={() => setShowQrCodeSlider(false)}></button>
+                        </div>
+                    )}
 
-                    <div className="col align-self-end text-end">
-                        <Button variant="primary" className={`btn ${whatsAppShare ? "btn-success" : "btn-primary"}`} onClick={whatsAppShare ? openWhatsAppShare : handlePrint}>
-
-                            {isProcessing ?
-                                <Spinner
-                                    as="span"
-                                    animation="border"
-                                    size="sm"
-                                    role="status"
-                                    aria-hidden={true}
-                                />
-
-                                : ""
-                            }
-
-                            {!isProcessing && <>
-                                {!whatsAppShare && <><i className="bi bi-printer"></i> Print</>}
-                                {whatsAppShare && <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="white" viewBox="0 0 16 16">
-                                    <path d="M13.601 2.326A7.875 7.875 0 0 0 8.036 0C3.596 0 0 3.597 0 8.036c0 1.417.37 2.805 1.07 4.03L0 16l3.993-1.05a7.968 7.968 0 0 0 4.043 1.085h.003c4.44 0 8.036-3.596 8.036-8.036 0-2.147-.836-4.166-2.37-5.673ZM8.036 14.6a6.584 6.584 0 0 1-3.35-.92l-.24-.142-2.37.622.63-2.31-.155-.238a6.587 6.587 0 0 1-1.018-3.513c0-3.637 2.96-6.6 6.6-6.6 1.764 0 3.42.69 4.67 1.94a6.56 6.56 0 0 1 1.93 4.668c0 3.637-2.96 6.6-6.6 6.6Zm3.61-4.885c-.198-.1-1.17-.578-1.352-.644-.18-.066-.312-.1-.444.1-.13.197-.51.644-.626.775-.115.13-.23.15-.428.05-.198-.1-.837-.308-1.594-.983-.59-.525-.99-1.174-1.11-1.372-.116-.198-.012-.305.088-.403.09-.09.198-.23.298-.345.1-.115.132-.197.2-.33.065-.13.032-.247-.017-.345-.05-.1-.444-1.07-.61-1.46-.16-.384-.323-.332-.444-.338l-.378-.007c-.13 0-.344.048-.525.23s-.688.672-.688 1.64c0 .967.704 1.9.802 2.03.1.13 1.386 2.116 3.365 2.963.47.203.837.324 1.122.414.472.15.902.13 1.24.08.378-.057 1.17-.48 1.336-.942.165-.462.165-.858.116-.943-.048-.084-.18-.132-.378-.23Z" />
-                                </svg>}
-                            </>}
-                        </Button>
-
-
-                        <button
-                            type="button"
-                            className="btn-close"
-                            onClick={handleClose}
-                            aria-label="Close"
-                        ></button>
-
-                    </div>
                 </div>
 
             </Modal.Header>
             <Modal.Body>
                 <div ref={printAreaRef}>
-                    <CustomerDepositPreviewContent model={model} invoiceBackground={InvoiceBackground} modelName={modelName} whatsAppShare={whatsAppShare} selectText={selectText} fontSizes={fontSizes} />
+                    <CustomerDepositPreviewContent model={model} invoiceBackground={InvoiceBackground} modelName={modelName} whatsAppShare={whatsAppShare} selectText={selectText} fontSizes={fontSizes} selectQRCode={() => { setShowQrCodeSlider(true); setShowSlider(false); }} />
                 </div>
             </Modal.Body>
             <Modal.Footer>

@@ -66,7 +66,8 @@ function CustomerDepositIndex(props) {
     const [vendorOptions, setVendorOptions] = useState([]);
     const [selectedVendors, setSelectedVendors] = useState([]);
 
-
+    const [store, setStore] = useState({});
+    const [reportingIds, setReportingIds] = useState(new Set());
 
     useEffect(() => {
         list();
@@ -77,8 +78,44 @@ function CustomerDepositIndex(props) {
 
     async function getStore(id) {
         try {
-            await fetchStore(id);
+            const data = await fetchStore(id);
+            if (data) setStore(data);
         } catch (error) { }
+    }
+
+    function ReportDepositToZatca(id, index) {
+        setReportingIds(prev => new Set([...prev, id]));
+        let searchParams = {};
+        if (localStorage.getItem("store_id")) searchParams.store_id = localStorage.getItem("store_id");
+        let queryParams = ObjectToSearchQueryParams(searchParams);
+        let endPoint = "/v1/customer-deposit/zatca/report/" + id + "?" + queryParams;
+        const requestOptions = {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', Authorization: localStorage.getItem("access_token") },
+        };
+        fetch(endPoint, requestOptions)
+            .then(async response => {
+                const data = await response.json();
+                setReportingIds(prev => { const s = new Set(prev); s.delete(id); return s; });
+                if (!response.ok || !data.status) {
+                    const errMsg = data?.errors ? Object.values(data.errors).join("; ") : "Reporting to Zatca failed!";
+                    if (props.showToastMessage) props.showToastMessage(errMsg, "danger");
+                    let updated = [...customerdepositList];
+                    updated[index] = { ...updated[index], _zatcaError: errMsg };
+                    setCustomerDepositList(updated);
+                    return;
+                }
+                if (data.result) {
+                    let updated = [...customerdepositList];
+                    updated[index] = data.result;
+                    setCustomerDepositList(updated);
+                }
+                if (props.showToastMessage) props.showToastMessage("Reported successfully to Zatca!", "success");
+            })
+            .catch(() => {
+                setReportingIds(prev => { const s = new Set(prev); s.delete(id); return s; });
+                if (props.showToastMessage) props.showToastMessage("Network error: Reporting to Zatca failed!", "danger");
+            });
     }
 
 
@@ -380,7 +417,7 @@ function CustomerDepositIndex(props) {
             },
         };
         let Select =
-            "select=id,code,date,type,net_total,total,total_discount,payment_methods,payments,bank_reference_no,description,remarks,customer_id,customer_name,customer_name_arabic,vendor_id,vendor_name,vendor_name_arabic,created_by_name,created_at";
+            "select=id,code,date,type,net_total,total,total_discount,payment_methods,payments,bank_reference_no,description,remarks,customer_id,customer_name,customer_name_arabic,vendor_id,vendor_name,vendor_name_arabic,created_by_name,created_at,uuid,hash,zatca,store_id";
 
         if (localStorage.getItem("store_id")) {
             searchParams.store_id = localStorage.getItem("store_id");
@@ -562,6 +599,7 @@ function CustomerDepositIndex(props) {
         { key: "description", label: "Description", fieldName: "description", visible: true },
         { key: "created_by", label: "Created By", fieldName: "created_by_name", visible: true },
         { key: "created_at", label: "Created At", fieldName: "created_at", visible: true },
+        { key: "reported_to_zatca", label: "Reported to Zatca", fieldName: "zatca.reporting_passed", visible: true },
         { key: "actions_end", label: "Actions", fieldName: "actions_end", visible: true },
     ], []);
 
@@ -584,7 +622,7 @@ function CustomerDepositIndex(props) {
 
             <CustomerDepositPreview ref={PreviewRef} />
             <CustomerDepositCreate ref={CreateFormRef} refreshList={list} openDetailsView={openDetailsView} showToastMessage={props.showToastMessage} />
-            <CustomerDepositView ref={DetailsViewRef} openUpdateForm={openUpdateForm} openCreateForm={openCreateForm} showToastMessage={props.showToastMessage} />
+            <CustomerDepositView ref={DetailsViewRef} store={store} openUpdateForm={openUpdateForm} openCreateForm={openCreateForm} showToastMessage={props.showToastMessage} />
 
             {/*<div className="container-fluid p-0">
                 <div className="row">
@@ -962,7 +1000,7 @@ function CustomerDepositIndex(props) {
 
                                         <tbody className="text-center">
                                             {customerdepositList &&
-                                                customerdepositList.map((customerdeposit) => (
+                                                customerdepositList.map((customerdeposit, index) => (
                                                     <tr key={customerdeposit.code}>
                                                         {columns.filter(c => c.visible).map((col) => (
                                                             <React.Fragment key={col.key}>
@@ -986,6 +1024,47 @@ function CustomerDepositIndex(props) {
                                                                 {col.key === "description" && <td style={{ width: "auto", whiteSpace: "nowrap" }}><OverflowTooltip value={customerdeposit.description} maxWidth={300} /></td>}
                                                                 {col.fieldName === "created_by_name" && <td style={{ width: "auto", whiteSpace: "nowrap" }}>{customerdeposit.created_by_name}</td>}
                                                                 {col.fieldName === "created_at" && <td style={{ width: "auto", whiteSpace: "nowrap" }}>{format(new Date(customerdeposit.created_at), "MMM dd yyyy h:mma")}</td>}
+                                                                {col.key === "reported_to_zatca" && store?.zatca?.phase === "2" && store?.zatca?.connected && store?.settings?.enable_zatca_reporting_for_receivables && (
+                                                                    <td style={{ width: "auto", minWidth: "174px" }}>
+                                                                        {!customerdeposit.zatca?.reporting_passed && (
+                                                                            <div style={{ display: "flex", flexDirection: "column", gap: "2px", alignItems: "flex-start" }}>
+                                                                                {(customerdeposit.zatca?.reporting_failed_count > 0) && (
+                                                                                    <span className="badge bg-danger">Failed</span>
+                                                                                )}
+                                                                                <Button
+                                                                                    className={`btn btn-sm ${customerdeposit.zatca?.reporting_failed_count > 0 ? "btn-outline-warning" : "btn-warning"}`}
+                                                                                    disabled={reportingIds.has(customerdeposit.id)}
+                                                                                    onClick={() => ReportDepositToZatca(customerdeposit.id, index)}
+                                                                                >
+                                                                                    {reportingIds.has(customerdeposit.id)
+                                                                                        ? <Spinner animation="border" size="sm" />
+                                                                                        : customerdeposit.zatca?.reporting_failed_count > 0
+                                                                                            ? <><i className="bi bi-arrow-clockwise"></i> Retry</>
+                                                                                            : <><i className="bi bi-cloud-upload"></i> Report</>
+                                                                                    }
+                                                                                </Button>
+                                                                                {customerdeposit._zatcaError && (
+                                                                                    <span style={{ fontSize: "0.7rem", color: "#dc3545", maxWidth: "180px", whiteSpace: "normal", lineHeight: "1.2" }} title={customerdeposit._zatcaError}>
+                                                                                        {customerdeposit._zatcaError.length > 80 ? customerdeposit._zatcaError.substring(0, 77) + "…" : customerdeposit._zatcaError}
+                                                                                    </span>
+                                                                                )}
+                                                                                {!customerdeposit._zatcaError && customerdeposit.zatca?.reporting_errors?.length > 0 && (
+                                                                                    <span style={{ fontSize: "0.7rem", color: "#dc3545", maxWidth: "180px", whiteSpace: "normal", lineHeight: "1.2" }} title={customerdeposit.zatca.reporting_errors[customerdeposit.zatca.reporting_errors.length - 1]}>
+                                                                                        {customerdeposit.zatca.reporting_errors[customerdeposit.zatca.reporting_errors.length - 1].length > 80
+                                                                                            ? customerdeposit.zatca.reporting_errors[customerdeposit.zatca.reporting_errors.length - 1].substring(0, 77) + "…"
+                                                                                            : customerdeposit.zatca.reporting_errors[customerdeposit.zatca.reporting_errors.length - 1]}
+                                                                                    </span>
+                                                                                )}
+                                                                            </div>
+                                                                        )}
+                                                                        {customerdeposit.zatca?.reporting_passed && (
+                                                                            <>
+                                                                                <span className="badge bg-success">Reported</span>&nbsp;
+                                                                                <a href={`/zatca/${customerdeposit.store_id}/receivables/xml/${customerdeposit.code}.xml`} target="_blank" rel="noreferrer" className="btn btn-outline-secondary btn-sm"><i className="bi bi-file-earmark-code"></i> XML</a>
+                                                                            </>
+                                                                        )}
+                                                                    </td>
+                                                                )}
                                                                 {col.key === "actions_end" && (
                                                                     <td style={{ width: "auto", whiteSpace: "nowrap" }}>
                                                                         <Button className="btn btn-light btn-sm" onClick={() => openUpdateForm(customerdeposit.id)}><i className="bi bi-pencil"></i></Button>

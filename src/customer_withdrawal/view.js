@@ -4,6 +4,7 @@ import CustomerDepositPreview from './../customer_deposit/preview.js';
 import AttachmentsViewer from '../utils/AttachmentsViewer.js';
 import { ObjectToSearchQueryParams } from '../utils/queryUtils.js';
 import { formatInStoreTimezone, formatPaymentMethod } from '../utils/dateUtils.js';
+import { QRCodeCanvas } from 'qrcode.react';
 
 const CustomerWithdrawalView = forwardRef((props, ref) => {
     useImperativeHandle(ref, () => ({
@@ -284,6 +285,73 @@ const CustomerWithdrawalView = forwardRef((props, ref) => {
 
                         {/* Right Column: Metadata Sidebar */}
                         <div className="lg:col-span-4" style={{ display: 'flex', flexDirection: 'column', gap: '32px' }}>
+                            {store?.zatca?.phase === "2" && store?.zatca?.connected && store?.settings?.enable_zatca_reporting_for_payables && (
+                                <section style={{ backgroundColor: '#ffffff', borderRadius: '8px', border: '1px solid #e2e8f0', overflow: 'hidden' }}>
+                                    <div style={{ padding: '12px 24px', borderBottom: '1px solid #c3c6d7', backgroundColor: '#f2f4f6' }}>
+                                        <h3 style={{ margin: 0, fontSize: '18px', fontWeight: 600, lineHeight: '26px', fontFamily: "'Hanken Grotesk', sans-serif", color: '#191c1e' }}>Zatca Info</h3>
+                                    </div>
+                                    <div style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingBottom: '8px', borderBottom: '1px solid #c3c6d7' }}>
+                                            <span style={{ fontSize: '14px', color: '#434655' }}>Zatca Status</span>
+                                            {model.zatca?.reporting_passed
+                                                ? <span className="badge bg-success">YES</span>
+                                                : <span className="badge bg-danger">NO</span>}
+                                        </div>
+                                        {model.zatca?.reporting_passed_at && (
+                                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingBottom: '8px', borderBottom: '1px solid #c3c6d7' }}>
+                                                <span style={{ fontSize: '14px', color: '#434655' }}>Reported At</span>
+                                                <span style={{ fontSize: '14px', fontWeight: 500, color: '#191c1e', textAlign: 'right' }}>{formatInStoreTimezone(model.zatca.reporting_passed_at, store?.country_code)}</span>
+                                            </div>
+                                        )}
+                                        {model.invoice_count_value != null && (
+                                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingBottom: '8px', borderBottom: '1px solid #c3c6d7' }}>
+                                                <span style={{ fontSize: '14px', color: '#434655' }}>ICV</span>
+                                                <span style={{ fontSize: '14px', fontWeight: 600, color: '#191c1e' }}>{model.invoice_count_value}</span>
+                                            </div>
+                                        )}
+                                        {model.uuid && (
+                                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingBottom: '8px', borderBottom: '1px solid #c3c6d7' }}>
+                                                <span style={{ fontSize: '14px', color: '#434655' }}>UUID</span>
+                                                <span style={{ fontSize: '12px', fontFamily: 'monospace', color: '#191c1e', wordBreak: 'break-all', textAlign: 'right', maxWidth: '60%' }}>{model.uuid}</span>
+                                            </div>
+                                        )}
+                                        {model.hash && (
+                                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingBottom: '8px', borderBottom: '1px solid #c3c6d7' }}>
+                                                <span style={{ fontSize: '14px', color: '#434655' }}>Reported Invoice Hash</span>
+                                                <span style={{ fontSize: '12px', fontFamily: 'monospace', color: '#191c1e', wordBreak: 'break-all', textAlign: 'right', maxWidth: '60%' }}>{model.hash}</span>
+                                            </div>
+                                        )}
+                                        {model.zatca?.qr_code && (
+                                            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px', paddingBottom: '8px', borderBottom: '1px solid #c3c6d7' }}>
+                                                <QRCodeCanvas value={model.zatca.qr_code} size={128} />
+                                            </div>
+                                        )}
+                                        {model.zatca?.signing_time && (
+                                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingBottom: '8px', borderBottom: '1px solid #c3c6d7' }}>
+                                                <span style={{ fontSize: '14px', color: '#434655' }}>Signing Time</span>
+                                                <span style={{ fontSize: '14px', fontWeight: 500, color: '#191c1e', textAlign: 'right' }}>{model.zatca.signing_time}</span>
+                                            </div>
+                                        )}
+                                        {model.zatca?.reporting_passed && model.code && (
+                                            <div style={{ paddingBottom: '8px', borderBottom: '1px solid #c3c6d7' }}>
+                                                <a href={`/zatca/${model.store_id}/payables/xml/${model.code}.xml`} target="_blank" rel="noreferrer" style={{ fontSize: '14px', color: '#004ac6' }}>
+                                                    <i className="bi bi-file-earmark-code"></i> Zatca Signed XML
+                                                </a>
+                                            </div>
+                                        )}
+                                        {model.zatca?.reporting_errors && model.zatca.reporting_errors.length > 0 && (
+                                            <div>
+                                                <span style={{ fontSize: '14px', color: '#ba1a1a', fontWeight: 600 }}>Reporting Errors</span>
+                                                <ul style={{ marginTop: '4px', paddingLeft: '16px' }}>
+                                                    {model.zatca.reporting_errors.map((err, i) => (
+                                                        <li key={i} style={{ fontSize: '13px', color: '#ba1a1a' }}>{err}</li>
+                                                    ))}
+                                                </ul>
+                                            </div>
+                                        )}
+                                    </div>
+                                </section>
+                            )}
                             <section style={{ backgroundColor: '#ffffff', borderRadius: '8px', border: '1px solid #e2e8f0', overflow: 'hidden' }}>
                                 <div style={{ padding: '12px 24px', borderBottom: '1px solid #c3c6d7', backgroundColor: '#f2f4f6' }}>
                                     <h3 style={{ margin: 0, fontSize: '18px', fontWeight: 600, lineHeight: '26px', fontFamily: "'Hanken Grotesk', sans-serif", color: '#191c1e' }}>Metadata</h3>

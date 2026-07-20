@@ -519,6 +519,9 @@ const CustomerDepositCreate = forwardRef((props, ref) => {
         if (isProcessing) {
             return;
         }
+        if (formData.id && formData.zatca?.reporting_passed) {
+            return;
+        }
 
         event.preventDefault();
         console.log("Inside handle Create");
@@ -1190,6 +1193,7 @@ const CustomerDepositCreate = forwardRef((props, ref) => {
 
     const allErrors = Object.entries(errors).filter(([, v]) => v);
     const totalErrors = allErrors.length;
+    const zatcaLocked = !!(formData.id && formData.zatca?.reporting_passed);
 
     return (
         <>
@@ -1310,12 +1314,17 @@ const CustomerDepositCreate = forwardRef((props, ref) => {
                                 <i className="bi bi-eye me-1"></i>View Detail
                             </button>
                         )}
-                        <button type="button"
-                            style={{ background: '#004ac6', color: '#ffffff', border: 'none', borderRadius: '4px', padding: '6px 18px', fontSize: '13px', fontWeight: 600, fontFamily: '"Inter", sans-serif', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '6px' }}
-                            onClick={handleCreate} disabled={isProcessing}>
-                            {isProcessing && <Spinner as="span" animation="border" size="sm" role="status" aria-hidden={true} />}
-                            {formData.id ? 'Update' : 'Create'}
-                        </button>
+                        {zatcaLocked
+                            ? <span style={{ background: '#fff3cd', color: '#856404', border: '1px solid #ffc107', borderRadius: '4px', padding: '5px 12px', fontSize: '12px', fontWeight: 600, fontFamily: '"Inter", sans-serif', display: 'inline-flex', alignItems: 'center', gap: '5px' }}>
+                                <i className="bi bi-lock-fill"></i> ZATCA Reported
+                              </span>
+                            : <button type="button"
+                                style={{ background: '#004ac6', color: '#ffffff', border: 'none', borderRadius: '4px', padding: '6px 18px', fontSize: '13px', fontWeight: 600, fontFamily: '"Inter", sans-serif', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '6px' }}
+                                onClick={handleCreate} disabled={isProcessing}>
+                                {isProcessing && <Spinner as="span" animation="border" size="sm" role="status" aria-hidden={true} />}
+                                {formData.id ? 'Update' : 'Create'}
+                              </button>
+                        }
                         <button type="button" className="btn-close ms-1" onClick={handleClose} aria-label="Close" />
                     </div>
                 </Modal.Header>
@@ -1363,7 +1372,17 @@ const CustomerDepositCreate = forwardRef((props, ref) => {
                         {/* Main Content Area */}
                         <div className="pw-content" style={{ display: "flex", flexDirection: "column" }}>
                             <div style={{ flex: 1, overflowY: "auto", padding: "20px 28px", paddingBottom: "8px" }}>
+                            <fieldset disabled={zatcaLocked} style={{ border: 'none', padding: 0, margin: 0 }}>
                             <div className="pw-tab-wrap">
+
+                                {zatcaLocked && (
+                                    <div style={{ background: '#fff8e1', border: '1px solid #ffc107', borderRadius: '8px', padding: '10px 16px', marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '10px' }}>
+                                        <i className="bi bi-lock-fill" style={{ color: '#856404', fontSize: '16px', flexShrink: 0 }}></i>
+                                        <span style={{ fontFamily: 'Inter, sans-serif', fontSize: '13px', color: '#856404', fontWeight: 500 }}>
+                                            This record has been reported to ZATCA and cannot be modified.
+                                        </span>
+                                    </div>
+                                )}
 
                                 <div style={{ overflow: "hidden", maxHeight: totalErrors > 0 ? "500px" : "0", marginBottom: totalErrors > 0 ? "16px" : "0", transition: "max-height 0.25s ease, margin-bottom 0.2s ease" }}>
                                   <div style={{ background: "#ffdad6", border: "1px solid #f4adaa", borderRadius: "8px", padding: "12px 16px" }}>
@@ -2189,6 +2208,23 @@ const CustomerDepositCreate = forwardRef((props, ref) => {
                                                         </td>
 
                                                     </tr>
+                                                    {store?.settings?.display_vat_in_receivables_and_payables && store?.vat_percent > 0 && (() => {
+                                                        const vatPct = store.vat_percent;
+                                                        const vatAmt = parseFloat(trimTo2Decimals(netTotalPaymentAmount * vatPct / (100 + vatPct)));
+                                                        const exVat = parseFloat(trimTo2Decimals(netTotalPaymentAmount - vatAmt));
+                                                        return (<>
+                                                            <tr>
+                                                                <td className="text-end"><b>Amount (Excl. VAT)</b></td>
+                                                                <td><b style={{ marginLeft: "14px" }}>{trimTo2Decimals(exVat)}</b></td>
+                                                                <td colSpan={6}></td>
+                                                            </tr>
+                                                            <tr>
+                                                                <td className="text-end"><b>VAT ({vatPct}%)</b></td>
+                                                                <td><b style={{ marginLeft: "14px" }}>{trimTo2Decimals(vatAmt)}</b></td>
+                                                                <td colSpan={6}></td>
+                                                            </tr>
+                                                        </>);
+                                                    })()}
                                                     <tr>
                                                         <td className="text-end">
                                                             <b>Net Total</b>
@@ -2207,6 +2243,27 @@ const CustomerDepositCreate = forwardRef((props, ref) => {
                                             </table>
                                         </div>
                                 </div>
+
+                                {/* ── ZATCA Reporting ── */}
+                                {!formData.id && store?.zatca?.phase === "2" && store?.zatca?.connected && store?.settings?.enable_zatca_reporting_for_receivables && (
+                                    <div style={CARD} className="pw-card">
+                                        <SectionTitle icon="bi-shield-check">ZATCA Reporting (Debit Note)</SectionTitle>
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                            <input
+                                                type="checkbox"
+                                                id="enable_report_to_zatca_deposit"
+                                                checked={!!formData.enable_report_to_zatca}
+                                                onChange={() => {
+                                                    formData.enable_report_to_zatca = !formData.enable_report_to_zatca;
+                                                    setFormData({ ...formData });
+                                                }}
+                                            />
+                                            <label htmlFor="enable_report_to_zatca_deposit" style={{ margin: 0, fontSize: '14px', fontWeight: 500 }}>
+                                                Report to ZATCA as Debit Note on Create
+                                            </label>
+                                        </div>
+                                    </div>
+                                )}
 
                                 {/* ── Attachments ── */}
                                 <div style={CARD} className="pw-card">
@@ -2302,6 +2359,7 @@ const CustomerDepositCreate = forwardRef((props, ref) => {
                                 </div>
 
                             </div>
+                            </fieldset>
                             </div>
                         </div>
 
