@@ -100,9 +100,6 @@ function CustomerDepositIndex(props) {
                 if (!response.ok || !data.status) {
                     const errMsg = data?.errors ? Object.values(data.errors).join("; ") : "Reporting to Zatca failed!";
                     if (props.showToastMessage) props.showToastMessage(errMsg, "danger");
-                    let updated = [...customerdepositList];
-                    updated[index] = { ...updated[index], _zatcaError: errMsg };
-                    setCustomerDepositList(updated);
                     return;
                 }
                 if (data.result) {
@@ -1043,18 +1040,6 @@ function CustomerDepositIndex(props) {
                                                                                             : <><i className="bi bi-cloud-upload"></i> Report</>
                                                                                     }
                                                                                 </Button>
-                                                                                {customerdeposit._zatcaError && (
-                                                                                    <span style={{ fontSize: "0.7rem", color: "#dc3545", maxWidth: "180px", whiteSpace: "normal", lineHeight: "1.2" }} title={customerdeposit._zatcaError}>
-                                                                                        {customerdeposit._zatcaError.length > 80 ? customerdeposit._zatcaError.substring(0, 77) + "…" : customerdeposit._zatcaError}
-                                                                                    </span>
-                                                                                )}
-                                                                                {!customerdeposit._zatcaError && customerdeposit.zatca?.reporting_errors?.length > 0 && (
-                                                                                    <span style={{ fontSize: "0.7rem", color: "#dc3545", maxWidth: "180px", whiteSpace: "normal", lineHeight: "1.2" }} title={customerdeposit.zatca.reporting_errors[customerdeposit.zatca.reporting_errors.length - 1]}>
-                                                                                        {customerdeposit.zatca.reporting_errors[customerdeposit.zatca.reporting_errors.length - 1].length > 80
-                                                                                            ? customerdeposit.zatca.reporting_errors[customerdeposit.zatca.reporting_errors.length - 1].substring(0, 77) + "…"
-                                                                                            : customerdeposit.zatca.reporting_errors[customerdeposit.zatca.reporting_errors.length - 1]}
-                                                                                    </span>
-                                                                                )}
                                                                             </div>
                                                                         )}
                                                                         {customerdeposit.zatca?.reporting_passed && (

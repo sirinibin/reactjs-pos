@@ -1127,42 +1127,106 @@ const OrderCreate = forwardRef((props, ref) => {
     let [selectedCustomers, setSelectedCustomers] = useState([]);
     //const [isCustomersLoading, setIsCustomersLoading] = useState(false);
 
-    function autoSuggestAdvanceDeposit(customerId) {
-        if (!store?.settings?.auto_suggest_advance_payment_linking_in_sales) return;
-        if (store?.zatca?.phase !== "2" || !store?.zatca?.connected) return;
-        if (!store?.settings?.enable_zatca_reporting_for_receivables) return;
-        if (!customerId) return;
+    const [advanceDepositModal, setAdvanceDepositModal] = useState({ show: false, deposits: [], idx: 0 });
+    // Refs so async callbacks always see current values without stale closures
+    const pendingDepositsRef = useRef([]);      // unlinked deposits fetched for current customer
+    const promptedDepositIdsRef = useRef(new Set()); // deposits already shown to the user this session
+    const advanceModalActiveRef = useRef(false); // true while the modal is open
 
+    // Called on customer selection — silently fetches unlinked deposits for later eligibility checks
+    function fetchAdvanceDepositsForCustomer(customerId) {
+        if (!store?.settings?.auto_suggest_advance_payment_linking_in_sales) return;
+        if (!customerId) return;
+        pendingDepositsRef.current = [];
+        promptedDepositIdsRef.current = new Set();
         const storeId = localStorage.getItem("store_id");
-        fetch(`/v1/customer-deposit?search[customer_id]=${customerId}&search[zatca_reporting_passed]=true&search[not_linked_to_order]=true&search[store_id]=${storeId}&limit=10`, {
+        fetch(`/v1/customer-deposit?search[customer_id]=${customerId}&search[not_linked_to_order]=true&search[store_id]=${storeId}&limit=10`, {
             method: 'GET',
             headers: { 'Content-Type': 'application/json', 'Authorization': localStorage.getItem('access_token') },
         })
             .then(async r => {
                 const data = r.ok && await r.json();
-                if (!data?.result?.length) return;
-                if (!formData.payments_input) formData.payments_input = [];
-                const alreadyLinked = new Set(
-                    formData.payments_input.filter(p => p.reference_type === "customer_deposit").map(p => p.reference_id)
-                );
-                let added = false;
-                for (const deposit of data.result) {
-                    if (alreadyLinked.has(deposit.id)) continue;
-                    formData.payments_input.push({
-                        date_str: deposit.date ? new Date(deposit.date).toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' }) : "",
-                        amount: deposit.net_total,
-                        method: deposit.payment_method || (deposit.payment_methods?.[0] ?? ""),
-                        reference_type: "customer_deposit",
-                        reference_code: deposit.code,
-                        reference_id: deposit.id,
-                        receivable_id: deposit.id,
-                        deleted: false,
-                    });
-                    added = true;
+                if (data?.result?.length) {
+                    pendingDepositsRef.current = data.result;
+                    checkForNewlyEligibleDeposits(formData.net_total);
                 }
-                if (added) setFormData({ ...formData });
             })
             .catch(() => {});
+    }
+
+    // Called after every net_total update — shows modal for any deposit that just became eligible
+    function checkForNewlyEligibleDeposits(netTotal) {
+        if (!store?.settings?.auto_suggest_advance_payment_linking_in_sales) return;
+        if (advanceModalActiveRef.current) return; // don't stack modals
+        if (!netTotal || netTotal <= 0) return;
+
+        const alreadyLinked = new Set(
+            (formData.payments_input || []).filter(p => p.reference_type === "customer_deposit").map(p => p.reference_id)
+        );
+
+        const eligible = pendingDepositsRef.current.filter(d =>
+            !alreadyLinked.has(d.id) &&
+            !promptedDepositIdsRef.current.has(d.id) &&
+            d.net_total <= netTotal
+        );
+
+        if (!eligible.length) return;
+
+        eligible.forEach(d => promptedDepositIdsRef.current.add(d.id));
+        advanceModalActiveRef.current = true;
+        setAdvanceDepositModal({ show: true, deposits: eligible, idx: 0 });
+    }
+
+    function handleApplyAdvanceDeposit() {
+        const deposit = advanceDepositModal.deposits[advanceDepositModal.idx];
+        if (!formData.payments_input) formData.payments_input = [];
+
+        formData.payments_input.push({
+            date_str: deposit.date || formData.date_str || new Date().toISOString(),
+            amount: deposit.net_total,
+            method: deposit.payment_method || (deposit.payment_methods?.[0] ?? ""),
+            reference_type: "customer_deposit",
+            reference_code: deposit.code,
+            reference_id: deposit.id,
+            receivable_id: deposit.id,
+            deleted: false,
+        });
+
+        // Reduce the first main payment (no reference_type) to the remaining balance
+        if (formData.net_total > 0) {
+            const linkedTotal = formData.payments_input
+                .filter(p => p.reference_type === "customer_deposit" && !p.deleted)
+                .reduce((s, p) => s + (parseFloat(p.amount) || 0), 0);
+            const remainder = parseFloat(trimTo2Decimals(formData.net_total - linkedTotal));
+            const firstMain = formData.payments_input.find(p => !p.reference_type && !p.deleted);
+            if (firstMain) firstMain.amount = remainder > 0 ? remainder : 0;
+        }
+
+        setFormData({ ...formData });
+        advanceToNextDeposit();
+    }
+
+    function advanceToNextDeposit() {
+        const nextIdx = advanceDepositModal.idx + 1;
+        if (nextIdx < advanceDepositModal.deposits.length) {
+            setAdvanceDepositModal(prev => ({ ...prev, idx: nextIdx }));
+        } else {
+            advanceModalActiveRef.current = false;
+            setAdvanceDepositModal({ show: false, deposits: [], idx: 0 });
+        }
+    }
+
+    function removeDepositPayments() {
+        if (!formData.payments_input) return;
+        const hadDeposit = formData.payments_input.some(p => p.reference_type === "customer_deposit" && !p.deleted);
+        if (!hadDeposit) return;
+        formData.payments_input = formData.payments_input.filter(p => p.reference_type !== "customer_deposit");
+        // Restore the first main payment to the full invoice total
+        const firstMain = formData.payments_input.find(p => !p.reference_type && !p.deleted);
+        if (firstMain && formData.net_total > 0) {
+            firstMain.amount = parseFloat(trimTo2Decimals(formData.net_total));
+        }
+        setFormData({ ...formData });
     }
 
     function fetchAndSetCustomer(customerId, fallbackData) {
@@ -2934,6 +2998,7 @@ const OrderCreate = forwardRef((props, ref) => {
             }
 
             findTotalPayments();
+            checkForNewlyEligibleDeposits(formData.net_total);
             setFormData({ ...formData });
 
 
@@ -3626,6 +3691,27 @@ const OrderCreate = forwardRef((props, ref) => {
     const timerRef = useRef(null);
     const reCalculateRef = useRef(null);
     reCalculateRef.current = reCalculate;
+
+    // Always points to the latest fetchAdvanceDepositsForCustomer (avoids stale closure in useEffect)
+    const fetchAdvanceDepositsRef = useRef(null);
+    fetchAdvanceDepositsRef.current = fetchAdvanceDepositsForCustomer;
+
+    // Trigger deposit fetch whenever customer_id changes — covers ALL form types including type1
+    // which manages its own Typeahead inside SalesType1Form.js
+    useEffect(() => {
+        if (!formData.id && formData.customer_id) {
+            // Reset modal state when customer changes
+            if (advanceModalActiveRef.current) {
+                advanceModalActiveRef.current = false;
+                setAdvanceDepositModal({ show: false, deposits: [], idx: 0 });
+            }
+            fetchAdvanceDepositsRef.current(formData.customer_id);
+        } else if (!formData.customer_id) {
+            pendingDepositsRef.current = [];
+            promptedDepositIdsRef.current = new Set();
+        }
+    }, [formData.customer_id]); // eslint-disable-line react-hooks/exhaustive-deps
+
     const priceValidationTimer = useRef(null);
     const warningValidationTimer = useRef(null);
 
@@ -4115,13 +4201,17 @@ const OrderCreate = forwardRef((props, ref) => {
                                             formData.customer_id = "";
                                             formData.customer_name = "";
                                             formData.customerName = "";
-                                            setFormData({ ...formData });
+                                            removeDepositPayments();
                                             setSelectedCustomers([]);
                                             setOpenCustomerSearchResult(false);
                                             return;
                                         }
 
+                                        const prevCustomerId = formData.customer_id;
                                         formData.customer_id = selectedItems[0].id;
+                                        if (prevCustomerId && prevCustomerId !== selectedItems[0].id) {
+                                            removeDepositPayments();
+                                        }
                                         if (selectedItems[0].use_remarks_in_sales && selectedItems[0].remarks) {
                                             formData.remarks = selectedItems[0].remarks;
                                         }
@@ -4133,7 +4223,6 @@ const OrderCreate = forwardRef((props, ref) => {
                                         setFormData({ ...formData });
                                         setSelectedCustomers(selectedItems);
                                         setOpenCustomerSearchResult(false);
-                                        autoSuggestAdvanceDeposit(selectedItems[0].id);
 
                                         if (store?.settings?.block_sales_after_pending_count > 0) {
                                             const storeId = localStorage.getItem("store_id");
@@ -4158,7 +4247,7 @@ const OrderCreate = forwardRef((props, ref) => {
                                             formData.customer_id = "";
                                             formData.customer_name = "";
                                             formData.customerName = "";
-                                            setFormData({ ...formData });
+                                            removeDepositPayments();
                                             setSelectedCustomers([]);
                                             setCustomerOptions([]);
                                             setOpenCustomerSearchResult(false);
@@ -5820,13 +5909,17 @@ const OrderCreate = forwardRef((props, ref) => {
                                                                         formData.customer_id = "";
                                                                         formData.customer_name = "";
                                                                         formData.customerName = "";
-                                                                        setFormData({ ...formData });
+                                                                        removeDepositPayments();
                                                                         setSelectedCustomers([]);
                                                                         setOpenCustomerSearchResult(false);
                                                                         return;
                                                                     }
 
+                                                                    const prevCustomerId = formData.customer_id;
                                                                     formData.customer_id = selectedItems[0].id;
+                                                                    if (prevCustomerId && prevCustomerId !== selectedItems[0].id) {
+                                                                        removeDepositPayments();
+                                                                    }
                                                                     if (selectedItems[0].use_remarks_in_sales && selectedItems[0].remarks) {
                                                                         formData.remarks = selectedItems[0].remarks;
                                                                     }
@@ -5838,7 +5931,6 @@ const OrderCreate = forwardRef((props, ref) => {
                                                                     setFormData({ ...formData });
                                                                     setSelectedCustomers(selectedItems);
                                                                     setOpenCustomerSearchResult(false);
-                                                                    autoSuggestAdvanceDeposit(selectedItems[0].id);
 
                                                                     // Warn immediately if this customer has too many unpaid sales
                                                                     if (store?.settings?.block_sales_after_pending_count > 0) {
@@ -5865,7 +5957,7 @@ const OrderCreate = forwardRef((props, ref) => {
                                                                         formData.customer_id = "";
                                                                         formData.customer_name = "";
                                                                         formData.customerName = "";
-                                                                        setFormData({ ...formData });
+                                                                        removeDepositPayments();
                                                                         setSelectedCustomers([]);
                                                                         setCustomerOptions([]);
                                                                         setOpenCustomerSearchResult(false);
@@ -7821,11 +7913,13 @@ const OrderCreate = forwardRef((props, ref) => {
                                                                     showTimeSelect
                                                                     timeIntervals="1"
                                                                     popperProps={{ strategy: 'fixed' }}
+                                                                    disabled={formData.payments_input[key].reference_type === "customer_deposit" && isZatcaReported}
                                                                     onChange={(value) => { formData.payments_input[key].date_str = value; setFormData({ ...formData }); }}
                                                                 />
                                                             </td>
                                                             <td style={{ padding: '3px 6px', width: '100px' }}>
                                                                 <input type='number' id={`${"sales_payment_amount" + key}`} name={`${"sales_payment_amount" + key}`} value={formData.payments_input[key].amount} className={`form-control form-control-sm text-end${errors["payment_amount_" + key] ? ' is-invalid' : ''}`}
+                                                                    disabled={formData.payments_input[key].reference_type === "customer_deposit" && isZatcaReported}
                                                                     onChange={(e) => {
                                                                         delete errors["payment_amount_" + key]; setErrors({ ...errors });
                                                                         if (!e.target.value) { formData.payments_input[key].amount = e.target.value; setFormData({ ...formData }); if (paymentValidationTimer.current) clearTimeout(paymentValidationTimer.current); paymentValidationTimer.current = setTimeout(() => validatePaymentAmounts(), 1000); return; }
@@ -7834,6 +7928,7 @@ const OrderCreate = forwardRef((props, ref) => {
                                                             </td>
                                                             <td style={{ padding: '3px 6px', width: '273px' }}>
                                                                 <select value={formData.payments_input[key].method} className={`form-select form-select-sm ${errors['payment_method_' + key] ? 'is-invalid' : ''}`} style={{ fontSize: '12px', height: '26px', padding: '0 24px 0 6px' }}
+                                                                    disabled={formData.payments_input[key].reference_type === "customer_deposit" && isZatcaReported}
                                                                     onChange={(e) => {
                                                                         delete errors["payment_method_" + key]; setErrors({ ...errors });
                                                                         if (!e.target.value) { errors["payment_method_" + key] = t("Payment method is required"); setErrors({ ...errors }); formData.payments_input[key].method = ""; setFormData({ ...formData }); return; }
@@ -7864,11 +7959,15 @@ const OrderCreate = forwardRef((props, ref) => {
                                                                 )}
                                                             </td>
                                                             <td style={{ padding: '3px 4px', textAlign: 'center' }}>
-                                                                <button type="button" onClick={() => removePayment(key)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#dc2626', padding: '1px 3px', borderRadius: '4px' }}
-                                                                    onMouseEnter={e => e.currentTarget.style.backgroundColor = '#fef2f2'}
-                                                                    onMouseLeave={e => e.currentTarget.style.backgroundColor = 'transparent'}>
-                                                                    <i className="bi bi-trash" style={{ fontSize: '12px' }}></i>
-                                                                </button>
+                                                                {formData.payments_input[key].reference_type === "customer_deposit" && isZatcaReported ? (
+                                                                    <i className="bi bi-lock" style={{ fontSize: '12px', color: '#94a3b8' }} title="Cannot remove: invoice already reported to ZATCA"></i>
+                                                                ) : (
+                                                                    <button type="button" onClick={() => removePayment(key)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#dc2626', padding: '1px 3px', borderRadius: '4px' }}
+                                                                        onMouseEnter={e => e.currentTarget.style.backgroundColor = '#fef2f2'}
+                                                                        onMouseLeave={e => e.currentTarget.style.backgroundColor = 'transparent'}>
+                                                                        <i className="bi bi-trash" style={{ fontSize: '12px' }}></i>
+                                                                    </button>
+                                                                )}
                                                             </td>
                                                         </tr>
                                                     ))}
@@ -10376,7 +10475,8 @@ const OrderCreate = forwardRef((props, ref) => {
                                                                 <label className="block text-[10px] opacity-60 uppercase mb-0.5">{t("Method")}</label>
                                                                 <select
                                                                     value={payment.method}
-                                                                    className="w-full bg-transparent border-0 border-b border-outline-variant/50 focus:ring-0 focus:border-primary py-0.5 px-0 text-body-md"
+                                                                    disabled={payment.reference_type === "customer_deposit" && isZatcaReported}
+                                                                    className="w-full bg-transparent border-0 border-b border-outline-variant/50 focus:ring-0 focus:border-primary py-0.5 px-0 text-body-md disabled:opacity-50 disabled:cursor-not-allowed"
                                                                     onChange={(e) => {
                                                                         delete errors["payment_method_" + key];
                                                                         setErrors({ ...errors });
@@ -10414,7 +10514,8 @@ const OrderCreate = forwardRef((props, ref) => {
                                                                 <input
                                                                     type='number'
                                                                     value={payment.amount}
-                                                                    className="w-full bg-transparent border-0 border-b border-outline-variant/50 focus:ring-0 focus:border-primary text-right py-0.5 px-0 text-body-md font-semibold"
+                                                                    disabled={payment.reference_type === "customer_deposit" && isZatcaReported}
+                                                                    className="w-full bg-transparent border-0 border-b border-outline-variant/50 focus:ring-0 focus:border-primary text-right py-0.5 px-0 text-body-md font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
                                                                     onChange={(e) => {
                                                                         delete errors["payment_amount_" + key];
                                                                         setErrors({ ...errors });
@@ -10454,6 +10555,7 @@ const OrderCreate = forwardRef((props, ref) => {
                                                                 locale={dateLocale}
                                                                 showTimeSelect
                                                                 timeIntervals="1"
+                                                                disabled={payment.reference_type === "customer_deposit" && isZatcaReported}
                                                                 onChange={(value) => {
                                                                     formData.payments_input[key].date_str = value;
                                                                     setFormData({ ...formData });
@@ -10494,9 +10596,15 @@ const OrderCreate = forwardRef((props, ref) => {
                                                                 <span className="text-[10px] opacity-40 italic">{t("No Reference")}</span>
                                                             )}
 
-                                                            <button type="button" className="text-[11px] text-error hover:underline bg-transparent border-0 cursor-pointer font-semibold" onClick={() => removePayment(key)}>
-                                                                {t("Remove")}
-                                                            </button>
+                                                            {payment.reference_type === "customer_deposit" && isZatcaReported ? (
+                                                                <span className="text-[11px] text-outline flex items-center gap-1" title={t("Cannot remove: invoice already reported to ZATCA")}>
+                                                                    <i className="bi bi-lock"></i> {t("Locked")}
+                                                                </span>
+                                                            ) : (
+                                                                <button type="button" className="text-[11px] text-error hover:underline bg-transparent border-0 cursor-pointer font-semibold" onClick={() => removePayment(key)}>
+                                                                    {t("Remove")}
+                                                                </button>
+                                                            )}
                                                         </div>
                                                     </div>
                                                 ))
@@ -10576,6 +10684,55 @@ const OrderCreate = forwardRef((props, ref) => {
                 </Modal.Body >
             </Modal >
 
+
+            {advanceDepositModal.show && (() => {
+                const dep = advanceDepositModal.deposits[advanceDepositModal.idx];
+                const custName = selectedCustomers[0]?.name || "This customer";
+                const depDate = dep?.date
+                    ? new Date(dep.date).toLocaleString('en-US', { month: 'short', day: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })
+                    : "";
+                return (
+                    <Modal show={true} onHide={advanceToNextDeposit} centered backdrop="static" keyboard={false}>
+                        <Modal.Header style={{ background: '#fff8e1', borderBottom: '1px solid #ffc107', padding: '14px 20px' }}>
+                            <Modal.Title style={{ fontSize: '15px', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                <i className="bi bi-wallet2" style={{ color: '#856404', fontSize: '18px' }}></i>
+                                Advance Payment Detected
+                            </Modal.Title>
+                        </Modal.Header>
+                        <Modal.Body style={{ padding: '20px 24px' }}>
+                            <p style={{ fontSize: '14px', lineHeight: '1.7', marginBottom: '10px' }}>
+                                <strong>{custName}</strong> has an unlinked advance payment of{' '}
+                                <strong style={{ color: '#155724' }}>{dep?.net_total} SAR</strong>{' '}
+                                received on <strong>{depDate}</strong>{' '}
+                                (Ref: <span style={{ fontFamily: 'monospace', fontSize: '13px' }}>{dep?.code}</span>).
+                            </p>
+                            <p style={{ fontSize: '14px', lineHeight: '1.7', marginBottom: 0 }}>
+                                Would you like to apply this advance as a payment toward the current sale and link it to that receivable?
+                            </p>
+                            {dep?.zatca?.reporting_passed && (
+                                <div style={{ marginTop: '14px', padding: '10px 14px', background: '#e8f5e9', borderRadius: '6px', fontSize: '12px', color: '#2e7d32', display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
+                                    <i className="bi bi-check-circle-fill" style={{ marginTop: '2px', flexShrink: 0 }}></i>
+                                    <span>This receivable is already reported to ZATCA. Applying it will deduct the advance from this invoice's taxable base to prevent double taxation.</span>
+                                </div>
+                            )}
+                            {advanceDepositModal.deposits.length > 1 && (
+                                <div style={{ marginTop: '10px', fontSize: '12px', color: '#888' }}>
+                                    Showing {advanceDepositModal.idx + 1} of {advanceDepositModal.deposits.length} unlinked advance payments.
+                                </div>
+                            )}
+                        </Modal.Body>
+                        <Modal.Footer style={{ gap: '8px' }}>
+                            <Button variant="outline-secondary" onClick={advanceToNextDeposit} style={{ fontFamily: 'Inter, sans-serif' }}>
+                                No, Skip
+                            </Button>
+                            <Button onClick={handleApplyAdvanceDeposit} style={{ background: '#f59e0b', border: 'none', color: '#fff', fontWeight: 600, fontFamily: 'Inter, sans-serif' }}>
+                                <i className="bi bi-check-lg" style={{ marginRight: '6px' }}></i>
+                                Yes, Apply It
+                            </Button>
+                        </Modal.Footer>
+                    </Modal>
+                );
+            })()}
 
         </>
     );

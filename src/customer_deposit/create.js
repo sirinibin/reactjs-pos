@@ -1992,14 +1992,22 @@ const CustomerDepositCreate = forwardRef((props, ref) => {
                                                                                 }
 
                                                                             }}>{formData.payments[key].invoice_code}</span>
-                                                                            {formData.payments[key].invoice_code && <span className="text-danger"
-                                                                                style={{ cursor: "pointer", fontSize: "0.75rem", marginLeft: "3px" }}
-                                                                                onClick={() => {
-                                                                                    confirmInvoiceRemoval(key)
-                                                                                }}
-                                                                            >
-                                                                                ❌
-                                                                            </span>}
+                                                                            {formData.payments[key].invoice_code && (
+                                                                                formData.zatca?.reporting_passed && formData.payments[key].invoice_type === "sales" ? (
+                                                                                    <span style={{ fontSize: "0.75rem", marginLeft: "3px", color: "#94a3b8" }} title="Cannot remove: deposit is ZATCA reported">
+                                                                                        🔒
+                                                                                    </span>
+                                                                                ) : (
+                                                                                    <span className="text-danger"
+                                                                                        style={{ cursor: "pointer", fontSize: "0.75rem", marginLeft: "3px" }}
+                                                                                        onClick={() => {
+                                                                                            confirmInvoiceRemoval(key)
+                                                                                        }}
+                                                                                    >
+                                                                                        ❌
+                                                                                    </span>
+                                                                                )
+                                                                            )}
                                                                         </div>
                                                                         <div className="" style={{ border: "solid 0px", width: "40px" }}>
                                                                             <Button className="btn btn-primary" style={{ marginLeft: "-12px" }} onClick={() => {

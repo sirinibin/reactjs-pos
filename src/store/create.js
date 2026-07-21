@@ -4724,11 +4724,7 @@ const StoreCreate = forwardRef((props, ref) => {
                                 </label>
                                 <label className="pw-check" htmlFor="auto_suggest_advance_payment_linking_in_sales">
                                     <input type="checkbox" id="auto_suggest_advance_payment_linking_in_sales" checked={!!formData.settings.auto_suggest_advance_payment_linking_in_sales} value={formData.settings.auto_suggest_advance_payment_linking_in_sales} onChange={() => { formData.settings.auto_suggest_advance_payment_linking_in_sales = !formData.settings.auto_suggest_advance_payment_linking_in_sales; setFormData({ ...formData }); }} />
-                                    <span>Auto Suggest Advance Payment Linking in Sales Payments</span>
-                                </label>
-                                <label className="pw-check" htmlFor="auto_suggest_advance_payment_linking_in_sales_return">
-                                    <input type="checkbox" id="auto_suggest_advance_payment_linking_in_sales_return" checked={!!formData.settings.auto_suggest_advance_payment_linking_in_sales_return} value={formData.settings.auto_suggest_advance_payment_linking_in_sales_return} onChange={() => { formData.settings.auto_suggest_advance_payment_linking_in_sales_return = !formData.settings.auto_suggest_advance_payment_linking_in_sales_return; setFormData({ ...formData }); }} />
-                                    <span>Auto Suggest Advance Payment Linking in Sales Return Payments</span>
+                                    <span>Auto Prompt Advance Payment Linking in Sales Payments</span>
                                 </label>
                                 <label className="pw-check" htmlFor="display_vat_in_receivables_and_payables">
                                     <input type="checkbox" id="display_vat_in_receivables_and_payables" checked={!!formData.settings.display_vat_in_receivables_and_payables} value={formData.settings.display_vat_in_receivables_and_payables} onChange={() => { formData.settings.display_vat_in_receivables_and_payables = !formData.settings.display_vat_in_receivables_and_payables; setFormData({ ...formData }); }} />
@@ -5618,22 +5614,7 @@ const StoreCreate = forwardRef((props, ref) => {
                                         setFormData({ ...formData });
                                     }}
                                     id="formData.auto_suggest_advance_payment_linking_in_sales"
-                                /> &nbsp;Auto Suggest Advance Payment Linking in Sales Payments
-                            </div>
-                            <label className="form-label"></label>
-                        </div>
-
-                        <div className="col-md-2">
-                            <div className="input-group mb-3">
-                                <input type="checkbox"
-                                    value={formData.settings.auto_suggest_advance_payment_linking_in_sales_return}
-                                    checked={!!formData.settings.auto_suggest_advance_payment_linking_in_sales_return}
-                                    onChange={() => {
-                                        formData.settings.auto_suggest_advance_payment_linking_in_sales_return = !formData.settings.auto_suggest_advance_payment_linking_in_sales_return;
-                                        setFormData({ ...formData });
-                                    }}
-                                    id="formData.auto_suggest_advance_payment_linking_in_sales_return"
-                                /> &nbsp;Auto Suggest Advance Payment Linking in Sales Return Payments
+                                /> &nbsp;Auto Prompt Advance Payment Linking in Sales Payments
                             </div>
                             <label className="form-label"></label>
                         </div>

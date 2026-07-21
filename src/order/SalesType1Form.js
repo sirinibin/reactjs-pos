@@ -263,6 +263,19 @@ export function SalesType1Body({
     startPsColResize,
 }) {
     const { t } = useTranslation('common');
+
+    function removeDepositPayments() {
+        if (!formData.payments_input) return;
+        const hadDeposit = formData.payments_input.some(p => p.reference_type === "customer_deposit" && !p.deleted);
+        if (!hadDeposit) return;
+        formData.payments_input = formData.payments_input.filter(p => p.reference_type !== "customer_deposit");
+        const firstMain = formData.payments_input.find(p => !p.reference_type && !p.deleted);
+        if (firstMain && formData.net_total > 0) {
+            firstMain.amount = parseFloat(trimTo2Decimals(formData.net_total));
+        }
+        setFormData({ ...formData });
+    }
+
     const [showCustomerSearchSettings, setShowCustomerSearchSettings] = useState(false);
     const [customerSearchColumns, setCustomerSearchColumns] = useState(() => {
         try {
@@ -362,12 +375,16 @@ export function SalesType1Body({
                                                                 formData.customer_id = "";
                                                                 formData.customer_name = "";
                                                                 formData.customerName = "";
-                                                                setFormData({ ...formData });
+                                                                removeDepositPayments();
                                                                 setSelectedCustomers([]);
                                                                 setOpenCustomerSearchResult(false);
                                                                 return;
                                                             }
+                                                            const prevCustomerId = formData.customer_id;
                                                             formData.customer_id = selectedItems[0].id;
+                                                            if (prevCustomerId && prevCustomerId !== selectedItems[0].id) {
+                                                                removeDepositPayments();
+                                                            }
                                                             if (selectedItems[0].use_remarks_in_sales && selectedItems[0].remarks) {
                                                                 formData.remarks = selectedItems[0].remarks;
                                                             }
@@ -401,7 +418,7 @@ export function SalesType1Body({
                                                                 formData.customer_id = "";
                                                                 formData.customer_name = "";
                                                                 formData.customerName = "";
-                                                                setFormData({ ...formData });
+                                                                removeDepositPayments();
                                                                 setSelectedCustomers([]);
                                                                 setCustomerOptions([]);
                                                                 setOpenCustomerSearchResult(false);
@@ -2804,6 +2821,7 @@ export function SalesType1Body({
                                                                 locale={dateLocale}
                                                                 showTimeSelect
                                                                 timeIntervals="1"
+                                                                disabled={formData.payments_input[key].reference_type === "customer_deposit" && isZatcaReported}
                                                                 onChange={(value) => {
                                                                     console.log("Value", value);
                                                                     formData.payments_input[key].date_str = value;
@@ -2819,6 +2837,7 @@ export function SalesType1Body({
                                                         </td>
                                                         <td style={{ position: 'relative', minWidth: "96px" }}>
                                                             <input type='number' id={`${"sales_payment_amount" + key}`} name={`${"sales_payment_amount" + key}`} value={formData.payments_input[key].amount} className="form-control "
+                                                                disabled={formData.payments_input[key].reference_type === "customer_deposit" && isZatcaReported}
                                                                 onChange={(e) => {
                                                                     delete errors["payment_amount_" + key];
                                                                     setErrors({ ...errors });
@@ -2845,6 +2864,7 @@ export function SalesType1Body({
                                                         </td>
                                                         <td style={{ position: 'relative', minWidth: "80px" }}>
                                                             <select value={formData.payments_input[key].method} className="form-control "
+                                                                disabled={formData.payments_input[key].reference_type === "customer_deposit" && isZatcaReported}
                                                                 onChange={(e) => {
                                                                     // errors["payment_method"] = [];
                                                                     delete errors["payment_method_" + key];
@@ -2900,9 +2920,13 @@ export function SalesType1Body({
                                                             )}
                                                         </td>
                                                         <td style={{ width: "80px", textAlign: 'center' }}>
-                                                            <button type="button" onClick={() => removePayment(key)} className="btn btn-danger btn-sm">
-                                                                <i className="bi bi-trash"></i>
-                                                            </button>
+                                                            {formData.payments_input[key].reference_type === "customer_deposit" && isZatcaReported ? (
+                                                                <i className="bi bi-lock" style={{ fontSize: '14px', color: '#94a3b8' }} title="Cannot remove: invoice already reported to ZATCA"></i>
+                                                            ) : (
+                                                                <button type="button" onClick={() => removePayment(key)} className="btn btn-danger btn-sm">
+                                                                    <i className="bi bi-trash"></i>
+                                                                </button>
+                                                            )}
                                                         </td>
                                                     </tr>
                                                 ))}

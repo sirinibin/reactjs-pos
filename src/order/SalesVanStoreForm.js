@@ -764,6 +764,7 @@ export function SalesVanStoreBody({
                                         <select value={payment.method || ""}
                                             className="form-select form-select-sm"
                                             style={{ flex: "1 1 100px", minWidth: 80, height: 38, fontSize: 13 }}
+                                            disabled={payment.reference_type === "customer_deposit" && isZatcaReported}
                                             onChange={e => {
                                                 delete errors[`payment_method_${key}`]; setErrors({ ...errors });
                                                 formData.payments_input[key].method = e.target.value;
@@ -782,6 +783,7 @@ export function SalesVanStoreBody({
                                             value={payment.amount || ""}
                                             placeholder={t("Amount")}
                                             onWheel={e => e.target.blur()}
+                                            disabled={payment.reference_type === "customer_deposit" && isZatcaReported}
                                             onChange={e => {
                                                 delete errors[`payment_method_${key}`]; setErrors({ ...errors });
                                                 formData.payments_input[key].amount = e.target.value ? parseFloat(e.target.value) : e.target.value;
@@ -790,10 +792,14 @@ export function SalesVanStoreBody({
                                             }}
                                             style={{ ...field({ width: 110, height: 38, textAlign: "right", flexShrink: 0 }) }}
                                         />
-                                        <button type="button" onClick={() => removePayment(key)}
-                                            style={{ background: "none", border: "none", cursor: "pointer", color: C.danger, fontSize: 20, flexShrink: 0, padding: "0 2px", lineHeight: 1 }}>
-                                            <i className="bi bi-x" />
-                                        </button>
+                                        {payment.reference_type === "customer_deposit" && isZatcaReported ? (
+                                            <i className="bi bi-lock" style={{ fontSize: 16, color: '#94a3b8', flexShrink: 0, padding: "0 4px" }} title="Cannot remove: invoice already reported to ZATCA" />
+                                        ) : (
+                                            <button type="button" onClick={() => removePayment(key)}
+                                                style={{ background: "none", border: "none", cursor: "pointer", color: C.danger, fontSize: 20, flexShrink: 0, padding: "0 2px", lineHeight: 1 }}>
+                                                <i className="bi bi-x" />
+                                            </button>
+                                        )}
                                     </div>
                                 );
                             })}
